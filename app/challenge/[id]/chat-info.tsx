@@ -1,0 +1,398 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  Image,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Bell,
+  BellOff,
+  AtSign,
+  Shield,
+  AlertCircle,
+} from "lucide-react-native";
+import * as Haptics from "expo-haptics";
+import { useApp } from "@/contexts/AppContext";
+import Colors from "@/constants/colors";
+
+const MEMBER_AVATARS = [
+  "https://i.pravatar.cc/150?img=2",
+  "https://i.pravatar.cc/150?img=3",
+  "https://i.pravatar.cc/150?img=4",
+  "https://i.pravatar.cc/150?img=5",
+  "https://i.pravatar.cc/150?img=8",
+  "https://i.pravatar.cc/150?img=12",
+];
+
+export default function ChallengeChatInfoScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const {
+    challenges,
+    getChallengeRoom,
+    chatRoomSettings,
+    updateChatRoomSettings,
+  } = useApp();
+
+  const challenge = (challenges as any[]).find((c: any) => c.id === id);
+  const room = getChallengeRoom(id || "");
+  const settings = chatRoomSettings[room?.roomId || ""] || {
+    muteRoom: false,
+    mentionsOnly: false,
+  };
+
+  const handleToggleMute = () => {
+    if (!room) return;
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    updateChatRoomSettings(room.roomId, { muteRoom: !settings.muteRoom });
+  };
+
+  const handleToggleMentions = () => {
+    if (!room) return;
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    updateChatRoomSettings(room.roomId, { mentionsOnly: !settings.mentionsOnly });
+  };
+
+  if (!challenge || !room) {
+    return (
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Chat info not available</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          headerTitle: "Chat Info",
+          headerLeft: () => (
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => router.back()}
+            >
+              <ChevronLeft size={24} color={Colors.text.primary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.challengeHeader}>
+          <View style={[styles.challengeIcon, { backgroundColor: challenge.themeColor || Colors.accent }]}>
+            <Text style={styles.challengeIconText}>
+              {challenge.title.charAt(0)}
+            </Text>
+          </View>
+          <Text style={styles.challengeTitle}>{challenge.title}</Text>
+          <Text style={styles.challengeSubtitle}>
+            {challenge.participantsCount.toLocaleString()} members
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Shield size={18} color={Colors.text.secondary} />
+            <Text style={styles.sectionTitle}>Room Rules</Text>
+          </View>
+          <View style={styles.rulesCard}>
+            <View style={styles.ruleItem}>
+              <View style={styles.ruleBullet} />
+              <Text style={styles.ruleText}>Be respectful. No harassment.</Text>
+            </View>
+            <View style={styles.ruleItem}>
+              <View style={styles.ruleBullet} />
+              <Text style={styles.ruleText}>No spam or self-promo.</Text>
+            </View>
+            <View style={styles.ruleItem}>
+              <View style={styles.ruleBullet} />
+              <Text style={styles.ruleText}>Keep it challenge-related.</Text>
+            </View>
+            <View style={styles.ruleItem}>
+              <View style={styles.ruleBullet} />
+              <Text style={styles.ruleText}>Report anything weird.</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Users size={18} color={Colors.text.secondary} />
+            <Text style={styles.sectionTitle}>Members</Text>
+            <Text style={styles.sectionCount}>
+              {challenge.participantsCount.toLocaleString()}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.membersCard}>
+            <View style={styles.avatarStack}>
+              {MEMBER_AVATARS.slice(0, 5).map((avatar, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: avatar }}
+                  style={[
+                    styles.stackAvatar,
+                    { marginLeft: index > 0 ? -10 : 0, zIndex: 5 - index },
+                  ]}
+                />
+              ))}
+              <View style={[styles.stackAvatar, styles.moreAvatar, { marginLeft: -10 }]}>
+                <Text style={styles.moreAvatarText}>+{challenge.participantsCount - 5}</Text>
+              </View>
+            </View>
+            <View style={styles.membersText}>
+              <Text style={styles.membersTitle}>View all members</Text>
+              <Text style={styles.membersSubtitle}>
+                {challenge.activeTodayCount?.toLocaleString() || 0} active today
+              </Text>
+            </View>
+            <ChevronRight size={20} color={Colors.text.tertiary} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Bell size={18} color={Colors.text.secondary} />
+            <Text style={styles.sectionTitle}>Notifications</Text>
+          </View>
+          <View style={styles.settingsCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <BellOff size={20} color={Colors.text.secondary} />
+                <View>
+                  <Text style={styles.settingTitle}>Mute chat</Text>
+                  <Text style={styles.settingSubtitle}>
+                    Turn off all notifications
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={settings.muteRoom}
+                onValueChange={handleToggleMute}
+                trackColor={{ false: Colors.border, true: Colors.accent }}
+                thumbColor="#FFF"
+              />
+            </View>
+            <View style={styles.settingDivider} />
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <AtSign size={20} color={Colors.text.secondary} />
+                <View>
+                  <Text style={styles.settingTitle}>Mentions only</Text>
+                  <Text style={styles.settingSubtitle}>
+                    Only notify when mentioned
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={settings.mentionsOnly}
+                onValueChange={handleToggleMentions}
+                trackColor={{ false: Colors.border, true: Colors.accent }}
+                thumbColor="#FFF"
+                disabled={settings.muteRoom}
+              />
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.reportButton}>
+          <AlertCircle size={18} color={Colors.warning} />
+          <Text style={styles.reportText}>Report an issue</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  content: {
+    padding: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    fontSize: 15,
+    color: Colors.text.tertiary,
+  },
+  headerButton: {
+    padding: 8,
+  },
+  challengeHeader: {
+    alignItems: "center",
+    marginBottom: 28,
+  },
+  challengeIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  challengeIconText: {
+    fontSize: 28,
+    fontWeight: "700" as const,
+    color: "#FFF",
+  },
+  challengeTitle: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  challengeSubtitle: {
+    fontSize: 14,
+    color: Colors.text.tertiary,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+    flex: 1,
+  },
+  sectionCount: {
+    fontSize: 14,
+    color: Colors.text.tertiary,
+  },
+  rulesCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+  ruleItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  ruleBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.text.tertiary,
+    marginTop: 6,
+  },
+  ruleText: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  membersCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 14,
+    gap: 12,
+  },
+  avatarStack: {
+    flexDirection: "row",
+  },
+  stackAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: Colors.card,
+  },
+  moreAvatar: {
+    backgroundColor: Colors.pill,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  moreAvatarText: {
+    fontSize: 10,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
+  },
+  membersText: {
+    flex: 1,
+  },
+  membersTitle: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  membersSubtitle: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
+    marginTop: 2,
+  },
+  settingsCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 4,
+  },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+  },
+  settingInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 15,
+    fontWeight: "500" as const,
+    color: Colors.text.primary,
+  },
+  settingSubtitle: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
+    marginTop: 2,
+  },
+  settingDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginHorizontal: 12,
+  },
+  reportButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+  },
+  reportText: {
+    fontSize: 14,
+    color: Colors.warning,
+    fontWeight: "500" as const,
+  },
+});
