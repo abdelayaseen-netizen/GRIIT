@@ -6,12 +6,13 @@
     "start": "bunx rork start -p suykkcjj2pk6zyx6knixc --tunnel",
     "start-web": "bunx rork start -p suykkcjj2pk6zyx6knixc --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p suykkcjj2pk6zyx6knixc --web --tunnel",
-    "lint": "expo lint"
+    "lint": "expo lint",
     "backend:start": "tsx backend/server.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@hono/trpc-server": "^0.4.2",
+    "@hono/node-server": "^1.0.0",
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@rork-ai/toolkit-sdk": "^0.2.51",
@@ -54,7 +55,6 @@
     "superjson": "^2.2.6",
     "zod": "^4.3.6",
     "zustand": "^5.0.2"
-    "@hono/node-server": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -62,8 +62,8 @@
     "@types/react": "~19.1.10",
     "eslint": "^9.31.0",
     "eslint-config-expo": "~10.0.0",
+    "tsx": "^4.0.0",
     "typescript": "~5.9.2"
-    "tsx": "^4.0.0"
   },
   "private": true
 }
