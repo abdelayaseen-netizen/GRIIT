@@ -7,20 +7,22 @@ let _baseUrl: string | null = null;
 export function getApiBaseUrl(): string {
   if (_baseUrl) return _baseUrl;
 
-  let url = process.env.EXPO_PUBLIC_RORK_API_BASE_URL ?? '';
-  url = url.replace(/\/$/, '');
+  const rawEnv = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+  console.log('[API] RAW EXPO_PUBLIC_RORK_API_BASE_URL:', rawEnv);
+
+  let url = (rawEnv ?? '').trim().replace(/\/$/, '');
 
   if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
     url = `https://${url}`;
   }
 
-  if (!url || url.includes('rorktest.dev') || url.includes('rork.live')) {
-    console.warn('[API] Ignoring platform-provided URL:', url || '(empty)', '— using Railway backend');
+  if (!url || url.includes('rorktest.dev') || url.includes('rork.live') || url.includes('localhost')) {
+    console.warn('[API] Ignoring platform-provided URL:', url || '(empty)', '— forcing Railway backend');
     url = RAILWAY_BACKEND_URL;
   }
 
   _baseUrl = url;
-  console.log('[API] Using Base URL:', _baseUrl, '| Platform:', Platform.OS);
+  console.log('[API] FINAL Base URL:', _baseUrl, '| Platform:', Platform.OS);
   return _baseUrl;
 }
 
