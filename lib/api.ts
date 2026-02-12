@@ -16,8 +16,8 @@ export function getApiBaseUrl(): string {
     url = `https://${url}`;
   }
 
-  if (!url || url.includes('rorktest.dev') || url.includes('rork.live') || url.includes('localhost')) {
-    console.warn('[API] Ignoring platform-provided URL:', url || '(empty)', '— forcing Railway backend');
+  if (!url) {
+    console.warn('[API] No base URL configured, using Railway fallback');
     url = RAILWAY_BACKEND_URL;
   }
 
@@ -26,12 +26,20 @@ export function getApiBaseUrl(): string {
   return _baseUrl;
 }
 
+function isRailway(url: string): boolean {
+  return url.includes('railway.app');
+}
+
 export function getHealthUrl(): string {
-  return `${getApiBaseUrl()}/api/health`;
+  const base = getApiBaseUrl();
+  const url = isRailway(base) ? `${base}/health` : `${base}/api/health`;
+  console.log('[API] Health URL:', url);
+  return url;
 }
 
 export function getTrpcUrl(): string {
-  const url = `${getApiBaseUrl()}/api/trpc`;
+  const base = getApiBaseUrl();
+  const url = isRailway(base) ? `${base}/trpc` : `${base}/api/trpc`;
   console.log('[API] TRPC URL:', url);
   return url;
 }

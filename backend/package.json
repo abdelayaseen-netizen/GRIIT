@@ -1,0 +1,21 @@
+{
+  "name": "grit-backend",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "start": "tsx server.ts"
+  },
+  "dependencies": {
+    "hono": "^4.11.7",
+    "@hono/node-server": "^1.0.0",
+    "@hono/trpc-server": "^0.4.2",
+    "@trpc/server": "^11.9.0",
+    "@supabase/supabase-js": "^2.94.1",
+    "superjson": "^2.2.6",
+    "zod": "^4.3.6",
+    "tsx": "^4.0.0"
+  }
+}

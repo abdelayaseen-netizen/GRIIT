@@ -33,4 +33,13 @@ app.use(
   }),
 );
 
+app.use(
+  "/trpc/*",
+  trpcServer({
+    endpoint: "/trpc",
+    router: appRouter,
+    createContext,
+  }),
+);
+
 export default app;
