@@ -12,7 +12,12 @@ export function getApiBaseUrl(): string {
     throw new Error(msg);
   }
 
-  _baseUrl = url.replace(/\/$/, '');
+  let normalized = url.replace(/\/$/, '');
+  if (normalized && !normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://${normalized}`;
+    console.warn('[API] Base URL was missing protocol, added https://', normalized);
+  }
+  _baseUrl = normalized;
   console.log('[API] Base URL:', _baseUrl, '| Platform:', Platform.OS);
   return _baseUrl;
 }
