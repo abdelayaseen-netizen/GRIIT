@@ -22,7 +22,9 @@ export function getHealthUrl(): string {
 }
 
 export function getTrpcUrl(): string {
-  return `${getApiBaseUrl()}/trpc`;
+  const url = `${getApiBaseUrl()}/api/trpc`;
+  console.log('[API] TRPC URL:', url);
+  return url;
 }
 
 const RETRY_DELAYS = [500, 1000, 2000, 4000];
