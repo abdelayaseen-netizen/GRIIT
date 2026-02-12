@@ -18,7 +18,7 @@ export function getApiBaseUrl(): string {
 }
 
 export function getHealthUrl(): string {
-  return `${getApiBaseUrl()}/health`;
+  return `${getApiBaseUrl()}/api/health`;
 }
 
 export function getTrpcUrl(): string {
