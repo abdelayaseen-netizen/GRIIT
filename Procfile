@@ -1,1 +1,1 @@
-web: bun run backend:start
+web: npx tsx backend/server.ts

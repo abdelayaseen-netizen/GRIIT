@@ -24,7 +24,12 @@ app.get("/", (c) => {
 });
 
 app.get("/health", (c) => {
-  console.log('[Hono] Health check hit');
+  console.log('[Hono] Health check hit at /health');
+  return c.json({ ok: true, ts: Date.now(), version: "1.0.0" });
+});
+
+app.get("/api/health", (c) => {
+  console.log('[Hono] Health check hit at /api/health');
   return c.json({ ok: true, ts: Date.now(), version: "1.0.0" });
 });
 
