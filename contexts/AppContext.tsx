@@ -1,6 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useAuth } from './AuthContext';
 import { trpc } from '@/lib/trpc';
+import { supabase } from '@/lib/supabase';
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 
 export const [AppProvider, useApp] = createContextHook(() => {
@@ -8,6 +9,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const utils = trpc.useUtils();
   const [autoCreateAttempted, setAutoCreateAttempted] = useState(false);
   const [autoCreateError, setAutoCreateError] = useState<string | null>(null);
+  const [fallbackProfile, setFallbackProfile] = useState<Record<string, any> | null>(null);
+  const [fallbackAttempted, setFallbackAttempted] = useState(false);
   
   const [hardTimeout, setHardTimeout] = useState(false);
 
@@ -38,6 +41,64 @@ export const [AppProvider, useApp] = createContextHook(() => {
     },
   });
 
+  const directProfileFallback = useCallback(async (userId: string, email?: string) => {
+    if (fallbackAttempted) return;
+    setFallbackAttempted(true);
+    console.log('[AppContext] Attempting direct Supabase profile fallback...');
+    try {
+      const { data: existing, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (existing && !fetchErr) {
+        console.log('[AppContext] Direct fallback found existing profile');
+        setFallbackProfile(existing);
+        return;
+      }
+
+      if (fetchErr && fetchErr.code !== 'PGRST116') {
+        console.warn('[AppContext] Direct profile fetch error:', fetchErr.message);
+      }
+
+      console.log('[AppContext] No profile found, auto-creating via Supabase...');
+      const fallbackUsername = `user_${userId.slice(0, 8)}`;
+      const fallbackName = email?.split('@')[0] || fallbackUsername;
+
+      const { data: created, error: createErr } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: userId,
+            username: fallbackUsername,
+            display_name: fallbackName,
+            bio: '',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        )
+        .select()
+        .single();
+
+      if (createErr) {
+        console.error('[AppContext] Direct profile create error:', createErr.message);
+        setAutoCreateError(createErr.message);
+        return;
+      }
+
+      if (created) {
+        console.log('[AppContext] Direct fallback created profile successfully');
+        setFallbackProfile(created);
+        utils.profiles.get.invalidate();
+        utils.profiles.getStats.invalidate();
+      }
+    } catch (err) {
+      console.error('[AppContext] Direct fallback exception:', err);
+      setAutoCreateError(err instanceof Error ? err.message : 'Unknown error');
+    }
+  }, [fallbackAttempted, utils]);
+
   useEffect(() => {
     if (
       user &&
@@ -46,7 +107,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       !autoCreateAttempted &&
       !createProfileMutation.isPending
     ) {
-      console.log('[AppContext] Profile missing for user, auto-creating...');
+      console.log('[AppContext] Profile missing for user, auto-creating via tRPC...');
       setAutoCreateAttempted(true);
       const fallbackUsername = `user_${user.id.slice(0, 8)}`;
       const fallbackName = user.email?.split('@')[0] || fallbackUsername;
@@ -58,9 +119,24 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [user, profileQuery.isSuccess, profileQuery.data, autoCreateAttempted, createProfileMutation]);
 
   useEffect(() => {
+    if (
+      user &&
+      profileQuery.isError &&
+      !fallbackAttempted &&
+      !profileQuery.data &&
+      !fallbackProfile
+    ) {
+      console.log('[AppContext] tRPC profile failed, trying direct Supabase fallback...');
+      directProfileFallback(user.id, user.email ?? undefined);
+    }
+  }, [user, profileQuery.isError, profileQuery.data, fallbackAttempted, fallbackProfile, directProfileFallback]);
+
+  useEffect(() => {
     if (!user) {
       setAutoCreateAttempted(false);
       setAutoCreateError(null);
+      setFallbackProfile(null);
+      setFallbackAttempted(false);
     }
   }, [user]);
 
@@ -135,9 +211,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
   };
 
   const profileAutoCreating = createProfileMutation.isPending;
-  const profileHasLoaded = (profileQuery.isSuccess && profileQuery.data !== null) || profileQuery.isError;
+  const resolvedProfile = profileQuery.data || fallbackProfile;
+  const profileHasLoaded = (profileQuery.isSuccess && profileQuery.data !== null) || profileQuery.isError || !!fallbackProfile;
   const activeChallengeHasLoaded = activeChallengeQuery.isSuccess || activeChallengeQuery.isError;
-  const initialFetchDone = hardTimeout || ((profileHasLoaded || (profileQuery.isSuccess && autoCreateAttempted && !profileAutoCreating)) && activeChallengeHasLoaded);
+  const initialFetchDone = hardTimeout || ((profileHasLoaded || (profileQuery.isSuccess && autoCreateAttempted && !profileAutoCreating) || !!fallbackProfile) && activeChallengeHasLoaded);
 
   useEffect(() => {
     if (initialFetchDone && !hardTimeout) {
@@ -148,7 +225,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const isError = (
     profileQuery.isError &&
     !hadProfileSuccess.current &&
-    !profileQuery.data
+    !profileQuery.data &&
+    !fallbackProfile &&
+    fallbackAttempted
   );
 
   const refetchAll = async () => {
@@ -160,11 +239,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
     ]);
   };
 
-  const profileMissing = profileQuery.isSuccess && profileQuery.data === null && autoCreateAttempted && !profileAutoCreating && !!autoCreateError;
+  const profileMissing = !resolvedProfile && autoCreateAttempted && fallbackAttempted && !profileAutoCreating && !!autoCreateError;
 
   return {
-    profile: profileQuery.data,
-    profileLoading: profileQuery.isLoading || profileAutoCreating,
+    profile: resolvedProfile,
+    profileLoading: (profileQuery.isLoading || profileAutoCreating) && !resolvedProfile,
     profileMissing,
     autoCreateError,
     stats: statsQuery.data,
@@ -177,7 +256,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     canSecureDay,
     completeTask,
     secureDay,
-    isLoading: !initialFetchDone && !hardTimeout && ((profileQuery.isLoading && profileQuery.fetchStatus !== 'idle') || profileAutoCreating || (activeChallengeQuery.isLoading && activeChallengeQuery.fetchStatus !== 'idle')),
+    isLoading: !initialFetchDone && !hardTimeout && !resolvedProfile && ((profileQuery.isLoading && profileQuery.fetchStatus !== 'idle') || profileAutoCreating || (activeChallengeQuery.isLoading && activeChallengeQuery.fetchStatus !== 'idle')),
     isError,
     initialFetchDone,
     refetchAll,

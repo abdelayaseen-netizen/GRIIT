@@ -154,6 +154,12 @@ export default function ProfileScreen() {
     loadingTimedOut ||
     ((isError || profileMissing) && !profile)
   ) {
+    const errorMsg = autoCreateError
+      ? `Profile setup failed: ${autoCreateError}`
+      : loadingTimedOut
+      ? "Server is taking too long to respond. Pull down to retry."
+      : "Network error. Can't reach server. Pull down to retry.";
+
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <ScrollView
@@ -172,13 +178,24 @@ export default function ProfileScreen() {
               <Shield size={28} color={Colors.text.muted} strokeWidth={1.5} />
             </View>
             <Text style={styles.errorTitle}>
-              {loadingTimedOut ? "Taking too long" : "Could not load profile"}
+              {loadingTimedOut ? "Taking too long" : autoCreateError ? "Profile Setup Issue" : "Connection Issue"}
             </Text>
             <Text style={styles.errorSubtitle}>
-              {autoCreateError
-                ? `Profile setup failed: ${autoCreateError}`
-                : "Pull down to retry."}
+              {errorMsg}
             </Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                onRefresh();
+              }}
+              activeOpacity={0.7}
+              testID="profile-retry-button"
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.signOutLink}
               onPress={() => {
@@ -405,6 +422,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
+  },
+  retryButton: {
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  retryButtonText: {
+    fontSize: 15,
+    fontWeight: "700" as const,
+    color: "#fff",
   },
   signOutLink: {
     paddingVertical: 8,
