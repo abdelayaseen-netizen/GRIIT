@@ -1,24 +1,26 @@
 import { Platform } from 'react-native';
 
+const RAILWAY_BACKEND_URL = 'https://grit-production-8e7d.up.railway.app';
+
 let _baseUrl: string | null = null;
 
 export function getApiBaseUrl(): string {
   if (_baseUrl) return _baseUrl;
 
-  const url = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  if (!url) {
-    const msg = 'Missing EXPO_PUBLIC_RORK_API_BASE_URL. Set it in env and rebuild.';
-    console.error('[API]', msg);
-    throw new Error(msg);
+  let url = process.env.EXPO_PUBLIC_RORK_API_BASE_URL ?? '';
+  url = url.replace(/\/$/, '');
+
+  if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`;
   }
 
-  let normalized = url.replace(/\/$/, '');
-  if (normalized && !normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-    normalized = `https://${normalized}`;
-    console.warn('[API] Base URL was missing protocol, added https://', normalized);
+  if (!url || url.includes('rorktest.dev') || url.includes('rork.live')) {
+    console.warn('[API] Ignoring platform-provided URL:', url || '(empty)', '— using Railway backend');
+    url = RAILWAY_BACKEND_URL;
   }
-  _baseUrl = normalized;
-  console.log('[API] Base URL:', _baseUrl, '| Platform:', Platform.OS);
+
+  _baseUrl = url;
+  console.log('[API] Using Base URL:', _baseUrl, '| Platform:', Platform.OS);
   return _baseUrl;
 }
 
