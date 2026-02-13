@@ -1,10 +1,60 @@
-import createContextHook from '@nkzw/create-context-hook';
+import { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { trpc } from '@/lib/trpc';
 import { supabase } from '@/lib/supabase';
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 
-export const [AppProvider, useApp] = createContextHook(() => {
+// Define the context value type
+type AppContextValue = {
+  profile: any;
+  profileLoading: boolean;
+  profileMissing: boolean;
+  autoCreateError: string | null;
+  stats: any;
+  activeChallenge: any;
+  challenge: any;
+  stories: any[];
+  todayCheckins: any[];
+  todayDateLocal: string;
+  computeProgress: { verifiedCount: number; totalRequired: number; progress: number };
+  canSecureDay: boolean;
+  completeTask: (params: { activeChallengeId: string; taskId: string; value?: number; noteText?: string; proofUrl?: string }) => void;
+  secureDay: () => void;
+  isLoading: boolean;
+  isError: boolean;
+  initialFetchDone: boolean;
+  refetchAll: () => Promise<void>;
+  notifications: any[];
+  markNotificationAsRead: (notificationId: string) => Promise<void>;
+  challenges: any[];
+  getChallengeRoom: (challengeId: string) => any;
+  getChatMessages: (roomId: string) => any[];
+  sendChatMessage: (params: any) => Promise<void>;
+  toggleMessageReaction: (messageId: string, emoji: string) => Promise<void>;
+  isChallengeMember: (challengeId: string) => boolean;
+  currentUser: { id: string; name: string; avatarUrl: string };
+  activeUserChallenge: { currentDayIndex: number } | null;
+  chatRoomSettings: Record<string, { muteRoom: boolean; mentionsOnly: boolean }>;
+  updateChatRoomSettings: (roomId: string, settings: any) => Promise<void>;
+  currentChallenge: { tasks: any[] } | null;
+  verifyTask: (taskId: string, verificationData: any, task: any) => { success: boolean; failureReason: string | undefined };
+  getTaskStateForTemplate: (taskId: string) => any;
+};
+
+// Create the context
+const AppContext = createContext<AppContextValue | undefined>(undefined);
+
+// Hook to use the context
+export function useApp() {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useApp must be used within AppProvider');
+  }
+  return context;
+}
+
+// Provider component
+export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const utils = trpc.useUtils();
   const [autoCreateAttempted, setAutoCreateAttempted] = useState(false);
@@ -194,7 +244,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     return computeProgress.progress === 100 && computeProgress.totalRequired > 0;
   }, [computeProgress]);
 
-  const completeTask = (params: { 
+  const completeTask = useCallback((params: { 
     activeChallengeId: string; 
     taskId: string; 
     value?: number; 
@@ -202,13 +252,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
     proofUrl?: string;
   }) => {
     completeCheckInMutation.mutate(params);
-  };
+  }, [completeCheckInMutation]);
 
-  const secureDay = () => {
+  const secureDay = useCallback(() => {
     if (activeChallenge?.id && canSecureDay) {
       secureDayMutation.mutate({ activeChallengeId: activeChallenge.id });
     }
-  };
+  }, [activeChallenge, canSecureDay, secureDayMutation]);
 
   const profileAutoCreating = createProfileMutation.isPending;
   const resolvedProfile = profileQuery.data || fallbackProfile;
@@ -230,18 +280,18 @@ export const [AppProvider, useApp] = createContextHook(() => {
     fallbackAttempted
   );
 
-  const refetchAll = async () => {
+  const refetchAll = useCallback(async () => {
     await Promise.allSettled([
       profileQuery.refetch(),
       statsQuery.refetch(),
       activeChallengeQuery.refetch(),
       storiesQuery.refetch(),
     ]);
-  };
+  }, [profileQuery, statsQuery, activeChallengeQuery, storiesQuery]);
 
   const profileMissing = !resolvedProfile && autoCreateAttempted && fallbackAttempted && !profileAutoCreating && !!autoCreateError;
 
-  return {
+  const value: AppContextValue = useMemo(() => ({
     profile: resolvedProfile,
     profileLoading: (profileQuery.isLoading || profileAutoCreating) && !resolvedProfile,
     profileMissing,
@@ -279,5 +329,28 @@ export const [AppProvider, useApp] = createContextHook(() => {
     currentChallenge: activeChallenge ? { tasks: challenge?.challenge_tasks || [] } : null,
     verifyTask: (_taskId: string, _verificationData: any, _task: any) => ({ success: true, failureReason: undefined }),
     getTaskStateForTemplate: (_taskId: string) => null as any,
-  };
-});
+  }), [
+    resolvedProfile,
+    profileQuery,
+    profileAutoCreating,
+    profileMissing,
+    autoCreateError,
+    statsQuery.data,
+    activeChallenge,
+    challenge,
+    storiesQuery.data,
+    todayCheckinsQuery.data,
+    todayDateLocal,
+    computeProgress,
+    canSecureDay,
+    completeTask,
+    secureDay,
+    initialFetchDone,
+    hardTimeout,
+    isError,
+    refetchAll,
+    user,
+  ]);
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+}
