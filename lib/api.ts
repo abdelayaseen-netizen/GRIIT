@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { supabase } from '@/lib/supabase';
 
 const RAILWAY_BACKEND_URL = 'https://grit-production-8e7d.up.railway.app';
 
@@ -196,7 +197,6 @@ export interface DbSanityResult {
 
 export async function checkDbTables(): Promise<DbSanityResult> {
   try {
-    const { supabase } = await import('@/lib/supabase');
     const requiredTables = ['challenges', 'challenge_tasks', 'active_challenges', 'check_ins', 'profiles', 'streaks'];
     const missingTables: string[] = [];
 
