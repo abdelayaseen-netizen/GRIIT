@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Platform } from 'react';
+const Platform = { OS: 'web' };
 import { checkHealth, getApiBaseUrl, formatError, checkDbTables } from '@/lib/api';
 import type { HealthCheckResult } from '@/lib/api';
 
