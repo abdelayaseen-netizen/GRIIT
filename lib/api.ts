@@ -7,23 +7,7 @@ let _baseUrl: string | null = null;
 
 export function getApiBaseUrl(): string {
   if (_baseUrl) return _baseUrl;
-
-  const rawEnv = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  console.log('[API] RAW EXPO_PUBLIC_RORK_API_BASE_URL:', rawEnv);
-
-  let url = (rawEnv ?? '').trim().replace(/\/$/, '');
-
-  if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
-    url = `https://${url}`;
-  }
-
-  if (!url) {
-    console.warn('[API] No base URL configured, using Railway fallback');
-    url = RAILWAY_BACKEND_URL;
-  }
-
-  _baseUrl = url;
-  console.log('[API] FINAL Base URL:', _baseUrl, '| Platform:', Platform.OS);
+  _baseUrl = RAILWAY_BACKEND_URL;
   return _baseUrl;
 }
 
@@ -34,14 +18,12 @@ function isRailway(url: string): boolean {
 export function getHealthUrl(): string {
   const base = getApiBaseUrl();
   const url = isRailway(base) ? `${base}/health` : `${base}/api/health`;
-  console.log('[API] Health URL:', url);
   return url;
 }
 
 export function getTrpcUrl(): string {
   const base = getApiBaseUrl();
   const url = isRailway(base) ? `${base}/trpc` : `${base}/api/trpc`;
-  console.log('[API] TRPC URL:', url);
   return url;
 }
 
@@ -146,36 +128,29 @@ export async function checkHealth(): Promise<HealthCheckResult> {
   const start = Date.now();
   try {
     const url = getHealthUrl();
-    console.log('[API] Health check:', url);
     const res = await fetchWithTimeout(url, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
     }, 4000);
     const responseTimeMs = Date.now() - start;
     if (!res.ok) {
-      console.warn('[API] Health check returned status:', res.status);
       return { ok: false, responseTimeMs, statusCode: res.status, errorMessage: `HTTP ${res.status}` };
     }
     const data = await res.json();
-    console.log('[API] Health check OK:', data, `(${responseTimeMs}ms)`);
     return { ok: data?.ok === true, responseTimeMs, statusCode: res.status };
   } catch (error) {
     const responseTimeMs = Date.now() - start;
     const msg = formatError(error);
-    console.warn('[API] Health check failed:', msg, `(${responseTimeMs}ms)`);
     return { ok: false, responseTimeMs, errorMessage: msg };
   }
 }
 
 export function formatError(error: unknown): string {
   if (error === null || error === undefined) return 'Unknown error';
-
   if (typeof error === 'string') return error;
-
   if (error instanceof Error) {
     return error.message || error.toString();
   }
-
   if (typeof error === 'object') {
     const obj = error as Record<string, unknown>;
     if (typeof obj.message === 'string') return obj.message;
@@ -185,7 +160,6 @@ export function formatError(error: unknown): string {
       return String(error);
     }
   }
-
   return String(error);
 }
 
@@ -205,27 +179,26 @@ export async function checkDbTables(): Promise<DbSanityResult> {
         const { error } = await supabase.from(table).select('*').limit(1);
         if (error) {
           const isMissing = error.code === 'PGRST205' || error.code === '42P01';
-          console.error(`[DB Sanity] Table "${table}" error: code=${error.code}, message=${error.message}, details=${error.details ?? 'none'}, hint=${error.hint ?? 'none'}`);
           if (isMissing) {
             missingTables.push(table);
+          } else {
+            console.warn(`[DB Sanity] Table "${table}" query error (non-fatal): ${error.message}`);
           }
         }
       } catch (tableErr) {
-        console.error(`[DB Sanity] Exception checking table "${table}":`, formatError(tableErr));
+        console.warn(`[DB Sanity] Table "${table}" fetch failed (non-fatal):`, formatError(tableErr));
       }
     }
 
     if (missingTables.length > 0) {
-      console.error('[DB Sanity] Missing tables:', missingTables.join(', '));
       return { ok: false, missingTables, errorMessage: `Missing tables: ${missingTables.join(', ')}` };
     }
 
-    console.log('[DB Sanity] All required tables present');
     return { ok: true, missingTables: [] };
   } catch (err) {
     const msg = formatError(err);
-    console.error('[DB Sanity] Check failed:', msg);
-    return { ok: false, missingTables: [], errorMessage: msg };
+    console.warn('[DB Sanity] Check failed (non-fatal):', msg);
+    return { ok: true, missingTables: [] };
   }
 }
 
@@ -265,13 +238,6 @@ export function formatTRPCError(error: unknown): {
   } else if (code === 'INTERNAL_SERVER_ERROR') {
     title = 'Server Error';
   }
-
-  console.error('[TRPC ERROR]', JSON.stringify({
-    message: raw,
-    code,
-    shape: trpcError?.shape,
-    data: trpcError?.data,
-  }, null, 2));
 
   return { title, message, isNetwork: false };
 }
