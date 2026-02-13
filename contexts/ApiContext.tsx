@@ -1,11 +1,10 @@
-import createContextHook from '@nkzw/create-context-hook';
+import { createContext, useContext, ReactNode } from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { checkHealth, getApiBaseUrl, formatError, checkDbTables } from '@/lib/api';
 import type { HealthCheckResult } from '@/lib/api';
 
 export type ApiStatus = 'checking' | 'ready' | 'down';
-
 export type DbStatus = 'unchecked' | 'ok' | 'missing_tables' | 'error';
 
 export interface ApiDiagnostics {
@@ -20,7 +19,32 @@ export interface ApiDiagnostics {
   retryAttempts: number;
 }
 
-export const [ApiProvider, useApi] = createContextHook(() => {
+type ApiContextValue = {
+  apiStatus: ApiStatus;
+  apiReady: boolean;
+  checking: boolean;
+  dbStatus: DbStatus;
+  missingTables: string[];
+  dbMisconfigured: boolean;
+  lastResponseTimeMs: number | null;
+  lastErrorMessage: string | null;
+  retryNow: () => Promise<void>;
+  runDbSanityCheck: () => Promise<void>;
+  getDiagnostics: () => ApiDiagnostics;
+  getDiagnosticsString: () => string;
+};
+
+const ApiContext = createContext<ApiContextValue | undefined>(undefined);
+
+export function useApi() {
+  const context = useContext(ApiContext);
+  if (context === undefined) {
+    throw new Error('useApi must be used within ApiProvider');
+  }
+  return context;
+}
+
+export function ApiProvider({ children }: { children: ReactNode }) {
   const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
   const [dbStatus, setDbStatus] = useState<DbStatus>('unchecked');
   const [missingTables, setMissingTables] = useState<string[]>([]);
@@ -169,18 +193,24 @@ export const [ApiProvider, useApi] = createContextHook(() => {
     };
   }, [runHealthCheck, scheduleRetry]);
 
-  return {
-    apiStatus,
-    apiReady: apiStatus === 'ready' && dbStatus !== 'missing_tables',
-    checking: apiStatus === 'checking',
-    dbStatus,
-    missingTables,
-    dbMisconfigured: dbStatus === 'missing_tables',
-    lastResponseTimeMs,
-    lastErrorMessage,
-    retryNow,
-    runDbSanityCheck,
-    getDiagnostics,
-    getDiagnosticsString,
-  };
-});
+  return (
+    <ApiContext.Provider
+      value={{
+        apiStatus,
+        apiReady: apiStatus === 'ready' && dbStatus !== 'missing_tables',
+        checking: apiStatus === 'checking',
+        dbStatus,
+        missingTables,
+        dbMisconfigured: dbStatus === 'missing_tables',
+        lastResponseTimeMs,
+        lastErrorMessage,
+        retryNow,
+        runDbSanityCheck,
+        getDiagnostics,
+        getDiagnosticsString,
+      }}
+    >
+      {children}
+    </ApiContext.Provider>
+  );
+}
