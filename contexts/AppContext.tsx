@@ -1,8 +1,7 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { trpc } from '@/lib/trpc';
 import { supabase } from '@/lib/supabase';
-import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 
 // Define the context value type
 type AppContextValue = {

@@ -1,30 +1,28 @@
-import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
-
-const RAILWAY_BACKEND_URL = 'https://grit-production-8e7d.up.railway.app';
 
 let _baseUrl: string | null = null;
 
 export function getApiBaseUrl(): string {
   if (_baseUrl) return _baseUrl;
-  _baseUrl = RAILWAY_BACKEND_URL;
+  const envUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+  if (envUrl) {
+    _baseUrl = envUrl.replace(/\/$/, '');
+    console.log('[API] Using base URL from env:', _baseUrl);
+    return _baseUrl;
+  }
+  _baseUrl = '';
+  console.warn('[API] No EXPO_PUBLIC_RORK_API_BASE_URL set, using relative URLs');
   return _baseUrl;
-}
-
-function isRailway(url: string): boolean {
-  return url.includes('railway.app');
 }
 
 export function getHealthUrl(): string {
   const base = getApiBaseUrl();
-  const url = isRailway(base) ? `${base}/health` : `${base}/api/health`;
-  return url;
+  return base ? `${base}/api/health` : '/api/health';
 }
 
 export function getTrpcUrl(): string {
   const base = getApiBaseUrl();
-  const url = isRailway(base) ? `${base}/trpc` : `${base}/api/trpc`;
-  return url;
+  return base ? `${base}/api/trpc` : '/api/trpc';
 }
 
 const RETRY_DELAYS = [500, 1000, 2000, 4000];
