@@ -169,25 +169,52 @@ export interface DbSanityResult {
   errorMessage?: string;
 }
 
+function isNetworkError(error: unknown): boolean {
+  const msg = typeof error === 'string' ? error : (error instanceof Error ? error.message : String(error ?? ''));
+  const lower = msg.toLowerCase();
+  return lower.includes('failed to fetch') ||
+    lower.includes('network request failed') ||
+    lower.includes('load failed') ||
+    lower.includes('networkerror') ||
+    lower.includes('request_timeout') ||
+    lower.includes('typeerror');
+}
+
 export async function checkDbTables(): Promise<DbSanityResult> {
   try {
     const requiredTables = ['challenges', 'challenge_tasks', 'active_challenges', 'check_ins', 'profiles', 'streaks'];
     const missingTables: string[] = [];
+    let networkErrorCount = 0;
 
     for (const table of requiredTables) {
       try {
-        const { error } = await supabase.from(table).select('*').limit(1);
+        const { error } = await supabase.from(table).select('id').limit(1);
         if (error) {
+          if (isNetworkError(error.message)) {
+            networkErrorCount++;
+            console.log(`[DB Sanity] Table "${table}" network error (skipping):`, error.message);
+            continue;
+          }
           const isMissing = error.code === 'PGRST205' || error.code === '42P01';
           if (isMissing) {
             missingTables.push(table);
           } else {
-            console.warn(`[DB Sanity] Table "${table}" query error (non-fatal): ${error.message}`);
+            console.log(`[DB Sanity] Table "${table}" query returned code=${error.code} (non-fatal)`);
           }
         }
       } catch (tableErr) {
-        console.warn(`[DB Sanity] Table "${table}" fetch failed (non-fatal):`, formatError(tableErr));
+        if (isNetworkError(tableErr)) {
+          networkErrorCount++;
+          console.log(`[DB Sanity] Table "${table}" network error (skipping)`);
+          continue;
+        }
+        console.log(`[DB Sanity] Table "${table}" fetch failed (non-fatal):`, formatError(tableErr));
       }
+    }
+
+    if (networkErrorCount === requiredTables.length) {
+      console.log('[DB Sanity] All tables had network errors — Supabase may be unreachable. Treating as OK.');
+      return { ok: true, missingTables: [] };
     }
 
     if (missingTables.length > 0) {
@@ -197,7 +224,7 @@ export async function checkDbTables(): Promise<DbSanityResult> {
     return { ok: true, missingTables: [] };
   } catch (err) {
     const msg = formatError(err);
-    console.warn('[DB Sanity] Check failed (non-fatal):', msg);
+    console.log('[DB Sanity] Check failed (non-fatal):', msg);
     return { ok: true, missingTables: [] };
   }
 }
