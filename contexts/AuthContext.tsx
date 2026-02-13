@@ -1,9 +1,25 @@
-import createContextHook from '@nkzw/create-context-hook';
+import { createContext, useContext, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
-export const [AuthProvider, useAuth] = createContextHook(() => {
+type AuthContextValue = {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+};
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,9 +55,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     };
   }, []);
 
-  return {
-    user,
-    session,
-    loading,
-  };
-});
+  return (
+    <AuthContext.Provider value={{ user, session, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
