@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Platform } from 'react-native';
+import { Platform } from 'react';
 import { checkHealth, getApiBaseUrl, formatError, checkDbTables } from '@/lib/api';
 import type { HealthCheckResult } from '@/lib/api';
 
