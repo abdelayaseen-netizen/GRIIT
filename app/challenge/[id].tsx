@@ -479,44 +479,33 @@ export default function ChallengeDetailScreen() {
     return Math.max(userCurrentDay - Math.floor(Math.random() * 3), 1);
   }, [isJoined, userCurrentDay]);
 
-  const handleJoinStarter = useCallback(() => {
+  const handleJoinStarter = useCallback(async () => {
     if (!challenge || !id) return;
-    Alert.alert(challenge.title, `${challenge.duration_days} day${challenge.duration_days > 1 ? "s" : ""}. Ready?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Join",
-        onPress: async () => {
-          setJoiningStarter(true);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          await saveJoinedStarterId(id);
-          setStarterJoined(true);
-          setJoiningStarter(false);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Alert.alert("Joined", `You're in ${challenge.title}.`, [
-            { text: "OK", onPress: () => router.push("/(tabs)") },
-          ]);
-        },
-      },
-    ]);
+    setJoiningStarter(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await saveJoinedStarterId(id);
+    setStarterJoined(true);
+    setJoiningStarter(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.push("/(tabs)");
   }, [challenge, id, router]);
 
   const handleJoin = useCallback(() => {
     if (!challenge) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (isStarter) {
-      handleJoinStarter();
-      return;
-    }
-    Alert.alert(challenge.title, "Ready to start this challenge?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Join",
-        onPress: () => {
-          joinMutation.mutate({ challengeId: challenge.id });
-        },
+    
+    router.push({
+      pathname: "/commitment",
+      params: {
+        title: challenge.title,
+        duration: challenge.duration_days?.toString() || "0",
+        difficulty: challenge.difficulty || "medium",
+        onConfirm: isStarter 
+          ? `handleJoinStarter()` 
+          : `joinMutation.mutate({ challengeId: "${challenge.id}" })`,
       },
-    ]);
-  }, [challenge, isStarter, handleJoinStarter, joinMutation]);
+    } as any);
+  }, [challenge, router, isStarter]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();

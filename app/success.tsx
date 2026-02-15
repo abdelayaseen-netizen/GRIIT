@@ -8,198 +8,156 @@ import {
   Platform,
   Animated,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Shield, Share2, ArrowRight, Flame, Zap } from "lucide-react-native";
+import { Shield, Share2, Award, TrendingUp } from "lucide-react-native";
 import Colors from "@/constants/colors";
-import Celebration from "@/components/Celebration";
 import { trpc } from "@/lib/trpc";
 
 export default function SuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [showConfetti, setShowConfetti] = useState(false);
   const utils = trpc.useUtils();
 
-  const shieldScale = useRef(new Animated.Value(0)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const cardSlide = useRef(new Animated.Value(40)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
-  const actionsOpacity = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const badgeScale = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const statsSlide = useRef(new Animated.Value(30)).current;
 
   const challengeId = params.challengeId as string;
   const title = params.title as string;
   const duration = params.duration as string;
   const tasksCount = params.tasksCount as string;
   const difficulty = params.difficulty as string;
+  const daysCompleted = params.daysCompleted as string;
+  const finalStreak = params.finalStreak as string;
+  const isCompletion = params.isCompletion === "true";
 
-  const joinMutation = trpc.challenges.join.useMutation({
-    onSuccess: () => {
-      utils.challenges.getActive.invalidate();
-    },
-    onError: (error) => {
-      console.error("Auto-join failed:", error);
-    },
-  });
+  const isHardMode = difficulty === "hard" || difficulty === "extreme";
 
   useEffect(() => {
     if (Platform.OS !== "web") {
-      try {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch (error) {
-        console.log("Haptic not available:", error);
-      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
 
-    setShowConfetti(true);
-
     Animated.sequence([
-      Animated.spring(shieldScale, {
+      Animated.spring(badgeScale, {
         toValue: 1,
         useNativeDriver: true,
-        tension: 100,
-        friction: 8,
-        delay: 200,
+        tension: 80,
+        friction: 7,
+        delay: 150,
       }),
       Animated.parallel([
-        Animated.timing(titleOpacity, {
+        Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 400,
           useNativeDriver: true,
         }),
-        Animated.timing(cardOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardSlide, {
+        Animated.timing(statsSlide, {
           toValue: 0,
           duration: 500,
           useNativeDriver: true,
         }),
       ]),
-      Animated.timing(actionsOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
     ]).start();
+  }, [badgeScale, fadeAnim, statsSlide]);
 
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.08, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-      ])
-    );
-    pulse.start();
-
-    return () => pulse.stop();
-  }, [shieldScale, titleOpacity, cardOpacity, cardSlide, actionsOpacity, pulseAnim]);
-
-  const handleStartNow = async () => {
-    if (joinMutation.isPending) return;
+  const handleContinue = () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    await joinMutation.mutateAsync({ challengeId });
-    router.replace(`/challenge/${challengeId}`);
+    router.replace("/(tabs)");
   };
 
   const handleShare = async () => {
     try {
-      const message = `I just created "${title}" on GRIT. ${parseInt(duration, 10)} days. ${tasksCount} daily tasks. Join me.`;
+      const message = `I completed "${title}" on GRIT. ${daysCompleted} of ${duration} days secured. ${isHardMode ? "Hard Mode." : ""}`;
       if (Platform.OS === "web") {
         if (navigator.share) {
-          await navigator.share({ title: `Join ${title}`, text: message });
+          await navigator.share({ title: "Challenge Complete", text: message });
         } else {
           await navigator.clipboard.writeText(message);
           alert("Copied to clipboard!");
         }
       } else {
-        await Share.share({ message, title: `Join ${title}` });
+        await Share.share({ message, title: "Challenge Complete" });
       }
     } catch (error) {
       console.log("Share failed:", error);
     }
   };
 
-  const handleBack = () => {
-    router.replace("/(tabs)");
-  };
-
-  const getDurationLabel = () => {
-    const days = parseInt(duration, 10);
-    if (days === 1) return "24H";
-    return `${days} days`;
-  };
-
-  const getDifficultyColor = () => {
-    switch (difficulty) {
-      case "easy": return "#22C55E";
-      case "medium": return "#F59E0B";
-      case "hard": return "#EF4444";
-      case "extreme": return "#B91C1C";
-      default: return Colors.accent;
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <Celebration visible={showConfetti} onComplete={() => setShowConfetti(false)} />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.content}>
-        <Animated.View style={[styles.shieldContainer, { transform: [{ scale: Animated.multiply(shieldScale, pulseAnim) }] }]}>
-          <View style={styles.shieldOuter}>
-            <View style={styles.shieldInner}>
-              <Shield size={44} color="#fff" fill="#fff" />
+        <Animated.View
+          style={[
+            styles.badgeContainer,
+            { transform: [{ scale: badgeScale }] },
+          ]}
+        >
+          <View style={[styles.badgeOuter, isHardMode && styles.badgeOuterHard]}>
+            <View style={[styles.badgeInner, isHardMode && styles.badgeInnerHard]}>
+              <Award size={48} color="#fff" />
             </View>
           </View>
         </Animated.View>
 
-        <Animated.View style={{ opacity: titleOpacity, alignItems: "center" }}>
-          <Text style={styles.title}>Challenge Created</Text>
-          <Text style={styles.subtitle}>This is day 1. You{"'"}re leading now.</Text>
+        <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
+          <Text style={styles.header}>Challenge Complete.</Text>
+
+          {isHardMode && (
+            <View style={styles.hardModeTag}>
+              <Shield size={14} color="#E87D4F" />
+              <Text style={styles.hardModeTagText}>Hard Mode</Text>
+            </View>
+          )}
+
+          <Text style={styles.challengeTitle}>{title}</Text>
         </Animated.View>
 
         <Animated.View
           style={[
-            styles.challengeCard,
-            { opacity: cardOpacity, transform: [{ translateY: cardSlide }] },
+            styles.statsCard,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: statsSlide }],
+            },
           ]}
         >
-          <Text style={styles.challengeTitle}>{title}</Text>
+          <View style={styles.statRow}>
+            <View style={styles.statItem}>
+              <TrendingUp size={18} color={Colors.streak.shield} />
+              <Text style={styles.statLabel}>Final Streak</Text>
+            </View>
+            <Text style={styles.statValue}>{finalStreak} days</Text>
+          </View>
 
-          <View style={styles.statsRow}>
-            <View style={styles.statPill}>
-              <Flame size={14} color={Colors.streak.fire} />
-              <Text style={styles.statPillText}>{getDurationLabel()}</Text>
+          <View style={styles.divider} />
+
+          <View style={styles.statRow}>
+            <View style={styles.statItem}>
+              <Shield size={18} color={Colors.streak.shield} />
+              <Text style={styles.statLabel}>Days Secured</Text>
             </View>
-            <View style={styles.statPill}>
-              <Zap size={14} color={Colors.accent} />
-              <Text style={styles.statPillText}>{tasksCount} tasks</Text>
-            </View>
-            <View style={[styles.statPill, { backgroundColor: getDifficultyColor() + "14" }]}>
-              <Text style={[styles.statPillText, { color: getDifficultyColor() }]}>
-                {difficulty || "medium"}
-              </Text>
-            </View>
+            <Text style={styles.statValue}>{daysCompleted}/{duration}</Text>
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.actions, { opacity: actionsOpacity }]}>
+        <Animated.View style={[styles.recognitionCard, { opacity: fadeAnim }]}>
+          <Text style={styles.recognitionText}>You showed up consistently.</Text>
+        </Animated.View>
+
+        <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
           <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleStartNow}
-            disabled={joinMutation.isPending}
+            style={[styles.primaryButton, isHardMode && styles.primaryButtonHard]}
+            onPress={handleContinue}
             activeOpacity={0.85}
-            testID="success-start-button"
           >
-            <Text style={styles.primaryButtonText}>
-              {joinMutation.isPending ? "Joining..." : "Start Now"}
-            </Text>
-            <ArrowRight size={20} color="#fff" />
+            <Text style={styles.primaryButtonText}>Continue</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -208,11 +166,7 @@ export default function SuccessScreen() {
             activeOpacity={0.7}
           >
             <Share2 size={18} color={Colors.text.secondary} />
-            <Text style={styles.secondaryButtonText}>Share Challenge</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.textButton} onPress={handleBack} activeOpacity={0.7}>
-            <Text style={styles.textButtonText}>Back to Home</Text>
+            <Text style={styles.secondaryButtonText}>Share Completion</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -223,126 +177,159 @@ export default function SuccessScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#111",
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 28,
     justifyContent: "center",
     alignItems: "center",
   },
-  shieldContainer: {
-    marginBottom: 28,
+  badgeContainer: {
+    marginBottom: 32,
   },
-  shieldOuter: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: Colors.streak.shield + "20",
+  badgeOuter: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: Colors.streak.shield + "15",
     alignItems: "center",
     justifyContent: "center",
   },
-  shieldInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  badgeOuterHard: {
+    backgroundColor: "rgba(232,125,79,0.15)",
+  },
+  badgeInner: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: Colors.streak.shield,
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    fontSize: 30,
-    fontWeight: "900" as const,
-    color: "#fff",
-    letterSpacing: -0.5,
-    marginBottom: 8,
-    textAlign: "center",
+  badgeInnerHard: {
+    backgroundColor: "#E87D4F",
   },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: "500" as const,
-    color: "rgba(255,255,255,0.6)",
-    marginBottom: 32,
-    textAlign: "center",
-  },
-  challengeCard: {
+  textContainer: {
     width: "100%",
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 20,
-    padding: 22,
+    alignItems: "center",
+    marginBottom: 28,
+  },
+  header: {
+    fontSize: 38,
+    fontWeight: "900" as const,
+    color: Colors.text.primary,
+    textAlign: "center",
+    marginBottom: 16,
+    letterSpacing: -1,
+  },
+  hardModeTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(232,125,79,0.12)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    marginBottom: 36,
+    borderColor: "rgba(232,125,79,0.25)",
+    marginBottom: 12,
+  },
+  hardModeTagText: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    color: "#E87D4F",
+    letterSpacing: 0.3,
   },
   challengeTitle: {
     fontSize: 22,
-    fontWeight: "800" as const,
-    color: "#fff",
+    fontWeight: "700" as const,
+    color: Colors.text.secondary,
     textAlign: "center",
-    marginBottom: 16,
     letterSpacing: -0.3,
   },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-    flexWrap: "wrap",
+  statsCard: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 22,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  statPill: {
+  statRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  statItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
+    gap: 10,
   },
-  statPillText: {
-    fontSize: 13,
-    fontWeight: "700" as const,
-    color: "rgba(255,255,255,0.8)",
+  statLabel: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
+  },
+  statValue: {
+    fontSize: 19,
+    fontWeight: "800" as const,
+    color: Colors.text.primary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 18,
+  },
+  recognitionCard: {
+    width: "100%",
+    backgroundColor: Colors.pill,
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 32,
+  },
+  recognitionText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+    textAlign: "center",
+    lineHeight: 22,
   },
   actions: {
     width: "100%",
     gap: 12,
   },
   primaryButton: {
-    flexDirection: "row",
-    backgroundColor: Colors.streak.shield,
+    backgroundColor: "#111",
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+  },
+  primaryButtonHard: {
+    backgroundColor: "#E87D4F",
   },
   primaryButtonText: {
     fontSize: 17,
     fontWeight: "800" as const,
     color: "#fff",
+    letterSpacing: 0.3,
   },
   secondaryButton: {
     flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "#fff",
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: Colors.border,
   },
   secondaryButtonText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: "rgba(255,255,255,0.7)",
-  },
-  textButton: {
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  textButtonText: {
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: "rgba(255,255,255,0.4)",
+    color: Colors.text.secondary,
   },
 });

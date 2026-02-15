@@ -179,7 +179,20 @@ export default function HomeScreen() {
     ]).start();
     secureDay();
     setShowCelebration(true);
-  }, [secureDay, secureBtnScale]);
+    
+    const currentDay = activeChallenge?.current_day || 1;
+    setTimeout(() => {
+      router.push({
+        pathname: "/secure-confirmation",
+        params: {
+          day: currentDay.toString(),
+          streak: currentStreak.toString(),
+          totalDays: (challenge?.duration_days || 0).toString(),
+          isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
+        },
+      } as any);
+    }, 1200);
+  }, [secureDay, secureBtnScale, activeChallenge, currentStreak, challenge, router]);
 
   if (isLoading && !initialFetchDone) {
     return (
@@ -251,7 +264,10 @@ export default function HomeScreen() {
             />
 
             <TouchableOpacity
-              style={styles.challengeCard}
+              style={[
+                styles.challengeCard,
+                (challenge.difficulty === "hard" || challenge.difficulty === "extreme") && styles.challengeCardHard,
+              ]}
               onPress={() => {
                 if (Platform.OS !== "web") {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -263,10 +279,18 @@ export default function HomeScreen() {
             >
               <View style={styles.challengeHeader}>
                 <View style={{ flex: 1 }}>
+                  <View style={styles.dayRow}>
+                    <Text style={styles.challengeDay}>
+                      Day {activeChallenge.current_day}{challenge.duration_days ? `/${challenge.duration_days}` : ""}
+                    </Text>
+                    {(challenge.difficulty === "hard" || challenge.difficulty === "extreme") && (
+                      <View style={styles.hardModeBadge}>
+                        <Shield size={11} color="#E87D4F" fill="#E87D4F" />
+                        <Text style={styles.hardModeBadgeText}>Hard Mode</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.challengeTitle} numberOfLines={1}>{challenge.title}</Text>
-                  <Text style={styles.challengeDay}>
-                    Day {activeChallenge.current_day}{challenge.duration_days ? ` of ${challenge.duration_days}` : ""}
-                  </Text>
                 </View>
                 <ChevronRight size={18} color={Colors.text.muted} />
               </View>
@@ -321,9 +345,9 @@ export default function HomeScreen() {
             <View style={styles.emptyIconWrap}>
               <Compass size={40} color={Colors.text.muted} strokeWidth={1.2} />
             </View>
-            <Text style={styles.emptyTitle}>No Active Challenge</Text>
+            <Text style={styles.emptyTitle}>You have no active challenge.</Text>
             <Text style={styles.emptyText}>
-              Your journey starts with one challenge.{"\n"}Pick one that matches your energy.
+              Start something that matters.
             </Text>
 
             <TouchableOpacity
@@ -439,9 +463,18 @@ const styles = StyleSheet.create({
   challengeCard: {
     backgroundColor: "#fff",
     borderRadius: 18,
-    padding: 18,
+    padding: 20,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  challengeCardHard: {
+    borderColor: "rgba(232,125,79,0.3)",
+    backgroundColor: "rgba(255,255,255,0.98)",
   },
   challengeHeader: {
     flexDirection: "row",
@@ -450,16 +483,39 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   challengeTitle: {
-    fontSize: 18,
-    fontWeight: "700" as const,
+    fontSize: 20,
+    fontWeight: "800" as const,
     color: Colors.text.primary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
+  },
+  dayRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 4,
   },
   challengeDay: {
-    fontSize: 12,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
-    marginTop: 2,
+    fontSize: 28,
+    fontWeight: "900" as const,
+    color: Colors.text.primary,
+    letterSpacing: -0.8,
+  },
+  hardModeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(232,125,79,0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(232,125,79,0.2)",
+  },
+  hardModeBadgeText: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+    color: "#E87D4F",
+    letterSpacing: 0.3,
   },
   progressSection: {
     gap: 8,
@@ -491,18 +547,27 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: "#111",
     borderRadius: 16,
-    paddingVertical: 18,
+    paddingVertical: 20,
     overflow: "hidden",
+    shadowColor: Colors.streak.shield,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  secureDayButtonHard: {
+    backgroundColor: "#E87D4F",
+    shadowColor: "#E87D4F",
   },
   secureDayGlow: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: Colors.streak.shield,
   },
   secureDayText: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "800" as const,
     color: "#fff",
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   securedBanner: {
     flexDirection: "row",
@@ -511,14 +576,15 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: Colors.streak.shield + "12",
     borderRadius: 14,
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderWidth: 1,
     borderColor: Colors.streak.shield + "30",
   },
   securedText: {
-    fontSize: 16,
-    fontWeight: "700" as const,
+    fontSize: 17,
+    fontWeight: "800" as const,
     color: Colors.streak.shield,
+    letterSpacing: 0.3,
   },
   emptySection: {
     alignItems: "center",
@@ -535,17 +601,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 22,
-    fontWeight: "800" as const,
+    fontSize: 24,
+    fontWeight: "700" as const,
     color: Colors.text.primary,
-    marginBottom: 8,
-    letterSpacing: -0.3,
+    marginBottom: 10,
+    letterSpacing: -0.5,
+    textAlign: "center",
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: "500" as const,
     color: Colors.text.secondary,
     textAlign: "center",
-    marginBottom: 28,
+    marginBottom: 32,
     lineHeight: 22,
   },
   ctaButton: {
