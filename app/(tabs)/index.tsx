@@ -181,18 +181,19 @@ export default function HomeScreen() {
     setShowCelebration(true);
     
     const currentDay = activeChallenge?.current_day || 1;
+    const streak = stats?.activeStreak || 0;
     setTimeout(() => {
       router.push({
         pathname: "/secure-confirmation",
         params: {
           day: currentDay.toString(),
-          streak: currentStreak.toString(),
+          streak: streak.toString(),
           totalDays: (challenge?.duration_days || 0).toString(),
           isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
         },
       } as any);
     }, 1200);
-  }, [secureDay, secureBtnScale, activeChallenge, currentStreak, challenge, router]);
+  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router]);
 
   if (isLoading && !initialFetchDone) {
     return (
