@@ -95,14 +95,14 @@ export default function SignupScreen() {
 
       if (signInError) {
         console.log('Auto sign-in failed, routing to login:', signInError.message);
-        router.replace('/auth/login');
+        router.replace('/auth/login' as any);
         return;
       }
 
       if (signInData.session) {
         router.replace('/' as never);
       } else {
-        router.replace('/auth/login');
+        router.replace('/auth/login' as any);
       }
     } catch (err: any) {
       console.error('Signup error:', err);

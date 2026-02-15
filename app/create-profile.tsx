@@ -78,7 +78,7 @@ export default function CreateProfileScreen() {
         Alert.alert(
           'Session Expired',
           'Your session has expired. Please log in again.',
-          [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
+          [{ text: 'OK', onPress: () => router.replace('/auth/login' as any) }]
         );
         return;
       }

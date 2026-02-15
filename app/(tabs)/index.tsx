@@ -274,7 +274,7 @@ export default function HomeScreen() {
                 if (Platform.OS !== "web") {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
-                router.push(`/challenge/${activeChallenge.challenge_id}`);
+                router.push(`/challenge/${activeChallenge.challenge_id}` as any);
               }}
               activeOpacity={0.85}
               testID="home-challenge-card"
@@ -358,7 +358,7 @@ export default function HomeScreen() {
                 if (Platform.OS !== "web") {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 }
-                router.push("/(tabs)/discover");
+                router.push("/(tabs)/discover" as any);
               }}
               activeOpacity={0.85}
               testID="discover-cta"
@@ -373,7 +373,7 @@ export default function HomeScreen() {
                 if (Platform.OS !== "web") {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
-                router.push("/(tabs)/create");
+                router.push("/(tabs)/create" as any);
               }}
               activeOpacity={0.7}
               testID="create-cta"

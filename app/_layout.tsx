@@ -83,16 +83,16 @@ function AuthRedirector() {
     if (loading || !profileChecked) return;
 
     const first = segments[0];
-    const inAuth = first === "auth";
-    const onCreateProfile = first === "create-profile";
+    const inAuth = (first as any) === "auth";
+    const onCreateProfile = (first as any) === "create-profile";
 
     if (!user && !inAuth) {
-      router.replace("/auth/login");
+      router.replace("/auth/login" as any);
       return;
     }
 
     if (user && !hasProfile && !onCreateProfile) {
-      router.replace("/create-profile");
+      router.replace("/create-profile" as any);
       return;
     }
 

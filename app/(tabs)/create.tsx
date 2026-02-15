@@ -605,7 +605,7 @@ export default function CreateScreen() {
       console.log('[Create] Challenge created successfully:', challenge.id);
 
       router.push({
-        pathname: "/success",
+        pathname: "/success" as any,
         params: {
           challengeId: challenge.id,
           title: challenge.title,

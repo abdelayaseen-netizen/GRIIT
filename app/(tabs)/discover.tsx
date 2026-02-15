@@ -300,7 +300,7 @@ export default function DiscoverScreen() {
     (challengeId: string) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       console.log("[Discover] Tapped challenge:", challengeId);
-      router.push(`/challenge/${challengeId}`);
+      router.push(`/challenge/${challengeId}` as any);
     },
     [router]
   );

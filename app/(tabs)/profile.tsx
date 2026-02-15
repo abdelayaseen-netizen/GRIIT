@@ -528,7 +528,7 @@ export default function ProfileScreen() {
                 if (Platform.OS !== "web") {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
-                router.push("/edit-profile");
+                router.push("/edit-profile" as any);
               }}
               activeOpacity={0.7}
               testID="edit-profile-button"
@@ -564,7 +564,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              onPress={() => router.push("/edit-profile")}
+              onPress={() => router.push("/edit-profile" as any)}
               activeOpacity={0.7}
               style={styles.addBioButton}
             >
@@ -664,7 +664,7 @@ export default function ProfileScreen() {
         {activeChallenges === 0 && completedChallenges === 0 && (
           <TouchableOpacity
             style={styles.joinCTA}
-            onPress={() => router.push("/(tabs)/discover")}
+            onPress={() => router.push("/(tabs)/discover" as any)}
             activeOpacity={0.7}
           >
             <TrendingUp size={15} color="#fff" />
