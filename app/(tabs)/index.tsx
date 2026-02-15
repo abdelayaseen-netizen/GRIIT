@@ -147,6 +147,25 @@ export default function HomeScreen() {
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
 
+  const currentStreak = stats?.activeStreak || 0;
+  const bestStreak = stats?.longestStreak || 0;
+  const hasActiveChallenge = !!activeChallenge && !!challenge;
+  const daySecured = computeProgress.progress === 100 && !canSecureDay;
+  
+  const tasks: { id: string; title: string; completed: boolean }[] = challenge?.challenge_tasks
+    ? challenge.challenge_tasks.map((t: any) => ({
+        id: t.id,
+        title: t.title || t.type,
+        completed: todayCheckins.some((c: any) => c.task_id === t.id && c.status === "completed"),
+      }))
+    : [];
+
+  const progressColor = daySecured
+    ? Colors.streak.shield
+    : computeProgress.progress >= 50
+    ? Colors.accent
+    : Colors.text.muted;
+
   useEffect(() => {
     if (canSecureDay) {
       const pulse = Animated.loop(
@@ -204,24 +223,6 @@ export default function HomeScreen() {
       </SafeAreaView>
     );
   }
-
-  const hasActiveChallenge = !!activeChallenge && !!challenge;
-  const currentStreak = stats?.activeStreak || 0;
-  const bestStreak = stats?.longestStreak || 0;
-  const daySecured = computeProgress.progress === 100 && !canSecureDay;
-  const tasks: { id: string; title: string; completed: boolean }[] = challenge?.challenge_tasks
-    ? challenge.challenge_tasks.map((t: any) => ({
-        id: t.id,
-        title: t.title || t.type,
-        completed: todayCheckins.some((c: any) => c.task_id === t.id && c.status === "completed"),
-      }))
-    : [];
-
-  const progressColor = daySecured
-    ? Colors.streak.shield
-    : computeProgress.progress >= 50
-    ? Colors.accent
-    : Colors.text.muted;
 
   const glowOpacity = secureBtnGlow.interpolate({
     inputRange: [0, 1],
