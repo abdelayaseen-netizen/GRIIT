@@ -16,7 +16,7 @@ import {
   Plus,
   Shield,
   CheckCircle2,
-  Compass,
+  Clock,
   Wifi,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
@@ -32,6 +32,57 @@ function OfflineBadge() {
     <View style={badgeStyles.container}>
       <Wifi size={11} color={Colors.text.muted} />
       <Text style={badgeStyles.text}>Offline mode</Text>
+    </View>
+  );
+}
+
+function CircularProgress({ size = 120, strokeWidth = 2, progress = 0 }: { size?: number; strokeWidth?: number; progress?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, [progress, progressAnim]);
+
+  const strokeDashoffset = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+  });
+
+  if (Platform.OS === 'web') {
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: strokeWidth,
+          borderColor: Colors.border,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Text style={styles.emptyProgressText}>Day 0</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: strokeWidth,
+        borderColor: Colors.border,
+        position: 'absolute',
+      }} />
+      <Text style={styles.emptyProgressText}>Day 0</Text>
     </View>
   );
 }
@@ -253,17 +304,29 @@ export default function HomeScreen() {
 
         {hasActiveChallenge ? (
           <View style={styles.activeSection}>
-            <StreakTracker
-              currentStreak={currentStreak}
-              bestStreak={bestStreak}
-              daySecured={daySecured}
-              streakProtectionsLeft={1}
-            />
+            <View style={styles.missionControlCard}>
+              <View style={styles.dayNumberSection}>
+                <Text style={styles.dayNumberLarge}>
+                  Day {activeChallenge.current_day}
+                </Text>
+                <Text style={styles.dayNumberTotal}>/ {challenge.duration_days || "∞"}</Text>
+              </View>
 
-            <StreakCalendar
-              currentStreak={currentStreak}
-              daySecuredToday={daySecured}
-            />
+              <View style={styles.statusRow}>
+                <Text style={styles.statusLabel}>
+                  {daySecured ? "Secured" : "Pending"}
+                </Text>
+                {(challenge.difficulty === "hard" || challenge.difficulty === "extreme") && (
+                  <View style={styles.modeTagHard}>
+                    <Text style={styles.modeTagText}>Hard Mode</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.challengeTitleRow}>
+                <Text style={styles.challengeTitleMission} numberOfLines={2}>{challenge.title}</Text>
+              </View>
+            </View>
 
             <TouchableOpacity
               style={[
@@ -279,24 +342,6 @@ export default function HomeScreen() {
               activeOpacity={0.85}
               testID="home-challenge-card"
             >
-              <View style={styles.challengeHeader}>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.dayRow}>
-                    <Text style={styles.challengeDay}>
-                      Day {activeChallenge.current_day}{challenge.duration_days ? `/${challenge.duration_days}` : ""}
-                    </Text>
-                    {(challenge.difficulty === "hard" || challenge.difficulty === "extreme") && (
-                      <View style={styles.hardModeBadge}>
-                        <Shield size={11} color="#E87D4F" fill="#E87D4F" />
-                        <Text style={styles.hardModeBadgeText}>Hard Mode</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.challengeTitle} numberOfLines={1}>{challenge.title}</Text>
-                </View>
-                <ChevronRight size={18} color={Colors.text.muted} />
-              </View>
-
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
                   <Text style={styles.progressLabel}>Today</Text>
@@ -314,6 +359,11 @@ export default function HomeScreen() {
                   ))}
                 </View>
               )}
+
+              <View style={styles.cardFooter}>
+                <Text style={styles.viewDetailsText}>View Details</Text>
+                <ChevronRight size={16} color={Colors.text.tertiary} />
+              </View>
             </TouchableOpacity>
 
             {canSecureDay && (
@@ -329,27 +379,41 @@ export default function HomeScreen() {
                       { opacity: glowOpacity },
                     ]}
                   />
-                  <Shield size={20} color="#fff" fill="#fff" />
-                  <Text style={styles.secureDayText}>Secure Today</Text>
+                  <Text style={styles.secureDayText}>Secure Day</Text>
                 </Animated.View>
               </TouchableOpacity>
             )}
 
             {daySecured && (
               <View style={styles.securedBanner}>
-                <Shield size={18} color={Colors.streak.shield} fill={Colors.streak.shield} />
-                <Text style={styles.securedText}>Day Secured</Text>
+                <CheckCircle2 size={16} color={Colors.streak.shield} fill={Colors.streak.shield} strokeWidth={0} />
+                <Text style={styles.securedText}>Day {activeChallenge.current_day} Secured</Text>
               </View>
             )}
+
+            <View style={styles.streakSectionSpaced}>
+              <StreakTracker
+                currentStreak={currentStreak}
+                bestStreak={bestStreak}
+                daySecured={daySecured}
+                streakProtectionsLeft={1}
+              />
+
+              <StreakCalendar
+                currentStreak={currentStreak}
+                daySecuredToday={daySecured}
+              />
+            </View>
           </View>
         ) : (
           <View style={styles.emptySection}>
-            <View style={styles.emptyIconWrap}>
-              <Compass size={40} color={Colors.text.muted} strokeWidth={1.2} />
+            <View style={styles.emptyProgressSection}>
+              <CircularProgress size={140} strokeWidth={2} progress={0} />
             </View>
-            <Text style={styles.emptyTitle}>You have no active challenge.</Text>
-            <Text style={styles.emptyText}>
-              Start something that matters.
+
+            <Text style={styles.emptyTitleNew}>No active commitment.</Text>
+            <Text style={styles.emptySubtitle}>
+              Discipline starts with one decision.
             </Text>
 
             <TouchableOpacity
@@ -363,24 +427,10 @@ export default function HomeScreen() {
               activeOpacity={0.85}
               testID="discover-cta"
             >
-              <Compass size={18} color="#fff" />
               <Text style={styles.ctaButtonText}>Discover Challenges</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.ctaSecondary}
-              onPress={() => {
-                if (Platform.OS !== "web") {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-                router.push("/(tabs)/create" as any);
-              }}
-              activeOpacity={0.7}
-              testID="create-cta"
-            >
-              <Plus size={16} color={Colors.accent} />
-              <Text style={styles.ctaSecondaryText}>Create Your Own</Text>
-            </TouchableOpacity>
+            <Text style={styles.supportingText}>Join others building consistency.</Text>
           </View>
         )}
       </ScrollView>
@@ -460,67 +510,114 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   activeSection: {
-    gap: 14,
+    gap: 20,
+  },
+  missionControlCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 28,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  dayNumberSection: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    marginBottom: 12,
+  },
+  dayNumberLarge: {
+    fontSize: 56,
+    fontWeight: "900" as const,
+    color: Colors.text.primary,
+    letterSpacing: -2,
+    lineHeight: 56,
+  },
+  dayNumberTotal: {
+    fontSize: 28,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    letterSpacing: -0.5,
+    marginLeft: 4,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 16,
+  },
+  statusLabel: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
+    letterSpacing: 0.3,
+  },
+  modeTagHard: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: "rgba(232,125,79,0.08)",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(232,125,79,0.2)",
+  },
+  modeTagText: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    color: "#E87D4F",
+    letterSpacing: 0.5,
+  },
+  challengeTitleRow: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: 16,
+  },
+  challengeTitleMission: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    letterSpacing: -0.3,
+    lineHeight: 24,
+  },
+  streakSectionSpaced: {
+    gap: 16,
+    marginTop: 8,
   },
   challengeCard: {
     backgroundColor: "#fff",
-    borderRadius: 18,
+    borderRadius: 16,
     padding: 20,
     borderWidth: 1,
     borderColor: Colors.border,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   challengeCardHard: {
-    borderColor: "rgba(232,125,79,0.3)",
-    backgroundColor: "rgba(255,255,255,0.98)",
+    borderColor: "rgba(232,125,79,0.25)",
   },
-  challengeHeader: {
+  cardFooter: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
-  challengeTitle: {
-    fontSize: 20,
-    fontWeight: "800" as const,
-    color: Colors.text.primary,
-    letterSpacing: -0.5,
-  },
-  dayRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 4,
-  },
-  challengeDay: {
-    fontSize: 28,
-    fontWeight: "900" as const,
-    color: Colors.text.primary,
-    letterSpacing: -0.8,
-  },
-  hardModeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(232,125,79,0.1)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(232,125,79,0.2)",
-  },
-  hardModeBadgeText: {
-    fontSize: 10,
-    fontWeight: "700" as const,
-    color: "#E87D4F",
-    letterSpacing: 0.3,
+  viewDetailsText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    letterSpacing: 0.2,
   },
   progressSection: {
-    gap: 8,
+    gap: 10,
   },
   progressHeader: {
     flexDirection: "row",
@@ -537,112 +634,102 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
   },
   taskList: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: 16,
+    paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
+    gap: 2,
   },
   secureDayButton: {
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
     backgroundColor: "#111",
     borderRadius: 16,
-    paddingVertical: 20,
+    paddingVertical: 22,
     overflow: "hidden",
-    shadowColor: Colors.streak.shield,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 6,
-  },
-  secureDayButtonHard: {
-    backgroundColor: "#E87D4F",
-    shadowColor: "#E87D4F",
+    elevation: 5,
   },
   secureDayGlow: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: Colors.streak.shield,
   },
   secureDayText: {
-    fontSize: 18,
-    fontWeight: "800" as const,
+    fontSize: 17,
+    fontWeight: "700" as const,
     color: "#fff",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   securedBanner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: Colors.streak.shield + "12",
+    backgroundColor: Colors.streak.shield + "0F",
     borderRadius: 14,
     paddingVertical: 18,
     borderWidth: 1,
-    borderColor: Colors.streak.shield + "30",
+    borderColor: Colors.streak.shield + "25",
   },
   securedText: {
-    fontSize: 17,
-    fontWeight: "800" as const,
+    fontSize: 16,
+    fontWeight: "700" as const,
     color: Colors.streak.shield,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   emptySection: {
     alignItems: "center",
-    paddingVertical: 48,
-    paddingHorizontal: 20,
+    paddingVertical: 60,
+    paddingHorizontal: 24,
   },
-  emptyIconWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: Colors.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
+  emptyProgressSection: {
+    marginBottom: 32,
   },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-    marginBottom: 10,
+  emptyProgressText: {
+    fontSize: 32,
+    fontWeight: "800" as const,
+    color: Colors.text.tertiary,
     letterSpacing: -0.5,
+  },
+  emptyTitleNew: {
+    fontSize: 26,
+    fontWeight: "800" as const,
+    color: Colors.text.primary,
+    marginBottom: 12,
+    letterSpacing: -0.8,
     textAlign: "center",
   },
-  emptyText: {
+  emptySubtitle: {
     fontSize: 16,
     fontWeight: "500" as const,
     color: Colors.text.secondary,
     textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 22,
+    marginBottom: 40,
+    lineHeight: 24,
+    letterSpacing: -0.2,
   },
   ctaButton: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     backgroundColor: "#111",
-    paddingHorizontal: 28,
-    paddingVertical: 16,
+    paddingHorizontal: 40,
+    paddingVertical: 18,
     borderRadius: 14,
-    marginBottom: 12,
+    marginBottom: 16,
+    minWidth: 240,
   },
   ctaButtonText: {
     fontSize: 16,
     fontWeight: "700" as const,
     color: "#fff",
+    letterSpacing: 0.2,
   },
-  ctaSecondary: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  ctaSecondaryText: {
+  supportingText: {
     fontSize: 14,
-    fontWeight: "600" as const,
-    color: Colors.accent,
+    fontWeight: "500" as const,
+    color: Colors.text.tertiary,
+    textAlign: "center",
   },
 });
