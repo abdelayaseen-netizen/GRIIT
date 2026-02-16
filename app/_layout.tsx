@@ -174,6 +174,28 @@ function RootLayoutNav() {
           presentation: "modal"
         }} 
       />
+      <Stack.Screen 
+        name="commitment" 
+        options={{ 
+          headerShown: false,
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="secure-confirmation" 
+        options={{ 
+          headerShown: false,
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="day-missed" 
+        options={{ 
+          headerShown: false,
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen name="+not-found" />
     </Stack>
   );
 }
