@@ -659,7 +659,7 @@ export default function CreateScreen() {
   });
 
   const handleCreate = useCallback(() => {
-    if (submitStatus === 'submitting' || createMutation.isPending) {
+    if (submitStatus === 'submitting' || createMutation.isLoading) {
       console.log('[Create] Already submitting, ignoring tap');
       return;
     }

@@ -219,7 +219,7 @@ export default function DiscoverScreen() {
       staleTime: 60_000,
       retry: 0,
       networkMode: "offlineFirst",
-      gcTime: 5 * 60_000,
+      cacheTime: 5 * 60_000,
     }
   );
 

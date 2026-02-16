@@ -154,7 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       profileQuery.isSuccess &&
       profileQuery.data === null &&
       !autoCreateAttempted &&
-      !createProfileMutation.isPending
+      !createProfileMutation.isLoading
     ) {
       console.log('[AppContext] Profile missing for user, auto-creating via tRPC...');
       setAutoCreateAttempted(true);
@@ -259,7 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [activeChallenge, canSecureDay, secureDayMutation]);
 
-  const profileAutoCreating = createProfileMutation.isPending;
+  const profileAutoCreating = createProfileMutation.isLoading;
   const resolvedProfile = profileQuery.data || fallbackProfile;
   const profileHasLoaded = (profileQuery.isSuccess && profileQuery.data !== null) || profileQuery.isError || !!fallbackProfile;
   const activeChallengeHasLoaded = activeChallengeQuery.isSuccess || activeChallengeQuery.isError;

@@ -578,7 +578,7 @@ export default function ChallengeDetailScreen() {
     );
   }
 
-  const isPending = isStarter ? joiningStarter : joinMutation.isPending;
+  const isPending = isStarter ? joiningStarter : joinMutation.isLoading;
   const difficulty = (challenge.difficulty || "medium") as string;
   const theme = getTheme(difficulty);
   const allTasks = (challenge.tasks || []) as StarterTask[];

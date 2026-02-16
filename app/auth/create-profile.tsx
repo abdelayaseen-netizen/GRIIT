@@ -125,7 +125,7 @@ export default function CreateProfileScreen() {
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!createProfileMutation.isPending}
+                editable={!createProfileMutation.isLoading}
               />
               <Text style={styles.hint}>Letters, numbers, and underscores only</Text>
             </View>
@@ -139,7 +139,7 @@ export default function CreateProfileScreen() {
                 value={displayName}
                 onChangeText={setDisplayName}
                 autoCapitalize="words"
-                editable={!createProfileMutation.isPending}
+                editable={!createProfileMutation.isLoading}
               />
             </View>
 
@@ -154,17 +154,17 @@ export default function CreateProfileScreen() {
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
-                editable={!createProfileMutation.isPending}
+                editable={!createProfileMutation.isLoading}
               />
             </View>
 
             <TouchableOpacity
-              style={[styles.button, createProfileMutation.isPending && styles.buttonDisabled]}
+              style={[styles.button, createProfileMutation.isLoading && styles.buttonDisabled]}
               onPress={handleCreateProfile}
-              disabled={createProfileMutation.isPending}
+              disabled={createProfileMutation.isLoading}
               activeOpacity={0.8}
             >
-              {createProfileMutation.isPending ? (
+              {createProfileMutation.isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.buttonText}>Continue to GRIT</Text>

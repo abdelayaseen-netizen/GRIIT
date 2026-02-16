@@ -94,11 +94,11 @@ export default function EditProfileScreen() {
         <Text style={styles.topTitle}>Edit Profile</Text>
         <TouchableOpacity
           onPress={handleSave}
-          disabled={updateMutation.isPending}
-          style={[styles.saveBtn, updateMutation.isPending && { opacity: 0.5 }]}
+          disabled={updateMutation.isLoading}
+          style={[styles.saveBtn, updateMutation.isLoading && { opacity: 0.5 }]}
           activeOpacity={0.7}
         >
-          {updateMutation.isPending ? (
+          {updateMutation.isLoading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <Text style={styles.saveBtnText}>Save</Text>
@@ -130,7 +130,7 @@ export default function EditProfileScreen() {
                 placeholder="Your display name"
                 placeholderTextColor={Colors.text.tertiary}
                 autoCapitalize="words"
-                editable={!updateMutation.isPending}
+                editable={!updateMutation.isLoading}
               />
             </View>
 
@@ -145,7 +145,7 @@ export default function EditProfileScreen() {
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
-                editable={!updateMutation.isPending}
+                editable={!updateMutation.isLoading}
               />
             </View>
 
@@ -159,7 +159,7 @@ export default function EditProfileScreen() {
                 placeholderTextColor={Colors.text.tertiary}
                 autoCapitalize="none"
                 keyboardType="url"
-                editable={!updateMutation.isPending}
+                editable={!updateMutation.isLoading}
               />
             </View>
           </View>
