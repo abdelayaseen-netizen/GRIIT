@@ -386,7 +386,7 @@ export default function ChallengeDetailScreen() {
         { text: "OK", onPress: () => router.push("/(tabs)") },
       ]);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       Alert.alert("Error", error.message);
     },
   });

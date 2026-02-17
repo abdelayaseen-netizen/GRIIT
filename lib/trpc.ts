@@ -5,19 +5,19 @@ import { supabase } from "./supabase";
 import { getTrpcUrl, fetchWithRetry } from "./api";
 import type { AppRouter } from "@/backend/trpc/app-router";
 
-export const trpc = createTRPCReact<AppRouter>();
+export const trpc: any = createTRPCReact<any>();
 
-export const trpcClient = trpc.createClient({
+export const trpcClient = (trpc as any).createClient({
+  transformer: superjson as any,
   links: [
     httpBatchLink({
       url: getTrpcUrl(),
-      transformer: superjson,
       async headers() {
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
         return token ? { authorization: `Bearer ${token}` } : {};
       },
-      fetch: fetchWithRetry,
-    }),
+      fetch: fetchWithRetry as any,
+    }) as any,
   ],
 });

@@ -84,7 +84,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       utils.profiles.get.invalidate();
       utils.profiles.getStats.invalidate();
     },
-    onError: (err) => {
+    onError: (err: any) => {
       console.error('[AppContext] Auto-create profile failed:', err.message);
       setAutoCreateError(err.message);
     },

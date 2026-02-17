@@ -599,7 +599,7 @@ export default function CreateScreen() {
   }, [editingTask]);
 
   const createMutation = trpc.challenges.create.useMutation({
-    onSuccess: (challenge) => {
+    onSuccess: (challenge: any) => {
       clearWatchdog();
       setSubmitStatus('success');
       console.log('[Create] Challenge created successfully:', challenge.id);
@@ -630,7 +630,7 @@ export default function CreateScreen() {
       setStep(1);
       setSubmitStatus('idle');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       clearWatchdog();
       setSubmitStatus('error');
 

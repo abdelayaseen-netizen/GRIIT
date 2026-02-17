@@ -1,6 +1,7 @@
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "@/backend/trpc/app-router";
 import { createContext } from "@/backend/trpc/create-context";
+import type { AppRouter } from "@/backend/trpc/app-router";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 function withCORS(res: Response) {
   const headers = new Headers(res.headers);
@@ -34,9 +35,9 @@ async function handler(request: Request) {
     const res = await fetchRequestHandler({
       endpoint: "/api/trpc",
       req: request,
-      router: appRouter,
-      createContext: async (opts) => createContext({ req: opts.req }),
-      onError: ({ error, path }) => {
+      router: appRouter as any,
+      createContext: async () => createContext({ req: request }),
+      onError({ error, path }) {
         console.error(`[API Route] tRPC error on '${path}':`, error);
       },
     });
