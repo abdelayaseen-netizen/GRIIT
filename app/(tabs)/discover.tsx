@@ -219,14 +219,14 @@ export default function DiscoverScreen() {
       staleTime: 60_000,
       retry: 0,
       networkMode: "offlineFirst",
-      cacheTime: 5 * 60_000,
+      gcTime: 5 * 60_000,
     }
   );
 
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!featuredQuery.isLoading) {
+    if (!featuredQuery.isPending) {
       setTimedOut(false);
       return;
     }
@@ -235,9 +235,9 @@ export default function DiscoverScreen() {
       setTimedOut(true);
     }, 6000);
     return () => clearTimeout(timer);
-  }, [featuredQuery.isLoading]);
+  }, [featuredQuery.isPending]);
 
-  const isLoading = featuredQuery.isLoading && !timedOut;
+  const isLoading = featuredQuery.isPending && !timedOut;
   const isError = featuredQuery.isError || timedOut;
   const isFallback = isError || (!isLoading && (featuredQuery.data?.length ?? 0) === 0);
 
@@ -571,7 +571,7 @@ export default function DiscoverScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={featuredQuery.isFetching && !featuredQuery.isLoading}
+            refreshing={featuredQuery.isFetching && !featuredQuery.isPending}
             onRefresh={handleRefresh}
             tintColor={Colors.accent}
           />

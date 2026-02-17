@@ -464,7 +464,7 @@ export default function ChallengeDetailScreen() {
     return () => clearInterval(interval);
   }, [isDaily, challenge?.ends_at]);
 
-  const isLoading = !isStarter && challengeQuery.isLoading;
+  const isLoading = !isStarter && challengeQuery.isPending;
   const isJoinedRemote = activeChallenge?.challenge_id === id;
   const isJoined = isJoinedRemote || (isStarter && starterJoined);
 
@@ -578,7 +578,7 @@ export default function ChallengeDetailScreen() {
     );
   }
 
-  const isPending = isStarter ? joiningStarter : joinMutation.isLoading;
+  const isPending = isStarter ? joiningStarter : joinMutation.isPending;
   const difficulty = (challenge.difficulty || "medium") as string;
   const theme = getTheme(difficulty);
   const allTasks = (challenge.tasks || []) as StarterTask[];
