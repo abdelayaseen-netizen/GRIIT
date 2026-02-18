@@ -8,7 +8,7 @@ export function getApiBaseUrl(): string {
   if (envUrl) {
     _baseUrl = envUrl.replace(/\/$/, '');
     console.log('[API] Using base URL from env:', _baseUrl);
-    return _baseUrl;
+    return _baseUrl ?? '';
   }
   _baseUrl = '';
   console.warn('[API] No EXPO_PUBLIC_RORK_API_BASE_URL set, using relative URLs');
