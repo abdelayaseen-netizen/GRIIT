@@ -13,7 +13,7 @@
         "@rork-ai/toolkit-sdk": "^0.2.51",
         "@stardazed/streams-text-encoding": "^1.0.2",
         "@supabase/supabase-js": "^2.94.1",
-        "@tanstack/react-query": "5.51.24",
+        "@tanstack/react-query": "5.44.0",
         "@trpc/client": "10.45.2",
         "@trpc/react-query": "10.45.2",
         "@trpc/server": "10.45.2",
@@ -524,9 +524,9 @@
 
     "@szmarczak/http-timer": ["@szmarczak/http-timer@4.0.6", "", { "dependencies": { "defer-to-connect": "^2.0.0" } }, ""],
 
-    "@tanstack/query-core": ["@tanstack/query-core@5.51.24", "", {}, "sha512-qtIR0FMHUDIWyIQw87q4C+so7XaN59MsGfWrc6rgi2VTHrVZF3Hd0St2dbpqRetHf6XW5yY5lzTrXpTilPlxUg=="],
+    "@tanstack/query-core": ["@tanstack/query-core@5.44.0", "", {}, "sha512-Fa1J7iEEyJnjXG1N4+Fz4OXNH/INve3XSn0Htms3X4wgRsXHxMDwqBE2XtDCts7swkwSIs4izEtaFqWVFr/eLQ=="],
 
-    "@tanstack/react-query": ["@tanstack/react-query@5.51.24", "", { "dependencies": { "@tanstack/query-core": "5.51.24" }, "peerDependencies": { "react": "^18.0.0" } }, "sha512-sW1qRwoCDqOFku67xng4Y5z6NPK1DS347jR4RiX9wFHrmyqpbXgUjPIjT3fodezdJAaSJD/6CvWb0cl05J8zNQ=="],
+    "@tanstack/react-query": ["@tanstack/react-query@5.44.0", "", { "dependencies": { "@tanstack/query-core": "5.44.0" }, "peerDependencies": { "react": "^18.0.0" } }, "sha512-zmaD6cw8P2cBOfRHhqRmwvDsAi56gqbiwG2CDR6oQOCXSDOvRagvpP6RUStn+RrfcVUrNjKsxBmrgG6Za8p5zg=="],
 
     "@teovilla/react-native-web-maps": ["@teovilla/react-native-web-maps@0.9.5", "", { "dependencies": { "@react-google-maps/api": "^2.12.0", "expo-location": "~15.1.1", "supercluster": "^7.1.5" }, "peerDependencies": { "@react-google-maps/api": "*", "expo-location": "*", "react": "*", "react-native": "*" } }, ""],
 
