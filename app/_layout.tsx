@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useCallback } from "react";
@@ -7,26 +6,9 @@ import { ActivityIndicator, View } from "react-native";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ApiProvider } from "@/contexts/ApiContext";
-import { trpc, trpcClient } from "@/lib/trpc";
 import { supabase } from "@/lib/supabase";
 
 SplashScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      staleTime: 60_000,
-      networkMode: "offlineFirst",
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    },
-    mutations: {
-      retry: false,
-      networkMode: "offlineFirst",
-    },
-  },
-});
 
 function AuthRedirector() {
   const { user, loading } = useAuth();
@@ -206,19 +188,15 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <AuthProvider>
-            <ApiProvider>
-              <AppProvider>
-                <RootLayoutNav />
-                <AuthRedirector />
-              </AppProvider>
-            </ApiProvider>
-          </AuthProvider>
-        </GestureHandlerRootView>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <ApiProvider>
+          <AppProvider>
+            <RootLayoutNav />
+            <AuthRedirector />
+          </AppProvider>
+        </ApiProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

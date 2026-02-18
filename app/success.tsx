@@ -13,13 +13,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, Share2, Award, TrendingUp } from "lucide-react-native";
 import Colors from "@/constants/colors";
-import { trpc } from "@/lib/trpc";
+
 
 export default function SuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const utils = trpc.useUtils();
-
   const badgeScale = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const statsSlide = useRef(new Animated.Value(30)).current;

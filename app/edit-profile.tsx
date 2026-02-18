@@ -13,11 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useMutation } from '@tanstack/react-query';
 import { X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
-import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
@@ -26,7 +24,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useApp();
-  const utils = trpc.useUtils();
+  const [isPending, setIsPending] = useState(false);
 
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [bio, setBio] = useState(profile?.bio || '');
@@ -40,11 +38,14 @@ export default function EditProfileScreen() {
     }
   }, [profile]);
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: { display_name: string; bio: string; avatar_url: string }) => {
-      if (!user?.id) throw new Error('Not authenticated');
-
-      const { data: updated, error } = await supabase
+  const handleUpdate = async (data: { display_name: string; bio: string; avatar_url: string }) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'Not authenticated');
+      return;
+    }
+    setIsPending(true);
+    try {
+      const { error } = await supabase
         .from('profiles')
         .update({
           display_name: data.display_name,
@@ -58,27 +59,20 @@ export default function EditProfileScreen() {
 
       if (error) {
         console.error('Supabase update error:', error);
-        throw new Error(error.message);
+        Alert.alert('Error', error.message);
+        return;
       }
-      return updated;
-    },
-    onSuccess: (updated) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (updated) {
-        utils.profiles.get.setData(undefined, updated);
-      } else {
-        utils.profiles.get.invalidate();
-      }
-      utils.profiles.getStats.invalidate();
       router.back();
-    },
-    onError: (error: Error) => {
-      Alert.alert('Error', error.message);
-    },
-  });
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Something went wrong');
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   const handleSave = () => {
-    updateMutation.mutate({
+    handleUpdate({
       display_name: displayName.trim() || profile?.username || '',
       bio: bio.trim(),
       avatar_url: avatarUrl.trim(),
@@ -94,11 +88,11 @@ export default function EditProfileScreen() {
         <Text style={styles.topTitle}>Edit Profile</Text>
         <TouchableOpacity
           onPress={handleSave}
-          disabled={updateMutation.isPending}
-          style={[styles.saveBtn, updateMutation.isPending && { opacity: 0.5 }]}
+          disabled={isPending}
+          style={[styles.saveBtn, isPending && { opacity: 0.5 }]}
           activeOpacity={0.7}
         >
-          {updateMutation.isPending ? (
+          {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <Text style={styles.saveBtnText}>Save</Text>
@@ -130,7 +124,7 @@ export default function EditProfileScreen() {
                 placeholder="Your display name"
                 placeholderTextColor={Colors.text.tertiary}
                 autoCapitalize="words"
-                editable={!updateMutation.isPending}
+                editable={!isPending}
               />
             </View>
 
@@ -145,7 +139,7 @@ export default function EditProfileScreen() {
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
-                editable={!updateMutation.isPending}
+                editable={!isPending}
               />
             </View>
 
@@ -159,7 +153,7 @@ export default function EditProfileScreen() {
                 placeholderTextColor={Colors.text.tertiary}
                 autoCapitalize="none"
                 keyboardType="url"
-                editable={!updateMutation.isPending}
+                editable={!isPending}
               />
             </View>
           </View>

@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import Colors from '@/constants/colors';
 
@@ -23,14 +22,22 @@ export default function CreateProfileScreen() {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
 
-  const createProfileMutation = useMutation({
-    mutationFn: async (data: { username: string; display_name: string; bio: string }) => {
+  const [isPending, setIsPending] = useState(false);
+
+  const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {
+    setIsPending(true);
+    try {
       console.log('Creating profile with data:', data);
       
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         console.error('Failed to get session:', sessionError);
-        throw new Error('SESSION_MISSING');
+        Alert.alert(
+          'Session Expired',
+          'Your session has expired. Please log in again.',
+          [{ text: 'OK', onPress: () => router.replace('/auth/login' as any) }]
+        );
+        return;
       }
       
       const userId = sessionData.session.user.id;
@@ -52,29 +59,21 @@ export default function CreateProfileScreen() {
         console.error('Supabase profile upsert error:', error);
         const code = (error as any).code;
         if (code === '23505') {
-          throw new Error('Username is already taken. Please choose another.');
+          Alert.alert('Error', 'Username is already taken. Please choose another.');
+          return;
         }
-        throw new Error(error.message || 'Failed to create profile');
+        Alert.alert('Error', error.message || 'Failed to create profile');
+        return;
       }
       
       console.log('Profile created successfully:', profile);
-      return profile;
-    },
-    onSuccess: () => {
       router.replace('/(tabs)');
-    },
-    onError: (error: Error) => {
-      if (error.message === 'SESSION_MISSING') {
-        Alert.alert(
-          'Session Expired',
-          'Your session has expired. Please log in again.',
-          [{ text: 'OK', onPress: () => router.replace('/auth/login' as any) }]
-        );
-        return;
-      }
-      Alert.alert('Error', error.message);
-    },
-  });
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Something went wrong');
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   const handleCreateProfile = async () => {
     if (!username.trim()) {
@@ -92,7 +91,7 @@ export default function CreateProfileScreen() {
       return;
     }
 
-    createProfileMutation.mutate({
+    handleSubmit({
       username: username.trim().toLowerCase(),
       display_name: displayName.trim() || username.trim(),
       bio: bio.trim(),
@@ -125,7 +124,7 @@ export default function CreateProfileScreen() {
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!createProfileMutation.isPending}
+                editable={!isPending}
               />
               <Text style={styles.hint}>Letters, numbers, and underscores only</Text>
             </View>
@@ -139,7 +138,7 @@ export default function CreateProfileScreen() {
                 value={displayName}
                 onChangeText={setDisplayName}
                 autoCapitalize="words"
-                editable={!createProfileMutation.isPending}
+                editable={!isPending}
               />
             </View>
 
@@ -154,17 +153,17 @@ export default function CreateProfileScreen() {
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
-                editable={!createProfileMutation.isPending}
+                editable={!isPending}
               />
             </View>
 
             <TouchableOpacity
-              style={[styles.button, createProfileMutation.isPending && styles.buttonDisabled]}
+              style={[styles.button, isPending && styles.buttonDisabled]}
               onPress={handleCreateProfile}
-              disabled={createProfileMutation.isPending}
+              disabled={isPending}
               activeOpacity={0.8}
             >
-              {createProfileMutation.isPending ? (
+              {isPending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.buttonText}>Continue to GRIT</Text>

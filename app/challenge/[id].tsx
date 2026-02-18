@@ -35,7 +35,7 @@ import {
 import { formatTimeHHMM, getTimeWindowState } from "@/lib/time-enforcement";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { trpc } from "@/lib/trpc";
+import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { useApp } from "@/contexts/AppContext";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
 import type { StarterChallenge, StarterTask } from "@/mocks/starter-challenges";
@@ -357,8 +357,6 @@ export default function ChallengeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { activeChallenge, todayCheckins } = useApp();
-  const utils = trpc.useUtils();
-
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -373,23 +371,33 @@ export default function ChallengeDetailScreen() {
     return STARTER_CHALLENGES.find((c) => c.id === id) ?? null;
   }, [id, isStarter]);
 
-  const challengeQuery = trpc.challenges.getById.useQuery(
-    { id: id || "" },
-    { enabled: !!id && !isStarter }
-  );
+  const [remoteChallenge, setRemoteChallenge] = useState<any>(null);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [joinPending, setJoinPending] = useState(false);
 
-  const joinMutation = trpc.challenges.join.useMutation({
-    onSuccess: () => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      utils.challenges.getActive.invalidate();
-      Alert.alert("Challenge started", "Head to Home to begin.", [
-        { text: "OK", onPress: () => router.push("/(tabs)") },
-      ]);
-    },
-    onError: (error: any) => {
-      Alert.alert("Error", error.message);
-    },
-  });
+  useEffect(() => {
+    if (!id || isStarter) return;
+    setRemoteLoading(true);
+    trpcQuery('challenges.getById', { id })
+      .then((data) => setRemoteChallenge(data))
+      .catch((err) => console.error('[ChallengeDetail] Fetch error:', err))
+      .finally(() => setRemoteLoading(false));
+  }, [id, isStarter]);
+
+  const handleJoinRemote = useCallback((challengeId: string) => {
+    setJoinPending(true);
+    trpcMutate('challenges.join', { challengeId })
+      .then(() => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert("Challenge started", "Head to Home to begin.", [
+          { text: "OK", onPress: () => router.push("/(tabs)") },
+        ]);
+      })
+      .catch((error: any) => {
+        Alert.alert("Error", error.message);
+      })
+      .finally(() => setJoinPending(false));
+  }, [router]);
 
   const [starterJoined, setStarterJoined] = useState(false);
   const [joiningStarter, setJoiningStarter] = useState(false);
@@ -431,8 +439,8 @@ export default function ChallengeDetailScreen() {
         })),
       };
     }
-    if (challengeQuery.data) {
-      const d = challengeQuery.data as any;
+    if (remoteChallenge) {
+      const d = remoteChallenge as any;
       return {
         ...d,
         is_daily: d.is_daily ?? d.duration_type === "24h",
@@ -449,7 +457,7 @@ export default function ChallengeDetailScreen() {
       };
     }
     return null;
-  }, [isStarter, starterChallenge, challengeQuery.data]);
+  }, [isStarter, starterChallenge, remoteChallenge]);
 
   const isDaily = challenge?.is_daily ?? false;
   const [expired, setExpired] = useState(false);
@@ -464,7 +472,7 @@ export default function ChallengeDetailScreen() {
     return () => clearInterval(interval);
   }, [isDaily, challenge?.ends_at]);
 
-  const isLoading = !isStarter && challengeQuery.isPending;
+  const isLoading = !isStarter && remoteLoading;
   const isJoinedRemote = activeChallenge?.challenge_id === id;
   const isJoined = isJoinedRemote || (isStarter && starterJoined);
 
@@ -502,7 +510,7 @@ export default function ChallengeDetailScreen() {
         difficulty: challenge.difficulty || "medium",
         onConfirm: isStarter 
           ? `handleJoinStarter()` 
-          : `joinMutation.mutate({ challengeId: "${challenge.id}" })`,
+          : `handleJoinRemote("${challenge.id}")`,
       },
     } as any);
   }, [challenge, router, isStarter]);
@@ -578,7 +586,7 @@ export default function ChallengeDetailScreen() {
     );
   }
 
-  const isPending = isStarter ? joiningStarter : joinMutation.isPending;
+  const isPending = isStarter ? joiningStarter : joinPending;
   const difficulty = (challenge.difficulty || "medium") as string;
   const theme = getTheme(difficulty);
   const allTasks = (challenge.tasks || []) as StarterTask[];

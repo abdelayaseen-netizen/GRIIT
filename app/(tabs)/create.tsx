@@ -40,7 +40,7 @@ import {
 import Colors from "@/constants/colors";
 import * as Haptics from 'expo-haptics';
 import { ChallengeType, ReplayPolicy, JournalCategory, WordLimitMode, ScheduleType, WindowMode, TimezoneMode, ChallengeVisibility } from "@/types";
-import { trpc } from "@/lib/trpc";
+import { trpcMutate } from "@/lib/trpc";
 import { useApi } from "@/contexts/ApiContext";
 import { formatTimeHHMM, computeWindowSummary, validateTimeEnforcement } from "@/lib/time-enforcement";
 
@@ -598,68 +598,10 @@ export default function CreateScreen() {
     console.log('[Create] Task saved:', task.title, task.type);
   }, [editingTask]);
 
-  const createMutation = trpc.challenges.create.useMutation({
-    onSuccess: (challenge: any) => {
-      clearWatchdog();
-      setSubmitStatus('success');
-      console.log('[Create] Challenge created successfully:', challenge.id);
-
-      router.push({
-        pathname: "/success" as any,
-        params: {
-          challengeId: challenge.id,
-          title: challenge.title,
-          duration: challenge.duration_days.toString(),
-          tasksCount: challenge.tasks.length.toString(),
-          difficulty: challenge.difficulty,
-        },
-      });
-
-      setTitle("");
-      setDescription("");
-      setChallengeType("standard");
-      setDurationDays(null);
-      setCustomDuration("");
-      setCategories([]);
-      setTasks([]);
-      setLiveDate("");
-      setReplayPolicy("allow_replay");
-      setRequireSameRules(true);
-      setShowReplayLabel(true);
-      setVisibility("FRIENDS");
-      setStep(1);
-      setSubmitStatus('idle');
-    },
-    onError: (error: any) => {
-      clearWatchdog();
-      setSubmitStatus('error');
-
-      const errorInfo = formatTRPCError(error);
-      const isTimeout = formatError(error).includes('REQUEST_TIMEOUT');
-
-      console.error('[Create] Mutation error:', {
-        message: errorInfo.message,
-        isNetwork: errorInfo.isNetwork,
-        isTimeout,
-        apiStatus,
-      });
-
-      if (isTimeout) {
-        setRecoveryMessage("Server didn't respond in time. Your challenge data is preserved.");
-        setShowRecoveryModal(true);
-      } else if (errorInfo.isNetwork) {
-        setRecoveryMessage('Cannot reach server. The backend may be starting up.');
-        setShowRecoveryModal(true);
-      } else {
-        Alert.alert(errorInfo.title, errorInfo.message, [
-          { text: "OK", style: "cancel" as const },
-        ]);
-      }
-    },
-  });
+  const createMutationPendingRef = useRef(false);
 
   const handleCreate = useCallback(() => {
-    if (submitStatus === 'submitting' || createMutation.isPending) {
+    if (submitStatus === 'submitting' || createMutationPendingRef.current) {
       console.log('[Create] Already submitting, ignoring tap');
       return;
     }
@@ -702,8 +644,9 @@ export default function CreateScreen() {
 
     setSubmitStatus('submitting');
     startWatchdog();
+    createMutationPendingRef.current = true;
 
-    createMutation.mutate({
+    const payload = {
       title,
       description,
       type: challengeType,
@@ -752,8 +695,70 @@ export default function CreateScreen() {
         timezoneMode: task.timeEnforcementEnabled ? task.timezoneMode : undefined,
         challengeTimezone: task.timeEnforcementEnabled && task.timezoneMode === "CHALLENGE_TIMEZONE" ? task.challengeTimezone : undefined,
       })),
-    });
-  }, [submitStatus, createMutation, title, description, challengeType, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, apiStatus, startWatchdog]);
+    };
+
+    trpcMutate('challenges.create', payload)
+      .then((challenge: any) => {
+        clearWatchdog();
+        setSubmitStatus('success');
+        console.log('[Create] Challenge created successfully:', challenge.id);
+
+        router.push({
+          pathname: "/success" as any,
+          params: {
+            challengeId: challenge.id,
+            title: challenge.title,
+            duration: challenge.duration_days.toString(),
+            tasksCount: challenge.tasks.length.toString(),
+            difficulty: challenge.difficulty,
+          },
+        });
+
+        setTitle("");
+        setDescription("");
+        setChallengeType("standard");
+        setDurationDays(null);
+        setCustomDuration("");
+        setCategories([]);
+        setTasks([]);
+        setLiveDate("");
+        setReplayPolicy("allow_replay");
+        setRequireSameRules(true);
+        setShowReplayLabel(true);
+        setVisibility("FRIENDS");
+        setStep(1);
+        setSubmitStatus('idle');
+      })
+      .catch((error: any) => {
+        clearWatchdog();
+        setSubmitStatus('error');
+
+        const errorInfo = formatTRPCError(error);
+        const isTimeout = formatError(error).includes('REQUEST_TIMEOUT');
+
+        console.error('[Create] Mutation error:', {
+          message: errorInfo.message,
+          isNetwork: errorInfo.isNetwork,
+          isTimeout,
+          apiStatus,
+        });
+
+        if (isTimeout) {
+          setRecoveryMessage("Server didn't respond in time. Your challenge data is preserved.");
+          setShowRecoveryModal(true);
+        } else if (errorInfo.isNetwork) {
+          setRecoveryMessage('Cannot reach server. The backend may be starting up.');
+          setShowRecoveryModal(true);
+        } else {
+          Alert.alert(errorInfo.title, errorInfo.message, [
+            { text: "OK", style: "cancel" as const },
+          ]);
+        }
+      })
+      .finally(() => {
+        createMutationPendingRef.current = false;
+      });
+  }, [submitStatus, title, description, challengeType, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, apiStatus, startWatchdog, clearWatchdog]);
 
   const handleRetryFromModal = useCallback(async () => {
     setShowRecoveryModal(false);

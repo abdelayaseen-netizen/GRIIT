@@ -31,7 +31,7 @@ import {
   Zap,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { trpc } from "@/lib/trpc";
+import { trpcQuery } from "@/lib/trpc";
 import Colors from "@/constants/colors";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
@@ -210,39 +210,58 @@ export default function DiscoverScreen() {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
   const searchInputRef = useRef<TextInput>(null);
 
-  const featuredQuery = trpc.challenges.getFeatured.useQuery(
-    {
-      search: searchQuery || undefined,
-      category: activeCategory !== "all" ? activeCategory : undefined,
-    },
-    {
-      staleTime: 60_000,
-      retry: 0,
-      networkMode: "offlineFirst",
-      gcTime: 5 * 60_000,
+  const [featuredData, setFeaturedData] = useState<any[] | null>(null);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [featuredError, setFeaturedError] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  const fetchFeatured = useCallback(async () => {
+    setIsFetching(true);
+    try {
+      const params: Record<string, string> = {};
+      if (searchQuery) params.search = searchQuery;
+      if (activeCategory !== "all") params.category = activeCategory;
+      const data = await trpcQuery('challenges.getFeatured', params);
+      setFeaturedData(data || []);
+      setFeaturedError(false);
+    } catch (err) {
+      console.error('[Discover] Fetch error:', err);
+      setFeaturedError(true);
+    } finally {
+      setFeaturedLoading(false);
+      setIsFetching(false);
     }
-  );
+  }, [searchQuery, activeCategory]);
+
+  useEffect(() => {
+    setFeaturedLoading(true);
+    const timer = setTimeout(() => {
+      fetchFeatured();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchFeatured]);
 
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!featuredQuery.isPending) {
+    if (!featuredLoading) {
       setTimedOut(false);
       return;
     }
     const timer = setTimeout(() => {
       console.log("[Discover] Query timed out after 6s, showing fallback");
       setTimedOut(true);
+      setFeaturedLoading(false);
     }, 6000);
     return () => clearTimeout(timer);
-  }, [featuredQuery.isPending]);
+  }, [featuredLoading]);
 
-  const isLoading = featuredQuery.isPending && !timedOut;
-  const isError = featuredQuery.isError || timedOut;
-  const isFallback = isError || (!isLoading && (featuredQuery.data?.length ?? 0) === 0);
+  const isLoading = featuredLoading && !timedOut;
+  const isError = featuredError || timedOut;
+  const isFallback = isError || (!isLoading && (featuredData?.length ?? 0) === 0);
 
   const allChallenges = useMemo((): StarterChallenge[] => {
-    const serverData = featuredQuery.data;
+    const serverData = featuredData;
     if (serverData && serverData.length > 0) {
       return serverData.map((c: any) => ({
         id: c.id,
@@ -267,7 +286,7 @@ export default function DiscoverScreen() {
     }
     if (isFallback && !isLoading) return STARTER_CHALLENGES;
     return [];
-  }, [featuredQuery.data, isFallback, isLoading]);
+  }, [featuredData, isFallback, isLoading]);
 
   const dailyChallenges = useMemo(() => {
     return allChallenges
@@ -293,8 +312,8 @@ export default function DiscoverScreen() {
   const totalVisible = dailyChallenges.length + featuredChallenges.length + otherChallenges.length;
 
   const handleRefresh = useCallback(() => {
-    featuredQuery.refetch();
-  }, [featuredQuery]);
+    fetchFeatured();
+  }, [fetchFeatured]);
 
   const handleChallengePress = useCallback(
     (challengeId: string) => {
@@ -571,7 +590,7 @@ export default function DiscoverScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={featuredQuery.isFetching && !featuredQuery.isPending}
+            refreshing={isFetching && !featuredLoading}
             onRefresh={handleRefresh}
             tintColor={Colors.accent}
           />
