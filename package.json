@@ -10,7 +10,8 @@
     "start-web": "bunx rork start -p suykkcjj2pk6zyx6knixc --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p suykkcjj2pk6zyx6knixc --web --tunnel",
     "lint": "expo lint",
-    "backend:start": "tsx backend/server.ts"
+    "backend:start": "tsx backend/server.ts",
+    "postinstall": "node scripts/patch-expo-router.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -71,6 +72,9 @@
   },
   "private": true,
   "resolutions": {
+    "@tanstack/react-query": "5.51.24"
+  },
+  "overrides": {
     "@tanstack/react-query": "5.51.24"
   }
 }
