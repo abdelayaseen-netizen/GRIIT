@@ -21,7 +21,7 @@
     "@rork-ai/toolkit-sdk": "^0.2.51",
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@supabase/supabase-js": "^2.94.1",
-    "@tanstack/react-query": "5.44.0",
+    "@tanstack/react-query": "5.51.24",
     "@trpc/client": "10.45.2",
     "@trpc/react-query": "10.45.2",
     "@trpc/server": "10.45.2",
@@ -69,5 +69,8 @@
     "tsx": "^4.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "resolutions": {
+    "@tanstack/react-query": "5.51.24"
+  }
 }
