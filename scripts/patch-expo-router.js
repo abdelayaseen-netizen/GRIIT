@@ -1,33 +1,26 @@
 const fs = require('fs');
 const path = require('path');
+const modulesDir = path.resolve(__dirname, '..', 'node_modules', 'expo-router', 'build');
 
-const patches = [
-  {
-    file: 'node_modules/expo-router/build/views/Navigator.js',
-    search: /React\.use\(exports\.NavigatorContext\)/g,
-    replace: 'React.useContext(exports.NavigatorContext)',
-  },
-  {
-    file: 'node_modules/expo-router/build/fork/useLinking.js',
-    search: /React\.use\(serverLocationContext_1\.ServerContext\)/g,
-    replace: 'React.useContext(serverLocationContext_1.ServerContext)',
-  },
-];
-
-for (const patch of patches) {
-  const filePath = path.resolve(__dirname, '..', patch.file);
-  if (!fs.existsSync(filePath)) {
-    console.log(`[patch] Skipping ${patch.file} (not found)`);
-    continue;
-  }
-  let content = fs.readFileSync(filePath, 'utf8');
-  const updated = content.replace(patch.search, patch.replace);
-  if (content !== updated) {
-    fs.writeFileSync(filePath, updated, 'utf8');
-    console.log(`[patch] Patched ${patch.file}`);
-  } else {
-    console.log(`[patch] ${patch.file} already patched`);
+function patchDir(dir) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      patchDir(full);
+    } else if (entry.name.endsWith('.js')) {
+      let content = fs.readFileSync(full, 'utf8');
+      let updated = content;
+      updated = updated.replace(/\(0, react_1\.use\)\(/g, '(0, react_1.useContext)(');
+      updated = updated.replace(/React\.use\((?!State|Effect|Memo|Callback|Ref|Context|Reducer|Id|LayoutEffect|InsertionEffect|ImperativeHandle|DebugValue|SyncExternalStore|Transition|DeferredValue|Optimistic|ActionState|Formstatus)/g, 'React.useContext(');
+      if (content !== updated) {
+        fs.writeFileSync(full, updated, 'utf8');
+        console.log(`[patch] Patched ${path.relative(modulesDir, full)}`);
+      }
+    }
   }
 }
 
+patchDir(modulesDir);
 console.log('[patch] expo-router React.use() -> React.useContext() complete');
