@@ -24,7 +24,7 @@ GRIT is now a **fully functional beta app** with real backend integration, authe
 ### ✅ Authentication Flow
 - **Login Screen** (`/auth/login`)
 - **Signup Screen** (`/auth/signup`)
-- **Create Profile Screen** (`/auth/create-profile`)
+- **Create Profile Screen** (`/create-profile`)
 - **Auth Gate** - Automatic routing based on auth state
 - **Session Persistence** - Stays logged in after app restart
 
@@ -70,17 +70,28 @@ This will:
 
 ### 4. Configure Environment Variables
 
-Create a `.env` file in the project root (or use Rork's environment variable UI):
+Create a `.env` file in the project root. See **Production environment variables** below for a full checklist.
 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-EXPO_PUBLIC_RORK_API_BASE_URL=your_rork_api_url
+EXPO_PUBLIC_API_BASE_URL=https://your-backend-url.com
 ```
+
+#### Production environment variables (checklist)
+
+| Variable | Required | Where | Description |
+|----------|----------|--------|-------------|
+| `EXPO_PUBLIC_SUPABASE_URL` | Yes | App + Backend | Supabase project URL. Set at build time for app; set in env for backend. |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Yes | App + Backend | Supabase anon/public key. Set at build time for app; set in env for backend. |
+| `EXPO_PUBLIC_API_BASE_URL` | No (dev) | App | Backend API base URL. Omit for dev (uses relative `/api/trpc`). Required for production if API is on another host (e.g. Railway). |
+| `PORT` | No | Backend | Server port (default `8080`). Used by Railway/Node. |
+| `NODE_ENV` | No | Backend | Set to `production` to disable verbose logging and enable strict CORS. |
+| `CORS_ORIGIN` | No (prod) | Backend | Allowed origin(s) for CORS. In production set to your app origin (e.g. `https://yourapp.com`). Omit to allow `*` (not recommended in prod). |
 
 **Where to find these values:**
 - Supabase URL and Anon Key: **Settings** → **API** in your Supabase dashboard
-- Rork API URL: Provided by Rork platform
+- API base URL: Your deployed backend URL (e.g. from Railway: `https://your-app.up.railway.app`), no trailing slash
 
 ### 5. Test the App
 

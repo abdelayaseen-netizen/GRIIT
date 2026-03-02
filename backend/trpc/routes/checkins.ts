@@ -1,5 +1,7 @@
 import * as z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { computeNewStreakCount } from "../../lib/streak";
+import { getTierForDays } from "../../lib/progression";
 
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
@@ -30,15 +32,20 @@ export const checkinsRouter = createTRPCRouter({
 
       if (error) throw new Error(error.message);
 
+      const { data: activeRow, error: acErr } = await ctx.supabase
+        .from('active_challenges')
+        .select('challenge_id')
+        .eq('id', input.activeChallengeId)
+        .single();
+
+      if (acErr || !activeRow?.challenge_id) {
+        throw new Error('Active challenge not found');
+      }
+
       const { data: allTasks } = await ctx.supabase
         .from('challenge_tasks')
         .select('id, required')
-        .eq('challenge_id', (await ctx.supabase
-          .from('active_challenges')
-          .select('challenge_id')
-          .eq('id', input.activeChallengeId)
-          .single()
-        ).data?.challenge_id);
+        .eq('challenge_id', activeRow.challenge_id);
 
       const { data: completedCheckins } = await ctx.supabase
         .from('check_ins')
@@ -96,6 +103,11 @@ export const checkinsRouter = createTRPCRouter({
 
       if (acError) throw new Error(acError.message);
 
+      const challengeTasks = (activeChallenge as any)?.challenges?.challenge_tasks;
+      if (!Array.isArray(challengeTasks)) {
+        throw new Error('Challenge tasks not found');
+      }
+
       const { data: completedCheckins } = await ctx.supabase
         .from('check_ins')
         .select('task_id')
@@ -103,7 +115,7 @@ export const checkinsRouter = createTRPCRouter({
         .eq('date_key', dateKey)
         .eq('status', 'completed');
 
-      const requiredTasks = (activeChallenge as any).challenges.challenge_tasks.filter((t: any) => t.required);
+      const requiredTasks = challengeTasks.filter((t: any) => t.required);
       const allRequiredCompleted = requiredTasks.every((rt: any) =>
         completedCheckins?.some(c => c.task_id === rt.id)
       );
@@ -114,29 +126,23 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: streak } = await ctx.supabase
         .from('streaks')
-        .select('*')
+        .select('last_completed_date_key, active_streak_count, longest_streak_count')
         .eq('user_id', ctx.userId)
         .single();
 
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayKey = yesterday.toISOString().split('T')[0];
-
-      let newStreakCount = 1;
-      if (streak?.last_completed_date_key === yesterdayKey) {
-        newStreakCount = (streak.active_streak_count || 0) + 1;
-      }
-
-      const longestStreak = Math.max(newStreakCount, streak?.longest_streak_count || 0);
+      const { newStreakCount, longestStreak } = computeNewStreakCount(dateKey, streak);
 
       await ctx.supabase
         .from('streaks')
-        .upsert({
-          user_id: ctx.userId,
-          active_streak_count: newStreakCount,
-          longest_streak_count: longestStreak,
-          last_completed_date_key: dateKey,
-        });
+        .upsert(
+          {
+            user_id: ctx.userId,
+            active_streak_count: newStreakCount,
+            longest_streak_count: longestStreak,
+            last_completed_date_key: dateKey,
+          },
+          { onConflict: 'user_id' }
+        );
 
       await ctx.supabase
         .from('active_challenges')
@@ -145,6 +151,21 @@ export const checkinsRouter = createTRPCRouter({
           progress_percent: 100,
         })
         .eq('id', input.activeChallengeId);
+
+      await ctx.supabase.from('day_secures').insert({ user_id: ctx.userId, date_key: dateKey }).then(() => {}).catch(() => {});
+
+      const { data: profileRow } = await ctx.supabase
+        .from('profiles')
+        .select('total_days_secured')
+        .eq('user_id', ctx.userId)
+        .single();
+      const totalDays = (profileRow?.total_days_secured ?? 0) + 1;
+      const tier = getTierForDays(totalDays);
+      await ctx.supabase
+        .from('profiles')
+        .update({ total_days_secured: totalDays, tier, updated_at: new Date().toISOString() })
+        .eq('user_id', ctx.userId)
+        .then(() => {}).catch(() => {});
 
       return { success: true, newStreakCount };
     }),

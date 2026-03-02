@@ -28,23 +28,19 @@ export async function OPTIONS() {
 }
 
 async function handler(request: Request) {
-  const url = new URL(request.url);
-  console.log(`[API Route] ${request.method} ${url.pathname}`);
-
   try {
     const res = await fetchRequestHandler({
       endpoint: "/api/trpc",
       req: request,
       router: appRouter as any,
       createContext: async () => createContext({ req: request }),
-      onError({ error, path }) {
-        console.error(`[API Route] tRPC error on '${path}':`, error);
+      onError() {
+        // Error is thrown to client
       },
     });
 
     return withCORS(res);
-  } catch (error) {
-    console.error("[API Route] Unhandled error:", error);
+  } catch {
     return withCORS(
       new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,

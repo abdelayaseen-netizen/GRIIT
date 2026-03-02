@@ -113,9 +113,8 @@ export default function JournalTaskScreen() {
           if (parsed.mood) setMood(parsed.mood);
           if (parsed.energy) setEnergy(parsed.energy);
           if (parsed.bodyState) setBodyState(parsed.bodyState);
-          console.log("[Journal] Draft loaded:", draftKey);
-        } catch (e) {
-          console.log("[Journal] Failed to parse draft:", e);
+        } catch {
+          // Failed to parse draft — ignore
         }
       }
       setDraftLoaded(true);

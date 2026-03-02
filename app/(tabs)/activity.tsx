@@ -8,6 +8,7 @@ import {
   Animated,
   RefreshControl,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -24,12 +25,17 @@ import {
   Shield,
   Crown,
   Zap,
+  Globe,
+  ThumbsUp,
+  Send,
+  AlertTriangle,
 } from "lucide-react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { useAuthGate } from "@/contexts/AuthGateContext";
+import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import Colors from "@/constants/colors";
-import { mockUsers } from "@/mocks/data";
 
 type ActivityType = "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined";
 
@@ -58,179 +64,117 @@ interface MilestoneItem {
   createdAt: string;
 }
 
+type FeedFilter = "global" | "friends" | "team";
+
 interface LeaderboardEntry {
   id: string;
+  userId: string;
   username: string;
   displayName: string;
   avatar: string;
   streak: number;
   rank: number;
   secured: boolean;
+  score: number;
+  respectCount: number;
+  badge?: "Elite" | "Relentless" | "Builder" | "Starter";
 }
 
-const WEEK_STATS = {
-  consistencyScore: 86,
-  respectEarned: 12,
-  daysSecured: 6,
-  totalDays: 7,
+function DailyStatsCard({ securedToday }: { securedToday: number }) {
+  return (
+    <View style={styles.dailyStatsCard}>
+      <View style={styles.dailyStatRow}>
+        <Shield size={18} color={Colors.streak.shield} />
+        <Text style={styles.dailyStatValue}>{securedToday}</Text>
+        <Text style={styles.dailyStatLabel}>secured today</Text>
+      </View>
+    </View>
+  );
+}
+
+const BADGE_STYLES: Record<string, { bg: string; text: string }> = {
+  Elite: { bg: "rgba(212,160,23,0.2)", text: "#B8860B" },
+  Relentless: { bg: "rgba(232,125,79,0.2)", text: Colors.accent },
+  Builder: { bg: "rgba(46,125,74,0.15)", text: Colors.streak.shield },
+  Initiate: { bg: "rgba(107,114,128,0.2)", text: Colors.text.tertiary },
 };
 
-const mockLeaderboard: LeaderboardEntry[] = [
-  { id: "user3", username: "sam_rivers", displayName: "Sam", avatar: "https://i.pravatar.cc/150?img=3", streak: 60, rank: 1, secured: true },
-  { id: "user2", username: "jordan_lee", displayName: "Jordan", avatar: "https://i.pravatar.cc/150?img=2", streak: 45, rank: 2, secured: true },
-  { id: "user1", username: "alex_martinez", displayName: "You", avatar: "https://i.pravatar.cc/150?img=1", streak: 14, rank: 3, secured: true },
-  { id: "user4", username: "taylor_chen", displayName: "Taylor", avatar: "https://i.pravatar.cc/150?img=4", streak: 12, rank: 4, secured: false },
-  { id: "user5", username: "maya_patel", displayName: "Maya", avatar: "https://i.pravatar.cc/150?img=5", streak: 3, rank: 5, secured: true },
-];
-
-const mockMilestones: MilestoneItem[] = [
-  {
-    id: "m1",
-    icon: "flame",
-    actorUsername: "sam_rivers",
-    actorDisplayName: "Sam",
-    actorId: "user3",
-    text: "locked in Day 60. Respect.",
-    badge: "MILESTONE",
-    dayNumber: 60,
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "m2",
-    icon: "trophy",
-    actorUsername: "jordan_lee",
-    actorDisplayName: "Jordan",
-    actorId: "user2",
-    text: "reached Day 30. Keep going.",
-    badge: "MILESTONE",
-    dayNumber: 30,
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "m3",
-    icon: "flag",
-    actorUsername: "alex_martinez",
-    actorDisplayName: "You",
-    actorId: "user1",
-    text: "secured 6 days this week.",
-    badge: "STREAK",
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const mockRecentActivity: ActivityItem[] = [
-  { id: "r1", type: "respect", actorId: "user3", actorUsername: "sam_rivers", actorDisplayName: "Sam", targetTitle: "Day 14", createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), read: false },
-  { id: "r2", type: "day_secured", actorId: "user2", actorUsername: "jordan_lee", actorDisplayName: "Jordan", targetTitle: "Morning Warrior", dayNumber: 45, createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), read: false },
-  { id: "r3", type: "follow", actorId: "user4", actorUsername: "taylor_chen", actorDisplayName: "Taylor", createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), read: true },
-  { id: "r4", type: "challenge_joined", actorId: "user5", actorUsername: "maya_patel", actorDisplayName: "Maya", targetTitle: "30 Day Mindful", createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(), read: true },
-  { id: "r5", type: "streak_milestone", actorId: "user3", actorUsername: "sam_rivers", actorDisplayName: "Sam", dayNumber: 60, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), read: true },
-];
-
-function ConsistencyCard({ stats }: { stats: typeof WEEK_STATS }) {
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(progressAnim, {
-        toValue: stats.consistencyScore / 100,
-        duration: 1000,
-        useNativeDriver: false,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [stats.consistencyScore, progressAnim, fadeAnim]);
-
-  const scoreColor = stats.consistencyScore >= 70 ? Colors.streak.shield : stats.consistencyScore >= 40 ? Colors.accent : "#DC2626";
-  const barWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0%", "100%"],
-  });
-
+function TopThisWeekRow({ entries }: { entries: LeaderboardEntry[] }) {
+  const top4 = entries.slice(0, 4);
   return (
-    <Animated.View style={[styles.consistencyCard, { opacity: fadeAnim }]}>
-      <View style={styles.consistencyTop}>
-        <View>
-          <Text style={styles.consistencyLabel}>This week</Text>
-          <Text style={[styles.consistencyScore, { color: scoreColor }]}>
-            {stats.consistencyScore}%
-          </Text>
-        </View>
-        <View style={styles.consistencyMini}>
-          <View style={styles.miniStat}>
-            <Shield size={14} color={Colors.streak.shield} />
-            <Text style={styles.miniStatValue}>{stats.daysSecured}/{stats.totalDays}</Text>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.topThisWeekScroll}
+    >
+      {top4.map((entry) => (
+        <View key={entry.id} style={styles.topThisWeekItem}>
+          <View style={styles.topThisWeekAvatarWrap}>
+            <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.topThisWeekAvatar} contentFit="cover" />
+            <View style={[styles.topThisWeekRankBadge, entry.rank === 1 && styles.topThisWeekRankBadgeGold]}>
+              <Text style={styles.topThisWeekRankText}>{entry.rank}</Text>
+            </View>
           </View>
-          <View style={styles.miniStat}>
-            <Star size={14} color={Colors.accent} />
-            <Text style={styles.miniStatValue}>+{stats.respectEarned}</Text>
+          <Text style={styles.topThisWeekName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
+          <View style={styles.topThisWeekScoreRow}>
+            <Zap size={12} color={Colors.accent} />
+            <Text style={styles.topThisWeekScore}>+{entry.score}</Text>
           </View>
         </View>
-      </View>
-
-      <View style={styles.consistencyBarTrack}>
-        <Animated.View
-          style={[styles.consistencyBarFill, { width: barWidth, backgroundColor: scoreColor }]}
-        />
-      </View>
-    </Animated.View>
+      ))}
+    </ScrollView>
   );
 }
 
 function LeaderboardSection({ entries }: { entries: LeaderboardEntry[] }) {
-  const getRankIcon = useCallback((rank: number) => {
-    if (rank === 1) return <Crown size={14} color={Colors.milestone.gold} fill={Colors.milestone.gold} />;
-    if (rank === 2) return <Crown size={14} color={Colors.milestone.silver} />;
-    if (rank === 3) return <Crown size={14} color={Colors.milestone.bronze} />;
-    return null;
-  }, []);
+  const top3 = entries.slice(0, 3);
+  const rest = entries.slice(3);
+  const rankCircleColor = (rank: number) => (rank === 1 ? "#D4A017" : rank === 2 ? "#9CA3AF" : Colors.accent);
 
   return (
     <View style={styles.leaderboardSection}>
-      <View style={styles.sectionHeaderRow}>
-        <Trophy size={15} color={Colors.milestone.gold} />
-        <Text style={styles.sectionTitle}>Consistency Ranking</Text>
+      <View style={styles.weeklyLeaderboardHeader}>
+        <View style={styles.sectionHeaderRow}>
+          <Trophy size={16} color="#D4A017" />
+          <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
+        </View>
+        <Text style={styles.resetsSunday}>Resets Sunday</Text>
       </View>
-      {entries.map((entry, i) => {
-        const isYou = entry.displayName === "You";
-        return (
-          <View key={entry.id} style={[styles.leaderboardRow, isYou && styles.leaderboardRowYou]}>
-            <View style={styles.rankColumn}>
-              {getRankIcon(entry.rank) || (
-                <Text style={styles.rankNumber}>{entry.rank}</Text>
-              )}
+      <View style={styles.topThreeRow}>
+        {top3.map((entry) => (
+          <View key={entry.id} style={[styles.topThreeCard, entry.rank === 1 && styles.topThreeCardFirst]}>
+            <View style={[styles.topThreeRankCircle, { backgroundColor: rankCircleColor(entry.rank) + "22" }]}>
+              <Text style={[styles.topThreeRankText, { color: rankCircleColor(entry.rank) }]}>{entry.rank}</Text>
             </View>
-            <Image
-              source={{ uri: entry.avatar }}
-              style={styles.leaderboardAvatar}
-              contentFit="cover"
-            />
-            <View style={styles.leaderboardInfo}>
-              <Text style={[styles.leaderboardName, isYou && styles.leaderboardNameYou]}>
-                {entry.displayName}
-              </Text>
-              <View style={styles.leaderboardMeta}>
-                <Flame size={11} color={Colors.streak.fire} />
-                <Text style={styles.leaderboardStreak}>{entry.streak}d</Text>
-              </View>
-            </View>
-            {entry.secured ? (
-              <View style={styles.securedPill}>
-                <Shield size={10} color={Colors.streak.shield} fill={Colors.streak.shield} />
-                <Text style={styles.securedPillText}>Secured</Text>
-              </View>
-            ) : (
-              <View style={styles.pendingPill}>
-                <Text style={styles.pendingPillText}>Pending</Text>
+            <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.topThreeAvatar} contentFit="cover" />
+            <Text style={styles.topThreeName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
+            <Text style={styles.topThreeScore}>+{entry.score}</Text>
+            {entry.badge && (
+              <View style={[styles.topThreeBadge, { backgroundColor: BADGE_STYLES[entry.badge]?.bg || Colors.pill }]}>
+                {entry.rank === 1 && <Crown size={10} color="#B8860B" />}
+                <Text style={[styles.topThreeBadgeText, { color: BADGE_STYLES[entry.badge]?.text || Colors.text.secondary }]}>{entry.badge}</Text>
               </View>
             )}
           </View>
-        );
-      })}
+        ))}
+      </View>
+      {rest.map((entry) => (
+        <View key={entry.id} style={styles.leaderboardRow}>
+          <Text style={styles.leaderboardRankNum}>#{entry.rank}</Text>
+          <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.leaderboardAvatar} contentFit="cover" />
+          <View style={styles.leaderboardInfo}>
+            <View style={styles.leaderboardNameRow}>
+              <Text style={styles.leaderboardName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
+              {entry.secured && <Shield size={12} color={Colors.streak.shield} style={{ marginLeft: 4 }} />}
+            </View>
+            <View style={styles.leaderboardMeta}>
+              <Flame size={11} color={Colors.accent} />
+              <Text style={styles.leaderboardStreak}>{entry.streak}d</Text>
+            </View>
+          </View>
+          <Text style={styles.leaderboardScoreRight}>+{entry.score}</Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -260,10 +204,7 @@ function MilestoneSection({ items }: { items: MilestoneItem[] }) {
     }
   };
 
-  const getUserAvatar = (actorId: string) => {
-    const user = mockUsers.find((u) => u.id === actorId);
-    return user?.avatar || `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`;
-  };
+  const getUserAvatar = (actorId: string) => `https://i.pravatar.cc/150?u=${actorId}`;
 
   return (
     <View style={styles.milestoneSection}>
@@ -306,6 +247,65 @@ function MilestoneSection({ items }: { items: MilestoneItem[] }) {
   );
 }
 
+function MovementFeedSection({
+  entries,
+  onGiveRespect,
+  givingRespectId,
+}: {
+  entries: LeaderboardEntry[];
+  onGiveRespect: (userId: string) => Promise<void>;
+  givingRespectId: string | null;
+}) {
+  return (
+    <View style={styles.movementFeedSection}>
+      <Text style={styles.movementFeedSectionTitle}>THIS WEEK</Text>
+      {entries.length === 0 ? (
+        <Text style={styles.onlyDisciplineShows}>Be the first this week.</Text>
+      ) : (
+        <>
+          {entries.map((entry) => {
+            const badge = entry.badge && BADGE_STYLES[entry.badge];
+            return (
+              <View key={entry.id} style={styles.movementFeedItem}>
+                <View style={styles.movementFeedAvatarWrap}>
+                  <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.movementFeedAvatar} contentFit="cover" />
+                </View>
+                <View style={styles.movementFeedBody}>
+                  <View style={styles.movementFeedNameRow}>
+                    <Text style={styles.movementFeedName}>{entry.displayName || entry.username}</Text>
+                    {badge && (
+                      <View style={[styles.movementFeedBadge, { backgroundColor: badge.bg }]}>
+                        <Text style={[styles.movementFeedBadgeText, { color: badge.text }]}>{entry.badge}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.movementFeedDesc}>{entry.score} day{entry.score !== 1 ? "s" : ""} secured this week • {entry.streak}d streak</Text>
+                  <View style={styles.movementFeedMeta}>
+                    <Flame size={11} color={Colors.accent} />
+                    <Text style={styles.movementFeedTime}>#{entry.rank}</Text>
+                  </View>
+                </View>
+                <View style={styles.movementFeedActions}>
+                  <TouchableOpacity
+                    style={styles.movementFeedRespect}
+                    onPress={() => onGiveRespect(entry.userId)}
+                    disabled={givingRespectId === entry.userId}
+                    activeOpacity={0.7}
+                  >
+                    <ThumbsUp size={14} color={Colors.text.tertiary} />
+                    <Text style={styles.movementFeedRespectCount}>{entry.respectCount}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
+          <Text style={styles.onlyDisciplineShows}>Only discipline shows here.</Text>
+        </>
+      )}
+    </View>
+  );
+}
+
 function RecentActivitySection({ items }: { items: ActivityItem[] }) {
   const [expanded, setExpanded] = useState(false);
   const visibleItems = expanded ? items : items.slice(0, 3);
@@ -343,10 +343,7 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
     }
   };
 
-  const getUserAvatar = (userId: string) => {
-    const user = mockUsers.find((u) => u.id === userId);
-    return user?.avatar || `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`;
-  };
+  const getUserAvatar = (userId: string) => `https://i.pravatar.cc/150?u=${userId}`;
 
   if (items.length === 0) return null;
 
@@ -396,29 +393,110 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
   );
 }
 
-export default function ActivityScreen() {
-  useApp();
-  const [refreshing, setRefreshing] = useState(false);
+function mapApiEntryToLeaderboardEntry(e: any): LeaderboardEntry {
+  return {
+    id: e.userId,
+    userId: e.userId,
+    username: e.username,
+    displayName: e.displayName || e.username,
+    avatar: e.avatarUrl || "",
+    streak: e.currentStreak ?? 0,
+    rank: e.rank ?? 0,
+    secured: (e.securedDaysThisWeek ?? 0) > 0,
+    score: e.securedDaysThisWeek ?? 0,
+    respectCount: e.respectCount ?? 0,
+  };
+}
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+export default function ActivityScreen() {
+  const { refetchAll } = useApp();
+  const [refreshing, setRefreshing] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<FeedFilter>("global");
+  const [leaderboard, setLeaderboard] = useState<{ entries: LeaderboardEntry[]; totalSecuredToday: number }>({ entries: [], totalSecuredToday: 0 });
+  const [givingRespectId, setGivingRespectId] = useState<string | null>(null);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const data = await trpcQuery("leaderboard.getWeekly") as any;
+      const entries = (data?.entries ?? []).map(mapApiEntryToLeaderboardEntry);
+      setLeaderboard({
+        entries,
+        totalSecuredToday: data?.totalSecuredToday ?? 0,
+      });
+    } catch {
+      setLeaderboard({ entries: [], totalSecuredToday: 0 });
+    }
   }, []);
 
-  const unreadCount = useMemo(
-    () => mockRecentActivity.filter((a) => !a.read).length,
-    []
-  );
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetchAll();
+    await fetchLeaderboard();
+    setRefreshing(false);
+  }, [refetchAll, fetchLeaderboard]);
+
+  const handleGiveRespect = useCallback(async (recipientId: string) => {
+    setGivingRespectId(recipientId);
+    try {
+      await trpcMutate("respects.give", { recipientId });
+      await fetchLeaderboard();
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "Could not send respect.");
+    } finally {
+      setGivingRespectId(null);
+    }
+  }, [fetchLeaderboard]);
+
+  const { requireAuth } = useAuthGate();
+  const handleTeamsPress = useCallback(() => {
+    requireAuth("team", () => {
+      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Alert.alert("Teams", "Teams and accountability groups are coming soon.");
+    });
+  }, [requireAuth]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Activity</Text>
-        {unreadCount > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadText}>{unreadCount}</Text>
-          </View>
-        )}
+        <View>
+          <Text style={styles.title}>Movement</Text>
+          <Text style={styles.subtitle}>Proof of discipline</Text>
+        </View>
+        <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8}>
+          <Users size={16} color={Colors.text.secondary} />
+          <Text style={styles.teamsButtonText}>Teams</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.filterRow}>
+        <TouchableOpacity
+          style={[styles.filterPill, feedFilter === "global" && styles.filterPillActive]}
+          onPress={() => setFeedFilter("global")}
+          activeOpacity={0.8}
+        >
+          <Globe size={14} color={feedFilter === "global" ? "#fff" : Colors.text.secondary} />
+          <Text style={[styles.filterPillText, feedFilter === "global" && styles.filterPillTextActive]}>Global</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterPill, feedFilter === "friends" && styles.filterPillActive]}
+          onPress={() => setFeedFilter("friends")}
+          activeOpacity={0.8}
+        >
+          <Users size={14} color={feedFilter === "friends" ? "#fff" : Colors.text.secondary} />
+          <Text style={[styles.filterPillText, feedFilter === "friends" && styles.filterPillTextActive]}>Friends</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterPill, feedFilter === "team" && styles.filterPillActive]}
+          onPress={() => setFeedFilter("team")}
+          activeOpacity={0.8}
+        >
+          <Users size={14} color={feedFilter === "team" ? "#fff" : Colors.text.secondary} />
+          <Text style={[styles.filterPillText, feedFilter === "team" && styles.filterPillTextActive]}>Team</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -426,17 +504,42 @@ export default function ActivityScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.accent}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />
         }
       >
-        <ConsistencyCard stats={WEEK_STATS} />
-        <LeaderboardSection entries={mockLeaderboard} />
-        <MilestoneSection items={mockMilestones} />
-        <RecentActivitySection items={mockRecentActivity} />
+        <View style={styles.dailyStatsWrap}>
+          <DailyStatsCard securedToday={leaderboard.totalSecuredToday} />
+        </View>
+        <View style={styles.topThisWeekSection}>
+          <View style={styles.sectionHeaderRow}>
+            <TrendingUp size={16} color={Colors.accent} />
+            <Text style={styles.weeklyLeaderboardTitle}>Top This Week</Text>
+          </View>
+          {leaderboard.entries.length === 0 ? (
+            <Text style={styles.emptyLeaderboardText}>Be the first this week.</Text>
+          ) : (
+            <TopThisWeekRow entries={leaderboard.entries} />
+          )}
+        </View>
+        {leaderboard.entries.length === 0 ? (
+          <View style={styles.leaderboardSection}>
+            <View style={styles.weeklyLeaderboardHeader}>
+              <View style={styles.sectionHeaderRow}>
+                <Trophy size={16} color="#D4A017" />
+                <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
+              </View>
+              <Text style={styles.resetsSunday}>Resets Sunday</Text>
+            </View>
+            <Text style={styles.emptyLeaderboardText}>Be the first this week.</Text>
+          </View>
+        ) : (
+          <LeaderboardSection entries={leaderboard.entries} />
+        )}
+        <MovementFeedSection
+          entries={leaderboard.entries}
+          onGiveRespect={handleGiveRespect}
+          givingRespectId={givingRespectId}
+        />
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
@@ -462,6 +565,27 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     letterSpacing: -0.5,
   },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: "400" as const,
+    color: Colors.text.secondary,
+    marginTop: 2,
+  },
+  teamsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.pill,
+    marginLeft: "auto",
+  },
+  teamsButtonText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
+  },
   unreadBadge: {
     backgroundColor: Colors.accent,
     width: 22,
@@ -480,6 +604,308 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 32,
+  },
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  filterPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: Colors.pill,
+  },
+  filterPillActive: {
+    backgroundColor: Colors.text.primary,
+  },
+  filterPillText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
+  },
+  filterPillTextActive: {
+    color: "#fff",
+  },
+  dailyStatsWrap: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  dailyStatsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  dailyStatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  dailyStatValue: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  dailyStatLabel: {
+    fontSize: 14,
+    fontWeight: "400" as const,
+    color: Colors.text.primary,
+  },
+  topThisWeekSection: {
+    paddingHorizontal: 20,
+    marginBottom: 4,
+  },
+  topThisWeekScroll: {
+    paddingHorizontal: 0,
+    gap: 14,
+    paddingBottom: 8,
+  },
+  topThisWeekItem: {
+    alignItems: "center",
+    width: 80,
+  },
+  topThisWeekAvatarWrap: {
+    position: "relative",
+    marginBottom: 6,
+  },
+  topThisWeekAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  topThisWeekRankBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.text.tertiary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topThisWeekRankBadgeGold: {
+    backgroundColor: "#D4A853",
+  },
+  topThisWeekRankText: {
+    fontSize: 11,
+    fontWeight: "800" as const,
+    color: "#fff",
+  },
+  topThisWeekName: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+    marginBottom: 2,
+  },
+  topThisWeekScoreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  topThisWeekScore: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  weeklyLeaderboardTitle: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  weeklyLeaderboardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  resetsSunday: {
+    fontSize: 12,
+    fontWeight: "400" as const,
+    color: Colors.text.tertiary,
+  },
+  topThreeRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  topThreeCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  topThreeCardFirst: {
+    backgroundColor: "#FDF8E8",
+    borderColor: "#E8D9A0",
+  },
+  topThreeRankCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  topThreeRankText: {
+    fontSize: 14,
+    fontWeight: "800" as const,
+  },
+  topThreeAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginBottom: 6,
+  },
+  topThreeName: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+    marginBottom: 2,
+  },
+  topThreeScore: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    marginBottom: 6,
+  },
+  topThreeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  topThreeBadgeText: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+  },
+  leaderboardRankNum: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    width: 28,
+  },
+  leaderboardNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  leaderboardScoreRight: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  movementFeedSection: {
+    marginTop: 24,
+    paddingHorizontal: 20,
+  },
+  movementFeedSectionTitle: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  movementFeedItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+  },
+  movementFeedAvatarWrap: {
+    marginRight: 12,
+  },
+  movementFeedAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: Colors.streak.shield,
+  },
+  movementFeedBody: {
+    flex: 1,
+  },
+  movementFeedNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 2,
+  },
+  movementFeedName: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  movementFeedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  movementFeedBadgeText: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+  },
+  movementFeedDesc: {
+    fontSize: 13,
+    fontWeight: "400" as const,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  movementFeedMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  movementFeedTime: {
+    fontSize: 12,
+    fontWeight: "400" as const,
+    color: Colors.text.tertiary,
+  },
+  movementFeedActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  movementFeedRespect: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  movementFeedRespectCount: {
+    fontSize: 12,
+    fontWeight: "500" as const,
+    color: Colors.text.tertiary,
+  },
+  emptyLeaderboardText: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
+    textAlign: "center",
+    paddingVertical: 20,
+  },
+  onlyDisciplineShows: {
+    fontSize: 13,
+    fontWeight: "400" as const,
+    color: Colors.text.tertiary,
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 8,
   },
 
   consistencyCard: {

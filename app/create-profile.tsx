@@ -1,78 +1,60 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import Colors from '@/constants/colors';
+import React, { useState } from "react";
+import { View, TextInput, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
+import { supabase } from "@/lib/supabase";
+import { Screen, Input, PrimaryButton } from "@/src/components/ui";
+import { H1, Body, Caption } from "@/src/components/Typography";
+import { colors } from "@/src/theme/colors";
+import { spacing } from "@/src/theme/spacing";
 
 export default function CreateProfileScreen() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
   const [isPending, setIsPending] = useState(false);
 
   const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {
     setIsPending(true);
     try {
-      console.log('Creating profile with data:', data);
-      
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
-        console.error('Failed to get session:', sessionError);
-        Alert.alert(
-          'Session Expired',
-          'Your session has expired. Please log in again.',
-          [{ text: 'OK', onPress: () => router.replace('/auth/login' as any) }]
+        require("react-native").Alert.alert(
+          "Session Expired",
+          "Your session has expired. Please log in again.",
+          [{ text: "OK", onPress: () => router.replace("/auth/login" as any) }]
         );
         return;
       }
-      
       const userId = sessionData.session.user.id;
-      console.log('Got user from session:', userId);
-      
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          username: data.username,
-          display_name: data.display_name,
-          bio: data.bio,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' })
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            user_id: userId,
+            username: data.username,
+            display_name: data.display_name,
+            bio: data.bio,
+            updated_at: new Date().toISOString(),
+            onboarding_completed: false,
+          },
+          { onConflict: "user_id" }
+        )
         .select()
         .maybeSingle();
-      
+
       if (error) {
-        console.error('Supabase profile upsert error:', error);
-        const code = (error as any).code;
-        if (code === '23505') {
-          Alert.alert('Error', 'Username is already taken. Please choose another.');
+        const code = (error as { code?: string }).code;
+        if (code === "23505") {
+          require("react-native").Alert.alert("Error", "Username is already taken. Please choose another.");
           return;
         }
-        Alert.alert('Error', error.message || 'Failed to create profile');
+        require("react-native").Alert.alert("Error", error.message || "Failed to create profile");
         return;
       }
-      
-      if (!profile) {
-        console.log('Upsert returned no row, but no error — likely RLS restriction');
-      } else {
-        console.log('Profile created successfully:', profile);
-      }
-      router.replace('/(tabs)');
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Something went wrong');
+      router.replace("/onboarding" as any);
+    } catch (err: unknown) {
+      require("react-native").Alert.alert("Error", (err as Error).message || "Something went wrong");
     } finally {
       setIsPending(false);
     }
@@ -80,20 +62,17 @@ export default function CreateProfileScreen() {
 
   const handleCreateProfile = async () => {
     if (!username.trim()) {
-      Alert.alert('Error', 'Username is required');
+      require("react-native").Alert.alert("Error", "Username is required");
       return;
     }
-
     if (username.length < 3) {
-      Alert.alert('Error', 'Username must be at least 3 characters');
+      require("react-native").Alert.alert("Error", "Username must be at least 3 characters");
       return;
     }
-
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      Alert.alert('Error', 'Username can only contain letters, numbers, and underscores');
+      require("react-native").Alert.alert("Error", "Username can only contain letters, numbers, and underscores");
       return;
     }
-
     handleSubmit({
       username: username.trim().toLowerCase(),
       display_name: displayName.trim() || username.trim(),
@@ -101,157 +80,134 @@ export default function CreateProfileScreen() {
     });
   };
 
+  const validUsername = username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username);
+  const validDisplayName = (displayName.trim() || username.trim()).length >= 2;
+  const canContinue = validUsername && validDisplayName;
+
+  const header = (
+    <View style={styles.topRow}>
+      <Caption style={styles.gritLogo}>GRIT</Caption>
+      <View style={styles.progressWrap}>
+        <View style={styles.progressLine} />
+        <Caption tone="subtle">1/5</Caption>
+      </View>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Text style={styles.title}>Create Your Profile</Text>
-            <Text style={styles.subtitle}>Choose a unique username and tell us about yourself</Text>
-          </View>
+    <Screen scroll keyboardAvoiding header={header}>
+      <View style={styles.header}>
+        <Caption style={styles.stepLabel}>GETTING STARTED</Caption>
+        <H1 style={styles.title}>Claim your name.</H1>
+        <Body tone="muted" style={styles.subtitle}>
+          This is how others will know you.
+        </Body>
+      </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Username *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="johndoe"
-                placeholderTextColor={Colors.text.tertiary}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isPending}
-              />
-              <Text style={styles.hint}>Letters, numbers, and underscores only</Text>
-            </View>
+      <View style={styles.form}>
+        <View style={styles.inputGroup}>
+          <Caption style={styles.label}>Username</Caption>
+          <Input
+            placeholder="your_username"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!isPending}
+          />
+          <Caption tone="subtle" style={styles.hint}>
+            Letters, numbers, and underscores only
+          </Caption>
+        </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Display Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="John Doe"
-                placeholderTextColor={Colors.text.tertiary}
-                value={displayName}
-                onChangeText={setDisplayName}
-                autoCapitalize="words"
-                editable={!isPending}
-              />
-            </View>
+        <View style={styles.inputGroup}>
+          <Caption style={styles.label}>Display Name</Caption>
+          <Input
+            placeholder="Your Name"
+            value={displayName}
+            onChangeText={setDisplayName}
+            autoCapitalize="words"
+            editable={!isPending}
+          />
+        </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Bio</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Tell us about yourself..."
-                placeholderTextColor={Colors.text.tertiary}
-                value={bio}
-                onChangeText={setBio}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-                editable={!isPending}
-              />
-            </View>
+        <View style={styles.inputGroup}>
+          <Caption style={styles.label}>Bio</Caption>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Tell us about yourself..."
+            placeholderTextColor={colors.textSubtle}
+            value={bio}
+            onChangeText={setBio}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            editable={!isPending}
+          />
+        </View>
 
-            <TouchableOpacity
-              style={[styles.button, isPending && styles.buttonDisabled]}
-              onPress={handleCreateProfile}
-              disabled={isPending}
-              activeOpacity={0.8}
-            >
-              {isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Continue to GRIT</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        <PrimaryButton
+          title="Continue"
+          onPress={handleCreateProfile}
+          variant="black"
+          disabled={!canContinue || isPending}
+          loading={isPending}
+          style={styles.continueBtn}
+          testID="create-profile-continue"
+        />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.xl,
   },
-  keyboardView: {
-    flex: 1,
+  gritLogo: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+  progressWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
-  header: {
-    marginBottom: 32,
+  progressLine: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: Colors.text.primary,
-    marginBottom: 8,
-    letterSpacing: -0.5,
+  header: { paddingTop: spacing.lg, marginBottom: spacing.xxl - 4 },
+  stepLabel: {
+    color: colors.accent,
+    marginBottom: spacing.sm,
   },
-  subtitle: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
-  },
-  form: {
-    width: '100%',
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text.primary,
-    marginBottom: 8,
-  },
+  title: { marginBottom: spacing.sm },
+  subtitle: { marginBottom: 0 },
+  form: { width: "100%", paddingBottom: spacing.xxl },
+  inputGroup: { marginBottom: spacing.xl },
+  label: { marginBottom: spacing.sm },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
+    borderColor: colors.border,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontSize: 15,
-    color: Colors.text.primary,
+    fontSize: 16,
+    color: colors.text,
+    minHeight: 54,
   },
   textArea: {
     minHeight: 80,
     paddingTop: 14,
   },
-  hint: {
-    fontSize: 12,
-    color: Colors.text.tertiary,
-    marginTop: 6,
-  },
-  button: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: '#fff',
-    letterSpacing: 0.3,
-  },
+  hint: { marginTop: spacing.xs },
+  continueBtn: { marginTop: spacing.xl },
 });

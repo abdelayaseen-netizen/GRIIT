@@ -3,12 +3,19 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View } from "react-native";
+import { useFonts } from "@expo-google-fonts/inter/useFonts";
+import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { supabase } from "@/lib/supabase";
+import { colors } from "@/src/theme/colors";
 
 SplashScreen.preventAutoHideAsync();
+
+const PROFILE_CHECK_TIMEOUT_MS = 2500;
+const SPLASH_MAX_MS = 1800;
 
 function AuthRedirector() {
   const { user, loading } = useAuth();
@@ -16,36 +23,33 @@ function AuthRedirector() {
   const router = useRouter();
   const [profileChecked, setProfileChecked] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
   const checkProfile = useCallback(async (userId: string) => {
     try {
       const timeoutPromise = new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), 4000)
+        setTimeout(() => resolve(null), PROFILE_CHECK_TIMEOUT_MS)
       );
 
       const profilePromise = supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
+        .from("profiles")
+        .select("user_id, onboarding_completed")
+        .eq("user_id", userId)
         .single()
-        .then(({ data, error }) => {
-          if (error && error.code !== 'PGRST116') {
-            console.log('[AuthRedirector] Profile check error:', error.message);
-          }
-          return data;
-        });
+        .then(({ data }: { data: any }) => data);
 
       const result = await Promise.race([profilePromise, timeoutPromise]);
 
       if (result === null) {
-        console.log('[AuthRedirector] Profile check timed out, assuming has profile');
         setHasProfile(true);
+        setOnboardingCompleted(true);
       } else {
         setHasProfile(!!result);
+        setOnboardingCompleted(result?.onboarding_completed === true);
       }
     } catch {
-      console.log('[AuthRedirector] Profile check failed (network?), assuming has profile');
       setHasProfile(true);
+      setOnboardingCompleted(true);
     } finally {
       setProfileChecked(true);
     }
@@ -58,6 +62,7 @@ function AuthRedirector() {
     } else {
       setProfileChecked(true);
       setHasProfile(false);
+      setOnboardingCompleted(null);
     }
   }, [user, loading, checkProfile]);
 
@@ -67,21 +72,28 @@ function AuthRedirector() {
     const first = segments[0];
     const inAuth = (first as any) === "auth";
     const onCreateProfile = (first as any) === "create-profile";
+    const inOnboarding = (first as any) === "onboarding";
+    const inDay1QuickWin = (first as any) === "day1-quick-win";
 
-    if (!user && !inAuth) {
-      router.replace("/auth/login" as any);
+    if (!user) {
+      if (inAuth) return;
       return;
     }
 
-    if (user && !hasProfile && !onCreateProfile) {
+    if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
       router.replace("/create-profile" as any);
       return;
     }
 
-    if (user && hasProfile && (inAuth || onCreateProfile)) {
-      router.replace("/(tabs)");
+    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin) {
+      router.replace("/onboarding" as any);
+      return;
     }
-  }, [user, loading, segments, hasProfile, profileChecked, router]);
+
+    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile || inOnboarding)) {
+      router.replace("/(tabs)" as any);
+    }
+  }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, router]);
 
   if (loading || (user && !profileChecked)) {
     return (
@@ -90,10 +102,10 @@ function AuthRedirector() {
         inset: 0,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#F9FAFB",
+        backgroundColor: colors.bg,
         zIndex: 999,
       }}>
-        <ActivityIndicator size="large" color="#E87D4F" />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -106,6 +118,7 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="edit-profile" options={{ headerShown: false, presentation: "modal" }} />
       <Stack.Screen name="success" options={{ headerShown: false, presentation: "modal" }} />
@@ -177,25 +190,43 @@ function RootLayoutNav() {
           presentation: "modal"
         }} 
       />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="day1-quick-win" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_800ExtraBold,
+  });
+
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (!fontsLoaded) return;
+    const t = setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, SPLASH_MAX_MS);
+    return () => clearTimeout(t);
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <ApiProvider>
-          <AppProvider>
-            <RootLayoutNav />
-            <AuthRedirector />
-          </AppProvider>
-        </ApiProvider>
+        <AuthGateProvider>
+          <ApiProvider>
+            <AppProvider>
+              <RootLayoutNav />
+              <AuthRedirector />
+            </AppProvider>
+          </ApiProvider>
+        </AuthGateProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

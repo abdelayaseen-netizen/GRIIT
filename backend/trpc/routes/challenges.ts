@@ -36,7 +36,6 @@ export const challengesRouter = createTRPCRouter({
       category: z.string().optional(),
     }).optional())
     .query(async ({ input, ctx }) => {
-      console.log('[challenges.getFeatured] Fetching featured challenges...');
       let query = ctx.supabase
         .from('challenges')
         .select(`
@@ -58,16 +57,61 @@ export const challengesRouter = createTRPCRouter({
       }
 
       const { data, error } = await query;
-      if (error) {
-        console.error('[challenges.getFeatured] Error:', error.message);
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
-      console.log('[challenges.getFeatured] Found', data?.length, 'challenges');
+      // TODO: backend needs to support active_today_count (count of users who secured today per challenge)
       return (data || []).map((challenge: any) => ({
         ...challenge,
         tasks: challenge.challenge_tasks || [],
       }));
+    }),
+
+  /** Curated list of starter-pack challenges (e.g. onboarding). Stable order. Requires challenges seeded with source_starter_id. */
+  getStarterPack: publicProcedure
+    .query(async ({ ctx }) => {
+      const ORDER: string[] = [
+        'onboard-water',
+        'onboard-steps',
+        'onboard-read',
+        'onboard-journal',
+        'onboard-breath',
+        'onboard-bed',
+      ];
+      const { data: rows, error } = await ctx.supabase
+        .from('challenges')
+        .select(`
+          id,
+          title,
+          description,
+          short_hook,
+          theme_color,
+          duration_type,
+          duration_days,
+          difficulty,
+          category,
+          visibility,
+          status,
+          source_starter_id,
+          challenge_tasks (id, title, type, required, duration_minutes, min_words)
+        `)
+        .not('source_starter_id', 'is', null)
+        .eq('visibility', 'public')
+        .eq('status', 'published');
+
+      if (error) throw new Error(error.message);
+      const list = (rows || []).map((c: any) => ({
+        ...c,
+        tasks: c.challenge_tasks || [],
+      }));
+      list.sort((a: any, b: any) => {
+        const ai = ORDER.indexOf(a.source_starter_id);
+        const bi = ORDER.indexOf(b.source_starter_id);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+      return list.slice(0, 10);
     }),
 
   getById: publicProcedure
@@ -225,15 +269,6 @@ export const challengesRouter = createTRPCRouter({
       })).min(1, "At least one task is required"),
     }))
     .mutation(async ({ input, ctx }) => {
-      console.log('[challenges.create] Starting mutation:', {
-        title: input.title,
-        type: input.type,
-        durationDays: input.durationDays,
-        tasksCount: input.tasks.length,
-        userId: ctx.userId,
-        hasSupabase: !!ctx.supabase,
-      });
-
       if (input.tasks.length === 0) {
         throw new Error('At least one task is required');
       }
@@ -296,11 +331,8 @@ export const challengesRouter = createTRPCRouter({
         .single();
 
       if (challengeError) {
-        console.error('[challenges.create] Challenge insert error:', JSON.stringify(challengeError));
         throw new Error(`Failed to create challenge: ${challengeError.message} (code: ${challengeError.code}, details: ${challengeError.details})`);
       }
-
-      console.log('[challenges.create] Challenge row inserted:', challenge.id);
 
       const tasksToInsert = input.tasks.map((task) => ({
         challenge_id: challenge.id,
@@ -348,14 +380,8 @@ export const challengesRouter = createTRPCRouter({
         .select();
 
       if (tasksError) {
-        console.error('[challenges.create] Tasks insert error:', JSON.stringify(tasksError));
         throw new Error(`Failed to create tasks: ${tasksError.message} (code: ${tasksError.code}, details: ${tasksError.details})`);
       }
-
-      console.log('[challenges.create] Success:', {
-        challengeId: challenge.id,
-        tasksCount: tasks?.length || 0
-      });
 
       return {
         ...challenge,

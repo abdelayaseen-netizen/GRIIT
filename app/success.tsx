@@ -81,8 +81,8 @@ export default function SuccessScreen() {
       } else {
         await Share.share({ message, title: "Challenge Complete" });
       }
-    } catch (error) {
-      console.log("Share failed:", error);
+    } catch {
+      // Share failed — optional action, no alert
     }
   };
 

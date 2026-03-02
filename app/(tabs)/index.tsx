@@ -8,30 +8,56 @@ import {
   Animated,
   Platform,
   RefreshControl,
+  Modal,
+  Alert,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   ChevronRight,
-  Plus,
-  Shield,
   CheckCircle2,
   Clock,
   Wifi,
+  Flame,
+  Trophy,
+  Zap,
+  Target,
+  TrendingUp,
+  Users,
+  Circle,
+  RefreshCw,
+  ThumbsUp,
+  UserPlus,
+  AlertTriangle,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import Colors from "@/constants/colors";
 import StreakTracker from "@/components/StreakTracker";
 import StreakCalendar from "@/components/StreakCalendar";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
 import Celebration from "@/components/Celebration";
+import { RETENTION_CONFIG } from "@/lib/retention-config";
+import { track } from "@/lib/analytics";
+import { trpcMutate, trpcQuery } from "@/lib/trpc";
 
-function OfflineBadge() {
+function getTimeUntilMidnight(): { hours: number; minutes: number } {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const ms = midnight.getTime() - now.getTime();
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  return { hours, minutes };
+}
+
+function SyncingBanner() {
   return (
-    <View style={badgeStyles.container}>
-      <Wifi size={11} color={Colors.text.muted} />
-      <Text style={badgeStyles.text}>Offline mode</Text>
+    <View style={syncingBannerStyles.wrap}>
+      <RefreshCw size={14} color={Colors.accent} />
+      <Text style={syncingBannerStyles.text}>Syncing... we'll update when you're back online.</Text>
     </View>
   );
 }
@@ -178,6 +204,8 @@ function TaskRow({
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { requireAuth } = useAuthGate();
+  const isGuest = useIsGuest();
   const {
     activeChallenge,
     challenge,
@@ -195,13 +223,46 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showMilestone, setShowMilestone] = useState<number | null>(null);
+  const [showFreezeModal, setShowFreezeModal] = useState(false);
+  const [freezeSubmitting, setFreezeSubmitting] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState<{ currentUserRank: number | null; totalSecuredToday: number } | null>(null);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    if (isGuest) return;
+    trpcQuery("leaderboard.getWeekly").then((data: any) => {
+      setLeaderboardData({
+        currentUserRank: data?.currentUserRank ?? null,
+        totalSecuredToday: data?.totalSecuredToday ?? 0,
+      });
+    }).catch(() => {});
+  }, [isGuest, stats?.activeStreak]);
+
   const currentStreak = stats?.activeStreak || 0;
+  const lastCompletedDateKey = (stats as any)?.lastCompletedDateKey ?? null;
+  const todayKey = todayDateLocal;
+  const yesterdayDate = new Date(todayKey);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayKey = yesterdayDate.toISOString().split("T")[0];
+  const effectiveMissedDays = (stats as any)?.effectiveMissedDays ?? (lastCompletedDateKey == null ? 0 : lastCompletedDateKey >= todayKey ? 0 : Math.floor((Date.parse(todayKey) - Date.parse(lastCompletedDateKey)) / 86400000));
+  const daysSinceLastSecure = effectiveMissedDays;
+  const showRecoveryBanner =
+    !isGuest &&
+    hasActiveChallenge &&
+    effectiveMissedDays >= RETENTION_CONFIG.missedOneDayThreshold;
+  const showComebackMode =
+    !isGuest &&
+    effectiveMissedDays >= RETENTION_CONFIG.comebackModeMinDays &&
+    effectiveMissedDays <= RETENTION_CONFIG.comebackModeMaxDays;
+  const showRestartMode = !isGuest && effectiveMissedDays >= RETENTION_CONFIG.restartThreshold;
+  const canUseFreeze = (stats as any)?.canUseFreeze ?? (effectiveMissedDays === RETENTION_CONFIG.streakFreezeEligibleMissedDays && currentStreak > 0);
+  const freezesRemaining = (stats as any)?.freezesRemaining ?? 1;
   const bestStreak = stats?.longestStreak || 0;
   const hasActiveChallenge = !!activeChallenge && !!challenge;
   const daySecured = computeProgress.progress === 100 && !canSecureDay;
+  const isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
   
   const tasks: { id: string; title: string; completed: boolean }[] = challenge?.challenge_tasks
     ? challenge.challenge_tasks.map((t: any) => ({
@@ -216,6 +277,12 @@ export default function HomeScreen() {
     : computeProgress.progress >= 50
     ? Colors.accent
     : Colors.text.muted;
+
+  useEffect(() => {
+    if (showComebackMode) {
+      track({ name: "comeback_mode_started" });
+    }
+  }, [showComebackMode]);
 
   useEffect(() => {
     if (canSecureDay) {
@@ -239,19 +306,31 @@ export default function HomeScreen() {
     }
   }, [refetchAll]);
 
-  const handleSecureDay = useCallback(() => {
+  const handleSecureDay = useCallback(async () => {
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    if (daysSinceLastSecure >= RETENTION_CONFIG.comebackModeMinDays) {
+      track({ name: "comeback_day_secured" });
     }
     Animated.sequence([
       Animated.timing(secureBtnScale, { toValue: 0.95, duration: 60, useNativeDriver: true }),
       Animated.spring(secureBtnScale, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }),
     ]).start();
-    secureDay();
+    const result = await secureDay();
     setShowCelebration(true);
-    
+    if (result?.newStreakCount === 7 || result?.newStreakCount === 30) {
+      setShowMilestone(result.newStreakCount);
+      track({ name: "milestone_unlocked", streak: result.newStreakCount });
+    }
+    trpcQuery("leaderboard.getWeekly").then((data: any) => {
+      setLeaderboardData({
+        currentUserRank: data?.currentUserRank ?? null,
+        totalSecuredToday: data?.totalSecuredToday ?? 0,
+      });
+    }).catch(() => {});
     const currentDay = activeChallenge?.current_day || 1;
-    const streak = stats?.activeStreak || 0;
+    const streak = result?.newStreakCount ?? stats?.activeStreak ?? 0;
     setTimeout(() => {
       router.push({
         pathname: "/secure-confirmation",
@@ -263,9 +342,9 @@ export default function HomeScreen() {
         },
       } as any);
     }, 1200);
-  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router]);
+  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure]);
 
-  if (isLoading && !initialFetchDone) {
+  if (!isGuest && isLoading && !initialFetchDone) {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -296,47 +375,137 @@ export default function HomeScreen() {
           />
         }
       >
-        {isError && <OfflineBadge />}
+        {isError && <SyncingBanner />}
 
         <View style={styles.header}>
-          <Text style={styles.logo}>GRIT</Text>
+          <View>
+            <Text style={styles.logo}>GRIT</Text>
+            <Text style={styles.logoSubtitle}>Build Discipline Daily</Text>
+          </View>
+          <View style={styles.headerBadges}>
+            <View style={styles.headerBadge}>
+              <TrendingUp size={14} color={Colors.text.tertiary} />
+              <Text style={styles.headerBadgeText}>{stats?.longestStreak ?? 0}</Text>
+            </View>
+            <View style={styles.headerBadge}>
+              <Flame size={14} color={Colors.accent} />
+              <Text style={styles.headerBadgeText}>{currentStreak}</Text>
+            </View>
+          </View>
         </View>
+
+        {showRecoveryBanner && (
+          <View style={styles.recoveryBanner}>
+            <AlertTriangle size={18} color={Colors.warning ?? Colors.accent} />
+            <View style={styles.recoveryBannerTextWrap}>
+              <Text style={styles.recoveryBannerTitle}>
+                {showRestartMode
+                  ? "Welcome back. Start fresh today."
+                  : showComebackMode
+                  ? "Secure 3 days in a row to restore momentum."
+                  : "You missed yesterday. Secure today to stay in the game."}
+              </Text>
+              {canUseFreeze && (
+                <TouchableOpacity
+                  style={styles.freezeCta}
+                  onPress={() => setShowFreezeModal(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.freezeCtaText}>Use streak freeze</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
 
         {hasActiveChallenge ? (
           <View style={styles.activeSection}>
-            <View style={styles.missionControlCard}>
-              <View style={styles.dayNumberSection}>
-                <Text style={styles.dayNumberLarge}>
-                  Day {activeChallenge.current_day}
-                </Text>
-                <Text style={styles.dayNumberTotal}>/ {challenge.duration_days || "∞"}</Text>
-              </View>
+            <Text style={styles.continueLabel}>Continue where you left off</Text>
+            <Text style={styles.secureTodayTitle}>Secure today to protect your streak.</Text>
+            {(() => {
+              const { hours, minutes } = getTimeUntilMidnight();
+              return (
+                <Text style={styles.secureTodaySub}>{hours}h {minutes}m remaining.</Text>
+              );
+            })()}
 
-              <View style={styles.statusRow}>
-                <Text style={styles.statusLabel}>
-                  {daySecured ? "Secured" : "Pending"}
+            <View style={styles.metricsCard}>
+              {nextTierName != null && pointsToNextTier > 0 && (
+                <View style={styles.metricsRow}>
+                  <Flame size={18} color={Colors.text.tertiary} />
+                  <Text style={styles.metricsText}>{pointsToNextTier} pts to {nextTierName}</Text>
+                </View>
+              )}
+              {leaderboardData && (leaderboardData.totalSecuredToday > 0 || leaderboardData.currentUserRank != null) && (
+                <View style={styles.metricsRow}>
+                  <Users size={18} color={Colors.text.tertiary} />
+                  <Text style={styles.metricsText}>
+                    {leaderboardData.totalSecuredToday} {leaderboardData.totalSecuredToday === 1 ? "person" : "people"} secured today
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.todaysResetCard}>
+              <View style={styles.todaysResetHeader}>
+                <Clock size={18} color={Colors.accent} />
+                <Text style={styles.todaysResetTitle}>Today's Reset</Text>
+                <Text style={styles.todaysResetTime}>
+                  {(() => {
+                    const { hours, minutes } = getTimeUntilMidnight();
+                    return `${hours}h ${minutes}m left`;
+                  })()}
                 </Text>
-                {(challenge.difficulty === "hard" || challenge.difficulty === "extreme") && (
-                  <View style={styles.modeTagHard}>
-                    <Text style={styles.modeTagText}>Hard Mode</Text>
+              </View>
+              {tasks.length > 0 ? (
+                <View style={styles.todaysResetTaskList}>
+                  {tasks.map((task, i) => (
+                    <View key={task.id} style={styles.todaysResetTaskRow}>
+                      <Circle size={18} color={Colors.border} strokeWidth={2} />
+                      <Text style={[styles.todaysResetTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.todaysResetTaskList}>
+                  <View style={styles.todaysResetTaskRow}>
+                    <Circle size={18} color={Colors.border} strokeWidth={2} />
+                    <Text style={styles.todaysResetTaskText}>Move for 5 minutes</Text>
                   </View>
-                )}
-              </View>
+                  <View style={styles.todaysResetTaskRow}>
+                    <Circle size={18} color={Colors.border} strokeWidth={2} />
+                    <Text style={styles.todaysResetTaskText}>Drink a glass of water</Text>
+                  </View>
+                  <View style={styles.todaysResetTaskRow}>
+                    <Circle size={18} color={Colors.border} strokeWidth={2} />
+                    <Text style={styles.todaysResetTaskText}>Write one sentence about today</Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
-              <View style={styles.challengeTitleRow}>
-                <Text style={styles.challengeTitleMission} numberOfLines={2}>{challenge.title}</Text>
+            <View style={styles.statsSummaryCard}>
+              <View style={styles.statsSummaryCol}>
+                <Flame size={20} color={Colors.accent} />
+                <Text style={styles.statsSummaryValue}>{currentStreak}</Text>
+                <Text style={styles.statsSummaryLabel}>Streak</Text>
+              </View>
+              <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder]}>
+                <TrendingUp size={20} color={Colors.accent} />
+                <Text style={styles.statsSummaryValue}>{stats?.longestStreak ?? 0}</Text>
+                <Text style={styles.statsSummaryLabel}>Score</Text>
+              </View>
+              <View style={styles.statsSummaryCol}>
+                <Target size={20} color={Colors.text.tertiary} />
+                <Text style={styles.statsSummaryValue}>{tierName}</Text>
+                <Text style={styles.statsSummaryLabel}>Rank</Text>
               </View>
             </View>
 
             <TouchableOpacity
-              style={[
-                styles.challengeCard,
-                (challenge.difficulty === "hard" || challenge.difficulty === "extreme") && styles.challengeCardHard,
-              ]}
+              style={[styles.challengeCard, (challenge.difficulty === "hard" || challenge.difficulty === "extreme") && styles.challengeCardHard]}
               onPress={() => {
-                if (Platform.OS !== "web") {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push(`/challenge/${activeChallenge.challenge_id}` as any);
               }}
               activeOpacity={0.85}
@@ -351,7 +520,6 @@ export default function HomeScreen() {
                 </View>
                 <AnimatedProgressBar progress={computeProgress.progress} color={progressColor} />
               </View>
-
               {tasks.length > 0 && (
                 <View style={styles.taskList}>
                   {tasks.map((task, i) => (
@@ -359,7 +527,6 @@ export default function HomeScreen() {
                   ))}
                 </View>
               )}
-
               <View style={styles.cardFooter}>
                 <Text style={styles.viewDetailsText}>View Details</Text>
                 <ChevronRight size={16} color={Colors.text.tertiary} />
@@ -369,16 +536,11 @@ export default function HomeScreen() {
             {canSecureDay && (
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={handleSecureDay}
+                onPress={() => requireAuth("secure", handleSecureDay)}
                 testID="secure-day-button"
               >
                 <Animated.View style={[styles.secureDayButton, { transform: [{ scale: secureBtnScale }] }]}>
-                  <Animated.View
-                    style={[
-                      styles.secureDayGlow,
-                      { opacity: glowOpacity },
-                    ]}
-                  />
+                  <Animated.View style={[styles.secureDayGlow, { opacity: glowOpacity }]} />
                   <Text style={styles.secureDayText}>Secure Day</Text>
                 </Animated.View>
               </TouchableOpacity>
@@ -390,50 +552,143 @@ export default function HomeScreen() {
                 <Text style={styles.securedText}>Day {activeChallenge.current_day} Secured</Text>
               </View>
             )}
-
-            <View style={styles.streakSectionSpaced}>
-              <StreakTracker
-                currentStreak={currentStreak}
-                bestStreak={bestStreak}
-                daySecured={daySecured}
-                streakProtectionsLeft={1}
-              />
-
-              <StreakCalendar
-                currentStreak={currentStreak}
-                daySecuredToday={daySecured}
-              />
-            </View>
           </View>
         ) : (
-          <View style={styles.emptySection}>
-            <View style={styles.emptyProgressSection}>
-              <CircularProgress size={140} strokeWidth={2} progress={0} />
-            </View>
-
-            <Text style={styles.emptyTitleNew}>No active commitment.</Text>
-            <Text style={styles.emptySubtitle}>
-              Discipline starts with one decision.
+          <View style={styles.welcomeBackCard}>
+            <RefreshCw size={28} color={Colors.accent} />
+            <Text style={styles.welcomeBackTitle}>
+              {isFirstTimeUser ? "Start your first challenge." : "Welcome back."}
             </Text>
-
+            <Text style={styles.welcomeBackSub}>
+              {isFirstTimeUser
+                ? "Pick a challenge, commit, and secure your first day."
+                : "Secure 1 day today to restart momentum."}
+            </Text>
             <TouchableOpacity
-              style={styles.ctaButton}
+              style={styles.pickChallengeButton}
               onPress={() => {
-                if (Platform.OS !== "web") {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                }
-                router.push("/(tabs)/discover" as any);
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                requireAuth("join", () => router.push("/(tabs)/discover" as any));
               }}
               activeOpacity={0.85}
               testID="discover-cta"
             >
-              <Text style={styles.ctaButtonText}>Discover Challenges</Text>
+              <Text style={styles.pickChallengeButtonText}>
+                {isFirstTimeUser ? "Find a challenge" : "Pick a Challenge"}
+              </Text>
             </TouchableOpacity>
-
-            <Text style={styles.supportingText}>Join others building consistency.</Text>
           </View>
         )}
+
+        <View style={styles.liveSection}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveTitle}>LIVE</Text>
+          <Text style={styles.liveSub}>People are moving</Text>
+        </View>
+
+        {leaderboardData?.currentUserRank != null ? (
+          <View style={styles.yourPositionCard}>
+            <Target size={28} color={Colors.accent} />
+            <Text style={styles.yourPositionLabel}>YOUR POSITION</Text>
+            <Text style={styles.yourPositionText}>You are ranked <Text style={styles.feedBold}>#{leaderboardData.currentUserRank}</Text> this week.</Text>
+            <TouchableOpacity
+              style={styles.secureNowButton}
+              onPress={() => requireAuth("secure", () => router.push("/(tabs)/discover" as any))}
+              activeOpacity={0.85}
+            >
+              <CheckCircle2 size={18} color="#fff" />
+              <Text style={styles.secureNowButtonText}>Secure Now</Text>
+            </TouchableOpacity>
+          </View>
+        ) : !isGuest && (
+          <TouchableOpacity
+            style={styles.yourPositionCard}
+            onPress={() => router.push("/(tabs)/activity" as any)}
+            activeOpacity={0.85}
+          >
+            <Target size={28} color={Colors.accent} />
+            <Text style={styles.yourPositionLabel}>LEADERBOARD</Text>
+            <Text style={styles.yourPositionText}>Be the first this week.</Text>
+            <Text style={styles.secureNowButtonText}>View Activity</Text>
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.footerTagline}>Only discipline shows here.</Text>
       </ScrollView>
+
+      {showMilestone != null && (
+        <Modal visible transparent animationType="fade">
+          <TouchableOpacity style={styles.freezeModalBackdrop} activeOpacity={1} onPress={() => setShowMilestone(null)} />
+          <View style={styles.freezeModalCenter}>
+            <View style={styles.freezeModalCard}>
+              <Text style={styles.freezeModalTitle}>{showMilestone}-Day Streak</Text>
+              <Text style={styles.freezeModalSub}>You are building discipline.</Text>
+              <TouchableOpacity
+                style={[styles.freezeModalConfirm, { marginBottom: 8 }]}
+                onPress={() => {
+                  track({ name: "invite_shared", source: "milestone_modal" });
+                  const joinUrl = Linking.createURL("/(tabs)/discover");
+                  const message = `I just hit a ${showMilestone}-day streak on GRIT. Join me: ${joinUrl}`;
+                  if (Platform.OS === "web") {
+                    try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
+                    Alert.alert("Copied", "Invite message copied.");
+                  } else {
+                    Share.share({ title: "My streak on GRIT", message }).catch(() => {});
+                  }
+                  setShowMilestone(null);
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.freezeModalConfirmText}>Invite a friend</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.freezeModalCancel]}
+                onPress={() => setShowMilestone(null)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.freezeModalCancelText}>Got it</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {showFreezeModal && (
+        <Modal visible transparent animationType="fade">
+          <TouchableOpacity style={styles.freezeModalBackdrop} activeOpacity={1} onPress={() => !freezeSubmitting && setShowFreezeModal(false)} />
+          <View style={styles.freezeModalCenter}>
+            <View style={styles.freezeModalCard}>
+              <Text style={styles.freezeModalTitle}>Use your streak freeze?</Text>
+              <Text style={styles.freezeModalSub}>
+                This will save your streak. You get 1 free freeze per month.{freezesRemaining !== undefined && freezesRemaining >= 0 ? ` (${freezesRemaining} left this month)` : ""}
+              </Text>
+              <TouchableOpacity
+                style={[styles.freezeModalConfirm, freezeSubmitting && styles.freezeModalConfirmDisabled]}
+                disabled={freezeSubmitting}
+                onPress={async () => {
+                  track({ name: "streak_freeze_used" });
+                  setFreezeSubmitting(true);
+                  try {
+                    await trpcMutate("streaks.useFreeze", { dateKeyToFreeze: yesterdayKey });
+                    await refetchAll();
+                    setShowFreezeModal(false);
+                  } catch (e: any) {
+                    Alert.alert("Error", e?.message ?? "Could not use freeze.");
+                  } finally {
+                    setFreezeSubmitting(false);
+                  }
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.freezeModalConfirmText}>{freezeSubmitting ? "..." : "Use freeze"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.freezeModalCancel} onPress={() => setShowFreezeModal(false)} disabled={freezeSubmitting} activeOpacity={0.8}>
+                <Text style={styles.freezeModalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -451,6 +706,28 @@ const badgeStyles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500" as const,
     color: Colors.text.muted,
+  },
+});
+
+const syncingBannerStyles = StyleSheet.create({
+  wrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: Colors.accentLight,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.accent + "30",
+  },
+  text: {
+    fontSize: 13,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
+    flex: 1,
   },
 });
 
@@ -499,18 +776,388 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   header: {
-    alignItems: "center",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     paddingTop: 12,
-    paddingBottom: 20,
+    paddingBottom: 16,
+  },
+  headerBadges: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  headerBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  headerBadgeText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
   },
   logo: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "900" as const,
     color: Colors.text.primary,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
+  },
+  logoSubtitle: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: Colors.text.tertiary,
+    marginTop: 4,
+  },
+  secureTodayTitle: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  secureTodaySub: {
+    fontSize: 14,
+    color: Colors.text.tertiary,
+    marginBottom: 16,
+  },
+  metricsCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 10,
+  },
+  metricsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  metricsText: {
+    fontSize: 15,
+    fontWeight: "500" as const,
+    color: Colors.text.primary,
+  },
+  todaysResetCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  todaysResetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  todaysResetTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  todaysResetTime: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+  },
+  todaysResetTaskList: {
+    gap: 8,
+  },
+  todaysResetTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  todaysResetTaskText: {
+    fontSize: 15,
+    color: Colors.text.primary,
+    flex: 1,
+  },
+  todaysResetTaskDone: {
+    color: Colors.text.tertiary,
+    textDecorationLine: "line-through",
+  },
+  statsSummaryCard: {
+    flexDirection: "row",
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  statsSummaryCol: {
+    flex: 1,
+    alignItems: "center",
+    gap: 6,
+  },
+  statsSummaryColBorder: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: Colors.border,
+  },
+  statsSummaryValue: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  statsSummaryLabel: {
+    fontSize: 12,
+    fontWeight: "500" as const,
+    color: Colors.text.tertiary,
+  },
+  welcomeBackCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+  },
+  welcomeBackTitle: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  welcomeBackSub: {
+    fontSize: 15,
+    color: Colors.text.secondary,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  pickChallengeButton: {
+    backgroundColor: Colors.pill,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  pickChallengeButtonText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  liveSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#C62828",
+  },
+  liveTitle: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  liveSub: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+    flex: 1,
+  },
+  feedCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  feedCardChallenge: {
+    borderColor: Colors.accent + "40",
+  },
+  feedCardRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  feedAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.pill,
+  },
+  feedAvatarSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.pill,
+  },
+  feedBody: {
+    flex: 1,
+    gap: 4,
+  },
+  feedMain: {
+    fontSize: 15,
+    fontWeight: "500" as const,
+    color: Colors.text.primary,
+    lineHeight: 20,
+  },
+  feedUser: {
+    fontWeight: "700" as const,
+  },
+  feedBold: {
+    fontWeight: "700" as const,
+  },
+  feedMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+  },
+  feedStreak: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.accent,
+  },
+  feedTime: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+  },
+  feedDiscipline: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.success,
+  },
+  feedRank: {
+    fontWeight: "700" as const,
+    color: Colors.accent,
+  },
+  feedSub: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+    marginTop: 2,
+  },
+  feedHighlight: {
+    fontWeight: "700" as const,
+    color: "#D4A017",
+  },
+  feedCta: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: Colors.accent,
+    marginTop: 4,
+  },
+  feedActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+  },
+  feedPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: Colors.pill,
+    alignSelf: "flex-start",
+  },
+  feedPillText: {
+    fontSize: 13,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
+  },
+  feedPillRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 8,
+  },
+  feedTrophyWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FDF8E7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  feedZapWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.accentLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  feedOpenChallengeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 12,
+    alignSelf: "flex-start",
+  },
+  feedOpenChallengeText: {
+    fontSize: 15,
+    fontWeight: "700" as const,
+    color: "#fff",
+  },
+  yourPositionCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+  },
+  yourPositionLabel: {
+    fontSize: 11,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  yourPositionText: {
+    fontSize: 16,
+    fontWeight: "500" as const,
+    color: Colors.text.primary,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  secureNowButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: Colors.accent,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  secureNowButtonText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#fff",
+  },
+  footerTagline: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+    textAlign: "center",
+    marginBottom: 24,
   },
   activeSection: {
-    gap: 20,
+    gap: 4,
+  },
+  continueLabel: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   missionControlCard: {
     backgroundColor: "#fff",
@@ -693,6 +1340,118 @@ const styles = StyleSheet.create({
     fontWeight: "800" as const,
     color: Colors.text.tertiary,
     letterSpacing: -0.5,
+  },
+  guestBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginHorizontal: -20,
+    marginBottom: 12,
+    backgroundColor: Colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  guestBarText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  guestBarCta: {
+    backgroundColor: Colors.accent,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  guestBarCtaText: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: "#fff",
+  },
+  recoveryBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    backgroundColor: (Colors.warningLight ?? Colors.accentLight) || "#FFF5F0",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: (Colors.warning ?? Colors.accent) + "30",
+  },
+  recoveryBannerTextWrap: { flex: 1 },
+  recoveryBannerTitle: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+    marginBottom: 8,
+  },
+  freezeCta: {
+    alignSelf: "flex-start",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: Colors.accent,
+  },
+  freezeCtaText: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: "#fff",
+  },
+  freezeModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  freezeModalCenter: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  freezeModalCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  freezeModalTitle: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    marginBottom: 8,
+  },
+  freezeModalSub: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    marginBottom: 20,
+  },
+  freezeModalConfirm: {
+    backgroundColor: Colors.accent,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  freezeModalConfirmDisabled: {
+    opacity: 0.6,
+  },
+  freezeModalConfirmText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#fff",
+  },
+  freezeModalCancel: {
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  freezeModalCancelText: {
+    fontSize: 15,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
   },
   emptyTitleNew: {
     fontSize: 26,

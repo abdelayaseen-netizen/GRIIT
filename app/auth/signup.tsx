@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { track } from '@/lib/analytics';
 import Colors from '@/constants/colors';
 
 export default function SignupScreen() {
@@ -80,8 +81,6 @@ export default function SignupScreen() {
         return;
       }
 
-      console.log('Signup response:', { user: data.user?.id, session: !!data.session });
-
       if (data.session) {
         router.replace('/' as never);
         return;
@@ -94,18 +93,17 @@ export default function SignupScreen() {
       });
 
       if (signInError) {
-        console.log('Auto sign-in failed, routing to login:', signInError.message);
         router.replace('/auth/login' as any);
         return;
       }
 
       if (signInData.session) {
+        track({ name: "signup_completed" });
         router.replace('/' as never);
       } else {
         router.replace('/auth/login' as any);
       }
     } catch (err: any) {
-      console.error('Signup error:', err);
       Alert.alert('Error', err.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);

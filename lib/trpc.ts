@@ -28,8 +28,6 @@ export async function trpcQuery<T = any>(
   });
 
   if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    console.error(`[trpcQuery] ${path} failed:`, response.status, text);
     throw new Error(`tRPC query failed: ${path} (${response.status})`);
   }
 
@@ -69,7 +67,6 @@ export async function trpcMutate<T = any>(
       if (parsed?.error?.message) errorMessage = parsed.error.message;
       else if (parsed?.error?.json?.message) errorMessage = parsed.error.json.message;
     } catch {}
-    console.error(`[trpcMutate] ${path} failed:`, response.status, text);
     throw new Error(errorMessage);
   }
 

@@ -20,9 +20,17 @@ import {
   CheckCircle,
   MapPin,
   Clock,
-  Check,
 } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import {
+  CreateFlowHeader,
+  CreateFlowInput,
+  TaskTypeCard,
+  EnforcementBlock,
+  DurationPill,
+  CreateFlowCheckbox,
+} from "@/src/components/ui";
+import { colors as tokenColors } from "@/src/theme/tokens";
+import { createFlowStyles as cfs } from "@/src/theme/createFlowStyles";
 import {
   JournalCategory,
   WordLimitMode,
@@ -122,24 +130,24 @@ const TASK_TYPES: {
   label: string;
   color: string;
 }[] = [
-  { id: "journal", icon: BookOpen, label: "Journal", color: "#6366F1" },
-  { id: "timer", icon: Timer, label: "Timer", color: "#F59E0B" },
-  { id: "photo", icon: Camera, label: "Photo", color: "#EC4899" },
-  { id: "run", icon: Footprints, label: "Run", color: "#10B981" },
-  { id: "simple", icon: CheckCircle, label: "Simple", color: "#6B7280" },
-  { id: "checkin", icon: MapPin, label: "Check-in", color: "#0EA5E9" },
+  { id: "journal", icon: BookOpen, label: "Journal", color: tokenColors.accentPurple },
+  { id: "timer", icon: Timer, label: "Timer", color: tokenColors.accentYellow },
+  { id: "photo", icon: Camera, label: "Photo", color: tokenColors.accentPink },
+  { id: "run", icon: Footprints, label: "Run", color: tokenColors.accentGreen },
+  { id: "simple", icon: CheckCircle, label: "Simple", color: tokenColors.accentGray },
+  { id: "checkin", icon: MapPin, label: "Check-in", color: tokenColors.accentBlue },
 ];
 
 const TASK_TYPE_MAP: Record<
   TaskType,
   { icon: React.ComponentType<any>; label: string; color: string }
 > = {
-  journal: { icon: BookOpen, label: "Journal", color: "#6366F1" },
-  timer: { icon: Timer, label: "Timer", color: "#F59E0B" },
-  photo: { icon: Camera, label: "Photo", color: "#EC4899" },
-  run: { icon: Footprints, label: "Run / Workout", color: "#10B981" },
-  simple: { icon: CheckCircle, label: "Simple Check", color: "#6B7280" },
-  checkin: { icon: MapPin, label: "Location Check-in", color: "#0EA5E9" },
+  journal: { icon: BookOpen, label: "Journal", color: tokenColors.accentPurple },
+  timer: { icon: Timer, label: "Timer", color: tokenColors.accentYellow },
+  photo: { icon: Camera, label: "Photo", color: tokenColors.accentPink },
+  run: { icon: Footprints, label: "Run / Workout", color: tokenColors.accentGreen },
+  simple: { icon: CheckCircle, label: "Simple Check", color: tokenColors.accentGray },
+  checkin: { icon: MapPin, label: "Location Check-in", color: tokenColors.accentBlue },
 };
 
 export default function TaskEditorModal({
@@ -455,8 +463,6 @@ export default function TaskEditorModal({
         };
         break;
     }
-
-    console.log("[TaskEditor] Saving task:", task.title, task.type);
     onSave(task);
   }, [
     canSave,
@@ -541,37 +547,24 @@ export default function TaskEditorModal({
     <View style={s.typeGrid}>
       {TASK_TYPES.map((t) => {
         const Icon = t.icon;
-        const selected = taskType === t.id;
         return (
-          <TouchableOpacity
-            key={t.id}
-            style={[
-              s.typeCard,
-              selected && { borderColor: t.color, backgroundColor: `${t.color}0A` },
-            ]}
-            onPress={() => setTaskType(t.id)}
-            activeOpacity={0.7}
-          >
-            <View style={[s.typeIcon, { backgroundColor: `${t.color}18` }]}>
-              <Icon size={18} color={t.color} />
-            </View>
-            <Text
-              style={[
-                s.typeLabel,
-                selected && { color: t.color, fontWeight: "600" as const },
-              ]}
-            >
-              {t.label}
-            </Text>
-          </TouchableOpacity>
+          <View key={t.id} style={s.typeGridItem}>
+            <TaskTypeCard
+              label={t.label}
+              selected={taskType === t.id}
+              onPress={() => setTaskType(t.id)}
+              icon={<Icon size={22} color={t.color} />}
+              accentColor={t.color}
+            />
+          </View>
         );
       })}
     </View>
   );
 
   const renderJournalSettings = () => (
-    <View style={s.settingsCard}>
-      <View style={s.fieldGroup}>
+    <View style={cfs.settingsCard}>
+      <View style={cfs.fieldGroup}>
         <Text style={s.inputLabel}>What is this journal about?</Text>
         <View style={s.chipGrid}>
           {JOURNAL_CATEGORIES.map((cat) => {
@@ -579,7 +572,7 @@ export default function TaskEditorModal({
             return (
               <TouchableOpacity
                 key={cat.id}
-                style={[s.chip, sel && { backgroundColor: "#6366F115", borderColor: "#6366F1" }]}
+                style={[s.chip, sel && s.chipSelected]}
                 onPress={() => {
                   setJournalType((prev) =>
                     prev.includes(cat.id)
@@ -590,7 +583,7 @@ export default function TaskEditorModal({
                     setAllowFreeWrite(!journalType.includes(cat.id));
                 }}
               >
-                <Text style={[s.chipText, sel && { color: "#6366F1" }]}>
+                <Text style={[s.chipText, sel && s.chipTextSelected]}>
                   {cat.label}
                 </Text>
               </TouchableOpacity>
@@ -599,145 +592,77 @@ export default function TaskEditorModal({
         </View>
       </View>
 
-      <View style={s.fieldGroup}>
+      <View style={cfs.fieldGroup}>
         <Text style={s.inputLabel}>Prompt (what should they write about?)</Text>
         <Text style={s.inputHint}>This appears at the top when the user journals.</Text>
-        <TextInput
-          style={[s.input, s.textArea, { marginTop: 6 }]}
+        <CreateFlowInput
           value={journalPrompt}
           onChangeText={setJournalPrompt}
           placeholder={JOURNAL_PROMPTS[promptIdx]}
-          placeholderTextColor={Colors.text.tertiary}
           multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-          maxLength={240}
         />
         <View style={s.charRow}>
           {journalPrompt.trim().length > 0 && journalPrompt.trim().length < 20 && (
             <Text style={s.errorText}>Min 20 characters</Text>
           )}
           <View style={{ flex: 1 }} />
-          <Text style={[s.hintText, journalPrompt.length > 220 && { color: Colors.warning }]}>
+          <Text style={[s.hintText, journalPrompt.length > 220 && { color: tokenColors.accentRed }]}>
             {journalPrompt.length}/240
           </Text>
         </View>
       </View>
 
-      <View style={s.fieldGroup}>
+      <View style={cfs.fieldGroup}>
         <Text style={s.inputLabel}>Quick check-ins</Text>
-        <TouchableOpacity style={s.toggleRow} onPress={() => setCaptureMood(!captureMood)}>
-          <View style={[s.toggleBox, captureMood && s.toggleBoxActive]}>
-            {captureMood && <Check size={14} color="#fff" />}
-          </View>
-          <Text style={s.toggleLabel}>Capture mood</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={s.toggleRow} onPress={() => setCaptureEnergy(!captureEnergy)}>
-          <View style={[s.toggleBox, captureEnergy && s.toggleBoxActive]}>
-            {captureEnergy && <Check size={14} color="#fff" />}
-          </View>
-          <Text style={s.toggleLabel}>Capture energy level</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={s.toggleRow} onPress={() => setCaptureBodyState(!captureBodyState)}>
-          <View style={[s.toggleBox, captureBodyState && s.toggleBoxActive]}>
-            {captureBodyState && <Check size={14} color="#fff" />}
-          </View>
-          <Text style={s.toggleLabel}>Capture body state</Text>
-        </TouchableOpacity>
+        <CreateFlowCheckbox checked={captureMood} onPress={() => setCaptureMood(!captureMood)} label="Capture mood" />
+        <CreateFlowCheckbox checked={captureEnergy} onPress={() => setCaptureEnergy(!captureEnergy)} label="Capture energy level" />
+        <CreateFlowCheckbox checked={captureBodyState} onPress={() => setCaptureBodyState(!captureBodyState)} label="Capture body state" />
       </View>
 
-      <View style={s.fieldGroup}>
-        <Text style={s.inputLabel}>Word limit</Text>
-        <TouchableOpacity style={s.toggleRow} onPress={() => setWordLimitEnabled(!wordLimitEnabled)}>
-          <View style={[s.toggleBox, wordLimitEnabled && s.toggleBoxActive]}>
-            {wordLimitEnabled && <Check size={14} color="#fff" />}
-          </View>
-          <Text style={s.toggleLabel}>Limit entry length</Text>
-        </TouchableOpacity>
-
+      <View style={cfs.fieldGroup}>
+        <CreateFlowCheckbox
+          checked={wordLimitEnabled}
+          onPress={() => setWordLimitEnabled(!wordLimitEnabled)}
+          label="Limit entry length"
+        />
         {!wordLimitEnabled && (
           <Text style={s.inputHint}>
             Limits keep journaling quick and consistent. Turn off for free writing.
           </Text>
         )}
-
         {wordLimitEnabled && (
-          <View style={{ marginTop: 8 }}>
+          <View style={s.wordLimitBody}>
             <View style={s.modeRow}>
-              <TouchableOpacity
-                style={[s.modeBtn, wordLimitMode === "PRESET" && s.modeBtnActive]}
-                onPress={() => setWordLimitMode("PRESET")}
-              >
-                <Text style={[s.modeBtnText, wordLimitMode === "PRESET" && s.modeBtnTextActive]}>
-                  Fair preset
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.modeBtn, wordLimitMode === "CUSTOM" && s.modeBtnActive]}
-                onPress={() => setWordLimitMode("CUSTOM")}
-              >
-                <Text style={[s.modeBtnText, wordLimitMode === "CUSTOM" && s.modeBtnTextActive]}>
-                  Custom
-                </Text>
-              </TouchableOpacity>
+              <DurationPill label="Fair preset" selected={wordLimitMode === "PRESET"} onPress={() => setWordLimitMode("PRESET")} />
+              <DurationPill label="Custom" selected={wordLimitMode === "CUSTOM"} onPress={() => setWordLimitMode("CUSTOM")} />
             </View>
-
             {wordLimitMode === "PRESET" ? (
               <View style={s.presetRow}>
-                {(
-                  [
-                    { words: 50, label: "Short" },
-                    { words: 120, label: "Standard" },
-                    { words: 250, label: "Deep" },
-                    { words: 500, label: "Long" },
-                  ] as const
-                ).map((p) => (
+                {([50, 120, 250, 500] as const).map((w) => (
                   <TouchableOpacity
-                    key={p.words}
-                    style={[
-                      s.presetCard,
-                      wordLimitWords === p.words && s.presetCardActive,
-                    ]}
-                    onPress={() => setWordLimitWords(p.words)}
+                    key={w}
+                    style={[s.presetCard, wordLimitWords === w && s.presetCardActive]}
+                    onPress={() => setWordLimitWords(w)}
                   >
-                    <Text
-                      style={[
-                        s.presetNum,
-                        wordLimitWords === p.words && s.presetNumActive,
-                      ]}
-                    >
-                      {p.words}
-                    </Text>
-                    <Text
-                      style={[
-                        s.presetLabel,
-                        wordLimitWords === p.words && s.presetLabelActive,
-                      ]}
-                    >
-                      {p.label}
+                    <Text style={[s.presetNum, wordLimitWords === w && s.presetNumActive]}>{w}</Text>
+                    <Text style={[s.presetLabel, wordLimitWords === w && s.presetLabelActive]}>
+                      {w === 50 ? "Short" : w === 120 ? "Standard" : w === 250 ? "Deep" : "Long"}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             ) : (
-              <View style={{ gap: 4, marginTop: 4 }}>
+              <View style={cfs.fieldGroup}>
                 <Text style={s.inputLabel}>Max words</Text>
-                <TextInput
-                  style={s.input}
+                <CreateFlowInput
                   value={customWordLimit}
                   onChangeText={setCustomWordLimit}
-                  keyboardType="number-pad"
                   placeholder="e.g., 150"
-                  placeholderTextColor={Colors.text.tertiary}
                 />
                 <Text style={s.inputHint}>Min 20, max 1000</Text>
-                {customWordLimit &&
-                  parseInt(customWordLimit, 10) >= 20 &&
-                  parseInt(customWordLimit, 10) <= 1000 && (
-                    <Text style={{ fontSize: 12, color: "#6366F1", fontWeight: "500" as const }}>
-                      Users can write up to {customWordLimit} words.
-                    </Text>
-                  )}
+                {customWordLimit && parseInt(customWordLimit, 10) >= 20 && parseInt(customWordLimit, 10) <= 1000 && (
+                  <Text style={s.purpleHint}>Users can write up to {customWordLimit} words.</Text>
+                )}
               </View>
             )}
           </View>
@@ -747,132 +672,65 @@ export default function TaskEditorModal({
   );
 
   const renderTimerSettings = () => (
-    <View style={s.settingsCard}>
-      <View style={s.fieldGroup}>
-        <Text style={s.inputLabel}>Target minutes</Text>
-        <TextInput
-          style={s.input}
-          value={duration}
-          onChangeText={setDuration}
-          keyboardType="number-pad"
-          placeholder="10"
-          placeholderTextColor={Colors.text.tertiary}
-        />
+    <View style={cfs.settingsCard}>
+      <View style={cfs.fieldGroup}>
+        <CreateFlowInput label="Target minutes" value={duration} onChangeText={setDuration} placeholder="10" />
       </View>
-      <TouchableOpacity style={s.toggleRow} onPress={() => setMustComplete(!mustComplete)}>
-        <View style={[s.toggleBox, mustComplete && s.toggleBoxActive]}>
-          {mustComplete && <Check size={14} color="#fff" />}
-        </View>
-        <Text style={s.toggleLabel}>Must complete without exiting</Text>
-      </TouchableOpacity>
+      <CreateFlowCheckbox checked={mustComplete} onPress={() => setMustComplete(!mustComplete)} label="Must complete without exiting" />
     </View>
   );
 
   const renderPhotoSettings = () => (
-    <View style={s.settingsCard}>
+    <View style={cfs.settingsCard}>
       <View style={s.lockedRow}>
-        <Camera size={16} color={Colors.text.secondary} />
+        <Camera size={18} color={tokenColors.textSecondaryCreate} />
         <Text style={s.lockedText}>User uploads 1 photo</Text>
       </View>
     </View>
   );
 
   const renderRunSettings = () => (
-    <View style={s.settingsCard}>
-      <View style={s.fieldGroup}>
+    <View style={cfs.settingsCard}>
+      <View style={cfs.fieldGroup}>
         <Text style={s.inputLabel}>Tracking Mode</Text>
         <View style={s.modeRow}>
-          <TouchableOpacity
-            style={[s.modeBtn, trackingMode === "distance" && s.modeBtnActive]}
-            onPress={() => setTrackingMode("distance")}
-          >
-            <Text style={[s.modeBtnText, trackingMode === "distance" && s.modeBtnTextActive]}>
-              Distance
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[s.modeBtn, trackingMode === "time" && s.modeBtnActive]}
-            onPress={() => setTrackingMode("time")}
-          >
-            <Text style={[s.modeBtnText, trackingMode === "time" && s.modeBtnTextActive]}>
-              Time
-            </Text>
-          </TouchableOpacity>
+          <DurationPill label="Distance" selected={trackingMode === "distance"} onPress={() => setTrackingMode("distance")} />
+          <DurationPill label="Time" selected={trackingMode === "time"} onPress={() => setTrackingMode("time")} />
         </View>
       </View>
-
       {trackingMode === "distance" ? (
-        <View style={s.fieldGroup}>
-          <Text style={s.inputLabel}>Target Distance</Text>
-          <TextInput
-            style={s.input}
-            value={targetDistance}
-            onChangeText={setTargetDistance}
-            keyboardType="decimal-pad"
-            placeholder="5"
-            placeholderTextColor={Colors.text.tertiary}
-          />
-          <View style={[s.modeRow, { marginTop: 8 }]}>
+        <View style={cfs.fieldGroup}>
+          <CreateFlowInput label="Target Distance" value={targetDistance} onChangeText={setTargetDistance} placeholder="5" />
+          <View style={s.modeRow}>
             {(["miles", "km", "meters"] as const).map((u) => (
-              <TouchableOpacity
-                key={u}
-                style={[s.modeBtn, distanceUnit === u && s.modeBtnActive]}
-                onPress={() => setDistanceUnit(u)}
-              >
-                <Text style={[s.modeBtnText, distanceUnit === u && s.modeBtnTextActive]}>
-                  {u}
-                </Text>
-              </TouchableOpacity>
+              <DurationPill key={u} label={u} selected={distanceUnit === u} onPress={() => setDistanceUnit(u)} />
             ))}
           </View>
         </View>
       ) : (
-        <View style={s.fieldGroup}>
-          <Text style={s.inputLabel}>Target minutes</Text>
-          <TextInput
-            style={s.input}
-            value={duration}
-            onChangeText={setDuration}
-            keyboardType="number-pad"
-            placeholder="30"
-            placeholderTextColor={Colors.text.tertiary}
-          />
+        <View style={cfs.fieldGroup}>
+          <CreateFlowInput label="Target minutes" value={duration} onChangeText={setDuration} placeholder="30" />
         </View>
       )}
     </View>
   );
 
   const renderSimpleSettings = () => (
-    <View style={s.settingsCard}>
+    <View style={cfs.settingsCard}>
       <View style={s.lockedRow}>
-        <CheckCircle size={16} color={Colors.text.secondary} />
+        <CheckCircle size={18} color={tokenColors.textSecondaryCreate} />
         <Text style={s.lockedText}>User taps complete (confirm modal shown)</Text>
       </View>
     </View>
   );
 
   const renderCheckinSettings = () => (
-    <View style={s.settingsCard}>
-      <View style={s.fieldGroup}>
-        <Text style={s.inputLabel}>Location Name</Text>
-        <TextInput
-          style={s.input}
-          value={locationName}
-          onChangeText={setLocationName}
-          placeholder="e.g. LA Fitness, Central Park"
-          placeholderTextColor={Colors.text.tertiary}
-        />
+    <View style={cfs.settingsCard}>
+      <View style={cfs.fieldGroup}>
+        <CreateFlowInput label="Location Name" value={locationName} onChangeText={setLocationName} placeholder="e.g. LA Fitness, Central Park" />
       </View>
-      <View style={s.fieldGroup}>
-        <Text style={s.inputLabel}>Radius (meters)</Text>
-        <TextInput
-          style={s.input}
-          value={radiusMeters}
-          onChangeText={setRadiusMeters}
-          keyboardType="number-pad"
-          placeholder="150"
-          placeholderTextColor={Colors.text.tertiary}
-        />
+      <View style={cfs.fieldGroup}>
+        <CreateFlowInput label="Radius (meters)" value={radiusMeters} onChangeText={setRadiusMeters} placeholder="150" />
         <Text style={s.inputHint}>User must check in within this radius</Text>
       </View>
     </View>
@@ -901,72 +759,64 @@ export default function TaskEditorModal({
   const renderTimeEnforcement = () => {
     if (!taskType) return null;
     return (
-      <View style={s.settingsCard}>
-        <Text style={s.settingsTitle}>Time enforcement</Text>
-        <TouchableOpacity style={s.toggleRow} onPress={() => setTeEnabled(!teEnabled)}>
-          <View style={[s.toggleBox, teEnabled && s.toggleBoxActive]}>
-            {teEnabled && <Check size={14} color="#fff" />}
-          </View>
-          <Text style={s.toggleLabel}>Require completion at a specific time</Text>
-        </TouchableOpacity>
+      <EnforcementBlock title="Time enforcement">
+        <CreateFlowCheckbox
+          checked={teEnabled}
+          onPress={() => setTeEnabled(!teEnabled)}
+          label="Require completion at a specific time"
+        />
 
         {teEnabled && (
-          <View style={{ marginTop: 8, gap: 14 }}>
-            <View>
-              <Text style={s.inputLabel}>Target time</Text>
-              <TextInput
-                style={s.input}
+          <View style={s.teBody}>
+            <View style={cfs.fieldGroup}>
+              <CreateFlowInput
+                label="Target time"
                 value={teAnchor}
                 onChangeText={setTeAnchor}
                 placeholder="05:00"
-                placeholderTextColor={Colors.text.tertiary}
-                keyboardType="numbers-and-punctuation"
               />
               <Text style={s.inputHint}>24h format (HH:mm)</Text>
             </View>
 
-            <View>
-              <Text style={s.inputLabel}>Expected duration (optional)</Text>
-              <TextInput
-                style={s.input}
+            <View style={cfs.fieldGroup}>
+              <CreateFlowInput
+                label="Expected duration (optional)"
                 value={teDuration}
                 onChangeText={setTeDuration}
                 placeholder="e.g. 10"
-                placeholderTextColor={Colors.text.tertiary}
-                keyboardType="number-pad"
               />
               <Text style={s.inputHint}>Minutes</Text>
             </View>
 
-            <View>
+            <View style={cfs.fieldGroup}>
               <Text style={s.inputLabel}>Allowed window</Text>
               <View style={s.offsetRow}>
-                <View style={{ flex: 1 }}>
+                <View style={s.offsetField}>
                   <Text style={s.offsetLabel}>Starts (min)</Text>
                   <TextInput
-                    style={[s.input, { textAlign: "center" }]}
+                    style={s.offsetInput}
                     value={teWinStart}
                     onChangeText={setTeWinStart}
                     keyboardType="number-pad"
                     placeholder="0"
-                    placeholderTextColor={Colors.text.tertiary}
+                    placeholderTextColor={tokenColors.textSecondaryCreate}
                   />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={s.offsetField}>
                   <Text style={s.offsetLabel}>Ends (min)</Text>
                   <TextInput
-                    style={[s.input, { textAlign: "center" }]}
+                    style={s.offsetInput}
                     value={teWinEnd}
                     onChangeText={setTeWinEnd}
                     keyboardType="number-pad"
                     placeholder="60"
-                    placeholderTextColor={Colors.text.tertiary}
+                    placeholderTextColor={tokenColors.textSecondaryCreate}
                   />
                 </View>
               </View>
               {teAnchor && (
-                <View style={s.summaryPill}>
-                  <Text style={s.summaryText}>
+                <View style={cfs.allowedPill}>
+                  <Text style={cfs.allowedPillText}>
                     {"Allowed: " +
                       computeWindowSummary(
                         teAnchor,
@@ -978,46 +828,41 @@ export default function TaskEditorModal({
               )}
             </View>
 
-            <View>
-              <TouchableOpacity
-                style={s.toggleRow}
+            <View style={cfs.fieldGroup}>
+              <CreateFlowCheckbox
+                checked={teHardEnabled}
                 onPress={() => setTeHardEnabled(!teHardEnabled)}
-              >
-                <View style={[s.toggleBox, teHardEnabled && s.toggleBoxActive]}>
-                  {teHardEnabled && <Check size={14} color="#fff" />}
-                </View>
-                <Text style={s.toggleLabel}>Hard mode stricter window</Text>
-              </TouchableOpacity>
-
+                label="Hard mode stricter window"
+              />
               {teHardEnabled && (
                 <>
                   <View style={s.offsetRow}>
-                    <View style={{ flex: 1 }}>
+                    <View style={s.offsetField}>
                       <Text style={s.offsetLabel}>Starts (min)</Text>
                       <TextInput
-                        style={[s.input, { textAlign: "center" }]}
+                        style={s.offsetInput}
                         value={teHardStart}
                         onChangeText={setTeHardStart}
                         keyboardType="number-pad"
                         placeholder="0"
-                        placeholderTextColor={Colors.text.tertiary}
+                        placeholderTextColor={tokenColors.textSecondaryCreate}
                       />
                     </View>
-                    <View style={{ flex: 1 }}>
+                    <View style={s.offsetField}>
                       <Text style={s.offsetLabel}>Ends (min)</Text>
                       <TextInput
-                        style={[s.input, { textAlign: "center" }]}
+                        style={s.offsetInput}
                         value={teHardEnd}
                         onChangeText={setTeHardEnd}
                         keyboardType="number-pad"
                         placeholder="30"
-                        placeholderTextColor={Colors.text.tertiary}
+                        placeholderTextColor={tokenColors.textSecondaryCreate}
                       />
                     </View>
                   </View>
                   {teAnchor && (
-                    <View style={[s.summaryPill, s.hardSummaryPill]}>
-                      <Text style={[s.summaryText, s.hardSummaryText]}>
+                    <View style={cfs.hardPill}>
+                      <Text style={cfs.hardPillText}>
                         {"Hard mode: " +
                           computeWindowSummary(
                             teAnchor,
@@ -1031,52 +876,31 @@ export default function TaskEditorModal({
               )}
             </View>
 
-            <View>
+            <View style={cfs.fieldGroup}>
               <Text style={s.inputLabel}>Timezone</Text>
               <View style={s.modeRow}>
-                <TouchableOpacity
-                  style={[s.modeBtn, teTzMode === "USER_LOCAL" && s.modeBtnActive]}
+                <DurationPill
+                  label="User local"
+                  selected={teTzMode === "USER_LOCAL"}
                   onPress={() => setTeTzMode("USER_LOCAL")}
-                >
-                  <Text
-                    style={[
-                      s.modeBtnText,
-                      teTzMode === "USER_LOCAL" && s.modeBtnTextActive,
-                    ]}
-                  >
-                    User local
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    s.modeBtn,
-                    teTzMode === "CHALLENGE_TIMEZONE" && s.modeBtnActive,
-                  ]}
+                />
+                <DurationPill
+                  label="Locked timezone"
+                  selected={teTzMode === "CHALLENGE_TIMEZONE"}
                   onPress={() => setTeTzMode("CHALLENGE_TIMEZONE")}
-                >
-                  <Text
-                    style={[
-                      s.modeBtnText,
-                      teTzMode === "CHALLENGE_TIMEZONE" && s.modeBtnTextActive,
-                    ]}
-                  >
-                    Locked timezone
-                  </Text>
-                </TouchableOpacity>
+                />
               </View>
               {teTzMode === "CHALLENGE_TIMEZONE" && (
-                <TextInput
-                  style={[s.input, { marginTop: 8 }]}
+                <CreateFlowInput
                   value={teTz}
                   onChangeText={setTeTz}
                   placeholder="e.g. America/New_York"
-                  placeholderTextColor={Colors.text.tertiary}
                 />
               )}
             </View>
           </View>
         )}
-      </View>
+      </EnforcementBlock>
     );
   };
 
@@ -1087,10 +911,10 @@ export default function TaskEditorModal({
     const meta = getPreviewMeta();
 
     return (
-      <View style={s.section}>
-        <Text style={s.sectionLabel}>PREVIEW</Text>
+      <View style={cfs.section}>
+        <Text style={cfs.sectionLabel}>PREVIEW</Text>
         <View style={s.previewCard}>
-          <View style={[s.previewIcon, { backgroundColor: `${cfg.color}12` }]}>
+          <View style={[s.previewIcon, { backgroundColor: `${cfg.color}18` }]}>
             <Icon size={22} color={cfg.color} />
           </View>
           <View style={s.previewContent}>
@@ -1111,8 +935,8 @@ export default function TaskEditorModal({
             )}
             {teEnabled && teAnchor && (
               <View style={s.previewBadge}>
-                <Clock size={11} color="#0EA5E9" />
-                <Text style={[s.previewBadgeText, { color: "#0EA5E9" }]}>
+                <Clock size={12} color={tokenColors.accentBlue} />
+                <Text style={[s.previewBadgeText, { color: tokenColors.accentBlue }]}>
                   {formatTimeHHMM(teAnchor)}
                 </Text>
               </View>
@@ -1130,34 +954,15 @@ export default function TaskEditorModal({
       onRequestClose={onCancel}
       testID="task-editor-modal"
     >
-      <SafeAreaView style={s.container} edges={["top", "bottom"]}>
-        <View style={s.header}>
-          <TouchableOpacity
-            onPress={onCancel}
-            style={s.headerSide}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Text style={s.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-          <Text style={s.headerTitle}>
-            {editingTask ? "Edit Task" : "New Task"}
-          </Text>
-          <TouchableOpacity
-            style={[s.saveBtn, !canSave() && s.saveBtnDisabled]}
-            onPress={handleSave}
-            disabled={!canSave()}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text
-              style={[
-                s.saveBtnText,
-                !canSave() && s.saveBtnTextDisabled,
-              ]}
-            >
-              {editingTask ? "Save" : "Add"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <SafeAreaView style={[cfs.screenContainer, { backgroundColor: tokenColors.bgMain }]} edges={["top", "bottom"]}>
+        <CreateFlowHeader
+          title={editingTask ? "Edit Task" : "New Task"}
+          onCancel={onCancel}
+          rightLabel={editingTask ? "Save" : "Add"}
+          onRight={handleSave}
+          rightDisabled={!canSave()}
+          rightButtonVariant="soft"
+        />
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -1165,46 +970,42 @@ export default function TaskEditorModal({
           keyboardVerticalOffset={0}
         >
           <ScrollView
-            contentContainerStyle={s.scrollContent}
+            contentContainerStyle={[cfs.screenPadding, { paddingTop: 16 }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={s.section}>
-              <Text style={s.sectionLabel}>TASK NAME</Text>
-              <TextInput
-                style={s.nameInput}
-                placeholder="e.g. Morning run, Journal, Meditate..."
-                placeholderTextColor={Colors.text.tertiary}
+            <View style={cfs.section}>
+              <CreateFlowInput
+                label="TASK NAME"
                 value={title}
                 onChangeText={setTitle}
-                autoFocus={!editingTask}
-                returnKeyType="next"
+                placeholder="e.g. Morning run, Journal, Meditate..."
               />
             </View>
 
-            <View style={s.section}>
-              <Text style={s.sectionLabel}>TASK TYPE</Text>
+            <View style={cfs.section}>
+              <Text style={cfs.sectionLabel}>TASK TYPE</Text>
               {renderTypeSelector()}
             </View>
 
             {taskType && (
-              <View style={s.section}>
-                <Text style={s.sectionLabel}>
-                  {TASK_TYPE_MAP[taskType].label.toUpperCase() + " SETTINGS"}
+              <View style={cfs.section}>
+                <Text style={cfs.sectionLabel}>
+                  {TASK_TYPE_MAP[taskType].label.toUpperCase().replace(/ \/ /g, " / ") + " SETTINGS"}
                 </Text>
                 {renderSettings()}
               </View>
             )}
 
             {taskType && (
-              <View style={s.section}>
+              <View style={cfs.section}>
                 {renderTimeEnforcement()}
               </View>
             )}
 
             {renderPreview()}
 
-            <View style={{ height: 40 }} />
+            <View style={{ height: 48 }} />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -1213,350 +1014,131 @@ export default function TaskEditorModal({
 }
 
 const s = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F6F6F8",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EBEBED",
-  },
-  headerSide: {
-    minWidth: 60,
-  },
-  cancelText: {
-    fontSize: 16,
-    color: Colors.accent,
-    fontWeight: "500" as const,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-  },
-  saveBtn: {
-    backgroundColor: Colors.accent,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 60,
-    alignItems: "center" as const,
-  },
-  saveBtnDisabled: {
-    opacity: 0.35,
-  },
-  saveBtnText: {
-    fontSize: 15,
-    fontWeight: "600" as const,
-    color: "#fff",
-  },
-  saveBtnTextDisabled: {
-    color: "#fff",
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 60,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    color: Colors.text.tertiary,
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  nameInput: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#EBEBED",
-    fontSize: 17,
-    color: Colors.text.primary,
-  },
   typeGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 12,
   },
-  typeCard: {
-    width: "31%",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#EBEBED",
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    alignItems: "center",
-    gap: 8,
+  typeGridItem: {
+    width: "48%",
+    minWidth: 0,
   },
-  typeIcon: {
-    width: 36,
-    height: 36,
+  teBody: { marginTop: 4, gap: 14 },
+  offsetRow: { flexDirection: "row", gap: 10, marginTop: 4 },
+  offsetField: { flex: 1 },
+  offsetLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: tokenColors.textSecondaryCreate,
+    marginBottom: 4,
+  },
+  offsetInput: {
+    height: 48,
+    backgroundColor: tokenColors.cardBg,
     borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  typeLabel: {
-    fontSize: 12,
-    fontWeight: "500" as const,
-    color: Colors.text.primary,
+    borderWidth: 1.5,
+    borderColor: tokenColors.borderLight,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: tokenColors.textPrimary,
     textAlign: "center",
   },
-  settingsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#EBEBED",
-  },
-  settingsTitle: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-    marginBottom: 12,
-  },
-  fieldGroup: {
-    marginBottom: 16,
-  },
   inputLabel: {
-    fontSize: 13,
-    fontWeight: "500" as const,
-    color: Colors.text.secondary,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: "#F6F6F8",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#EBEBED",
-    fontSize: 15,
-    color: Colors.text.primary,
-  },
-  textArea: {
-    minHeight: 72,
-    paddingTop: 12,
+    fontSize: 12,
+    fontWeight: "600",
+    color: tokenColors.textPrimary,
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   inputHint: {
-    fontSize: 11,
-    color: Colors.text.tertiary,
+    fontSize: 12,
+    color: tokenColors.textSecondaryCreate,
     marginTop: 4,
   },
-  hintText: {
-    fontSize: 11,
-    color: Colors.text.tertiary,
-  },
-  errorText: {
-    fontSize: 11,
-    color: "#DC2626",
-  },
-  charRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  chipGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 4,
-  },
+  modeRow: { flexDirection: "row", gap: 8 },
+  chipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: "#F6F6F8",
-    borderWidth: 1,
-    borderColor: "#EBEBED",
+    borderRadius: 16,
+    backgroundColor: "#F2F2F1",
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  chipSelected: {
+    backgroundColor: `${tokenColors.accentPurple}18`,
+    borderColor: tokenColors.accentPurple,
   },
   chipText: {
-    fontSize: 13,
-    fontWeight: "500" as const,
-    color: Colors.text.secondary,
-  },
-  toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  toggleBox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    backgroundColor: "#F6F6F8",
-    borderWidth: 1,
-    borderColor: "#EBEBED",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-  toggleBoxActive: {
-    backgroundColor: Colors.success,
-    borderColor: Colors.success,
-  },
-  toggleLabel: {
     fontSize: 14,
-    color: Colors.text.secondary,
-    flex: 1,
+    fontWeight: "500",
+    color: tokenColors.textSecondaryCreate,
   },
-  modeRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  modeBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: "#F6F6F8",
-    borderWidth: 1,
-    borderColor: "#EBEBED",
-    alignItems: "center",
-  },
-  modeBtnActive: {
-    backgroundColor: Colors.accentLight,
-    borderColor: Colors.accent,
-  },
-  modeBtnText: {
-    fontSize: 13,
-    fontWeight: "500" as const,
-    color: Colors.text.secondary,
-  },
-  modeBtnTextActive: {
-    color: Colors.accent,
-    fontWeight: "600" as const,
-  },
-  presetRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 8,
-  },
+  chipTextSelected: { color: tokenColors.accentPurple },
+  charRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
+  hintText: { fontSize: 11, color: tokenColors.textSecondaryCreate },
+  errorText: { fontSize: 11, color: tokenColors.accentRed },
+  wordLimitBody: { marginTop: 8 },
+  presetRow: { flexDirection: "row", gap: 8, marginTop: 8 },
   presetCard: {
     flex: 1,
     alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: 4,
-    borderRadius: 10,
-    backgroundColor: "#fff",
+    borderRadius: 16,
+    backgroundColor: tokenColors.cardBg,
     borderWidth: 1.5,
-    borderColor: "#EBEBED",
+    borderColor: tokenColors.borderLight,
   },
   presetCardActive: {
-    borderColor: "#6366F1",
-    backgroundColor: "#6366F10A",
+    borderColor: tokenColors.accentPurple,
+    backgroundColor: `${tokenColors.accentPurple}12`,
   },
   presetNum: {
     fontSize: 18,
-    fontWeight: "700" as const,
-    color: Colors.text.secondary,
+    fontWeight: "700",
+    color: tokenColors.textSecondaryCreate,
     marginBottom: 2,
   },
-  presetNumActive: {
-    color: "#6366F1",
-  },
-  presetLabel: {
-    fontSize: 11,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
-  },
-  presetLabelActive: {
-    color: "#6366F1",
-  },
-  lockedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 4,
-  },
-  lockedText: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-  },
-  offsetRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 4,
-  },
-  offsetLabel: {
-    fontSize: 11,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
-    marginBottom: 4,
-  },
-  summaryPill: {
-    marginTop: 8,
-    backgroundColor: "rgba(16,185,129,0.08)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(16,185,129,0.2)",
-  },
-  summaryText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: "#059669",
-  },
-  hardSummaryPill: {
-    backgroundColor: "rgba(220,38,38,0.06)",
-    borderColor: "rgba(220,38,38,0.15)",
-  },
-  hardSummaryText: {
-    color: "#DC2626",
-  },
+  presetNumActive: { color: tokenColors.accentPurple },
+  presetLabel: { fontSize: 11, fontWeight: "500", color: tokenColors.textSecondaryCreate },
+  presetLabelActive: { color: tokenColors.accentPurple },
+  purpleHint: { fontSize: 12, color: tokenColors.accentPurple, fontWeight: "500", marginTop: 4 },
+  lockedRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 },
+  lockedText: { fontSize: 14, color: tokenColors.textSecondaryCreate },
   previewCard: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 16,
+    backgroundColor: tokenColors.cardBg,
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#EBEBED",
+    borderColor: tokenColors.borderLight,
     flexDirection: "row",
     gap: 14,
   },
   previewIcon: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  previewContent: {
-    flex: 1,
-    gap: 3,
-  },
+  previewContent: { flex: 1, gap: 3 },
   previewTitle: {
     fontSize: 16,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
+    fontWeight: "600",
+    color: tokenColors.textPrimary,
   },
   previewMeta: {
-    fontSize: 13,
-    color: Colors.text.secondary,
+    fontSize: 14,
+    color: tokenColors.textSecondaryCreate,
     lineHeight: 18,
   },
   previewPromptText: {
     fontSize: 12,
-    color: "#6366F1",
-    fontStyle: "italic" as const,
+    color: tokenColors.accentPurple,
+    fontStyle: "italic",
   },
-  previewBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 2,
-  },
-  previewBadgeText: {
-    fontSize: 11,
-    fontWeight: "600" as const,
-  },
+  previewBadge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  previewBadgeText: { fontSize: 12, fontWeight: "600" },
 });

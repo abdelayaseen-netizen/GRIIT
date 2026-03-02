@@ -65,28 +65,23 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   const runDbSanityCheck = useCallback(async () => {
     if (dbCheckedRef.current) return;
     try {
-      console.log('[ApiContext] Running DB sanity check...');
       const result = await checkDbTables();
       if (!mountedRef.current) return;
 
       if (result.ok) {
-        console.log('[ApiContext] DB sanity check passed');
         setDbStatus('ok');
         setMissingTables([]);
         dbCheckedRef.current = true;
       } else if (result.missingTables.length > 0) {
-        console.error('[ApiContext] DB missing tables:', result.missingTables);
         setDbStatus('missing_tables');
         setMissingTables(result.missingTables);
         setLastErrorMessage(`Database misconfigured: missing table(s) ${result.missingTables.join(', ')}. Run seed.sql in Supabase.`);
       } else {
-        console.error('[ApiContext] DB sanity check error:', result.errorMessage);
         setDbStatus('error');
         setLastErrorMessage(result.errorMessage || 'DB check failed');
       }
-    } catch (err) {
+    } catch {
       if (!mountedRef.current) return;
-      console.error('[ApiContext] DB sanity check exception:', formatError(err));
       setDbStatus('error');
     }
   }, []);
@@ -100,7 +95,6 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       setLastResponseTimeMs(result.responseTimeMs);
 
       if (result.ok) {
-        console.log('[ApiContext] Backend is ready', `(${result.responseTimeMs}ms)`);
         setApiStatus('ready');
         setLastErrorMessage(null);
         retryCount.current = 0;
@@ -112,14 +106,12 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       }
 
       const errMsg = result.errorMessage || `HTTP ${result.statusCode || 'unknown'}`;
-      console.warn('[ApiContext] Backend not ready, attempt', retryCount.current + 1, errMsg);
       setApiStatus('down');
       setLastErrorMessage(errMsg);
       return false;
     } catch (err) {
       if (!mountedRef.current) return false;
       const errMsg = formatError(err);
-      console.warn('[ApiContext] Health check error, attempt', retryCount.current + 1, errMsg);
       setApiStatus('down');
       setLastErrorMessage(errMsg);
       return false;
@@ -132,8 +124,6 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     const delays = [500, 1000, 2000, 4000];
     const delay = delays[Math.min(retryCount.current, delays.length - 1)];
     retryCount.current += 1;
-
-    console.log(`[ApiContext] Scheduling retry in ${delay}ms (attempt ${retryCount.current})`);
 
     timerRef.current = setTimeout(async () => {
       if (!mountedRef.current) return;

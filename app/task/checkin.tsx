@@ -84,7 +84,6 @@ export default function CheckinTaskScreen() {
     const handleAppState = (nextAppState: typeof AppState.currentState) => {
       if (sessionActive) {
         if (appStateRef.current === "active" && nextAppState.match(/inactive|background/)) {
-          console.log("App went to background during check-in session");
           backgroundStartRef.current = Date.now();
         } else if (appStateRef.current.match(/inactive|background/) && nextAppState === "active") {
           if (backgroundStartRef.current) {
@@ -178,8 +177,7 @@ export default function CheckinTaskScreen() {
           checkGeofence(newLocation);
         }
       );
-    } catch (error) {
-      console.error("Location tracking error:", error);
+    } catch {
       setLocationStatus("error");
     }
   };

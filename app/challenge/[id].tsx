@@ -10,6 +10,7 @@ import {
   Animated,
   Platform,
   Image,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -34,14 +35,15 @@ import {
 } from "lucide-react-native";
 import { formatTimeHHMM, getTimeWindowState } from "@/lib/time-enforcement";
 import * as Haptics from "expo-haptics";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { useApp } from "@/contexts/AppContext";
+import { useAuthGate } from "@/contexts/AuthGateContext";
+import { track } from "@/lib/analytics";
+import * as Linking from "expo-linking";
+import { getJoinedStarterIds, saveJoinedStarterId } from "@/lib/starter-join";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
 import type { StarterChallenge, StarterTask } from "@/mocks/starter-challenges";
 import Colors from "@/constants/colors";
-
-const JOINED_CHALLENGES_KEY = "joined_starter_challenges";
 
 const AVATAR_URLS = [
   "https://i.pravatar.cc/80?img=10",
@@ -332,30 +334,11 @@ function MissionRow({
   );
 }
 
-async function getJoinedStarterIds(): Promise<string[]> {
-  try {
-    const raw = await AsyncStorage.getItem(JOINED_CHALLENGES_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-async function saveJoinedStarterId(id: string): Promise<void> {
-  try {
-    const ids = await getJoinedStarterIds();
-    if (!ids.includes(id)) {
-      ids.push(id);
-      await AsyncStorage.setItem(JOINED_CHALLENGES_KEY, JSON.stringify(ids));
-    }
-  } catch (e) {
-    console.log("[ChallengeDetail] Failed to save joined starter:", e);
-  }
-}
-
 export default function ChallengeDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id: string | string[] }>();
+  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
   const router = useRouter();
+  const { requireAuth } = useAuthGate();
   const { activeChallenge, todayCheckins } = useApp();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
@@ -380,7 +363,7 @@ export default function ChallengeDetailScreen() {
     setRemoteLoading(true);
     trpcQuery('challenges.getById', { id })
       .then((data) => setRemoteChallenge(data))
-      .catch((err) => console.error('[ChallengeDetail] Fetch error:', err))
+      .catch(() => {})
       .finally(() => setRemoteLoading(false));
   }, [id, isStarter]);
 
@@ -499,21 +482,19 @@ export default function ChallengeDetailScreen() {
   }, [challenge, id, router]);
 
   const handleJoin = useCallback(() => {
-    if (!challenge) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
+    if (!challenge || !id) return;
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
       pathname: "/commitment",
       params: {
+        challengeId: id,
+        isStarter: isStarter ? "1" : "0",
         title: challenge.title,
         duration: challenge.duration_days?.toString() || "0",
         difficulty: challenge.difficulty || "medium",
-        onConfirm: isStarter 
-          ? `handleJoinStarter()` 
-          : `handleJoinRemote("${challenge.id}")`,
       },
     } as any);
-  }, [challenge, router, isStarter]);
+  }, [challenge, id, isStarter, router]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -524,7 +505,6 @@ export default function ChallengeDetailScreen() {
   }, [ctaScaleAnim]);
 
   const handleMissionStart = useCallback((task: StarterTask) => {
-    console.log("[ChallengeDetail] Starting mission:", task.id, task.type);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (task.type === "journal") {
@@ -632,7 +612,10 @@ export default function ChallengeDetailScreen() {
                   style={s.backPill}
                   onPress={() => router.back()}
                   activeOpacity={0.7}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  accessible
+                  accessibilityLabel="Go back"
+                  accessibilityRole="button"
                 >
                   <ChevronLeft size={18} color="#FFFFFF" />
                 </TouchableOpacity>
@@ -640,7 +623,47 @@ export default function ChallengeDetailScreen() {
                 <TouchableOpacity
                   style={s.morePill}
                   activeOpacity={0.7}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  onPress={() => {
+                    Alert.alert("Challenge", undefined, [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Share challenge",
+                        onPress: () => {
+                          const message = `${challenge.title} — ${challenge.short_hook || challenge.description}. Join me on GRIT.`;
+                          if (Platform.OS === "web") {
+                            try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
+                            Alert.alert("Copied", "Challenge details copied to clipboard.");
+                            return;
+                          }
+                          Share.share({
+                            title: challenge.title,
+                            message,
+                            // TODO: backend needs shareable challenge link (deep link or web URL)
+                          }).catch(() => {});
+                        },
+                      },
+                      {
+                        text: "Invite friends",
+                        onPress: () => {
+                          const message = `Join me in "${challenge.title}" on GRIT — build discipline daily.`;
+                          if (Platform.OS === "web") {
+                            try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
+                            Alert.alert("Copied", "Invite message copied. Share it with friends!");
+                            return;
+                          }
+                          Share.share({
+                            title: "Join my challenge",
+                            message,
+                            // TODO: needs deep link or invite endpoint for in-app join
+                          }).catch(() => {});
+                        },
+                      },
+                    ], { cancelable: true });
+                  }}
+                  accessible
+                  accessibilityLabel="Share or invite"
+                  accessibilityRole="button"
                 >
                   <MoreHorizontal size={18} color="#FFFFFF" />
                 </TouchableOpacity>
@@ -824,7 +847,14 @@ export default function ChallengeDetailScreen() {
                 onPress={() => {
                   Alert.alert("Leave Challenge", "Are you sure you want to leave?", [
                     { text: "Cancel", style: "cancel" },
-                    { text: "Leave", style: "destructive", onPress: () => console.log("[ChallengeDetail] User left challenge") },
+                    {
+                      text: "Leave",
+                      style: "destructive",
+                      onPress: () => {
+                        router.back();
+                        // TODO: when backend supports challenges.leave, call it and refetch
+                      },
+                    },
                   ]);
                 }}
               >
@@ -846,7 +876,7 @@ export default function ChallengeDetailScreen() {
             <Animated.View style={{ transform: [{ scale: ctaScaleAnim }] }}>
               <TouchableOpacity
                 style={[s.ctaButton, { backgroundColor: theme.ctaBg }]}
-                onPress={isJoined ? () => router.push("/(tabs)") : handleJoin}
+                onPress={isJoined ? () => router.push("/(tabs)") : () => requireAuth("join", handleJoin)}
                 onPressIn={handleCtaPressIn}
                 onPressOut={handleCtaPressOut}
                 disabled={joinDisabled}
@@ -860,6 +890,26 @@ export default function ChallengeDetailScreen() {
                 )}
               </TouchableOpacity>
             </Animated.View>
+          )}
+          {isJoined && (
+            <TouchableOpacity
+              style={s.inviteLink}
+              onPress={() => {
+                const joinUrl = Linking.createURL(`/challenge/${id}`);
+                const message = `Join me in "${challenge.title}" on GRIT — build discipline daily. ${joinUrl}`;
+                track({ name: "invite_shared", challengeId: id, source: "challenge_detail" });
+                if (Platform.OS === "web") {
+                  try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
+                  Alert.alert("Copied", "Invite message copied. Share it with friends!");
+                  return;
+                }
+                Share.share({ title: "Join my challenge", message }).catch(() => {});
+              }}
+              activeOpacity={0.7}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Text style={s.inviteLinkText}>Invite friends to this challenge</Text>
+            </TouchableOpacity>
           )}
           <Text style={s.ctaMicro}>
             {isDaily ? "Challenge expires at midnight" : "Day resets at midnight"}
@@ -1454,6 +1504,18 @@ const s = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700" as const,
     letterSpacing: -0.1,
+  },
+  inviteLink: {
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    minHeight: 44,
+    justifyContent: "center",
+  },
+  inviteLinkText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: Colors.accent,
   },
   ctaMicro: {
     fontSize: 12,
