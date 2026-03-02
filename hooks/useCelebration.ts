@@ -23,8 +23,7 @@ export function useCelebration(): UseCelebrationReturn {
       const key = `${taskId}_${today}`;
       
       return !!shownIds[key];
-    } catch (error) {
-      console.log("Error checking celebration status:", error);
+    } catch {
       return false;
     }
   }, []);
@@ -48,33 +47,23 @@ export function useCelebration(): UseCelebrationReturn {
       }
       
       await AsyncStorage.setItem(CELEBRATION_STORAGE_KEY, JSON.stringify(shownIds));
-    } catch (error) {
-      console.log("Error marking celebration as shown:", error);
+    } catch {
+      // Ignore storage errors
     }
   }, []);
 
   const triggerCelebration = useCallback(async (taskId: string): Promise<void> => {
-    if (currentTaskIdRef.current === taskId) {
-      console.log("Celebration already triggered for this task");
-      return;
-    }
-
+    if (currentTaskIdRef.current === taskId) return;
     const alreadyShown = await hasShownCelebration(taskId);
-    if (alreadyShown) {
-      console.log("Celebration already shown for task:", taskId);
-      return;
-    }
-
+    if (alreadyShown) return;
     currentTaskIdRef.current = taskId;
     await markCelebrationShown(taskId);
     setShowCelebration(true);
-    console.log("Triggering celebration for task:", taskId);
   }, [hasShownCelebration, markCelebrationShown]);
 
   const onCelebrationComplete = useCallback(() => {
     setShowCelebration(false);
     currentTaskIdRef.current = null;
-    console.log("Celebration complete");
   }, []);
 
   return {

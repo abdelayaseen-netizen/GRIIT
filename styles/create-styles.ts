@@ -15,50 +15,14 @@ export const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 20,
   },
+  stepperWrap: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
   headerTitle: {
     ...Typography.pageTitle,
     color: Colors.text.primary,
     marginBottom: 16,
-  },
-  stepIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  stepDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepDotActive: {
-    backgroundColor: Colors.accent,
-  },
-  stepDotCompleted: {
-    backgroundColor: Colors.success,
-  },
-  stepDotText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.tertiary,
-  },
-  stepDotTextActive: {
-    color: "#fff",
-  },
-  stepLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: Colors.pill,
-    marginHorizontal: 8,
-  },
-  stepLineCompleted: {
-    backgroundColor: Colors.success,
   },
   scrollView: {
     flex: 1,

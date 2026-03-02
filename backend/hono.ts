@@ -7,22 +7,22 @@ import { createContext } from "./trpc/create-context";
 
 const app = new Hono();
 
-app.use("*", cors());
+const isProd = process.env.NODE_ENV === 'production';
+const corsOrigin = process.env.CORS_ORIGIN ?? (isProd ? '' : '*');
+app.use(
+  '*',
+  cors({
+    origin: corsOrigin || '*',
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
-app.get("/", (c) => {
-  console.log("[Hono] Root hit");
-  return c.json({ status: "ok", message: "GRIT API is running" });
-});
+app.get("/", (c) => c.json({ status: "ok", message: "GRIT API is running" }));
 
-app.get("/api/health", (c) => {
-  console.log("[Hono] Health check hit at /api/health");
-  return c.json({ ok: true, ts: Date.now(), version: "1.0.0" });
-});
+app.get("/api/health", (c) => c.json({ ok: true, ts: Date.now(), version: "1.0.0" }));
 
-app.get("/health", (c) => {
-  console.log("[Hono] Health check hit at /health");
-  return c.json({ ok: true, ts: Date.now(), version: "1.0.0" });
-});
+app.get("/health", (c) => c.json({ ok: true, ts: Date.now(), version: "1.0.0" }));
 
 app.use(
   "/api/trpc/*",

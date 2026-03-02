@@ -6,20 +6,24 @@
     "node": "20.x"
   },
   "scripts": {
-    "start": "bunx rork start -p suykkcjj2pk6zyx6knixc --tunnel",
-    "start-web": "bunx rork start -p suykkcjj2pk6zyx6knixc --web --tunnel",
-    "start-web-dev": "DEBUG=expo* bunx rork start -p suykkcjj2pk6zyx6knixc --web --tunnel",
+    "start": "expo start",
+    "start:ios": "expo start --ios",
+    "start:web": "expo start --web",
+    "start:tunnel": "expo start --tunnel",
+    "start:web:tunnel": "expo start --web --tunnel",
+    "preview": "npx serve . -p 5000",
     "lint": "expo lint",
     "backend:start": "tsx backend/server.ts",
-    "postinstall": "node scripts/patch-expo-router.js"
+    "postinstall": "node scripts/patch-expo-router.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.2.3",
     "@expo/vector-icons": "^15.0.3",
     "@hono/node-server": "^1.0.0",
     "@hono/trpc-server": "0.3.2",
-    "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@rork-ai/toolkit-sdk": "^0.2.51",
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@supabase/supabase-js": "^2.94.1",
     "@trpc/client": "10.45.2",
@@ -36,6 +40,7 @@
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.10",
     "expo-location": "~19.0.8",
+    "expo-notifications": "~0.31.0",
     "expo-router": "~6.0.17",
     "expo-splash-screen": "~31.0.12",
     "expo-status-bar": "~3.0.9",
@@ -59,6 +64,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "vitest": "^2.1.0",
     "@babel/core": "^7.25.2",
     "@expo/ngrok": "^4.1.0",
     "@types/react": "~18.3.12",

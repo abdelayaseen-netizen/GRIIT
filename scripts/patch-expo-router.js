@@ -16,11 +16,9 @@ function patchDir(dir) {
       updated = updated.replace(/React\.use\((?!State|Effect|Memo|Callback|Ref|Context|Reducer|Id|LayoutEffect|InsertionEffect|ImperativeHandle|DebugValue|SyncExternalStore|Transition|DeferredValue|Optimistic|ActionState|Formstatus)/g, 'React.useContext(');
       if (content !== updated) {
         fs.writeFileSync(full, updated, 'utf8');
-        console.log(`[patch] Patched ${path.relative(modulesDir, full)}`);
       }
     }
   }
 }
 
 patchDir(modulesDir);
-console.log('[patch] expo-router React.use() -> React.useContext() complete');

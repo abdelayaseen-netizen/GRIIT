@@ -1,25 +1,32 @@
 import { Tabs } from "expo-router";
-import { Home, Compass, PlusCircle, Activity, User } from "lucide-react-native";
+import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React from "react";
-import Colors from "@/constants/colors";
+import { View, StyleSheet } from "react-native";
+import {
+  colors,
+  spacing,
+  typography,
+  shadows,
+  measures,
+} from "@/src/theme/tokens";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: Colors.text.tertiary,
+        tabBarActiveTintColor: colors.accentOrangeCreate,
+        tabBarInactiveTintColor: colors.tabInactive,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.card,
-          borderTopColor: Colors.border,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.borderSubtle,
           borderTopWidth: 1,
-          paddingTop: 8,
+          paddingTop: spacing.sm,
           height: 88,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "500",
+          fontSize: typography.tabLabel.fontSize,
+          fontWeight: typography.tabLabel.fontWeight,
           marginTop: 4,
           marginBottom: 8,
         },
@@ -43,14 +50,19 @@ export default function TabLayout() {
         name="create"
         options={{
           title: "Create",
-          tabBarIcon: ({ color, size }) => <PlusCircle color={color} size={size} />,
+          tabBarIcon: () => (
+            <View style={styles.centerButton}>
+              <Plus color={colors.white} size={25} strokeWidth={2.5} />
+            </View>
+          ),
+          tabBarLabel: () => null,
         }}
       />
       <Tabs.Screen
         name="activity"
         options={{
-          title: "Activity",
-          tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
+          title: "Movement",
+          tabBarIcon: ({ color, size }) => <Flame color={color} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -63,3 +75,16 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  centerButton: {
+    width: measures.centerButtonSize,
+    height: measures.centerButtonSize,
+    borderRadius: measures.centerButtonSize / 2,
+    backgroundColor: colors.accentOrangeCreate,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    ...shadows.centerButton,
+  },
+});

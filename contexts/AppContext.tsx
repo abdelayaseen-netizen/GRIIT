@@ -1,7 +1,14 @@
 import { createContext, useContext, ReactNode, useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
 import { supabase } from '@/lib/supabase';
+import {
+  requestNotificationPermissions,
+  setupNotificationChannel,
+  scheduleNextSecureReminder,
+  cancelSecureReminders,
+} from '@/lib/notifications';
 
 type AppContextValue = {
   profile: any;
@@ -17,13 +24,11 @@ type AppContextValue = {
   computeProgress: { verifiedCount: number; totalRequired: number; progress: number };
   canSecureDay: boolean;
   completeTask: (params: { activeChallengeId: string; taskId: string; value?: number; noteText?: string; proofUrl?: string }) => void;
-  secureDay: () => void;
+  secureDay: () => Promise<{ newStreakCount: number } | undefined>;
   isLoading: boolean;
   isError: boolean;
   initialFetchDone: boolean;
   refetchAll: () => Promise<void>;
-  notifications: any[];
-  markNotificationAsRead: (notificationId: string) => Promise<void>;
   challenges: any[];
   getChallengeRoom: (challengeId: string) => any;
   getChatMessages: (roomId: string) => any[];
@@ -73,10 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
-    const timer = setTimeout(() => {
-      console.warn('[AppContext] Hard timeout reached (15s), forcing initialFetchDone');
-      setHardTimeout(true);
-    }, 15000);
+    const timer = setTimeout(() => setHardTimeout(true), 15000);
     return () => clearTimeout(timer);
   }, [user]);
 
@@ -85,11 +87,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProfileLoading(true);
     try {
       const data = await trpcQuery('profiles.get');
-      console.log('[AppContext] Profile fetched:', !!data);
       setProfile(data);
       setProfileError(false);
-    } catch (err) {
-      console.error('[AppContext] Profile fetch error:', err);
+    } catch {
       setProfileError(true);
     } finally {
       setProfileLoading(false);
@@ -102,8 +102,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery('profiles.getStats');
       setStats(data);
-    } catch (err) {
-      console.error('[AppContext] Stats fetch error:', err);
+    } catch {
+      // Stats fetch failed — non-blocking
     }
   }, [user]);
 
@@ -113,8 +113,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const data = await trpcQuery('challenges.getActive');
       setActiveChallenge(data);
       setActiveChallengeError(false);
-    } catch (err) {
-      console.error('[AppContext] Active challenge fetch error:', err);
+    } catch {
       setActiveChallengeError(true);
     } finally {
       setActiveChallengeLoaded(true);
@@ -126,8 +125,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery('stories.list');
       setStories(data || []);
-    } catch (err) {
-      console.error('[AppContext] Stories fetch error:', err);
+    } catch {
+      // Stories fetch failed — non-blocking
     }
   }, [user]);
 
@@ -135,8 +134,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery('checkins.getTodayCheckins', { activeChallengeId });
       setTodayCheckins(data || []);
-    } catch (err) {
-      console.error('[AppContext] Today checkins fetch error:', err);
+    } catch {
+      // Today checkins failed — non-blocking
     }
   }, []);
 
@@ -149,6 +148,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user, fetchProfile, fetchStats, fetchActiveChallenge, fetchStories]);
 
   useEffect(() => {
+    if (Platform.OS === 'web' || !user) return;
+    requestNotificationPermissions().then((ok) => {
+      if (ok) setupNotificationChannel();
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' || !user || !stats) return;
+    const todayKey = new Date().toISOString().split('T')[0];
+    const lastKey = stats.lastCompletedDateKey ?? null;
+    const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
+    if (lastKey === todayKey) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      scheduleNextSecureReminder(preferred, tomorrow).catch(() => {});
+    } else {
+      scheduleNextSecureReminder(preferred).catch(() => {});
+    }
+    return () => {
+      cancelSecureReminders();
+    };
+  }, [user, stats?.lastCompletedDateKey, (stats as any)?.preferredSecureTime]);
+
+  useEffect(() => {
     if (activeChallenge?.id) {
       fetchTodayCheckins(activeChallenge.id);
     }
@@ -157,25 +180,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const directProfileFallback = useCallback(async (userId: string, email?: string) => {
     if (fallbackAttempted) return;
     setFallbackAttempted(true);
-    console.log('[AppContext] Attempting direct Supabase profile fallback...');
     try {
       const { data: existing, error: fetchErr } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
       if (existing && !fetchErr) {
-        console.log('[AppContext] Direct fallback found existing profile');
         setFallbackProfile(existing);
         return;
       }
 
-      if (fetchErr && fetchErr.code !== 'PGRST116') {
-        console.warn('[AppContext] Direct profile fetch error:', fetchErr.message);
-      }
-
-      console.log('[AppContext] No profile found, auto-creating via Supabase...');
       const fallbackUsername = `user_${userId.slice(0, 8)}`;
       const fallbackName = email?.split('@')[0] || fallbackUsername;
 
@@ -183,29 +199,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .upsert(
           {
-            id: userId,
+            user_id: userId,
             username: fallbackUsername,
             display_name: fallbackName,
             bio: '',
             updated_at: new Date().toISOString(),
           },
-          { onConflict: 'id' }
+          { onConflict: 'user_id' }
         )
         .select()
         .single();
 
       if (createErr) {
-        console.error('[AppContext] Direct profile create error:', createErr.message);
         setAutoCreateError(createErr.message);
         return;
       }
 
-      if (created) {
-        console.log('[AppContext] Direct fallback created profile successfully');
-        setFallbackProfile(created);
-      }
+      if (created) setFallbackProfile(created);
     } catch (err) {
-      console.error('[AppContext] Direct fallback exception:', err);
       setAutoCreateError(err instanceof Error ? err.message : 'Unknown error');
     }
   }, [fallbackAttempted]);
@@ -218,7 +229,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       !autoCreateAttempted &&
       !profileAutoCreating
     ) {
-      console.log('[AppContext] Profile missing for user, auto-creating via tRPC...');
       setAutoCreateAttempted(true);
       setProfileAutoCreating(true);
       const fallbackUsername = `user_${user.id.slice(0, 8)}`;
@@ -227,11 +237,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         username: fallbackUsername,
         display_name: fallbackName,
       }).then(() => {
-        console.log('[AppContext] Auto-created profile, refetching...');
         fetchProfile();
         fetchStats();
       }).catch((err: any) => {
-        console.error('[AppContext] Auto-create profile failed:', err.message);
         setAutoCreateError(err.message);
       }).finally(() => {
         setProfileAutoCreating(false);
@@ -247,7 +255,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       !profile &&
       !fallbackProfile
     ) {
-      console.log('[AppContext] tRPC profile failed, trying direct Supabase fallback...');
       directProfileFallback(user.id, user.email ?? undefined);
     }
   }, [user, profileError, profile, fallbackAttempted, fallbackProfile, directProfileFallback]);
@@ -308,21 +315,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     trpcMutate('checkins.complete', params).then(() => {
       if (activeChallenge?.id) fetchTodayCheckins(activeChallenge.id);
       fetchActiveChallenge();
-    }).catch((err: any) => {
-      console.error('[AppContext] Complete task error:', err);
+    }).catch(() => {
+      // Complete task failed — UI can show retry
     });
   }, [activeChallenge, fetchTodayCheckins, fetchActiveChallenge]);
 
-  const secureDay = useCallback(() => {
-    if (activeChallenge?.id && canSecureDay) {
-      trpcMutate('checkins.secureDay', { activeChallengeId: activeChallenge.id }).then(() => {
-        fetchActiveChallenge();
-        fetchStats();
-      }).catch((err: any) => {
-        console.error('[AppContext] Secure day error:', err);
-      });
+  const secureDay = useCallback(async (): Promise<{ newStreakCount: number } | undefined> => {
+    if (!activeChallenge?.id || !canSecureDay) return undefined;
+    try {
+      const result = await trpcMutate('checkins.secureDay', { activeChallengeId: activeChallenge.id }) as { success: boolean; newStreakCount: number };
+      fetchActiveChallenge();
+      fetchStats();
+      if (Platform.OS !== 'web') {
+        const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        scheduleNextSecureReminder(preferred, tomorrow).catch(() => {});
+      }
+      return result;
+    } catch {
+      return undefined;
     }
-  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats]);
+  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats]);
 
   const resolvedProfile = profile || fallbackProfile;
   const profileHasLoaded = (profileFetched && profile !== null) || profileError || !!fallbackProfile;
@@ -365,9 +379,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isError,
     initialFetchDone,
     refetchAll,
-
-    notifications: [],
-    markNotificationAsRead: async (_notificationId: string) => {},
 
     challenges: [],
     getChallengeRoom: (_challengeId: string) => null as any,

@@ -7,6 +7,8 @@ type AuthContextValue = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  /** True when there is no session (user can browse as guest). */
+  isGuest: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -25,10 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      console.log('[Auth] getSession timed out, continuing without session');
-      setLoading(false);
-    }, 5000);
+    const timeout = setTimeout(() => setLoading(false), 5000);
 
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
@@ -39,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         clearTimeout(timeout);
-        console.log('[Auth] getSession failed, continuing without session');
         setLoading(false);
       });
 
@@ -55,8 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const isGuest = !user;
+
   return (
-    <AuthContext.Provider value={{ user, session, loading }}>
+    <AuthContext.Provider value={{ user, session, loading, isGuest }}>
       {children}
     </AuthContext.Provider>
   );

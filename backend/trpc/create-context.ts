@@ -17,28 +17,21 @@ function createUserSupabase(accessToken: string) {
 }
 
 export const createContext = async (opts: { req: Request }) => {
-  console.log('[Context] Creating context...');
   const authHeader = opts.req.headers.get('authorization');
   let userId: string | null = null;
   let supabase = sharedSupabase;
 
   if (authHeader) {
     const token = authHeader.replace('Bearer ', '');
-    console.log('[Context] Auth token present, verifying user...');
     try {
       const { data: { user }, error } = await sharedSupabase.auth.getUser(token);
-      if (error) {
-        console.error('[Context] Auth verification error:', error.message);
-      } else if (user) {
+      if (!error && user) {
         userId = user.id;
         supabase = createUserSupabase(token);
-        console.log('[Context] Authenticated user:', userId);
       }
-    } catch (err) {
-      console.error('[Context] Auth crash:', err);
+    } catch {
+      // Auth verification failed — proceed without user
     }
-  } else {
-    console.log('[Context] No auth header present');
   }
 
   return {

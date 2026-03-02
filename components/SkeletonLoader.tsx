@@ -70,31 +70,6 @@ export function HomeScreenSkeleton() {
   );
 }
 
-export function ProfileScreenSkeleton() {
-  return (
-    <View style={skeletonStyles.container}>
-      <View style={skeletonStyles.profileHeader}>
-        <Skeleton width={80} height={80} borderRadius={40} />
-        <Skeleton width={140} height={22} borderRadius={4} style={{ marginTop: 14 }} />
-        <Skeleton width={100} height={14} borderRadius={4} style={{ marginTop: 6 }} />
-      </View>
-
-      <View style={skeletonStyles.statsRow}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <View key={i} style={skeletonStyles.statItem}>
-            <Skeleton width={24} height={24} borderRadius={12} />
-            <Skeleton width={40} height={24} borderRadius={4} style={{ marginTop: 8 }} />
-            <Skeleton width={60} height={12} borderRadius={4} style={{ marginTop: 4 }} />
-          </View>
-        ))}
-      </View>
-
-      <Skeleton width="100%" height={52} borderRadius={12} style={{ marginTop: 20 }} />
-      <Skeleton width="100%" height={52} borderRadius={12} style={{ marginTop: 10 }} />
-    </View>
-  );
-}
-
 const skeletonStyles = StyleSheet.create({
   container: {
     padding: 20,
@@ -123,30 +98,6 @@ const skeletonStyles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
-    borderWidth: 1,
-    borderColor: "#E8E6E1",
-  },
-  profileHeader: {
-    alignItems: "center",
-    paddingVertical: 24,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8E6E1",
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-    gap: 12,
-  },
-  statItem: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
     borderWidth: 1,
     borderColor: "#E8E6E1",
   },

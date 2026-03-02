@@ -47,37 +47,3 @@ export const mockUsers: User[] = [
     joinedChallenges: ["challenge1"],
   },
 ];
-
-export const mockCurrentUser: User = mockUsers[0];
-
-export const socialSnapshots = [
-  { id: "user2", username: "jordan_lee", avatarUrl: "https://i.pravatar.cc/150?img=2", secured: true, day: 45 },
-  { id: "user3", username: "sam_rivers", avatarUrl: "https://i.pravatar.cc/150?img=3", secured: true, day: 60 },
-  { id: "user4", username: "taylor_chen", avatarUrl: "https://i.pravatar.cc/150?img=4", secured: false, day: 12 },
-  { id: "user5", username: "maya_patel", avatarUrl: "https://i.pravatar.cc/150?img=5", secured: true, day: 3 },
-];
-
-export const purposeLines = [
-  "Secure today. Then see how others did.",
-  "One day at a time. Community keeps you steady.",
-  "Finish your work. Stay for the people.",
-  "Build momentum. One task at a time.",
-];
-
-export const encouragementMessages = {
-  incomplete: [
-    "Momentum starts after the first task.",
-    "Small win first.",
-    "One task closer.",
-  ],
-  secured: [
-    "You did your part today.",
-    "Showed up. That's the point.",
-    "Day secured. Well done.",
-  ],
-  streakGrowing: [
-    "Consistency compounds quietly.",
-    "Keep it steady.",
-    "Building something real.",
-  ],
-};

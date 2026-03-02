@@ -17,7 +17,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   ChevronLeft,
-  ChevronRight,
   Plus,
   BookOpen,
   Timer,
@@ -26,7 +25,6 @@ import {
   CheckCircle,
   Trash2,
   Clock,
-  Sparkles,
   MapPin,
   X,
   Check,
@@ -42,11 +40,24 @@ import * as Haptics from 'expo-haptics';
 import { ChallengeType, ReplayPolicy, JournalCategory, WordLimitMode, ScheduleType, WindowMode, TimezoneMode, ChallengeVisibility } from "@/types";
 import { trpcMutate } from "@/lib/trpc";
 import { useApi } from "@/contexts/ApiContext";
+import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { formatTimeHHMM, computeWindowSummary, validateTimeEnforcement } from "@/lib/time-enforcement";
 
 import { formatTRPCError, getApiBaseUrl, formatError } from "@/lib/api";
 import { styles } from "@/styles/create-styles";
 import TaskEditorModal from '@/components/TaskEditorModal';
+import {
+  ChallengeStepper,
+  ChallengeTypeCard,
+  CreateFlowHeader,
+  CreateFlowInput,
+  DurationPill,
+  CategoryTag,
+  PrimaryButtonCreate,
+  PreviewCard,
+  DailyTaskRow,
+} from "@/src/components/ui";
+import { colors as tokenColors } from "@/src/theme/tokens";
 
 type TaskType = "journal" | "timer" | "photo" | "run" | "simple" | "checkin";
 type TrackingMode = "distance" | "time";
@@ -124,6 +135,88 @@ const JOURNAL_PROMPT_EXAMPLES = [
 const DURATION_PRESETS = [7, 14, 30, 75];
 const CATEGORIES = ["Fitness", "Mind", "Faith", "Discipline", "Other"];
 
+// TODO: backend may provide challenge packs; using client-side presets for now
+const CHALLENGE_PACKS: {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  taskCount: number;
+  buildTasks: () => TaskTemplate[];
+}[] = [
+  {
+    id: "athlete",
+    icon: "🏋️",
+    title: "Athlete Pack",
+    description: "Run, train, and track your body daily.",
+    taskCount: 3,
+    buildTasks: () => [
+      { id: "a1", title: "Morning run", type: "run", required: true, trackingMode: "distance", targetValue: 3, unit: "miles" },
+      { id: "a2", title: "Workout", type: "run", required: true, trackingMode: "time", targetValue: 30, unit: "minutes" },
+      { id: "a3", title: "Body check-in", type: "journal", required: true, journalType: ["physical_state"], journalPrompt: "How did your body feel today? Energy, soreness, recovery.", captureMood: true, captureEnergy: true },
+    ],
+  },
+  {
+    id: "faith",
+    icon: "🙏",
+    title: "Faith Pack",
+    description: "Prayer, reflection, and spiritual growth.",
+    taskCount: 3,
+    buildTasks: () => [
+      { id: "f1", title: "Prayer", type: "simple", required: true },
+      { id: "f2", title: "Reflection", type: "journal", required: true, journalType: ["self_reflection"], journalPrompt: "What did you learn about yourself today?", captureMood: true },
+      { id: "f3", title: "Gratitude", type: "journal", required: true, journalType: ["gratitude"], journalPrompt: "Write three things you're grateful for today.", captureMood: false },
+    ],
+  },
+  {
+    id: "entrepreneur",
+    icon: "🔨",
+    title: "Entrepreneur Pack",
+    description: "Ship, build, and reflect on your progress.",
+    taskCount: 3,
+    buildTasks: () => [
+      { id: "e1", title: "Ship something", type: "simple", required: true },
+      { id: "e2", title: "Build log", type: "journal", required: true, journalType: ["wins_losses"], journalPrompt: "What did you ship or build today?", captureMood: true },
+      { id: "e3", title: "Reflection", type: "journal", required: true, journalType: ["mental_clarity"], journalPrompt: "Describe your progress and blockers.", captureEnergy: true },
+    ],
+  },
+  {
+    id: "hyrox",
+    icon: "⚡",
+    title: "HYROX Pack",
+    description: "Run, row, and functional training.",
+    taskCount: 4,
+    buildTasks: () => [
+      { id: "h1", title: "Run", type: "run", required: true, trackingMode: "distance", targetValue: 5, unit: "km" },
+      { id: "h2", title: "Row", type: "run", required: true, trackingMode: "time", targetValue: 15, unit: "minutes" },
+      { id: "h3", title: "Functional", type: "timer", required: true, durationMinutes: 20, mustCompleteInSession: true },
+      { id: "h4", title: "Cool down", type: "journal", required: true, journalType: ["physical_state"], journalPrompt: "How did your body recover?", captureBodyState: true },
+    ],
+  },
+  {
+    id: "morning",
+    icon: "☀️",
+    title: "Morning Routine",
+    description: "Win the morning, win the day.",
+    taskCount: 5,
+    buildTasks: () => [
+      { id: "m1", title: "Wake early", type: "simple", required: true },
+      { id: "m2", title: "Morning run", type: "run", required: true, trackingMode: "distance", targetValue: 2, unit: "miles" },
+      { id: "m3", title: "Meditate", type: "timer", required: true, durationMinutes: 10, mustCompleteInSession: true },
+      { id: "m4", title: "Journal", type: "journal", required: true, journalType: ["self_reflection"], journalPrompt: "What was the hardest part of today and how did you push through?", captureMood: true, captureEnergy: true },
+      { id: "m5", title: "Plan day", type: "simple", required: true },
+    ],
+  },
+];
+
+const PACK_CARD_BORDER: Record<string, string> = {
+  athlete: Colors.border,
+  faith: "#93C5FD",
+  entrepreneur: Colors.border,
+  hyrox: "#FDBA74",
+  morning: "#FDBA74",
+};
+
 const CHALLENGE_TYPES: { id: ChallengeType; label: string; description: string }[] = [
   { id: "standard", label: "Standard", description: "Multi-day challenge with daily tasks" },
   { id: "one_day", label: "24-Hour", description: "One day challenge, can be live or replayable" },
@@ -151,6 +244,8 @@ const TASK_TYPE_CONFIG: Record<TaskType, { icon: any; label: string; color: stri
 
 export default function CreateScreen() {
   const router = useRouter();
+  const isGuest = useIsGuest();
+  const { showGate } = useAuthGate();
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -208,6 +303,22 @@ export default function CreateScreen() {
   const [locationName, setLocationName] = useState("");
   const [radiusMeters, setRadiusMeters] = useState("150");
 
+  if (isGuest) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.bgMain ?? "#F7F7F6", justifyContent: "center", alignItems: "center", padding: 24 }}>
+        <Text style={{ fontSize: 22, fontWeight: "700", color: tokenColors.textPrimary ?? "#111", marginBottom: 8, textAlign: "center" }}>Sign up to create challenges</Text>
+        <Text style={{ fontSize: 15, color: tokenColors.textSecondaryCreate ?? "#6E6E6C", marginBottom: 24, textAlign: "center" }}>Create an account to design and launch your own challenges.</Text>
+        <TouchableOpacity
+          style={{ backgroundColor: tokenColors.accentOrangeCreate ?? "#E17847", paddingVertical: 16, paddingHorizontal: 32, borderRadius: 14 }}
+          onPress={() => showGate("create")}
+          activeOpacity={0.85}
+        >
+          <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Sign up</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   const { apiStatus, apiReady, retryNow: retryApi, lastResponseTimeMs, lastErrorMessage, getDiagnosticsString } = useApi();
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -227,7 +338,6 @@ export default function CreateScreen() {
   const startWatchdog = useCallback(() => {
     clearWatchdog();
     watchdogRef.current = setTimeout(() => {
-      console.warn('[Create] Watchdog triggered: submit stuck for 15s');
       setSubmitStatus('error');
       setRecoveryMessage('Server not responding. Your challenge data is preserved — you can retry or save as draft.');
       setShowRecoveryModal(true);
@@ -595,14 +705,12 @@ export default function CreateScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    console.log('[Create] Task saved:', task.title, task.type);
   }, [editingTask]);
 
   const createMutationPendingRef = useRef(false);
 
   const handleCreate = useCallback(() => {
     if (submitStatus === 'submitting' || createMutationPendingRef.current) {
-      console.log('[Create] Already submitting, ignoring tap');
       return;
     }
 
@@ -631,16 +739,6 @@ export default function CreateScreen() {
       Alert.alert("No Tasks", "Add at least one task to your challenge");
       return;
     }
-
-    console.log('[Create] Submitting challenge:', {
-      baseUrl: getApiBaseUrl(),
-      apiStatus,
-      submitStatus,
-      title,
-      type: challengeType,
-      durationDays: getDuration(),
-      tasksCount: tasks.length,
-    });
 
     setSubmitStatus('submitting');
     startWatchdog();
@@ -701,7 +799,6 @@ export default function CreateScreen() {
       .then((challenge: any) => {
         clearWatchdog();
         setSubmitStatus('success');
-        console.log('[Create] Challenge created successfully:', challenge.id);
 
         router.push({
           pathname: "/success" as any,
@@ -735,13 +832,6 @@ export default function CreateScreen() {
 
         const errorInfo = formatTRPCError(error);
         const isTimeout = formatError(error).includes('REQUEST_TIMEOUT');
-
-        console.error('[Create] Mutation error:', {
-          message: errorInfo.message,
-          isNetwork: errorInfo.isNetwork,
-          isTimeout,
-          apiStatus,
-        });
 
         if (isTimeout) {
           setRecoveryMessage("Server didn't respond in time. Your challenge data is preserved.");
@@ -832,49 +922,29 @@ export default function CreateScreen() {
     }
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      {[1, 2, 3].map((s) => (
-        <View key={s} style={styles.stepRow}>
-          <View style={[styles.stepDot, s === step && styles.stepDotActive, s < step && styles.stepDotCompleted]}>
-            {s < step ? (
-              <CheckCircle size={14} color="#fff" />
-            ) : (
-              <Text style={[styles.stepDotText, s === step && styles.stepDotTextActive]}>{s}</Text>
-            )}
-          </View>
-          {s < 3 && <View style={[styles.stepLine, s < step && styles.stepLineCompleted]} />}
-        </View>
-      ))}
-    </View>
-  );
-
   const renderStep1 = () => (
     <Animated.View style={[styles.stepContent, { transform: [{ translateX: slideAnim }] }]}>
       <Text style={styles.stepTitle}>Challenge Basics</Text>
       <Text style={styles.stepSubtitle}>What are you building?</Text>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Title</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. 75 Day Hard"
-          placeholderTextColor={Colors.text.tertiary}
+        <CreateFlowInput
+          label="TITLE"
           value={title}
           onChangeText={setTitle}
+          placeholder="e.g. 75 Day Hard"
         />
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Challenge Type</Text>
+        <Text style={styles.label}>CHALLENGE TYPE</Text>
         <View style={styles.challengeTypeRow}>
           {CHALLENGE_TYPES.map((type) => (
-            <TouchableOpacity
+            <ChallengeTypeCard
               key={type.id}
-              style={[
-                styles.challengeTypeCard,
-                challengeType === type.id && styles.challengeTypeCardActive,
-              ]}
+              title={type.label}
+              description={type.description}
+              selected={challengeType === type.id}
               onPress={() => {
                 setChallengeType(type.id);
                 if (type.id === "one_day") {
@@ -882,52 +952,35 @@ export default function CreateScreen() {
                   setCustomDuration("");
                 }
               }}
-            >
-              <Text
-                style={[
-                  styles.challengeTypeLabel,
-                  challengeType === type.id && styles.challengeTypeLabelActive,
-                ]}
-              >
-                {type.label}
-              </Text>
-              <Text style={styles.challengeTypeDesc}>{type.description}</Text>
-            </TouchableOpacity>
+            />
           ))}
         </View>
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Purpose</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="What's the goal of this challenge?"
-          placeholderTextColor={Colors.text.tertiary}
+        <CreateFlowInput
+          label="PURPOSE"
           value={description}
           onChangeText={setDescription}
+          placeholder="What's the goal of this challenge?"
           multiline
-          numberOfLines={3}
-          textAlignVertical="top"
         />
       </View>
 
       {challengeType === "standard" ? (
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Duration</Text>
+          <Text style={styles.label}>DURATION</Text>
           <View style={styles.durationRow}>
             {DURATION_PRESETS.map((d) => (
-              <TouchableOpacity
+              <DurationPill
                 key={d}
-                style={[styles.durationChip, durationDays === d && styles.durationChipActive]}
+                label={`${d} days`}
+                selected={durationDays === d}
                 onPress={() => {
                   setDurationDays(d);
                   setCustomDuration("");
                 }}
-              >
-                <Text style={[styles.durationChipText, durationDays === d && styles.durationChipTextActive]}>
-                  {d}
-                </Text>
-              </TouchableOpacity>
+              />
             ))}
             <TextInput
               style={[styles.durationInput, customDuration && styles.durationInputActive]}
@@ -941,7 +994,7 @@ export default function CreateScreen() {
               keyboardType="number-pad"
             />
           </View>
-          <Text style={styles.durationHint}>days</Text>
+          <Text style={styles.durationHint}>Enter number of days</Text>
         </View>
       ) : (
         <>
@@ -1016,16 +1069,15 @@ export default function CreateScreen() {
       )}
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Category (optional)</Text>
+        <Text style={styles.label}>CATEGORY (OPTIONAL)</Text>
         <View style={styles.categoryRow}>
           {CATEGORIES.map((c) => (
-            <TouchableOpacity
+            <CategoryTag
               key={c}
-              style={[styles.categoryChip, categories.includes(c) && styles.categoryChipActive]}
+              label={c}
+              selected={categories.includes(c)}
               onPress={() => setCategories(prev => prev.includes(c) ? prev.filter(cat => cat !== c) : [...prev, c])}
-            >
-              <Text style={[styles.categoryChipText, categories.includes(c) && styles.categoryChipTextActive]}>{c}</Text>
-            </TouchableOpacity>
+            />
           ))}
         </View>
       </View>
@@ -1741,59 +1793,67 @@ export default function CreateScreen() {
         activeOpacity={0.7}
       >
         <Plus size={18} color="#fff" />
-        <Text style={step2Styles.addBtnText}>Add Task</Text>
+        <Text style={step2Styles.addBtnText}>+ Add Task</Text>
       </TouchableOpacity>
+
+      <View style={step2Styles.packsSection}>
+        <Text style={step2Styles.packsTitle}>QUICK START WITH PACKS</Text>
+        <Text style={step2Styles.packsSubtitle}>One tap applies a full set of daily tasks</Text>
+        <View style={step2Styles.packsGrid}>
+          {CHALLENGE_PACKS.map((pack) => (
+            <TouchableOpacity
+              key={pack.id}
+              style={[step2Styles.packCard, { borderColor: PACK_CARD_BORDER[pack.id] ?? Colors.border }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setTasks(pack.buildTasks());
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={step2Styles.packIcon}>{pack.icon}</Text>
+              <Text style={step2Styles.packTitle} numberOfLines={1}>{pack.title}</Text>
+              <Text style={step2Styles.packDesc} numberOfLines={2}>{pack.description}</Text>
+              <Text style={step2Styles.packTaskCount}>{pack.taskCount} tasks</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
     </Animated.View>
   );
+
+  const reviewTags = [
+    ...(challengeType === "one_day" ? ["24-Hour", replayPolicy === "live_only" ? "Live Only" : "Replayable"] : [`${getDuration()} days`]),
+    ...categories,
+  ];
 
   const renderStep3 = () => (
     <Animated.View style={[styles.stepContent, { transform: [{ translateX: slideAnim }] }]}>
       <Text style={styles.stepTitle}>Review</Text>
       <Text style={styles.stepSubtitle}>Everything look good?</Text>
 
-      <View style={styles.reviewCard}>
-        <View style={styles.reviewHeader}>
-          <Sparkles size={20} color={Colors.accent} />
-          <Text style={styles.reviewTitle}>{title}</Text>
-        </View>
-        <Text style={styles.reviewDescription}>{description}</Text>
-        <View style={styles.reviewMeta}>
-          <View style={[styles.reviewBadge, challengeType === "one_day" && styles.reviewBadgeDaily]}>
-            <Text style={[styles.reviewBadgeText, challengeType === "one_day" && styles.reviewBadgeTextDaily]}>
-              {challengeType === "one_day" ? "24-Hour Challenge" : `${getDuration()} days`}
-            </Text>
-          </View>
-          {challengeType === "one_day" && (
-            <View style={styles.reviewBadge}>
-              <Text style={styles.reviewBadgeText}>
-                {replayPolicy === "live_only" ? "Live Only" : "Replayable"}
-              </Text>
-            </View>
-          )}
-          {categories.map((cat) => (
-            <View key={cat} style={styles.reviewBadge}>
-              <Text style={styles.reviewBadgeText}>{cat}</Text>
-            </View>
-          ))}
-        </View>
-        {challengeType === "one_day" && liveDate && (
-          <Text style={styles.reviewLiveDate}>Live Date: {liveDate}</Text>
-        )}
-      </View>
+      <PreviewCard
+        title={title}
+        subtitle={description}
+        tags={reviewTags}
+      />
+      {challengeType === "one_day" && liveDate ? (
+        <Text style={styles.reviewLiveDate}>Live Date: {liveDate}</Text>
+      ) : null}
 
       <Text style={styles.reviewSectionTitle}>Daily Tasks ({tasks.length})</Text>
       <View style={styles.reviewTaskList}>
-        {tasks.map((task) => {
+        {tasks.map((task, idx) => {
           const config = TASK_TYPE_CONFIG[task.type];
           const Icon = config.icon;
           return (
-            <View key={task.id} style={styles.reviewTaskRow}>
-              <View style={[styles.reviewTaskIcon, { backgroundColor: `${config.color}15` }]}>
-                <Icon size={14} color={config.color} />
-              </View>
-              <Text style={styles.reviewTaskTitle}>{task.title}</Text>
-              <Text style={styles.reviewTaskMeta}>{getVerificationSummary(task)}</Text>
-            </View>
+            <DailyTaskRow
+              key={task.id}
+              icon={<Icon size={20} color={config.color} />}
+              iconBackgroundColor={`${config.color}15`}
+              title={task.title}
+              metadata={getVerificationSummary(task)}
+              showDivider={idx < tasks.length - 1}
+            />
           );
         })}
       </View>
@@ -1898,11 +1958,10 @@ export default function CreateScreen() {
             style={diagStyles.actionBtn}
             onPress={() => {
               const diagStr = getDiagnosticsString();
-              console.log('[Diagnostics]', diagStr);
               if (Platform.OS === 'web') {
                 try { navigator.clipboard.writeText(diagStr); } catch { /* ignore */ }
               }
-              Alert.alert('Diagnostics Copied', 'Check console for full details.\n\n' + diagStr);
+              Alert.alert('Diagnostics', diagStr);
             }}
           >
             <Text style={diagStyles.actionBtnText}>Copy diagnostics</Text>
@@ -1913,11 +1972,17 @@ export default function CreateScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: tokenColors.bgMain }]} edges={["top"]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Create Challenge</Text>
-          {renderStepIndicator()}
+        <CreateFlowHeader
+          title="Create Challenge"
+          onCancel={() => router.back()}
+          rightLabel={step === 1 ? "Next" : step === 2 ? "Review" : undefined}
+          onRight={step < 3 ? handleNext : undefined}
+          rightDisabled={step === 1 ? !canProceedStep1 : step === 2 ? !canProceedStep2 : false}
+        />
+        <View style={styles.stepperWrap}>
+          <ChallengeStepper currentStep={step} totalSteps={3} />
         </View>
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -1966,13 +2031,15 @@ export default function CreateScreen() {
           )}
           <View style={styles.footerSpacer} />
           {step < 3 ? (
-            <TouchableOpacity
-              style={[styles.nextButton, !(step === 1 ? canProceedStep1 : canProceedStep2) && styles.nextButtonDisabled]}
-              onPress={handleNext}
-            >
-              <Text style={styles.nextButtonText}>{step === 2 ? "Review" : "Next: Add Tasks"}</Text>
-              <ChevronRight size={20} color="#fff" />
-            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <PrimaryButtonCreate
+                label={step === 2 ? "Review >" : "Next: Add Tasks"}
+                onPress={handleNext}
+                variant="orange"
+                fullWidth
+                disabled={!(step === 1 ? canProceedStep1 : canProceedStep2)}
+              />
+            </View>
           ) : (
             <View style={recoveryStyles.footerColumn}>
               {apiStatus === 'down' && submitStatus !== 'submitting' && (
@@ -1984,25 +2051,14 @@ export default function CreateScreen() {
                   </TouchableOpacity>
                 </View>
               )}
-              <TouchableOpacity
-                style={[
-                  styles.createButton,
-                  (submitStatus === 'submitting' || !canCreateChallenge) && styles.createButtonDisabled,
-                ]}
+              <PrimaryButtonCreate
+                label={submitStatus === "submitting" ? "Creating..." : apiStatus === "down" ? "Create Challenge" : apiStatus === "checking" ? "Checking server..." : "Create Challenge"}
                 onPress={handleCreate}
-                disabled={submitStatus === 'submitting' || !canCreateChallenge}
-              >
-                {submitStatus === 'submitting' ? (
-                  <View style={recoveryStyles.submittingRow}>
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text style={[styles.createButtonText, { marginLeft: 8 }]}>Creating...</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.createButtonText}>
-                    {apiStatus === 'down' ? 'Create Challenge' : apiStatus === 'checking' ? 'Checking server...' : 'Create Challenge'}
-                  </Text>
-                )}
-              </TouchableOpacity>
+                variant="green"
+                fullWidth
+                disabled={submitStatus === "submitting" || !canCreateChallenge}
+                loading={submitStatus === "submitting"}
+              />
             </View>
           )}
         </View>
@@ -2794,5 +2850,54 @@ const step2Styles = RNStyleSheet.create({
     fontSize: 14,
     color: Colors.text.tertiary,
     textAlign: 'center',
+  },
+  packsSection: {
+    marginTop: 28,
+  },
+  packsTitle: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.text.secondary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  packsSubtitle: {
+    fontSize: 14,
+    color: Colors.text.tertiary,
+    marginBottom: 16,
+  },
+  packsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  packCard: {
+    width: '47%',
+    minWidth: 140,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+  },
+  packIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  packTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  packDesc: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  packTaskCount: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
   },
 });

@@ -4,14 +4,12 @@ let _baseUrl: string | null = null;
 
 export function getApiBaseUrl(): string {
   if (_baseUrl) return _baseUrl;
-  const envUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+  const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
   if (envUrl) {
     _baseUrl = envUrl.replace(/\/$/, '');
-    console.log('[API] Using base URL from env:', _baseUrl);
     return _baseUrl ?? '';
   }
   _baseUrl = '';
-  console.warn('[API] No EXPO_PUBLIC_RORK_API_BASE_URL set, using relative URLs');
   return _baseUrl;
 }
 
@@ -28,17 +26,20 @@ export function getTrpcUrl(): string {
 const RETRY_DELAYS = [500, 1000, 2000, 4000];
 const RETRYABLE_STATUS_CODES = new Set([502, 503, 504, 408, 429]);
 
-function isRetryableError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const msg = error.message.toLowerCase();
-    return msg.includes('failed to fetch') ||
-      msg.includes('network request failed') ||
-      msg.includes('load failed') ||
-      msg.includes('networkerror') ||
-      msg.includes('request_timeout') ||
-      msg.includes('aborted');
-  }
-  return false;
+const NETWORK_ERROR_PATTERNS = [
+  'failed to fetch',
+  'network request failed',
+  'load failed',
+  'networkerror',
+  'request_timeout',
+  'aborted',
+  'typeerror',
+];
+
+function isNetworkLikeError(error: unknown): boolean {
+  const msg = typeof error === 'string' ? error : (error instanceof Error ? error.message : String(error ?? ''));
+  const lower = msg.toLowerCase();
+  return NETWORK_ERROR_PATTERNS.some((p) => lower.includes(p));
 }
 
 function sleep(ms: number): Promise<void> {
@@ -93,7 +94,6 @@ export async function fetchWithRetry(
       const response = await fetchWithTimeout(input, init, 12000);
 
       if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < RETRY_DELAYS.length) {
-        console.warn(`[API] Retryable status ${response.status} on attempt ${attempt + 1}, retrying...`);
         await sleep(RETRY_DELAYS[attempt]);
         continue;
       }
@@ -102,8 +102,7 @@ export async function fetchWithRetry(
     } catch (error) {
       lastError = error;
 
-      if (isRetryableError(error) && attempt < RETRY_DELAYS.length) {
-        console.warn(`[API] Network error on attempt ${attempt + 1}, retrying in ${RETRY_DELAYS[attempt]}ms...`);
+      if (isNetworkLikeError(error) && attempt < RETRY_DELAYS.length) {
         await sleep(RETRY_DELAYS[attempt]);
         continue;
       }
@@ -167,17 +166,6 @@ export interface DbSanityResult {
   errorMessage?: string;
 }
 
-function isNetworkError(error: unknown): boolean {
-  const msg = typeof error === 'string' ? error : (error instanceof Error ? error.message : String(error ?? ''));
-  const lower = msg.toLowerCase();
-  return lower.includes('failed to fetch') ||
-    lower.includes('network request failed') ||
-    lower.includes('load failed') ||
-    lower.includes('networkerror') ||
-    lower.includes('request_timeout') ||
-    lower.includes('typeerror');
-}
-
 export async function checkDbTables(): Promise<DbSanityResult> {
   try {
     const requiredTables = ['challenges', 'challenge_tasks', 'active_challenges', 'check_ins', 'profiles', 'streaks'];
@@ -186,32 +174,24 @@ export async function checkDbTables(): Promise<DbSanityResult> {
 
     for (const table of requiredTables) {
       try {
-        const { error } = await supabase.from(table).select('id').limit(1);
+        const { error } = await supabase.from(table).select('*').limit(1);
         if (error) {
-          if (isNetworkError(error.message)) {
+          if (isNetworkLikeError(error.message)) {
             networkErrorCount++;
-            console.log(`[DB Sanity] Table "${table}" network error (skipping):`, error.message);
             continue;
           }
           const isMissing = error.code === 'PGRST205' || error.code === '42P01';
-          if (isMissing) {
-            missingTables.push(table);
-          } else {
-            console.log(`[DB Sanity] Table "${table}" query returned code=${error.code} (non-fatal)`);
-          }
+          if (isMissing) missingTables.push(table);
         }
       } catch (tableErr) {
-        if (isNetworkError(tableErr)) {
+        if (isNetworkLikeError(tableErr)) {
           networkErrorCount++;
-          console.log(`[DB Sanity] Table "${table}" network error (skipping)`);
           continue;
         }
-        console.log(`[DB Sanity] Table "${table}" fetch failed (non-fatal):`, formatError(tableErr));
       }
     }
 
     if (networkErrorCount === requiredTables.length) {
-      console.log('[DB Sanity] All tables had network errors — Supabase may be unreachable. Treating as OK.');
       return { ok: true, missingTables: [] };
     }
 
@@ -220,9 +200,7 @@ export async function checkDbTables(): Promise<DbSanityResult> {
     }
 
     return { ok: true, missingTables: [] };
-  } catch (err) {
-    const msg = formatError(err);
-    console.log('[DB Sanity] Check failed (non-fatal):', msg);
+  } catch {
     return { ok: true, missingTables: [] };
   }
 }

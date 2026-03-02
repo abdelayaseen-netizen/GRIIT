@@ -96,7 +96,6 @@ export default function RunTaskScreen() {
     
     const handleAppState = (nextAppState: typeof AppState.currentState) => {
       if (timerRunning && appStateRef.current === "active" && nextAppState.match(/inactive|background/)) {
-        console.log("App went to background during timer - violation!");
         setBackgroundViolation(true);
         setTimerRunning(false);
         if (timerRef.current) {

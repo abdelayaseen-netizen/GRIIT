@@ -25,15 +25,17 @@ import {
   Lock,
   Award,
   CheckCircle2,
-  Swords,
   Share2,
   ShieldCheck,
   Star,
   TrendingUp,
+  Globe,
+  UserCheck,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { supabase } from "@/lib/supabase";
 import Colors from "@/constants/colors";
 import { Skeleton } from "@/components/SkeletonLoader";
@@ -52,14 +54,12 @@ function StatCard({
   icon,
   value,
   label,
-  sublabel,
   index,
   onPress,
 }: {
   icon: React.ReactNode;
   value: number;
   label: string;
-  sublabel: string;
   color: string;
   index: number;
   onPress?: () => void;
@@ -126,7 +126,6 @@ function StatCard({
         <View style={styles.statIconWrap}>{icon}</View>
         <Text style={styles.statValue}>{value}</Text>
         <Text style={styles.statLabel}>{label}</Text>
-        <Text style={styles.statSublabel}>{sublabel}</Text>
       </Animated.View>
     </TouchableOpacity>
   );
@@ -187,70 +186,153 @@ function AchievementBadge({
   );
 }
 
-function ChallengeCard({
-  title,
-  count,
-  subtitle,
-  icon,
-  color,
-  onPress,
+function DisciplineScoreCard({
+  score,
+  tier,
+  daysSecured,
 }: {
-  title: string;
-  count: number;
-  subtitle: string;
-  icon: React.ReactNode;
-  color: string;
-  onPress?: () => void;
+  score: number;
+  tier: string;
+  daysSecured: number;
 }) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => {
-        if (Platform.OS !== "web") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        onPress?.();
-      }}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      style={styles.challengeCardTouch}
-    >
-      <Animated.View
-        style={[styles.challengeCard, { transform: [{ scale: scaleAnim }] }]}
-      >
-        <View style={styles.challengeCardTop}>
-          <View style={[styles.challengeCardIcon, { backgroundColor: color + "12" }]}>
-            {icon}
-          </View>
-          <ChevronRight size={14} color={Colors.text.muted} />
+    <View style={styles.disciplineScoreCard}>
+      <View style={styles.disciplineScoreHeader}>
+        <Text style={styles.disciplineScoreLabel}>DISCIPLINE SCORE</Text>
+        <View style={styles.disciplineScoreTierBadge}>
+          <View style={styles.disciplineScoreTierDot} />
+          <Text style={styles.disciplineScoreTierText}>{tier}</Text>
         </View>
-        <Text style={styles.challengeCardCount}>{count}</Text>
-        <Text style={styles.challengeCardTitle}>{title}</Text>
-        <Text style={styles.challengeCardSubtitle}>{subtitle}</Text>
-      </Animated.View>
-    </TouchableOpacity>
+      </View>
+      <Text style={styles.disciplineScoreValue}>{score}</Text>
+      <Text style={styles.disciplineScoreDaysValue}>{daysSecured}</Text>
+      <Text style={styles.disciplineScoreDaysLabel}>DAYS SECURED</Text>
+      <Text style={styles.disciplineScoreTierFooter}>{tier} tier</Text>
+    </View>
+  );
+}
+
+function TierProgress({ tier, ptsToNext, nextTierName }: { tier: string; ptsToNext: number; nextTierName: string | null }) {
+  const nextLabel = nextTierName ? `pts to ${nextTierName}` : "max tier";
+  const denom = 7;
+  const progress = nextTierName && ptsToNext > 0 ? Math.min(1, (denom - Math.min(ptsToNext / 10, denom)) / denom) : 1;
+  return (
+    <View style={styles.tierProgressWrap}>
+      <View style={styles.tierPill}>
+        <Flame size={14} color={Colors.accent} />
+        <Text style={styles.tierPillText}>{tier}</Text>
+      </View>
+      <View style={styles.tierBarTrack}>
+        <View style={[styles.tierBarFill, { width: `${progress * 100}%` }]} />
+      </View>
+      <Text style={styles.tierPtsToNext}>{nextTierName && ptsToNext > 0 ? `${ptsToNext} ${nextLabel}` : nextLabel}</Text>
+    </View>
+  );
+}
+
+function ActivityCalendar({ daysSecured }: { daysSecured: number }) {
+  const months = ["Dec", "Jan", "Feb"];
+  const totalCells = 7 * 12; // ~12 weeks, 7 days
+  const filledCount = Math.min(daysSecured, totalCells);
+  return (
+    <View style={styles.activitySection}>
+      <View style={styles.activityHeader}>
+        <Text style={styles.activityTitle}>Activity</Text>
+        <Text style={styles.activitySubtitle}>{daysSecured} day{daysSecured !== 1 ? "s" : ""} secured</Text>
+      </View>
+      <View style={styles.activityGrid}>
+        <View style={styles.activityGridMonths}>
+          {months.map((m) => (
+            <Text key={m} style={styles.activityGridMonthLabel}>{m}</Text>
+          ))}
+        </View>
+        <View style={styles.activityGridCells}>
+          {Array.from({ length: totalCells }).map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.activityCell,
+                i < filledCount && styles.activityCellFilled,
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+      <View style={styles.activityLegend}>
+        <Text style={styles.activityLegendText}>Less</Text>
+        <View style={styles.activityLegendSquares}>
+          {["22", "44", "88", "E8"].map((alpha, i) => (
+            <View
+              key={i}
+              style={[styles.activityLegendSquare, { backgroundColor: Colors.success + alpha }]}
+            />
+          ))}
+        </View>
+        <Text style={styles.activityLegendText}>More</Text>
+      </View>
+    </View>
+  );
+}
+
+function DisciplineGrowthCard({ score, previousScore }: { score: number; previousScore: number }) {
+  const change = score - previousScore;
+  const trendPositive = change >= 0;
+  return (
+    <View style={styles.disciplineGrowthCard}>
+      <View style={styles.disciplineGrowthHeader}>
+        <View style={styles.disciplineGrowthTitleRow}>
+          <TrendingUp size={18} color={Colors.text.primary} />
+          <Text style={styles.disciplineGrowthTitle}>Discipline Growth</Text>
+        </View>
+        <View style={styles.disciplineGrowthPill}>
+          <Text style={styles.disciplineGrowthPillText}>30 days</Text>
+        </View>
+      </View>
+      <View style={styles.disciplineGrowthMetrics}>
+        <View style={styles.disciplineGrowthCol}>
+          <Text style={styles.disciplineGrowthLabel}>30 DAYS AGO</Text>
+          <Text style={styles.disciplineGrowthValue}>{previousScore}</Text>
+        </View>
+        <TrendingUp size={20} color={Colors.success} style={{ marginHorizontal: 8 }} />
+        <View style={styles.disciplineGrowthCol}>
+          <Text style={styles.disciplineGrowthLabel}>CURRENT</Text>
+          <View style={styles.disciplineGrowthCurrentRow}>
+            <Text style={styles.disciplineGrowthValue}>{score}</Text>
+            {change !== 0 && (
+              <View style={[styles.disciplineGrowthChangePill, trendPositive && styles.disciplineGrowthChangePillPositive]}>
+                <Text style={[styles.disciplineGrowthChangeText, trendPositive && styles.disciplineGrowthChangeTextPositive]}>
+                  {trendPositive ? "+" : ""}{change}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+      <View style={styles.disciplineGrowthBarTrack}>
+        <View style={[styles.disciplineGrowthBarFill, { width: `${Math.min(100, (score / 100) * 100)}%` }]} />
+      </View>
+    </View>
+  );
+}
+
+function StreakAtRiskAlert({ daysMissed }: { daysMissed: number }) {
+  return (
+    <View style={styles.streakAtRiskCard}>
+      <View style={styles.streakAtRiskDot} />
+      <View style={styles.streakAtRiskContent}>
+        <Text style={styles.streakAtRiskTitle}>Streak at risk</Text>
+        <Text style={styles.streakAtRiskSubtitle}>
+          {daysMissed} day{daysMissed !== 1 ? "s" : ""} missed. Secure today to recover.
+        </Text>
+      </View>
+    </View>
   );
 }
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const isGuest = useIsGuest();
+  const { showGate } = useAuthGate();
   const {
     profile,
     profileLoading,
@@ -267,6 +349,27 @@ export default function ProfileScreen() {
   const [bioExpanded, setBioExpanded] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerFade = useRef(new Animated.Value(0)).current;
+
+  if (isGuest) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.guestIdentityCard}>
+            <Lock size={32} color={Colors.text.tertiary} style={{ marginBottom: 12 }} />
+            <Text style={styles.guestIdentityTitle}>Create your identity</Text>
+            <Text style={styles.guestIdentitySub}>Sign up to build your profile, track streaks, and earn ranks.</Text>
+            <TouchableOpacity
+              style={styles.guestIdentityCta}
+              onPress={() => showGate("other")}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.guestIdentityCtaText}>Sign up</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   const stillLoading =
     (isLoading && !initialFetchDone) || (profileLoading && !profile);
@@ -327,7 +430,7 @@ export default function ProfileScreen() {
         message: `Check out @${profile?.username || "user"} on GRIT — the discipline app. Join me!`,
       });
     } catch {
-      console.log("[Profile] Share cancelled or failed");
+      // Share cancelled or failed — no user feedback needed
     }
   }, [profile?.username]);
 
@@ -345,42 +448,42 @@ export default function ProfileScreen() {
   const achievements: Achievement[] = useMemo(
     () => [
       {
-        id: "first_challenge",
-        title: "First Challenge",
-        icon: <Star size={16} color={Colors.milestone.gold} />,
-        earned: activeChallenges > 0 || completedChallenges > 0,
-        color: Colors.milestone.gold,
-      },
-      {
-        id: "7_day_streak",
-        title: "7-Day Streak",
+        id: "0_day_streak",
+        title: "0-Day Streak",
         icon: <Flame size={16} color={Colors.streak.fire} />,
-        earned: bestStreak >= 7,
+        earned: bestStreak > 0,
         color: Colors.streak.fire,
       },
       {
-        id: "10_checkins",
-        title: "10 Check-ins",
+        id: "75_day_legend",
+        title: "75-Day Legend",
+        icon: <Trophy size={16} color={Colors.milestone.gold} />,
+        earned: bestStreak >= 75,
+        color: Colors.milestone.gold,
+      },
+      {
+        id: "consistent",
+        title: "Consistent",
         icon: <CheckCircle2 size={16} color={Colors.success} />,
-        earned: bestStreak >= 10,
+        earned: bestStreak >= 7,
         color: Colors.success,
       },
       {
-        id: "30_day_streak",
-        title: "30-Day Streak",
+        id: "elite",
+        title: "Elite",
         icon: <ShieldCheck size={16} color={Colors.streak.shield} />,
         earned: bestStreak >= 30,
         color: Colors.streak.shield,
       },
       {
-        id: "consistency_king",
-        title: "Consistency King",
-        icon: <Trophy size={16} color={Colors.milestone.gold} />,
-        earned: completedChallenges >= 3,
-        color: Colors.milestone.gold,
+        id: "challenge_done",
+        title: "Challenge Done",
+        icon: <Award size={16} color={Colors.accent} />,
+        earned: completedChallenges > 0,
+        color: Colors.accent,
       },
     ],
-    [activeChallenges, completedChallenges, bestStreak]
+    [completedChallenges, bestStreak]
   );
 
   const avatarRingColor = useMemo(() => {
@@ -478,10 +581,15 @@ export default function ProfileScreen() {
   const bioIsLong = bioText.length > 80;
   const displayBio = bioExpanded || !bioIsLong ? bioText : bioText.slice(0, 80) + "...";
 
-  const streakMicro =
-    currentStreak === 0
-      ? "No active streak yet."
-      : `🔥 ${currentStreak}-day streak. Keep going.`;
+  const totalDaysSecured = (stats as any)?.totalDaysSecured ?? 0;
+  const disciplineScore = totalDaysSecured;
+  const daysSecured = totalDaysSecured;
+  const tierName = (stats as any)?.tier ?? "Starter";
+  const ptsToNext = (stats as any)?.pointsToNextTier ?? 0;
+  const nextTierName = (stats as any)?.nextTierName ?? null;
+
+  const showStreakAtRisk = currentStreak === 0 && daysSecured > 0;
+  const daysMissedForAlert = 2; // TODO: backend needs to provide days_missed for streak-at-risk
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -502,7 +610,7 @@ export default function ProfileScreen() {
             <View style={[styles.avatarRing, { borderColor: avatarRingColor }]}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {profile.username.charAt(0).toUpperCase()}
+                  {(profile.display_name || profile.username).charAt(0).toUpperCase()}
                 </Text>
               </View>
             </View>
@@ -517,6 +625,15 @@ export default function ProfileScreen() {
             {profile.display_name || profile.username}
           </Text>
           <Text style={styles.username}>@{profile.username}</Text>
+          {bioText ? (
+            <View style={styles.taglinePill}>
+              <Text style={styles.taglinePillText}>{displayBio}</Text>
+            </View>
+          ) : null}
+          <View style={styles.statusBadgeRow}>
+            <View style={styles.statusBadgeDot} />
+            <Text style={styles.statusBadgeText}>{tierName}</Text>
+          </View>
           {joinedDate ? (
             <Text style={styles.joinedDate}>Joined {joinedDate}</Text>
           ) : null}
@@ -533,52 +650,37 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="edit-profile-button"
             >
-              <Pencil size={13} color={Colors.text.primary} />
-              <Text style={styles.editButtonText}>Edit Profile</Text>
+              <Pencil size={14} color={Colors.text.primary} />
+              <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.shareButton}
               onPress={handleShare}
               activeOpacity={0.7}
             >
-              <Share2 size={13} color={Colors.text.primary} />
+              <Share2 size={14} color={Colors.text.primary} />
               <Text style={styles.shareButtonText}>Share</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
 
-        <View style={styles.divider} />
+        <View style={styles.cardSection}>
+          <DisciplineScoreCard
+            score={disciplineScore}
+            tier={tierName}
+            daysSecured={daysSecured}
+          />
+        </View>
 
-        <View style={styles.bioSection}>
-          {bioText ? (
-            <TouchableOpacity
-              onPress={() => bioIsLong && setBioExpanded(!bioExpanded)}
-              activeOpacity={bioIsLong ? 0.7 : 1}
-            >
-              <Text style={styles.bioText}>{displayBio}</Text>
-              {bioIsLong && (
-                <Text style={styles.bioSeeMore}>
-                  {bioExpanded ? "See less" : "See more"}
-                </Text>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => router.push("/edit-profile" as any)}
-              activeOpacity={0.7}
-              style={styles.addBioButton}
-            >
-              <Text style={styles.addBioText}>Add a bio</Text>
-            </TouchableOpacity>
-          )}
+        <View style={styles.cardSection}>
+          <TierProgress tier={tierName} ptsToNext={ptsToNext} nextTierName={nextTierName} />
         </View>
 
         <View style={styles.statsGrid}>
           <StatCard
-            icon={<Flame size={18} color={Colors.streak.fire} />}
+            icon={<Flame size={20} color={Colors.streak.fire} />}
             value={currentStreak}
-            label="Streak"
-            sublabel="days"
+            label="STREAK"
             color={Colors.streak.fire}
             index={0}
             onPress={() => {
@@ -589,10 +691,9 @@ export default function ProfileScreen() {
             }}
           />
           <StatCard
-            icon={<Trophy size={18} color={Colors.milestone.gold} />}
+            icon={<Trophy size={20} color={Colors.milestone.gold} />}
             value={bestStreak}
-            label="Best"
-            sublabel="days"
+            label="BEST"
             color={Colors.milestone.gold}
             index={1}
             onPress={() => {
@@ -603,77 +704,31 @@ export default function ProfileScreen() {
             }}
           />
           <StatCard
-            icon={<Target size={18} color={Colors.streak.shield} />}
-            value={activeChallenges}
-            label="Active"
-            sublabel={activeChallenges === 1 ? "challenge" : "challenges"}
+            icon={<Target size={20} color={Colors.streak.shield} />}
+            value={daysSecured}
+            label="SECURED"
             color={Colors.streak.shield}
             index={2}
           />
           <StatCard
-            icon={<Zap size={18} color={Colors.accent} />}
+            icon={<UserCheck size={20} color={Colors.accent} />}
             value={completedChallenges}
-            label="Done"
-            sublabel="completed"
+            label="DONE"
             color={Colors.accent}
             index={3}
           />
         </View>
 
-        <Text
-          style={[
-            styles.streakMicro,
-            currentStreak > 0 && styles.streakMicroActive,
-          ]}
-        >
-          {streakMicro}
-        </Text>
-
-        <View style={styles.sectionHeader}>
-          <Swords size={15} color={Colors.text.secondary} />
-          <Text style={styles.sectionTitle}>My Challenges</Text>
-        </View>
-        <View style={styles.challengeCards}>
-          <ChallengeCard
-            title="Active"
-            count={activeChallenges}
-            subtitle={
-              activeChallenges === 0
-                ? "Join one to start"
-                : `${activeChallenges} in progress`
-            }
-            icon={<Target size={16} color={Colors.streak.shield} />}
-            color={Colors.streak.shield}
-            onPress={() => {
-              router.push("/(tabs)");
-            }}
-          />
-          <ChallengeCard
-            title="Completed"
-            count={completedChallenges}
-            subtitle={
-              completedChallenges === 0
-                ? "Finish your first"
-                : `${completedChallenges} conquered`
-            }
-            icon={<Award size={16} color={Colors.milestone.gold} />}
-            color={Colors.milestone.gold}
-          />
+        <View style={styles.cardSection}>
+          <ActivityCalendar daysSecured={daysSecured} />
         </View>
 
-        {activeChallenges === 0 && completedChallenges === 0 && (
-          <TouchableOpacity
-            style={styles.joinCTA}
-            onPress={() => router.push("/(tabs)/discover" as any)}
-            activeOpacity={0.7}
-          >
-            <TrendingUp size={15} color="#fff" />
-            <Text style={styles.joinCTAText}>Discover a Challenge</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.cardSection}>
+          <DisciplineGrowthCard score={disciplineScore} previousScore={0} />
+        </View>
 
         <View style={styles.sectionHeader}>
-          <Trophy size={15} color={Colors.text.secondary} />
+          <Trophy size={18} color={Colors.text.primary} />
           <Text style={styles.sectionTitle}>Achievements</Text>
         </View>
         <ScrollView
@@ -686,6 +741,12 @@ export default function ProfileScreen() {
           ))}
         </ScrollView>
 
+        {showStreakAtRisk && (
+          <View style={styles.cardSection}>
+            <StreakAtRiskAlert daysMissed={daysMissedForAlert} />
+          </View>
+        )}
+
         <View style={styles.menuSection}>
           <TouchableOpacity
             style={styles.menuItem}
@@ -693,18 +754,38 @@ export default function ProfileScreen() {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              Alert.alert("Coming Soon", "Settings will be available soon!");
+              router.push("/edit-profile" as any);
             }}
             activeOpacity={0.7}
           >
             <View style={styles.menuIconWrap}>
-              <Settings size={17} color={Colors.text.secondary} />
+              <Globe size={18} color={Colors.text.secondary} />
+            </View>
+            <View style={styles.menuTextWrap}>
+              <Text style={styles.menuText}>Profile: Public</Text>
+              <Text style={styles.menuSubtext}>Activity: Public</Text>
+            </View>
+            <Text style={styles.menuEditLabel}>Edit</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, { marginTop: 10 }]}
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              router.push("/settings" as any);
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuIconWrap}>
+              <Settings size={18} color={Colors.text.secondary} />
             </View>
             <View style={styles.menuTextWrap}>
               <Text style={styles.menuText}>Settings</Text>
-              <Text style={styles.menuSubtext}>Notifications, privacy, account</Text>
+              <Text style={styles.menuSubtext}>Privacy, notifications, consequences</Text>
             </View>
-            <ChevronRight size={15} color={Colors.text.muted} />
+            <ChevronRight size={18} color={Colors.text.muted} />
           </TouchableOpacity>
         </View>
 
@@ -719,8 +800,7 @@ export default function ProfileScreen() {
             }}
             activeOpacity={0.7}
           >
-            <LogOut size={14} color="#B91C1C" />
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Text style={styles.signOutText}>→ Sign Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -819,6 +899,40 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
+  },
+  guestIdentityCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 28,
+    marginHorizontal: 20,
+    marginTop: 24,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  guestIdentityTitle: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  guestIdentitySub: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  guestIdentityCta: {
+    backgroundColor: Colors.accent,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  guestIdentityCtaText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#fff",
   },
   errorScrollContent: {
     flexGrow: 1,
@@ -981,43 +1095,11 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginHorizontal: 40,
-  },
-
-  bioSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    alignItems: "center" as const,
-  },
-  bioText: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    lineHeight: 20,
-    textAlign: "center" as const,
-  },
-  bioSeeMore: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.accent,
-    marginTop: 4,
-    textAlign: "center" as const,
-  },
-  addBioButton: {
-    paddingVertical: 4,
-  },
-  addBioText: {
-    fontSize: 14,
-    color: Colors.text.muted,
-    fontStyle: "italic" as const,
-  },
-
   statsGrid: {
     flexDirection: "row" as const,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 4,
+    marginBottom: 16,
     gap: 8,
   },
   statCardTouch: {
@@ -1050,29 +1132,343 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    color: Colors.text.secondary,
+    color: Colors.text.tertiary,
     fontWeight: "600" as const,
     marginTop: 2,
     textTransform: "uppercase" as const,
     letterSpacing: 0.4,
   },
-  statSublabel: {
-    fontSize: 10,
-    color: Colors.text.muted,
-    fontWeight: "400" as const,
-    marginTop: 1,
-  },
 
-  streakMicro: {
-    fontSize: 12,
-    color: Colors.text.muted,
-    textAlign: "center" as const,
-    paddingTop: 10,
-    paddingBottom: 4,
+  cardSection: {
     paddingHorizontal: 20,
+    marginBottom: 16,
   },
-  streakMicroActive: {
+  disciplineScoreCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  disciplineScoreHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  disciplineScoreLabel: {
+    fontSize: 11,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    letterSpacing: 0.5,
+    textTransform: "uppercase" as const,
+  },
+  disciplineScoreTierBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  disciplineScoreTierDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.text.tertiary,
+  },
+  disciplineScoreTierText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
+  },
+  disciplineScoreValue: {
+    fontSize: 36,
+    fontWeight: "800" as const,
+    color: Colors.text.primary,
+    letterSpacing: -1,
+    marginBottom: 4,
+  },
+  disciplineScoreDaysValue: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  disciplineScoreDaysLabel: {
+    fontSize: 11,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    letterSpacing: 0.5,
+    textTransform: "uppercase" as const,
+    marginTop: 2,
+  },
+  disciplineScoreTierFooter: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
+    marginTop: 8,
+  },
+  tierProgressWrap: {
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tierPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "flex-start",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.pill,
+    marginBottom: 10,
+  },
+  tierPillText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  tierBarTrack: {
+    height: 6,
+    backgroundColor: Colors.pill,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  tierBarFill: {
+    height: "100%",
+    backgroundColor: Colors.text.tertiary,
+    borderRadius: 3,
+  },
+  tierPtsToNext: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
+  },
+  activitySection: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  activityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  activitySubtitle: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+  },
+  activityGrid: {
+    marginBottom: 12,
+  },
+  activityGridMonths: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+    paddingHorizontal: 4,
+  },
+  activityGridMonthLabel: {
+    fontSize: 11,
+    color: Colors.text.tertiary,
+  },
+  activityGridCells: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 3,
+  },
+  activityCell: {
+    width: 10,
+    height: 10,
+    borderRadius: 2,
+    backgroundColor: Colors.pill,
+  },
+  activityCellFilled: {
+    backgroundColor: Colors.success,
+  },
+  activityLegend: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  activityLegendText: {
+    fontSize: 11,
+    color: Colors.text.tertiary,
+  },
+  activityLegendSquares: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  activityLegendSquare: {
+    width: 10,
+    height: 10,
+    borderRadius: 2,
+  },
+  disciplineGrowthCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  disciplineGrowthHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  disciplineGrowthTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  disciplineGrowthTitle: {
+    fontSize: 17,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+  },
+  disciplineGrowthPill: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: Colors.pill,
+  },
+  disciplineGrowthPillText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
+  },
+  disciplineGrowthMetrics: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  disciplineGrowthCol: {
+    alignItems: "flex-start",
+  },
+  disciplineGrowthLabel: {
+    fontSize: 10,
+    fontWeight: "600" as const,
+    color: Colors.text.tertiary,
+    letterSpacing: 0.5,
+    textTransform: "uppercase" as const,
+    marginBottom: 4,
+  },
+  disciplineGrowthValue: {
+    fontSize: 28,
+    fontWeight: "800" as const,
+    color: Colors.text.primary,
+  },
+  disciplineGrowthCurrentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  disciplineGrowthChangePill: {
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: Colors.pill,
+  },
+  disciplineGrowthChangePillPositive: {
+    backgroundColor: Colors.successLight,
+  },
+  disciplineGrowthChangeText: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    color: Colors.text.secondary,
+  },
+  disciplineGrowthChangeTextPositive: {
     color: Colors.success,
+  },
+  disciplineGrowthBarTrack: {
+    height: 6,
+    backgroundColor: Colors.pill,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  disciplineGrowthBarFill: {
+    height: "100%",
+    backgroundColor: Colors.success,
+    borderRadius: 3,
+  },
+  streakAtRiskCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#FEF2F2",
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  streakAtRiskDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.accent,
+  },
+  streakAtRiskContent: {
+    flex: 1,
+  },
+  streakAtRiskTitle: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: Colors.accent,
+    marginBottom: 2,
+  },
+  streakAtRiskSubtitle: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+  },
+  taglinePill: {
+    alignSelf: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: Colors.pill,
+    marginBottom: 8,
+  },
+  taglinePillText: {
+    fontSize: 13,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
+  },
+  statusBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  statusBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.text.tertiary,
+  },
+  statusBadgeText: {
+    fontSize: 13,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
+  },
+  menuEditLabel: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.secondary,
   },
 
   sectionHeader: {
@@ -1088,73 +1484,6 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
     color: Colors.text.primary,
     letterSpacing: -0.1,
-  },
-
-  challengeCards: {
-    flexDirection: "row" as const,
-    paddingHorizontal: 16,
-    gap: 10,
-    marginBottom: 8,
-  },
-  challengeCardTouch: {
-    flex: 1,
-  },
-  challengeCard: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    minHeight: 110,
-  },
-  challengeCardTop: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    marginBottom: 10,
-  },
-  challengeCardIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  challengeCardCount: {
-    fontSize: 26,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-    letterSpacing: -0.5,
-  },
-  challengeCardTitle: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    color: Colors.text.secondary,
-    textTransform: "uppercase" as const,
-    letterSpacing: 0.4,
-    marginTop: 2,
-  },
-  challengeCardSubtitle: {
-    fontSize: 11,
-    color: Colors.text.muted,
-    marginTop: 3,
-  },
-
-  joinCTA: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    gap: 8,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: Colors.accent,
-    paddingVertical: 13,
-    borderRadius: 14,
-  },
-  joinCTAText: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: "#fff",
   },
 
   achievementsScroll: {
@@ -1236,15 +1565,12 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
   },
   signOutButton: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   signOutText: {
-    fontSize: 13,
-    fontWeight: "500" as const,
+    fontSize: 14,
+    fontWeight: "600" as const,
     color: "#B91C1C",
   },
 

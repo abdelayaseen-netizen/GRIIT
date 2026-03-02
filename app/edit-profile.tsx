@@ -53,12 +53,11 @@ export default function EditProfileScreen() {
           avatar_url: data.avatar_url,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .select()
         .maybeSingle();
 
       if (error) {
-        console.error('Supabase update error:', error);
         Alert.alert('Error', error.message);
         return;
       }

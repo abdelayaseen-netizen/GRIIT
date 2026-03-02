@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,22 +6,37 @@ import {
   TouchableOpacity,
   Animated,
   Platform,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, X } from "lucide-react-native";
 import Colors from "@/constants/colors";
+import { useApp } from "@/contexts/AppContext";
+import { saveJoinedStarterId } from "@/lib/starter-join";
+import { trpcMutate } from "@/lib/trpc";
 
 export default function CommitmentScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams<{
+    challengeId?: string;
+    isStarter?: string;
+    title?: string;
+    duration?: string;
+    difficulty?: string;
+  }>();
+  const { refetchAll } = useApp();
+  const [joining, setJoining] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  const title = params.title as string;
-  const duration = params.duration as string;
+  const challengeId = params.challengeId ?? "";
+  const isStarter = params.isStarter === "1";
+  const title = params.title ?? "Challenge";
+  const duration = params.duration ?? "0";
   const difficulty = (params.difficulty as string) || "medium";
   const isHardMode = difficulty === "hard" || difficulty === "extreme";
 
@@ -40,20 +55,37 @@ export default function CommitmentScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(async () => {
+    if (!challengeId || joining) return;
+    setJoining(true);
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.back();
-    setTimeout(() => {
-      if (params.onConfirm) {
-        const onConfirm = params.onConfirm as string;
-        eval(onConfirm);
+    try {
+      if (isStarter) {
+        await saveJoinedStarterId(challengeId);
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        router.replace("/(tabs)" as any);
+        return;
       }
-    }, 100);
-  };
+      await trpcMutate("challenges.join", { challengeId });
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      await refetchAll();
+      router.replace("/(tabs)" as any);
+    } catch (err: any) {
+      const message = err?.message ?? "Failed to join challenge. Try again.";
+      Alert.alert("Error", message);
+    } finally {
+      setJoining(false);
+    }
+  }, [challengeId, isStarter, joining, router, refetchAll]);
 
   const handleCancel = () => {
+    if (joining) return;
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -124,11 +156,16 @@ export default function CommitmentScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.confirmButton, isHardMode && styles.confirmButtonHard]}
+            style={[styles.confirmButton, isHardMode && styles.confirmButtonHard, joining && styles.confirmButtonDisabled]}
             onPress={handleConfirm}
             activeOpacity={0.85}
+            disabled={joining}
           >
-            <Text style={styles.confirmButtonText}>Confirm Commitment</Text>
+            {joining ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.confirmButtonText}>Confirm Commitment</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -245,6 +282,9 @@ const styles = StyleSheet.create({
   },
   confirmButtonHard: {
     backgroundColor: "#E87D4F",
+  },
+  confirmButtonDisabled: {
+    opacity: 0.7,
   },
   confirmButtonText: {
     fontSize: 17,

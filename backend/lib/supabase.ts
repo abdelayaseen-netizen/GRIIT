@@ -3,9 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-console.log('[Backend Supabase] URL:', supabaseUrl);
-console.log('[Backend Supabase] Key present:', !!supabaseAnonKey);
-
 if (!supabaseUrl) {
   throw new Error('EXPO_PUBLIC_SUPABASE_URL is required for backend');
 }
