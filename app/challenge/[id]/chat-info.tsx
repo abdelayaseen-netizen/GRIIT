@@ -8,6 +8,7 @@ import {
   Switch,
   Image,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -65,6 +66,36 @@ export default function ChallengeChatInfoScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     updateChatRoomSettings(room.roomId, { mentionsOnly: !settings.mentionsOnly });
+  };
+
+  const handleViewMembers = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    Alert.alert(
+      "Members",
+      `This challenge has ${challenge.participantsCount?.toLocaleString() ?? 0} members. A full member list will be available in a future update.`,
+      [{ text: "OK" }]
+    );
+  };
+
+  const handleReport = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    Alert.alert(
+      "Report an issue",
+      "Describe what’s wrong (e.g. spam, harassment, off-topic). We’ll review it shortly.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Submit",
+          onPress: () => {
+            Alert.alert("Thanks", "We’ve received your report and will look into it.");
+          },
+        },
+      ]
+    );
   };
 
   if (!challenge || !room) {
@@ -209,7 +240,7 @@ export default function ChallengeChatInfoScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.reportButton}>
+        <TouchableOpacity style={styles.reportButton} onPress={handleReport} activeOpacity={0.7}>
           <AlertCircle size={18} color={Colors.warning} />
           <Text style={styles.reportText}>Report an issue</Text>
         </TouchableOpacity>

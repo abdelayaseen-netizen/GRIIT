@@ -35,6 +35,7 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import Colors from "@/constants/colors";
 
 type ActivityType = "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined";
@@ -310,17 +311,6 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
   const [expanded, setExpanded] = useState(false);
   const visibleItems = expanded ? items : items.slice(0, 3);
 
-  const formatTimeAgo = (dateString: string) => {
-    const diffMs = Date.now() - new Date(dateString).getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffMins < 1) return "now";
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    return `${diffDays}d`;
-  };
-
   const getActivityText = (activity: ActivityItem) => {
     switch (activity.type) {
       case "follow": return "started following you";
@@ -370,7 +360,7 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
             <Text style={styles.recentName}>{activity.actorDisplayName}</Text>
             {" "}{getActivityText(activity)}
           </Text>
-          <Text style={styles.recentTime}>{formatTimeAgo(activity.createdAt)}</Text>
+          <Text style={styles.recentTime}>{formatTimeAgoCompact(activity.createdAt)}</Text>
         </View>
       ))}
       {items.length > 3 && (

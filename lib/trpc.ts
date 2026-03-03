@@ -62,12 +62,16 @@ export async function trpcMutate<T = any>(
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     let errorMessage = `tRPC mutation failed: ${path} (${response.status})`;
+    let errorCode: string | undefined;
     try {
       const parsed = JSON.parse(text);
       if (parsed?.error?.message) errorMessage = parsed.error.message;
       else if (parsed?.error?.json?.message) errorMessage = parsed.error.json.message;
+      errorCode = parsed?.error?.data?.code ?? parsed?.error?.code;
     } catch {}
-    throw new Error(errorMessage);
+    const err = new Error(errorMessage) as Error & { data?: { code?: string } };
+    if (errorCode) err.data = { code: errorCode };
+    throw err;
   }
 
   const json = await response.json();

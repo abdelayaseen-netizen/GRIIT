@@ -1,5 +1,23 @@
 import * as z from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+
+const isProd = process.env.NODE_ENV === "production";
+function logCreateChallenge(msg: string, data?: Record<string, unknown>) {
+  if (!isProd) {
+    console.log("[challenges.create]", msg, data ?? "");
+  }
+}
+
+/** Map UI task type to DB enum (e.g. "simple" -> "manual"). Exported for tests. */
+export function dbTaskType(type: string): string {
+  return type === "simple" ? "manual" : type;
+}
+
+/** Default min_words for journal tasks when not provided. Exported for tests. */
+export function journalMinWords(minWords: number | undefined | null): number {
+  return minWords ?? 20;
+}
 
 export const challengesRouter = createTRPCRouter({
   list: publicProcedure
@@ -269,48 +287,52 @@ export const challengesRouter = createTRPCRouter({
       })).min(1, "At least one task is required"),
     }))
     .mutation(async ({ input, ctx }) => {
+      logCreateChallenge("start", { userId: ctx.userId, title: input.title?.slice(0, 50), taskCount: input.tasks.length });
+
       if (input.tasks.length === 0) {
-        throw new Error('At least one task is required');
+        throw new TRPCError({ code: "BAD_REQUEST", message: "At least one task is required" });
       }
 
       for (let i = 0; i < input.tasks.length; i++) {
         const task = input.tasks[i];
         if (!task.title.trim()) {
-          throw new Error(`Task ${i + 1}: Title is required`);
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Task ${i + 1}: Title is required` });
         }
 
         switch (task.type) {
           case 'journal':
-            if (!task.minWords || task.minWords <= 0) {
-              throw new Error(`Task "${task.title}": Minimum words is required`);
+            if (task.minWords != null && task.minWords <= 0) {
+              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Minimum words must be positive` });
             }
             break;
           case 'timer':
             if (!task.durationMinutes || task.durationMinutes <= 0) {
-              throw new Error(`Task "${task.title}": Duration is required`);
+              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Duration is required` });
             }
             break;
           case 'run':
             if (task.trackingMode === 'distance') {
               if (!task.targetValue || task.targetValue <= 0) {
-                throw new Error(`Task "${task.title}": Distance is required`);
+                throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Distance is required` });
               }
             } else if (task.trackingMode === 'time') {
               if (!task.targetValue || task.targetValue <= 0) {
-                throw new Error(`Task "${task.title}": Time duration is required`);
+                throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Time duration is required` });
               }
             }
             break;
           case 'checkin':
             if (!task.locationName || !task.locationName.trim()) {
-              throw new Error(`Task "${task.title}": Location name is required`);
+              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Location name is required` });
             }
             if (!task.radiusMeters || task.radiusMeters <= 0) {
-              throw new Error(`Task "${task.title}": Radius is required`);
+              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Radius is required` });
             }
             break;
         }
       }
+
+      const dbTaskType = (type: string) => (type === "simple" ? "manual" : type);
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from('challenges')
         .insert({
@@ -331,15 +353,19 @@ export const challengesRouter = createTRPCRouter({
         .single();
 
       if (challengeError) {
-        throw new Error(`Failed to create challenge: ${challengeError.message} (code: ${challengeError.code}, details: ${challengeError.details})`);
+        logCreateChallenge("challenge insert failed", { error: challengeError.message, code: challengeError.code });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to create challenge: ${challengeError.message}`,
+        });
       }
 
       const tasksToInsert = input.tasks.map((task) => ({
         challenge_id: challenge.id,
         title: task.title,
-        type: task.type,
+        type: dbTaskType(task.type),
         required: task.required,
-        min_words: task.minWords,
+        min_words: task.type === "journal" ? journalMinWords(task.minWords) : task.minWords,
         target_value: task.targetValue,
         unit: task.unit,
         tracking_mode: task.trackingMode,
@@ -380,9 +406,14 @@ export const challengesRouter = createTRPCRouter({
         .select();
 
       if (tasksError) {
-        throw new Error(`Failed to create tasks: ${tasksError.message} (code: ${tasksError.code}, details: ${tasksError.details})`);
+        logCreateChallenge("tasks insert failed", { error: tasksError.message, code: tasksError.code });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to create tasks: ${tasksError.message}`,
+        });
       }
 
+      logCreateChallenge("success", { challengeId: challenge.id, title: challenge.title });
       return {
         ...challenge,
         tasks: tasks || [],

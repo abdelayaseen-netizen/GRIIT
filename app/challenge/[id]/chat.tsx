@@ -20,6 +20,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { formatTimeAgo } from "@/lib/formatTimeAgo";
 import Colors from "@/constants/colors";
 import { ChatMessage } from "@/types";
 
@@ -105,16 +106,9 @@ export default function ChallengeChatScreen() {
   };
 
   const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-
-    if (diffMins < 1) return "now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return formatTime(dateString);
+    const { text, isDayOrMore } = formatTimeAgo(dateString);
+    if (isDayOrMore) return formatTime(dateString);
+    return text === "now" ? "now" : `${text} ago`;
   };
 
   const renderMessage = ({ item: msg }: { item: ChatMessage }) => {
