@@ -13,6 +13,7 @@
     "start:web:tunnel": "expo start --web --tunnel",
     "preview": "npx serve . -p 5000",
     "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
     "backend:start": "tsx backend/server.ts",
     "postinstall": "node scripts/patch-expo-router.js",
     "test": "vitest run",

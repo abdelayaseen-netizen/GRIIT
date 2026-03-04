@@ -29,6 +29,7 @@ import {
   ThumbsUp,
   Send,
   AlertTriangle,
+  HandMetal,
 } from "lucide-react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
@@ -36,9 +37,10 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
+import { track } from "@/lib/analytics";
 import Colors from "@/constants/colors";
 
-type ActivityType = "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined";
+type ActivityType = "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined" | "nudge";
 
 interface ActivityItem {
   id: string;
@@ -51,6 +53,8 @@ interface ActivityItem {
   dayNumber?: number;
   createdAt: string;
   read: boolean;
+  /** For type "nudge": the encouragement message. */
+  message?: string;
 }
 
 interface MilestoneItem {
@@ -250,12 +254,18 @@ function MilestoneSection({ items }: { items: MilestoneItem[] }) {
 
 function MovementFeedSection({
   entries,
+  currentUserId,
   onGiveRespect,
   givingRespectId,
+  onGiveNudge,
+  givingNudgeId,
 }: {
   entries: LeaderboardEntry[];
+  currentUserId: string | null;
   onGiveRespect: (userId: string) => Promise<void>;
   givingRespectId: string | null;
+  onGiveNudge: (userId: string) => void;
+  givingNudgeId: string | null;
 }) {
   return (
     <View style={styles.movementFeedSection}>
@@ -266,6 +276,7 @@ function MovementFeedSection({
         <>
           {entries.map((entry) => {
             const badge = entry.badge && BADGE_STYLES[entry.badge];
+            const isSelf = currentUserId != null && entry.userId === currentUserId;
             return (
               <View key={entry.id} style={styles.movementFeedItem}>
                 <View style={styles.movementFeedAvatarWrap}>
@@ -296,6 +307,17 @@ function MovementFeedSection({
                     <ThumbsUp size={14} color={Colors.text.tertiary} />
                     <Text style={styles.movementFeedRespectCount}>{entry.respectCount}</Text>
                   </TouchableOpacity>
+                  {!isSelf && (
+                    <TouchableOpacity
+                      style={styles.movementFeedNudge}
+                      onPress={() => onGiveNudge(entry.userId)}
+                      disabled={givingNudgeId === entry.userId}
+                      activeOpacity={0.7}
+                    >
+                      <HandMetal size={14} color={Colors.text.tertiary} />
+                      <Text style={styles.movementFeedNudgeText}>Nudge</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             );
@@ -315,9 +337,10 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
     switch (activity.type) {
       case "follow": return "started following you";
       case "challenge_joined": return `joined ${activity.targetTitle}`;
-      case "respect": return `respected your ${activity.targetTitle}`;
+      case "respect": return activity.targetTitle ? `respected your ${activity.targetTitle}` : "respected you";
       case "day_secured": return `secured Day ${activity.dayNumber}`;
       case "streak_milestone": return `reached Day ${activity.dayNumber} 🔥`;
+      case "nudge": return activity.message ? `nudged you: ${activity.message}` : "nudged you";
       default: return "";
     }
   };
@@ -329,6 +352,7 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
       case "respect": return <Star size={12} color={Colors.accent} fill={Colors.accent} />;
       case "day_secured": return <Shield size={12} color={Colors.streak.shield} />;
       case "streak_milestone": return <Flame size={12} color={Colors.streak.fire} />;
+      case "nudge": return <HandMetal size={12} color={Colors.accent} />;
       default: return null;
     }
   };
@@ -399,11 +423,14 @@ function mapApiEntryToLeaderboardEntry(e: any): LeaderboardEntry {
 }
 
 export default function ActivityScreen() {
-  const { refetchAll } = useApp();
+  const { refetchAll, currentUser } = useApp();
+  const currentUserId = currentUser?.id ?? null;
   const [refreshing, setRefreshing] = useState(false);
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("global");
   const [leaderboard, setLeaderboard] = useState<{ entries: LeaderboardEntry[]; totalSecuredToday: number }>({ entries: [], totalSecuredToday: 0 });
   const [givingRespectId, setGivingRespectId] = useState<string | null>(null);
+  const [givingNudgeId, setGivingNudgeId] = useState<string | null>(null);
+  const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
 
   const fetchLeaderboard = useCallback(async () => {
     try {
@@ -418,30 +445,107 @@ export default function ActivityScreen() {
     }
   }, []);
 
+  const fetchActivityFeed = useCallback(async () => {
+    if (!currentUserId) {
+      setActivityItems([]);
+      return;
+    }
+    try {
+      const [respectsData, nudgesData] = await Promise.all([
+        trpcQuery("respects.getForUser") as Promise<{ recent: { id: string; actorId: string; actorDisplayName: string; actorUsername: string; at: string }[] }>,
+        trpcQuery("nudges.getForUser") as Promise<{ items: { id: string; fromUserId: string; fromDisplayName: string; message: string; createdAt: string }[] }>,
+      ]);
+      const respectItems: ActivityItem[] = (respectsData?.recent ?? []).map((r) => ({
+        id: r.id,
+        type: "respect" as const,
+        actorId: r.actorId,
+        actorUsername: r.actorUsername ?? "?",
+        actorDisplayName: r.actorDisplayName ?? "?",
+        createdAt: r.at,
+        read: false,
+      }));
+      const nudgeItems: ActivityItem[] = (nudgesData?.items ?? []).map((n) => ({
+        id: n.id,
+        type: "nudge" as const,
+        actorId: n.fromUserId,
+        actorUsername: n.fromDisplayName,
+        actorDisplayName: n.fromDisplayName,
+        createdAt: n.createdAt,
+        read: false,
+        message: n.message,
+      }));
+      const merged = [...respectItems, ...nudgeItems].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setActivityItems(merged);
+    } catch {
+      setActivityItems([]);
+    }
+  }, [currentUserId]);
+
   useEffect(() => {
     fetchLeaderboard();
   }, [fetchLeaderboard]);
+
+  useEffect(() => {
+    fetchActivityFeed();
+  }, [fetchActivityFeed]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetchAll();
     await fetchLeaderboard();
+    await fetchActivityFeed();
     setRefreshing(false);
-  }, [refetchAll, fetchLeaderboard]);
+  }, [refetchAll, fetchLeaderboard, fetchActivityFeed]);
 
-  const handleGiveRespect = useCallback(async (recipientId: string) => {
-    setGivingRespectId(recipientId);
-    try {
-      await trpcMutate("respects.give", { recipientId });
-      await fetchLeaderboard();
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Could not send respect.");
-    } finally {
-      setGivingRespectId(null);
-    }
-  }, [fetchLeaderboard]);
+  const handleGiveRespect = useCallback(
+    (recipientId: string) => {
+      requireAuth("respect", async () => {
+        setGivingRespectId(recipientId);
+        try {
+          await trpcMutate("respects.give", { recipientId });
+          track({ name: "respect_sent", toUserId: recipientId });
+          await fetchLeaderboard();
+        } catch (e: any) {
+          Alert.alert("Error", e?.message ?? "Could not send respect.");
+        } finally {
+          setGivingRespectId(null);
+        }
+      });
+    },
+    [requireAuth, fetchLeaderboard]
+  );
 
   const { requireAuth } = useAuthGate();
+  const handleGiveNudge = useCallback(
+    (toUserId: string) => {
+      requireAuth("nudge", () => {
+        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setGivingNudgeId(toUserId);
+        trpcMutate("nudges.send", { toUserId })
+          .then(() => {
+            track({ name: "nudge_sent", toUserId });
+            Alert.alert("Nudged!", "");
+            return fetchActivityFeed();
+          })
+          .catch((e: any) => {
+            const code = e?.data?.code ?? e?.code;
+            const msg = e?.message ?? "";
+            if (code === "TOO_MANY_REQUESTS" || msg.includes("already nudged")) {
+              Alert.alert("Limit", "You already nudged them today.");
+            } else {
+              Alert.alert("Error", msg || "Could not send nudge.");
+            }
+          })
+          .finally(() => {
+            setGivingNudgeId(null);
+          });
+      });
+    },
+    [requireAuth, fetchActivityFeed]
+  );
+
   const handleTeamsPress = useCallback(() => {
     requireAuth("team", () => {
       if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -527,9 +631,13 @@ export default function ActivityScreen() {
         )}
         <MovementFeedSection
           entries={leaderboard.entries}
+          currentUserId={currentUserId}
           onGiveRespect={handleGiveRespect}
           givingRespectId={givingRespectId}
+          onGiveNudge={handleGiveNudge}
+          givingNudgeId={givingNudgeId}
         />
+        <RecentActivitySection items={activityItems} />
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
@@ -871,6 +979,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 8,
+    gap: 10,
   },
   movementFeedRespect: {
     flexDirection: "row",
@@ -878,6 +987,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   movementFeedRespectCount: {
+    fontSize: 12,
+    fontWeight: "500" as const,
+    color: Colors.text.tertiary,
+  },
+  movementFeedNudge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  movementFeedNudgeText: {
     fontSize: 12,
     fontWeight: "500" as const,
     color: Colors.text.tertiary,

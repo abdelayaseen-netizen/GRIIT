@@ -13,6 +13,15 @@ export async function trpcQuery<T = any>(
   input?: unknown,
 ): Promise<T> {
   const url = getTrpcUrl();
+  const fullUrl = input !== undefined
+    ? `${url}/${path}?input=${encodeURIComponent(JSON.stringify(superjson.serialize(input)))}`
+    : `${url}/${path}`;
+  if (__DEV__) {
+    if (!(global as any).__trpcQueryUrlLogged) {
+      (global as any).__trpcQueryUrlLogged = true;
+      console.log('[tRPC] query URL (first call):', fullUrl.split('?')[0]);
+    }
+  }
   const authHeaders = await getAuthHeaders();
 
   const queryInput = input !== undefined

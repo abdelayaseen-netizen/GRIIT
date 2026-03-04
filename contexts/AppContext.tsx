@@ -9,6 +9,7 @@ import {
   scheduleNextSecureReminder,
   cancelSecureReminders,
 } from '@/lib/notifications';
+import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 
 type AppContextValue = {
   profile: any;
@@ -150,7 +151,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (Platform.OS === 'web' || !user) return;
     requestNotificationPermissions().then((ok) => {
-      if (ok) setupNotificationChannel();
+      if (ok) {
+        setupNotificationChannel();
+        registerPushTokenWithBackend().catch(() => {});
+      }
     });
   }, [user]);
 
@@ -159,17 +163,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const todayKey = new Date().toISOString().split('T')[0];
     const lastKey = stats.lastCompletedDateKey ?? null;
     const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
+    const lastStands = (stats as any)?.lastStandsAvailable ?? 0;
     if (lastKey === todayKey) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      scheduleNextSecureReminder(preferred, tomorrow).catch(() => {});
+      scheduleNextSecureReminder(preferred, tomorrow, lastStands).catch(() => {});
     } else {
-      scheduleNextSecureReminder(preferred).catch(() => {});
+      scheduleNextSecureReminder(preferred, undefined, lastStands).catch(() => {});
     }
     return () => {
       cancelSecureReminders();
     };
-  }, [user, stats?.lastCompletedDateKey, (stats as any)?.preferredSecureTime]);
+  }, [user, stats?.lastCompletedDateKey, (stats as any)?.preferredSecureTime, (stats as any)?.lastStandsAvailable]);
 
   useEffect(() => {
     if (activeChallenge?.id) {
@@ -320,17 +325,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [activeChallenge, fetchTodayCheckins, fetchActiveChallenge]);
 
-  const secureDay = useCallback(async (): Promise<{ newStreakCount: number } | undefined> => {
+  const secureDay = useCallback(async (): Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined> => {
     if (!activeChallenge?.id || !canSecureDay) return undefined;
     try {
-      const result = await trpcMutate('checkins.secureDay', { activeChallengeId: activeChallenge.id }) as { success: boolean; newStreakCount: number };
+      const result = await trpcMutate('checkins.secureDay', { activeChallengeId: activeChallenge.id }) as { success: boolean; newStreakCount: number; lastStandEarned?: boolean };
       fetchActiveChallenge();
       fetchStats();
       if (Platform.OS !== 'web') {
         const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        scheduleNextSecureReminder(preferred, tomorrow).catch(() => {});
+        const currentLastStands = (stats as any)?.lastStandsAvailable ?? 0;
+        const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
+        scheduleNextSecureReminder(preferred, tomorrow, newLastStands).catch(() => {});
       }
       return result;
     } catch {

@@ -82,7 +82,7 @@ export const profilesRouter = createTRPCRouter({
 
   getStats: protectedProcedure
     .query(async ({ ctx }) => {
-      const [activeChallenges, completedChallenges, streakData, profileResult, freezesResult] = await Promise.all([
+      const [activeChallenges, completedChallenges, streakData, profileResult, freezesResult, lastStandUsesResult] = await Promise.all([
         ctx.supabase
           .from('active_challenges')
           .select('id')
@@ -107,10 +107,15 @@ export const profilesRouter = createTRPCRouter({
           .from('streak_freezes')
           .select('date_key')
           .eq('user_id', ctx.userId),
+        ctx.supabase
+          .from('last_stand_uses')
+          .select('date_key')
+          .eq('user_id', ctx.userId),
       ]);
 
       const profileRow = profileResult?.error ? { data: null } : profileResult;
       const freezesRows = freezesResult?.error ? { data: [] } : freezesResult;
+      const lastStandUsesRows = lastStandUsesResult?.error ? { data: [] } : lastStandUsesResult;
 
       const streakFreezePerMonth = 1;
       let usedCount = profileRow?.data?.streak_freeze_used_count ?? 0;
@@ -128,6 +133,7 @@ export const profilesRouter = createTRPCRouter({
       }
       const freezesRemaining = Math.max(0, streakFreezePerMonth - usedCount);
       const frozenDateKeys = new Set((freezesRows?.data ?? []).map((r: any) => r.date_key));
+      const lastStandUsedDateKeys = new Set((lastStandUsesRows?.data ?? []).map((r: any) => r.date_key));
 
       const lastCompletedDateKey = streakData.data?.last_completed_date_key ?? null;
       const todayKey = now.toISOString().split('T')[0];
@@ -136,12 +142,67 @@ export const profilesRouter = createTRPCRouter({
       const yesterdayKey = yesterday.toISOString().split('T')[0];
 
       let effectiveMissedDays = 0;
+      let missedDateKeys: string[] = [];
       if (lastCompletedDateKey != null && lastCompletedDateKey < todayKey) {
-        const missed = daysBetweenKeys(lastCompletedDateKey, yesterdayKey);
-        effectiveMissedDays = missed.filter((k: string) => !frozenDateKeys.has(k)).length;
+        missedDateKeys = daysBetweenKeys(lastCompletedDateKey, yesterdayKey);
+        effectiveMissedDays = missedDateKeys.filter(
+          (k: string) => !frozenDateKeys.has(k) && !lastStandUsedDateKeys.has(k)
+        ).length;
       }
 
-      const activeStreak = streakData.data?.active_streak_count ?? 0;
+      let lastStandsAvailable = Math.min(2, Math.max(0, (streakData.data as any)?.last_stands_available ?? 0));
+      let lastStandUsedThisSession = false;
+      let streakLostNoLastStand = false;
+
+      if (effectiveMissedDays === 1 && lastStandsAvailable > 0) {
+        const dateToProtect = missedDateKeys.filter(
+          (k: string) => !frozenDateKeys.has(k) && !lastStandUsedDateKeys.has(k)
+        )[0];
+        if (dateToProtect) {
+          const { error: insertErr } = await ctx.supabase
+            .from('last_stand_uses')
+            .insert({ user_id: ctx.userId, date_key: dateToProtect });
+          const inserted = !insertErr;
+          if (inserted) {
+            const newAvailable = lastStandsAvailable - 1;
+            const newUsedTotal = ((streakData.data as any)?.last_stands_used_total ?? 0) + 1;
+            await ctx.supabase
+              .from('streaks')
+              .update({
+                last_stands_available: newAvailable,
+                last_stands_used_total: newUsedTotal,
+              })
+              .eq('user_id', ctx.userId)
+              .then(() => {})
+              .catch(() => {});
+            lastStandsAvailable = newAvailable;
+            effectiveMissedDays = 0;
+            lastStandUsedThisSession = true;
+            const { sendExpoPush } = await import('../../lib/push');
+            const [pushRes, profileTokenRes] = await Promise.all([
+              ctx.supabase.from('push_tokens').select('token').eq('user_id', ctx.userId),
+              ctx.supabase.from('profiles').select('expo_push_token').eq('user_id', ctx.userId).single(),
+            ]);
+            const tokens = (pushRes?.data ?? []).map((r: any) => r.token).filter(Boolean);
+            const pt = (profileTokenRes?.data as any)?.expo_push_token;
+            const allT = [...new Set([...tokens, pt].filter(Boolean))];
+            await sendExpoPush(allT, 'Last Stand used', 'Your streak continues.');
+          }
+        }
+      } else if (effectiveMissedDays >= 1 && lastStandsAvailable === 0) {
+        const activeStreakBefore = streakData.data?.active_streak_count ?? 0;
+        if (activeStreakBefore > 0) {
+          await ctx.supabase
+            .from('streaks')
+            .update({ active_streak_count: 0 })
+            .eq('user_id', ctx.userId)
+            .then(() => {})
+            .catch(() => {});
+          streakLostNoLastStand = true;
+        }
+      }
+
+      const activeStreak = streakLostNoLastStand ? 0 : (streakData.data?.active_streak_count ?? 0);
       const canUseFreeze = effectiveMissedDays === 1 && activeStreak > 0 && freezesRemaining > 0;
 
       const totalDaysSecured = profileRow?.data?.total_days_secured ?? 0;
@@ -153,7 +214,7 @@ export const profilesRouter = createTRPCRouter({
       return {
         activeChallenges: activeChallenges.data?.length || 0,
         completedChallenges: completedChallenges.data?.length || 0,
-        activeStreak: streakData.data?.active_streak_count || 0,
+        activeStreak: activeStreak || 0,
         longestStreak: streakData.data?.longest_streak_count || 0,
         lastCompletedDateKey: lastCompletedDateKey,
         streakFreezeUsedCount: usedCount,
@@ -166,7 +227,29 @@ export const profilesRouter = createTRPCRouter({
         pointsToNextTier,
         nextTierName,
         preferredSecureTime,
+        lastStandsAvailable,
+        lastStandUsedThisSession,
+        streakLostNoLastStand,
       };
+    }),
+
+  search: protectedProcedure
+    .input(z.object({ query: z.string().min(1).max(100) }))
+    .query(async ({ input, ctx }) => {
+      const q = input.query.trim().toLowerCase();
+      if (!q) return [];
+      const { data, error } = await ctx.supabase
+        .from('profiles')
+        .select('user_id, username, display_name')
+        .neq('user_id', ctx.userId)
+        .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+        .limit(20);
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((r: any) => ({
+        user_id: r.user_id,
+        username: r.username ?? '',
+        display_name: r.display_name ?? r.username ?? '',
+      }));
     }),
 });
 

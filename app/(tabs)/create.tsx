@@ -59,7 +59,7 @@ import {
 } from "@/src/components/ui";
 import { colors as tokenColors } from "@/src/theme/tokens";
 
-type TaskType = "journal" | "timer" | "photo" | "run" | "simple" | "checkin";
+type TaskType = "journal" | "timer" | "run" | "simple" | "checkin";
 type TrackingMode = "distance" | "time";
 type DistanceUnit = "miles" | "km" | "meters";
 
@@ -82,6 +82,8 @@ interface TaskTemplate {
   unit?: DistanceUnit | "minutes";
   trackingMode?: TrackingMode;
   photoRequired?: boolean;
+  requirePhotoProof?: boolean;
+  strictTimerMode?: boolean;
   locationName?: string;
   radiusMeters?: number;
   durationMinutes?: number;
@@ -236,7 +238,6 @@ const VISIBILITY_OPTIONS: { value: ChallengeVisibility; label: string; descripti
 const TASK_TYPE_CONFIG: Record<TaskType, { icon: any; label: string; color: string }> = {
   journal: { icon: BookOpen, label: "Journal", color: "#6366F1" },
   timer: { icon: Timer, label: "Timer", color: "#F59E0B" },
-  photo: { icon: Camera, label: "Photo", color: "#EC4899" },
   run: { icon: Footprints, label: "Run / Workout", color: "#10B981" },
   simple: { icon: CheckCircle, label: "Simple Check", color: "#6B7280" },
   checkin: { icon: MapPin, label: "Location Check-in", color: "#0EA5E9" },
@@ -288,6 +289,8 @@ export default function CreateScreen() {
   const [teChallengeTimezone, setTeChallengeTimezone] = useState("");
   const [newTaskDuration, setNewTaskDuration] = useState("10");
   const [newTaskMustComplete, setNewTaskMustComplete] = useState(true);
+  const [newTaskStrictTimerMode, setNewTaskStrictTimerMode] = useState(false);
+  const [newTaskRequirePhotoProof, setNewTaskRequirePhotoProof] = useState(false);
   const [newTaskLocations, setNewTaskLocations] = useState<LocationItem[]>([]);
   const [newTaskStartTime, setNewTaskStartTime] = useState("05:00");
   const [newTaskWindowMinutes, setNewTaskWindowMinutes] = useState("10");
@@ -319,7 +322,7 @@ export default function CreateScreen() {
     );
   }
 
-  const { apiStatus, apiReady, retryNow: retryApi, lastResponseTimeMs, lastErrorMessage, getDiagnosticsString } = useApi();
+  const { apiStatus, apiReady, retryNow: retryApi, lastResponseTimeMs, lastStatusCode, lastErrorMessage, getDiagnosticsString, getTrpcUrl } = useApi();
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
@@ -449,6 +452,8 @@ export default function CreateScreen() {
     setNewTaskMinWords("50");
     setNewTaskDuration("10");
     setNewTaskMustComplete(true);
+    setNewTaskStrictTimerMode(false);
+    setNewTaskRequirePhotoProof(false);
     setNewTaskLocations([]);
     setNewTaskStartTime("05:00");
     setNewTaskWindowMinutes("10");
@@ -524,7 +529,6 @@ export default function CreateScreen() {
         }
       case "checkin":
         return locationName.trim().length > 0 && parseInt(radiusMeters, 10) > 0;
-      case "photo":
       case "simple":
         return true;
       default:
@@ -560,6 +564,7 @@ export default function CreateScreen() {
       title: newTaskTitle.trim(),
       type: newTaskType!,
       required: true,
+      requirePhotoProof: newTaskRequirePhotoProof,
       ...teFields,
     };
 
@@ -590,12 +595,8 @@ export default function CreateScreen() {
           unit: "minutes" as const,
           durationMinutes: parseInt(newTaskDuration, 10) || 10,
           mustCompleteInSession: newTaskMustComplete,
-        };
-        break;
-      case "photo":
-        task = {
-          ...baseTask,
-          photoRequired: true,
+          strictTimerMode: newTaskStrictTimerMode,
+          requirePhotoProof: newTaskRequirePhotoProof,
         };
         break;
       case "run":
@@ -667,6 +668,8 @@ export default function CreateScreen() {
     if (task.unit && task.unit !== "minutes") setDistanceUnit(task.unit as DistanceUnit);
     if (task.trackingMode) setTrackingMode(task.trackingMode);
     if (task.mustCompleteInSession !== undefined) setNewTaskMustComplete(task.mustCompleteInSession);
+    if (task.strictTimerMode !== undefined) setNewTaskStrictTimerMode(task.strictTimerMode);
+    if (task.requirePhotoProof !== undefined) setNewTaskRequirePhotoProof(task.requirePhotoProof);
     if (task.locations) setNewTaskLocations(task.locations);
     if (task.locationName) setLocationName(task.locationName);
     if (task.radiusMeters) setRadiusMeters(task.radiusMeters.toString());
@@ -764,6 +767,8 @@ export default function CreateScreen() {
         unit: task.unit,
         trackingMode: task.trackingMode,
         photoRequired: task.photoRequired,
+        requirePhotoProof: task.requirePhotoProof,
+        strictTimerMode: task.type === "timer" ? task.strictTimerMode : undefined,
         locationName: task.locationName,
         radiusMeters: task.radiusMeters,
         durationMinutes: task.durationMinutes,
@@ -883,6 +888,7 @@ export default function CreateScreen() {
   const getVerificationSummary = (task: TaskTemplate): string => {
     const parts: string[] = [];
 
+    if (task.requirePhotoProof) parts.push("Photo proof");
     if (task.timeEnforcementEnabled && task.anchorTimeLocal) {
       parts.push(formatTimeHHMM(task.anchorTimeLocal));
     }
@@ -899,10 +905,7 @@ export default function CreateScreen() {
         return parts.length > 0 ? parts.join(" · ") : `${task.minWords || 50} words minimum`;
       }
       case "timer":
-        parts.push(`${task.targetValue || task.durationMinutes || 10} min${task.mustCompleteInSession ? ", no exit" : ""}`);
-        return parts.join(" · ");
-      case "photo":
-        parts.push("In-app camera");
+        parts.push(`${task.targetValue || task.durationMinutes || 10} min${task.mustCompleteInSession ? ", no exit" : ""}${task.strictTimerMode ? ", strict timer" : ""}`);
         return parts.join(" · ");
       case "run":
         if (task.trackingMode === "distance") {
@@ -1113,12 +1116,23 @@ export default function CreateScreen() {
     const showLocationLock = ["checkin", "run"].includes(newTaskType);
     const showHardModeFail = true;
 
-    if (!showTimeLock && !showLocationLock && !showHardModeFail) return null;
-
     return (
       <View style={styles.strictTogglesSection}>
         <Text style={styles.strictTogglesTitle}>Strict Verification (Optional)</Text>
         <Text style={styles.strictTogglesHint}>Make this task stricter</Text>
+
+        <TouchableOpacity
+          style={styles.strictToggleRow}
+          onPress={() => setNewTaskRequirePhotoProof(!newTaskRequirePhotoProof)}
+        >
+          <View style={[styles.strictToggleBox, newTaskRequirePhotoProof && styles.strictToggleBoxActive]}>
+            {newTaskRequirePhotoProof && <Check size={14} color="#fff" />}
+          </View>
+          <View style={styles.strictToggleContent}>
+            <Text style={styles.strictToggleLabel}>Require photo proof</Text>
+            <Text style={styles.strictToggleDesc}>User must take or upload a photo to complete</Text>
+          </View>
+        </TouchableOpacity>
 
         {showTimeLock && (
           <TouchableOpacity
@@ -1370,15 +1384,15 @@ export default function CreateScreen() {
               </View>
               <Text style={styles.toggleLabel}>Must complete without exiting</Text>
             </TouchableOpacity>
-          </View>
-        );
-      case "photo":
-        return (
-          <View style={styles.verificationSection}>
-            <View style={styles.lockedOption}>
-              <Camera size={16} color={Colors.text.secondary} />
-              <Text style={styles.lockedOptionText}>User uploads 1 photo</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.toggleRow}
+              onPress={() => setNewTaskStrictTimerMode(!newTaskStrictTimerMode)}
+            >
+              <View style={[styles.toggleBox, newTaskStrictTimerMode && styles.toggleBoxActive]}>
+                {newTaskStrictTimerMode && <Check size={14} color="#fff" />}
+              </View>
+              <Text style={styles.toggleLabel}>Require active timer (leaving resets progress)</Text>
+            </TouchableOpacity>
           </View>
         );
       case "run":
@@ -1934,6 +1948,20 @@ export default function CreateScreen() {
             {(() => { try { return getApiBaseUrl(); } catch { return 'NOT SET'; } })()}
           </Text>
         </View>
+
+        <View style={diagStyles.infoRow}>
+          <Text style={diagStyles.infoLabel}>tRPC URL</Text>
+          <Text style={diagStyles.infoValue} numberOfLines={1} ellipsizeMode="middle">
+            {(() => { try { return getTrpcUrl(); } catch { return 'NOT SET'; } })()}
+          </Text>
+        </View>
+
+        {lastStatusCode !== null && (
+          <View style={diagStyles.infoRow}>
+            <Text style={diagStyles.infoLabel}>Last status</Text>
+            <Text style={diagStyles.infoValue}>{lastStatusCode}</Text>
+          </View>
+        )}
 
         {lastResponseTimeMs !== null && (
           <View style={diagStyles.infoRow}>

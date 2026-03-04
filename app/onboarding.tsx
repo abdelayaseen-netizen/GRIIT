@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { colors, spacing, radius, typography } from "@/src/theme/tokens";
 import { trpcMutate } from "@/lib/trpc";
@@ -22,11 +22,22 @@ const TIME_OPTIONS = ["3 min", "10 min", "20+ min"];
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ step?: string }>();
   const [step, setStep] = useState(1);
+  useEffect(() => {
+    if (params.step === "4") setStep(4);
+  }, [params.step]);
   const [primaryGoal, setPrimaryGoal] = useState("");
   const [dailyTimeBudget, setDailyTimeBudget] = useState("");
   const [selectedStarter, setSelectedStarter] = useState<OnboardingStarter | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleNextStep3 = useCallback(() => {
+    if (!selectedStarter) return;
+    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    track({ name: "onboarding_step_completed", step: 3, total: 4 });
+    setStep(4);
+  }, [selectedStarter]);
 
   const starters = filterOnboardingStarters(primaryGoal, dailyTimeBudget);
 
@@ -59,7 +70,7 @@ export default function OnboardingScreen() {
         daily_time_budget: dailyTimeBudget || undefined,
         starter_challenge_id: selectedStarter.id,
       });
-      track({ name: "onboarding_step_completed", step: 3, total: 3 });
+      track({ name: "onboarding_step_completed", step: 4, total: 4 });
       await setDay1StartedAt();
       router.replace({
         pathname: "/day1-quick-win",
@@ -85,7 +96,7 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={s.container} edges={["top", "bottom"]}>
       <View style={s.progressRow}>
-        <Text style={s.progressText}>{step}/3</Text>
+        <Text style={s.progressText}>{step}/4</Text>
       </View>
 
       {step === 1 && (
@@ -168,15 +179,37 @@ export default function OnboardingScreen() {
             ))}
           </View>
           <TouchableOpacity
-            style={[s.primaryBtn, (!selectedStarter || submitting) && s.primaryBtnDisabled]}
+            style={[s.primaryBtn, !selectedStarter && s.primaryBtnDisabled]}
+            onPress={handleNextStep3}
+            disabled={!selectedStarter}
+            activeOpacity={0.85}
+          >
+            <Text style={s.primaryBtnText}>Continue</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
+      {step === 4 && (
+        <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={s.title}>Build with someone</Text>
+          <Text style={s.subtitle}>Add 1 accountability partner (optional)</Text>
+          <TouchableOpacity
+            style={[s.primaryBtn, s.primaryBtnMargin]}
+            onPress={() => router.push("/accountability/add?from=onboarding" as any)}
+            activeOpacity={0.85}
+          >
+            <Text style={s.primaryBtnText}>Add partner</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={s.secondaryBtn}
             onPress={handleStartDay1}
-            disabled={!selectedStarter || submitting}
+            disabled={submitting}
             activeOpacity={0.85}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={colors.textPrimary} size="small" />
             ) : (
-              <Text style={s.primaryBtnText}>Start Day 1</Text>
+              <Text style={s.secondaryBtnText}>Skip for now</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -290,5 +323,23 @@ const s = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: "#fff",
+  },
+  primaryBtnMargin: {
+    marginBottom: 12,
+  },
+  secondaryBtn: {
+    paddingVertical: 18,
+    borderRadius: radius.primaryButton,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 56,
+    backgroundColor: colors.chipFill,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  secondaryBtnText: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: colors.textPrimary,
   },
 });

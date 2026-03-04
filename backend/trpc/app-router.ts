@@ -8,6 +8,9 @@ import { startersRouter } from "./routes/starters";
 import { streaksRouter } from "./routes/streaks";
 import { leaderboardRouter } from "./routes/leaderboard";
 import { respectsRouter } from "./routes/respects";
+import { nudgesRouter } from "./routes/nudges";
+import { notificationsRouter } from "./routes/notifications";
+import { accountabilityRouter } from "./routes/accountability";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -19,6 +22,9 @@ export const appRouter = createTRPCRouter({
   streaks: streaksRouter,
   leaderboard: leaderboardRouter,
   respects: respectsRouter,
+  nudges: nudgesRouter,
+  notifications: notificationsRouter,
+  accountability: accountabilityRouter,
 });
 
 export type AppRouter = typeof appRouter;

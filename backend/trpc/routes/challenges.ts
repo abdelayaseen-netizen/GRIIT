@@ -9,9 +9,9 @@ function logCreateChallenge(msg: string, data?: Record<string, unknown>) {
   }
 }
 
-/** Map UI task type to DB enum (e.g. "simple" -> "manual"). Exported for tests. */
+/** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
-  return type === "simple" ? "manual" : type;
+  return type === "simple" || type === "photo" ? "manual" : type;
 }
 
 /** Default min_words for journal tasks when not provided. Exported for tests. */
@@ -19,13 +19,31 @@ export function journalMinWords(minWords: number | undefined | null): number {
   return minWords ?? 20;
 }
 
+/** Task input shape used when building insert row. Exported for tests. */
+export type CreateTaskInput = {
+  type: string;
+  strictTimerMode?: boolean;
+  requirePhotoProof?: boolean;
+  photoRequired?: boolean;
+};
+
+/** Compute strict_timer_mode and require_photo_proof for DB insert. Exported for tests. */
+export function taskStrictAndPhoto(task: CreateTaskInput): { strict_timer_mode: boolean; require_photo_proof: boolean } {
+  return {
+    strict_timer_mode: task.type === "timer" ? (task.strictTimerMode ?? false) : false,
+    require_photo_proof: task.type === "photo" ? true : (task.requirePhotoProof ?? false),
+  };
+}
+
 export const challengesRouter = createTRPCRouter({
+  /** List public challenges with a safe limit for performance. */
   list: publicProcedure
     .input(z.object({
       search: z.string().optional(),
       category: z.string().optional(),
     }))
     .query(async ({ input, ctx }) => {
+      const LIMIT = 50;
       let query = ctx.supabase
         .from('challenges')
         .select(`
@@ -33,7 +51,8 @@ export const challengesRouter = createTRPCRouter({
           challenge_tasks (*)
         `)
         .eq('visibility', 'public')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(LIMIT);
 
       if (input.search) {
         query = query.ilike('title', `%${input.search}%`);
@@ -48,12 +67,14 @@ export const challengesRouter = createTRPCRouter({
       }));
     }),
 
+  /** Featured challenges for Discover tab. Limited for performance. */
   getFeatured: publicProcedure
     .input(z.object({
       search: z.string().optional(),
       category: z.string().optional(),
     }).optional())
     .query(async ({ input, ctx }) => {
+      const LIMIT = 50;
       let query = ctx.supabase
         .from('challenges')
         .select(`
@@ -64,7 +85,8 @@ export const challengesRouter = createTRPCRouter({
         .eq('status', 'published')
         .order('is_featured', { ascending: false })
         .order('participants_count', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(LIMIT);
 
       if (input?.search) {
         query = query.ilike('title', `%${input.search}%`);
@@ -260,6 +282,8 @@ export const challengesRouter = createTRPCRouter({
         radiusMeters: z.number().optional(),
         durationMinutes: z.number().optional(),
         mustCompleteInSession: z.boolean().optional(),
+        strictTimerMode: z.boolean().optional(),
+        requirePhotoProof: z.boolean().optional(),
         locations: z.array(z.any()).optional(),
         startTime: z.string().optional(),
         startWindowMinutes: z.number().optional(),
@@ -332,7 +356,6 @@ export const challengesRouter = createTRPCRouter({
         }
       }
 
-      const dbTaskType = (type: string) => (type === "simple" ? "manual" : type);
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from('challenges')
         .insert({
@@ -363,17 +386,18 @@ export const challengesRouter = createTRPCRouter({
       const tasksToInsert = input.tasks.map((task) => ({
         challenge_id: challenge.id,
         title: task.title,
-        type: dbTaskType(task.type),
+        type: dbTaskType(task.type as string),
         required: task.required,
         min_words: task.type === "journal" ? journalMinWords(task.minWords) : task.minWords,
         target_value: task.targetValue,
         unit: task.unit,
         tracking_mode: task.trackingMode,
-        photo_required: task.photoRequired,
+        photo_required: task.type === "photo" ? true : (task.photoRequired ?? task.requirePhotoProof ?? false),
         location_name: task.locationName,
         radius_meters: task.radiusMeters,
         duration_minutes: task.durationMinutes,
         must_complete_in_session: task.mustCompleteInSession,
+        ...taskStrictAndPhoto(task),
         locations: task.locations,
         start_time: task.startTime,
         start_window_minutes: task.startWindowMinutes,

@@ -29,3 +29,38 @@ export function sendSecureReminder(_userId: string): void {
   // TODO: integrate with push provider
   // e.g. Expo: ExpoPush.sendPushNotificationAsync({ to: pushToken, title: "Time to secure your day", body: "..." })
 }
+
+const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+
+/**
+ * Send a push notification via Expo Push API.
+ * Caller should look up push token from profiles (expo_push_token) and pass it.
+ * If pushToken is null/empty, no-op (nudge is still recorded in DB and activity feed).
+ */
+export async function sendPushToUser(
+  pushToken: string | null | undefined,
+  title: string,
+  body: string
+): Promise<void> {
+  const token = typeof pushToken === "string" ? pushToken.trim() : "";
+  if (!token || !token.startsWith("ExponentPushToken")) return;
+
+  try {
+    const res = await fetch(EXPO_PUSH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        to: token,
+        title,
+        body,
+        sound: "default",
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.warn("[push] Expo push failed:", res.status, text);
+    }
+  } catch (err) {
+    console.warn("[push] Expo push error:", err);
+  }
+}
