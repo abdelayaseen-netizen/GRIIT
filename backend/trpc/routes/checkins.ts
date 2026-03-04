@@ -1,7 +1,9 @@
 import * as z from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { computeNewStreakCount } from "../../lib/streak";
 import { getTierForDays } from "../../lib/progression";
+import { shouldEarnLastStand, newAvailableAfterEarn } from "../../lib/last-stand";
 
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
@@ -14,6 +16,20 @@ export const checkinsRouter = createTRPCRouter({
     }))
     .mutation(async ({ input, ctx }) => {
       const dateKey = new Date().toISOString().split('T')[0];
+
+      const { data: taskRow } = await ctx.supabase
+        .from('challenge_tasks')
+        .select('id, photo_required, require_photo_proof')
+        .eq('id', input.taskId)
+        .single();
+
+      const needsProof = taskRow && (taskRow.photo_required === true || (taskRow as any).require_photo_proof === true);
+      if (needsProof && !(input.proofUrl && input.proofUrl.trim())) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'This task requires photo proof. Please take or upload a photo before completing.',
+        });
+      }
 
       const { data, error } = await ctx.supabase
         .from('check_ins')
@@ -126,23 +142,44 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: streak } = await ctx.supabase
         .from('streaks')
-        .select('last_completed_date_key, active_streak_count, longest_streak_count')
+        .select('last_completed_date_key, active_streak_count, longest_streak_count, last_stands_available, last_stands_used_total')
         .eq('user_id', ctx.userId)
         .single();
 
       const { newStreakCount, longestStreak } = computeNewStreakCount(dateKey, streak);
 
+      const streakPayload: Record<string, unknown> = {
+        user_id: ctx.userId,
+        active_streak_count: newStreakCount,
+        longest_streak_count: longestStreak,
+        last_completed_date_key: dateKey,
+      };
+
+      const now = new Date();
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      const startKey = sevenDaysAgo.toISOString().split('T')[0];
+      const { data: securesLast7 } = await ctx.supabase
+        .from('day_secures')
+        .select('date_key')
+        .eq('user_id', ctx.userId)
+        .gte('date_key', startKey)
+        .lte('date_key', dateKey);
+      const securedDaysLast7 = new Set((securesLast7 ?? []).map((r: any) => r.date_key));
+      if (dateKey) securedDaysLast7.add(dateKey);
+      const countLast7 = securedDaysLast7.size;
+
+      const currentLastStands = Math.min(2, Math.max(0, (streak as any)?.last_stands_available ?? 0));
+      let lastStandEarned = false;
+      if (shouldEarnLastStand(countLast7, currentLastStands)) {
+        (streakPayload as any).last_stands_available = newAvailableAfterEarn(currentLastStands);
+        (streakPayload as any).last_stand_earned_at = now.toISOString();
+        lastStandEarned = true;
+      }
+
       await ctx.supabase
         .from('streaks')
-        .upsert(
-          {
-            user_id: ctx.userId,
-            active_streak_count: newStreakCount,
-            longest_streak_count: longestStreak,
-            last_completed_date_key: dateKey,
-          },
-          { onConflict: 'user_id' }
-        );
+        .upsert(streakPayload, { onConflict: 'user_id' });
 
       await ctx.supabase
         .from('active_challenges')
@@ -167,6 +204,6 @@ export const checkinsRouter = createTRPCRouter({
         .eq('user_id', ctx.userId)
         .then(() => {}).catch(() => {});
 
-      return { success: true, newStreakCount };
+      return { success: true, newStreakCount, lastStandEarned };
     }),
 });

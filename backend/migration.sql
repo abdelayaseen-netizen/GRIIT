@@ -53,6 +53,12 @@ ALTER TABLE challenge_tasks ADD COLUMN IF NOT EXISTS hard_window_end_offset_min 
 ALTER TABLE challenge_tasks ADD COLUMN IF NOT EXISTS timezone_mode TEXT;
 ALTER TABLE challenge_tasks ADD COLUMN IF NOT EXISTS challenge_timezone TEXT;
 
+-- Strict timer mode: when true, leaving timer screen or backgrounding app resets progress
+ALTER TABLE challenge_tasks ADD COLUMN IF NOT EXISTS strict_timer_mode BOOLEAN DEFAULT false;
+
+-- Require photo proof for any task type (replaces standalone "photo" task type)
+ALTER TABLE challenge_tasks ADD COLUMN IF NOT EXISTS require_photo_proof BOOLEAN DEFAULT false;
+
 -- =============================================
 -- 3) Refresh PostgREST schema cache
 -- =============================================

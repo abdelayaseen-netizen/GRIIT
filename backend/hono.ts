@@ -20,9 +20,24 @@ app.use(
 
 app.get("/", (c) => c.json({ status: "ok", message: "GRIT API is running" }));
 
-app.get("/api/health", (c) => c.json({ ok: true, ts: Date.now(), version: "1.0.0" }));
+const healthPayload = () => {
+  const commitSha =
+    process.env.RAILWAY_GIT_COMMIT_SHA ??
+    process.env.VERCEL_GIT_COMMIT_SHA ??
+    process.env.GIT_COMMIT_SHA ??
+    "unknown";
+  return {
+    ok: true,
+    service: "backend",
+    version: "1.0.0",
+    commitSha,
+    commit: commitSha,
+    time: new Date().toISOString(),
+  };
+};
 
-app.get("/health", (c) => c.json({ ok: true, ts: Date.now(), version: "1.0.0" }));
+app.get("/api/health", (c) => c.json(healthPayload()));
+app.get("/health", (c) => c.json(healthPayload()));
 
 app.use(
   "/api/trpc/*",

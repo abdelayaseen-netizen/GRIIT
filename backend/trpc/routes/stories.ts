@@ -40,11 +40,12 @@ export const storiesRouter = createTRPCRouter({
           story_views!left (user_id)
         `)
         .gt('expires_at', now)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw new Error(error.message);
 
-      return data.map((story: any) => ({
+      return (data ?? []).map((story: any) => ({
         ...story,
         viewed: story.story_views?.some((v: any) => v.user_id === ctx.userId) || false,
       }));

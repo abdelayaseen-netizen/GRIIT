@@ -7,6 +7,7 @@ import * as Notifications from "expo-notifications";
 
 const SECURE_REMINDER_ID = "secure-day-reminder";
 const TWO_HOURS_LEFT_ID = "secure-two-hours-left";
+const STREAK_AT_RISK_ID = "streak-at-risk-45min";
 
 /** Default 8pm */
 const DEFAULT_PREFERRED_TIME = "20:00";
@@ -17,6 +18,13 @@ export const ENABLE_TWO_HOURS_LEFT = true;
 function parsePreferredTime(preferredTime: string): { hour: number; minute: number } {
   const [h, m] = (preferredTime || DEFAULT_PREFERRED_TIME).split(":").map(Number);
   return { hour: isNaN(h) ? 20 : h, minute: isNaN(m) ? 0 : m };
+}
+
+/** Format hour/minute as "8:00 PM" for notification body. */
+export function formatTimeForNotification(hour: number, minute: number): string {
+  const h = hour % 12 || 12;
+  const ampm = hour < 12 ? "AM" : "PM";
+  return `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
 }
 
 /** Next calendar date at hour:minute on or after fromDate. */
@@ -34,6 +42,7 @@ export async function cancelSecureReminders(): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(SECURE_REMINDER_ID);
     await Notifications.cancelScheduledNotificationAsync(TWO_HOURS_LEFT_ID);
+    await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
   } catch {
     // ignore
   }
@@ -45,19 +54,21 @@ export async function cancelSecureReminders(): Promise<void> {
  */
 export async function scheduleNextSecureReminder(
   preferredTime: string,
-  afterDate?: Date
+  afterDate?: Date,
+  lastStandsRemaining?: number
 ): Promise<void> {
   try {
     const { hour, minute } = parsePreferredTime(preferredTime);
     const from = afterDate ?? new Date();
     const triggerDate = nextOccurrence(from, hour, minute);
 
+    const timeStr = formatTimeForNotification(hour, minute);
     await Notifications.cancelScheduledNotificationAsync(SECURE_REMINDER_ID);
     await Notifications.scheduleNotificationAsync({
       identifier: SECURE_REMINDER_ID,
       content: {
         title: "Time to secure your day",
-        body: "Lock in your discipline before midnight.",
+        body: `It's ${timeStr} — time to secure your day.`,
         sound: true,
       },
       trigger: {
@@ -66,7 +77,7 @@ export async function scheduleNextSecureReminder(
       },
     });
 
-    if (ENABLE_TWO_HOURS_LEFT) {
+      if (ENABLE_TWO_HOURS_LEFT) {
       const twoHoursLeft = new Date(triggerDate);
       twoHoursLeft.setHours(twoHoursLeft.getHours() + 2, 0, 0, 0);
       if (twoHoursLeft.getTime() > Date.now()) {
@@ -75,13 +86,34 @@ export async function scheduleNextSecureReminder(
           identifier: TWO_HOURS_LEFT_ID,
           content: {
             title: "2 hours left",
-            body: "Secure your day before midnight.",
+            body: "2 hours left to protect your streak.",
             sound: true,
           },
           trigger: {
             type: "date" as const,
             date: twoHoursLeft,
           },
+        });
+      }
+    }
+    if (!afterDate) {
+      const now = new Date();
+      const streakAtRisk = new Date(now);
+      streakAtRisk.setHours(23, 15, 0, 0);
+      if (streakAtRisk.getTime() > now.getTime()) {
+        await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
+        const lsText =
+          lastStandsRemaining !== undefined && lastStandsRemaining >= 0
+            ? ` Last Stands remaining: ${lastStandsRemaining}.`
+            : "";
+        await Notifications.scheduleNotificationAsync({
+          identifier: STREAK_AT_RISK_ID,
+          content: {
+            title: "Streak at risk",
+            body: `45 minutes left to protect your streak.${lsText}`,
+            sound: true,
+          },
+          trigger: { type: "date" as const, date: streakAtRisk },
         });
       }
     }

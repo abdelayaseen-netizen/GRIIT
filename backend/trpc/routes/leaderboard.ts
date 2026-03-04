@@ -8,9 +8,10 @@ function getWeekStartDateKey(): string {
 }
 
 export const leaderboardRouter = createTRPCRouter({
-  getWeekly: protectedProcedure.query(async ({ ctx }) => {
+  getWeekly: publicProcedure.query(async ({ ctx }) => {
     const todayKey = new Date().toISOString().split("T")[0];
     const weekStartKey = getWeekStartDateKey();
+    const userId = ctx.userId;
 
     const { data: secures } = await ctx.supabase
       .from("day_secures")
@@ -24,9 +25,11 @@ export const leaderboardRouter = createTRPCRouter({
       countByUser.set(uid, (countByUser.get(uid) ?? 0) + 1);
     }
 
+    const LEADERBOARD_TOP = 100;
     const sortedUserIds = Array.from(countByUser.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([uid]) => uid);
+      .map(([uid]) => uid)
+      .slice(0, LEADERBOARD_TOP);
 
     if (sortedUserIds.length === 0) {
       return {
@@ -80,7 +83,7 @@ export const leaderboardRouter = createTRPCRouter({
       };
     });
 
-    const currentUserRank = sortedUserIds.indexOf(ctx.userId) + 1 || null;
+    const currentUserRank = userId ? (sortedUserIds.indexOf(userId) + 1 || null) : null;
 
     return {
       entries,

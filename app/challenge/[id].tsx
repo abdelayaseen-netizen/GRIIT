@@ -461,13 +461,13 @@ export default function ChallengeDetailScreen() {
 
   const userCurrentDay = useMemo(() => {
     if (!isJoined) return 0;
-    if (isStarter) return Math.floor(Math.random() * 14) + 1;
+    if (isStarter) return 1;
     return (activeChallenge as any)?.current_day_index ?? 1;
   }, [isJoined, isStarter, activeChallenge]);
 
   const userStreak = useMemo(() => {
     if (!isJoined) return 0;
-    return Math.max(userCurrentDay - Math.floor(Math.random() * 3), 1);
+    return Math.max(userCurrentDay, 1);
   }, [isJoined, userCurrentDay]);
 
   const handleJoinStarter = useCallback(async () => {
@@ -521,6 +521,10 @@ export default function ChallengeDetailScreen() {
       return;
     }
 
+    if ((task as any).type === "manual" && (task as any).require_photo_proof) {
+      router.push({ pathname: "/task/photo", params: { taskId: task.id } } as any);
+      return;
+    }
     const routeMap: Record<string, string> = {
       run: "/task/run",
       timer: "/task/timer",
@@ -529,7 +533,7 @@ export default function ChallengeDetailScreen() {
     };
     const route = routeMap[task.type];
     if (route) {
-      router.push(route as any);
+      router.push({ pathname: route as any, params: { taskId: task.id } });
     }
   }, [router]);
 

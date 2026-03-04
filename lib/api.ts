@@ -1,26 +1,56 @@
 import { supabase } from '@/lib/supabase';
 
+/**
+ * Backend path constants. Must match backend/hono.ts exactly:
+ * - app.get("/api/health", ...) and app.get("/health", ...)
+ * - app.use("/api/trpc/*", trpcServer({ endpoint: "/api/trpc", ... }))
+ */
+export const TRPC_PATH = '/api/trpc';
+export const HEALTH_PATH = '/api/health';
+
 let _baseUrl: string | null = null;
 
+/**
+ * Base URL of the backend API (no trailing slash).
+ * Env: EXPO_PUBLIC_API_URL (prefer) or EXPO_PUBLIC_API_BASE_URL.
+ * In production (Rork + Railway) MUST be set to the backend host — e.g. https://your-backend.up.railway.app.
+ * If unset in production, tRPC requests use relative path and hit the frontend host → 404.
+ */
 export function getApiBaseUrl(): string {
-  if (_baseUrl) return _baseUrl;
-  const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-  if (envUrl) {
-    _baseUrl = envUrl.replace(/\/$/, '');
-    return _baseUrl ?? '';
+  if (_baseUrl !== null) return _baseUrl;
+  const envUrl =
+    process.env.EXPO_PUBLIC_API_URL ??
+    process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (envUrl && typeof envUrl === 'string') {
+    _baseUrl = envUrl.replace(/\/$/, '').trim();
+    if (__DEV__) {
+      console.log('[API] baseUrl (from env):', _baseUrl);
+      console.log('[API] trpcUrl (dev):', `${_baseUrl}${TRPC_PATH}`);
+    }
+    return _baseUrl;
   }
   _baseUrl = '';
+  if (__DEV__) {
+    console.log('[API] baseUrl: (empty) — requests use relative path. Set EXPO_PUBLIC_API_URL in production.');
+  }
   return _baseUrl;
 }
 
 export function getHealthUrl(): string {
   const base = getApiBaseUrl();
-  return base ? `${base}/api/health` : '/api/health';
+  if (base) return `${base}${HEALTH_PATH}`;
+  return HEALTH_PATH;
 }
 
+/** Full URL for tRPC (baseUrl + TRPC_PATH). Must match backend mount: app.use("/api/trpc/*", ...). */
 export function getTrpcUrl(): string {
   const base = getApiBaseUrl();
-  return base ? `${base}/api/trpc` : '/api/trpc';
+  const url = base ? `${base}${TRPC_PATH}` : TRPC_PATH;
+  if (__DEV__ && !(global as any).__trpcUrlLogged) {
+    (global as any).__trpcUrlLogged = true;
+    console.log('[tRPC] trpcUrl (final):', url);
+  }
+  return url;
 }
 
 const RETRY_DELAYS = [500, 1000, 2000, 4000];

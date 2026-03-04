@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, AppState, AppStateStatus } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { Play, Pause, Check } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
@@ -15,10 +16,53 @@ export default function TimerTaskScreen() {
   const [isRunning, setIsRunning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [strictResetMessage, setStrictResetMessage] = useState<string | null>(null);
+  const resetInProgressRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const tasks = (activeChallenge as any)?.challenges?.challenge_tasks ?? [];
+  const task = taskId ? tasks.find((t: any) => t.id === taskId) : null;
+  const strictTimerMode = task?.strict_timer_mode === true;
+
+  const resetTimer = useCallback(() => {
+    if (resetInProgressRef.current) return;
+    resetInProgressRef.current = true;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIntervalId(null);
+    setSeconds(0);
+    setIsRunning(false);
+    setStrictResetMessage("Timer reset: Strict Mode requires staying on this screen.");
+    resetInProgressRef.current = false;
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (strictTimerMode && isRunning) {
+          resetTimer();
+        }
+      };
+    }, [strictTimerMode, isRunning, resetTimer])
+  );
+
+  useEffect(() => {
+    if (!strictTimerMode) return;
+    const sub = AppState.addEventListener("change", (nextState: AppStateStatus) => {
+      if (nextState === "background" || nextState === "inactive") {
+        if (isRunning) resetTimer();
+      }
+    });
+    return () => sub.remove();
+  }, [strictTimerMode, isRunning, resetTimer]);
 
   const handleStartPause = () => {
+    setStrictResetMessage(null);
     if (isRunning) {
-      if (intervalId) clearInterval(intervalId);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
       setIntervalId(null);
       setIsRunning(false);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -26,6 +70,7 @@ export default function TimerTaskScreen() {
       const id = setInterval(() => {
         setSeconds(prev => prev + 1);
       }, 1000);
+      intervalRef.current = id;
       setIntervalId(id);
       setIsRunning(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -48,7 +93,8 @@ export default function TimerTaskScreen() {
       return;
     }
 
-    if (intervalId) clearInterval(intervalId);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
 
     setLoading(true);
     try {
@@ -182,5 +228,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#fff',
+  },
+  strictBanner: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  strictBannerText: {
+    fontSize: 14,
+    color: '#DC2626',
+    textAlign: 'center',
   },
 });

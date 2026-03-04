@@ -225,13 +225,14 @@ export default function HomeScreen() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showMilestone, setShowMilestone] = useState<number | null>(null);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
+  const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<{ currentUserRank: number | null; totalSecuredToday: number } | null>(null);
+  const streakLostTrackedRef = useRef(false);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (isGuest) return;
     trpcQuery("leaderboard.getWeekly").then((data: any) => {
       setLeaderboardData({
         currentUserRank: data?.currentUserRank ?? null,
@@ -259,6 +260,7 @@ export default function HomeScreen() {
   const showRestartMode = !isGuest && effectiveMissedDays >= RETENTION_CONFIG.restartThreshold;
   const canUseFreeze = (stats as any)?.canUseFreeze ?? (effectiveMissedDays === RETENTION_CONFIG.streakFreezeEligibleMissedDays && currentStreak > 0);
   const freezesRemaining = (stats as any)?.freezesRemaining ?? 1;
+  const lastStandsAvailable = (stats as any)?.lastStandsAvailable ?? 0;
   const bestStreak = stats?.longestStreak || 0;
   const hasActiveChallenge = !!activeChallenge && !!challenge;
   const daySecured = computeProgress.progress === 100 && !canSecureDay;
@@ -319,6 +321,9 @@ export default function HomeScreen() {
     ]).start();
     const result = await secureDay();
     setShowCelebration(true);
+    if (result?.lastStandEarned) {
+      track({ name: "last_stand_earned" });
+    }
     if (result?.newStreakCount === 7 || result?.newStreakCount === 30) {
       setShowMilestone(result.newStreakCount);
       track({ name: "milestone_unlocked", streak: result.newStreakCount });
@@ -405,6 +410,11 @@ export default function HomeScreen() {
                   ? "Secure 3 days in a row to restore momentum."
                   : "You missed yesterday. Secure today to stay in the game."}
               </Text>
+              {showRecoveryBanner && lastStandsAvailable >= 0 && (
+                <Text style={styles.recoveryBannerSub}>
+                  Last Stands remaining: {lastStandsAvailable}
+                </Text>
+              )}
               {canUseFreeze && (
                 <TouchableOpacity
                   style={styles.freezeCta}
@@ -469,16 +479,7 @@ export default function HomeScreen() {
               ) : (
                 <View style={styles.todaysResetTaskList}>
                   <View style={styles.todaysResetTaskRow}>
-                    <Circle size={18} color={Colors.border} strokeWidth={2} />
-                    <Text style={styles.todaysResetTaskText}>Move for 5 minutes</Text>
-                  </View>
-                  <View style={styles.todaysResetTaskRow}>
-                    <Circle size={18} color={Colors.border} strokeWidth={2} />
-                    <Text style={styles.todaysResetTaskText}>Drink a glass of water</Text>
-                  </View>
-                  <View style={styles.todaysResetTaskRow}>
-                    <Circle size={18} color={Colors.border} strokeWidth={2} />
-                    <Text style={styles.todaysResetTaskText}>Write one sentence about today</Text>
+                    <Text style={styles.todaysResetTaskText}>No tasks yet — open your challenge to see today’s list.</Text>
                   </View>
                 </View>
               )}
@@ -489,6 +490,7 @@ export default function HomeScreen() {
                 <Flame size={20} color={Colors.accent} />
                 <Text style={styles.statsSummaryValue}>{currentStreak}</Text>
                 <Text style={styles.statsSummaryLabel}>Streak</Text>
+                <Text style={styles.statsSummaryLastStand}>Last Stands: {lastStandsAvailable}</Text>
               </View>
               <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder]}>
                 <TrendingUp size={20} color={Colors.accent} />
@@ -684,6 +686,25 @@ export default function HomeScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={styles.freezeModalCancel} onPress={() => setShowFreezeModal(false)} disabled={freezeSubmitting} activeOpacity={0.8}>
                 <Text style={styles.freezeModalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {showLastStandUsedModal && (
+        <Modal visible transparent animationType="fade">
+          <TouchableOpacity style={styles.freezeModalBackdrop} activeOpacity={1} onPress={() => setShowLastStandUsedModal(false)} />
+          <View style={styles.freezeModalCenter}>
+            <View style={styles.freezeModalCard}>
+              <Text style={styles.freezeModalTitle}>Last Stand used.</Text>
+              <Text style={styles.freezeModalSub}>Streak preserved.</Text>
+              <TouchableOpacity
+                style={[styles.freezeModalConfirm]}
+                onPress={() => setShowLastStandUsedModal(false)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.freezeModalConfirmText}>Got it</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -908,6 +929,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500" as const,
     color: Colors.text.tertiary,
+  },
+  statsSummaryLastStand: {
+    fontSize: 11,
+    fontWeight: "500" as const,
+    color: Colors.text.tertiary,
+    marginTop: 2,
   },
   welcomeBackCard: {
     backgroundColor: Colors.card,
@@ -1385,6 +1412,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600" as const,
     color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  recoveryBannerSub: {
+    fontSize: 13,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
     marginBottom: 8,
   },
   freezeCta: {

@@ -3,10 +3,6 @@ export { Card } from "./Card";
 export { PrimaryButton } from "./PrimaryButton";
 export { Input } from "./Input";
 export { Chip } from "./Chip";
-// TODO: ProgressBar, ListOptionCard, ModalSheet – verify usage; no current imports found in app/screens
-export { ProgressBar } from "./ProgressBar";
-export { ListOptionCard } from "./ListOptionCard";
-export { ModalSheet } from "./ModalSheet";
 export { SearchBar } from "./SearchBar";
 export { FilterChip } from "./FilterChip";
 export { SectionHeader } from "./SectionHeader";

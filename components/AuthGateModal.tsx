@@ -15,7 +15,7 @@ export type GateContext =
   | "join"
   | "secure"
   | "respect"
-  | "chase"
+  | "nudge"
   | "create"
   | "team"
   | "other";

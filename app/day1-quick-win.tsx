@@ -11,12 +11,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CheckCircle2, Shield } from "lucide-react-native";
 import { colors, spacing, radius } from "@/src/theme/tokens";
 import { track } from "@/lib/analytics";
 import { trpcMutate } from "@/lib/trpc";
 import { useApp } from "@/contexts/AppContext";
 import { getDay1TtfvSeconds } from "@/lib/starter-join";
+
+const ACCOUNTABILITY_PROMPT_DISMISSED_KEY = "grit_accountability_prompt_dismissed";
 
 export default function Day1QuickWinScreen() {
   const router = useRouter();
@@ -34,6 +37,7 @@ export default function Day1QuickWinScreen() {
   }>();
   const [taskCompleted, setTaskCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showAccountabilityPrompt, setShowAccountabilityPrompt] = useState(false);
   const [securing, setSecuring] = useState(false);
 
   const activeChallengeId = params.activeChallengeId ?? "";
@@ -83,9 +87,30 @@ export default function Day1QuickWinScreen() {
     }
   }, [taskCompleted, securing, challengeId, activeChallengeId, refetchAll, params.starterId, params.primaryGoal, params.dailyTimeBudget]);
 
-  const handleGoToHome = useCallback(() => {
+  const handleGoToHome = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowCelebration(false);
+    try {
+      const dismissed = await AsyncStorage.getItem(ACCOUNTABILITY_PROMPT_DISMISSED_KEY);
+      if (dismissed === "1") {
+        router.replace("/(tabs)" as any);
+        return;
+      }
+      setShowAccountabilityPrompt(true);
+    } catch {
+      router.replace("/(tabs)" as any);
+    }
+  }, [router]);
+
+  const handleAccountabilityAdd = useCallback(async () => {
+    await AsyncStorage.setItem(ACCOUNTABILITY_PROMPT_DISMISSED_KEY, "1");
+    setShowAccountabilityPrompt(false);
+    router.replace("/accountability/add?from=day1" as any);
+  }, [router]);
+
+  const handleAccountabilityNotNow = useCallback(async () => {
+    await AsyncStorage.setItem(ACCOUNTABILITY_PROMPT_DISMISSED_KEY, "1");
+    setShowAccountabilityPrompt(false);
     router.replace("/(tabs)" as any);
   }, [router]);
 
@@ -143,6 +168,27 @@ export default function Day1QuickWinScreen() {
             </View>
             <TouchableOpacity style={s.goHomeBtn} onPress={handleGoToHome} activeOpacity={0.85}>
               <Text style={s.goHomeBtnText}>Go to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showAccountabilityPrompt} transparent animationType="fade">
+        <View style={s.celebrationBackdrop}>
+          <View style={s.celebrationCard}>
+            <Text style={s.celebrationTitle}>Want to make this easier to stick to?</Text>
+            <Text style={s.celebrationSub}>
+              Add an accountability partner and stay on track together.
+            </Text>
+            <TouchableOpacity style={s.goHomeBtn} onPress={handleAccountabilityAdd} activeOpacity={0.85}>
+              <Text style={s.goHomeBtnText}>Add accountability partner</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.secondaryBtn}
+              onPress={handleAccountabilityNotNow}
+              activeOpacity={0.85}
+            >
+              <Text style={s.secondaryBtnText}>Not now</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -294,5 +340,16 @@ const s = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: "#fff",
+  },
+  secondaryBtn: {
+    marginTop: 12,
+    paddingVertical: 14,
+    width: "100%",
+    alignItems: "center",
+  },
+  secondaryBtnText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.textSecondary,
   },
 });

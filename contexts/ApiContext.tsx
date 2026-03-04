@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useRef, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { checkHealth, getApiBaseUrl, formatError, checkDbTables } from '@/lib/api';
+import { checkHealth, getApiBaseUrl, getTrpcUrl, formatError, checkDbTables } from '@/lib/api';
 import type { HealthCheckResult } from '@/lib/api';
 
 export type ApiStatus = 'checking' | 'ready' | 'down';
@@ -8,9 +8,12 @@ export type DbStatus = 'unchecked' | 'ok' | 'missing_tables' | 'error';
 
 export interface ApiDiagnostics {
   baseUrl: string;
+  trpcUrl: string;
+  healthUrl: string;
   platform: string;
   timestamp: string;
   healthStatus: ApiStatus;
+  lastStatusCode: number | null;
   dbStatus: DbStatus;
   missingTables: string[];
   lastResponseTimeMs: number | null;
@@ -26,11 +29,13 @@ type ApiContextValue = {
   missingTables: string[];
   dbMisconfigured: boolean;
   lastResponseTimeMs: number | null;
+  lastStatusCode: number | null;
   lastErrorMessage: string | null;
   retryNow: () => Promise<void>;
   runDbSanityCheck: () => Promise<void>;
   getDiagnostics: () => ApiDiagnostics;
   getDiagnosticsString: () => string;
+  getTrpcUrl: () => string;
 };
 
 const ApiContext = createContext<ApiContextValue | undefined>(undefined);
@@ -48,6 +53,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   const [dbStatus, setDbStatus] = useState<DbStatus>('unchecked');
   const [missingTables, setMissingTables] = useState<string[]>([]);
   const [lastResponseTimeMs, setLastResponseTimeMs] = useState<number | null>(null);
+  const [lastStatusCode, setLastStatusCode] = useState<number | null>(null);
   const [lastErrorMessage, setLastErrorMessage] = useState<string | null>(null);
   const retryCount = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -144,19 +150,33 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     }
   }, [runHealthCheck, scheduleRetry]);
 
+  const getTrpcUrlSafe = useCallback((): string => {
+    try {
+      return getTrpcUrl();
+    } catch {
+      return 'NOT_SET';
+    }
+  }, []);
+
   const getDiagnostics = useCallback((): ApiDiagnostics => {
+    const base = getBaseUrlSafe();
+    const trpcUrl = getTrpcUrlSafe();
+    const healthUrl = base && base !== 'NOT_SET' ? `${base}/api/health` : '/api/health';
     return {
-      baseUrl: getBaseUrlSafe(),
+      baseUrl: base,
+      trpcUrl,
+      healthUrl,
       platform: Platform.OS,
       timestamp: new Date().toISOString(),
       healthStatus: apiStatus,
+      lastStatusCode: lastStatusCode ?? null,
       dbStatus,
       missingTables,
       lastResponseTimeMs,
       lastErrorMessage,
       retryAttempts: retryCount.current,
     };
-  }, [apiStatus, dbStatus, missingTables, lastResponseTimeMs, lastErrorMessage, getBaseUrlSafe]);
+  }, [apiStatus, lastStatusCode, dbStatus, missingTables, lastResponseTimeMs, lastErrorMessage, getBaseUrlSafe, getTrpcUrlSafe]);
 
   const getDiagnosticsString = useCallback((): string => {
     try {
@@ -192,11 +212,13 @@ export function ApiProvider({ children }: { children: ReactNode }) {
         missingTables,
         dbMisconfigured: dbStatus === 'missing_tables',
         lastResponseTimeMs,
+        lastStatusCode: lastStatusCode ?? null,
         lastErrorMessage,
         retryNow,
         runDbSanityCheck,
         getDiagnostics,
         getDiagnosticsString,
+        getTrpcUrl: getTrpcUrlSafe,
       }}
     >
       {children}

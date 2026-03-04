@@ -75,7 +75,7 @@ Create a `.env` file in the project root. See **Production environment variables
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-EXPO_PUBLIC_API_BASE_URL=https://your-backend-url.com
+EXPO_PUBLIC_API_URL=https://your-backend-url.com
 ```
 
 #### Production environment variables (checklist)
@@ -84,7 +84,7 @@ EXPO_PUBLIC_API_BASE_URL=https://your-backend-url.com
 |----------|----------|--------|-------------|
 | `EXPO_PUBLIC_SUPABASE_URL` | Yes | App + Backend | Supabase project URL. Set at build time for app; set in env for backend. |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Yes | App + Backend | Supabase anon/public key. Set at build time for app; set in env for backend. |
-| `EXPO_PUBLIC_API_BASE_URL` | No (dev) | App | Backend API base URL. Omit for dev (uses relative `/api/trpc`). Required for production if API is on another host (e.g. Railway). |
+| `EXPO_PUBLIC_API_URL` or `EXPO_PUBLIC_API_BASE_URL` | No (dev) | App | Backend API base URL (no trailing slash). **Required in production** when app and backend are on different hosts (e.g. Rork + Railway). Prefer `EXPO_PUBLIC_API_URL`. |
 | `PORT` | No | Backend | Server port (default `8080`). Used by Railway/Node. |
 | `NODE_ENV` | No | Backend | Set to `production` to disable verbose logging and enable strict CORS. |
 | `CORS_ORIGIN` | No (prod) | Backend | Allowed origin(s) for CORS. In production set to your app origin (e.g. `https://yourapp.com`). Omit to allow `*` (not recommended in prod). |
