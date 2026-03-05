@@ -11,6 +11,8 @@ import { respectsRouter } from "./routes/respects";
 import { nudgesRouter } from "./routes/nudges";
 import { notificationsRouter } from "./routes/notifications";
 import { accountabilityRouter } from "./routes/accountability";
+import { metaRouter } from "./routes/meta";
+import { feedRouter } from "./routes/feed";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -25,6 +27,8 @@ export const appRouter = createTRPCRouter({
   nudges: nudgesRouter,
   notifications: notificationsRouter,
   accountability: accountabilityRouter,
+  meta: metaRouter,
+  feed: feedRouter,
 });
 
 export type AppRouter = typeof appRouter;
