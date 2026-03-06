@@ -427,7 +427,7 @@ export default function ProfileScreen() {
     }
     try {
       await Share.share({
-        message: `Check out @${profile?.username || "user"} on GRIT — the discipline app. Join me!`,
+        message: `Check out @${profile?.username || "user"} on GRIIT — the discipline app. Join me!`,
       });
     } catch {
       // Share cancelled or failed — no user feedback needed

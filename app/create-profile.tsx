@@ -86,7 +86,7 @@ export default function CreateProfileScreen() {
 
   const header = (
     <View style={styles.topRow}>
-      <Caption style={styles.gritLogo}>GRIT</Caption>
+      <Caption style={styles.gritLogo}>GRIIT</Caption>
       <View style={styles.progressWrap}>
         <View style={styles.progressLine} />
         <Caption tone="subtle">1/5</Caption>

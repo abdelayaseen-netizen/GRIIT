@@ -61,7 +61,7 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.logo}>GRIT</Text>
+            <Text style={styles.logo}>GRIIT</Text>
             <Text style={styles.tagline}>Find your next commitment.</Text>
           </View>
 

@@ -804,18 +804,20 @@ export default function CreateScreen() {
       .then((challenge: any) => {
         clearWatchdog();
         setSubmitStatus('success');
-
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
         router.push({
           pathname: "/success" as any,
           params: {
             challengeId: challenge.id,
             title: challenge.title,
-            duration: challenge.duration_days.toString(),
-            tasksCount: challenge.tasks.length.toString(),
-            difficulty: challenge.difficulty,
+            duration: String(challenge.duration_days ?? duration),
+            tasksCount: String(challenge.tasks?.length ?? tasks.length),
+            difficulty: challenge.difficulty ?? "medium",
+            isCreateSuccess: "true",
           },
         });
-
         setTitle("");
         setDescription("");
         setChallengeType("standard");
@@ -1391,7 +1393,7 @@ export default function CreateScreen() {
               <View style={[styles.toggleBox, newTaskStrictTimerMode && styles.toggleBoxActive]}>
                 {newTaskStrictTimerMode && <Check size={14} color="#fff" />}
               </View>
-              <Text style={styles.toggleLabel}>Require active timer (leaving resets progress)</Text>
+              <Text style={styles.toggleLabel}>Require participants to stay on timer screen (resets if they leave)</Text>
             </TouchableOpacity>
           </View>
         );

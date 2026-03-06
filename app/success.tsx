@@ -30,6 +30,7 @@ export default function SuccessScreen() {
   const daysCompleted = params.daysCompleted as string;
   const finalStreak = params.finalStreak as string;
   const isCompletion = params.isCompletion === "true";
+  const isCreateSuccess = params.isCreateSuccess === "true";
 
   const isHardMode = difficulty === "hard" || difficulty === "extreme";
 
@@ -70,7 +71,9 @@ export default function SuccessScreen() {
 
   const handleShare = async () => {
     try {
-      const message = `I completed "${title}" on GRIT. ${daysCompleted} of ${duration} days secured. ${isHardMode ? "Hard Mode." : ""}`;
+      const message = isCreateSuccess
+        ? `I just created "${title}" on GRIIT — ${duration} days, ${tasksCount} task${tasksCount === "1" ? "" : "s"}. Join me!`
+        : `I completed "${title}" on GRIIT. ${daysCompleted} of ${duration} days secured. ${isHardMode ? "Hard Mode." : ""}`;
       if (Platform.OS === "web") {
         if (navigator.share) {
           await navigator.share({ title: "Challenge Complete", text: message });
@@ -105,9 +108,9 @@ export default function SuccessScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.header}>Challenge Complete.</Text>
+          <Text style={styles.header}>{isCreateSuccess ? "Challenge created." : "Challenge Complete."}</Text>
 
-          {isHardMode && (
+          {!isCreateSuccess && isHardMode && (
             <View style={styles.hardModeTag}>
               <Shield size={14} color="#E87D4F" />
               <Text style={styles.hardModeTagText}>Hard Mode</Text>
@@ -117,36 +120,40 @@ export default function SuccessScreen() {
           <Text style={styles.challengeTitle}>{title}</Text>
         </Animated.View>
 
-        <Animated.View
-          style={[
-            styles.statsCard,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: statsSlide }],
-            },
-          ]}
-        >
-          <View style={styles.statRow}>
-            <View style={styles.statItem}>
-              <TrendingUp size={18} color={Colors.streak.shield} />
-              <Text style={styles.statLabel}>Final Streak</Text>
+        {!isCreateSuccess && (
+          <Animated.View
+            style={[
+              styles.statsCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: statsSlide }],
+              },
+            ]}
+          >
+            <View style={styles.statRow}>
+              <View style={styles.statItem}>
+                <TrendingUp size={18} color={Colors.streak.shield} />
+                <Text style={styles.statLabel}>Final Streak</Text>
+              </View>
+              <Text style={styles.statValue}>{finalStreak ?? "0"} days</Text>
             </View>
-            <Text style={styles.statValue}>{finalStreak} days</Text>
-          </View>
 
-          <View style={styles.divider} />
+            <View style={styles.divider} />
 
-          <View style={styles.statRow}>
-            <View style={styles.statItem}>
-              <Shield size={18} color={Colors.streak.shield} />
-              <Text style={styles.statLabel}>Days Secured</Text>
+            <View style={styles.statRow}>
+              <View style={styles.statItem}>
+                <Shield size={18} color={Colors.streak.shield} />
+                <Text style={styles.statLabel}>Days Secured</Text>
+              </View>
+              <Text style={styles.statValue}>{daysCompleted ?? "0"}/{duration}</Text>
             </View>
-            <Text style={styles.statValue}>{daysCompleted}/{duration}</Text>
-          </View>
-        </Animated.View>
+          </Animated.View>
+        )}
 
         <Animated.View style={[styles.recognitionCard, { opacity: fadeAnim }]}>
-          <Text style={styles.recognitionText}>You showed up consistently.</Text>
+          <Text style={styles.recognitionText}>
+            {isCreateSuccess ? `${duration} days · ${tasksCount} task${tasksCount === "1" ? "" : "s"}. Share it and get others to join.` : "You showed up consistently."}
+          </Text>
         </Animated.View>
 
         <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
@@ -164,7 +171,7 @@ export default function SuccessScreen() {
             activeOpacity={0.7}
           >
             <Share2 size={18} color={Colors.text.secondary} />
-            <Text style={styles.secondaryButtonText}>Share Completion</Text>
+            <Text style={styles.secondaryButtonText}>{isCreateSuccess ? "Share challenge" : "Share Completion"}</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>

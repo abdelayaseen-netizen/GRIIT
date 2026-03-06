@@ -43,6 +43,7 @@ import * as Linking from "expo-linking";
 import { getJoinedStarterIds, saveJoinedStarterId } from "@/lib/starter-join";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
 import type { StarterChallenge, StarterTask } from "@/mocks/starter-challenges";
+import type { ChallengeTaskFromApi } from "@/types";
 import Colors from "@/constants/colors";
 
 const AVATAR_URLS = [
@@ -521,7 +522,8 @@ export default function ChallengeDetailScreen() {
       return;
     }
 
-    if ((task as any).type === "manual" && (task as any).require_photo_proof) {
+    const apiTask = task as ChallengeTaskFromApi;
+    if (apiTask.type === "manual" && apiTask.require_photo_proof) {
       router.push({ pathname: "/task/photo", params: { taskId: task.id } } as any);
       return;
     }
@@ -634,7 +636,7 @@ export default function ChallengeDetailScreen() {
                       {
                         text: "Share challenge",
                         onPress: () => {
-                          const message = `${challenge.title} — ${challenge.short_hook || challenge.description}. Join me on GRIT.`;
+                          const message = `${challenge.title} — ${challenge.short_hook || challenge.description}. Join me on GRIIT.`;
                           if (Platform.OS === "web") {
                             try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
                             Alert.alert("Copied", "Challenge details copied to clipboard.");
@@ -650,7 +652,7 @@ export default function ChallengeDetailScreen() {
                       {
                         text: "Invite friends",
                         onPress: () => {
-                          const message = `Join me in "${challenge.title}" on GRIT — build discipline daily.`;
+                          const message = `Join me in "${challenge.title}" on GRIIT — build discipline daily.`;
                           if (Platform.OS === "web") {
                             try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
                             Alert.alert("Copied", "Invite message copied. Share it with friends!");
@@ -900,7 +902,7 @@ export default function ChallengeDetailScreen() {
               style={s.inviteLink}
               onPress={() => {
                 const joinUrl = Linking.createURL(`/challenge/${id}`);
-                const message = `Join me in "${challenge.title}" on GRIT — build discipline daily. ${joinUrl}`;
+                const message = `Join me in "${challenge.title}" on GRIIT — build discipline daily. ${joinUrl}`;
                 track({ name: "invite_shared", challengeId: id, source: "challenge_detail" });
                 if (Platform.OS === "web") {
                   try { navigator.clipboard.writeText(message); } catch { /* ignore */ }

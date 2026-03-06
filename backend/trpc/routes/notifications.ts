@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
+import type { PgError } from "../../types/db";
 
 const PUSH_TOKEN_MAX = 500;
 const DEVICE_ID_MAX = 256;
@@ -26,7 +27,7 @@ export const notificationsRouter = createTRPCRouter({
         );
 
       if (error) {
-        if ((error as any).code === "42P01") {
+        if ((error as PgError).code === "42P01") {
           return { success: true, message: "Push tokens table not yet migrated; token not stored." };
         }
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to register push token." });
@@ -71,13 +72,14 @@ export const notificationsRouter = createTRPCRouter({
       .eq("user_id", ctx.userId)
       .single();
 
-    if (error && (error as any).code !== "PGRST116") {
+    if (error && (error as PgError).code !== "PGRST116") {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load reminder settings." });
     }
+    const row = data as { preferred_secure_time?: string | null; reminder_enabled?: boolean | null; reminder_timezone?: string | null } | null;
     return {
-      reminder_time: (data as any)?.preferred_secure_time ?? "20:00",
-      enabled: (data as any)?.reminder_enabled !== false,
-      timezone: (data as any)?.reminder_timezone ?? "UTC",
+      reminder_time: row?.preferred_secure_time ?? "20:00",
+      enabled: row?.reminder_enabled !== false,
+      timezone: row?.reminder_timezone ?? "UTC",
     };
   }),
 });

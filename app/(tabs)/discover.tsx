@@ -226,27 +226,30 @@ export default function DiscoverScreen() {
   const allChallenges = useMemo((): StarterChallenge[] => {
     const serverData = featuredData;
     if (serverData && serverData.length > 0) {
-      return serverData.map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        description: c.description ?? "",
-        short_hook: c.short_hook ?? c.description ?? "",
-        theme_color: c.theme_color ?? tokenColors.accentOrange,
-        difficulty: c.difficulty ?? "medium",
-        duration_type: c.duration_type ?? "multi_day",
-        duration_days: c.duration_days ?? 30,
-        category: c.category ?? "fitness",
-        visibility: c.visibility ?? "public",
-        status: c.status ?? "published",
-        is_featured: c.is_featured ?? false,
-        is_daily: c.is_daily ?? (c.duration_type === "24h"),
-        starts_at: c.starts_at ?? null,
-        ends_at: c.ends_at ?? null,
-        participants_count: c.participants_count ?? 0,
-        active_today_count: c.active_today_count ?? 0,
-        challenge_tasks: c.challenge_tasks ?? c.tasks ?? [],
-        tasks: c.tasks ?? c.challenge_tasks ?? [],
-      }));
+      return serverData.map((c: any) => {
+        const tasks = c.tasks ?? c.challenge_tasks ?? [];
+        return {
+          id: c.id,
+          title: c.title,
+          description: c.description ?? "",
+          short_hook: c.short_hook ?? c.description ?? "",
+          theme_color: c.theme_color ?? tokenColors.accentOrange,
+          difficulty: c.difficulty ?? "medium",
+          duration_type: c.duration_type ?? "multi_day",
+          duration_days: c.duration_days ?? 30,
+          category: c.category ?? "fitness",
+          visibility: c.visibility ?? "public",
+          status: c.status ?? "published",
+          is_featured: c.is_featured ?? false,
+          is_daily: c.is_daily ?? (c.duration_type === "24h"),
+          starts_at: c.starts_at ?? null,
+          ends_at: c.ends_at ?? null,
+          participants_count: c.participants_count ?? 0,
+          active_today_count: c.active_today_count ?? 0,
+          challenge_tasks: tasks,
+          tasks,
+        };
+      });
     }
     return [];
   }, [featuredData]);
@@ -376,7 +379,7 @@ export default function DiscoverScreen() {
                   description={c.short_hook || c.description}
                   stripeColor={c.theme_color || tokenColors.orangeStripe}
                   durationLabel={c.duration_type === "24h" ? "24H" : `${c.duration_days ?? 1} day${(c.duration_days ?? 1) === 1 ? "" : "s"}`}
-                  taskCount={(c.tasks || c.challenge_tasks || []).length}
+                  taskCount={c.tasks.length}
                   participantsCount={c.participants_count ?? 0}
                   statusDotColor={c.theme_color}
                   onPress={() => handleChallengePress(c.id)}
@@ -406,7 +409,7 @@ export default function DiscoverScreen() {
                   endsAt={c.ends_at}
                   difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
                   stripeColor={c.theme_color || tokenColors.orangeStripe}
-                  tasksPreview={(c.tasks || []).slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
+                  tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
                   participantsCount={c.participants_count ?? 0}
                   onPress={() => handleChallengePress(c.id)}
                 />
@@ -429,9 +432,9 @@ export default function DiscoverScreen() {
                   description={c.short_hook ?? c.description}
                   difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
                   stripeColor={c.theme_color || tokenColors.orangeStripe}
-                  tasksPreview={(c.tasks || c.challenge_tasks || []).slice(0, 3).map((t) => ({ icon: t.type, label: t.title }))}
+                  tasksPreview={c.tasks.slice(0, 3).map((t) => ({ icon: t.type, label: t.title }))}
                   durationLabel={getDurationLabel(c)}
-                  taskCount={(c.tasks || c.challenge_tasks || []).length}
+                  taskCount={c.tasks.length}
                   participantsCount={c.participants_count ?? 0}
                   activeTodayCount={c.active_today_count ?? 0}
                   onPress={() => handleChallengePress(c.id)}
@@ -455,7 +458,7 @@ export default function DiscoverScreen() {
                   description={c.short_hook || c.description}
                   stripeColor={c.theme_color || tokenColors.orangeStripe}
                   durationLabel={getDurationLabel(c)}
-                  taskCount={(c.tasks || c.challenge_tasks || []).length}
+                  taskCount={c.tasks.length}
                   participantsCount={c.participants_count ?? 0}
                   statusDotColor={c.theme_color}
                   onPress={() => handleChallengePress(c.id)}

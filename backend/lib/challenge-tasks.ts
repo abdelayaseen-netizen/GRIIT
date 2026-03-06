@@ -1,0 +1,167 @@
+/**
+ * Real schema: public.challenge_tasks has (id, created_at, challenge_id, title, task_type, order_index, config).
+ * This module maps between DB shape and the API shape the frontend expects (type, required, duration_minutes, etc.).
+ */
+
+/** Config JSONB shape stored in challenge_tasks.config */
+export interface ChallengeTaskConfig {
+  required?: boolean;
+  duration_minutes?: number;
+  min_words?: number;
+  photo_required?: boolean;
+  require_photo_proof?: boolean;
+  strict_timer_mode?: boolean;
+  [key: string]: unknown;
+}
+
+/** Raw row from DB (task_type + config, no flat columns) */
+export interface ChallengeTaskRowRaw {
+  id: string;
+  challenge_id?: string;
+  title?: string | null;
+  task_type: string;
+  order_index?: number | null;
+  config?: ChallengeTaskConfig | null;
+  created_at?: string | null;
+}
+
+/** API shape returned to frontend (flat fields) */
+export interface ChallengeTaskApiShape {
+  id: string;
+  title?: string | null;
+  type: string;
+  required: boolean;
+  duration_minutes?: number | null;
+  min_words?: number | null;
+  photo_required?: boolean;
+  require_photo_proof?: boolean;
+  strict_timer_mode?: boolean;
+  order_index?: number | null;
+  [key: string]: unknown;
+}
+
+/** Map a raw challenge_tasks row to the API shape expected by the frontend. */
+export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): ChallengeTaskApiShape | null {
+  if (!row) return null;
+  const config = row.config ?? {};
+  const type = row.task_type ?? "manual";
+  return {
+    id: row.id,
+    title: row.title ?? null,
+    type,
+    required: config.required ?? true,
+    duration_minutes: config.duration_minutes ?? null,
+    min_words: config.min_words ?? null,
+    photo_required: config.photo_required ?? false,
+    require_photo_proof: config.require_photo_proof ?? false,
+    strict_timer_mode: config.strict_timer_mode ?? false,
+    order_index: row.order_index ?? null,
+    ...row,
+  };
+}
+
+/** Map an array of raw task rows to API shape. */
+export function mapTaskRowsToApi(rows: ChallengeTaskRowRaw[] | null | undefined): ChallengeTaskApiShape[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((r) => mapTaskRowToApi(r)!).filter(Boolean);
+}
+
+/** Whether the task is required (for filtering). Reads from config. */
+export function isTaskRequired(row: ChallengeTaskRowRaw | null | undefined): boolean {
+  if (!row) return false;
+  const config = row.config ?? {};
+  return config.required ?? true;
+}
+
+/** Get task type for verification (timer, journal, etc.). */
+export function getTaskType(row: ChallengeTaskRowRaw | null | undefined): string {
+  if (!row) return "manual";
+  return row.task_type ?? "manual";
+}
+
+/** Get verification settings from a raw task row. */
+export function getTaskVerification(row: ChallengeTaskRowRaw | null | undefined): {
+  needsProof: boolean;
+  minWords: number;
+  durationMinutes: number;
+} {
+  const config = row?.config ?? {};
+  const taskType = getTaskType(row);
+  const needsProof = config.photo_required === true || config.require_photo_proof === true;
+  const minWords = typeof config.min_words === "number" ? config.min_words : 0;
+  const durationMinutes = typeof config.duration_minutes === "number" ? config.duration_minutes : 0;
+  return { needsProof, minWords, durationMinutes };
+}
+
+/** Map UI task type to DB task_type (e.g. simple/photo -> manual). */
+export function toTaskType(type: string): string {
+  return type === "simple" || type === "photo" ? "manual" : type;
+}
+
+/** Build config object for a task from create-flow input. */
+export function buildTaskConfigFromInput(task: {
+  type: string;
+  required?: boolean;
+  minWords?: number | null;
+  durationMinutes?: number | null;
+  photoRequired?: boolean;
+  requirePhotoProof?: boolean;
+  strictTimerMode?: boolean;
+  [key: string]: unknown;
+}): ChallengeTaskConfig {
+  const type = task.type ?? "manual";
+  const config: ChallengeTaskConfig = {
+    required: task.required ?? true,
+  };
+  if (type === "journal" && (task.minWords != null || task.minWords === 0)) {
+    config.min_words = task.minWords ?? 20;
+  }
+  if ((type === "timer" || type === "run") && task.durationMinutes != null) {
+    config.duration_minutes = task.durationMinutes;
+  }
+  if (task.photoRequired === true || task.requirePhotoProof === true || type === "photo") {
+    config.photo_required = true;
+    config.require_photo_proof = true;
+  } else if (task.requirePhotoProof === true) {
+    config.require_photo_proof = true;
+  }
+  if (type === "timer" && task.strictTimerMode === true) {
+    config.strict_timer_mode = true;
+  }
+  return config;
+}
+
+/** Build insert payload for one challenge_task (real schema: challenge_id, title, task_type, order_index, config). */
+export function buildTaskInsertPayload(
+  task: {
+    title: string;
+    type: string;
+    required?: boolean;
+    minWords?: number | null;
+    durationMinutes?: number | null;
+    photoRequired?: boolean;
+    requirePhotoProof?: boolean;
+    strictTimerMode?: boolean;
+    [key: string]: unknown;
+  },
+  challengeId: string,
+  orderIndex: number
+): { challenge_id: string; title: string; task_type: string; order_index: number; config: ChallengeTaskConfig } {
+  const task_type = toTaskType(task.type ?? "manual");
+  const config = buildTaskConfigFromInput({
+    type: task.type,
+    required: task.required,
+    minWords: task.minWords,
+    durationMinutes: task.durationMinutes,
+    photoRequired: task.photoRequired,
+    requirePhotoProof: task.requirePhotoProof,
+    strictTimerMode: task.strictTimerMode,
+  });
+  return {
+    challenge_id: challengeId,
+    title: task.title,
+    task_type,
+    order_index: orderIndex,
+    config,
+  };
+}

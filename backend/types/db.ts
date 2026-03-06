@@ -15,6 +15,7 @@ export interface DaySecureRow {
   user_id?: string;
 }
 
+/** Minimal task row; API responses use mapped shape from backend/lib/challenge-tasks (ChallengeTaskApiShape). */
 export interface ChallengeTaskRow {
   id: string;
   required: boolean;

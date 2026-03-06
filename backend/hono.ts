@@ -21,7 +21,7 @@ app.use(
   })
 );
 
-app.get("/", (c) => c.json({ status: "ok", message: "GRIT API is running" }));
+app.get("/", (c) => c.json({ status: "ok", message: "GRIIT API is running" }));
 
 const healthPayload = () => {
   const commitSha =

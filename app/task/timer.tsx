@@ -7,6 +7,12 @@ import { Play, Pause, Check } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import Colors from "@/constants/colors";
+import type { ChallengeTaskFromApi } from "@/types";
+
+/** Active challenge as returned by getActive (nested challenges.challenge_tasks in API shape). */
+interface ActiveChallengeWithTasks {
+  challenges?: { challenge_tasks?: ChallengeTaskFromApi[] } | null;
+}
 
 export default function TimerTaskScreen() {
   const router = useRouter();
@@ -20,8 +26,9 @@ export default function TimerTaskScreen() {
   const resetInProgressRef = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const tasks = (activeChallenge as any)?.challenges?.challenge_tasks ?? [];
-  const task = taskId ? tasks.find((t: any) => t.id === taskId) : null;
+  const ac = activeChallenge as ActiveChallengeWithTasks | null | undefined;
+  const tasks: ChallengeTaskFromApi[] = ac?.challenges?.challenge_tasks ?? [];
+  const task = taskId ? tasks.find((t) => t.id === taskId) ?? null : null;
   const strictTimerMode = task?.strict_timer_mode === true;
 
   const resetTimer = useCallback(() => {
@@ -58,6 +65,16 @@ export default function TimerTaskScreen() {
     return () => sub.remove();
   }, [strictTimerMode, isRunning, resetTimer]);
 
+  const startTimer = useCallback(() => {
+    const id = setInterval(() => {
+      setSeconds(prev => prev + 1);
+    }, 1000);
+    intervalRef.current = id;
+    setIntervalId(id);
+    setIsRunning(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
+
   const handleStartPause = () => {
     setStrictResetMessage(null);
     if (isRunning) {
@@ -67,13 +84,19 @@ export default function TimerTaskScreen() {
       setIsRunning(false);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } else {
-      const id = setInterval(() => {
-        setSeconds(prev => prev + 1);
-      }, 1000);
-      intervalRef.current = id;
-      setIntervalId(id);
-      setIsRunning(true);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      if (strictTimerMode) {
+        Alert.alert(
+          "Focus lock on",
+          "You must stay on this screen while the timer runs. Leaving the app or navigating away will reset the timer.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "I understand, start", onPress: startTimer },
+          ],
+          { cancelable: true }
+        );
+      } else {
+        startTimer();
+      }
     }
   };
 
@@ -147,6 +170,11 @@ export default function TimerTaskScreen() {
           )}
         </TouchableOpacity>
 
+        {strictTimerMode && strictResetMessage ? (
+          <View style={styles.strictBanner}>
+            <Text style={styles.strictBannerText}>{strictResetMessage}</Text>
+          </View>
+        ) : null}
         {seconds >= 60 && (
           <TouchableOpacity
             style={[styles.submitButton, loading && styles.submitButtonDisabled]}

@@ -7,7 +7,12 @@ import { computeNewStreakCount } from "../../lib/streak";
 import { getTierForDays } from "../../lib/progression";
 import { shouldEarnLastStand, newAvailableAfterEarn } from "../../lib/last-stand";
 import { getTodayDateKey } from "../../lib/date-utils";
-import type { StreakRow, DaySecureRow, ActiveChallengeWithTasks, ChallengeTaskRow } from "../../types/db";
+import type { StreakRow, DaySecureRow, ActiveChallengeWithTasks, PgError } from "../../types/db";
+import {
+  type ChallengeTaskRowRaw,
+  getTaskVerification,
+  isTaskRequired,
+} from "../../lib/challenge-tasks";
 
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
@@ -24,16 +29,42 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: taskRow } = await ctx.supabase
         .from('challenge_tasks')
-        .select('id, photo_required, require_photo_proof')
+        .select('id, task_type, config')
         .eq('id', input.taskId)
         .single();
 
-      const needsProof = taskRow && (taskRow.photo_required === true || (taskRow as any).require_photo_proof === true);
+      const taskRaw = taskRow as ChallengeTaskRowRaw | null;
+      const { needsProof, minWords, durationMinutes } = getTaskVerification(taskRaw);
+      const taskType = taskRaw?.task_type ?? 'manual';
+
       if (needsProof && !(input.proofUrl && input.proofUrl.trim())) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'This task requires photo proof. Please take or upload a photo before completing.',
         });
+      }
+
+      const isJournal = taskType === 'journal' || taskType === 'manual';
+      if (isJournal && minWords > 0) {
+        const text = (input.noteText ?? '').trim();
+        const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
+        if (wordCount < minWords) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `This task requires at least ${minWords} words. You wrote ${wordCount}.`,
+          });
+        }
+      }
+
+      const isTimer = taskType === 'timer';
+      if (isTimer && durationMinutes > 0) {
+        const completedMinutes = input.value ?? 0;
+        if (completedMinutes < durationMinutes) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `This task requires at least ${durationMinutes} minutes. You logged ${completedMinutes}.`,
+          });
+        }
       }
 
       const { data, error } = await ctx.supabase
@@ -55,7 +86,7 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: allTasks } = await ctx.supabase
         .from('challenge_tasks')
-        .select('id, required')
+        .select('id, task_type, config')
         .eq('challenge_id', challenge_id);
 
       const { data: completedCheckins } = await ctx.supabase
@@ -65,7 +96,7 @@ export const checkinsRouter = createTRPCRouter({
         .eq('date_key', dateKey)
         .eq('status', 'completed');
 
-      const requiredTasks = allTasks?.filter(t => t.required) || [];
+      const requiredTasks = (allTasks ?? []).filter((t) => isTaskRequired(t as ChallengeTaskRowRaw));
       const completedRequired = completedCheckins?.filter(c => 
         requiredTasks.some(rt => rt.id === c.task_id)
       ) || [];
@@ -151,15 +182,15 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: activeChallenge, error: acError } = await ctx.supabase
         .from("active_challenges")
-        .select("*, challenges (challenge_tasks (id, required))")
+        .select("*, challenges (challenge_tasks (id, task_type, config))")
         .eq("id", input.activeChallengeId)
         .single();
 
       requireNoError(acError, "Active challenge not found.");
 
       const ac = activeChallenge as ActiveChallengeWithTasks | null;
-      const challengeTasks = ac?.challenges?.challenge_tasks;
-      if (!Array.isArray(challengeTasks)) {
+      const challengeTasksRaw = ac?.challenges?.challenge_tasks as ChallengeTaskRowRaw[] | null | undefined;
+      if (!Array.isArray(challengeTasksRaw)) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Challenge tasks not found." });
       }
 
@@ -170,8 +201,8 @@ export const checkinsRouter = createTRPCRouter({
         .eq('date_key', dateKey)
         .eq('status', 'completed');
 
-      const requiredTasks = (challengeTasks ?? []).filter((t: ChallengeTaskRow) => t.required);
-      const allRequiredCompleted = requiredTasks.every((rt: ChallengeTaskRow) =>
+      const requiredTasks = challengeTasksRaw.filter((t) => isTaskRequired(t));
+      const allRequiredCompleted = requiredTasks.every((rt: { id: string }) =>
         completedCheckins?.some((c: { task_id: string }) => c.task_id === rt.id)
       );
 
@@ -232,7 +263,7 @@ export const checkinsRouter = createTRPCRouter({
       const { error: daySecErr } = await ctx.supabase
         .from('day_secures')
         .insert({ user_id: ctx.userId, date_key: dateKey });
-      if (daySecErr && (daySecErr as any).code !== "23505") {
+      if (daySecErr && (daySecErr as PgError).code !== "23505") {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to record day secure." });
       }
 

@@ -7,6 +7,14 @@ import { getTodayDateKey } from "../../lib/date-utils";
 
 const STARTER_IDS = STARTER_DEFINITIONS.map((s) => s.starter_id);
 
+/** Challenge row from DB when selecting for starter join (has duration fields). */
+interface ChallengeRowForStarter {
+  id: string;
+  duration_type?: string | null;
+  duration_days?: number | null;
+  challenge_tasks?: { id: string }[] | null;
+}
+
 export const startersRouter = createTRPCRouter({
   /**
    * Resolve starterId to a challenge id. Challenges must be seeded with source_starter_id.
@@ -32,7 +40,7 @@ export const startersRouter = createTRPCRouter({
   join: protectedProcedure
     .input(z.object({ starterId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      if (!STARTER_IDS.includes(input.starterId as any)) {
+      if (!STARTER_IDS.includes(input.starterId as (typeof STARTER_IDS)[number])) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid starter challenge." });
       }
 
@@ -46,7 +54,8 @@ export const startersRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Starter challenge not found." });
       }
 
-      const challengeId = challenge.id;
+      const row = challenge as unknown as ChallengeRowForStarter;
+      const challengeId = row.id;
       const { data: existingJoin } = await ctx.supabase
         .from("active_challenges")
         .select("id")
@@ -59,17 +68,17 @@ export const startersRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this starter challenge." });
       }
 
-      const tasks = challenge.challenge_tasks ?? [];
+      const tasks = row.challenge_tasks ?? [];
       if (tasks.length === 0) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Starter challenge has no tasks." });
       }
 
       const startAt = new Date().toISOString();
       const endAt = new Date();
-      if ((challenge as any).duration_type === "24h") {
+      if (row.duration_type === "24h") {
         endAt.setHours(endAt.getHours() + 24);
       } else {
-        endAt.setDate(endAt.getDate() + ((challenge as any).duration_days ?? 1));
+        endAt.setDate(endAt.getDate() + (row.duration_days ?? 1));
       }
 
       const { data: activeChallenge, error: acError } = await ctx.supabase
@@ -89,7 +98,7 @@ export const startersRouter = createTRPCRouter({
       requireNoError(acError, "Failed to create active challenge.");
 
       const dateKey = getTodayDateKey();
-      const checkIns = tasks.map((t: any) => ({
+      const checkIns = tasks.map((t) => ({
         user_id: ctx.userId,
         active_challenge_id: activeChallenge.id,
         task_id: t.id,

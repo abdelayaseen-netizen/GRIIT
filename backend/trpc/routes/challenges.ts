@@ -3,6 +3,11 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
 import { requireNoError } from "../errors";
 import type { ChallengeWithTasksRow } from "../../types/db";
+import {
+  type ChallengeTaskRowRaw,
+  mapTaskRowsToApi,
+  buildTaskInsertPayload,
+} from "../../lib/challenge-tasks";
 
 const isProd = process.env.NODE_ENV === "production";
 function logCreateChallenge(msg: string, data?: Record<string, unknown>) {
@@ -65,7 +70,7 @@ export const challengesRouter = createTRPCRouter({
       requireNoError(error, "Failed to load challenges.");
       const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
         ...challenge,
-        tasks: challenge.challenge_tasks ?? [],
+        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
       }));
       const nextOffset = safeOffset + items.length;
       const hasMore = count != null && nextOffset < count;
@@ -105,7 +110,7 @@ export const challengesRouter = createTRPCRouter({
       requireNoError(error, "Failed to load featured challenges.");
       const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
         ...challenge,
-        tasks: challenge.challenge_tasks ?? [],
+        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
       }));
       const nextOffset = safeOffset + items.length;
       const hasMore = count != null && nextOffset < count;
@@ -131,25 +136,22 @@ export const challengesRouter = createTRPCRouter({
           id,
           title,
           description,
-          short_hook,
-          theme_color,
-          duration_type,
           duration_days,
           difficulty,
           category,
           visibility,
           status,
           source_starter_id,
-          challenge_tasks (id, title, type, required, duration_minutes, min_words)
+          challenge_tasks (id, title, task_type, order_index, config)
         `)
         .not('source_starter_id', 'is', null)
         .eq('visibility', 'public')
         .eq('status', 'published');
 
       requireNoError(error, "Failed to load starter pack.");
-      const list = (rows ?? []).map((c: any) => ({
+      const list = (rows ?? []).map((c: { challenge_tasks?: ChallengeTaskRowRaw[] } & Record<string, unknown>) => ({
         ...c,
-        tasks: c.challenge_tasks || [],
+        tasks: mapTaskRowsToApi(c.challenge_tasks ?? []),
       }));
       list.sort((a: any, b: any) => {
         const ai = ORDER.indexOf(a.source_starter_id);
@@ -178,7 +180,7 @@ export const challengesRouter = createTRPCRouter({
 
       return {
         ...data,
-        tasks: data.challenge_tasks || [],
+        tasks: mapTaskRowsToApi((data.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
       };
     }),
 
@@ -258,6 +260,10 @@ export const challengesRouter = createTRPCRouter({
 
       if (error && error.code !== 'PGRST116') {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenge." });
+      }
+      if (data?.challenges?.challenge_tasks) {
+        const d = data as { challenges: { challenge_tasks: ChallengeTaskRowRaw[] } };
+        d.challenges.challenge_tasks = mapTaskRowsToApi(d.challenges.challenge_tasks) as unknown as ChallengeTaskRowRaw[];
       }
       return data;
     }),
@@ -389,49 +395,25 @@ export const challengesRouter = createTRPCRouter({
         });
       }
 
-      const tasksToInsert = input.tasks.map((task) => ({
-        challenge_id: challenge.id,
-        title: task.title,
-        type: dbTaskType(task.type as string),
-        required: task.required,
-        min_words: task.type === "journal" ? journalMinWords(task.minWords) : task.minWords,
-        target_value: task.targetValue,
-        unit: task.unit,
-        tracking_mode: task.trackingMode,
-        photo_required: task.type === "photo" ? true : (task.photoRequired ?? task.requirePhotoProof ?? false),
-        location_name: task.locationName,
-        radius_meters: task.radiusMeters,
-        duration_minutes: task.durationMinutes,
-        must_complete_in_session: task.mustCompleteInSession,
-        ...taskStrictAndPhoto(task),
-        locations: task.locations,
-        start_time: task.startTime,
-        start_window_minutes: task.startWindowMinutes,
-        min_session_minutes: task.minSessionMinutes,
-        journal_type: task.journalType,
-        journal_prompt: task.journalPrompt,
-        allow_free_write: task.allowFreeWrite,
-        capture_mood: task.captureMood,
-        capture_energy: task.captureEnergy,
-        capture_body_state: task.captureBodyState,
-        word_limit_enabled: task.wordLimitEnabled,
-        word_limit_mode: task.wordLimitMode,
-        word_limit_words: task.wordLimitEnabled ? task.wordLimitWords : null,
-        time_enforcement_enabled: task.timeEnforcementEnabled,
-        schedule_type: task.timeEnforcementEnabled ? (task.scheduleType || 'DAILY') : null,
-        anchor_time_local: task.timeEnforcementEnabled ? task.anchorTimeLocal : null,
-        task_duration_minutes: task.timeEnforcementEnabled ? task.taskDurationMinutes : null,
-        window_start_offset_min: task.timeEnforcementEnabled ? task.windowStartOffsetMin : null,
-        window_end_offset_min: task.timeEnforcementEnabled ? task.windowEndOffsetMin : null,
-        hard_window_enabled: task.timeEnforcementEnabled ? task.hardWindowEnabled : null,
-        hard_window_start_offset_min: task.timeEnforcementEnabled && task.hardWindowEnabled ? task.hardWindowStartOffsetMin : null,
-        hard_window_end_offset_min: task.timeEnforcementEnabled && task.hardWindowEnabled ? task.hardWindowEndOffsetMin : null,
-        timezone_mode: task.timeEnforcementEnabled ? (task.timezoneMode || 'USER_LOCAL') : null,
-        challenge_timezone: task.timeEnforcementEnabled && task.timezoneMode === 'CHALLENGE_TIMEZONE' ? task.challengeTimezone : null,
-      }));
+      const tasksToInsert = input.tasks.map((task, i) =>
+        buildTaskInsertPayload(
+          {
+            title: task.title,
+            type: task.type as string,
+            required: task.required,
+            minWords: task.minWords,
+            durationMinutes: task.durationMinutes,
+            photoRequired: task.photoRequired,
+            requirePhotoProof: task.requirePhotoProof,
+            strictTimerMode: task.strictTimerMode,
+          },
+          challenge.id,
+          i
+        )
+      );
 
-      const { data: tasks, error: tasksError } = await ctx.supabase
-        .from('challenge_tasks')
+      const { data: tasksRaw, error: tasksError } = await ctx.supabase
+        .from("challenge_tasks")
         .insert(tasksToInsert)
         .select();
 
@@ -446,7 +428,7 @@ export const challengesRouter = createTRPCRouter({
       logCreateChallenge("success", { challengeId: challenge.id, title: challenge.title });
       return {
         ...challenge,
-        tasks: tasks || [],
+        tasks: mapTaskRowsToApi((tasksRaw ?? []) as ChallengeTaskRowRaw[]),
       };
     }),
 });

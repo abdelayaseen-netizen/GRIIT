@@ -1,5 +1,19 @@
 export type TaskType = "run" | "journal" | "timer" | "photo" | "checklist" | "custom" | "checkin";
 
+/** Task shape returned by API (challenge_tasks mapped from DB). Use for typing challenge detail, timer, index. */
+export interface ChallengeTaskFromApi {
+  id: string;
+  title?: string | null;
+  type: string;
+  required: boolean;
+  duration_minutes?: number | null;
+  min_words?: number | null;
+  require_photo_proof?: boolean;
+  strict_timer_mode?: boolean;
+  order_index?: number | null;
+  [key: string]: unknown;
+}
+
 export type JournalCategory = "self_reflection" | "emotions" | "mental_clarity" | "physical_state" | "gratitude" | "wins_losses" | "discipline_check" | "free_write";
 
 export type MoodLevel = "very_bad" | "bad" | "neutral" | "good" | "very_good";

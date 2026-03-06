@@ -384,7 +384,7 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View>
-            <Text style={styles.logo}>GRIT</Text>
+            <Text style={styles.logo}>GRIIT</Text>
             <Text style={styles.logoSubtitle}>Build Discipline Daily</Text>
           </View>
           <View style={styles.headerBadges}>
@@ -630,12 +630,12 @@ export default function HomeScreen() {
                 onPress={() => {
                   track({ name: "invite_shared", source: "milestone_modal" });
                   const joinUrl = Linking.createURL("/(tabs)/discover");
-                  const message = `I just hit a ${showMilestone}-day streak on GRIT. Join me: ${joinUrl}`;
+                  const message = `I just hit a ${showMilestone}-day streak on GRIIT. Join me: ${joinUrl}`;
                   if (Platform.OS === "web") {
                     try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
                     Alert.alert("Copied", "Invite message copied.");
                   } else {
-                    Share.share({ title: "My streak on GRIT", message }).catch(() => {});
+                    Share.share({ title: "My streak on GRIIT", message }).catch(() => {});
                   }
                   setShowMilestone(null);
                 }}
