@@ -2,6 +2,7 @@ import { createContext, useContext, ReactNode, useMemo, useRef, useState, useEff
 import { Platform } from 'react-native';
 import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
+import { TRPC } from '@/lib/trpc-paths';
 import { supabase } from '@/lib/supabase';
 import {
   requestNotificationPermissions,
@@ -87,7 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     setProfileLoading(true);
     try {
-      const data = await trpcQuery('profiles.get');
+      const data = await trpcQuery(TRPC.profiles.get);
       setProfile(data);
       setProfileError(false);
     } catch {
@@ -101,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchStats = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await trpcQuery('profiles.getStats');
+      const data = await trpcQuery(TRPC.profiles.getStats);
       setStats(data);
     } catch {
       // Stats fetch failed — non-blocking
@@ -111,7 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchActiveChallenge = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await trpcQuery('challenges.getActive');
+      const data = await trpcQuery(TRPC.challenges.getActive);
       setActiveChallenge(data);
       setActiveChallengeError(false);
     } catch {
@@ -124,7 +125,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchStories = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await trpcQuery('stories.list');
+      const data = await trpcQuery(TRPC.stories.list);
       setStories(data || []);
     } catch {
       // Stories fetch failed — non-blocking
@@ -133,7 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const fetchTodayCheckins = useCallback(async (activeChallengeId: string) => {
     try {
-      const data = await trpcQuery('checkins.getTodayCheckins', { activeChallengeId });
+      const data = await trpcQuery(TRPC.checkins.getTodayCheckins, { activeChallengeId });
       setTodayCheckins(data || []);
     } catch {
       // Today checkins failed — non-blocking
@@ -238,7 +239,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProfileAutoCreating(true);
       const fallbackUsername = `user_${user.id.slice(0, 8)}`;
       const fallbackName = user.email?.split('@')[0] || fallbackUsername;
-      trpcMutate('profiles.create', {
+      trpcMutate(TRPC.profiles.create, {
         username: fallbackUsername,
         display_name: fallbackName,
       }).then(() => {
@@ -317,7 +318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     noteText?: string;
     proofUrl?: string;
   }) => {
-    trpcMutate('checkins.complete', params).then(() => {
+    trpcMutate(TRPC.checkins.complete, params).then(() => {
       if (activeChallenge?.id) fetchTodayCheckins(activeChallenge.id);
       fetchActiveChallenge();
     }).catch(() => {
@@ -328,7 +329,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const secureDay = useCallback(async (): Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined> => {
     if (!activeChallenge?.id || !canSecureDay) return undefined;
     try {
-      const result = await trpcMutate('checkins.secureDay', { activeChallengeId: activeChallenge.id }) as { success: boolean; newStreakCount: number; lastStandEarned?: boolean };
+      const result = await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id }) as { success: boolean; newStreakCount: number; lastStandEarned?: boolean };
       fetchActiveChallenge();
       fetchStats();
       if (Platform.OS !== 'web') {

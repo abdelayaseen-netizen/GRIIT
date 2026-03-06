@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
+
 import { appRouter } from "../app-router";
 
 const USER_A = "11111111-1111-1111-1111-111111111111";
@@ -112,10 +115,6 @@ function createMockSupabase(overrides: {
 }
 
 describe("accountability.invite", () => {
-  beforeEach(() => {
-    vi.spyOn(require("../../lib/push"), "sendExpoPush").mockImplementation(async () => {});
-  });
-
   it("rejects self-invite with BAD_REQUEST", async () => {
     const supabase = createMockSupabase();
     const caller = (appRouter as any).createCaller?.({

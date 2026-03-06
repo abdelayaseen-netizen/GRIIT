@@ -56,8 +56,10 @@ GRIT is now a **fully functional beta app** with real backend integration, authe
 This will:
 - Create all required tables
 - Set up RLS policies
-- Seed 4 demo challenges (75 Day Hard, 30 Day Mindful, Morning Warrior, Daily Gratitude)
+- Seed demo challenges
 - Create indexes for performance
+
+**Then run the additional migrations in order** so the backend has all expected tables and columns (leaderboard, streaks, push, nudges, accountability, stories FK, etc.). See **[docs/MIGRATIONS.md](docs/MIGRATIONS.md)** for the full list and run order. In short: after `seed.sql`, run each file listed there (e.g. `backend/migration-core-fixes.sql`, then `migration-activation-retention.sql`, and so on) in the Supabase SQL Editor.
 
 ### 3. Create Storage Buckets
 

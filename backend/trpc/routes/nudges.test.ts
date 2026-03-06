@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
+
 import { appRouter } from "../app-router";
 import { NUDGE_MESSAGES, pickRandomMessage } from "./nudges";
 
@@ -56,10 +59,6 @@ function createMockSupabase(overrides: {
 }
 
 describe("nudges.send (via createCaller)", () => {
-  beforeEach(() => {
-    vi.spyOn(require("../../lib/push"), "sendExpoPush").mockImplementation(async () => {});
-  });
-
   it("rejects self-nudging with BAD_REQUEST", async () => {
     const supabase = createMockSupabase();
     const caller = (appRouter as any).createCaller?.({

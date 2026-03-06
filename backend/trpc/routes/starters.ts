@@ -1,6 +1,9 @@
 import * as z from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { requireNoError } from "../errors";
 import { STARTER_DEFINITIONS } from "../../lib/starter-seed";
+import { getTodayDateKey } from "../../lib/date-utils";
 
 const STARTER_IDS = STARTER_DEFINITIONS.map((s) => s.starter_id);
 
@@ -17,7 +20,7 @@ export const startersRouter = createTRPCRouter({
         .select("id")
         .eq("source_starter_id", input.starterId)
         .maybeSingle();
-      if (error) throw new Error(error.message);
+      requireNoError(error, "Failed to resolve starter.");
       return data?.id ?? null;
     }),
 
@@ -30,8 +33,9 @@ export const startersRouter = createTRPCRouter({
     .input(z.object({ starterId: z.string() }))
     .mutation(async ({ input, ctx }) => {
       if (!STARTER_IDS.includes(input.starterId as any)) {
-        throw new Error("Invalid starter challenge");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid starter challenge." });
       }
+
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from("challenges")
         .select("*, challenge_tasks (*)")
@@ -39,15 +43,25 @@ export const startersRouter = createTRPCRouter({
         .single();
 
       if (challengeError || !challenge) {
-        throw new Error(
-          challengeError?.message ?? "Starter challenge not found. Run seed to create starter challenges."
-        );
+        throw new TRPCError({ code: "NOT_FOUND", message: "Starter challenge not found." });
       }
 
       const challengeId = challenge.id;
+      const { data: existingJoin } = await ctx.supabase
+        .from("active_challenges")
+        .select("id")
+        .eq("user_id", ctx.userId)
+        .eq("challenge_id", challengeId)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+      if (existingJoin) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this starter challenge." });
+      }
+
       const tasks = challenge.challenge_tasks ?? [];
       if (tasks.length === 0) {
-        throw new Error("Starter challenge has no tasks");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Starter challenge has no tasks." });
       }
 
       const startAt = new Date().toISOString();
@@ -72,9 +86,9 @@ export const startersRouter = createTRPCRouter({
         .select()
         .single();
 
-      if (acError) throw new Error(acError.message);
+      requireNoError(acError, "Failed to create active challenge.");
 
-      const dateKey = new Date().toISOString().split("T")[0];
+      const dateKey = getTodayDateKey();
       const checkIns = tasks.map((t: any) => ({
         user_id: ctx.userId,
         active_challenge_id: activeChallenge.id,
@@ -83,9 +97,10 @@ export const startersRouter = createTRPCRouter({
         status: "pending",
       }));
 
-      await ctx.supabase.from("check_ins").insert(checkIns);
+      const { error: checkInsErr } = await ctx.supabase.from("check_ins").insert(checkIns);
+      requireNoError(checkInsErr, "Failed to create check-ins.");
 
-      await ctx.supabase
+      const { error: streakErr } = await ctx.supabase
         .from("streaks")
         .upsert(
           {
@@ -95,6 +110,7 @@ export const startersRouter = createTRPCRouter({
           },
           { onConflict: "user_id" }
         );
+      requireNoError(streakErr, "Failed to initialize streak.");
 
       return {
         activeChallengeId: activeChallenge.id,

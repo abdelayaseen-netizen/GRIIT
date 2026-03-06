@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { TRPC_ERROR_CODE, TRPC_ERROR_TITLES, TRPC_ERROR_USER_MESSAGE } from '@/lib/trpc-errors';
 
 /**
  * Backend path constants. Must match backend/hono.ts exactly:
@@ -258,18 +259,19 @@ export function formatTRPCError(error: unknown): {
 
   const trpcError = error as any;
   const shape = trpcError?.shape?.message || trpcError?.data?.message;
-  const code = trpcError?.data?.code;
+  const code = trpcError?.data?.code as string | undefined;
 
   let message = shape || raw || 'Something went wrong. Please try again.';
   let title = 'Error';
 
-  if (code === 'UNAUTHORIZED' || code === 'FORBIDDEN') {
-    title = 'Not Authorized';
-    message = 'Please sign in again.';
-  } else if (code === 'BAD_REQUEST') {
-    title = 'Invalid Input';
-  } else if (code === 'INTERNAL_SERVER_ERROR') {
-    title = 'Server Error';
+  if (code && (code === TRPC_ERROR_CODE.UNAUTHORIZED || code === TRPC_ERROR_CODE.FORBIDDEN)) {
+    title = TRPC_ERROR_TITLES[TRPC_ERROR_CODE.UNAUTHORIZED];
+    message = TRPC_ERROR_USER_MESSAGE[TRPC_ERROR_CODE.UNAUTHORIZED] ?? message;
+  } else if (code && code in TRPC_ERROR_TITLES) {
+    title = TRPC_ERROR_TITLES[code as keyof typeof TRPC_ERROR_TITLES];
+    if (code in TRPC_ERROR_USER_MESSAGE) {
+      message = TRPC_ERROR_USER_MESSAGE[code as keyof typeof TRPC_ERROR_USER_MESSAGE] ?? message;
+    }
   }
 
   return { title, message, isNetwork: false };

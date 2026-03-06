@@ -1,31 +1,10 @@
 import * as z from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { dateKeyFromDate, parseDateKey, daysBetweenKeys } from "../../lib/date-utils";
 
 const STREAK_FREEZE_PER_MONTH = 1;
 const FREEZE_ELIGIBLE_MISSED_DAYS = 1;
-
-function parseDateKey(key: string): Date {
-  const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function dateKeyFromDate(d: Date): string {
-  return d.toISOString().split("T")[0];
-}
-
-/** Days between start (exclusive) and end (inclusive). start and end are YYYY-MM-DD. */
-function daysBetween(startKey: string, endKey: string): string[] {
-  const out: string[] = [];
-  const start = parseDateKey(startKey);
-  const end = parseDateKey(endKey);
-  const cur = new Date(start);
-  cur.setDate(cur.getDate() + 1);
-  while (cur <= end) {
-    out.push(dateKeyFromDate(cur));
-    cur.setDate(cur.getDate() + 1);
-  }
-  return out;
-}
 
 export const streaksRouter = createTRPCRouter({
   /**
@@ -41,7 +20,7 @@ export const streaksRouter = createTRPCRouter({
       const yesterdayKey = dateKeyFromDate(yesterday);
 
       if (input.dateKeyToFreeze !== yesterdayKey) {
-        throw new Error("Freeze can only be used for yesterday");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used for yesterday." });
       }
 
       const [{ data: streak }, { data: profile }] = await Promise.all([
@@ -65,15 +44,15 @@ export const streaksRouter = createTRPCRouter({
           .eq("user_id", ctx.userId);
       }
 
-      const missedDays = lastKey == null ? [] : daysBetween(lastKey, yesterdayKey);
+      const missedDays = lastKey == null ? [] : daysBetweenKeys(lastKey, yesterdayKey);
       if (missedDays.length !== FREEZE_ELIGIBLE_MISSED_DAYS || !missedDays.includes(yesterdayKey)) {
-        throw new Error("Freeze can only be used when you missed exactly one day (yesterday)");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used when you missed exactly one day (yesterday)." });
       }
       if (activeStreak <= 0) {
-        throw new Error("No active streak to protect");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No active streak to protect." });
       }
       if (usedCount >= STREAK_FREEZE_PER_MONTH) {
-        throw new Error("No streak freezes left this month");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No streak freezes left this month." });
       }
 
       const { error: insertErr } = await ctx.supabase.from("streak_freezes").insert({
@@ -81,8 +60,10 @@ export const streaksRouter = createTRPCRouter({
         date_key: input.dateKeyToFreeze,
       });
       if (insertErr) {
-        if ((insertErr as any).code === "23505") throw new Error("Freeze already used for this day");
-        throw new Error(insertErr.message);
+        if ((insertErr as any).code === "23505") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze already used for this day." });
+        }
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
       }
 
       await ctx.supabase

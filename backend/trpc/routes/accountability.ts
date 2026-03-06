@@ -1,12 +1,14 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { sendExpoPush } from "../../lib/push";
+import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow } from "../../types/db";
 
 const MAX_ACCEPTED_PARTNERS = 3;
 const INVITES_PER_DAY_LIMIT = 10;
 
-async function getAcceptedCount(supabase: any, userId: string): Promise<number> {
+async function getAcceptedCount(supabase: SupabaseClient, userId: string): Promise<number> {
   const { data } = await supabase
     .from("accountability_pairs")
     .select("id")
@@ -14,7 +16,7 @@ async function getAcceptedCount(supabase: any, userId: string): Promise<number> 
   return data?.length ?? 0;
 }
 
-async function getInvitesSentToday(supabase: any, userId: string): Promise<number> {
+async function getInvitesSentToday(supabase: SupabaseClient, userId: string): Promise<number> {
   const startOfDay = new Date();
   startOfDay.setUTCHours(0, 0, 0, 0);
   const { data } = await supabase
@@ -112,13 +114,13 @@ export const accountabilityRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        if ((error as any).code === "23505") {
+        if ((error as PgError).code === "23505") {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Invite already sent or relationship exists.",
           });
         }
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to send invite." });
       }
 
       const [{ data: inviterProfile }, pushTokensRes, profileTokenRes] = await Promise.all([
@@ -134,10 +136,10 @@ export const accountabilityRouter = createTRPCRouter({
           .eq("user_id", input.partnerId)
           .single(),
       ]);
-      const inviterName =
-        (inviterProfile as any)?.display_name || (inviterProfile as any)?.username || "Someone";
-      const tokensFromTable = pushTokensRes.error ? [] : (pushTokensRes.data ?? []).map((r: any) => r.token).filter(Boolean);
-      const profileToken = (profileTokenRes.data as any)?.expo_push_token;
+      const inviter = inviterProfile as ProfileRow | null;
+      const inviterName = inviter?.display_name ?? inviter?.username ?? "Someone";
+      const tokensFromTable = pushTokensRes.error ? [] : (pushTokensRes.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
+      const profileToken = (profileTokenRes.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
       const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))];
       await sendExpoPush(
         allTokens,
@@ -155,7 +157,7 @@ export const accountabilityRouter = createTRPCRouter({
       .or(`user_id.eq.${ctx.userId},partner_id.eq.${ctx.userId}`)
       .order("created_at", { ascending: false });
 
-    if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+    if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load partnerships." });
 
     const accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[] = [];
     const incomingPending: { id: string; user_id: string; username: string; display_name: string }[] = [];
@@ -173,7 +175,7 @@ export const accountabilityRouter = createTRPCRouter({
         .select("user_id, username, display_name")
         .in("user_id", [...otherIds]);
 
-      const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
+      const profileMap = new Map(((profiles ?? []) as ProfileRow[]).map((p) => [p.user_id, p]));
 
       for (const r of rows ?? []) {
         const otherId = r.user_id === ctx.userId ? r.partner_id : r.user_id;
@@ -251,7 +253,7 @@ export const accountabilityRouter = createTRPCRouter({
           .eq("id", input.inviteId);
 
         if (updateError) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: updateError.message });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to accept invite." });
         }
 
         const [{ data: accepterProfile }, pushRes, profileTokenRes] = await Promise.all([
@@ -267,10 +269,10 @@ export const accountabilityRouter = createTRPCRouter({
             .eq("user_id", row.user_id)
             .single(),
         ]);
-        const accepterName =
-          (accepterProfile as any)?.display_name || (accepterProfile as any)?.username || "Someone";
-        const tokens = pushRes.error ? [] : (pushRes.data ?? []).map((r: any) => r.token).filter(Boolean);
-        const pt = (profileTokenRes.data as any)?.expo_push_token;
+        const accepter = accepterProfile as ProfileRow | null;
+        const accepterName = accepter?.display_name ?? accepter?.username ?? "Someone";
+        const tokens = pushRes.error ? [] : (pushRes.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
+        const pt = (profileTokenRes.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
         const allT = [...new Set([...tokens, pt].filter(Boolean))];
         await sendExpoPush(
           allT,
@@ -287,7 +289,7 @@ export const accountabilityRouter = createTRPCRouter({
         .eq("id", input.inviteId);
 
       if (declineError) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: declineError.message });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to decline invite." });
       }
       return { success: true, status: "declined" as const };
     }),
@@ -302,7 +304,7 @@ export const accountabilityRouter = createTRPCRouter({
           `and(user_id.eq.${ctx.userId},partner_id.eq.${input.partnerId}),and(user_id.eq.${input.partnerId},partner_id.eq.${ctx.userId})`
         );
 
-      if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to remove partnership." });
       if (!rows?.length) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Partnership not found." });
       }

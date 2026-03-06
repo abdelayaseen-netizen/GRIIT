@@ -1,6 +1,8 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+import { requireNoError } from "../errors";
+import type { ChallengeWithTasksRow } from "../../types/db";
 
 const isProd = process.env.NODE_ENV === "production";
 function logCreateChallenge(msg: string, data?: Record<string, unknown>) {
@@ -36,74 +38,80 @@ export function taskStrictAndPhoto(task: CreateTaskInput): { strict_timer_mode: 
 }
 
 export const challengesRouter = createTRPCRouter({
-  /** List public challenges with a safe limit for performance. */
+  /** List public challenges with pagination. Backward compatible: no cursor => first page. */
   list: publicProcedure
     .input(z.object({
-      search: z.string().optional(),
-      category: z.string().optional(),
+      search: z.string().max(100).optional(),
+      category: z.string().max(50).optional(),
+      limit: z.number().min(1).max(50).optional(),
+      cursor: z.string().optional(),
     }))
     .query(async ({ input, ctx }) => {
-      const LIMIT = 50;
+      const limit = input.limit ?? 50;
+      const offset = input.cursor ? parseInt(input.cursor, 10) : 0;
+      const safeOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
+
       let query = ctx.supabase
-        .from('challenges')
-        .select(`
-          *,
-          challenge_tasks (*)
-        `)
-        .eq('visibility', 'public')
-        .order('created_at', { ascending: false })
-        .limit(LIMIT);
+        .from("challenges")
+        .select("*, challenge_tasks (*)", { count: "exact" })
+        .eq("visibility", "public")
+        .order("created_at", { ascending: false })
+        .range(safeOffset, safeOffset + limit - 1);
 
-      if (input.search) {
-        query = query.ilike('title', `%${input.search}%`);
-      }
+      const search = input.search?.trim();
+      if (search) query = query.ilike("title", `%${search}%`);
 
-      const { data, error } = await query;
-      if (error) throw new Error(error.message);
-      
-      return data.map((challenge: any) => ({
+      const { data, error, count } = await query;
+      requireNoError(error, "Failed to load challenges.");
+      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
         ...challenge,
-        tasks: challenge.challenge_tasks || [],
+        tasks: challenge.challenge_tasks ?? [],
       }));
+      const nextOffset = safeOffset + items.length;
+      const hasMore = count != null && nextOffset < count;
+      const withCursor = { items, nextCursor: hasMore ? String(nextOffset) : undefined };
+      const noPagination = input.cursor == null && input.limit == null;
+      return noPagination ? items : withCursor;
     }),
 
-  /** Featured challenges for Discover tab. Limited for performance. */
+  /** Featured challenges for Discover tab with pagination. Backward compatible. */
   getFeatured: publicProcedure
     .input(z.object({
-      search: z.string().optional(),
-      category: z.string().optional(),
+      search: z.string().max(100).optional(),
+      category: z.string().max(50).optional(),
+      limit: z.number().min(1).max(50).optional(),
+      cursor: z.string().optional(),
     }).optional())
     .query(async ({ input, ctx }) => {
-      const LIMIT = 50;
+      const limit = input?.limit ?? 50;
+      const offset = input?.cursor ? parseInt(input.cursor, 10) : 0;
+      const safeOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
+
       let query = ctx.supabase
-        .from('challenges')
-        .select(`
-          *,
-          challenge_tasks (*)
-        `)
-        .eq('visibility', 'public')
-        .eq('status', 'published')
-        .order('is_featured', { ascending: false })
-        .order('participants_count', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .limit(LIMIT);
+        .from("challenges")
+        .select("*, challenge_tasks (*)", { count: "exact" })
+        .eq("visibility", "public")
+        .eq("status", "published")
+        .order("is_featured", { ascending: false })
+        .order("participants_count", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .range(safeOffset, safeOffset + limit - 1);
 
-      if (input?.search) {
-        query = query.ilike('title', `%${input.search}%`);
-      }
+      const search = input?.search?.trim();
+      if (search) query = query.ilike("title", `%${search}%`);
+      if (input?.category && input.category !== "all") query = query.eq("category", input.category);
 
-      if (input?.category && input.category !== 'all') {
-        query = query.eq('category', input.category);
-      }
-
-      const { data, error } = await query;
-      if (error) throw new Error(error.message);
-
-      // TODO: backend needs to support active_today_count (count of users who secured today per challenge)
-      return (data || []).map((challenge: any) => ({
+      const { data, error, count } = await query;
+      requireNoError(error, "Failed to load featured challenges.");
+      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
         ...challenge,
-        tasks: challenge.challenge_tasks || [],
+        tasks: challenge.challenge_tasks ?? [],
       }));
+      const nextOffset = safeOffset + items.length;
+      const hasMore = count != null && nextOffset < count;
+      const withCursor = { items, nextCursor: hasMore ? String(nextOffset) : undefined };
+      const noPagination = input?.cursor == null && input?.limit == null;
+      return noPagination ? items : withCursor;
     }),
 
   /** Curated list of starter-pack challenges (e.g. onboarding). Stable order. Requires challenges seeded with source_starter_id. */
@@ -138,8 +146,8 @@ export const challengesRouter = createTRPCRouter({
         .eq('visibility', 'public')
         .eq('status', 'published');
 
-      if (error) throw new Error(error.message);
-      const list = (rows || []).map((c: any) => ({
+      requireNoError(error, "Failed to load starter pack.");
+      const list = (rows ?? []).map((c: any) => ({
         ...c,
         tasks: c.challenge_tasks || [],
       }));
@@ -155,7 +163,7 @@ export const challengesRouter = createTRPCRouter({
     }),
 
   getById: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       const { data, error } = await ctx.supabase
         .from('challenges')
@@ -166,8 +174,8 @@ export const challengesRouter = createTRPCRouter({
         .eq('id', input.id)
         .single();
 
-      if (error) throw new Error(error.message);
-      
+      if (error) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+
       return {
         ...data,
         tasks: data.challenge_tasks || [],
@@ -175,65 +183,60 @@ export const challengesRouter = createTRPCRouter({
     }),
 
   join: protectedProcedure
-    .input(z.object({ 
-      challengeId: z.string() 
+    .input(z.object({
+      challengeId: z.string().uuid(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const { data: challenge, error: challengeError } = await ctx.supabase
-        .from('challenges')
-        .select('*, challenge_tasks (*)')
-        .eq('id', input.challengeId)
-        .single();
+      const { data: existing } = await ctx.supabase
+        .from("active_challenges")
+        .select("id")
+        .eq("user_id", ctx.userId)
+        .eq("challenge_id", input.challengeId)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
 
-      if (challengeError) throw new Error(challengeError.message);
-
-      const startAt = new Date().toISOString();
-      const endAt = new Date();
-      
-      if (challenge.duration_type === '24h') {
-        endAt.setHours(endAt.getHours() + 24);
-      } else {
-        endAt.setDate(endAt.getDate() + challenge.duration_days);
+      if (existing) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You have already joined this challenge.",
+        });
       }
 
-      const { data: activeChallenge, error: acError } = await ctx.supabase
-        .from('active_challenges')
-        .insert({
-          user_id: ctx.userId,
-          challenge_id: input.challengeId,
-          status: 'active',
-          start_at: startAt,
-          end_at: endAt.toISOString(),
-          current_day: 1,
-          progress_percent: 0,
-        })
-        .select()
+      const { data: challenge, error: challengeError } = await ctx.supabase
+        .from("challenges")
+        .select("*, challenge_tasks (*)")
+        .eq("id", input.challengeId)
         .single();
 
-      if (acError) throw new Error(acError.message);
+      if (challengeError) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+      }
 
-      const dateKey = new Date().toISOString().split('T')[0];
-      const checkIns = challenge.challenge_tasks.map((task: any) => ({
-        user_id: ctx.userId,
-        active_challenge_id: activeChallenge.id,
-        task_id: task.id,
-        date_key: dateKey,
-        status: 'pending',
-      }));
+      const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("join_challenge", {
+        p_challenge_id: input.challengeId,
+      });
 
-      await ctx.supabase.from('check_ins').insert(checkIns);
+      if (!rpcError) {
+        const activeChallenge = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
+        if (activeChallenge) return activeChallenge;
+      }
 
-      const { error: streakError } = await ctx.supabase
-        .from('streaks')
-        .upsert({
-          user_id: ctx.userId,
-          active_streak_count: 0,
-          longest_streak_count: 0,
+      const code = (rpcError as any)?.code;
+      const msg = (rpcError as any)?.message ?? "";
+      if (msg.includes("ALREADY_JOINED")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
+      }
+      if (msg.includes("NOT_FOUND")) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+      }
+      if (code === "42883") {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Join is not available. Deploy migration 20250306000000_join_challenge_rpc.sql.",
         });
-
-      if (streakError) throw new Error(streakError.message);
-
-      return activeChallenge;
+      }
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
     }),
 
   getActive: protectedProcedure
@@ -253,7 +256,9 @@ export const challengesRouter = createTRPCRouter({
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw new Error(error.message);
+      if (error && error.code !== 'PGRST116') {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenge." });
+      }
       return data;
     }),
 
@@ -366,6 +371,7 @@ export const challengesRouter = createTRPCRouter({
           duration_days: input.durationDays,
           category: input.categories?.[0] || 'other',
           difficulty: 'medium',
+          status: 'published',
           live_date: input.liveDate || null,
           replay_policy: input.replayPolicy || 'allow_replay',
           require_same_rules: input.requireSameRules ?? true,
@@ -376,10 +382,10 @@ export const challengesRouter = createTRPCRouter({
         .single();
 
       if (challengeError) {
-        logCreateChallenge("challenge insert failed", { error: challengeError.message, code: challengeError.code });
+        logCreateChallenge("challenge insert failed", { code: challengeError.code });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to create challenge: ${challengeError.message}`,
+          message: "Failed to create challenge.",
         });
       }
 
@@ -430,10 +436,10 @@ export const challengesRouter = createTRPCRouter({
         .select();
 
       if (tasksError) {
-        logCreateChallenge("tasks insert failed", { error: tasksError.message, code: tasksError.code });
+        logCreateChallenge("tasks insert failed", { code: tasksError.code });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to create tasks: ${tasksError.message}`,
+          message: "Failed to create tasks.",
         });
       }
 

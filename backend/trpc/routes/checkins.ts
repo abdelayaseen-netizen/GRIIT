@@ -1,21 +1,26 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { assertActiveChallengeOwnership } from "../guards";
+import { requireNoError } from "../errors";
 import { computeNewStreakCount } from "../../lib/streak";
 import { getTierForDays } from "../../lib/progression";
 import { shouldEarnLastStand, newAvailableAfterEarn } from "../../lib/last-stand";
+import { getTodayDateKey } from "../../lib/date-utils";
+import type { StreakRow, DaySecureRow, ActiveChallengeWithTasks, ChallengeTaskRow } from "../../types/db";
 
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
     .input(z.object({
-      activeChallengeId: z.string(),
-      taskId: z.string(),
+      activeChallengeId: z.string().uuid(),
+      taskId: z.string().uuid(),
       value: z.number().optional(),
-      noteText: z.string().optional(),
-      proofUrl: z.string().optional(),
+      noteText: z.string().max(2000).optional(),
+      proofUrl: z.string().max(2000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const dateKey = new Date().toISOString().split('T')[0];
+      const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+      const dateKey = getTodayDateKey();
 
       const { data: taskRow } = await ctx.supabase
         .from('challenge_tasks')
@@ -46,22 +51,12 @@ export const checkinsRouter = createTRPCRouter({
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
-
-      const { data: activeRow, error: acErr } = await ctx.supabase
-        .from('active_challenges')
-        .select('challenge_id')
-        .eq('id', input.activeChallengeId)
-        .single();
-
-      if (acErr || !activeRow?.challenge_id) {
-        throw new Error('Active challenge not found');
-      }
+      requireNoError(error, "Failed to save check-in.");
 
       const { data: allTasks } = await ctx.supabase
         .from('challenge_tasks')
         .select('id, required')
-        .eq('challenge_id', activeRow.challenge_id);
+        .eq('challenge_id', challenge_id);
 
       const { data: completedCheckins } = await ctx.supabase
         .from('check_ins')
@@ -89,39 +84,83 @@ export const checkinsRouter = createTRPCRouter({
 
   getTodayCheckins: protectedProcedure
     .input(z.object({
-      activeChallengeId: z.string(),
+      activeChallengeId: z.string().uuid(),
     }))
     .query(async ({ input, ctx }) => {
-      const dateKey = new Date().toISOString().split('T')[0];
+      await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+      const dateKey = getTodayDateKey();
 
       const { data, error } = await ctx.supabase
         .from('check_ins')
-        .select('*')
+        .select('id, task_id, date_key, status, value, note_text, proof_url, created_at')
         .eq('active_challenge_id', input.activeChallengeId)
         .eq('date_key', dateKey);
 
-      if (error) throw new Error(error.message);
-      return data;
+      requireNoError(error, "Failed to load check-ins.");
+      return data ?? [];
     }),
 
   secureDay: protectedProcedure
     .input(z.object({
-      activeChallengeId: z.string(),
+      activeChallengeId: z.string().uuid(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const dateKey = new Date().toISOString().split('T')[0];
+      await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+
+      const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", {
+        p_active_challenge_id: input.activeChallengeId,
+      });
+
+      if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
+        const row = rpcRows[0] as { new_streak_count: number; last_stand_earned: boolean };
+        return {
+          success: true,
+          newStreakCount: row.new_streak_count,
+          lastStandEarned: row.last_stand_earned,
+        };
+      }
+
+      const code = (rpcError as { code?: string })?.code;
+      const msg = (rpcError as { message?: string })?.message ?? "";
+      if (msg.includes("NOT_ALL_REQUIRED")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Not all required tasks completed." });
+      }
+      if (rpcError && code !== "42883") {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to secure day." });
+      }
+
+      const dateKey = getTodayDateKey();
+
+      const { data: alreadySecured } = await ctx.supabase
+        .from("day_secures")
+        .select("date_key")
+        .eq("user_id", ctx.userId)
+        .eq("date_key", dateKey)
+        .limit(1)
+        .maybeSingle();
+      const securedRow = alreadySecured as DaySecureRow | null;
+      if (securedRow) {
+        const { data: streak } = await ctx.supabase
+          .from("streaks")
+          .select("active_streak_count")
+          .eq("user_id", ctx.userId)
+          .single();
+        const s = streak as { active_streak_count?: number } | null;
+        return { success: true, newStreakCount: s?.active_streak_count ?? 0, lastStandEarned: false };
+      }
 
       const { data: activeChallenge, error: acError } = await ctx.supabase
-        .from('active_challenges')
-        .select('*, challenges (challenge_tasks (id, required))')
-        .eq('id', input.activeChallengeId)
+        .from("active_challenges")
+        .select("*, challenges (challenge_tasks (id, required))")
+        .eq("id", input.activeChallengeId)
         .single();
 
-      if (acError) throw new Error(acError.message);
+      requireNoError(acError, "Active challenge not found.");
 
-      const challengeTasks = (activeChallenge as any)?.challenges?.challenge_tasks;
+      const ac = activeChallenge as ActiveChallengeWithTasks | null;
+      const challengeTasks = ac?.challenges?.challenge_tasks;
       if (!Array.isArray(challengeTasks)) {
-        throw new Error('Challenge tasks not found');
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Challenge tasks not found." });
       }
 
       const { data: completedCheckins } = await ctx.supabase
@@ -131,22 +170,22 @@ export const checkinsRouter = createTRPCRouter({
         .eq('date_key', dateKey)
         .eq('status', 'completed');
 
-      const requiredTasks = challengeTasks.filter((t: any) => t.required);
-      const allRequiredCompleted = requiredTasks.every((rt: any) =>
-        completedCheckins?.some(c => c.task_id === rt.id)
+      const requiredTasks = (challengeTasks ?? []).filter((t: ChallengeTaskRow) => t.required);
+      const allRequiredCompleted = requiredTasks.every((rt: ChallengeTaskRow) =>
+        completedCheckins?.some((c: { task_id: string }) => c.task_id === rt.id)
       );
 
       if (!allRequiredCompleted) {
-        throw new Error('Not all required tasks completed');
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Not all required tasks completed." });
       }
 
       const { data: streak } = await ctx.supabase
-        .from('streaks')
-        .select('last_completed_date_key, active_streak_count, longest_streak_count, last_stands_available, last_stands_used_total')
-        .eq('user_id', ctx.userId)
+        .from("streaks")
+        .select("last_completed_date_key, active_streak_count, longest_streak_count, last_stands_available, last_stands_used_total")
+        .eq("user_id", ctx.userId)
         .single();
 
-      const { newStreakCount, longestStreak } = computeNewStreakCount(dateKey, streak);
+      const { newStreakCount, longestStreak } = computeNewStreakCount(dateKey, streak as StreakRow | null);
 
       const streakPayload: Record<string, unknown> = {
         user_id: ctx.userId,
@@ -165,11 +204,12 @@ export const checkinsRouter = createTRPCRouter({
         .eq('user_id', ctx.userId)
         .gte('date_key', startKey)
         .lte('date_key', dateKey);
-      const securedDaysLast7 = new Set((securesLast7 ?? []).map((r: any) => r.date_key));
+      const securedDaysLast7 = new Set((securesLast7 ?? []).map((r: DaySecureRow) => r.date_key));
       if (dateKey) securedDaysLast7.add(dateKey);
       const countLast7 = securedDaysLast7.size;
 
-      const currentLastStands = Math.min(2, Math.max(0, (streak as any)?.last_stands_available ?? 0));
+      const streakRow = streak as StreakRow | null;
+      const currentLastStands = Math.min(2, Math.max(0, streakRow?.last_stands_available ?? 0));
       let lastStandEarned = false;
       if (shouldEarnLastStand(countLast7, currentLastStands)) {
         (streakPayload as any).last_stands_available = newAvailableAfterEarn(currentLastStands);
@@ -182,14 +222,19 @@ export const checkinsRouter = createTRPCRouter({
         .upsert(streakPayload, { onConflict: 'user_id' });
 
       await ctx.supabase
-        .from('active_challenges')
+        .from("active_challenges")
         .update({
-          current_day: (activeChallenge.current_day || 0) + 1,
+          current_day: (ac?.current_day ?? 0) + 1,
           progress_percent: 100,
         })
-        .eq('id', input.activeChallengeId);
+        .eq("id", input.activeChallengeId);
 
-      await ctx.supabase.from('day_secures').insert({ user_id: ctx.userId, date_key: dateKey }).then(() => {}).catch(() => {});
+      const { error: daySecErr } = await ctx.supabase
+        .from('day_secures')
+        .insert({ user_id: ctx.userId, date_key: dateKey });
+      if (daySecErr && (daySecErr as any).code !== "23505") {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to record day secure." });
+      }
 
       const { data: profileRow } = await ctx.supabase
         .from('profiles')
@@ -198,11 +243,11 @@ export const checkinsRouter = createTRPCRouter({
         .single();
       const totalDays = (profileRow?.total_days_secured ?? 0) + 1;
       const tier = getTierForDays(totalDays);
-      await ctx.supabase
+      const { error: profileErr } = await ctx.supabase
         .from('profiles')
         .update({ total_days_secured: totalDays, tier, updated_at: new Date().toISOString() })
-        .eq('user_id', ctx.userId)
-        .then(() => {}).catch(() => {});
+        .eq('user_id', ctx.userId);
+      requireNoError(profileErr, "Failed to update profile.");
 
       return { success: true, newStreakCount, lastStandEarned };
     }),

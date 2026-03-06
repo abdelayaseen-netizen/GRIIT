@@ -1,6 +1,16 @@
 import * as z from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { requireNoError } from "../errors";
 import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/progression";
+import { getTodayDateKey, daysBetweenKeys } from "../../lib/date-utils";
+import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
+
+const PROFILE_UPDATE_KEYS = [
+  "username", "display_name", "bio", "avatar_url", "cover_url",
+  "onboarding_completed", "onboarding_completed_at", "primary_goal", "daily_time_budget",
+  "starter_challenge_id", "preferred_secure_time",
+] as const;
 
 export const profilesRouter = createTRPCRouter({
   create: protectedProcedure
@@ -27,11 +37,11 @@ export const profilesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        const code = (error as any).code;
-        if (code === '23505') {
-          throw new Error('Username already taken');
+        const code = (error as PgError).code;
+        if (code === "23505") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Username already taken." });
         }
-        throw new Error(error.message);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create profile." });
       }
       return data;
     }),
@@ -44,38 +54,50 @@ export const profilesRouter = createTRPCRouter({
         .eq('user_id', ctx.userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw new Error(error.message);
+      if (error && error.code !== 'PGRST116') {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
+      }
       return data;
     }),
 
   update: protectedProcedure
     .input(z.object({
-      username: z.string().min(3).optional(),
-      display_name: z.string().optional(),
-      bio: z.string().optional(),
-      avatar_url: z.string().optional(),
-      cover_url: z.string().optional(),
+      username: z.string().min(3).max(64).optional(),
+      display_name: z.string().max(128).optional(),
+      bio: z.string().max(500).optional(),
+      avatar_url: z.string().max(2000).optional(),
+      cover_url: z.string().max(2000).optional(),
       onboarding_completed: z.boolean().optional(),
-      onboarding_completed_at: z.string().optional(),
-      primary_goal: z.string().optional(),
-      daily_time_budget: z.string().optional(),
-      starter_challenge_id: z.string().optional(),
-      preferred_secure_time: z.string().optional(), // "HH:mm" e.g. "20:00"
+      onboarding_completed_at: z.string().max(64).optional(),
+      primary_goal: z.string().max(128).optional(),
+      daily_time_budget: z.string().max(32).optional(),
+      starter_challenge_id: z.string().max(64).optional(),
+      preferred_secure_time: z.string().max(16).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const updatePayload: Record<string, unknown> = {};
+      for (const key of PROFILE_UPDATE_KEYS) {
+        if (input[key] !== undefined) {
+          updatePayload[key] = input[key];
+        }
+      }
+      if (Object.keys(updatePayload).length === 0) {
+        return (await ctx.supabase.from('profiles').select('*').eq('user_id', ctx.userId).single()).data;
+      }
+
       const { data, error } = await ctx.supabase
         .from('profiles')
-        .update(input)
+        .update(updatePayload)
         .eq('user_id', ctx.userId)
         .select()
         .single();
 
       if (error) {
-        const code = (error as any).code;
-        if (code === '23505') {
-          throw new Error('Username already taken');
+        const code = (error as PgError).code;
+        if (code === "23505") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Username already taken." });
         }
-        throw new Error(error.message);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to update profile." });
       }
       return data;
     }),
@@ -124,19 +146,18 @@ export const profilesRouter = createTRPCRouter({
       if (resetAt && (now.getTime() - new Date(resetAt).getTime()) / (1000 * 60 * 60 * 24) >= 30) {
         usedCount = 0;
         resetAt = now;
-        await ctx.supabase
+        const { error: resetErr } = await ctx.supabase
           .from('profiles')
           .update({ streak_freeze_used_count: 0, streak_freeze_reset_at: resetAt.toISOString() })
-          .eq('user_id', ctx.userId)
-          .then(() => {})
-          .catch(() => {});
+          .eq('user_id', ctx.userId);
+        if (!resetErr) { /* optional reset */ }
       }
       const freezesRemaining = Math.max(0, streakFreezePerMonth - usedCount);
-      const frozenDateKeys = new Set((freezesRows?.data ?? []).map((r: any) => r.date_key));
-      const lastStandUsedDateKeys = new Set((lastStandUsesRows?.data ?? []).map((r: any) => r.date_key));
+      const frozenDateKeys = new Set((freezesRows?.data ?? []).map((r: { date_key: string }) => r.date_key));
+      const lastStandUsedDateKeys = new Set((lastStandUsesRows?.data ?? []).map((r: { date_key: string }) => r.date_key));
 
       const lastCompletedDateKey = streakData.data?.last_completed_date_key ?? null;
-      const todayKey = now.toISOString().split('T')[0];
+      const todayKey = getTodayDateKey();
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayKey = yesterday.toISOString().split('T')[0];
@@ -150,7 +171,7 @@ export const profilesRouter = createTRPCRouter({
         ).length;
       }
 
-      let lastStandsAvailable = Math.min(2, Math.max(0, (streakData.data as any)?.last_stands_available ?? 0));
+      let lastStandsAvailable = Math.min(2, Math.max(0, (streakData.data as StreakRow | null)?.last_stands_available ?? 0));
       let lastStandUsedThisSession = false;
       let streakLostNoLastStand = false;
 
@@ -165,16 +186,14 @@ export const profilesRouter = createTRPCRouter({
           const inserted = !insertErr;
           if (inserted) {
             const newAvailable = lastStandsAvailable - 1;
-            const newUsedTotal = ((streakData.data as any)?.last_stands_used_total ?? 0) + 1;
+            const newUsedTotal = ((streakData.data as StreakRow | null)?.last_stands_used_total ?? 0) + 1;
             await ctx.supabase
               .from('streaks')
               .update({
                 last_stands_available: newAvailable,
                 last_stands_used_total: newUsedTotal,
               })
-              .eq('user_id', ctx.userId)
-              .then(() => {})
-              .catch(() => {});
+              .eq('user_id', ctx.userId);
             lastStandsAvailable = newAvailable;
             effectiveMissedDays = 0;
             lastStandUsedThisSession = true;
@@ -183,8 +202,8 @@ export const profilesRouter = createTRPCRouter({
               ctx.supabase.from('push_tokens').select('token').eq('user_id', ctx.userId),
               ctx.supabase.from('profiles').select('expo_push_token').eq('user_id', ctx.userId).single(),
             ]);
-            const tokens = (pushRes?.data ?? []).map((r: any) => r.token).filter(Boolean);
-            const pt = (profileTokenRes?.data as any)?.expo_push_token;
+            const tokens = (pushRes?.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
+            const pt = (profileTokenRes?.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
             const allT = [...new Set([...tokens, pt].filter(Boolean))];
             await sendExpoPush(allT, 'Last Stand used', 'Your streak continues.');
           }
@@ -195,9 +214,7 @@ export const profilesRouter = createTRPCRouter({
           await ctx.supabase
             .from('streaks')
             .update({ active_streak_count: 0 })
-            .eq('user_id', ctx.userId)
-            .then(() => {})
-            .catch(() => {});
+            .eq('user_id', ctx.userId);
           streakLostNoLastStand = true;
         }
       }
@@ -234,7 +251,7 @@ export const profilesRouter = createTRPCRouter({
     }),
 
   search: protectedProcedure
-    .input(z.object({ query: z.string().min(1).max(100) }))
+    .input(z.object({ query: z.string().min(1).max(100).transform((s) => s.trim()) }))
     .query(async ({ input, ctx }) => {
       const q = input.query.trim().toLowerCase();
       if (!q) return [];
@@ -244,26 +261,12 @@ export const profilesRouter = createTRPCRouter({
         .neq('user_id', ctx.userId)
         .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
         .limit(20);
-      if (error) throw new Error(error.message);
-      return (data ?? []).map((r: any) => ({
+      requireNoError(error, "Failed to search profiles.");
+      return (data ?? []).map((r: ProfileRow) => ({
         user_id: r.user_id,
-        username: r.username ?? '',
-        display_name: r.display_name ?? r.username ?? '',
+        username: r.username ?? "",
+        display_name: r.display_name ?? r.username ?? "",
       }));
     }),
 });
 
-function daysBetweenKeys(startKey: string, endKey: string): string[] {
-  const out: string[] = [];
-  const [sy, sm, sd] = startKey.split('-').map(Number);
-  const [ey, em, ed] = endKey.split('-').map(Number);
-  const start = new Date(sy, sm - 1, sd);
-  const end = new Date(ey, em - 1, ed);
-  const cur = new Date(start);
-  cur.setDate(cur.getDate() + 1);
-  while (cur <= end) {
-    out.push(cur.toISOString().split('T')[0]);
-    cur.setDate(cur.getDate() + 1);
-  }
-  return out;
-}
