@@ -2,70 +2,113 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Camera, Check } from "lucide-react-native";
+import { Camera, Check, ImagePlus } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from "expo-image-picker";
 import { useApp } from "@/contexts/AppContext";
 import Colors from "@/constants/colors";
+import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
+
+const PICKER_OPTIONS = {
+  allowsEditing: true,
+  aspect: [4, 3] as [number, number],
+  quality: 0.8,
+  base64: true as const,
+};
 
 export default function PhotoTaskScreen() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { activeChallenge, completeTask } = useApp();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Camera permission is required to take photos');
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Camera permission is required to take photos");
       return;
     }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
+    const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
     if (!result.canceled && result.assets[0]) {
-      setPhotoUri(result.assets[0].uri);
+      const asset = result.assets[0];
+      setPhotoUri(asset.uri);
+      setPhotoBase64(asset.base64 ?? null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Gallery access is required to upload a photo");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      ...PICKER_OPTIONS,
+      mediaTypes: ["images"],
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setPhotoUri(asset.uri);
+      setPhotoBase64(asset.base64 ?? null);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
   };
 
   const handleSubmit = async () => {
     if (!photoUri) {
-      Alert.alert('Error', 'Please take a photo first');
+      Alert.alert("Error", "Please take or upload a photo first");
       return;
     }
-
     if (!activeChallenge) {
-      Alert.alert('Error', 'No active challenge found');
+      Alert.alert("Error", "No active challenge found");
       return;
     }
-
     if (!taskId) {
-      Alert.alert('Error', 'Task not found');
+      Alert.alert("Error", "Task not found");
       return;
     }
 
     setLoading(true);
+    setUploading(true);
     try {
-      completeTask({
+      let proofUrl: string;
+      if (photoBase64) {
+        const contentType = photoUri.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
+        const result = await uploadProofImageFromBase64(photoBase64, contentType);
+        if ("error" in result) {
+          Alert.alert("Upload failed", result.error);
+          return;
+        }
+        proofUrl = result.url;
+      } else {
+        const { uploadProofImageFromUri } = await import("@/lib/uploadProofImage");
+        const result = await uploadProofImageFromUri(photoUri);
+        if ("error" in result) {
+          Alert.alert("Upload failed", result.error);
+          return;
+        }
+        proofUrl = result.url;
+      }
+      setUploading(false);
+
+      await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
-        proofUrl: photoUri,
+        proofUrl,
       });
-      
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Success!', 'Photo proof submitted', [
-        { text: 'OK', onPress: () => router.back() }
+      Alert.alert("Success!", "Photo proof submitted", [
+        { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert("Error", error?.message ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -91,14 +134,24 @@ export default function PhotoTaskScreen() {
         )}
 
         {!photoUri && (
-          <TouchableOpacity
-            style={styles.captureButton}
-            onPress={handleTakePhoto}
-            activeOpacity={0.8}
-          >
-            <Camera size={24} color="#fff" />
-            <Text style={styles.captureButtonText}>Take Photo</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.captureButton}
+              onPress={handleTakePhoto}
+              activeOpacity={0.8}
+            >
+              <Camera size={24} color="#fff" />
+              <Text style={styles.captureButtonText}>Take Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.galleryButton}
+              onPress={handlePickFromGallery}
+              activeOpacity={0.8}
+            >
+              <ImagePlus size={24} color={Colors.text.primary} />
+              <Text style={styles.galleryButtonText}>Upload from gallery</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {photoUri && (
@@ -109,7 +162,12 @@ export default function PhotoTaskScreen() {
             activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <>
+                <ActivityIndicator color="#fff" size="small" />
+                <Text style={styles.submitButtonText}>
+                  {uploading ? "Uploading…" : "Submitting…"}
+                </Text>
+              </>
             ) : (
               <>
                 <Check size={20} color="#fff" />
@@ -170,19 +228,38 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.text.primary,
   },
+  buttonRow: {
+    gap: 12,
+  },
   captureButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
     borderRadius: 12,
     padding: 16,
   },
   captureButtonText: {
     fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#fff',
+    fontWeight: "700" as const,
+    color: "#fff",
+  },
+  galleryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: 16,
+  },
+  galleryButtonText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
   },
   submitButton: {
     flexDirection: 'row',

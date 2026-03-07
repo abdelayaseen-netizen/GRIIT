@@ -72,9 +72,9 @@ export async function scheduleNextSecureReminder(
         sound: true,
       },
       trigger: {
-        type: "date" as const,
+        type: "date",
         date: triggerDate,
-      },
+      } as import("expo-notifications").NotificationTriggerInput,
     });
 
       if (ENABLE_TWO_HOURS_LEFT) {
@@ -90,9 +90,9 @@ export async function scheduleNextSecureReminder(
             sound: true,
           },
           trigger: {
-            type: "date" as const,
+            type: "date",
             date: twoHoursLeft,
-          },
+          } as import("expo-notifications").NotificationTriggerInput,
         });
       }
     }
@@ -113,7 +113,7 @@ export async function scheduleNextSecureReminder(
             body: `45 minutes left to protect your streak.${lsText}`,
             sound: true,
           },
-          trigger: { type: "date" as const, date: streakAtRisk },
+          trigger: { type: "date", date: streakAtRisk } as import("expo-notifications").NotificationTriggerInput,
         });
       }
     }

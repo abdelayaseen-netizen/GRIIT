@@ -14,6 +14,8 @@ export const TRPC = {
     create: 'profiles.create',
     update: 'profiles.update',
     getStats: 'profiles.getStats',
+    getCompletedChallenges: 'profiles.getCompletedChallenges',
+    getSecuredDateKeys: 'profiles.getSecuredDateKeys',
     search: 'profiles.search',
   },
   challenges: {
@@ -23,10 +25,12 @@ export const TRPC = {
     getById: 'challenges.getById',
     join: 'challenges.join',
     getActive: 'challenges.getActive',
+    listMyActive: 'challenges.listMyActive',
     create: 'challenges.create',
   },
   checkins: {
     getTodayCheckins: 'checkins.getTodayCheckins',
+    getTodayCheckinsForUser: 'checkins.getTodayCheckinsForUser',
     complete: 'checkins.complete',
     secureDay: 'checkins.secureDay',
   },
@@ -69,5 +73,14 @@ export const TRPC = {
   },
   feed: {
     list: 'feed.list',
+  },
+  integrations: {
+    getStravaAuthUrl: 'integrations.getStravaAuthUrl',
+    isStravaEnabled: 'integrations.isStravaEnabled',
+    getStravaConnection: 'integrations.getStravaConnection',
+    getStravaActivities: 'integrations.getStravaActivities',
+    getStravaAthlete: 'integrations.getStravaAthlete',
+    disconnectStrava: 'integrations.disconnectStrava',
+    verifyStravaTask: 'integrations.verifyStravaTask',
   },
 } as const;

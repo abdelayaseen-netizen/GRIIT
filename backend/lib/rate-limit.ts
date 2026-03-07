@@ -32,7 +32,7 @@ function memoryCleanup(): void {
 function ensureCleanup(): void {
   if (!cleanupTimer) {
     cleanupTimer = setInterval(memoryCleanup, CLEANUP_INTERVAL_MS);
-    if (cleanupTimer.unref) cleanupTimer.unref();
+    (cleanupTimer as { unref?: () => void }).unref?.();
   }
 }
 

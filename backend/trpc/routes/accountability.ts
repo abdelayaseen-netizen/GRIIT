@@ -140,7 +140,7 @@ export const accountabilityRouter = createTRPCRouter({
       const inviterName = inviter?.display_name ?? inviter?.username ?? "Someone";
       const tokensFromTable = pushTokensRes.error ? [] : (pushTokensRes.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
       const profileToken = (profileTokenRes.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
-      const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))];
+      const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
       await sendExpoPush(
         allTokens,
         "Accountability partner",
@@ -273,7 +273,7 @@ export const accountabilityRouter = createTRPCRouter({
         const accepterName = accepter?.display_name ?? accepter?.username ?? "Someone";
         const tokens = pushRes.error ? [] : (pushRes.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
         const pt = (profileTokenRes.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
-        const allT = [...new Set([...tokens, pt].filter(Boolean))];
+        const allT = [...new Set([...tokens, pt].filter(Boolean))].filter((t): t is string => typeof t === "string");
         await sendExpoPush(
           allT,
           "Accountability partner",

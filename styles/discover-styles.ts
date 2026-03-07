@@ -275,7 +275,7 @@ export const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: Colors.text.muted,
+    backgroundColor: t.colors.textSecondary,
   },
   activeTodayText: {
     fontSize: 12,

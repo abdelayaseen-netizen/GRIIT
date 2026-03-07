@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { createTRPCRouter, publicProcedure } from "../create-context";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
+import { getTodayDateKey } from "../../lib/date-utils";
 
 function getWeekStartDateKey(): string {
   const d = new Date();
@@ -25,7 +26,7 @@ export const leaderboardRouter = createTRPCRouter({
       const offset = input?.cursor ? parseInt(input.cursor, 10) : 0;
       const safeOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
 
-      const todayKey = new Date().toISOString().split("T")[0];
+      const todayKey = getTodayDateKey();
       const weekStartKey = getWeekStartDateKey();
       const userId = ctx.userId;
 

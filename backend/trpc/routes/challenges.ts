@@ -70,7 +70,7 @@ export const challengesRouter = createTRPCRouter({
       requireNoError(error, "Failed to load challenges.");
       const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
         ...challenge,
-        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
+        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
       }));
       const nextOffset = safeOffset + items.length;
       const hasMore = count != null && nextOffset < count;
@@ -110,7 +110,7 @@ export const challengesRouter = createTRPCRouter({
       requireNoError(error, "Failed to load featured challenges.");
       const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
         ...challenge,
-        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
+        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
       }));
       const nextOffset = safeOffset + items.length;
       const hasMore = count != null && nextOffset < count;
@@ -268,10 +268,41 @@ export const challengesRouter = createTRPCRouter({
       return data;
     }),
 
+  /** All active challenges for the current user (for home Daily Status + Active Challenges). */
+  listMyActive: protectedProcedure
+    .query(async ({ ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from('active_challenges')
+        .select(`
+          *,
+          challenges (
+            *,
+            challenge_tasks (*)
+          )
+        `)
+        .eq('user_id', ctx.userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenges." });
+      }
+      const list = (data ?? []) as { challenges?: { challenge_tasks?: ChallengeTaskRowRaw[] } }[];
+      for (const row of list) {
+        if (row.challenges?.challenge_tasks) {
+          (row.challenges as { challenge_tasks: ChallengeTaskRowRaw[] }).challenge_tasks = mapTaskRowsToApi(
+            row.challenges.challenge_tasks
+          ) as unknown as ChallengeTaskRowRaw[];
+        }
+      }
+      return list;
+    }),
+
   create: protectedProcedure
     .input(z.object({
       title: z.string().min(1, "Title is required"),
-      description: z.string().min(1, "Description is required"),
+      description: z.string().optional().default(""),
       type: z.enum(['standard', 'one_day']),
       durationDays: z.number().min(1, "Duration must be at least 1 day"),
       visibility: z.enum(['PUBLIC', 'FRIENDS', 'PRIVATE']).optional().default('FRIENDS'),
@@ -319,6 +350,8 @@ export const challengesRouter = createTRPCRouter({
         hardWindowEndOffsetMin: z.number().nullable().optional(),
         timezoneMode: z.enum(["USER_LOCAL", "CHALLENGE_TIMEZONE"]).optional(),
         challengeTimezone: z.string().nullable().optional(),
+        verificationMethod: z.string().optional(),
+        verificationRuleJson: z.record(z.unknown()).nullable().optional(),
       })).min(1, "At least one task is required"),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -406,6 +439,8 @@ export const challengesRouter = createTRPCRouter({
             photoRequired: task.photoRequired,
             requirePhotoProof: task.requirePhotoProof,
             strictTimerMode: task.strictTimerMode,
+            verificationMethod: task.verificationMethod,
+            verificationRuleJson: task.verificationRuleJson ?? undefined,
           },
           challenge.id,
           i

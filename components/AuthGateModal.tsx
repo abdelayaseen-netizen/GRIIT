@@ -5,10 +5,9 @@ import {
   Modal,
   TouchableOpacity,
   StyleSheet,
-  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { colors, spacing, radius, typography } from "@/src/theme/tokens";
+import { colors, spacing, radius } from "@/src/theme/tokens";
 import { PrimaryButton } from "@/src/components/ui/PrimaryButton";
 
 export type GateContext =

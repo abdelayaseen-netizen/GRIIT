@@ -11,6 +11,8 @@ export interface ChallengeTaskFromApi {
   require_photo_proof?: boolean;
   strict_timer_mode?: boolean;
   order_index?: number | null;
+  verification_method?: string | null;
+  verification_rule_json?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
   [key: string]: unknown;
 }
 
@@ -77,6 +79,23 @@ export type ChallengeDifficulty = "easy" | "medium" | "hard" | "extreme";
 export type ChallengeMode = "normal" | "hard";
 
 export type TaskStatus = "locked" | "pending" | "submitted" | "verified" | "rejected" | "missed";
+
+/** Row shape from checkins.getTodayCheckinsForUser (today's check-ins across all active challenges). */
+export interface TodayCheckinForUser {
+  active_challenge_id: string;
+  task_id: string;
+  status: string;
+  date_key?: string;
+  id?: string;
+  value?: number | null;
+  note_text?: string | null;
+  proof_url?: string | null;
+  completion_image_url?: string | null;
+  proof_source?: string | null;
+  external_activity_id?: string | null;
+  verification_status?: string | null;
+  created_at?: string;
+}
 
 export type ChallengeVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
 

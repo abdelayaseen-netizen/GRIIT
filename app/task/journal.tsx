@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
@@ -25,12 +26,16 @@ import {
   Zap,
   Heart,
   Check,
+  Camera,
+  ImagePlus,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useApp } from "@/contexts/AppContext";
 import Colors from "@/constants/colors";
 import type { MoodLevel, BodyState, JournalCategory } from "@/types";
+import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 
 const JOURNAL_CATEGORY_LABELS: Record<JournalCategory, string> = {
   self_reflection: "Self-reflection",
@@ -66,7 +71,7 @@ const DRAFT_KEY_PREFIX = "journal_draft_";
 
 export default function JournalTaskScreen() {
   const router = useRouter();
-  const { taskId, prompt, types, captureMood: captureMoodParam, captureEnergy: captureEnergyParam, captureBody, wordLimit: wordLimitParam } = useLocalSearchParams<{
+  const { taskId, prompt, types, captureMood: captureMoodParam, captureEnergy: captureEnergyParam, captureBody, wordLimit: wordLimitParam, requirePhotoProof: requirePhotoProofParam } = useLocalSearchParams<{
     taskId: string;
     prompt: string;
     types: string;
@@ -74,6 +79,7 @@ export default function JournalTaskScreen() {
     captureEnergy: string;
     captureBody: string;
     wordLimit: string;
+    requirePhotoProof: string;
   }>();
   const { activeChallenge, completeTask } = useApp();
 
@@ -84,12 +90,16 @@ export default function JournalTaskScreen() {
   const shouldCaptureBody = captureBody === "true";
   const wordLimitWords = wordLimitParam ? parseInt(wordLimitParam, 10) : null;
   const hasWordLimit = wordLimitWords !== null && wordLimitWords > 0;
+  const requirePhotoProof = requirePhotoProofParam === "true";
 
   const [entryText, setEntryText] = useState("");
   const [mood, setMood] = useState<MoodLevel | null>(null);
   const [energy, setEnergy] = useState<number | null>(null);
   const [bodyState, setBodyState] = useState<BodyState | null>(null);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
 
@@ -145,8 +155,43 @@ export default function JournalTaskScreen() {
     if (shouldCaptureMood && mood === null) return false;
     if (shouldCaptureEnergy && energy === null) return false;
     if (shouldCaptureBody && bodyState === null) return false;
+    if (requirePhotoProof && !photoUri) return false;
     return true;
-  }, [entryText, mood, energy, bodyState, shouldCaptureMood, shouldCaptureEnergy, shouldCaptureBody, hasWordLimit, wordLimitWords, countWords]);
+  }, [entryText, mood, energy, bodyState, shouldCaptureMood, shouldCaptureEnergy, shouldCaptureBody, hasWordLimit, wordLimitWords, countWords, requirePhotoProof, photoUri]);
+
+  const pickerOptions = { allowsEditing: true, aspect: [4, 3] as [number, number], quality: 0.8, base64: true as const };
+
+  const handleTakePhoto = useCallback(async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Camera permission is required to add photo proof");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync(pickerOptions);
+    if (!result.canceled && result.assets[0]) {
+      const a = result.assets[0];
+      setPhotoUri(a.uri);
+      setPhotoBase64(a.base64 ?? null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pickerOptions is a stable config object; adding would recreate callback every render
+  }, []);
+
+  const handlePickFromGallery = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Gallery access is required to add photo proof");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ ...pickerOptions, mediaTypes: ["images"] });
+    if (!result.canceled && result.assets[0]) {
+      const a = result.assets[0];
+      setPhotoUri(a.uri);
+      setPhotoBase64(a.base64 ?? null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pickerOptions is a stable config object; adding would recreate callback every render
+  }, []);
 
   const handleSubmit = async () => {
     if (!isValid()) {
@@ -155,6 +200,7 @@ export default function JournalTaskScreen() {
       if (shouldCaptureMood && mood === null) issues.push("Select your mood");
       if (shouldCaptureEnergy && energy === null) issues.push("Rate your energy");
       if (shouldCaptureBody && bodyState === null) issues.push("Select body state");
+      if (requirePhotoProof && !photoUri) issues.push("Add photo proof (required)");
       Alert.alert("Almost there", issues.join("\n"));
       return;
     }
@@ -170,10 +216,34 @@ export default function JournalTaskScreen() {
 
     setLoading(true);
     try {
-      completeTask({
+      let proofUrl: string | undefined;
+      if (requirePhotoProof && (photoUri || photoBase64)) {
+        setUploading(true);
+        if (photoBase64) {
+          const contentType = photoUri?.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
+          const result = await uploadProofImageFromBase64(photoBase64, contentType);
+          if ("error" in result) {
+            Alert.alert("Upload failed", result.error);
+            return;
+          }
+          proofUrl = result.url;
+        } else if (photoUri) {
+          const { uploadProofImageFromUri } = await import("@/lib/uploadProofImage");
+          const result = await uploadProofImageFromUri(photoUri);
+          if ("error" in result) {
+            Alert.alert("Upload failed", result.error);
+            return;
+          }
+          proofUrl = result.url;
+        }
+        setUploading(false);
+      }
+
+      await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
         noteText: entryText.trim(),
+        proofUrl,
       });
 
       await AsyncStorage.removeItem(draftKey);
@@ -186,9 +256,10 @@ export default function JournalTaskScreen() {
         Animated.timing(confettiOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]).start();
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Error", error?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -406,6 +477,38 @@ export default function JournalTaskScreen() {
                   <Text style={s.charCount}>{entryText.length}/{MAX_ENTRY_LENGTH}</Text>
                 </View>
               </View>
+
+              {requirePhotoProof && (
+                <View style={s.checkinSection}>
+                  <Text style={s.checkinLabel}>Photo proof (required)</Text>
+                  {photoUri ? (
+                    <View style={s.photoProofPreview}>
+                      <Image source={{ uri: photoUri }} style={s.photoProofThumb} />
+                      <View style={s.photoProofActions}>
+                        <TouchableOpacity style={s.photoProofBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
+                          <Camera size={18} color={Colors.text.primary} />
+                          <Text style={s.photoProofBtnText}>Retake</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={s.photoProofBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
+                          <ImagePlus size={18} color={Colors.text.primary} />
+                          <Text style={s.photoProofBtnText}>Change</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={s.photoProofEmpty}>
+                      <TouchableOpacity style={s.photoProofPrimaryBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
+                        <Camera size={22} color="#fff" />
+                        <Text style={s.photoProofPrimaryBtnText}>Take photo</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={s.photoProofSecondaryBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
+                        <ImagePlus size={20} color={Colors.text.secondary} />
+                        <Text style={s.photoProofSecondaryBtnText}>Upload from gallery</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              )}
             </ScrollView>
 
             <SafeAreaView edges={["bottom"]} style={s.footerSafe}>
@@ -418,7 +521,10 @@ export default function JournalTaskScreen() {
                   testID="journal-submit-button"
                 >
                   {loading ? (
-                    <ActivityIndicator color="#fff" />
+                    <View style={s.submitBtnInner}>
+                      <ActivityIndicator color="#fff" size="small" />
+                      <Text style={s.submitBtnText}>{uploading ? "Uploading…" : "Saving…"}</Text>
+                    </View>
                   ) : (
                     <View style={s.submitBtnInner}>
                       <Heart size={18} color="#fff" />
@@ -700,6 +806,70 @@ const s = StyleSheet.create({
     paddingBottom: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(0,0,0,0.06)",
+  },
+  photoProofPreview: {
+    marginTop: 8,
+    gap: 10,
+  },
+  photoProofThumb: {
+    width: "100%",
+    aspectRatio: 4 / 3,
+    borderRadius: 12,
+    backgroundColor: "#eee",
+  },
+  photoProofActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  photoProofBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  photoProofBtnText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  photoProofEmpty: {
+    marginTop: 8,
+    gap: 10,
+  },
+  photoProofPrimaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#6366F1",
+    borderRadius: 12,
+    paddingVertical: 14,
+  },
+  photoProofPrimaryBtnText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: "#fff",
+  },
+  photoProofSecondaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: "#fff",
+  },
+  photoProofSecondaryBtnText: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
   },
   submitBtn: {
     backgroundColor: "#6366F1",

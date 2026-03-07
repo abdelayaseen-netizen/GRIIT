@@ -9,6 +9,7 @@ import {
 
 export function TaskTypeCard(p: {
   label: string;
+  description?: string;
   selected: boolean;
   onPress: () => void;
   icon: React.ReactNode;
@@ -20,6 +21,7 @@ export function TaskTypeCard(p: {
         styles.card,
         p.selected && {
           borderColor: p.accentColor,
+          backgroundColor: `${p.accentColor}08`,
         },
       ]}
       onPress={p.onPress}
@@ -36,11 +38,16 @@ export function TaskTypeCard(p: {
       <Text
         style={[
           styles.label,
-          p.selected && { color: p.accentColor },
+          p.selected && { color: p.accentColor, fontWeight: "600" },
         ]}
       >
         {p.label}
       </Text>
+      {p.description ? (
+        <Text style={styles.description} numberOfLines={2}>
+          {p.description}
+        </Text>
+      ) : null}
     </TouchableOpacity>
   );
 }
@@ -68,5 +75,12 @@ const styles = StyleSheet.create({
     fontSize: typography.primaryBody.fontSize,
     fontWeight: "500",
     color: colors.textPrimary,
+  },
+  description: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginTop: 4,
+    lineHeight: 14,
   },
 });

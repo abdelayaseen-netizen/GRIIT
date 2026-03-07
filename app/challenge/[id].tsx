@@ -11,8 +11,10 @@ import {
   Platform,
   Image,
   Share,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import {
   Check,
@@ -36,11 +38,13 @@ import {
 import { formatTimeHHMM, getTimeWindowState } from "@/lib/time-enforcement";
 import * as Haptics from "expo-haptics";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { track } from "@/lib/analytics";
 import * as Linking from "expo-linking";
-import { getJoinedStarterIds, saveJoinedStarterId } from "@/lib/starter-join";
+import { getJoinedStarterIds } from "@/lib/starter-join";
+import { FLAGS } from "@/lib/feature-flags";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
 import type { StarterChallenge, StarterTask } from "@/mocks/starter-challenges";
 import type { ChallengeTaskFromApi } from "@/types";
@@ -244,16 +248,32 @@ function MissionRow({
   isCompleted,
   isLast,
   onStart,
+  checkin,
+  verificationMethod,
+  stravaConnected,
+  activeChallengeId,
+  stravaVerifyPending,
+  onConnectStrava,
+  onVerifyStrava,
 }: {
   task: StarterTask;
   theme: DifficultyTheme;
   isCompleted: boolean;
   isLast: boolean;
   onStart: () => void;
+  checkin?: any;
+  verificationMethod?: string | null;
+  stravaConnected?: boolean | null;
+  activeChallengeId?: string;
+  stravaVerifyPending?: boolean;
+  onConnectStrava?: () => void;
+  onVerifyStrava?: () => Promise<void>;
 }) {
   const IconComp = TASK_ICONS[task.type] || Target;
   const isJournal = task.type === "journal";
   const hasTimeEnforcement = task.timeEnforcementEnabled && task.anchorTimeLocal;
+  const needsStrava = verificationMethod === "strava_activity";
+  const verifiedByStrava = isCompleted && checkin?.proof_source === "strava";
 
   const timeState = hasTimeEnforcement ? getTimeWindowState({
     timeEnforcementEnabled: true,
@@ -309,6 +329,14 @@ function MissionRow({
           <Text style={s.missionMeta} numberOfLines={1}>
             {task.journalPrompt}
           </Text>
+        ) : needsStrava && !isCompleted ? (
+          <Text style={s.missionMeta}>
+            {stravaConnected === false
+              ? "Connect Strava to verify this task"
+              : stravaConnected === true
+              ? "No matching Strava activity found yet"
+              : null}
+          </Text>
         ) : (task.verification || task.estimate) ? (
           <Text style={s.missionMeta}>
             {[task.verification, task.estimate].filter(Boolean).join(" \u00B7 ")}
@@ -318,8 +346,35 @@ function MissionRow({
       {isCompleted ? (
         <View style={s.completedBadge}>
           <Check size={12} color={Colors.success} />
-          <Text style={s.completedBadgeText}>Done</Text>
+          <Text style={s.completedBadgeText}>{verifiedByStrava ? "Verified by Strava" : "Done"}</Text>
         </View>
+      ) : needsStrava && stravaConnected === false && onConnectStrava ? (
+        <TouchableOpacity
+          style={s.startAction}
+          onPress={onConnectStrava}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Text style={[s.startActionText, { color: theme.accent }]}>Connect Strava</Text>
+          <ChevronRight size={14} color={theme.accent} />
+        </TouchableOpacity>
+      ) : needsStrava && stravaConnected === true && activeChallengeId && onVerifyStrava ? (
+        <TouchableOpacity
+          style={s.startAction}
+          onPress={onVerifyStrava}
+          disabled={stravaVerifyPending}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          {stravaVerifyPending ? (
+            <ActivityIndicator size="small" color={theme.accent} />
+          ) : (
+            <>
+              <Text style={[s.startActionText, { color: theme.accent }]}>Verify with Strava</Text>
+              <ChevronRight size={14} color={theme.accent} />
+            </>
+          )}
+        </TouchableOpacity>
       ) : (
         <TouchableOpacity
           style={s.startAction}
@@ -340,7 +395,7 @@ export default function ChallengeDetailScreen() {
   const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
   const router = useRouter();
   const { requireAuth } = useAuthGate();
-  const { activeChallenge, todayCheckins } = useApp();
+  const { activeChallenge, todayCheckins, refetchTodayCheckins } = useApp();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -357,7 +412,10 @@ export default function ChallengeDetailScreen() {
 
   const [remoteChallenge, setRemoteChallenge] = useState<any>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
-  const [joinPending, setJoinPending] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [joinPending] = useState(false);
+  const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
+  const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id || isStarter) return;
@@ -368,23 +426,8 @@ export default function ChallengeDetailScreen() {
       .finally(() => setRemoteLoading(false));
   }, [id, isStarter]);
 
-  const handleJoinRemote = useCallback((challengeId: string) => {
-    setJoinPending(true);
-    trpcMutate('challenges.join', { challengeId })
-      .then(() => {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert("Challenge started", "Head to Home to begin.", [
-          { text: "OK", onPress: () => router.push("/(tabs)") },
-        ]);
-      })
-      .catch((error: any) => {
-        Alert.alert("Error", error.message);
-      })
-      .finally(() => setJoinPending(false));
-  }, [router]);
-
   const [starterJoined, setStarterJoined] = useState(false);
-  const [joiningStarter, setJoiningStarter] = useState(false);
+  const [joiningStarter] = useState(false);
 
   useEffect(() => {
     if (!isStarter || !id) return;
@@ -471,17 +514,6 @@ export default function ChallengeDetailScreen() {
     return Math.max(userCurrentDay, 1);
   }, [isJoined, userCurrentDay]);
 
-  const handleJoinStarter = useCallback(async () => {
-    if (!challenge || !id) return;
-    setJoiningStarter(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await saveJoinedStarterId(id);
-    setStarterJoined(true);
-    setJoiningStarter(false);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.push("/(tabs)");
-  }, [challenge, id, router]);
-
   const handleJoin = useCallback(() => {
     if (!challenge || !id) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -508,6 +540,9 @@ export default function ChallengeDetailScreen() {
   const handleMissionStart = useCallback((task: StarterTask) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
+    const apiTask = task as ChallengeTaskFromApi;
+    const needsPhotoProof = apiTask.require_photo_proof === true;
+
     if (task.type === "journal") {
       const params: Record<string, string> = { taskId: task.id };
       if (task.journalPrompt) params.prompt = task.journalPrompt;
@@ -518,26 +553,75 @@ export default function ChallengeDetailScreen() {
       if (task.wordLimitEnabled && task.wordLimitWords) {
         params.wordLimit = task.wordLimitWords.toString();
       }
+      params.requirePhotoProof = needsPhotoProof ? "true" : "false";
       router.push({ pathname: "/task/journal", params } as any);
       return;
     }
 
-    const apiTask = task as ChallengeTaskFromApi;
-    if (apiTask.type === "manual" && apiTask.require_photo_proof) {
+    if (apiTask.type === "manual" && needsPhotoProof) {
       router.push({ pathname: "/task/photo", params: { taskId: task.id } } as any);
+      return;
+    }
+    if (task.type === "checkin") {
+      if (!FLAGS.LOCATION_CHECKIN_ENABLED) {
+        Alert.alert(
+          "Coming soon",
+          "Location check-in verification is not available yet. Use another task type for now."
+        );
+        return;
+      }
+      router.push({ pathname: "/task/checkin", params: { taskId: task.id } } as any);
       return;
     }
     const routeMap: Record<string, string> = {
       run: "/task/run",
       timer: "/task/timer",
       photo: "/task/photo",
-      checkin: "/task/checkin",
     };
     const route = routeMap[task.type];
     if (route) {
-      router.push({ pathname: route as any, params: { taskId: task.id } });
+      const params: Record<string, string> = { taskId: task.id };
+      if (needsPhotoProof) params.requirePhotoProof = "true";
+      router.push({ pathname: route as any, params });
     }
   }, [router]);
+
+  const allTasks = (challenge?.tasks ?? []) as StarterTask[];
+  const isThisActiveChallenge = !!(
+    activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
+  );
+  const activeChallengeId = activeChallenge?.id as string | undefined;
+  const hasStravaTasks = allTasks.some((t: any) => t.verification_method === "strava_activity");
+
+  useEffect(() => {
+    if (!isThisActiveChallenge || !hasStravaTasks) {
+      setStravaConnected(null);
+      return;
+    }
+    trpcQuery(TRPC.integrations.getStravaConnection)
+      .then((conn: any) => setStravaConnected(!!conn))
+      .catch(() => setStravaConnected(false));
+  }, [isThisActiveChallenge, hasStravaTasks]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isJoined) refetchTodayCheckins();
+    }, [isJoined, refetchTodayCheckins])
+  );
+
+  const onRefresh = useCallback(async () => {
+    if (!id || refreshing) return;
+    setRefreshing(true);
+    try {
+      if (!isStarter) {
+        const data = await trpcQuery("challenges.getById", { id });
+        setRemoteChallenge(data);
+      }
+      if (isJoined) await refetchTodayCheckins();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [id, isStarter, isJoined, refetchTodayCheckins, refreshing]);
 
   if (isLoading) {
     return (
@@ -575,7 +659,6 @@ export default function ChallengeDetailScreen() {
   const isPending = isStarter ? joiningStarter : joinPending;
   const difficulty = (challenge.difficulty || "medium") as string;
   const theme = getTheme(difficulty);
-  const allTasks = (challenge.tasks || []) as StarterTask[];
   const rules = challenge.rules || [];
   const failCondition = challenge.fail_condition;
 
@@ -608,6 +691,13 @@ export default function ChallengeDetailScreen() {
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={true}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.ctaText}
+            />
+          }
         >
           {/* HERO HEADER */}
           <View style={[s.heroHeader, { backgroundColor: theme.headerBg }]}>
@@ -794,6 +884,7 @@ export default function ChallengeDetailScreen() {
               <Text style={s.sectionTitle}>Today{"'" as string}s Missions</Text>
               <View style={s.missionsCard}>
                 {allTasks.map((task, index) => {
+                  const checkin = todayCheckins.find((c: any) => c.task_id === task.id);
                   const isCompleted =
                     isJoinedRemote &&
                     todayCheckins.some(
@@ -807,6 +898,27 @@ export default function ChallengeDetailScreen() {
                       isCompleted={isCompleted}
                       isLast={index === allTasks.length - 1}
                       onStart={() => handleMissionStart(task)}
+                      checkin={checkin}
+                      verificationMethod={(task as any).verification_method}
+                      stravaConnected={hasStravaTasks ? stravaConnected : null}
+                      activeChallengeId={isThisActiveChallenge ? activeChallengeId : undefined}
+                      stravaVerifyPending={stravaVerifyPending === task.id}
+                      onConnectStrava={isThisActiveChallenge ? () => router.push("/(tabs)/profile" as any) : undefined}
+                      onVerifyStrava={async () => {
+                        if (!activeChallengeId) return;
+                        setStravaVerifyPending(task.id);
+                        try {
+                          await trpcMutate(TRPC.integrations.verifyStravaTask, {
+                            activeChallengeId,
+                            taskId: task.id,
+                          });
+                          await refetchTodayCheckins();
+                        } catch {
+                          Alert.alert("Verification failed", "No matching Strava activity found for today.");
+                        } finally {
+                          setStravaVerifyPending(null);
+                        }
+                      }}
                     />
                   );
                 })}
@@ -845,28 +957,8 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Leave Challenge */}
-            {isJoined && (
-              <TouchableOpacity
-                style={s.leaveBtn}
-                activeOpacity={0.6}
-                onPress={() => {
-                  Alert.alert("Leave Challenge", "Are you sure you want to leave?", [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Leave",
-                      style: "destructive",
-                      onPress: () => {
-                        router.back();
-                        // TODO: when backend supports challenges.leave, call it and refetch
-                      },
-                    },
-                  ]);
-                }}
-              >
-                <Text style={s.leaveBtnText}>Leave Challenge</Text>
-              </TouchableOpacity>
-            )}
+            {/* Leave Challenge: hidden until backend supports challenges.leave */}
+            {/* When ready, re-enable with trpcMutate("challenges.leave", { challengeId: id }) + refetch */}
 
             <View style={s.bottomSpacer} />
           </View>

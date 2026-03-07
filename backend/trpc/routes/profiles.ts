@@ -204,7 +204,7 @@ export const profilesRouter = createTRPCRouter({
             ]);
             const tokens = (pushRes?.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
             const pt = (profileTokenRes?.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
-            const allT = [...new Set([...tokens, pt].filter(Boolean))];
+            const allT = [...new Set([...tokens, pt].filter(Boolean))].filter((t: string | null | undefined): t is string => typeof t === "string");
             await sendExpoPush(allT, 'Last Stand used', 'Your streak continues.');
           }
         }
@@ -248,6 +248,57 @@ export const profilesRouter = createTRPCRouter({
         lastStandUsedThisSession,
         streakLostNoLastStand,
       };
+    }),
+
+  /** Completed challenges for profile dashboard (name + completion date). */
+  getCompletedChallenges: protectedProcedure
+    .query(async ({ ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from("active_challenges")
+        .select("id, challenge_id, created_at")
+        .eq("user_id", ctx.userId)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load completed challenges." });
+      }
+      const rows = (data ?? []) as { id: string; challenge_id: string; created_at?: string }[];
+      if (rows.length === 0) return [];
+      const challengeIds = [...new Set(rows.map((r) => r.challenge_id))];
+      const { data: challenges } = await ctx.supabase
+        .from("challenges")
+        .select("id, title")
+        .in("id", challengeIds);
+      const titleMap = new Map((challenges ?? []).map((c: { id: string; title?: string }) => [c.id, c.title ?? "Challenge"]));
+      return rows.map((r) => ({
+        id: r.id,
+        challengeId: r.challenge_id,
+        challengeName: titleMap.get(r.challenge_id) ?? "Challenge",
+        completedAt: r.created_at ?? new Date().toISOString(),
+      }));
+    }),
+
+  /** Secured date keys for discipline calendar (last 365 days). */
+  getSecuredDateKeys: protectedProcedure
+    .query(async ({ ctx }) => {
+      const todayKey = getTodayDateKey();
+      const start = new Date();
+      start.setDate(start.getDate() - 365);
+      const startKey = start.toISOString().split("T")[0];
+      const { data, error } = await ctx.supabase
+        .from("day_secures")
+        .select("date_key")
+        .eq("user_id", ctx.userId)
+        .gte("date_key", startKey)
+        .lte("date_key", todayKey)
+        .order("date_key", { ascending: false });
+
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load secured dates." });
+      }
+      return (data ?? []).map((r: { date_key: string }) => r.date_key);
     }),
 
   search: protectedProcedure

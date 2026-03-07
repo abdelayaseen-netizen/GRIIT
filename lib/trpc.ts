@@ -1,6 +1,7 @@
 import superjson from "superjson";
 import { supabase } from "./supabase";
 import { getTrpcUrl, fetchWithRetry } from "./api";
+import { notifySessionExpired } from "./auth-expiry";
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -13,15 +14,6 @@ export async function trpcQuery<T = any>(
   input?: unknown,
 ): Promise<T> {
   const url = getTrpcUrl();
-  const fullUrl = input !== undefined
-    ? `${url}/${path}?input=${encodeURIComponent(JSON.stringify(superjson.serialize(input)))}`
-    : `${url}/${path}`;
-  if (__DEV__) {
-    if (!(global as any).__trpcQueryUrlLogged) {
-      (global as any).__trpcQueryUrlLogged = true;
-      console.log('[tRPC] query URL (first call):', fullUrl.split('?')[0]);
-    }
-  }
   const authHeaders = await getAuthHeaders();
 
   const queryInput = input !== undefined
@@ -37,6 +29,10 @@ export async function trpcQuery<T = any>(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      await supabase.auth.signOut();
+      notifySessionExpired();
+    }
     throw new Error(`tRPC query failed: ${path} (${response.status})`);
   }
 
@@ -69,6 +65,10 @@ export async function trpcMutate<T = any>(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      await supabase.auth.signOut();
+      notifySessionExpired();
+    }
     const text = await response.text().catch(() => "");
     let errorMessage = `tRPC mutation failed: ${path} (${response.status})`;
     let errorCode: string | undefined;

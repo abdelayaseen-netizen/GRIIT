@@ -119,6 +119,7 @@ export default function CheckinTaskScreen() {
       clearInterval(interval);
       subscription.remove();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only setup; checkPermissions/updateTimeStatus would cause unnecessary re-runs if in deps
   }, [sessionActive]);
 
   useEffect(() => {
@@ -131,6 +132,7 @@ export default function CheckinTaskScreen() {
         locationSubscription.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- startLocationTracking is stable; sessionActive intentionally excluded to avoid toggling subscription on session change
   }, [hasPermission]);
 
   const checkPermissions = async () => {

@@ -68,17 +68,6 @@ export default function ChallengeChatInfoScreen() {
     updateChatRoomSettings(room.roomId, { mentionsOnly: !settings.mentionsOnly });
   };
 
-  const handleViewMembers = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert(
-      "Members",
-      `This challenge has ${challenge.participantsCount?.toLocaleString() ?? 0} members. A full member list will be available in a future update.`,
-      [{ text: "OK" }]
-    );
-  };
-
   const handleReport = () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

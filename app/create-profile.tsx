@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, StyleSheet } from "react-native";
+import { View, TextInput, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { Screen, Input, PrimaryButton } from "@/src/components/ui";
@@ -19,7 +19,7 @@ export default function CreateProfileScreen() {
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
-        require("react-native").Alert.alert(
+        Alert.alert(
           "Session Expired",
           "Your session has expired. Please log in again.",
           [{ text: "OK", onPress: () => router.replace("/auth/login" as any) }]
@@ -46,15 +46,15 @@ export default function CreateProfileScreen() {
       if (error) {
         const code = (error as { code?: string }).code;
         if (code === "23505") {
-          require("react-native").Alert.alert("Error", "Username is already taken. Please choose another.");
+          Alert.alert("Error", "Username is already taken. Please choose another.");
           return;
         }
-        require("react-native").Alert.alert("Error", error.message || "Failed to create profile");
+        Alert.alert("Error", error.message || "Failed to create profile");
         return;
       }
       router.replace("/onboarding" as any);
     } catch (err: unknown) {
-      require("react-native").Alert.alert("Error", (err as Error).message || "Something went wrong");
+      Alert.alert("Error", (err as Error).message || "Something went wrong");
     } finally {
       setIsPending(false);
     }
@@ -62,15 +62,15 @@ export default function CreateProfileScreen() {
 
   const handleCreateProfile = async () => {
     if (!username.trim()) {
-      require("react-native").Alert.alert("Error", "Username is required");
+      Alert.alert("Error", "Username is required");
       return;
     }
     if (username.length < 3) {
-      require("react-native").Alert.alert("Error", "Username must be at least 3 characters");
+      Alert.alert("Error", "Username must be at least 3 characters");
       return;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      require("react-native").Alert.alert("Error", "Username can only contain letters, numbers, and underscores");
+      Alert.alert("Error", "Username can only contain letters, numbers, and underscores");
       return;
     }
     handleSubmit({

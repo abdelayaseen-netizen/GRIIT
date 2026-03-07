@@ -1,0 +1,113 @@
+﻿env: load .env
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_RORK_API_BASE_URL EXPO_PUBLIC_API_URL
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\(tabs)\discover.tsx
+  224:9   warning  'isFallback' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  291:16  warning  '_' is defined but never used                    @typescript-eslint/no-unused-vars
+  519:10  warning  'formatCount' is defined but never used          @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\(tabs)\index.tsx
+   21:3   warning  'Wifi' is defined but never used                           @typescript-eslint/no-unused-vars
+   23:3   warning  'Trophy' is defined but never used                         @typescript-eslint/no-unused-vars
+   24:3   warning  'Zap' is defined but never used                            @typescript-eslint/no-unused-vars
+   30:3   warning  'ThumbsUp' is defined but never used                       @typescript-eslint/no-unused-vars
+   31:3   warning  'UserPlus' is defined but never used                       @typescript-eslint/no-unused-vars
+   39:8   warning  'StreakTracker' is defined but never used                  @typescript-eslint/no-unused-vars
+   40:8   warning  'StreakCalendar' is defined but never used                 @typescript-eslint/no-unused-vars
+   73:10  warning  'CircularProgress' is defined but never used               @typescript-eslint/no-unused-vars
+   86:9   warning  'strokeDashoffset' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  228:5   warning  'profileLoading' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  243:9   warning  'streakLostTrackedRef' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  830:7   warning  'badgeStyles' is assigned a value but never used           @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\(tabs)\profile.tsx
+   13:8   warning  'C:\Users\abdel\OneDrive\Desktop\GRIT-1\node_modules\react-native\index.js' imported multiple times  import/no-duplicates
+   16:3   warning  'Flame' is defined but never used                                                                    @typescript-eslint/no-unused-vars
+   17:3   warning  'Trophy' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   18:3   warning  'Target' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   19:3   warning  'LogOut' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   21:3   warning  'Pencil' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   23:3   warning  'Zap' is defined but never used                                                                      @typescript-eslint/no-unused-vars
+   26:3   warning  'Award' is defined but never used                                                                    @typescript-eslint/no-unused-vars
+   27:3   warning  'CheckCircle2' is defined but never used                                                             @typescript-eslint/no-unused-vars
+   28:3   warning  'Share2' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   29:3   warning  'ShieldCheck' is defined but never used                                                              @typescript-eslint/no-unused-vars
+   30:3   warning  'Star' is defined but never used                                                                     @typescript-eslint/no-unused-vars
+   31:3   warning  'TrendingUp' is defined but never used                                                               @typescript-eslint/no-unused-vars
+   33:3   warning  'UserCheck' is defined but never used                                                                @typescript-eslint/no-unused-vars
+   37:25  warning  'C:\Users\abdel\OneDrive\Desktop\GRIT-1\node_modules\react-native\index.js' imported multiple times  import/no-duplicates
+  264:23  warning  'setBioExpanded' is assigned a value but never used                                                  @typescript-eslint/no-unused-vars
+  395:9   warning  'avatarRingColor' is assigned a value but never used                                                 @typescript-eslint/no-unused-vars
+  509:9   warning  'displayBio' is assigned a value but never used                                                      @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\api\trpc\[trpc]+api.ts
+  3:15  warning  'AppRouter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\challenge\[id]\chat-info.tsx
+  71:9  warning  'handleViewMembers' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\create-profile.tsx
+  22:9   warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  49:11  warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  52:9   warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  57:7   warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  65:7   warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  69:7   warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  73:7   warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\day1-quick-win.tsx
+  48:9  warning  'taskType' is assigned a value but never used                                                                                                                                    @typescript-eslint/no-unused-vars
+  89:6  warning  React Hook useCallback has unnecessary dependencies: 'params.dailyTimeBudget', 'params.primaryGoal', and 'params.starterId'. Either exclude them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\onboarding.tsx
+  14:35  warning  'typography' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\secure-confirmation.tsx
+  6:3  warning  'TouchableOpacity' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\success.tsx
+   1:36  warning  'useState' is defined but never used               @typescript-eslint/no-unused-vars
+  25:9   warning  'challengeId' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  32:9   warning  'isCompletion' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\task\checkin.tsx
+  122:6  warning  React Hook useEffect has missing dependencies: 'checkPermissions', 'sessionPolicy?.allowBackgroundSeconds', and 'updateTimeStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  134:6  warning  React Hook useEffect has missing dependencies: 'sessionActive' and 'startLocationTracking'. Either include them or remove the dependency array                                          react-hooks/exhaustive-deps
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\task\journal.tsx
+  177:6  warning  React Hook useCallback has a missing dependency: 'pickerOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  192:6  warning  React Hook useCallback has a missing dependency: 'pickerOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\app\task\timer.tsx
+   4:49  warning  'C:\Users\abdel\OneDrive\Desktop\GRIT-1\node_modules\expo-router\build\index.js' imported multiple times  import/no-duplicates
+   5:32  warning  'C:\Users\abdel\OneDrive\Desktop\GRIT-1\node_modules\expo-router\build\index.js' imported multiple times  import/no-duplicates
+  32:10  warning  'intervalId' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\components\AuthGateModal.tsx
+   8:3   warning  'Platform' is defined but never used    @typescript-eslint/no-unused-vars
+  11:35  warning  'typography' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\components\Celebration.tsx
+  75:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\components\profile\AchievementsSection.tsx
+  22:7  warning  'categoryLabels' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\components\profile\DisciplineCalendar.tsx
+  22:9  warning  'todayKey' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\components\profile\ProfileCompletionCard.tsx
+  13:7  warning  'checklist' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\src\components\ui\ChallengeRowCard.tsx
+  6:7  warning  'DOT_COLORS' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\src\components\ui\CreateFlowCheckbox.tsx
+  4:18  warning  'radius' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\abdel\OneDrive\Desktop\GRIT-1\src\components\ui\EmptyState.tsx
+  10:3  warning  'measures' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 65 problems (0 errors, 65 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+

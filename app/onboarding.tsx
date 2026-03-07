@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { colors, spacing, radius, typography } from "@/src/theme/tokens";
+import { colors, spacing, radius } from "@/src/theme/tokens";
 import { trpcMutate } from "@/lib/trpc";
 import { saveJoinedStarterId, setDay1StartedAt } from "@/lib/starter-join";
 import { filterOnboardingStarters, type OnboardingStarter } from "@/lib/onboarding-starters";

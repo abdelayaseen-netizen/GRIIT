@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -22,14 +22,12 @@ export default function SuccessScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const statsSlide = useRef(new Animated.Value(30)).current;
 
-  const challengeId = params.challengeId as string;
   const title = params.title as string;
   const duration = params.duration as string;
   const tasksCount = params.tasksCount as string;
   const difficulty = params.difficulty as string;
   const daysCompleted = params.daysCompleted as string;
   const finalStreak = params.finalStreak as string;
-  const isCompletion = params.isCompletion === "true";
   const isCreateSuccess = params.isCreateSuccess === "true";
 
   const isHardMode = difficulty === "hard" || difficulty === "extreme";

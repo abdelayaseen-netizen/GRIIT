@@ -40,7 +40,8 @@ export function ChallengeCard24h(p: {
   participantsCount: number;
   onPress: () => void;
 }) {
-  const countdown = p.endsAt != null ? useCountdown(p.endsAt) : (p.countdownText ?? "--:--:--");
+  const countdownFromHook = useCountdown(p.endsAt ?? null);
+  const countdown = p.endsAt != null ? countdownFromHook : (p.countdownText ?? "--:--:--");
   const diff = DIFF_STYLES[p.difficulty] ?? DIFF_STYLES.Medium;
   const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
   return (

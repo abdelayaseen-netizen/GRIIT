@@ -67,6 +67,7 @@ export const checkinsRouter = createTRPCRouter({
         }
       }
 
+      const proofUrl = input.proofUrl?.trim() || null;
       const { data, error } = await ctx.supabase
         .from('check_ins')
         .upsert({
@@ -77,7 +78,8 @@ export const checkinsRouter = createTRPCRouter({
           status: 'completed',
           value: input.value,
           note_text: input.noteText,
-          proof_url: input.proofUrl,
+          proof_url: proofUrl,
+          completion_image_url: proofUrl,
         })
         .select()
         .single();
@@ -123,11 +125,32 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data, error } = await ctx.supabase
         .from('check_ins')
-        .select('id, task_id, date_key, status, value, note_text, proof_url, created_at')
+        .select('id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at')
         .eq('active_challenge_id', input.activeChallengeId)
         .eq('date_key', dateKey);
 
       requireNoError(error, "Failed to load check-ins.");
+      return data ?? [];
+    }),
+
+  /** All today check-ins for the user across all their active challenges (for home). */
+  getTodayCheckinsForUser: protectedProcedure
+    .query(async ({ ctx }) => {
+      const dateKey = getTodayDateKey();
+      const { data: acList, error: acErr } = await ctx.supabase
+        .from('active_challenges')
+        .select('id')
+        .eq('user_id', ctx.userId)
+        .eq('status', 'active');
+      requireNoError(acErr, "Failed to load active challenges.");
+      const acIds = (acList ?? []).map((r: { id: string }) => r.id);
+      if (acIds.length === 0) return [];
+      const { data, error } = await ctx.supabase
+        .from('check_ins')
+        .select('id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, external_activity_id, verification_status, created_at')
+        .in('active_challenge_id', acIds)
+        .eq('date_key', dateKey);
+      requireNoError(error, "Failed to load today check-ins.");
       return data ?? [];
     }),
 

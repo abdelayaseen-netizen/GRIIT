@@ -42,6 +42,15 @@ const healthPayload = () => {
 app.get("/api/health", (c) => c.json(healthPayload()));
 app.get("/health", (c) => c.json(healthPayload()));
 
+/** Strava OAuth callback: exchange code for tokens, upsert connected_accounts, redirect to app. */
+app.get("/api/auth/strava/callback", async (c) => {
+  const url = new URL(c.req.url);
+  const result = await import("./lib/strava-callback").then((m) =>
+    m.handleStravaCallback(url.searchParams)
+  );
+  return c.redirect(result.redirect, 302);
+});
+
 /** Adds X-Request-ID, enforces body size limit, rate limits by IP. Runs before tRPC. */
 async function trpcPreMiddleware(c: Context, next: () => Promise<void>) {
   const req = c.req.raw;
@@ -50,12 +59,13 @@ async function trpcPreMiddleware(c: Context, next: () => Promise<void>) {
   const newHeaders = new Headers(req.headers);
   newHeaders.set("x-request-id", requestId);
   // Replace request so downstream sees x-request-id (Hono req is mutable in practice)
-  (c as { req: Request }).req = new Request(req.url, {
+  type RequestInitWithDuplex = RequestInit & { duplex?: "half" };
+  (c as unknown as { req: Request }).req = new Request(req.url, {
     method: req.method,
     headers: newHeaders,
     body: req.body,
-    duplex: "half",
-  });
+    ...(req.body != null && { duplex: "half" as const }),
+  } as RequestInitWithDuplex);
 
   const contentLength = req.headers.get("content-length");
   if (req.method === "POST" && contentLength) {

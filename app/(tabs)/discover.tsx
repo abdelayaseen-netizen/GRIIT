@@ -221,8 +221,6 @@ export default function DiscoverScreen() {
 
   const isLoading = featuredLoading && !timedOut;
   const isError = featuredError || timedOut;
-  const isFallback = isError || (!isLoading && (featuredData?.length ?? 0) === 0);
-
   const allChallenges = useMemo((): StarterChallenge[] => {
     const serverData = featuredData;
     if (serverData && serverData.length > 0) {
@@ -288,7 +286,7 @@ export default function DiscoverScreen() {
       if (!id) return;
       try {
         if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      } catch (_) {}
+      } catch { /* ignore */ }
       router.push(`/challenge/${id}` as any);
     },
     [router]
@@ -516,7 +514,3 @@ export default function DiscoverScreen() {
   );
 }
 
-function formatCount(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
-  return String(n);
-}

@@ -11,6 +11,7 @@ import {
   cancelSecureReminders,
 } from '@/lib/notifications';
 import { registerPushTokenWithBackend } from '@/lib/register-push-token';
+import { getTodayDateKey } from '@/lib/date-utils';
 
 type AppContextValue = {
   profile: any;
@@ -26,11 +27,12 @@ type AppContextValue = {
   computeProgress: { verifiedCount: number; totalRequired: number; progress: number };
   canSecureDay: boolean;
   completeTask: (params: { activeChallengeId: string; taskId: string; value?: number; noteText?: string; proofUrl?: string }) => void;
-  secureDay: () => Promise<{ newStreakCount: number } | undefined>;
+  secureDay: () => Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined>;
   isLoading: boolean;
   isError: boolean;
   initialFetchDone: boolean;
   refetchAll: () => Promise<void>;
+  refetchTodayCheckins: () => Promise<void>;
   challenges: any[];
   getChallengeRoom: (challengeId: string) => any;
   getChatMessages: (roomId: string) => any[];
@@ -109,16 +111,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const fetchActiveChallenge = useCallback(async () => {
-    if (!user) return;
+  const fetchActiveChallenge = useCallback(async (): Promise<any> => {
+    if (!user) return null;
     try {
       const data = await trpcQuery(TRPC.challenges.getActive);
       setActiveChallenge(data);
       setActiveChallengeError(false);
+      setActiveChallengeLoaded(true);
+      return data;
     } catch {
       setActiveChallengeError(true);
-    } finally {
       setActiveChallengeLoaded(true);
+      return null;
     }
   }, [user]);
 
@@ -161,7 +165,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (Platform.OS === 'web' || !user || !stats) return;
-    const todayKey = new Date().toISOString().split('T')[0];
+    const todayKey = getTodayDateKey();
     const lastKey = stats.lastCompletedDateKey ?? null;
     const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
     const lastStands = (stats as any)?.lastStandsAvailable ?? 0;
@@ -284,9 +288,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const challenge = activeChallenge?.challenges as any;
 
-  const todayDateLocal = useMemo(() => {
-    return new Date().toISOString().split('T')[0];
-  }, []);
+  const todayDateLocal = useMemo(() => getTodayDateKey(), []);
 
   const computeProgress = useMemo(() => {
     if (!challenge || !todayCheckins.length) {
@@ -317,14 +319,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     value?: number;
     noteText?: string;
     proofUrl?: string;
-  }) => {
-    trpcMutate(TRPC.checkins.complete, params).then(() => {
+  }): Promise<void> => {
+    return trpcMutate(TRPC.checkins.complete, params).then(() => {
       if (activeChallenge?.id) fetchTodayCheckins(activeChallenge.id);
       fetchActiveChallenge();
-    }).catch(() => {
-      // Complete task failed — UI can show retry
+      fetchStats();
     });
-  }, [activeChallenge, fetchTodayCheckins, fetchActiveChallenge]);
+  }, [activeChallenge, fetchTodayCheckins, fetchActiveChallenge, fetchStats]);
 
   const secureDay = useCallback(async (): Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined> => {
     if (!activeChallenge?.id || !canSecureDay) return undefined;
@@ -358,13 +359,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const refetchAll = useCallback(async () => {
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       fetchProfile(),
       fetchStats(),
       fetchActiveChallenge(),
       fetchStories(),
     ]);
-  }, [fetchProfile, fetchStats, fetchActiveChallenge, fetchStories]);
+    const activeResult = results[2];
+    const activeData = activeResult.status === 'fulfilled' ? activeResult.value : null;
+    if (activeData?.id) await fetchTodayCheckins(activeData.id);
+  }, [fetchProfile, fetchStats, fetchActiveChallenge, fetchStories, fetchTodayCheckins]);
+
+  const refetchTodayCheckins = useCallback(async () => {
+    if (activeChallenge?.id) await fetchTodayCheckins(activeChallenge.id);
+  }, [activeChallenge?.id, fetchTodayCheckins]);
 
   const profileMissing = !resolvedProfile && autoCreateAttempted && fallbackAttempted && !profileAutoCreating && !!autoCreateError;
 
@@ -387,6 +395,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isError,
     initialFetchDone,
     refetchAll,
+    refetchTodayCheckins,
 
     challenges: [],
     getChallengeRoom: (_challengeId: string) => null as any,
@@ -423,6 +432,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     hardTimeout,
     isError,
     refetchAll,
+    refetchTodayCheckins,
     user,
   ]);
 

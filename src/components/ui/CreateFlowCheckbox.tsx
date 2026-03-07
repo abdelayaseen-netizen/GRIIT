@@ -1,7 +1,7 @@
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
-import { colors, radius } from "@/src/theme/tokens";
+import { colors } from "@/src/theme/tokens";
 
 const BOX_SIZE = 24;
 

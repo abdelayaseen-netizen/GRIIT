@@ -8,7 +8,7 @@ export default function NotFoundScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Page Not Found</Text>
         <Text style={styles.message}>
-          This screen doesn't exist.
+          This screen doesn{"'"}t exist.
         </Text>
         <Link href="/" asChild>
           <Pressable style={styles.button}>

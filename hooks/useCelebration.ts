@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getTodayDateKey } from "@/lib/date-utils";
 
 const CELEBRATION_STORAGE_KEY = "@celebrations_shown";
 
@@ -19,7 +20,7 @@ export function useCelebration(): UseCelebrationReturn {
       if (!stored) return false;
       
       const shownIds: Record<string, string> = JSON.parse(stored);
-      const today = new Date().toISOString().split("T")[0];
+      const today = getTodayDateKey();
       const key = `${taskId}_${today}`;
       
       return !!shownIds[key];
@@ -33,7 +34,7 @@ export function useCelebration(): UseCelebrationReturn {
       const stored = await AsyncStorage.getItem(CELEBRATION_STORAGE_KEY);
       const shownIds: Record<string, string> = stored ? JSON.parse(stored) : {};
       
-      const today = new Date().toISOString().split("T")[0];
+      const today = getTodayDateKey();
       const key = `${taskId}_${today}`;
       shownIds[key] = new Date().toISOString();
       

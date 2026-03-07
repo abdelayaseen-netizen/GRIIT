@@ -21,6 +21,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { formatTimeAgo } from "@/lib/formatTimeAgo";
+import { FLAGS } from "@/lib/feature-flags";
 import Colors from "@/constants/colors";
 import { ChatMessage } from "@/types";
 
@@ -48,6 +49,13 @@ export default function ChallengeChatScreen() {
   const [composerText, setComposerText] = useState("");
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    if (!FLAGS.CHAT_ENABLED && id) {
+      router.replace(`/challenge/${id}` as any);
+      return;
+    }
+  }, [id, router]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -224,6 +232,27 @@ export default function ChallengeChatScreen() {
     );
   };
 
+  if (!FLAGS.CHAT_ENABLED) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.chatDisabledWrap}>
+          <TouchableOpacity
+            style={styles.chatDisabledBack}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <ChevronLeft size={24} color={Colors.text.primary} />
+            <Text style={styles.chatDisabledBackText}>Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.chatDisabledTitle}>Chat not available</Text>
+          <Text style={styles.chatDisabledSub}>
+            Challenge chat is coming soon. Use the challenge to track tasks and progress.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!challenge || !room) {
     return (
       <SafeAreaView style={styles.container} edges={["bottom"]}>
@@ -335,6 +364,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  chatDisabledWrap: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+  },
+  chatDisabledBack: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    marginBottom: 32,
+    gap: 4,
+  },
+  chatDisabledBackText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+  },
+  chatDisabledTitle: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.text.primary,
+    marginBottom: 12,
+  },
+  chatDisabledSub: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    lineHeight: 20,
   },
   errorContainer: {
     flex: 1,

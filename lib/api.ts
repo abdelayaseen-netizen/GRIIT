@@ -24,16 +24,9 @@ export function getApiBaseUrl(): string {
     process.env.EXPO_PUBLIC_API_BASE_URL;
   if (envUrl && typeof envUrl === 'string') {
     _baseUrl = envUrl.replace(/\/$/, '').trim();
-    if (__DEV__) {
-      console.log('[API] baseUrl (from env):', _baseUrl);
-      console.log('[API] trpcUrl (dev):', `${_baseUrl}${TRPC_PATH}`);
-    }
     return _baseUrl;
   }
   _baseUrl = '';
-  if (__DEV__) {
-    console.log('[API] baseUrl: (empty) — requests use relative path. Set EXPO_PUBLIC_API_URL in production.');
-  }
   return _baseUrl;
 }
 
@@ -47,10 +40,6 @@ export function getHealthUrl(): string {
 export function getTrpcUrl(): string {
   const base = getApiBaseUrl();
   const url = base ? `${base}${TRPC_PATH}` : TRPC_PATH;
-  if (__DEV__ && !(global as any).__trpcUrlLogged) {
-    (global as any).__trpcUrlLogged = true;
-    console.log('[tRPC] trpcUrl (final):', url);
-  }
   return url;
 }
 

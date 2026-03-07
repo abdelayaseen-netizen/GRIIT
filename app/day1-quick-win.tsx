@@ -45,13 +45,13 @@ export default function Day1QuickWinScreen() {
   const challengeId = params.challengeId ?? "";
   const title = params.title ?? "Starter";
   const taskTitle = params.taskTitle ?? "Complete your first task";
-  const taskType = (params.taskType as string) ?? "checkin";
 
   const handleMarkComplete = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (activeChallengeId && taskId) {
       try {
         await trpcMutate("checkins.complete", { activeChallengeId, taskId });
+        await refetchAll();
       } catch (e: any) {
         Alert.alert("Error", e?.message ?? "Could not save completion.");
         return;
@@ -67,7 +67,7 @@ export default function Day1QuickWinScreen() {
       ...(params.primaryGoal && { primary_goal: params.primaryGoal }),
       ...(params.dailyTimeBudget && { daily_time_budget: params.dailyTimeBudget }),
     });
-  }, [activeChallengeId, taskId, challengeId, params.starterId, params.primaryGoal, params.dailyTimeBudget]);
+  }, [activeChallengeId, taskId, challengeId, refetchAll, params.starterId, params.primaryGoal, params.dailyTimeBudget]);
 
   const handleSecureDay = useCallback(async () => {
     if (!taskCompleted || securing) return;
@@ -85,7 +85,7 @@ export default function Day1QuickWinScreen() {
     } finally {
       setSecuring(false);
     }
-  }, [taskCompleted, securing, challengeId, activeChallengeId, refetchAll, params.starterId, params.primaryGoal, params.dailyTimeBudget]);
+  }, [taskCompleted, securing, challengeId, activeChallengeId, refetchAll]);
 
   const handleGoToHome = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -156,7 +156,7 @@ export default function Day1QuickWinScreen() {
             </View>
             <Text style={s.celebrationTitle}>Day 1 secured.</Text>
             <Text style={s.celebrationSub}>
-              You're officially in motion. Come back tomorrow to protect your streak.
+              You{"'"}re officially in motion. Come back tomorrow to protect your streak.
             </Text>
             <View style={s.celebrationStats}>
               <Text style={s.celebrationStatLabel}>Streak</Text>

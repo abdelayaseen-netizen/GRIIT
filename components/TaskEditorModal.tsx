@@ -20,6 +20,8 @@ import {
   CheckCircle,
   MapPin,
   Clock,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react-native";
 import {
   CreateFlowHeader,
@@ -96,6 +98,9 @@ export interface TaskEditorTask {
   hardWindowEnabled?: boolean;
   timezoneMode?: TimezoneMode;
   challengeTimezone?: string | null;
+  requirePhotoProof?: boolean;
+  verificationMethod?: string;
+  verificationRuleJson?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
 }
 
 interface Props {
@@ -128,14 +133,15 @@ const TASK_TYPES: {
   id: TaskType;
   icon: React.ComponentType<any>;
   label: string;
+  description: string;
   color: string;
 }[] = [
-  { id: "journal", icon: BookOpen, label: "Journal", color: tokenColors.accentPurple },
-  { id: "timer", icon: Timer, label: "Timer", color: tokenColors.accentYellow },
-  { id: "photo", icon: Camera, label: "Photo", color: tokenColors.accentPink },
-  { id: "run", icon: Footprints, label: "Run", color: tokenColors.accentGreen },
-  { id: "simple", icon: CheckCircle, label: "Simple", color: tokenColors.accentGray },
-  { id: "checkin", icon: MapPin, label: "Check-in", color: tokenColors.accentBlue },
+  { id: "journal", icon: BookOpen, label: "Journal", description: "Write a short reflection", color: tokenColors.accentPurple },
+  { id: "timer", icon: Timer, label: "Timer", description: "Stay focused for a set duration", color: tokenColors.accentYellow },
+  { id: "photo", icon: Camera, label: "Photo", description: "Upload proof", color: tokenColors.accentPink },
+  { id: "run", icon: Footprints, label: "Run", description: "Track distance or time", color: tokenColors.accentGreen },
+  { id: "simple", icon: CheckCircle, label: "Basic", description: "Mark complete manually", color: tokenColors.accentGray },
+  { id: "checkin", icon: MapPin, label: "Check-in", description: "Verify at a place", color: tokenColors.accentBlue },
 ];
 
 const TASK_TYPE_MAP: Record<
@@ -146,7 +152,7 @@ const TASK_TYPE_MAP: Record<
   timer: { icon: Timer, label: "Timer", color: tokenColors.accentYellow },
   photo: { icon: Camera, label: "Photo", color: tokenColors.accentPink },
   run: { icon: Footprints, label: "Run / Workout", color: tokenColors.accentGreen },
-  simple: { icon: CheckCircle, label: "Simple Check", color: tokenColors.accentGray },
+  simple: { icon: CheckCircle, label: "Basic", color: tokenColors.accentGray },
   checkin: { icon: MapPin, label: "Location Check-in", color: tokenColors.accentBlue },
 };
 
@@ -194,6 +200,16 @@ export default function TaskEditorModal({
   const [teHardEnd, setTeHardEnd] = useState("30");
   const [teTzMode, setTeTzMode] = useState<TimezoneMode>("USER_LOCAL");
   const [teTz, setTeTz] = useState("");
+  const [requirePhotoProof, setRequirePhotoProof] = useState(false);
+  const [verificationMethod, setVerificationMethod] = useState<"manual" | "photo_proof" | "strava_activity">("manual");
+  const [stravaSport, setStravaSport] = useState("Run");
+  const [stravaMinDistanceM, setStravaMinDistanceM] = useState("3000");
+  const [stravaMinMovingTimeS, setStravaMinMovingTimeS] = useState("900");
+
+  const [advancedJournalOpen, setAdvancedJournalOpen] = useState(false);
+  const [advancedTimerOpen, setAdvancedTimerOpen] = useState(false);
+  const [advancedRunOpen, setAdvancedRunOpen] = useState(false);
+  const [teDetailsExpanded, setTeDetailsExpanded] = useState(false);
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -226,6 +242,15 @@ export default function TaskEditorModal({
     setTeHardEnd("30");
     setTeTzMode("USER_LOCAL");
     setTeTz("");
+    setRequirePhotoProof(false);
+    setVerificationMethod("manual");
+    setStravaSport("Run");
+    setStravaMinDistanceM("3000");
+    setStravaMinMovingTimeS("900");
+    setAdvancedJournalOpen(false);
+    setAdvancedTimerOpen(false);
+    setAdvancedRunOpen(false);
+    setTeDetailsExpanded(false);
   }, []);
 
   useEffect(() => {
@@ -272,8 +297,18 @@ export default function TaskEditorModal({
       if (editingTask.locationName) setLocationName(editingTask.locationName);
       if (editingTask.radiusMeters)
         setRadiusMeters(editingTask.radiusMeters.toString());
+      if (editingTask.requirePhotoProof) setRequirePhotoProof(true);
+      if (editingTask.verificationMethod === "photo_proof" || (editingTask.requirePhotoProof && editingTask.type !== "photo")) setVerificationMethod("photo_proof");
+      else if (editingTask.verificationMethod === "strava_activity") {
+        setVerificationMethod("strava_activity");
+        const r = editingTask.verificationRuleJson;
+        if (r?.sport) setStravaSport(r.sport);
+        if (r?.min_distance_m != null) setStravaMinDistanceM(String(r.min_distance_m));
+        if (r?.min_moving_time_s != null) setStravaMinMovingTimeS(String(r.min_moving_time_s));
+      } else setVerificationMethod("manual");
       if (editingTask.timeEnforcementEnabled) {
         setTeEnabled(true);
+        setTeDetailsExpanded(true);
         if (editingTask.anchorTimeLocal)
           setTeAnchor(editingTask.anchorTimeLocal);
         if (editingTask.taskDurationMinutes)
@@ -330,7 +365,7 @@ export default function TaskEditorModal({
               : wordLimitWords;
           if (!limit || limit < 20 || limit > 1000) return false;
         }
-        return hasPrompt && hasType;
+        return hasPrompt || hasType;
       }
       case "timer":
         return parseInt(duration, 10) > 0;
@@ -404,11 +439,27 @@ export default function TaskEditorModal({
         }
       : { timeEnforcementEnabled: false };
 
+    const verMethod: "manual" | "photo_proof" | "strava_activity" =
+      verificationMethod === "strava_activity" ? "strava_activity"
+      : verificationMethod === "photo_proof" || (taskType === "photo" || requirePhotoProof) ? "photo_proof"
+      : "manual";
+    const verRuleJson =
+      verMethod === "strava_activity"
+        ? {
+            sport: stravaSport,
+            min_distance_m: parseInt(stravaMinDistanceM, 10) || 0,
+            min_moving_time_s: parseInt(stravaMinMovingTimeS, 10) || 0,
+          }
+        : null;
+
     const base: TaskEditorTask = {
       id: editingTask?.id || Date.now().toString(),
       title: title.trim(),
       type: taskType!,
       required: true,
+      requirePhotoProof: taskType === "photo" ? true : requirePhotoProof,
+      verificationMethod: verMethod,
+      verificationRuleJson: verRuleJson,
       ...teFields,
     };
 
@@ -497,6 +548,11 @@ export default function TaskEditorModal({
     distanceUnit,
     locationName,
     radiusMeters,
+    requirePhotoProof,
+    verificationMethod,
+    stravaSport,
+    stravaMinDistanceM,
+    stravaMinMovingTimeS,
     onSave,
   ]);
 
@@ -551,6 +607,7 @@ export default function TaskEditorModal({
           <View key={t.id} style={s.typeGridItem}>
             <TaskTypeCard
               label={t.label}
+              description={t.description}
               selected={taskType === t.id}
               onPress={() => setTaskType(t.id)}
               icon={<Icon size={22} color={t.color} />}
@@ -562,39 +619,31 @@ export default function TaskEditorModal({
     </View>
   );
 
+  const CollapsibleSection = ({
+    title,
+    open,
+    onToggle,
+    children,
+  }: {
+    title: string;
+    open: boolean;
+    onToggle: () => void;
+    children: React.ReactNode;
+  }) => (
+    <View style={s.collapsibleWrap}>
+      <TouchableOpacity style={s.collapsibleHeader} onPress={onToggle} activeOpacity={0.7}>
+        <Text style={s.collapsibleTitle}>{title}</Text>
+        {open ? <ChevronUp size={18} color={tokenColors.textSecondaryCreate} /> : <ChevronDown size={18} color={tokenColors.textSecondaryCreate} />}
+      </TouchableOpacity>
+      {open ? <View style={s.collapsibleBody}>{children}</View> : null}
+    </View>
+  );
+
   const renderJournalSettings = () => (
     <View style={cfs.settingsCard}>
       <View style={cfs.fieldGroup}>
-        <Text style={s.inputLabel}>What is this journal about?</Text>
-        <View style={s.chipGrid}>
-          {JOURNAL_CATEGORIES.map((cat) => {
-            const sel = journalType.includes(cat.id);
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[s.chip, sel && s.chipSelected]}
-                onPress={() => {
-                  setJournalType((prev) =>
-                    prev.includes(cat.id)
-                      ? prev.filter((c) => c !== cat.id)
-                      : [...prev, cat.id]
-                  );
-                  if (cat.id === "free_write")
-                    setAllowFreeWrite(!journalType.includes(cat.id));
-                }}
-              >
-                <Text style={[s.chipText, sel && s.chipTextSelected]}>
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={cfs.fieldGroup}>
-        <Text style={s.inputLabel}>Prompt (what should they write about?)</Text>
-        <Text style={s.inputHint}>This appears at the top when the user journals.</Text>
+        <Text style={s.inputLabel}>Prompt (optional)</Text>
+        <Text style={s.inputHint}>Appears at the top when the user journals.</Text>
         <CreateFlowInput
           value={journalPrompt}
           onChangeText={setJournalPrompt}
@@ -612,62 +661,86 @@ export default function TaskEditorModal({
         </View>
       </View>
 
-      <View style={cfs.fieldGroup}>
-        <Text style={s.inputLabel}>Quick check-ins</Text>
-        <CreateFlowCheckbox checked={captureMood} onPress={() => setCaptureMood(!captureMood)} label="Capture mood" />
-        <CreateFlowCheckbox checked={captureEnergy} onPress={() => setCaptureEnergy(!captureEnergy)} label="Capture energy level" />
-        <CreateFlowCheckbox checked={captureBodyState} onPress={() => setCaptureBodyState(!captureBodyState)} label="Capture body state" />
-      </View>
-
-      <View style={cfs.fieldGroup}>
-        <CreateFlowCheckbox
-          checked={wordLimitEnabled}
-          onPress={() => setWordLimitEnabled(!wordLimitEnabled)}
-          label="Limit entry length"
-        />
-        {!wordLimitEnabled && (
-          <Text style={s.inputHint}>
-            Limits keep journaling quick and consistent. Turn off for free writing.
-          </Text>
-        )}
-        {wordLimitEnabled && (
-          <View style={s.wordLimitBody}>
-            <View style={s.modeRow}>
-              <DurationPill label="Fair preset" selected={wordLimitMode === "PRESET"} onPress={() => setWordLimitMode("PRESET")} />
-              <DurationPill label="Custom" selected={wordLimitMode === "CUSTOM"} onPress={() => setWordLimitMode("CUSTOM")} />
-            </View>
-            {wordLimitMode === "PRESET" ? (
-              <View style={s.presetRow}>
-                {([50, 120, 250, 500] as const).map((w) => (
-                  <TouchableOpacity
-                    key={w}
-                    style={[s.presetCard, wordLimitWords === w && s.presetCardActive]}
-                    onPress={() => setWordLimitWords(w)}
-                  >
-                    <Text style={[s.presetNum, wordLimitWords === w && s.presetNumActive]}>{w}</Text>
-                    <Text style={[s.presetLabel, wordLimitWords === w && s.presetLabelActive]}>
-                      {w === 50 ? "Short" : w === 120 ? "Standard" : w === 250 ? "Deep" : "Long"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : (
-              <View style={cfs.fieldGroup}>
-                <Text style={s.inputLabel}>Max words</Text>
-                <CreateFlowInput
-                  value={customWordLimit}
-                  onChangeText={setCustomWordLimit}
-                  placeholder="e.g., 150"
-                />
-                <Text style={s.inputHint}>Min 20, max 1000</Text>
-                {customWordLimit && parseInt(customWordLimit, 10) >= 20 && parseInt(customWordLimit, 10) <= 1000 && (
-                  <Text style={s.purpleHint}>Users can write up to {customWordLimit} words.</Text>
-                )}
-              </View>
-            )}
+      <CollapsibleSection
+        title="Advanced options"
+        open={advancedJournalOpen}
+        onToggle={() => setAdvancedJournalOpen(!advancedJournalOpen)}
+      >
+        <View style={cfs.fieldGroup}>
+          <Text style={s.inputLabel}>What is this journal about?</Text>
+          <View style={s.chipGrid}>
+            {JOURNAL_CATEGORIES.map((cat) => {
+              const sel = journalType.includes(cat.id);
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[s.chip, sel && s.chipSelected]}
+                  onPress={() => {
+                    setJournalType((prev) =>
+                      prev.includes(cat.id)
+                        ? prev.filter((c) => c !== cat.id)
+                        : [...prev, cat.id]
+                    );
+                    if (cat.id === "free_write")
+                      setAllowFreeWrite(!journalType.includes(cat.id));
+                  }}
+                >
+                  <Text style={[s.chipText, sel && s.chipTextSelected]}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-        )}
-      </View>
+        </View>
+        <View style={cfs.fieldGroup}>
+          <Text style={s.inputLabel}>Quick check-ins</Text>
+          <CreateFlowCheckbox checked={captureMood} onPress={() => setCaptureMood(!captureMood)} label="Capture mood" />
+          <CreateFlowCheckbox checked={captureEnergy} onPress={() => setCaptureEnergy(!captureEnergy)} label="Capture energy level" />
+          <CreateFlowCheckbox checked={captureBodyState} onPress={() => setCaptureBodyState(!captureBodyState)} label="Capture body state" />
+        </View>
+        <View style={cfs.fieldGroup}>
+          <CreateFlowCheckbox
+            checked={wordLimitEnabled}
+            onPress={() => setWordLimitEnabled(!wordLimitEnabled)}
+            label="Limit entry length"
+          />
+          {wordLimitEnabled && (
+            <View style={s.wordLimitBody}>
+              <View style={s.modeRow}>
+                <DurationPill label="Fair preset" selected={wordLimitMode === "PRESET"} onPress={() => setWordLimitMode("PRESET")} />
+                <DurationPill label="Custom" selected={wordLimitMode === "CUSTOM"} onPress={() => setWordLimitMode("CUSTOM")} />
+              </View>
+              {wordLimitMode === "PRESET" ? (
+                <View style={s.presetRow}>
+                  {([50, 120, 250, 500] as const).map((w) => (
+                    <TouchableOpacity
+                      key={w}
+                      style={[s.presetCard, wordLimitWords === w && s.presetCardActive]}
+                      onPress={() => setWordLimitWords(w)}
+                    >
+                      <Text style={[s.presetNum, wordLimitWords === w && s.presetNumActive]}>{w}</Text>
+                      <Text style={[s.presetLabel, wordLimitWords === w && s.presetLabelActive]}>
+                        {w === 50 ? "Short" : w === 120 ? "Standard" : w === 250 ? "Deep" : "Long"}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={cfs.fieldGroup}>
+                  <Text style={s.inputLabel}>Max words</Text>
+                  <CreateFlowInput
+                    value={customWordLimit}
+                    onChangeText={setCustomWordLimit}
+                    placeholder="e.g., 150"
+                  />
+                  <Text style={s.inputHint}>Min 20, max 1000</Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      </CollapsibleSection>
     </View>
   );
 
@@ -676,7 +749,13 @@ export default function TaskEditorModal({
       <View style={cfs.fieldGroup}>
         <CreateFlowInput label="Target minutes" value={duration} onChangeText={setDuration} placeholder="10" />
       </View>
-      <CreateFlowCheckbox checked={mustComplete} onPress={() => setMustComplete(!mustComplete)} label="Must complete without exiting" />
+      <CollapsibleSection
+        title="Advanced options"
+        open={advancedTimerOpen}
+        onToggle={() => setAdvancedTimerOpen(!advancedTimerOpen)}
+      >
+        <CreateFlowCheckbox checked={mustComplete} onPress={() => setMustComplete(!mustComplete)} label="Must complete without exiting" />
+      </CollapsibleSection>
     </View>
   );
 
@@ -691,16 +770,9 @@ export default function TaskEditorModal({
 
   const renderRunSettings = () => (
     <View style={cfs.settingsCard}>
-      <View style={cfs.fieldGroup}>
-        <Text style={s.inputLabel}>Tracking Mode</Text>
-        <View style={s.modeRow}>
-          <DurationPill label="Distance" selected={trackingMode === "distance"} onPress={() => setTrackingMode("distance")} />
-          <DurationPill label="Time" selected={trackingMode === "time"} onPress={() => setTrackingMode("time")} />
-        </View>
-      </View>
       {trackingMode === "distance" ? (
         <View style={cfs.fieldGroup}>
-          <CreateFlowInput label="Target Distance" value={targetDistance} onChangeText={setTargetDistance} placeholder="5" />
+          <CreateFlowInput label="Target distance" value={targetDistance} onChangeText={setTargetDistance} placeholder="5" />
           <View style={s.modeRow}>
             {(["miles", "km", "meters"] as const).map((u) => (
               <DurationPill key={u} label={u} selected={distanceUnit === u} onPress={() => setDistanceUnit(u)} />
@@ -712,6 +784,19 @@ export default function TaskEditorModal({
           <CreateFlowInput label="Target minutes" value={duration} onChangeText={setDuration} placeholder="30" />
         </View>
       )}
+      <CollapsibleSection
+        title="Advanced options"
+        open={advancedRunOpen}
+        onToggle={() => setAdvancedRunOpen(!advancedRunOpen)}
+      >
+        <View style={cfs.fieldGroup}>
+          <Text style={s.inputLabel}>Tracking mode</Text>
+          <View style={s.modeRow}>
+            <DurationPill label="Distance" selected={trackingMode === "distance"} onPress={() => setTrackingMode("distance")} />
+            <DurationPill label="Time" selected={trackingMode === "time"} onPress={() => setTrackingMode("time")} />
+          </View>
+        </View>
+      </CollapsibleSection>
     </View>
   );
 
@@ -759,37 +844,50 @@ export default function TaskEditorModal({
   const renderTimeEnforcement = () => {
     if (!taskType) return null;
     return (
-      <EnforcementBlock title="Time enforcement">
+      <EnforcementBlock title="Time requirement (optional)">
         <CreateFlowCheckbox
           checked={teEnabled}
-          onPress={() => setTeEnabled(!teEnabled)}
+          onPress={() => {
+            setTeEnabled(!teEnabled);
+            if (!teEnabled) setTeDetailsExpanded(true);
+          }}
           label="Require completion at a specific time"
         />
 
         {teEnabled && (
-          <View style={s.teBody}>
-            <View style={cfs.fieldGroup}>
-              <CreateFlowInput
-                label="Target time"
-                value={teAnchor}
-                onChangeText={setTeAnchor}
-                placeholder="05:00"
-              />
-              <Text style={s.inputHint}>24h format (HH:mm)</Text>
-            </View>
+          <View style={s.collapsibleWrap}>
+            <TouchableOpacity
+              style={s.collapsibleHeader}
+              onPress={() => setTeDetailsExpanded(!teDetailsExpanded)}
+              activeOpacity={0.7}
+            >
+              <Text style={s.collapsibleTitle}>Time details</Text>
+              {teDetailsExpanded ? <ChevronUp size={18} color={tokenColors.textSecondaryCreate} /> : <ChevronDown size={18} color={tokenColors.textSecondaryCreate} />}
+            </TouchableOpacity>
+            {teDetailsExpanded && (
+              <View style={[s.teBody, s.collapsibleBody]}>
+                <View style={cfs.fieldGroup}>
+                  <CreateFlowInput
+                    label="Complete around"
+                    value={teAnchor}
+                    onChangeText={setTeAnchor}
+                    placeholder="05:00"
+                  />
+                  <Text style={s.inputHint}>24h format (HH:mm)</Text>
+                </View>
 
-            <View style={cfs.fieldGroup}>
-              <CreateFlowInput
-                label="Expected duration (optional)"
-                value={teDuration}
-                onChangeText={setTeDuration}
-                placeholder="e.g. 10"
-              />
-              <Text style={s.inputHint}>Minutes</Text>
-            </View>
+                <View style={cfs.fieldGroup}>
+                  <CreateFlowInput
+                    label="Expected duration (optional)"
+                    value={teDuration}
+                    onChangeText={setTeDuration}
+                    placeholder="e.g. 10"
+                  />
+                  <Text style={s.inputHint}>Minutes</Text>
+                </View>
 
-            <View style={cfs.fieldGroup}>
-              <Text style={s.inputLabel}>Allowed window</Text>
+                <View style={cfs.fieldGroup}>
+                  <Text style={s.inputLabel}>Allowed window</Text>
               <View style={s.offsetRow}>
                 <View style={s.offsetField}>
                   <Text style={s.offsetLabel}>Starts (min)</Text>
@@ -832,7 +930,7 @@ export default function TaskEditorModal({
               <CreateFlowCheckbox
                 checked={teHardEnabled}
                 onPress={() => setTeHardEnabled(!teHardEnabled)}
-                label="Hard mode stricter window"
+                label="Strict window"
               />
               {teHardEnabled && (
                 <>
@@ -898,6 +996,8 @@ export default function TaskEditorModal({
                 />
               )}
             </View>
+          </View>
+            )}
           </View>
         )}
       </EnforcementBlock>
@@ -976,7 +1076,7 @@ export default function TaskEditorModal({
           >
             <View style={cfs.section}>
               <CreateFlowInput
-                label="TASK NAME"
+                label="Task name"
                 value={title}
                 onChangeText={setTitle}
                 placeholder="e.g. Morning run, Journal, Meditate..."
@@ -984,15 +1084,90 @@ export default function TaskEditorModal({
             </View>
 
             <View style={cfs.section}>
-              <Text style={cfs.sectionLabel}>TASK TYPE</Text>
+              <Text style={cfs.sectionLabel}>Task type</Text>
               {renderTypeSelector()}
             </View>
 
             {taskType && (
               <View style={cfs.section}>
-                <Text style={cfs.sectionLabel}>
-                  {TASK_TYPE_MAP[taskType].label.toUpperCase().replace(/ \/ /g, " / ") + " SETTINGS"}
-                </Text>
+                <Text style={cfs.sectionLabel}>Verification</Text>
+                <View style={s.typeGrid}>
+                  {(["manual", "photo_proof", "strava_activity"] as const).map((method) => (
+                    <TouchableOpacity
+                      key={method}
+                      style={[
+                        s.verificationPill,
+                        verificationMethod === method && s.verificationPillActive,
+                      ]}
+                      onPress={() => {
+                        setVerificationMethod(method);
+                        if (method === "photo_proof") setRequirePhotoProof(true);
+                        else if (method === "manual" && taskType !== "photo") setRequirePhotoProof(false);
+                      }}
+                    >
+                      <Text style={[
+                        s.verificationPillText,
+                        verificationMethod === method && s.verificationPillTextActive,
+                      ]}>
+                        {method === "manual" ? "Manual" : method === "photo_proof" ? "Photo proof" : "Strava activity"}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {verificationMethod === "photo_proof" && (
+                  <CreateFlowCheckbox
+                    checked={true}
+                    onPress={() => {}}
+                    label="Photo proof required"
+                  />
+                )}
+                {taskType === "photo" && (
+                  <Text style={s.inputHint}>Photo tasks always require an image.</Text>
+                )}
+                {verificationMethod === "strava_activity" && (
+                  <View style={s.collapsibleBody}>
+                    <Text style={s.offsetLabel}>Sport type</Text>
+                    <View style={s.typeGrid}>
+                      {STRAVA_SPORTS.map((sport) => (
+                        <TouchableOpacity
+                          key={sport}
+                          style={[s.verificationPill, stravaSport === sport && s.verificationPillActive]}
+                          onPress={() => setStravaSport(sport)}
+                        >
+                          <Text style={[s.verificationPillText, stravaSport === sport && s.verificationPillTextActive]}>{sport}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <View style={s.offsetRow}>
+                      <View style={s.offsetField}>
+                        <Text style={s.offsetLabel}>Min distance (m)</Text>
+                        <TextInput
+                          style={s.offsetInput}
+                          value={stravaMinDistanceM}
+                          onChangeText={setStravaMinDistanceM}
+                          keyboardType="number-pad"
+                          placeholder="3000"
+                        />
+                      </View>
+                      <View style={s.offsetField}>
+                        <Text style={s.offsetLabel}>Min moving time (s)</Text>
+                        <TextInput
+                          style={s.offsetInput}
+                          value={stravaMinMovingTimeS}
+                          onChangeText={setStravaMinMovingTimeS}
+                          keyboardType="number-pad"
+                          placeholder="900"
+                        />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {taskType && (
+              <View style={cfs.section}>
+                <Text style={cfs.sectionLabel}>Settings</Text>
                 {renderSettings()}
               </View>
             )}
@@ -1013,15 +1188,57 @@ export default function TaskEditorModal({
   );
 }
 
+const STRAVA_SPORTS = ["Run", "Ride", "Walk"] as const;
+
 const s = StyleSheet.create({
   typeGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
   },
+  verificationPill: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: tokenColors.cardBg,
+    borderWidth: 1.5,
+    borderColor: tokenColors.borderLight,
+  },
+  verificationPillActive: {
+    borderColor: tokenColors.accentGreen,
+    backgroundColor: tokenColors.accentGreen + "18",
+  },
+  verificationPillText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: tokenColors.textSecondaryCreate,
+  },
+  verificationPillTextActive: {
+    color: tokenColors.accentGreen,
+  },
   typeGridItem: {
     width: "48%",
     minWidth: 0,
+  },
+  collapsibleWrap: {
+    marginTop: 8,
+  },
+  collapsibleHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
+  collapsibleTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: tokenColors.textSecondaryCreate,
+  },
+  collapsibleBody: {
+    marginTop: 4,
+    paddingTop: 4,
+    gap: 14,
   },
   teBody: { marginTop: 4, gap: 14 },
   offsetRow: { flexDirection: "row", gap: 10, marginTop: 4 },

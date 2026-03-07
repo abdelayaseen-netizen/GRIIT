@@ -2,7 +2,8 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Alert } from "react-native";
+import { onSessionExpired } from "@/lib/auth-expiry";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 import { AppProvider } from "@/contexts/AppContext";
@@ -65,6 +66,14 @@ function AuthRedirector() {
       setOnboardingCompleted(null);
     }
   }, [user, loading, checkProfile]);
+
+  useEffect(() => {
+    const unsubscribe = onSessionExpired(() => {
+      Alert.alert("Session expired", "Please sign in again.");
+      router.replace("/auth" as any);
+    });
+    return unsubscribe;
+  }, [router]);
 
   useEffect(() => {
     if (loading || !profileChecked) return;

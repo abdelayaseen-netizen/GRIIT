@@ -1,11 +1,10 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated,
   RefreshControl,
   Platform,
   Alert,
@@ -19,25 +18,23 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
-  Flag,
-  Heart,
   TrendingUp,
   Shield,
   Crown,
   Zap,
   Globe,
   ThumbsUp,
-  Send,
-  AlertTriangle,
   HandMetal,
 } from "lucide-react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
+import { useFocusEffect } from "expo-router";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { track } from "@/lib/analytics";
+import { FLAGS } from "@/lib/feature-flags";
 import Colors from "@/constants/colors";
 
 type ActivityType = "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined" | "nudge";
@@ -55,18 +52,6 @@ interface ActivityItem {
   read: boolean;
   /** For type "nudge": the encouragement message. */
   message?: string;
-}
-
-interface MilestoneItem {
-  id: string;
-  icon: "flame" | "trophy" | "flag";
-  actorUsername: string;
-  actorDisplayName: string;
-  actorId: string;
-  text: string;
-  badge: string;
-  dayNumber?: number;
-  createdAt: string;
 }
 
 type FeedFilter = "global" | "friends" | "team";
@@ -184,74 +169,6 @@ function LeaderboardSection({ entries }: { entries: LeaderboardEntry[] }) {
   );
 }
 
-function MilestoneSection({ items }: { items: MilestoneItem[] }) {
-  const scaleAnims = useRef(items.map(() => new Animated.Value(1))).current;
-
-  const handlePress = useCallback((index: number) => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    if (scaleAnims[index]) {
-      Animated.sequence([
-        Animated.timing(scaleAnims[index], { toValue: 1.02, duration: 80, useNativeDriver: true }),
-        Animated.timing(scaleAnims[index], { toValue: 1, duration: 80, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [scaleAnims]);
-
-  if (items.length === 0) return null;
-
-  const getIcon = (type: MilestoneItem["icon"]) => {
-    switch (type) {
-      case "flame": return <Flame size={16} color={Colors.streak.fire} fill={Colors.streak.fire} />;
-      case "trophy": return <Trophy size={16} color={Colors.milestone.gold} />;
-      case "flag": return <Flag size={16} color={Colors.streak.shield} />;
-    }
-  };
-
-  const getUserAvatar = (actorId: string) => `https://i.pravatar.cc/150?u=${actorId}`;
-
-  return (
-    <View style={styles.milestoneSection}>
-      <View style={styles.sectionHeaderRow}>
-        <Zap size={15} color={Colors.accent} />
-        <Text style={styles.sectionTitle}>Milestones</Text>
-      </View>
-      {items.map((item, index) => (
-        <TouchableOpacity
-          key={item.id}
-          activeOpacity={0.85}
-          onPress={() => handlePress(index)}
-        >
-          <Animated.View style={[styles.milestoneCard, { transform: [{ scale: scaleAnims[index] }] }]}>
-            <View style={styles.milestoneLeft}>
-              <Image
-                source={{ uri: getUserAvatar(item.actorId) }}
-                style={styles.milestoneAvatar}
-                contentFit="cover"
-              />
-              <View style={styles.milestoneIconBadge}>
-                {getIcon(item.icon)}
-              </View>
-            </View>
-            <View style={styles.milestoneContent}>
-              <Text style={styles.milestoneText}>
-                <Text style={styles.milestoneName}>{item.actorDisplayName}</Text>
-                {" "}{item.text}
-              </Text>
-              <View style={[styles.milestoneBadge, { backgroundColor: item.badge === "STREAK" ? Colors.streak.shield + "14" : Colors.accent + "14" }]}>
-                <Text style={[styles.milestoneBadgeText, { color: item.badge === "STREAK" ? Colors.streak.shield : Colors.accent }]}>
-                  {item.badge}
-                </Text>
-              </View>
-            </View>
-          </Animated.View>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
 function MovementFeedSection({
   entries,
   currentUserId,
@@ -262,7 +179,7 @@ function MovementFeedSection({
 }: {
   entries: LeaderboardEntry[];
   currentUserId: string | null;
-  onGiveRespect: (userId: string) => Promise<void>;
+  onGiveRespect: (userId: string) => void;
   givingRespectId: string | null;
   onGiveNudge: (userId: string) => void;
   givingNudgeId: string | null;
@@ -424,15 +341,18 @@ function mapApiEntryToLeaderboardEntry(e: any): LeaderboardEntry {
 
 export default function ActivityScreen() {
   const { refetchAll, currentUser } = useApp();
+  const { requireAuth } = useAuthGate();
   const currentUserId = currentUser?.id ?? null;
   const [refreshing, setRefreshing] = useState(false);
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("global");
   const [leaderboard, setLeaderboard] = useState<{ entries: LeaderboardEntry[]; totalSecuredToday: number }>({ entries: [], totalSecuredToday: 0 });
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [givingRespectId, setGivingRespectId] = useState<string | null>(null);
   const [givingNudgeId, setGivingNudgeId] = useState<string | null>(null);
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
 
   const fetchLeaderboard = useCallback(async () => {
+    setLeaderboardLoading(true);
     try {
       const data = await trpcQuery("leaderboard.getWeekly") as any;
       const entries = (data?.entries ?? []).map(mapApiEntryToLeaderboardEntry);
@@ -442,6 +362,8 @@ export default function ActivityScreen() {
       });
     } catch {
       setLeaderboard({ entries: [], totalSecuredToday: 0 });
+    } finally {
+      setLeaderboardLoading(false);
     }
   }, []);
 
@@ -491,6 +413,13 @@ export default function ActivityScreen() {
     fetchActivityFeed();
   }, [fetchActivityFeed]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchLeaderboard();
+      if (currentUserId) fetchActivityFeed();
+    }, [fetchLeaderboard, fetchActivityFeed, currentUserId])
+  );
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetchAll();
@@ -517,7 +446,6 @@ export default function ActivityScreen() {
     [requireAuth, fetchLeaderboard]
   );
 
-  const { requireAuth } = useAuthGate();
   const handleGiveNudge = useCallback(
     (toUserId: string) => {
       requireAuth("nudge", () => {
@@ -549,7 +477,9 @@ export default function ActivityScreen() {
   const handleTeamsPress = useCallback(() => {
     requireAuth("team", () => {
       if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      Alert.alert("Teams", "Teams and accountability groups are coming soon.");
+      if (FLAGS.IS_BETA) {
+        Alert.alert("Teams", "Teams and accountability groups are coming soon.");
+      }
     });
   }, [requireAuth]);
 
@@ -609,13 +539,26 @@ export default function ActivityScreen() {
             <TrendingUp size={16} color={Colors.accent} />
             <Text style={styles.weeklyLeaderboardTitle}>Top This Week</Text>
           </View>
-          {leaderboard.entries.length === 0 ? (
+          {leaderboardLoading ? (
+            <Text style={styles.emptyLeaderboardText}>Loading…</Text>
+          ) : leaderboard.entries.length === 0 ? (
             <Text style={styles.emptyLeaderboardText}>Be the first this week.</Text>
           ) : (
             <TopThisWeekRow entries={leaderboard.entries} />
           )}
         </View>
-        {leaderboard.entries.length === 0 ? (
+        {leaderboardLoading ? (
+          <View style={styles.leaderboardSection}>
+            <View style={styles.weeklyLeaderboardHeader}>
+              <View style={styles.sectionHeaderRow}>
+                <Trophy size={16} color="#D4A017" />
+                <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
+              </View>
+              <Text style={styles.resetsSunday}>Resets Sunday</Text>
+            </View>
+            <Text style={styles.emptyLeaderboardText}>Loading…</Text>
+          </View>
+        ) : leaderboard.entries.length === 0 ? (
           <View style={styles.leaderboardSection}>
             <View style={styles.weeklyLeaderboardHeader}>
               <View style={styles.sectionHeaderRow}>
@@ -683,19 +626,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600" as const,
     color: Colors.text.secondary,
-  },
-  unreadBadge: {
-    backgroundColor: Colors.accent,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  unreadText: {
-    fontSize: 11,
-    fontWeight: "800" as const,
-    color: "#fff",
   },
   scrollView: {
     flex: 1,
@@ -1017,58 +947,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  consistencyCard: {
-    marginHorizontal: 20,
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  consistencyTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 14,
-  },
-  consistencyLabel: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.tertiary,
-    textTransform: "uppercase" as const,
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  consistencyScore: {
-    fontSize: 36,
-    fontWeight: "900" as const,
-    letterSpacing: -1,
-  },
-  consistencyMini: {
-    gap: 8,
-    alignItems: "flex-end",
-  },
-  miniStat: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  miniStatValue: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-  },
-  consistencyBarTrack: {
-    height: 5,
-    backgroundColor: Colors.pill,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  consistencyBarFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-
   leaderboardSection: {
     marginTop: 24,
     paddingHorizontal: 20,
@@ -1096,19 +974,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  leaderboardRowYou: {
-    borderColor: Colors.accent + "40",
-    backgroundColor: Colors.accentTint,
-  },
-  rankColumn: {
-    width: 28,
-    alignItems: "center",
-  },
-  rankNumber: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: Colors.text.tertiary,
-  },
   leaderboardAvatar: {
     width: 36,
     height: 36,
@@ -1123,10 +988,6 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
     color: Colors.text.primary,
   },
-  leaderboardNameYou: {
-    fontWeight: "800" as const,
-    color: Colors.accent,
-  },
   leaderboardMeta: {
     flexDirection: "row",
     alignItems: "center",
@@ -1137,91 +998,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600" as const,
     color: Colors.text.tertiary,
-  },
-  securedPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: Colors.streak.shield + "14",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  securedPillText: {
-    fontSize: 10,
-    fontWeight: "700" as const,
-    color: Colors.streak.shield,
-  },
-  pendingPill: {
-    backgroundColor: Colors.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  pendingPillText: {
-    fontSize: 10,
-    fontWeight: "600" as const,
-    color: Colors.text.muted,
-  },
-
-  milestoneSection: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  milestoneCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  milestoneLeft: {
-    position: "relative",
-    marginRight: 12,
-  },
-  milestoneAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-  },
-  milestoneIconBadge: {
-    position: "absolute",
-    bottom: -3,
-    right: -3,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.background,
-  },
-  milestoneContent: {
-    flex: 1,
-  },
-  milestoneText: {
-    fontSize: 14,
-    color: Colors.text.primary,
-    lineHeight: 20,
-    marginBottom: 6,
-  },
-  milestoneName: {
-    fontWeight: "700" as const,
-  },
-  milestoneBadge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  milestoneBadgeText: {
-    fontSize: 9,
-    fontWeight: "800" as const,
-    letterSpacing: 0.8,
   },
 
   recentSection: {

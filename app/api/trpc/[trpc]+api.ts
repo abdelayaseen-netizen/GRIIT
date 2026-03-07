@@ -1,6 +1,5 @@
 import { appRouter } from "@/backend/trpc/app-router";
 import { createContext } from "@/backend/trpc/create-context";
-import type { AppRouter } from "@/backend/trpc/app-router";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 function withCORS(res: Response) {

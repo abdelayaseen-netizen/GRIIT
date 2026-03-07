@@ -3,14 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
 
-const DOT_COLORS: Record<string, string> = {
-  orange: t.colors.orangeStripe,
-  red: t.colors.redStripe,
-  purple: t.colors.purpleStripe,
-  blue: t.colors.blueStripe,
-  green: t.colors.greenStripe,
-};
-
 export function ChallengeRowCard(props: {
   title: string;
   description: string;

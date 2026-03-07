@@ -72,7 +72,7 @@ export default function Celebration({ visible, onComplete }: CelebrationProps) {
       }).catch(() => {
         // Silently fail if haptics not available
       });
-    } catch (error) {
+    } catch {
       // Silently fail
     }
   }, []);

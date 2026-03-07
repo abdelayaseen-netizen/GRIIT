@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,35 +13,36 @@ import {
   Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import {
   ChevronRight,
   CheckCircle2,
   Clock,
-  Wifi,
   Flame,
-  Trophy,
-  Zap,
   Target,
   TrendingUp,
   Users,
   Circle,
   RefreshCw,
-  ThumbsUp,
-  UserPlus,
   AlertTriangle,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
+import * as Linking from "expo-linking";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import Colors from "@/constants/colors";
-import StreakTracker from "@/components/StreakTracker";
-import StreakCalendar from "@/components/StreakCalendar";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
 import Celebration from "@/components/Celebration";
 import { RETENTION_CONFIG } from "@/lib/retention-config";
+import { getYesterdayDateKey } from "@/lib/date-utils";
+import { getHomeRetentionDerived } from "@/lib/home-derived";
 import { track } from "@/lib/analytics";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
+import DailyStatus from "@/components/home/DailyStatus";
+import ExploreChallengesButton from "@/components/home/ExploreChallengesButton";
+import ActiveChallenges, { type ChallengeWithProgress } from "@/components/home/ActiveChallenges";
+import type { TodayCheckinForUser, ChallengeTaskFromApi } from "@/types";
 
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
@@ -57,58 +58,7 @@ function SyncingBanner() {
   return (
     <View style={syncingBannerStyles.wrap}>
       <RefreshCw size={14} color={Colors.accent} />
-      <Text style={syncingBannerStyles.text}>Syncing... we'll update when you're back online.</Text>
-    </View>
-  );
-}
-
-function CircularProgress({ size = 120, strokeWidth = 2, progress = 0 }: { size?: number; strokeWidth?: number; progress?: number }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const progressAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: progress,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, [progress, progressAnim]);
-
-  const strokeDashoffset = progressAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: [circumference, 0],
-  });
-
-  if (Platform.OS === 'web') {
-    return (
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: strokeWidth,
-          borderColor: Colors.border,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Text style={styles.emptyProgressText}>Day 0</Text>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        borderWidth: strokeWidth,
-        borderColor: Colors.border,
-        position: 'absolute',
-      }} />
-      <Text style={styles.emptyProgressText}>Day 0</Text>
+      <Text style={syncingBannerStyles.text}>Syncing... we{"'"}ll update when you{"'"}re back online.</Text>
     </View>
   );
 }
@@ -217,8 +167,8 @@ export default function HomeScreen() {
     isError,
     initialFetchDone,
     refetchAll,
-    profileLoading,
     todayCheckins,
+    todayDateLocal,
   } = useApp();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -228,9 +178,65 @@ export default function HomeScreen() {
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<{ currentUserRank: number | null; totalSecuredToday: number } | null>(null);
-  const streakLostTrackedRef = useRef(false);
+  const [homeChallengesWithProgress, setHomeChallengesWithProgress] = useState<ChallengeWithProgress[] | null>(null);
+  const [homeTotalRemaining, setHomeTotalRemaining] = useState(0);
+  const [homeDataRefreshKey, setHomeDataRefreshKey] = useState(0);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
+
+  const fetchHomeActiveData = useCallback(async () => {
+    if (isGuest) return;
+    try {
+      const [list, checkins] = await Promise.all([
+        trpcQuery(TRPC.challenges.listMyActive) as Promise<any[]>,
+        trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
+      ]);
+      const acList = Array.isArray(list) ? list : [];
+      const checkinsByAcId: Record<string, Set<string>> = {};
+      for (const c of checkins ?? []) {
+        if (!checkinsByAcId[c.active_challenge_id]) checkinsByAcId[c.active_challenge_id] = new Set();
+        if (c.status === "completed") checkinsByAcId[c.active_challenge_id].add(c.task_id);
+      }
+      let totalRemaining = 0;
+      const withProgress: ChallengeWithProgress[] = acList.map((ac: any) => {
+        const ch = ac.challenges;
+        const tasks = ch?.challenge_tasks ?? [];
+        const required = tasks.filter((t: any) => t.required !== false);
+        const completedSet = checkinsByAcId[ac.id] ?? new Set();
+        const todayTasks = required.map((t: any) => ({
+          id: t.id,
+          title: t.title ?? t.type ?? "Task",
+          completed: completedSet.has(t.id),
+        }));
+        const completedCount = todayTasks.filter((t: any) => t.completed).length;
+        totalRemaining += Math.max(0, required.length - completedCount);
+        return {
+          activeChallengeId: ac.id,
+          challengeId: ch?.id ?? ac.challenge_id,
+          challengeName: ch?.title ?? "Challenge",
+          todayTaskProgress: required.length > 0 ? `${completedCount}/${required.length}` : "0/0",
+          todayTasks,
+        };
+      });
+      setHomeChallengesWithProgress(withProgress);
+      setHomeTotalRemaining(totalRemaining);
+    } catch {
+      setHomeChallengesWithProgress([]);
+      setHomeTotalRemaining(0);
+    }
+  }, [isGuest]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isGuest) {
+        refetchAll().then(() => fetchHomeActiveData());
+      }
+    }, [isGuest, refetchAll, fetchHomeActiveData])
+  );
+
+  useEffect(() => {
+    if (refreshing === false && initialFetchDone) setHomeDataRefreshKey((k) => k + 1);
+  }, [refreshing, initialFetchDone]);
 
   useEffect(() => {
     trpcQuery("leaderboard.getWeekly").then((data: any) => {
@@ -241,38 +247,38 @@ export default function HomeScreen() {
     }).catch(() => {});
   }, [isGuest, stats?.activeStreak]);
 
-  const currentStreak = stats?.activeStreak || 0;
-  const lastCompletedDateKey = (stats as any)?.lastCompletedDateKey ?? null;
   const todayKey = todayDateLocal;
-  const yesterdayDate = new Date(todayKey);
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-  const yesterdayKey = yesterdayDate.toISOString().split("T")[0];
-  const effectiveMissedDays = (stats as any)?.effectiveMissedDays ?? (lastCompletedDateKey == null ? 0 : lastCompletedDateKey >= todayKey ? 0 : Math.floor((Date.parse(todayKey) - Date.parse(lastCompletedDateKey)) / 86400000));
-  const daysSinceLastSecure = effectiveMissedDays;
-  const showRecoveryBanner =
-    !isGuest &&
-    hasActiveChallenge &&
-    effectiveMissedDays >= RETENTION_CONFIG.missedOneDayThreshold;
-  const showComebackMode =
-    !isGuest &&
-    effectiveMissedDays >= RETENTION_CONFIG.comebackModeMinDays &&
-    effectiveMissedDays <= RETENTION_CONFIG.comebackModeMaxDays;
-  const showRestartMode = !isGuest && effectiveMissedDays >= RETENTION_CONFIG.restartThreshold;
-  const canUseFreeze = (stats as any)?.canUseFreeze ?? (effectiveMissedDays === RETENTION_CONFIG.streakFreezeEligibleMissedDays && currentStreak > 0);
-  const freezesRemaining = (stats as any)?.freezesRemaining ?? 1;
-  const lastStandsAvailable = (stats as any)?.lastStandsAvailable ?? 0;
-  const bestStreak = stats?.longestStreak || 0;
   const hasActiveChallenge = !!activeChallenge && !!challenge;
+  const retention = useMemo(
+    () => getHomeRetentionDerived(stats ?? null, todayKey, hasActiveChallenge, isGuest),
+    [stats, todayKey, hasActiveChallenge, isGuest]
+  );
+  const {
+    currentStreak,
+    daysSinceLastSecure,
+    showRecoveryBanner,
+    showComebackMode,
+    showRestartMode,
+    canUseFreeze,
+    freezesRemaining,
+    lastStandsAvailable,
+    isDaySecured,
+  } = retention;
+  const tierName = (stats as any)?.tier ?? null;
+  const nextTierName = (stats as any)?.nextTierName ?? null;
+  const pointsToNextTier = (stats as any)?.pointsToNextTier ?? 0;
+  const yesterdayKey = getYesterdayDateKey();
   const daySecured = computeProgress.progress === 100 && !canSecureDay;
   const isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
-  
-  const tasks: { id: string; title: string; completed: boolean }[] = challenge?.challenge_tasks
-    ? challenge.challenge_tasks.map((t: any) => ({
-        id: t.id,
-        title: t.title || t.type,
-        completed: todayCheckins.some((c: any) => c.task_id === t.id && c.status === "completed"),
-      }))
-    : [];
+
+  const tasks = useMemo((): { id: string; title: string; completed: boolean }[] => {
+    if (!challenge?.challenge_tasks) return [];
+    return (challenge.challenge_tasks as ChallengeTaskFromApi[]).map((t) => ({
+      id: t.id,
+      title: t.title ?? t.type,
+      completed: todayCheckins.some((c) => c.task_id === t.id && c.status === "completed"),
+    }));
+  }, [challenge?.challenge_tasks, todayCheckins]);
 
   const progressColor = daySecured
     ? Colors.streak.shield
@@ -303,10 +309,11 @@ export default function HomeScreen() {
     setRefreshing(true);
     try {
       await refetchAll();
+      await fetchHomeActiveData();
     } finally {
       setRefreshing(false);
     }
-  }, [refetchAll]);
+  }, [refetchAll, fetchHomeActiveData]);
 
   const handleSecureDay = useCallback(async () => {
     if (Platform.OS !== "web") {
@@ -336,6 +343,7 @@ export default function HomeScreen() {
     }).catch(() => {});
     const currentDay = activeChallenge?.current_day || 1;
     const streak = result?.newStreakCount ?? stats?.activeStreak ?? 0;
+    fetchHomeActiveData();
     setTimeout(() => {
       router.push({
         pathname: "/secure-confirmation",
@@ -347,7 +355,7 @@ export default function HomeScreen() {
         },
       } as any);
     }, 1200);
-  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure]);
+  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, fetchHomeActiveData]);
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
@@ -428,7 +436,47 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {hasActiveChallenge ? (
+        {!isGuest && (
+          <>
+            <DailyStatus
+              state={isDaySecured ? "SECURED" : "NOT_SECURED"}
+              remainingTasksCount={homeTotalRemaining}
+              onSecureToday={canSecureDay ? () => requireAuth("secure", handleSecureDay) : undefined}
+              currentStreak={currentStreak}
+              disciplinePointsLabel={tierName ? `${tierName} · ${stats?.totalDaysSecured ?? 0} days secured` : undefined}
+            />
+            <ExploreChallengesButton />
+            <ActiveChallenges
+              challengesWithProgress={homeChallengesWithProgress}
+              refreshKey={homeDataRefreshKey}
+            />
+          </>
+        )}
+
+        {!isGuest && (
+          <View style={styles.statsSummaryCard}>
+            <View style={styles.statsSummaryCol}>
+              <Flame size={20} color={Colors.accent} />
+              <Text style={styles.statsSummaryValue}>{currentStreak}</Text>
+              <Text style={styles.statsSummaryLabel}>Streak</Text>
+              {lastStandsAvailable >= 0 && (
+                <Text style={styles.statsSummaryLastStand}>Last Stands: {lastStandsAvailable}</Text>
+              )}
+            </View>
+            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder]}>
+              <TrendingUp size={20} color={Colors.accent} />
+              <Text style={styles.statsSummaryValue}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={styles.statsSummaryLabel}>Score</Text>
+            </View>
+            <View style={styles.statsSummaryCol}>
+              <Target size={20} color={Colors.text.tertiary} />
+              <Text style={styles.statsSummaryValue}>{tierName}</Text>
+              <Text style={styles.statsSummaryLabel}>Rank</Text>
+            </View>
+          </View>
+        )}
+
+        {false && hasActiveChallenge ? (
           <View style={styles.activeSection}>
             <Text style={styles.continueLabel}>Continue where you left off</Text>
             <Text style={styles.secureTodayTitle}>Secure today to protect your streak.</Text>
@@ -446,20 +494,27 @@ export default function HomeScreen() {
                   <Text style={styles.metricsText}>{pointsToNextTier} pts to {nextTierName}</Text>
                 </View>
               )}
-              {leaderboardData && (leaderboardData.totalSecuredToday > 0 || leaderboardData.currentUserRank != null) && (
-                <View style={styles.metricsRow}>
-                  <Users size={18} color={Colors.text.tertiary} />
-                  <Text style={styles.metricsText}>
-                    {leaderboardData.totalSecuredToday} {leaderboardData.totalSecuredToday === 1 ? "person" : "people"} secured today
-                  </Text>
-                </View>
-              )}
+              {(() => {
+                const ld = leaderboardData;
+                if (ld == null) return null;
+                const count = ld!.totalSecuredToday;
+                const show = count > 0 || ld!.currentUserRank != null;
+                if (!show) return null;
+                return (
+                  <View style={styles.metricsRow}>
+                    <Users size={18} color={Colors.text.tertiary} />
+                    <Text style={styles.metricsText}>
+                      {count} {count === 1 ? "person" : "people"} secured today
+                    </Text>
+                  </View>
+                );
+              })()}
             </View>
 
             <View style={styles.todaysResetCard}>
               <View style={styles.todaysResetHeader}>
                 <Clock size={18} color={Colors.accent} />
-                <Text style={styles.todaysResetTitle}>Today's Reset</Text>
+                <Text style={styles.todaysResetTitle}>Today{"'"}s Reset</Text>
                 <Text style={styles.todaysResetTime}>
                   {(() => {
                     const { hours, minutes } = getTimeUntilMidnight();
@@ -713,22 +768,6 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const badgeStyles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    paddingVertical: 6,
-    marginBottom: 4,
-  },
-  text: {
-    fontSize: 11,
-    fontWeight: "500" as const,
-    color: Colors.text.muted,
-  },
-});
 
 const syncingBannerStyles = StyleSheet.create({
   wrap: {

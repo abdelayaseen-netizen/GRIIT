@@ -54,8 +54,5 @@ export function identify(userId: string, props?: UserProperties) {
 }
 
 export function track(event: AnalyticsEvent) {
-  if (__DEV__) {
-    console.log("[Analytics]", event.name, event);
-  }
   _handler?.(event);
 }

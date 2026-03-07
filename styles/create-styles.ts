@@ -42,7 +42,12 @@ export const styles = StyleSheet.create({
   stepSubtitle: {
     ...Typography.body,
     color: Colors.text.secondary,
-    marginBottom: 24,
+    marginBottom: 8,
+  },
+  stepHelper: {
+    ...Typography.meta,
+    color: Colors.text.tertiary,
+    marginBottom: 20,
   },
   fieldGroup: {
     marginBottom: 20,
@@ -53,6 +58,27 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  labelOptional: {
+    ...Typography.meta,
+    color: Colors.text.tertiary,
+    marginBottom: 6,
+  },
+  optionalPurposeTrigger: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: "dashed",
+    backgroundColor: Colors.card,
+  },
+  optionalPurposeTriggerText: {
+    ...Typography.body,
+    color: Colors.text.tertiary,
+  },
+  categoryGroupSecondary: {
+    marginTop: 4,
   },
   input: {
     backgroundColor: Colors.card,
@@ -502,6 +528,33 @@ export const styles = StyleSheet.create({
   reviewBadgeText: {
     ...Typography.meta,
     color: Colors.text.secondary,
+  },
+  reviewSummaryCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  reviewSummaryTitle: {
+    ...Typography.sectionHeader,
+    color: Colors.text.primary,
+    marginBottom: 6,
+  },
+  reviewSummaryMeta: {
+    gap: 4,
+    marginBottom: 8,
+  },
+  reviewSummaryMetaText: {
+    ...Typography.meta,
+    color: Colors.text.secondary,
+  },
+  reviewSummaryDesc: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   reviewSectionTitle: {
     ...Typography.cardTitle,
