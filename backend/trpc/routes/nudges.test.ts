@@ -1,9 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-
-vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
-
 import { appRouter } from "../app-router";
 import { NUDGE_MESSAGES, pickRandomMessage } from "./nudges";
+
+vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
 
 const USER_A = "11111111-1111-1111-1111-111111111111";
 const USER_B = "22222222-2222-2222-2222-222222222222";

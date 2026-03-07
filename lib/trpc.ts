@@ -1,4 +1,4 @@
-import superjson from "superjson";
+import { serialize, deserialize } from "superjson";
 import { supabase } from "./supabase";
 import { getTrpcUrl, fetchWithRetry } from "./api";
 import { notifySessionExpired } from "./auth-expiry";
@@ -17,7 +17,7 @@ export async function trpcQuery<T = any>(
   const authHeaders = await getAuthHeaders();
 
   const queryInput = input !== undefined
-    ? `?input=${encodeURIComponent(JSON.stringify(superjson.serialize(input)))}`
+    ? `?input=${encodeURIComponent(JSON.stringify(serialize(input)))}`
     : "";
 
   const response = await fetchWithRetry(`${url}/${path}${queryInput}`, {
@@ -39,7 +39,7 @@ export async function trpcQuery<T = any>(
   const json = await response.json();
   const result = json?.result?.data;
   if (result !== undefined) {
-    return superjson.deserialize(result) as T;
+    return deserialize(result) as T;
   }
   return json as T;
 }
@@ -52,7 +52,7 @@ export async function trpcMutate<T = any>(
   const authHeaders = await getAuthHeaders();
 
   const body = input !== undefined
-    ? JSON.stringify(superjson.serialize(input))
+    ? JSON.stringify(serialize(input))
     : undefined;
 
   const response = await fetchWithRetry(`${url}/${path}`, {
@@ -86,7 +86,7 @@ export async function trpcMutate<T = any>(
   const json = await response.json();
   const result = json?.result?.data;
   if (result !== undefined) {
-    return superjson.deserialize(result) as T;
+    return deserialize(result) as T;
   }
   return json as T;
 }

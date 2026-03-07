@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useEffect, useRef, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { checkHealth, getApiBaseUrl, getTrpcUrl, formatError, checkDbTables } from '@/lib/api';
 import type { HealthCheckResult } from '@/lib/api';
@@ -53,7 +53,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   const [dbStatus, setDbStatus] = useState<DbStatus>('unchecked');
   const [missingTables, setMissingTables] = useState<string[]>([]);
   const [lastResponseTimeMs, setLastResponseTimeMs] = useState<number | null>(null);
-  const [lastStatusCode, setLastStatusCode] = useState<number | null>(null);
+  const [lastStatusCode] = useState<number | null>(null);
   const [lastErrorMessage, setLastErrorMessage] = useState<string | null>(null);
   const retryCount = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -202,25 +202,40 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     };
   }, [runHealthCheck, scheduleRetry]);
 
+  const contextValue = useMemo(
+    () => ({
+      apiStatus,
+      apiReady: apiStatus === 'ready' && dbStatus !== 'missing_tables',
+      checking: apiStatus === 'checking',
+      dbStatus,
+      missingTables,
+      dbMisconfigured: dbStatus === 'missing_tables',
+      lastResponseTimeMs,
+      lastStatusCode: lastStatusCode ?? null,
+      lastErrorMessage,
+      retryNow,
+      runDbSanityCheck,
+      getDiagnostics,
+      getDiagnosticsString,
+      getTrpcUrl: getTrpcUrlSafe,
+    }),
+    [
+      apiStatus,
+      dbStatus,
+      missingTables,
+      lastResponseTimeMs,
+      lastStatusCode,
+      lastErrorMessage,
+      retryNow,
+      runDbSanityCheck,
+      getDiagnostics,
+      getDiagnosticsString,
+      getTrpcUrlSafe,
+    ]
+  );
+
   return (
-    <ApiContext.Provider
-      value={{
-        apiStatus,
-        apiReady: apiStatus === 'ready' && dbStatus !== 'missing_tables',
-        checking: apiStatus === 'checking',
-        dbStatus,
-        missingTables,
-        dbMisconfigured: dbStatus === 'missing_tables',
-        lastResponseTimeMs,
-        lastStatusCode: lastStatusCode ?? null,
-        lastErrorMessage,
-        retryNow,
-        runDbSanityCheck,
-        getDiagnostics,
-        getDiagnosticsString,
-        getTrpcUrl: getTrpcUrlSafe,
-      }}
-    >
+    <ApiContext.Provider value={contextValue}>
       {children}
     </ApiContext.Provider>
   );

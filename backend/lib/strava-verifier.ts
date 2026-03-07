@@ -5,10 +5,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ChallengeTaskRowRaw, VerificationRuleStrava } from "./challenge-tasks";
 import { getTaskVerification } from "./challenge-tasks";
-import type { ConnectedAccountRow } from "./strava-service";
 import {
   ensureValidToken,
   getAthleteActivities,
+  type ConnectedAccountRow,
   type StravaActivity,
 } from "./strava-service";
 

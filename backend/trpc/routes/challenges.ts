@@ -205,7 +205,7 @@ export const challengesRouter = createTRPCRouter({
         });
       }
 
-      const { data: challenge, error: challengeError } = await ctx.supabase
+      const { error: challengeError } = await ctx.supabase
         .from("challenges")
         .select("*, challenge_tasks (*)")
         .eq("id", input.challengeId)

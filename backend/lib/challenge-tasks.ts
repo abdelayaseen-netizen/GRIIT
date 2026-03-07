@@ -100,7 +100,6 @@ export function getTaskVerification(row: ChallengeTaskRowRaw | null | undefined)
   verificationRule: VerificationRuleStrava | null;
 } {
   const config = row?.config ?? {};
-  const taskType = getTaskType(row);
   const needsProof = config.photo_required === true || config.require_photo_proof === true;
   const minWords = typeof config.min_words === "number" ? config.min_words : 0;
   const durationMinutes = typeof config.duration_minutes === "number" ? config.duration_minutes : 0;

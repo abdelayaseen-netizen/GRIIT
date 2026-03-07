@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { AuthGateModal, type GateContext } from "@/components/AuthGateModal";
 import { track } from "@/lib/analytics";
@@ -63,9 +63,14 @@ export function AuthGateProvider({ children }: { children: ReactNode }) {
     setGateVisible(false);
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ requireAuth, showGate }),
+    [requireAuth, showGate]
+  );
+
   return (
     <>
-      <AuthGateContext.Provider value={{ requireAuth, showGate }}>
+      <AuthGateContext.Provider value={contextValue}>
         {children}
       </AuthGateContext.Provider>
       <AuthGateModal

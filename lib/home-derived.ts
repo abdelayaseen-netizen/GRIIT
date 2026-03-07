@@ -3,7 +3,6 @@
  * Single place so home and any reuse (e.g. widgets) stay consistent.
  */
 
-import { getYesterdayDateKey } from "./date-utils";
 import { RETENTION_CONFIG } from "./retention-config";
 
 export interface HomeStatsLike {

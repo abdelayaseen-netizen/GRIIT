@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
@@ -73,7 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [stats, setStats] = useState<any>(null);
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
-  const [activeChallengeError, setActiveChallengeError] = useState(false);
+  const [, setActiveChallengeError] = useState(false);
   const [activeChallengeLoaded, setActiveChallengeLoaded] = useState(false);
   const [stories, setStories] = useState<any[]>([]);
   const [todayCheckins, setTodayCheckins] = useState<any[]>([]);
@@ -179,6 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelSecureReminders();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- deps derived from stats; listing stats would re-run on any stats change
   }, [user, stats?.lastCompletedDateKey, (stats as any)?.preferredSecureTime, (stats as any)?.lastStandsAvailable]);
 
   useEffect(() => {

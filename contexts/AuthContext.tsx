@@ -1,5 +1,4 @@
-import { createContext, useContext, ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, ReactNode, useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -54,9 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const isGuest = !user;
+  const contextValue = useMemo(
+    () => ({ user, session, loading, isGuest }),
+    [user, session, loading, isGuest]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isGuest }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

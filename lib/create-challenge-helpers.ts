@@ -4,9 +4,15 @@
  * and future flows (templates, duplication) stay consistent.
  */
 
-import type { ChallengeType, ReplayPolicy, ChallengeVisibility } from "@/types";
-import type { ScheduleType, WindowMode, TimezoneMode, WordLimitMode } from "@/types";
-import type { JournalCategory } from "@/types";
+import type {
+  ChallengeType,
+  ReplayPolicy,
+  ChallengeVisibility,
+  ScheduleType,
+  TimezoneMode,
+  WordLimitMode,
+  JournalCategory,
+} from "@/types";
 
 /** Minimal task shape for validation and payload. Aligns with create screen TaskTemplate. */
 export interface CreateTaskDraft {

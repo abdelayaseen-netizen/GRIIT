@@ -9,12 +9,12 @@ import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { assertActiveChallengeOwnership } from "../guards";
 import { getStravaPublicConfig } from "../../lib/strava-config";
 import { createState } from "../../lib/strava-oauth-state";
-import { getAuthorizationUrl } from "../../lib/strava-service";
-import type { ConnectedAccountRow } from "../../lib/strava-service";
 import {
+  getAuthorizationUrl,
   ensureValidToken,
   getAthlete,
   getAthleteActivities,
+  type ConnectedAccountRow,
   type StravaActivity,
 } from "../../lib/strava-service";
 import { verifyStravaTaskCompletion } from "../../lib/strava-verifier";
