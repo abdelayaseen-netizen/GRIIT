@@ -72,14 +72,23 @@ export default function CommitmentScreen() {
         ]);
         return;
       }
-      await trpcMutate("challenges.join", { challengeId });
+      const result = await trpcMutate("challenges.join", { challengeId }) as { joined?: boolean; runStatus?: string } | undefined;
       if (Platform.OS !== "web") {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
       await refetchAll();
-      Alert.alert("You're in!", "Let's go.", [
-        { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
-      ]);
+      const runStatus = result?.runStatus;
+      if (runStatus === "waiting") {
+        Alert.alert("You're in!", "Waiting for more people to join. Share the challenge so the team can start.", [
+          { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+        ]);
+      } else if (runStatus === "active" || (result && "id" in result)) {
+        router.replace({ pathname: "/challenge/[id]", params: { id: challengeId } } as any);
+      } else {
+        Alert.alert("You're in!", "Let's go.", [
+          { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+        ]);
+      }
     } catch (err: any) {
       const message = err?.message ?? "Failed to join challenge. Try again.";
       Alert.alert("Error", message);

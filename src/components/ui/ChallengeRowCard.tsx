@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ChevronRight } from "lucide-react-native";
+import { ChevronRight, Users, Target } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
 
 export function ChallengeRowCard(props: {
@@ -12,6 +12,10 @@ export function ChallengeRowCard(props: {
   participantsCount: number;
   statusDotColor?: string;
   onPress: () => void;
+  participationType?: string;
+  teamSize?: number;
+  sharedGoalTarget?: number;
+  sharedGoalUnit?: string;
 }) {
   const {
     title,
@@ -22,8 +26,15 @@ export function ChallengeRowCard(props: {
     participantsCount,
     statusDotColor,
     onPress,
+    participationType,
+    teamSize,
+    sharedGoalTarget,
+    sharedGoalUnit,
   } = props;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+  const isTeam = participationType === "team";
+  const isSharedGoal = participationType === "shared_goal";
+  const badgeLabel = isTeam && teamSize != null ? `Team · ${teamSize} people` : isSharedGoal && sharedGoalTarget != null && sharedGoalUnit ? `Shared Goal · ${sharedGoalTarget} ${sharedGoalUnit}` : null;
   return (
     <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.85}>
       <View style={[s.stripe, { backgroundColor: stripeColor }]} />
@@ -34,6 +45,12 @@ export function ChallengeRowCard(props: {
             <View style={[s.statusDot, { backgroundColor: statusDotColor }]} />
           )}
         </View>
+        {badgeLabel && (
+          <View style={s.badgeRow}>
+            {isTeam ? <Users size={11} color={t.colors.textSecondary} /> : <Target size={11} color={t.colors.textSecondary} />}
+            <Text style={s.badgeText}>{badgeLabel}</Text>
+          </View>
+        )}
         <Text style={s.desc} numberOfLines={1}>{description}</Text>
         <View style={s.meta}>
           <Text style={s.metaLeft}>
@@ -87,6 +104,17 @@ const s = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: t.colors.textSecondary,
   },
   desc: {
     fontSize: t.typography.compactDesc.fontSize,

@@ -248,6 +248,11 @@ export default function DiscoverScreen() {
           active_today_count: c.active_today_count ?? 0,
           challenge_tasks: tasks,
           tasks,
+          participation_type: c.participation_type,
+          run_status: c.run_status,
+          team_size: c.team_size,
+          shared_goal_target: c.shared_goal_target,
+          shared_goal_unit: c.shared_goal_unit,
         };
       });
     }
@@ -379,10 +384,14 @@ export default function DiscoverScreen() {
                   description={c.short_hook || c.description}
                   stripeColor={c.theme_color || tokenColors.orangeStripe}
                   durationLabel={c.duration_type === "24h" ? "24H" : `${c.duration_days ?? 1} day${(c.duration_days ?? 1) === 1 ? "" : "s"}`}
-                  taskCount={c.tasks.length}
+                  taskCount={c.tasks?.length ?? 0}
                   participantsCount={c.participants_count ?? 0}
                   statusDotColor={c.theme_color}
                   onPress={() => handleChallengePress(c.id)}
+                  participationType={c.participation_type}
+                  teamSize={c.team_size}
+                  sharedGoalTarget={c.shared_goal_target}
+                  sharedGoalUnit={c.shared_goal_unit}
                 />
               ))}
             </View>
@@ -462,6 +471,10 @@ export default function DiscoverScreen() {
                   participantsCount={c.participants_count ?? 0}
                   statusDotColor={c.theme_color}
                   onPress={() => handleChallengePress(c.id)}
+                  participationType={(c as any).participation_type}
+                  teamSize={(c as any).team_size}
+                  sharedGoalTarget={(c as any).shared_goal_target}
+                  sharedGoalUnit={(c as any).shared_goal_unit}
                 />
               ))}
             </View>

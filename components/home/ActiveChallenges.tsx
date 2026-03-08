@@ -35,6 +35,12 @@ export interface ChallengeWithProgress {
   challengeName: string;
   todayTaskProgress: string;
   todayTasks: TodayTaskItem[];
+  participationType?: string;
+  runStatus?: string;
+  teamSize?: number;
+  sharedGoalTarget?: number;
+  sharedGoalUnit?: string;
+  sharedGoalTotal?: number;
 }
 
 interface ActiveChallengesProps {
@@ -99,12 +105,23 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
       const completedCount = todayTasks.filter((t) => t.completed).length;
       const total = required.length;
       const progressStr = total > 0 ? `${completedCount}/${total}` : "0/0";
+      const participationType = (challenge as { participation_type?: string } | null)?.participation_type;
+      const runStatus = (challenge as { run_status?: string } | null)?.run_status;
+      const teamSize = (challenge as { team_size?: number } | null)?.team_size;
+      const sharedGoalTarget = (challenge as { shared_goal_target?: number } | null)?.shared_goal_target;
+      const sharedGoalUnit = (challenge as { shared_goal_unit?: string } | null)?.shared_goal_unit;
       return {
         activeChallengeId: ac.id,
         challengeId: challenge?.id ?? ac.challenge_id,
         challengeName: challenge?.title ?? "Challenge",
         todayTaskProgress: progressStr,
         todayTasks,
+        participationType,
+        runStatus,
+        teamSize,
+        sharedGoalTarget,
+        sharedGoalUnit,
+        sharedGoalTotal: undefined,
       };
     });
   }, [controlledList, activeList, checkinsByAcId]);
@@ -139,6 +156,12 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
           challengeName={item.challengeName}
           todayTaskProgress={item.todayTaskProgress}
           todayTasks={item.todayTasks}
+          participationType={item.participationType}
+          runStatus={item.runStatus}
+          teamSize={item.teamSize}
+          sharedGoalTarget={item.sharedGoalTarget}
+          sharedGoalUnit={item.sharedGoalUnit}
+          sharedGoalTotal={item.sharedGoalTotal}
         />
       ))}
     </View>

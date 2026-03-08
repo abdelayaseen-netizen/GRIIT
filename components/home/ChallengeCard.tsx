@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
-import { ChevronRight, Circle, CheckCircle2 } from "lucide-react-native";
+import { ChevronRight, Circle, CheckCircle2, Users, Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import Colors from "@/constants/colors";
@@ -17,6 +17,12 @@ interface ChallengeCardProps {
   todayTaskProgress: string;
   todayTasks: TodayTaskItem[];
   onOpenChallenge?: () => void;
+  participationType?: string;
+  runStatus?: string;
+  teamSize?: number;
+  sharedGoalTarget?: number;
+  sharedGoalUnit?: string;
+  sharedGoalTotal?: number;
 }
 
 export default function ChallengeCard({
@@ -25,8 +31,16 @@ export default function ChallengeCard({
   todayTaskProgress,
   todayTasks,
   onOpenChallenge,
+  participationType,
+  runStatus,
+  teamSize,
+  sharedGoalTarget,
+  sharedGoalUnit,
+  sharedGoalTotal,
 }: ChallengeCardProps) {
   const router = useRouter();
+  const isTeam = participationType === "team";
+  const isSharedGoal = participationType === "shared_goal";
 
   const handleOpen = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -42,6 +56,27 @@ export default function ChallengeCard({
         </Text>
         <Text style={styles.progressBadge}>{todayTaskProgress}</Text>
       </View>
+      {(isTeam || isSharedGoal) && (
+        <View style={styles.badgeRow}>
+          {isTeam && (
+            <View style={styles.typeBadge}>
+              <Users size={12} color={Colors.accent} />
+              <Text style={styles.typeBadgeText}>Team{teamSize != null ? ` · ${teamSize} people` : ""}</Text>
+            </View>
+          )}
+          {isSharedGoal && (
+            <View style={styles.typeBadge}>
+              <Target size={12} color={Colors.accent} />
+              <Text style={styles.typeBadgeText}>
+                Shared Goal
+                {sharedGoalTarget != null && sharedGoalUnit
+                  ? ` · ${sharedGoalTotal ?? 0}/${sharedGoalTarget} ${sharedGoalUnit}`
+                  : ""}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
       {todayTasks.length > 0 && (
         <View style={styles.taskList}>
           {todayTasks.slice(0, 5).map((task) => (
@@ -103,6 +138,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.accent,
     marginLeft: 8,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 8,
+  },
+  typeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: Colors.accentLight,
+  },
+  typeBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.accent,
   },
   taskList: {
     gap: 8,

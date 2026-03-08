@@ -32,6 +32,8 @@ export const TRPC = {
   },
   sharedGoal: {
     logProgress: 'sharedGoal.logProgress',
+    getRecentLogs: 'sharedGoal.getRecentLogs',
+    getContributions: 'sharedGoal.getContributions',
   },
   checkins: {
     getTodayCheckins: 'checkins.getTodayCheckins',

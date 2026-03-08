@@ -39,8 +39,12 @@ import * as Haptics from "expo-haptics";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import TeamStatusHeader from "@/components/challenge/TeamStatusHeader";
+import TeamMemberList, { type TeamMemberForList } from "@/components/challenge/TeamMemberList";
+import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track } from "@/lib/analytics";
 import { getJoinedStarterIds } from "@/lib/starter-join";
 import { FLAGS } from "@/lib/feature-flags";
@@ -394,8 +398,10 @@ export default function ChallengeDetailScreen() {
   const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
   const router = useRouter();
   const { colors: themeColors } = useTheme();
+  const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins } = useApp();
+  const currentUserId = user?.id ?? undefined;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -485,6 +491,52 @@ export default function ChallengeDetailScreen() {
     }
     return null;
   }, [isStarter, starterChallenge, remoteChallenge]);
+
+  const participationType = (challenge as any)?.participation_type ?? "solo";
+  const runStatus = (challenge as any)?.run_status as "waiting" | "active" | "completed" | "failed" | undefined;
+  const teamMembers = ((challenge as any)?.teamMembers ?? []) as TeamMemberForList[];
+  const teamSize = (challenge as any)?.team_size ?? 1;
+  const isTeamChallenge = participationType === "team";
+  const isSharedGoal = participationType === "shared_goal";
+  const sharedGoalTotal = (challenge as any)?.sharedGoalTotal ?? 0;
+  const sharedGoalTarget = (challenge as any)?.shared_goal_target ?? 0;
+  const sharedGoalUnit = ((challenge as any)?.shared_goal_unit ?? "units") as string;
+  const deadlineType = (challenge as any)?.deadline_type as string | null | undefined;
+  const deadlineDate = (challenge as any)?.deadline_date as string | null | undefined;
+
+  const [sharedContributions, setSharedContributions] = useState<{ user_id: string; display_name: string; total: number; percent: number }[]>([]);
+  const [sharedRecentLogs, setSharedRecentLogs] = useState<{ id: string; user_id: string; amount: number; unit: string; note: string | null; logged_at: string; display_name: string }[]>([]);
+  const [sharedLogsLoading, setSharedLogsLoading] = useState(false);
+
+  const isTeamOrSharedMember = teamMembers.some((m) => m.user_id === currentUserId);
+
+  const fetchSharedGoalData = useCallback(async () => {
+    if (!id || !isSharedGoal || !isTeamOrSharedMember) return;
+    setSharedLogsLoading(true);
+    try {
+      const [contrib, logs] = await Promise.all([
+        trpcQuery(TRPC.sharedGoal.getContributions, { challengeId: id }) as Promise<{ user_id: string; display_name: string; total: number; percent: number }[]>,
+        trpcQuery(TRPC.sharedGoal.getRecentLogs, { challengeId: id, limit: 20 }) as Promise<{ id: string; user_id: string; amount: number; unit: string; note: string | null; logged_at: string; display_name: string }[]>,
+      ]);
+      setSharedContributions(Array.isArray(contrib) ? contrib : []);
+      setSharedRecentLogs(Array.isArray(logs) ? logs : []);
+    } catch {
+      setSharedContributions([]);
+      setSharedRecentLogs([]);
+    } finally {
+      setSharedLogsLoading(false);
+    }
+  }, [id, isSharedGoal, isTeamOrSharedMember]);
+
+  useEffect(() => {
+    if (isSharedGoal && isTeamOrSharedMember && id) fetchSharedGoalData();
+  }, [isSharedGoal, isTeamOrSharedMember, id, fetchSharedGoalData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isSharedGoal && isTeamOrSharedMember && id) fetchSharedGoalData();
+    }, [isSharedGoal, isTeamOrSharedMember, id, fetchSharedGoalData])
+  );
 
   const isDaily = challenge?.is_daily ?? false;
   const [expired, setExpired] = useState(false);
@@ -606,7 +658,10 @@ export default function ChallengeDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isJoined) refetchTodayCheckins();
-    }, [isJoined, refetchTodayCheckins])
+      if (id && !isStarter && (isTeamChallenge || isSharedGoal)) {
+        trpcQuery("challenges.getById", { id }).then((data) => setRemoteChallenge(data)).catch(() => {});
+      }
+    }, [id, isStarter, isJoined, isTeamChallenge, isSharedGoal, refetchTodayCheckins])
   );
 
   const onRefresh = useCallback(async () => {
@@ -793,6 +848,76 @@ export default function ChallengeDetailScreen() {
           {/* BODY */}
           <View style={s.body}>
 
+            {/* Team / Shared Goal sections (remote only) */}
+            {!isStarter && id && (isTeamChallenge || isSharedGoal) && (
+              <>
+                {isTeamChallenge && runStatus && (
+                  <>
+                    <TeamStatusHeader
+                      runStatus={runStatus}
+                      teamSize={teamSize}
+                      memberCount={teamMembers.length}
+                      currentDay={userCurrentDay}
+                      durationDays={challenge.duration_days ?? 0}
+                      isCreator={teamMembers.some((m) => m.user_id === currentUserId && m.role === "creator")}
+                      onStartChallenge={async () => {
+                        if (!id) return;
+                        try {
+                          await trpcMutate(TRPC.challenges.startTeamChallenge, { challengeId: id });
+                          const data = await trpcQuery("challenges.getById", { id });
+                          setRemoteChallenge(data);
+                        } catch (e: unknown) {
+                          Alert.alert("Error", (e as Error)?.message ?? "Could not start challenge.");
+                        }
+                      }}
+                      onInvite={() => {
+                        import("@/lib/share").then(({ inviteToChallenge }) =>
+                          inviteToChallenge({ name: challenge.title, id: id ?? "" })
+                        ).catch(() => {});
+                      }}
+                    />
+                    <TeamMemberList
+                      members={teamMembers}
+                      currentUserId={currentUserId}
+                      runStatus={runStatus}
+                    />
+                    {runStatus === "failed" && (
+                      <View style={[s.failCtaWrap, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                        <Text style={s.failCtaText}>Challenge failed for all {teamMembers.length} team members</Text>
+                        <TouchableOpacity
+                          style={[s.failCtaBtn, { backgroundColor: theme.accent }]}
+                          onPress={() => router.replace("/(tabs)" as any)}
+                          activeOpacity={0.85}
+                        >
+                          <Text style={s.failCtaBtnText}>Back to Home</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </>
+                )}
+                {isSharedGoal && isTeamOrSharedMember && (
+                  <SharedGoalProgress
+                    target={sharedGoalTarget}
+                    unit={sharedGoalUnit}
+                    total={sharedGoalTotal}
+                    runStatus={runStatus ?? "waiting"}
+                    deadlineType={deadlineType}
+                    deadlineDate={deadlineDate}
+                    contributions={sharedContributions}
+                    recentLogs={sharedRecentLogs}
+                    loadingLogs={sharedLogsLoading}
+                    onLogProgress={async (amount, note) => {
+                      if (!id) return;
+                      await trpcMutate(TRPC.sharedGoal.logProgress, { challengeId: id, amount, unit: sharedGoalUnit, note: note || undefined });
+                      const data = await trpcQuery("challenges.getById", { id });
+                      setRemoteChallenge(data);
+                      await fetchSharedGoalData();
+                    }}
+                  />
+                )}
+              </>
+            )}
+
             {/* Daily Countdown */}
             {isDaily && challenge.ends_at && !expired && (
               <CountdownTimer endsAt={challenge.ends_at} theme={theme} />
@@ -804,8 +929,8 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Progress Section (joined only) */}
-            {isJoined && !isDaily && (
+            {/* Progress Section (joined only; hidden when team failed) */}
+            {isJoined && !isDaily && !(isTeamChallenge && runStatus === "failed") && (
               <View style={s.progressSection}>
                 <View style={s.progressHeader}>
                   <Text style={s.sectionLabel}>Progress</Text>
@@ -868,9 +993,10 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Today's Missions */}
+            {/* Today's Missions (hidden when team failed or shared-goal-only) */}
+            {!(isTeamChallenge && runStatus === "failed") && (
             <View style={s.missionsSection}>
-              <Text style={s.sectionTitle}>Today{"'" as string}s Missions</Text>
+              <Text style={s.sectionTitle}>Today&apos;s Missions</Text>
               <View style={s.missionsCard}>
                 {allTasks.map((task, index) => {
                   const checkin = todayCheckins.find((c: any) => c.task_id === task.id);
@@ -913,6 +1039,7 @@ export default function ChallengeDetailScreen() {
                 })}
               </View>
             </View>
+            )}
 
             {/* Rules */}
             {rules.length > 0 && (
@@ -1290,6 +1417,28 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600" as const,
     color: "#B91C1C",
+  },
+  failCtaWrap: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 16,
+  },
+  failCtaText: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: Colors.text.secondary,
+    marginBottom: 12,
+  },
+  failCtaBtn: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  failCtaBtnText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: "#fff",
   },
 
   socialSection: {
