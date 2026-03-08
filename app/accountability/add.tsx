@@ -158,6 +158,7 @@ export default function AddAccountabilityPartnerScreen() {
           data={hits}
           keyExtractor={(item) => item.user_id}
           renderItem={renderItem}
+          initialNumToRender={12}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
         />

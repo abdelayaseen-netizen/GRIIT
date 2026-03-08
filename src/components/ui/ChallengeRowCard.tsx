@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, Users, Target } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
 
-export function ChallengeRowCard(props: {
+function ChallengeRowCardInner(props: {
   title: string;
   description: string;
   stripeColor: string;
@@ -67,6 +67,8 @@ export function ChallengeRowCard(props: {
     </TouchableOpacity>
   );
 }
+
+export const ChallengeRowCard = React.memo(ChallengeRowCardInner);
 
 const s = StyleSheet.create({
   card: {

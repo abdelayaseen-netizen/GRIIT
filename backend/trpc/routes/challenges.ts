@@ -11,13 +11,6 @@ import {
 } from "../../lib/challenge-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 
-const isProd = process.env.NODE_ENV === "production";
-function logCreateChallenge(msg: string, data?: Record<string, unknown>) {
-  if (!isProd) {
-    console.log("[challenges.create]", msg, data ?? "");
-  }
-}
-
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
   return type === "simple" || type === "photo" ? "manual" : type;
@@ -578,8 +571,6 @@ export const challengesRouter = createTRPCRouter({
       })).min(0),
     }).refine((data) => data.participationType === "shared_goal" || data.tasks.length >= 1, { message: "At least one task is required for non–shared-goal challenges." }))
     .mutation(async ({ input, ctx }) => {
-      logCreateChallenge("start", { userId: ctx.userId, title: input.title?.slice(0, 50), taskCount: input.tasks.length });
-
       const isSharedGoal = input.participationType === "shared_goal";
       if (!isSharedGoal && input.tasks.length === 0) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "At least one task is required" });
@@ -658,7 +649,6 @@ export const challengesRouter = createTRPCRouter({
         .single();
 
       if (challengeError) {
-        logCreateChallenge("challenge insert failed", { code: challengeError.code });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create challenge.",
@@ -673,13 +663,11 @@ export const challengesRouter = createTRPCRouter({
           status: "active",
         });
         if (memberError) {
-          logCreateChallenge("challenge_members insert failed", { code: memberError.code });
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create challenge." });
         }
       }
 
       if (input.tasks.length === 0) {
-        logCreateChallenge("success", { challengeId: challenge.id, title: challenge.title });
         return { ...challenge, tasks: [] };
       }
 
@@ -708,14 +696,12 @@ export const challengesRouter = createTRPCRouter({
         .select();
 
       if (tasksError) {
-        logCreateChallenge("tasks insert failed", { code: tasksError.code });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create tasks.",
         });
       }
 
-      logCreateChallenge("success", { challengeId: challenge.id, title: challenge.title });
       return {
         ...challenge,
         tasks: mapTaskRowsToApi((tasksRaw ?? []) as ChallengeTaskRowRaw[]),

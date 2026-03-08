@@ -3,12 +3,9 @@
  * Validates token format and handles errors without throwing.
  */
 
-const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+import { isValidExpoToken } from "./push-utils";
 
-function isValidExpoToken(token: string): boolean {
-  const t = typeof token === "string" ? token.trim() : "";
-  return t.length > 0 && (t.startsWith("ExponentPushToken") || t.startsWith("ExpoPushToken"));
-}
+const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
 /**
  * Send a single push notification via Expo Push API.

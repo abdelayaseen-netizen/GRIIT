@@ -10,7 +10,7 @@ const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Extreme: { bg: t.colors.badgeRedBg, text: t.colors.badgeRedText },
 };
 
-export function ChallengeCardFeatured(props: {
+function ChallengeCardFeaturedInner(props: {
   title: string;
   description: string;
   difficulty: string;
@@ -93,6 +93,8 @@ export function ChallengeCardFeatured(props: {
     </TouchableOpacity>
   );
 }
+
+export const ChallengeCardFeatured = React.memo(ChallengeCardFeaturedInner);
 
 const s = StyleSheet.create({
   card: {

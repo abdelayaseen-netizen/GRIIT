@@ -409,6 +409,7 @@ export default function DiscoverScreen() {
               data={dailyChallenges}
               keyExtractor={(item) => item.id}
               horizontal
+              initialNumToRender={5}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.dailyScrollContent}
               renderItem={({ item: c }) => (

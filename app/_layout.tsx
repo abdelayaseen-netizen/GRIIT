@@ -11,6 +11,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { supabase } from "@/lib/supabase";
 import { LIGHT_THEME } from "@/lib/theme-palettes";
 
@@ -229,21 +230,23 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <AuthProvider>
-          <AuthGateProvider>
-            <ApiProvider>
-              <AppProvider>
-                <ThemeAwareStatusBar />
-                <RootLayoutNav />
-                <AuthRedirector />
-              </AppProvider>
-            </ApiProvider>
-          </AuthGateProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider>
+          <AuthProvider>
+            <AuthGateProvider>
+              <ApiProvider>
+                <AppProvider>
+                  <ThemeAwareStatusBar />
+                  <RootLayoutNav />
+                  <AuthRedirector />
+                </AppProvider>
+              </ApiProvider>
+            </AuthGateProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

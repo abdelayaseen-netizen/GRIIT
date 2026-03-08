@@ -2,12 +2,9 @@
  * Server-side push via Expo Push API. Does not crash on missing/invalid tokens.
  */
 
-const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+import { isValidExpoToken } from "./push-utils";
 
-function isValidExpoToken(token: string): boolean {
-  const t = typeof token === "string" ? token.trim() : "";
-  return t.length > 0 && (t.startsWith("ExponentPushToken") || t.startsWith("ExpoPushToken"));
-}
+const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
 /**
  * Send push notification(s) to Expo device(s). No-op if tokens empty/invalid.

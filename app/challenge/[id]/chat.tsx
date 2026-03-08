@@ -310,6 +310,7 @@ export default function ChallengeChatScreen() {
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
+            initialNumToRender={20}
             contentContainerStyle={styles.messageList}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}

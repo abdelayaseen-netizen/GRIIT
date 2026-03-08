@@ -28,6 +28,7 @@ import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { formatSecondsToMMSS } from "@/lib/formatTime";
 import Colors from "@/constants/colors";
 import { RunMode } from "@/types";
 import { styles } from "@/styles/run-styles";
@@ -417,12 +418,6 @@ export default function RunTaskScreen() {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const formatPace = () => {
     if (distanceMiles === 0 || elapsedSeconds === 0) return "--:--";
     const paceSeconds = elapsedSeconds / distanceMiles;
@@ -521,7 +516,7 @@ export default function RunTaskScreen() {
               <View style={styles.secondaryStats}>
                 <View style={styles.statItem}>
                   <Clock size={18} color={Colors.text.secondary} />
-                  <Text style={styles.statValue}>{formatTime(elapsedSeconds)}</Text>
+                  <Text style={styles.statValue}>{formatSecondsToMMSS(elapsedSeconds)}</Text>
                   <Text style={styles.statLabel}>Duration</Text>
                 </View>
                 <View style={styles.statDivider} />
@@ -593,7 +588,7 @@ export default function RunTaskScreen() {
                 <View style={styles.timerSection}>
                   <View style={styles.mainStat}>
                     <Text style={[styles.distanceValue, isTreadmillTimerComplete && styles.distanceComplete]}>
-                      {formatTime(timerSeconds)}
+                      {formatSecondsToMMSS(timerSeconds)}
                     </Text>
                     <Text style={styles.distanceLabel}>
                       / {Math.floor(minTimerSeconds / 60)}:00 min
@@ -764,7 +759,7 @@ export default function RunTaskScreen() {
                       <Text style={styles.summaryLabel}>Timer</Text>
                       <View style={styles.summaryValue}>
                         <Check size={14} color={Colors.success} />
-                        <Text style={styles.summaryValueText}>{formatTime(timerSeconds)}</Text>
+                        <Text style={styles.summaryValueText}>{formatSecondsToMMSS(timerSeconds)}</Text>
                       </View>
                     </View>
                     <View style={styles.summaryRow}>

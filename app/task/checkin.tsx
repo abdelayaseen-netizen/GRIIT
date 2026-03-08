@@ -27,6 +27,7 @@ import { AllowedLocation } from "@/types";
 import { checkinStyles as styles } from "@/styles/checkin-styles";
 import Celebration from "@/components/Celebration";
 import { useCelebration } from "@/hooks/useCelebration";
+import { formatSecondsToMMSS } from "@/lib/formatTime";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
 type TimeStatus = "too_early" | "window_open" | "too_late";
@@ -367,12 +368,6 @@ export default function CheckinTaskScreen() {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const getTimeWindowDisplay = () => {
     if (!timeWindowPolicy?.enabled) return "Anytime";
     const [hours, minutes] = timeWindowPolicy.startTimeLocal.split(":").map(Number);
@@ -494,7 +489,7 @@ export default function CheckinTaskScreen() {
 
             <View style={styles.timerDisplay}>
               <Text style={[styles.timerValue, elapsedSeconds >= minSessionSeconds && styles.timerComplete]}>
-                {formatTime(elapsedSeconds)}
+                {formatSecondsToMMSS(elapsedSeconds)}
               </Text>
               <Text style={styles.timerLabel}>
                 / {Math.floor(minSessionSeconds / 60)}:00 required

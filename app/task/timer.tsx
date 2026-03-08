@@ -9,6 +9,7 @@ import { useApp } from "@/contexts/AppContext";
 import Colors from "@/constants/colors";
 import type { ChallengeTaskFromApi } from "@/types";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
+import { formatSecondsToMMSS } from "@/lib/formatTime";
 
 /** Active challenge as returned by getActive (nested challenges.challenge_tasks in API shape). */
 interface ActiveChallengeWithTasks {
@@ -208,17 +209,11 @@ export default function TimerTaskScreen() {
     }
   };
 
-  const formatTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>
         <View style={styles.timerContainer}>
-          <Text style={styles.timerText}>{formatTime(seconds)}</Text>
+          <Text style={styles.timerText}>{formatSecondsToMMSS(seconds)}</Text>
           <Text style={styles.timerLabel}>{isRunning ? 'Running...' : 'Paused'}</Text>
         </View>
 

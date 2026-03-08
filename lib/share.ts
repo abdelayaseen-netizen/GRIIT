@@ -5,12 +5,9 @@ import {
   inviteDeepLink,
   profileDeepLink,
 } from "@/lib/deep-links";
+import { DEEP_LINK_BASE_URL, APP_STORE_URLS } from "@/lib/config";
 
-const APP_STORE_URL = Platform.select({
-  ios: "https://apps.apple.com/app/griit/idXXXXXX",
-  android: "https://play.google.com/store/apps/details?id=app.grit.challenge_tracker",
-  default: "https://griit.app",
-});
+const APP_STORE_URL = Platform.select(APP_STORE_URLS);
 
 async function shareOrCopy(message: string, title?: string): Promise<void> {
   if (Platform.OS === "web") {
@@ -83,7 +80,7 @@ export async function shareDaySecured(data: {
   challengeName?: string;
   dayNumber?: number;
 }): Promise<void> {
-  const url = "https://griit.app";
+  const url = DEEP_LINK_BASE_URL;
   let message = "Day secured. ";
   if (data.challengeName && data.dayNumber) {
     message += `Day ${data.dayNumber} of "${data.challengeName}" complete. `;
@@ -101,7 +98,7 @@ export async function shareMilestone(data: {
   streak: number;
   milestoneMessage: string;
 }): Promise<void> {
-  const url = "https://griit.app";
+  const url = DEEP_LINK_BASE_URL;
   const message = `${data.streak}-day streak on GRIIT. ${data.milestoneMessage}\n\nNo shortcuts. No excuses.\n\n${url}`;
   await shareOrCopy(message, "My streak on GRIIT");
 }
@@ -112,7 +109,7 @@ export async function shareChallengeComplete(data: {
   daysCompleted: number;
   isHardMode?: boolean;
 }): Promise<void> {
-  const url = "https://griit.app";
+  const url = DEEP_LINK_BASE_URL;
   const hardLine = data.isHardMode ? " Hard Mode." : "";
   const message = `I completed "${data.name}" on GRIIT. ${data.daysCompleted} of ${data.duration} days secured.${hardLine}\n\n${url}`;
   await shareOrCopy(message, "Challenge Complete");

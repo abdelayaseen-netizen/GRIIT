@@ -18,5 +18,3 @@ export const RETENTION_CONFIG = {
   /** Freeze can only be used when missed exactly this many days (1 = yesterday only) */
   streakFreezeEligibleMissedDays: 1,
 } as const;
-
-export type RetentionConfig = typeof RETENTION_CONFIG;

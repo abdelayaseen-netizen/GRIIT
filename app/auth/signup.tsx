@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,15 @@ export default function SignupScreen() {
   const [cooldown, setCooldown] = useState(0);
   const isSubmittingRef = useRef(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) {
+        clearInterval(cooldownRef.current);
+        cooldownRef.current = null;
+      }
+    };
+  }, []);
 
   const startCooldown = (seconds: number) => {
     setCooldown(seconds);

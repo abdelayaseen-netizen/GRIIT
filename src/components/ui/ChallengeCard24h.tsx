@@ -29,7 +29,7 @@ const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Extreme: { bg: t.colors.badgeRedBg, text: t.colors.badgeRedText },
 };
 
-export function ChallengeCard24h(p: {
+function ChallengeCard24hInner(p: {
   title: string;
   description: string;
   countdownText?: string;
@@ -79,6 +79,8 @@ export function ChallengeCard24h(p: {
     </TouchableOpacity>
   );
 }
+
+export const ChallengeCard24h = React.memo(ChallengeCard24hInner);
 
 const s = StyleSheet.create({
   card: {

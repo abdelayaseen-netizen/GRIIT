@@ -157,6 +157,7 @@ export default function SharedGoalProgress({
           <FlatList
             data={recentLogs}
             keyExtractor={(item) => item.id}
+            initialNumToRender={15}
             scrollEnabled={false}
             renderItem={({ item }) => (
               <View style={[styles.logRow, { borderBottomColor: colors.border }]}>
