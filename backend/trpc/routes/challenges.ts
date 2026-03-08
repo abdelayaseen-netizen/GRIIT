@@ -7,7 +7,9 @@ import {
   type ChallengeTaskRowRaw,
   mapTaskRowsToApi,
   buildTaskInsertPayload,
+  isTaskRequired,
 } from "../../lib/challenge-tasks";
+import { getSupabaseServer } from "../../lib/supabase-server";
 
 const isProd = process.env.NODE_ENV === "production";
 function logCreateChallenge(msg: string, data?: Record<string, unknown>) {
@@ -186,7 +188,18 @@ export const challengesRouter = createTRPCRouter({
         await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: today });
       }
 
-      let teamMembers: { id: string; user_id: string; role: string; status: string; joined_at: string; profiles?: { user_id?: string; username?: string | null; display_name?: string | null; avatar_url?: string | null } }[] = [];
+      type TeamMemberOut = {
+        id: string;
+        user_id: string;
+        role: string;
+        status: string;
+        joined_at: string;
+        profiles?: { user_id?: string; username?: string | null; display_name?: string | null; avatar_url?: string | null };
+        secured_today?: boolean | null;
+        tasks_completed?: number;
+        tasks_total?: number;
+      };
+      let teamMembers: TeamMemberOut[] = [];
       let sharedGoalTotal: number | null = null;
 
       if (isTeam) {
@@ -196,18 +209,79 @@ export const challengesRouter = createTRPCRouter({
           .eq("challenge_id", input.id)
           .order("joined_at", { ascending: true });
         const memberRows = (members ?? []) as { id: string; user_id: string; role: string; status: string; joined_at: string }[];
+        const taskRows = (data.challenge_tasks ?? []) as ChallengeTaskRowRaw[];
+        const requiredTaskIds = new Set(taskRows.filter((t) => isTaskRequired(t)).map((t) => t.id));
+        const tasksTotal = requiredTaskIds.size;
+        const today = new Date().toISOString().split("T")[0];
+        let statusByUserId: Map<string, { tasks_completed: number; secured_today: boolean }> = new Map();
+
+        if (participationType === "team" && memberRows.length > 0 && tasksTotal > 0) {
+          const server = getSupabaseServer();
+          if (server) {
+            const userIds = memberRows.map((m) => m.user_id);
+            const { data: acRows } = await server
+              .from("active_challenges")
+              .select("id, user_id")
+              .eq("challenge_id", input.id)
+              .in("user_id", userIds);
+            const acList = (acRows ?? []) as { id: string; user_id: string }[];
+            const userToAcId = new Map(acList.map((a) => [a.user_id, a.id]));
+            const acIds = acList.map((a) => a.id);
+            if (acIds.length > 0) {
+              const { data: checkinRows } = await server
+                .from("check_ins")
+                .select("active_challenge_id, task_id")
+                .in("active_challenge_id", acIds)
+                .eq("date_key", today)
+                .eq("status", "completed");
+              const rows = (checkinRows ?? []) as { active_challenge_id: string; task_id: string }[];
+              const completedByAcId = new Map<string, Set<string>>();
+              for (const r of rows) {
+                if (!requiredTaskIds.has(r.task_id)) continue;
+                if (!completedByAcId.has(r.active_challenge_id)) completedByAcId.set(r.active_challenge_id, new Set());
+                completedByAcId.get(r.active_challenge_id)!.add(r.task_id);
+              }
+              for (const m of memberRows) {
+                const acId = userToAcId.get(m.user_id);
+                const completedSet = acId ? completedByAcId.get(acId) : undefined;
+                const tasksCompleted = completedSet?.size ?? 0;
+                statusByUserId.set(m.user_id, {
+                  tasks_completed: tasksCompleted,
+                  secured_today: tasksCompleted === tasksTotal,
+                });
+              }
+            }
+          }
+        }
+
         if (memberRows.length > 0) {
           const { data: profiles } = await ctx.supabase
             .from("profiles")
             .select("user_id, username, display_name, avatar_url")
             .in("user_id", memberRows.map((m) => m.user_id));
           const profileMap = new Map((profiles ?? []).map((p: { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }) => [p.user_id, p]));
+          teamMembers = memberRows.map((m) => {
+            const base: TeamMemberOut = {
+              ...m,
+              profiles: profileMap.get(m.user_id) ?? undefined,
+            };
+            if (participationType === "team") {
+              const status = statusByUserId.get(m.user_id);
+              base.tasks_total = tasksTotal;
+              base.tasks_completed = status?.tasks_completed ?? 0;
+              base.secured_today = status?.secured_today ?? false;
+            } else {
+              base.secured_today = null;
+              base.tasks_completed = 0;
+              base.tasks_total = 0;
+            }
+            return base;
+          });
+        } else {
           teamMembers = memberRows.map((m) => ({
             ...m,
-            profiles: profileMap.get(m.user_id) ?? undefined,
-          }));
-        } else {
-          teamMembers = memberRows;
+            ...(participationType === "shared_goal" ? { secured_today: null, tasks_completed: 0, tasks_total: 0 } : {}),
+          })) as TeamMemberOut[];
         }
       }
 

@@ -65,6 +65,15 @@ export interface ChallengeMemberRow {
   joined_at: string;
 }
 
+/** Team member as returned by getById (with profiles and optional daily status). */
+export interface ChallengeTeamMemberWithStatus extends ChallengeMemberRow {
+  profiles?: { user_id?: string; username?: string | null; display_name?: string | null; avatar_url?: string | null };
+  /** True if member secured today; only for participation_type === 'team'. Null for shared_goal. */
+  secured_today?: boolean | null;
+  tasks_completed?: number;
+  tasks_total?: number;
+}
+
 /** shared_goal_logs: one contribution toward shared goal. Total = SUM(amount). */
 export interface SharedGoalLogRow {
   id: string;
