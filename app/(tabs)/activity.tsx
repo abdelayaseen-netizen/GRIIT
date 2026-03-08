@@ -36,6 +36,7 @@ import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import Colors from "@/constants/colors";
+import { COPY } from "@/lib/constants/copy";
 
 type ActivityType = "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined" | "nudge";
 
@@ -246,7 +247,7 @@ function MovementFeedSection({
   );
 }
 
-function RecentActivitySection({ items }: { items: ActivityItem[] }) {
+function RecentActivitySection({ items, error }: { items: ActivityItem[]; error?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const visibleItems = expanded ? items : items.slice(0, 3);
 
@@ -276,7 +277,19 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
 
   const getUserAvatar = (userId: string) => `https://i.pravatar.cc/150?u=${userId}`;
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return (
+      <View style={styles.recentSection}>
+        <View style={styles.sectionHeaderRow}>
+          <TrendingUp size={15} color={Colors.text.secondary} />
+          <Text style={styles.sectionTitle}>Recent</Text>
+        </View>
+        <Text style={styles.emptyLeaderboardText}>
+          {error ? COPY.couldNotLoadActivity : COPY.noActivityYet}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.recentSection}>
@@ -347,12 +360,15 @@ export default function ActivityScreen() {
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("global");
   const [leaderboard, setLeaderboard] = useState<{ entries: LeaderboardEntry[]; totalSecuredToday: number }>({ entries: [], totalSecuredToday: 0 });
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardError, setLeaderboardError] = useState(false);
   const [givingRespectId, setGivingRespectId] = useState<string | null>(null);
   const [givingNudgeId, setGivingNudgeId] = useState<string | null>(null);
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
+  const [activityFeedError, setActivityFeedError] = useState(false);
 
   const fetchLeaderboard = useCallback(async () => {
     setLeaderboardLoading(true);
+    setLeaderboardError(false);
     try {
       const data = await trpcQuery("leaderboard.getWeekly") as any;
       const entries = (data?.entries ?? []).map(mapApiEntryToLeaderboardEntry);
@@ -362,6 +378,7 @@ export default function ActivityScreen() {
       });
     } catch {
       setLeaderboard({ entries: [], totalSecuredToday: 0 });
+      setLeaderboardError(true);
     } finally {
       setLeaderboardLoading(false);
     }
@@ -370,8 +387,10 @@ export default function ActivityScreen() {
   const fetchActivityFeed = useCallback(async () => {
     if (!currentUserId) {
       setActivityItems([]);
+      setActivityFeedError(false);
       return;
     }
+    setActivityFeedError(false);
     try {
       const [respectsData, nudgesData] = await Promise.all([
         trpcQuery("respects.getForUser") as Promise<{ recent: { id: string; actorId: string; actorDisplayName: string; actorUsername: string; at: string }[] }>,
@@ -402,6 +421,7 @@ export default function ActivityScreen() {
       setActivityItems(merged);
     } catch {
       setActivityItems([]);
+      setActivityFeedError(true);
     }
   }, [currentUserId]);
 
@@ -451,7 +471,7 @@ export default function ActivityScreen() {
       requireAuth("nudge", () => {
         if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setGivingNudgeId(toUserId);
-        trpcMutate("nudges.send", { toUserId })
+        void trpcMutate("nudges.send", { toUserId })
           .then(() => {
             track({ name: "nudge_sent", toUserId });
             Alert.alert("Nudged!", "");
@@ -540,9 +560,11 @@ export default function ActivityScreen() {
             <Text style={styles.weeklyLeaderboardTitle}>Top This Week</Text>
           </View>
           {leaderboardLoading ? (
-            <Text style={styles.emptyLeaderboardText}>Loading…</Text>
+            <Text style={styles.emptyLeaderboardText}>{COPY.loading}</Text>
+          ) : leaderboardError ? (
+            <Text style={styles.emptyLeaderboardText}>{COPY.couldNotLoad} {COPY.pullToRetry}</Text>
           ) : leaderboard.entries.length === 0 ? (
-            <Text style={styles.emptyLeaderboardText}>Be the first this week.</Text>
+            <Text style={styles.emptyLeaderboardText}>{COPY.beFirstThisWeek}</Text>
           ) : (
             <TopThisWeekRow entries={leaderboard.entries} />
           )}
@@ -556,7 +578,18 @@ export default function ActivityScreen() {
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>
             </View>
-            <Text style={styles.emptyLeaderboardText}>Loading…</Text>
+            <Text style={styles.emptyLeaderboardText}>{COPY.loading}</Text>
+          </View>
+        ) : leaderboardError ? (
+          <View style={styles.leaderboardSection}>
+            <View style={styles.weeklyLeaderboardHeader}>
+              <View style={styles.sectionHeaderRow}>
+                <Trophy size={16} color="#D4A017" />
+                <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
+              </View>
+              <Text style={styles.resetsSunday}>Resets Sunday</Text>
+            </View>
+            <Text style={styles.emptyLeaderboardText}>{COPY.couldNotLoad} {COPY.pullToRetry}</Text>
           </View>
         ) : leaderboard.entries.length === 0 ? (
           <View style={styles.leaderboardSection}>
@@ -567,7 +600,7 @@ export default function ActivityScreen() {
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>
             </View>
-            <Text style={styles.emptyLeaderboardText}>Be the first this week.</Text>
+            <Text style={styles.emptyLeaderboardText}>{COPY.beFirstThisWeek}</Text>
           </View>
         ) : (
           <LeaderboardSection entries={leaderboard.entries} />
@@ -580,7 +613,7 @@ export default function ActivityScreen() {
           onGiveNudge={handleGiveNudge}
           givingNudgeId={givingNudgeId}
         />
-        <RecentActivitySection items={activityItems} />
+        <RecentActivitySection items={activityItems} error={activityFeedError} />
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>

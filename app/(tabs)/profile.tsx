@@ -485,7 +485,7 @@ export default function ProfileScreen() {
 
   const bioText = profile.bio || "";
 
-  const disciplineScore = totalDaysSecured;
+  const disciplineScore = Math.max(0, Number(totalDaysSecured) || 0);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -516,7 +516,7 @@ export default function ProfileScreen() {
           disciplineScore={disciplineScore}
           tier={tierName}
           friendRank={leaderboardRank}
-          zeroStateHint={disciplineScore === 0 ? "Complete today's tasks to start earning points." : undefined}
+          zeroStateHint={disciplineScore === 0 ? "Complete today's tasks to start your streak." : undefined}
         />
 
         <TierProgressBar

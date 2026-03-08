@@ -50,11 +50,12 @@ export default function LifetimeStatsCard({
   challengesCompleted,
   totalDisciplinePoints,
 }: LifetimeStatsCardProps) {
+  const safe = (n: number) => Math.max(0, Number(n) || 0);
   const items = [
-    { icon: <Flame size={20} color={Colors.streak.fire} />, value: longestStreak, label: "Longest streak" },
-    { icon: <Target size={20} color={Colors.streak.shield} />, value: daysSecured, label: "Days secured" },
-    { icon: <Award size={20} color={Colors.accent} />, value: challengesCompleted, label: "Challenges completed" },
-    { icon: <Trophy size={20} color={Colors.milestone.gold} />, value: totalDisciplinePoints, label: "Discipline points" },
+    { icon: <Flame size={20} color={Colors.streak.fire} />, value: safe(longestStreak), label: "Longest streak" },
+    { icon: <Target size={20} color={Colors.streak.shield} />, value: safe(daysSecured), label: "Days secured" },
+    { icon: <Award size={20} color={Colors.accent} />, value: safe(challengesCompleted), label: "Challenges completed" },
+    { icon: <Trophy size={20} color={Colors.milestone.gold} />, value: safe(totalDisciplinePoints), label: "Discipline points" },
   ];
 
   return (

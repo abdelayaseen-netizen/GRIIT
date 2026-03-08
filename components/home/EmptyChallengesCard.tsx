@@ -17,7 +17,7 @@ export default function EmptyChallengesCard() {
     <View style={styles.card}>
       <Target size={40} color={Colors.text.muted} />
       <Text style={styles.title}>You have no active challenges</Text>
-      <Text style={styles.subtitle}>Join a challenge to start securing your days.</Text>
+      <Text style={styles.subtitle}>Join a challenge to get started.</Text>
       <TouchableOpacity
         style={styles.button}
         onPress={handlePress}

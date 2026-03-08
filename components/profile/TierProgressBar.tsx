@@ -16,8 +16,10 @@ export default function TierProgressBar({
   currentTier,
   nextTier,
 }: TierProgressBarProps) {
-  const totalForNext = nextTier ? currentPoints + pointsRequiredForNextTier : currentPoints;
-  const progress = nextTier && totalForNext > 0 ? Math.min(1, currentPoints / totalForNext) : 1;
+  const pts = Number(currentPoints) || 0;
+  const req = Number(pointsRequiredForNextTier) || 0;
+  const totalForNext = nextTier ? pts + req : pts;
+  const progress = nextTier && totalForNext > 0 ? Math.min(1, pts / totalForNext) : 1;
 
   return (
     <View style={styles.wrap}>

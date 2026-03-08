@@ -40,7 +40,7 @@ export default function CompletedChallengesSection({
         </View>
         <View style={styles.empty}>
           <Text style={styles.emptyText}>No completed challenges yet.</Text>
-          <Text style={styles.emptySub}>Complete a challenge to see it here.</Text>
+          <Text style={styles.emptySub}>Complete your first challenge to see your history here.</Text>
         </View>
       </View>
     );
