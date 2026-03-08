@@ -13,11 +13,13 @@ import * as Haptics from "expo-haptics";
 import { Shield, Share2, Award, TrendingUp } from "lucide-react-native";
 import Colors from "@/constants/colors";
 import { shareChallenge, shareChallengeComplete } from "@/lib/share";
-
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { user } = useAuth();
+  const refUserId = user?.id ?? null;
   const badgeScale = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const statsSlide = useRef(new Animated.Value(30)).current;
@@ -71,12 +73,15 @@ export default function SuccessScreen() {
   const handleShare = async () => {
     try {
       if (isCreateSuccess) {
-        await shareChallenge({
-          name: title,
-          duration: Number(duration) || 0,
-          id: "",
-          tasksPerDay: Number(tasksCount) || 0,
-        });
+        await shareChallenge(
+          {
+            name: title,
+            duration: Number(duration) || 0,
+            id: (params.challengeId as string) || "",
+            tasksPerDay: Number(tasksCount) || 0,
+          },
+          refUserId
+        );
       } else {
         await shareChallengeComplete({
           name: title,

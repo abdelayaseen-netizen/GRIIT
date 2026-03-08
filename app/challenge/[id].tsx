@@ -396,6 +396,8 @@ function MissionRow({
 export default function ChallengeDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
+  const p = params as { id?: string; ref?: string; openJoin?: string | boolean };
+  const ref = typeof p.ref === "string" ? p.ref : Array.isArray(p.ref) ? p.ref[0] : undefined;
   const router = useRouter();
   const { colors: themeColors } = useTheme();
   const { user } = useAuth();
@@ -431,6 +433,11 @@ export default function ChallengeDetailScreen() {
       .catch(() => {})
       .finally(() => setRemoteLoading(false));
   }, [id, isStarter]);
+
+  useEffect(() => {
+    if (!ref || !currentUserId || !id || isStarter) return;
+    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch(() => {});
+  }, [ref, currentUserId, id, isStarter]);
 
   const [starterJoined, setStarterJoined] = useState(false);
   const [joiningStarter] = useState(false);
@@ -782,12 +789,15 @@ export default function ChallengeDetailScreen() {
                         text: "Share challenge",
                         onPress: () => {
                           import("@/lib/share").then(({ shareChallenge }) =>
-                            shareChallenge({
-                              name: challenge.title,
-                              duration: challenge.duration_days ?? 0,
-                              id: id ?? "",
-                              tasksPerDay: challenge.tasks?.length,
-                            })
+                            shareChallenge(
+                              {
+                                name: challenge.title,
+                                duration: challenge.duration_days ?? 0,
+                                id: id ?? "",
+                                tasksPerDay: challenge.tasks?.length,
+                              },
+                              currentUserId
+                            )
                           ).catch(() => {});
                         },
                       },
@@ -795,7 +805,7 @@ export default function ChallengeDetailScreen() {
                         text: "Invite friends",
                         onPress: () => {
                           import("@/lib/share").then(({ inviteToChallenge }) =>
-                            inviteToChallenge({ name: challenge.title, id: id ?? "" })
+                            inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
                           ).catch(() => {});
                         },
                       },
@@ -872,7 +882,7 @@ export default function ChallengeDetailScreen() {
                       }}
                       onInvite={() => {
                         import("@/lib/share").then(({ inviteToChallenge }) =>
-                          inviteToChallenge({ name: challenge.title, id: id ?? "" })
+                          inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
                         ).catch(() => {});
                       }}
                     />
@@ -1111,7 +1121,7 @@ export default function ChallengeDetailScreen() {
               onPress={() => {
                 track({ name: "invite_shared", challengeId: id ?? undefined, source: "challenge_detail" });
                 import("@/lib/share").then(({ inviteToChallenge }) =>
-                  inviteToChallenge({ name: challenge.title, id: id ?? "" })
+                  inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
                 ).catch(() => {});
               }}
               activeOpacity={0.7}

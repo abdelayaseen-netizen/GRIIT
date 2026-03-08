@@ -1,66 +1,127 @@
 /**
- * Placeholder for daily "secure your day" push reminder.
- * Trigger logic: if user has not secured today and current time >= preferredSecureTime.
- * Actual push delivery (FCM, APNs, etc.) is not wired; this is the structure only.
+ * Daily "Secure Your Day" and "Streak at Risk" push notifications.
+ * Sends at user's reminder_time (morning) and at 20:00 local (evening).
+ * Uses variable copy (random template) for behavioral reinforcement.
  */
+
+import { sendPushToUser } from "./push-reminder-expo";
+
 export interface SecureReminderContext {
   userId: string;
-  preferredSecureTime: string; // "HH:mm" e.g. "20:00"
+  /** Morning reminder time "HH:mm" e.g. "09:00" */
+  reminderTime: string;
+  /** User's IANA timezone e.g. "America/New_York" */
+  timezone: string;
   hasSecuredToday: boolean;
   now: Date;
 }
 
 /**
- * Returns true if it's time to send the reminder (user has not secured today and now >= preferred time).
+ * Returns true if it's time to send the morning reminder (user has not secured today and now >= reminder time in their TZ).
  */
-export function shouldSendSecureReminder(ctx: SecureReminderContext): boolean {
+export function shouldSendMorningReminder(ctx: SecureReminderContext): boolean {
   if (ctx.hasSecuredToday) return false;
-  const [hours, minutes] = ctx.preferredSecureTime.split(":").map(Number);
-  const preferredMinutes = hours * 60 + (minutes ?? 0);
-  const nowMinutes = ctx.now.getHours() * 60 + ctx.now.getMinutes();
-  return nowMinutes >= preferredMinutes;
-}
-
-/**
- * Placeholder: would send push notification to user.
- * In production, wire to FCM (Android), APNs (iOS), or Expo Push.
- */
-export function sendSecureReminder(_userId: string): void {
-  // TODO: integrate with push provider
-  // e.g. Expo: ExpoPush.sendPushNotificationAsync({ to: pushToken, title: "Time to secure your day", body: "..." })
-}
-
-const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
-
-/**
- * Send a push notification via Expo Push API.
- * Caller should look up push token from profiles (expo_push_token) and pass it.
- * If pushToken is null/empty, no-op (nudge is still recorded in DB and activity feed).
- */
-export async function sendPushToUser(
-  pushToken: string | null | undefined,
-  title: string,
-  body: string
-): Promise<void> {
-  const token = typeof pushToken === "string" ? pushToken.trim() : "";
-  if (!token || !token.startsWith("ExponentPushToken")) return;
-
   try {
-    const res = await fetch(EXPO_PUSH_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        to: token,
-        title,
-        body,
-        sound: "default",
-      }),
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: ctx.timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
-    if (!res.ok) {
-      const text = await res.text();
-      console.warn("[push] Expo push failed:", res.status, text);
-    }
-  } catch (err) {
-    console.warn("[push] Expo push error:", err);
+    const parts = formatter.formatToParts(ctx.now);
+    const hour = parts.find((p) => p.type === "hour")?.value ?? "0";
+    const minute = parts.find((p) => p.type === "minute")?.value ?? "0";
+    const [prefHour, prefMin] = ctx.reminderTime.split(":").map(Number);
+    const nowMinutes = parseInt(hour, 10) * 60 + parseInt(minute, 10);
+    const prefMinutes = (prefHour ?? 9) * 60 + (prefMin ?? 0);
+    return nowMinutes >= prefMinutes && nowMinutes < prefMinutes + 60;
+  } catch {
+    return false;
   }
+}
+
+/** Streak-at-risk fires at 20:00 (8pm) local. */
+export function shouldSendStreakAtRiskReminder(ctx: SecureReminderContext): boolean {
+  if (ctx.hasSecuredToday) return false;
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: ctx.timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(ctx.now);
+    const hour = parts.find((p) => p.type === "hour")?.value ?? "0";
+    const minute = parts.find((p) => p.type === "minute")?.value ?? "0";
+    const nowMinutes = parseInt(hour, 10) * 60 + parseInt(minute, 10);
+    const targetMinutes = 20 * 60;
+    return nowMinutes >= targetMinutes && nowMinutes < targetMinutes + 60;
+  } catch {
+    return false;
+  }
+}
+
+/** Morning notification templates (variable reinforcement). */
+const MORNING_TEMPLATES: Array<{ title: string; body: (streak: number) => string }> = [
+  { title: "Day {streak} starts now", body: (s) => `Secure your day 💪` },
+  { title: "Your {streak}-day streak is waiting", body: (s) => `Let's go.` },
+  { title: "Rise and grind", body: (s) => `Day ${s} won't secure itself.` },
+  { title: "You've shown up {streak} days straight", body: (s) => `Make it ${s + 1}.` },
+  { title: "The grind doesn't stop", body: (s) => `Secure Day ${s}.` },
+];
+
+/** Evening streak-at-risk templates (loss-aversion framing). */
+const EVENING_TEMPLATES: Array<{ title: (streak: number) => string; body: (streak: number) => string }> = [
+  {
+    title: (s) => (s > 0 ? `Your ${s}-day streak expires at midnight` : "Your day isn't secured yet"),
+    body: (s) => (s > 0 ? "Still time." : "Secure your day before midnight."),
+  },
+  {
+    title: (s) => (s > 0 ? `Don't throw away ${s} days of work` : "Last chance today"),
+    body: (s) => "Secure your day now.",
+  },
+  {
+    title: (s) => (s > 0 ? `${s} days of discipline on the line` : "Day resets at midnight"),
+    body: (s) => "Finish strong.",
+  },
+];
+
+function pickMorningCopy(streak: number): { title: string; body: string } {
+  const template = MORNING_TEMPLATES[Math.floor(Math.random() * MORNING_TEMPLATES.length)];
+  const displayStreak = Math.max(1, streak);
+  const title = template.title.replace(/\{streak\}/g, String(displayStreak));
+  return { title, body: template.body(displayStreak) };
+}
+
+function pickEveningCopy(streak: number): { title: string; body: string } {
+  const template = EVENING_TEMPLATES[Math.floor(Math.random() * EVENING_TEMPLATES.length)];
+  return { title: template.title(streak), body: template.body(streak) };
+}
+
+export interface SendReminderOptions {
+  type: "morning" | "streak_at_risk";
+  pushToken: string | null | undefined;
+  streak: number;
+}
+
+/**
+ * Sends a "Secure Your Day" (morning) or "Streak at Risk" (evening) push.
+ * Uses personalized copy and variable template selection.
+ */
+export async function sendSecureReminder(
+  userId: string,
+  options: SendReminderOptions
+): Promise<void> {
+  const { type, pushToken, streak } = options;
+  const token = typeof pushToken === "string" ? pushToken.trim() : "";
+  if (!token || (!token.startsWith("ExponentPushToken") && !token.startsWith("ExpoPushToken"))) {
+    return;
+  }
+
+  const copy =
+    type === "morning"
+      ? pickMorningCopy(streak)
+      : pickEveningCopy(streak);
+
+  await sendPushToUser(token, copy.title, copy.body);
 }

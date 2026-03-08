@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../create-context";
 import { requireNoError } from "../errors";
 import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/progression";
 import { getTodayDateKey, daysBetweenKeys } from "../../lib/date-utils";
@@ -10,6 +10,7 @@ const PROFILE_UPDATE_KEYS = [
   "username", "display_name", "bio", "avatar_url", "cover_url",
   "onboarding_completed", "onboarding_completed_at", "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
+  "subscription_status", "subscription_expiry", "subscription_platform", "subscription_product_id",
 ] as const;
 
 export const profilesRouter = createTRPCRouter({
@@ -46,6 +47,32 @@ export const profilesRouter = createTRPCRouter({
       return data;
     }),
 
+  /** Public profile by username (for deep link /profile/[username]). */
+  getPublicByUsername: publicProcedure
+    .input(z.object({ username: z.string().min(1).max(64) }))
+    .query(async ({ input, ctx }) => {
+      const { data: profile, error: profileError } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url, total_days_secured, tier")
+        .eq("username", input.username.trim())
+        .maybeSingle();
+      if (profileError || !profile) return null;
+      const { data: streakRow } = await ctx.supabase
+        .from("streaks")
+        .select("active_streak_count")
+        .eq("user_id", profile.user_id)
+        .maybeSingle();
+      return {
+        user_id: profile.user_id,
+        username: profile.username,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        total_days_secured: profile.total_days_secured ?? 0,
+        tier: profile.tier ?? "Starter",
+        active_streak: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
+      };
+    }),
+
   get: protectedProcedure
     .query(async ({ ctx }) => {
       const { data, error } = await ctx.supabase
@@ -73,6 +100,10 @@ export const profilesRouter = createTRPCRouter({
       daily_time_budget: z.string().max(32).optional(),
       starter_challenge_id: z.string().max(64).optional(),
       preferred_secure_time: z.string().max(16).optional(),
+      subscription_status: z.enum(["free", "premium", "trial"]).optional(),
+      subscription_expiry: z.string().max(64).optional().nullable(),
+      subscription_platform: z.enum(["ios", "android"]).optional().nullable(),
+      subscription_product_id: z.string().max(128).optional().nullable(),
     }))
     .mutation(async ({ input, ctx }) => {
       const updatePayload: Record<string, unknown> = {};

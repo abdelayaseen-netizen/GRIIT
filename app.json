@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "grit",
+    "scheme": "griit",
+    "linking": {
+      "prefixes": ["griit://", "https://griit.app/"]
+    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {

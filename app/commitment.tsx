@@ -76,6 +76,11 @@ export default function CommitmentScreen() {
       if (Platform.OS !== "web") {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
+      try {
+        await trpcMutate("referrals.markJoinedChallenge", { challengeId });
+      } catch {
+        // attribution is best-effort
+      }
       await refetchAll();
       const runStatus = result?.runStatus;
       if (runStatus === "waiting") {

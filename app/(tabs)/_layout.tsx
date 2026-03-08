@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import {
   spacing,
@@ -9,9 +9,19 @@ import {
   measures,
 } from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const { user } = useAuth();
+  const pushRegistrationAttempted = useRef(false);
+
+  useEffect(() => {
+    if (!user || pushRegistrationAttempted.current) return;
+    pushRegistrationAttempted.current = true;
+    registerPushTokenWithBackend();
+  }, [user]);
   const tabBg = colors.card;
   const tabBorder = colors.border;
   const tabActive = colors.accent;

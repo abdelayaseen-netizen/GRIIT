@@ -139,6 +139,8 @@ function RootLayoutNav() {
           presentation: "card"
         }} 
       />
+      <Stack.Screen name="invite/[code]" options={{ headerShown: false }} />
+      <Stack.Screen name="profile/[username]" options={{ headerShown: false }} />
       <Stack.Screen 
         name="task/run" 
         options={{ 

@@ -13,6 +13,8 @@ import {
 } from '@/lib/notifications';
 import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 import { getTodayDateKey } from '@/lib/date-utils';
+import { setSubscriptionState } from '@/lib/premium';
+import { initSubscription, clearSubscription } from '@/lib/subscription';
 
 type AppContextValue = {
   profile: any;
@@ -93,7 +95,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery(TRPC.profiles.get);
       setProfile(data);
+      setSubscriptionState((data as any)?.subscription_status, (data as any)?.subscription_expiry);
       setProfileError(false);
+      initSubscription(user.id).catch(() => {});
     } catch {
       setProfileError(true);
     } finally {
@@ -147,7 +151,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setProfile(null);
+      setStats(null);
+      setSubscriptionState(null, null);
+      clearSubscription();
+      return;
+    }
     fetchProfile();
     fetchStats();
     fetchActiveChallenge();

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GRIIT — Discipline challenges that hold you accountable</title>
+  <meta name="description" content="Build discipline one day at a time. Join challenges, secure your day, and keep your streak." />
+  <!-- Open Graph (override per-route when deployed with server-side injection) -->
+  <meta property="og:title" content="GRIIT — Discipline challenges that hold you accountable" />
+  <meta property="og:description" content="Build discipline one day at a time. Join challenges, secure your day, and keep your streak." />
+  <meta property="og:url" content="https://griit.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GRIIT" />
+  <!-- For challenge shares: inject og:title (challenge name), og:description (X participants), og:url (https://griit.app/challenge/ID) -->
+  <!-- For profile shares: inject og:title (display name), og:description (streak + tier), og:url (https://griit.app/profile/USERNAME) -->
+</head>
+<body>
+  <p>Redirecting to GRIIT…</p>
+  <script>
+    (function () {
+      var storeUrl = /iPhone|iPad|iPod/.test(navigator.userAgent)
+        ? 'https://apps.apple.com/app/griit/idXXXXXX'
+        : 'https://play.google.com/store/apps/details?id=app.grit.challenge_tracker';
+      var path = location.pathname + location.search;
+      var appUrl = 'griit://' + path.replace(/^\//, '');
+      var intent = 'intent://' + path.replace(/^\//, '') + '#Intent;scheme=griit;package=app.grit.challenge_tracker;end';
+      if (/Android/i.test(navigator.userAgent)) {
+        window.location.href = intent;
+        setTimeout(function () { window.location.href = storeUrl; }, 1500);
+      } else {
+        window.location.href = appUrl;
+        setTimeout(function () { window.location.href = storeUrl; }, 1500);
+      }
+    })();
+  </script>
+</body>
+</html>

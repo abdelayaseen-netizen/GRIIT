@@ -78,6 +78,10 @@ export const TRPC = {
   meta: {
     version: 'meta.version',
   },
+  referrals: {
+    recordOpen: 'referrals.recordOpen',
+    markJoinedChallenge: 'referrals.markJoinedChallenge',
+  },
   feed: {
     list: 'feed.list',
   },

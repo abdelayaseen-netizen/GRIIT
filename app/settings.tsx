@@ -11,19 +11,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ChevronLeft, Users, Bell, Shield, Sun, Moon, Smartphone } from "lucide-react-native";
+import { ChevronLeft, Users, Bell, Shield, Sun, Moon, Smartphone, Crown } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
+import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
 
 const REMINDER_PRESETS = [
-  { label: "6:00 PM", value: "18:00" },
-  { label: "8:00 PM", value: "20:00" },
-  { label: "9:00 PM", value: "21:00" },
-  { label: "10:00 PM", value: "22:00" },
+  { label: "6:00 AM", value: "06:00" },
+  { label: "7:00 AM", value: "07:00" },
+  { label: "8:00 AM", value: "08:00" },
+  { label: "9:00 AM", value: "09:00" },
+  { label: "10:00 AM", value: "10:00" },
 ];
 
 
@@ -55,11 +57,12 @@ export default function SettingsScreen() {
   const isGuest = useIsGuest();
   const { colors: themeColors, mode: themeMode, setMode: setThemeMode } = useTheme();
   const [dailyReminder, setDailyReminder] = useState(true);
-  const [reminderTime, setReminderTime] = useState("20:00");
+  const [reminderTime, setReminderTime] = useState("09:00");
   const [reminderLoading, setReminderLoading] = useState(true);
   const [lastCall, setLastCall] = useState(false);
   const [friendActivity, setFriendActivity] = useState(false);
   const [accountabilityCount, setAccountabilityCount] = useState(0);
+  const [premiumModalVisible, setPremiumModalVisible] = useState(false);
 
   const loadReminderSettings = useCallback(async () => {
     if (isGuest) {
@@ -68,7 +71,7 @@ export default function SettingsScreen() {
     }
     try {
       const data = await trpcQuery("notifications.getReminderSettings") as { reminder_time: string; enabled: boolean };
-      setReminderTime(data?.reminder_time ?? "20:00");
+      setReminderTime(data?.reminder_time ?? "09:00");
       setDailyReminder(data?.enabled !== false);
     } catch {
       // ignore
@@ -281,6 +284,30 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Premium (future launch) */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Crown size={18} color={themeColors.accent} />
+            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Premium</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            onPress={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setPremiumModalVisible(true);
+            }}
+            activeOpacity={0.9}
+          >
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleTextWrap}>
+                <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>GRIIT Premium</Text>
+                <Text style={[styles.toggleSub, { color: themeColors.text.secondary }]}>Unlimited challenges, premium badge & more. Coming soon.</Text>
+              </View>
+              <ChevronLeft size={20} color={themeColors.text.tertiary} style={{ transform: [{ rotate: "-90deg" }] }} />
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Consequences */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -307,6 +334,11 @@ export default function SettingsScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+      <PremiumPaywallModal
+        visible={premiumModalVisible}
+        onClose={() => setPremiumModalVisible(false)}
+        featureTitle="GRIIT Premium"
+      />
     </SafeAreaView>
   );
 }

@@ -44,14 +44,14 @@ export const notificationsRouter = createTRPCRouter({
   updateReminderSettings: protectedProcedure
     .input(
       z.object({
-        reminder_time: z.string().optional(),
-        timezone: z.string().optional(),
+        reminder_time: z.string().max(16).optional(),
+        timezone: z.string().max(64).optional(),
         enabled: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const update: Record<string, unknown> = {};
-      if (input.reminder_time !== undefined) update.preferred_secure_time = input.reminder_time;
+      if (input.reminder_time !== undefined) update.reminder_time = input.reminder_time;
       if (input.timezone !== undefined) update.reminder_timezone = input.timezone;
       if (input.enabled !== undefined) update.reminder_enabled = input.enabled;
       if (Object.keys(update).length === 0) return { success: true };
@@ -68,16 +68,21 @@ export const notificationsRouter = createTRPCRouter({
   getReminderSettings: protectedProcedure.query(async ({ ctx }) => {
     const { data, error } = await ctx.supabase
       .from("profiles")
-      .select("preferred_secure_time, reminder_enabled, reminder_timezone")
+      .select("reminder_time, preferred_secure_time, reminder_enabled, reminder_timezone")
       .eq("user_id", ctx.userId)
       .single();
 
     if (error && (error as PgError).code !== "PGRST116") {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load reminder settings." });
     }
-    const row = data as { preferred_secure_time?: string | null; reminder_enabled?: boolean | null; reminder_timezone?: string | null } | null;
+    const row = data as {
+      reminder_time?: string | null;
+      preferred_secure_time?: string | null;
+      reminder_enabled?: boolean | null;
+      reminder_timezone?: string | null;
+    } | null;
     return {
-      reminder_time: row?.preferred_secure_time ?? "20:00",
+      reminder_time: row?.reminder_time ?? row?.preferred_secure_time ?? "09:00",
       enabled: row?.reminder_enabled !== false,
       timezone: row?.reminder_timezone ?? "UTC",
     };

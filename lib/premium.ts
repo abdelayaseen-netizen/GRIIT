@@ -1,23 +1,31 @@
 import { FREE_LIMITS, PREMIUM_FEATURES } from "./feature-flags";
 
+/** In-memory subscription state set by the app when profile is loaded. */
+let _subscriptionStatus: string | null = null;
+let _subscriptionExpiry: string | null = null;
+
 /**
- * Premium subscription utilities.
- *
- * CURRENT STATE: Always returns free tier (no payment integration yet).
- *
- * TO ENABLE PREMIUM:
- * 1. Integrate RevenueCat or Stripe
- * 2. Store subscription status in user profile (premiumStatus field)
- * 3. Replace isPremium() with real check against profile.premiumStatus
- * 4. Wire limit checks into UI with PremiumUpgradePrompt where limits are hit
+ * Set subscription state from profile. Call when user profile is loaded (e.g. from getStats or profiles.get).
  */
+export function setSubscriptionState(
+  status: string | null | undefined,
+  expiry: string | null | undefined
+): void {
+  _subscriptionStatus = status ?? null;
+  _subscriptionExpiry = expiry ?? null;
+}
 
 // ---- Core check ----
 
+/**
+ * Returns true if the user has an active premium or trial subscription.
+ * Reads from state set by setSubscriptionState(); when not set, returns false.
+ */
 export function isPremium(): boolean {
-  // TODO: Replace with real subscription check
-  // Example: return userProfile.premiumStatus === 'premium' || userProfile.premiumStatus === 'trial';
-  return false;
+  if (_subscriptionStatus !== "premium" && _subscriptionStatus !== "trial") return false;
+  if (!_subscriptionExpiry) return _subscriptionStatus === "premium";
+  const expiry = new Date(_subscriptionExpiry);
+  return !Number.isNaN(expiry.getTime()) && expiry > new Date();
 }
 
 // ---- Limit checks ----
@@ -58,15 +66,3 @@ export function isFeatureAvailable(feature: keyof typeof PREMIUM_FEATURES): bool
   if (isPremium()) return true;
   return PREMIUM_FEATURES[feature];
 }
-
-// ---- Premium surfaces (for future reference) ----
-// These are the places in the app where premium gating will plug in:
-//
-// 1. Join challenge → canJoinChallenge() → show upgrade prompt if at limit
-// 2. Create challenge → canCreateChallenge() → show upgrade prompt if at limit
-// 3. Respect/nudge → canSendRespect/canSendNudge() → show "Upgrade for unlimited"
-// 4. Advanced analytics → isFeatureAvailable('ADVANCED_ANALYTICS') → gate screen
-// 5. Premium challenge packs → isFeatureAvailable('PREMIUM_PACKS') → gate in discover
-// 6. Integrations (Strava, etc.) → isFeatureAvailable('INTEGRATIONS') → gate in settings
-// 7. Chat → isFeatureAvailable('CHAT') → already gated by FLAGS.CHAT_ENABLED
-// 8. Profile badge → isFeatureAvailable('PREMIUM_BADGE') → show badge on profile

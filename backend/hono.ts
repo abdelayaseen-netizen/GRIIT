@@ -42,6 +42,25 @@ const healthPayload = () => {
 app.get("/api/health", (c) => c.json(healthPayload()));
 app.get("/health", (c) => c.json(healthPayload()));
 
+/** Cron: send daily morning and streak-at-risk push reminders. Call every hour with CRON_SECRET. */
+app.get("/api/cron/send-reminders", async (c) => {
+  const secret = c.req.query("secret") ?? c.req.header("Authorization")?.replace(/^Bearer\s+/i, "").trim();
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || secret !== cronSecret) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  try {
+    const { runReminderCron } = await import("./lib/cron-reminders");
+    const { getSupabaseAdmin, hasSupabaseAdmin } = await import("./lib/supabase-admin");
+    const supabase = hasSupabaseAdmin() ? getSupabaseAdmin() : (await import("./lib/supabase")).supabase;
+    const result = await runReminderCron(supabase);
+    return c.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("[cron] send-reminders error:", err);
+    return c.json({ ok: false, error: (err as Error).message }, 500);
+  }
+});
+
 /** Strava OAuth callback: exchange code for tokens, upsert connected_accounts, redirect to app. */
 app.get("/api/auth/strava/callback", async (c) => {
   const url = new URL(c.req.url);
