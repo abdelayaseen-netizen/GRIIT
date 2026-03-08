@@ -59,6 +59,9 @@ export interface CreateTaskDraft {
   verificationRuleJson?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
 }
 
+export type ParticipationTypeUI = "solo" | "team" | "shared_goal";
+export type DeadlineTypeUI = "none" | "soft" | "hard";
+
 export interface CreateChallengeDraft {
   title: string;
   description: string;
@@ -72,6 +75,12 @@ export interface CreateChallengeDraft {
   requireSameRules: boolean;
   showReplayLabel: boolean;
   visibility: ChallengeVisibility;
+  participationType?: ParticipationTypeUI;
+  teamSize?: number;
+  sharedGoalTarget?: number;
+  sharedGoalUnit?: string;
+  deadlineType?: DeadlineTypeUI;
+  deadlineDate?: string | null;
 }
 
 /** Compute effective duration in days from draft state. */
@@ -86,9 +95,13 @@ export function getDurationFromDraft(
   return Number.isNaN(custom) ? 0 : custom;
 }
 
-/** Validate task list for create; returns first error message if invalid. */
-export function validateDraftTasks(tasks: CreateTaskDraft[]): { valid: boolean; error?: string } {
-  if (tasks.length === 0) {
+/** Validate task list for create; returns first error message if invalid. sharedGoal: tasks optional. */
+export function validateDraftTasks(
+  tasks: CreateTaskDraft[],
+  participationType?: ParticipationTypeUI
+): { valid: boolean; error?: string } {
+  const isSharedGoal = participationType === "shared_goal";
+  if (tasks.length === 0 && !isSharedGoal) {
     return { valid: false, error: "Add at least one task" };
   }
   for (const task of tasks) {
@@ -135,8 +148,17 @@ export function validateDraftTasks(tasks: CreateTaskDraft[]): { valid: boolean; 
 
 /** Build API payload for challenges.create from draft. Single source of truth for task -> API shape. */
 export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, unknown> {
-  const durationDays = getDurationFromDraft(draft.type, draft.durationDays, draft.customDuration);
-  return {
+  const partType = draft.participationType ?? "solo";
+  let durationDays = getDurationFromDraft(draft.type, draft.durationDays, draft.customDuration);
+  if (partType === "shared_goal" && draft.deadlineDate && (draft.deadlineType === "soft" || draft.deadlineType === "hard")) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = new Date(draft.deadlineDate);
+    end.setHours(0, 0, 0, 0);
+    const days = Math.max(1, Math.ceil((end.getTime() - today.getTime()) / 86400000));
+    durationDays = days;
+  }
+  const payload: Record<string, unknown> = {
     title: draft.title,
     description: draft.description,
     type: draft.type,
@@ -147,6 +169,8 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
     requireSameRules: draft.requireSameRules,
     showReplayLabel: draft.showReplayLabel,
     visibility: draft.visibility,
+    participationType: partType,
+    teamSize: partType === "team" || partType === "shared_goal" ? (draft.teamSize ?? 2) : 1,
     tasks: draft.tasks.map((task) => ({
       title: task.title,
       type: task.type,
@@ -193,14 +217,37 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
       verificationRuleJson: task.verificationRuleJson ?? undefined,
     })),
   };
+  if (partType === "shared_goal") {
+    if (draft.sharedGoalTarget != null) payload.sharedGoalTarget = draft.sharedGoalTarget;
+    if (draft.sharedGoalUnit != null) payload.sharedGoalUnit = draft.sharedGoalUnit;
+    if (draft.deadlineType != null && draft.deadlineType !== "none") payload.deadlineType = draft.deadlineType;
+    if (draft.deadlineDate != null && draft.deadlineDate.trim()) payload.deadlineDate = draft.deadlineDate.trim();
+  }
+  return payload;
 }
 
-/** Step 1 can proceed when title, duration, and (for one_day) liveDate are set. */
+/** Step 1 can proceed when title, duration (or shared-goal goal + optional deadline), and (for one_day) liveDate are set. */
 export function canProceedStep1(
   title: string,
   duration: number,
   challengeType: ChallengeType,
-  liveDate: string
+  liveDate: string,
+  participationType?: ParticipationTypeUI,
+  sharedGoalTarget?: number,
+  sharedGoalUnit?: string,
+  deadlineType?: DeadlineTypeUI,
+  deadlineDate?: string | null
 ): boolean {
-  return Boolean(title.trim()) && duration > 0 && (challengeType === "standard" || Boolean(liveDate));
+  if (!title.trim()) return false;
+  const isSharedGoal = participationType === "shared_goal";
+  if (isSharedGoal) {
+    const hasGoal = (sharedGoalTarget ?? 0) > 0 && Boolean((sharedGoalUnit ?? "").trim());
+    if (!hasGoal) return false;
+    if (deadlineType === "hard" && deadlineDate) {
+      const today = new Date().toISOString().split("T")[0];
+      if (deadlineDate < today) return false;
+    }
+    return true;
+  }
+  return duration > 0 && (challengeType === "standard" || Boolean(liveDate));
 }

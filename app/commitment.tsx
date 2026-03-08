@@ -65,17 +65,21 @@ export default function CommitmentScreen() {
       if (isStarter) {
         await saveJoinedStarterId(challengeId);
         if (Platform.OS !== "web") {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
-        router.replace("/(tabs)" as any);
+        Alert.alert("You're in!", "Let's go.", [
+          { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+        ]);
         return;
       }
       await trpcMutate("challenges.join", { challengeId });
       if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
       await refetchAll();
-      router.replace("/(tabs)" as any);
+      Alert.alert("You're in!", "Let's go.", [
+        { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+      ]);
     } catch (err: any) {
       const message = err?.message ?? "Failed to join challenge. Try again.";
       Alert.alert("Error", message);

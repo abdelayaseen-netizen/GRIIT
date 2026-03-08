@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Share,
   Platform,
   Animated,
 } from "react-native";
@@ -13,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, Share2, Award, TrendingUp } from "lucide-react-native";
 import Colors from "@/constants/colors";
+import { shareChallenge, shareChallengeComplete } from "@/lib/share";
 
 
 export default function SuccessScreen() {
@@ -29,6 +29,7 @@ export default function SuccessScreen() {
   const daysCompleted = params.daysCompleted as string;
   const finalStreak = params.finalStreak as string;
   const isCreateSuccess = params.isCreateSuccess === "true";
+  const waitingForTeam = params.waitingForTeam === "true";
 
   const isHardMode = difficulty === "hard" || difficulty === "extreme";
 
@@ -69,18 +70,20 @@ export default function SuccessScreen() {
 
   const handleShare = async () => {
     try {
-      const message = isCreateSuccess
-        ? `I just created "${title}" on GRIIT — ${duration} days, ${tasksCount} task${tasksCount === "1" ? "" : "s"}. Join me!`
-        : `I completed "${title}" on GRIIT. ${daysCompleted} of ${duration} days secured. ${isHardMode ? "Hard Mode." : ""}`;
-      if (Platform.OS === "web") {
-        if (navigator.share) {
-          await navigator.share({ title: "Challenge Complete", text: message });
-        } else {
-          await navigator.clipboard.writeText(message);
-          alert("Copied to clipboard!");
-        }
+      if (isCreateSuccess) {
+        await shareChallenge({
+          name: title,
+          duration: Number(duration) || 0,
+          id: "",
+          tasksPerDay: Number(tasksCount) || 0,
+        });
       } else {
-        await Share.share({ message, title: "Challenge Complete" });
+        await shareChallengeComplete({
+          name: title,
+          duration: Number(duration) || 0,
+          daysCompleted: Number(daysCompleted) || 0,
+          isHardMode,
+        });
       }
     } catch {
       // Share failed — optional action, no alert
@@ -150,7 +153,11 @@ export default function SuccessScreen() {
 
         <Animated.View style={[styles.recognitionCard, { opacity: fadeAnim }]}>
           <Text style={styles.recognitionText}>
-            {isCreateSuccess ? `${duration} days · ${tasksCount} task${tasksCount === "1" ? "" : "s"}. Share it and get others to join.` : "You showed up consistently."}
+            {isCreateSuccess
+              ? waitingForTeam
+                ? "Waiting for team members to join. Share the challenge so they can sign up."
+                : `${duration} days · ${tasksCount} task${tasksCount === "1" ? "" : "s"}. Share it and get others to join.`
+              : "You showed up consistently."}
           </Text>
         </Animated.View>
 

@@ -20,6 +20,7 @@ import { accountabilityRouter } from "./routes/accountability";
 import { metaRouter } from "./routes/meta";
 import { feedRouter } from "./routes/feed";
 import { integrationsRouter } from "./routes/integrations";
+import { sharedGoalRouter } from "./routes/sharedGoal";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -37,6 +38,7 @@ export const appRouter = createTRPCRouter({
   meta: metaRouter,
   feed: feedRouter,
   integrations: integrationsRouter,
+  sharedGoal: sharedGoalRouter,
 });
 
 export type AppRouter = typeof appRouter;

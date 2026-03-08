@@ -9,7 +9,6 @@ import {
   Animated,
   RefreshControl,
   Platform,
-  Share,
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,6 +26,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import type { ThemeColors } from "@/lib/theme-palettes";
 import { supabase } from "@/lib/supabase";
 import Colors from "@/constants/colors";
 import { Skeleton } from "@/components/SkeletonLoader";
@@ -58,7 +59,10 @@ type StravaActivity = {
   start_date: string;
 };
 
-function IntegrationsSection() {
+type ProfileStyles = ReturnType<typeof createProfileStyles>;
+
+function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
+  const { colors } = useTheme();
   const [stravaEnabled, setStravaEnabled] = useState<boolean | null>(null);
   const [stravaConnection, setStravaConnection] = useState<{
     id: string;
@@ -204,7 +208,7 @@ function IntegrationsSection() {
               <Text style={styles.integrationsActivitiesToggleText}>
                 {activitiesExpanded ? "Hide recent activities" : "View recent activities"}
               </Text>
-              <ChevronRight size={16} color={Colors.text.muted} style={{ transform: [{ rotate: activitiesExpanded ? "90deg" : "0deg" }] }} />
+              <ChevronRight size={16} color={colors.text.muted} style={{ transform: [{ rotate: activitiesExpanded ? "90deg" : "0deg" }] }} />
             </TouchableOpacity>
             {activitiesExpanded && (
               <View style={styles.integrationsActivitiesList}>
@@ -235,6 +239,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { showGate } = useAuthGate();
+  const { colors } = useTheme();
   const {
     profile,
     profileLoading,
@@ -255,6 +260,8 @@ export default function ProfileScreen() {
   const [dashboardDataLoading, setDashboardDataLoading] = useState(true);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerFade = useRef(new Animated.Value(0)).current;
+
+  const styles = useMemo(() => createProfileStyles(colors), [colors]);
 
   const fetchDashboardData = useCallback(async () => {
     setDashboardDataLoading(true);
@@ -335,25 +342,29 @@ export default function ProfileScreen() {
     ]);
   }, []);
 
-  const handleShare = useCallback(async () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    try {
-      await Share.share({
-        message: `Check out @${profile?.username || "user"} on GRIIT — the discipline app. Join me!`,
-      });
-    } catch {
-      // Share cancelled or failed — no user feedback needed
-    }
-  }, [profile?.username]);
-
   const currentStreak = stats?.activeStreak || 0;
   const bestStreak = stats?.longestStreak || 0;
   const activeChallenges = stats?.activeChallenges || 0;
   const completedChallengesCount = stats?.completedChallenges || 0;
   const totalDaysSecured = (stats as any)?.totalDaysSecured ?? 0;
   const tierName = (stats as any)?.tier ?? "Starter";
+
+  const handleShare = useCallback(async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    try {
+      const { shareProfile } = await import("@/lib/share");
+      await shareProfile({
+        username: profile?.username ?? "user",
+        streak: currentStreak,
+        totalDaysSecured,
+        tier: tierName,
+      });
+    } catch {
+      // Share cancelled or failed — no user feedback needed
+    }
+  }, [profile?.username, currentStreak, totalDaysSecured, tierName]);
   const ptsToNext = (stats as any)?.pointsToNextTier ?? 0;
   const nextTierName = (stats as any)?.nextTierName ?? null;
 
@@ -383,7 +394,7 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.container} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <View style={styles.guestIdentityCard}>
-            <Lock size={32} color={Colors.text.tertiary} style={{ marginBottom: 12 }} />
+            <Lock size={32} color={colors.text.tertiary} style={{ marginBottom: 12 }} />
             <Text style={styles.guestIdentityTitle}>Create your identity</Text>
             <Text style={styles.guestIdentitySub}>Sign up to build your profile, track streaks, and earn ranks.</Text>
             <TouchableOpacity
@@ -425,13 +436,13 @@ export default function ProfileScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.accent}
+              tintColor={colors.accent}
             />
           }
         >
           <View style={styles.errorCard}>
             <View style={styles.errorIconWrap}>
-              <Shield size={28} color={Colors.text.muted} strokeWidth={1.5} />
+              <Shield size={28} color={colors.text.muted} strokeWidth={1.5} />
             </View>
             <Text style={styles.errorTitle}>
               {loadingTimedOut
@@ -497,7 +508,7 @@ export default function ProfileScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={Colors.accent}
+            tintColor={colors.accent}
           />
         }
       >
@@ -564,7 +575,7 @@ export default function ProfileScreen() {
           onShare={handleShare}
         />
 
-        <IntegrationsSection />
+        <IntegrationsSection styles={styles} />
 
         <View style={styles.menuSection}>
           <TouchableOpacity
@@ -578,7 +589,7 @@ export default function ProfileScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.menuIconWrap}>
-              <Globe size={18} color={Colors.text.secondary} />
+              <Globe size={18} color={colors.text.secondary} />
             </View>
             <View style={styles.menuTextWrap}>
               <Text style={styles.menuText}>Profile: Public</Text>
@@ -598,13 +609,13 @@ export default function ProfileScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.menuIconWrap}>
-              <Settings size={18} color={Colors.text.secondary} />
+              <Settings size={18} color={colors.text.secondary} />
             </View>
             <View style={styles.menuTextWrap}>
               <Text style={styles.menuText}>Settings</Text>
               <Text style={styles.menuSubtext}>Privacy, notifications, consequences</Text>
             </View>
-            <ChevronRight size={18} color={Colors.text.muted} />
+            <ChevronRight size={18} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
 
@@ -708,281 +719,206 @@ const skeletonStyles = StyleSheet.create({
   },
 });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8F7F4",
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  guestIdentityCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 28,
-    marginHorizontal: 20,
-    marginTop: 24,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  guestIdentityTitle: {
-    fontSize: 20,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  guestIdentitySub: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  guestIdentityCta: {
-    backgroundColor: Colors.accent,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  guestIdentityCtaText: {
-    fontSize: 16,
-    fontWeight: "700" as const,
-    color: "#fff",
-  },
-  errorScrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 60,
-  },
-  errorCard: {
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingVertical: 36,
-    paddingHorizontal: 28,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  errorIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 18,
-  },
-  errorTitle: {
-    fontSize: 17,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-    textAlign: "center" as const,
-    marginBottom: 6,
-  },
-  errorSubtitle: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    textAlign: "center" as const,
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  retryButton: {
-    backgroundColor: Colors.accent,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  retryButtonText: {
-    fontSize: 15,
-    fontWeight: "700" as const,
-    color: "#fff",
-  },
-  signOutLink: {
-    paddingVertical: 8,
-  },
-  signOutLinkText: {
-    fontSize: 13,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
-    textDecorationLine: "underline" as const,
-  },
-
-  menuEditLabel: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.secondary,
-  },
-
-  integrationsSection: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
-  integrationsTitle: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.secondary,
-    marginBottom: 8,
-    textTransform: "uppercase" as const,
-  },
-  integrationsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 14,
-  },
-  integrationsRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 12,
-  },
-  integrationsIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "rgba(252, 76, 2, 0.12)",
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  integrationsTextWrap: {
-    flex: 1,
-  },
-  integrationsName: {
-    fontSize: 15,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-  },
-  integrationsSub: {
-    fontSize: 12,
-    color: Colors.text.muted,
-    marginTop: 2,
-  },
-  integrationsConnectBtn: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 6,
-    backgroundColor: "#FC4C02",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-  },
-  integrationsConnectBtnDisabled: {
-    opacity: 0.7,
-  },
-  integrationsConnectText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: "#fff",
-  },
-  integrationsDisconnectBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  integrationsDisconnectText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: "#B91C1C",
-  },
-  integrationsActivitiesToggle: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  integrationsActivitiesToggleText: {
-    fontSize: 13,
-    color: Colors.text.secondary,
-  },
-  integrationsActivitiesList: {
-    marginTop: 8,
-    gap: 8,
-  },
-  integrationsActivityRow: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    backgroundColor: Colors.pill,
-    borderRadius: 8,
-  },
-  integrationsActivityName: {
-    fontSize: 13,
-    color: Colors.text.primary,
-    flex: 1,
-  },
-  integrationsActivityMeta: {
-    fontSize: 12,
-    color: Colors.text.muted,
-    marginLeft: 8,
-  },
-  integrationsActivitiesEmpty: {
-    fontSize: 13,
-    color: Colors.text.muted,
-    marginTop: 8,
-  },
-
-  menuSection: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  menuItem: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 12,
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  menuIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: Colors.pill,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  menuTextWrap: {
-    flex: 1,
-  },
-  menuText: {
-    fontSize: 15,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-  },
-  menuSubtext: {
-    fontSize: 11,
-    color: Colors.text.muted,
-    marginTop: 1,
-  },
-
-  dangerSection: {
-    paddingHorizontal: 16,
-    paddingTop: 28,
-    alignItems: "center" as const,
-  },
-  signOutButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  signOutText: {
-    fontSize: 14,
-    fontWeight: "600" as const,
-    color: "#B91C1C",
-  },
-
-  bottomSpacer: {
-    height: 20,
-  },
-});
+function createProfileStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    scroll: { flex: 1 },
+    scrollContent: { paddingBottom: 40 },
+    guestIdentityCard: {
+      backgroundColor: c.card,
+      borderRadius: 16,
+      padding: 28,
+      marginHorizontal: 20,
+      marginTop: 24,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    guestIdentityTitle: {
+      fontSize: 20,
+      fontWeight: "700" as const,
+      color: c.text.primary,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    guestIdentitySub: {
+      fontSize: 14,
+      color: c.text.secondary,
+      textAlign: "center",
+      marginBottom: 20,
+    },
+    guestIdentityCta: {
+      backgroundColor: c.accent,
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+    },
+    guestIdentityCtaText: { fontSize: 16, fontWeight: "700" as const, color: "#fff" },
+    errorScrollContent: {
+      flexGrow: 1,
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      paddingBottom: 60,
+    },
+    errorCard: {
+      alignItems: "center",
+      backgroundColor: c.card,
+      borderRadius: 20,
+      paddingVertical: 36,
+      paddingHorizontal: 28,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    errorIconWrap: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: c.pill,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 18,
+    },
+    errorTitle: {
+      fontSize: 17,
+      fontWeight: "700" as const,
+      color: c.text.primary,
+      textAlign: "center" as const,
+      marginBottom: 6,
+    },
+    errorSubtitle: {
+      fontSize: 14,
+      color: c.text.secondary,
+      textAlign: "center" as const,
+      marginBottom: 24,
+      lineHeight: 20,
+    },
+    retryButton: {
+      backgroundColor: c.accent,
+      paddingHorizontal: 32,
+      paddingVertical: 12,
+      borderRadius: 12,
+      marginBottom: 16,
+    },
+    retryButtonText: { fontSize: 15, fontWeight: "700" as const, color: "#fff" },
+    signOutLink: { paddingVertical: 8 },
+    signOutLinkText: {
+      fontSize: 13,
+      fontWeight: "500" as const,
+      color: c.text.tertiary,
+      textDecorationLine: "underline" as const,
+    },
+    menuEditLabel: {
+      fontSize: 13,
+      fontWeight: "600" as const,
+      color: c.text.secondary,
+    },
+    integrationsSection: { paddingHorizontal: 16, paddingTop: 20 },
+    integrationsTitle: {
+      fontSize: 13,
+      fontWeight: "600" as const,
+      color: c.text.secondary,
+      marginBottom: 8,
+      textTransform: "uppercase" as const,
+    },
+    integrationsCard: {
+      backgroundColor: c.card,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 14,
+    },
+    integrationsRow: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 12,
+    },
+    integrationsIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: "rgba(252, 76, 2, 0.12)",
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    integrationsTextWrap: { flex: 1 },
+    integrationsName: {
+      fontSize: 15,
+      fontWeight: "600" as const,
+      color: c.text.primary,
+    },
+    integrationsSub: { fontSize: 12, color: c.text.muted, marginTop: 2 },
+    integrationsConnectBtn: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 6,
+      backgroundColor: "#FC4C02",
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 10,
+    },
+    integrationsConnectBtnDisabled: { opacity: 0.7 },
+    integrationsConnectText: { fontSize: 13, fontWeight: "600" as const, color: "#fff" },
+    integrationsDisconnectBtn: { paddingVertical: 8, paddingHorizontal: 12 },
+    integrationsDisconnectText: { fontSize: 13, fontWeight: "600" as const, color: "#B91C1C" },
+    integrationsActivitiesToggle: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "space-between",
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    integrationsActivitiesToggleText: { fontSize: 13, color: c.text.secondary },
+    integrationsActivitiesList: { marginTop: 8, gap: 8 },
+    integrationsActivityRow: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      backgroundColor: c.pill,
+      borderRadius: 8,
+    },
+    integrationsActivityName: {
+      fontSize: 13,
+      color: c.text.primary,
+      flex: 1,
+    },
+    integrationsActivityMeta: { fontSize: 12, color: c.text.muted, marginLeft: 8 },
+    integrationsActivitiesEmpty: { fontSize: 13, color: c.text.muted, marginTop: 8 },
+    menuSection: { paddingHorizontal: 16, paddingTop: 16 },
+    menuItem: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 12,
+      backgroundColor: c.card,
+      padding: 14,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    menuIconWrap: {
+      width: 34,
+      height: 34,
+      borderRadius: 10,
+      backgroundColor: c.pill,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    menuTextWrap: { flex: 1 },
+    menuText: {
+      fontSize: 15,
+      fontWeight: "600" as const,
+      color: c.text.primary,
+    },
+    menuSubtext: { fontSize: 11, color: c.text.muted, marginTop: 1 },
+    dangerSection: { paddingHorizontal: 16, paddingTop: 28, alignItems: "center" as const },
+    signOutButton: { paddingVertical: 10, paddingHorizontal: 20 },
+    signOutText: { fontSize: 14, fontWeight: "600" as const, color: "#B91C1C" },
+    bottomSpacer: { height: 20 },
+  });
+}

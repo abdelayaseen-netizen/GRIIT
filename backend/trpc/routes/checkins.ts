@@ -167,6 +167,21 @@ export const checkinsRouter = createTRPCRouter({
 
       if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
         const row = rpcRows[0] as { new_streak_count: number; last_stand_earned: boolean };
+        const { data: acRow } = await ctx.supabase
+          .from("active_challenges")
+          .select("challenge_id")
+          .eq("id", input.activeChallengeId)
+          .single();
+        const challengeId = (acRow as { challenge_id?: string } | null)?.challenge_id;
+        if (challengeId) {
+          const { data: ch } = await ctx.supabase.from("challenges").select("participation_type, run_status").eq("id", challengeId).single();
+          if ((ch as { participation_type?: string })?.participation_type === "team" && (ch as { run_status?: string })?.run_status === "active") {
+            const today = new Date().toISOString().split("T")[0];
+            const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+            await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
+            await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: today });
+          }
+        }
         return {
           success: true,
           newStreakCount: row.new_streak_count,
@@ -302,6 +317,16 @@ export const checkinsRouter = createTRPCRouter({
         .update({ total_days_secured: totalDays, tier, updated_at: new Date().toISOString() })
         .eq('user_id', ctx.userId);
       requireNoError(profileErr, "Failed to update profile.");
+
+      const challengeId = (ac as { challenge_id?: string })?.challenge_id;
+      if (challengeId) {
+        const { data: ch } = await ctx.supabase.from("challenges").select("participation_type, run_status").eq("id", challengeId).single();
+        if ((ch as { participation_type?: string })?.participation_type === "team" && (ch as { run_status?: string })?.run_status === "active") {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+          await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
+          await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: dateKey });
+        }
+      }
 
       return { success: true, newStreakCount, lastStandEarned };
     }),

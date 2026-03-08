@@ -22,6 +22,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { trpcQuery } from "@/lib/trpc";
+import { useTheme } from "@/contexts/ThemeContext";
 import { colors as tokenColors } from "@/src/theme/tokens";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
 import { styles } from "@/styles/discover-styles";
@@ -159,6 +160,7 @@ function SkeletonList() {
 
 export default function DiscoverScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
   const [featuredData, setFeaturedData] = useState<any[] | null>(null);
@@ -472,7 +474,7 @@ export default function DiscoverScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Discover</Text>
         <Text style={styles.subtitle}>Find challenges worth committing to</Text>

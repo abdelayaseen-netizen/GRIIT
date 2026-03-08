@@ -5,12 +5,14 @@ import {
   StyleSheet,
   Animated,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Shield, Check } from "lucide-react-native";
+import { Shield, Check, Share2 } from "lucide-react-native";
 import Colors from "@/constants/colors";
+import { shareDaySecured } from "@/lib/share";
 
 export default function SecureConfirmationScreen() {
   const router = useRouter();
@@ -124,6 +126,23 @@ export default function SecureConfirmationScreen() {
               <Text style={styles.hardModeText}>Hard Mode</Text>
             </View>
           )}
+
+          <TouchableOpacity
+            style={styles.shareButton}
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              shareDaySecured({
+                streak: parseInt(streak || "0", 10),
+                dayNumber: parseInt(day || "0", 10),
+              }).catch(() => {});
+            }}
+            activeOpacity={0.85}
+          >
+            <Share2 size={18} color={Colors.accent} />
+            <Text style={styles.shareButtonText}>Share Your Win</Text>
+          </TouchableOpacity>
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -236,5 +255,23 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     color: "#E87D4F",
     letterSpacing: 0.5,
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    backgroundColor: Colors.accent + "12",
+  },
+  shareButtonText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.accent,
   },
 });

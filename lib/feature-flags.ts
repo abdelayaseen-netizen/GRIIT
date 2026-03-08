@@ -22,6 +22,41 @@ export const FLAGS = {
   PREMIUM_INTEGRATIONS: false,
 } as const;
 
+// ============================================
+// FREE TIER LIMITS
+// ============================================
+export const FREE_LIMITS = {
+  MAX_ACTIVE_CHALLENGES: 3,
+  MAX_CREATED_CHALLENGES: 1,
+  MAX_DAILY_RESPECTS: 5,
+  MAX_DAILY_NUDGES: 3,
+} as const;
+
+/** @deprecated Use FREE_LIMITS */
+export const PREMIUM_LIMITS = {
+  FREE_MAX_ACTIVE_CHALLENGES: FREE_LIMITS.MAX_ACTIVE_CHALLENGES,
+  FREE_MAX_CREATED_CHALLENGES: FREE_LIMITS.MAX_CREATED_CHALLENGES,
+  FREE_MAX_DAILY_RESPECTS: FREE_LIMITS.MAX_DAILY_RESPECTS,
+  FREE_MAX_DAILY_NUDGES: FREE_LIMITS.MAX_DAILY_NUDGES,
+} as const;
+
+// ============================================
+// PREMIUM FEATURE FLAGS
+// When premium is enabled, flip individual features here.
+// ============================================
+export const PREMIUM_FEATURES = {
+  UNLIMITED_CHALLENGES: false,
+  UNLIMITED_CREATION: false,
+  ADVANCED_ANALYTICS: false,
+  PREMIUM_PACKS: false,
+  CUSTOM_THEMES: false,
+  LEADERBOARD_PRIORITY: false,
+  UNLIMITED_SOCIAL: false,
+  PREMIUM_BADGE: false,
+  INTEGRATIONS: false,
+  CHAT: false,
+} as const;
+
 /** @deprecated Use FLAGS.IS_BETA */
 export const IS_BETA_LAUNCH = FLAGS.IS_BETA;
 

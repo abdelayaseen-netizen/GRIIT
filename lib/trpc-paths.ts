@@ -27,6 +27,11 @@ export const TRPC = {
     getActive: 'challenges.getActive',
     listMyActive: 'challenges.listMyActive',
     create: 'challenges.create',
+    startTeamChallenge: 'challenges.startTeamChallenge',
+    getTeamMembers: 'challenges.getTeamMembers',
+  },
+  sharedGoal: {
+    logProgress: 'sharedGoal.logProgress',
   },
   checkins: {
     getTodayCheckins: 'checkins.getTodayCheckins',

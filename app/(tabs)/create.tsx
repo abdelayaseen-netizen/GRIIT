@@ -31,7 +31,9 @@ import {
   AlertTriangle,
   Globe,
   Users,
+  User,
   Lock,
+  Target,
 } from "lucide-react-native";
 import Colors from "@/constants/colors";
 import * as Haptics from 'expo-haptics';
@@ -39,6 +41,7 @@ import { ChallengeType, ReplayPolicy, JournalCategory, WordLimitMode, ScheduleTy
 import { trpcMutate } from "@/lib/trpc";
 import { useApi } from "@/contexts/ApiContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { formatTimeHHMM } from "@/lib/time-enforcement";
 
 import { formatTRPCError, getApiBaseUrl, formatError } from "@/lib/api";
@@ -47,6 +50,8 @@ import {
   validateDraftTasks,
   buildCreatePayload,
   canProceedStep1 as canProceedStep1Helper,
+  type ParticipationTypeUI,
+  type DeadlineTypeUI,
 } from "@/lib/create-challenge-helpers";
 import { styles } from "@/styles/create-styles";
 import TaskEditorModal, { type TaskEditorTask } from '@/components/TaskEditorModal';
@@ -205,6 +210,18 @@ const PACK_CARD_BORDER: Record<string, string> = {
   morning: "#FDBA74",
 };
 
+const PARTICIPATION_OPTIONS: { id: ParticipationTypeUI; label: string; description: string; Icon: typeof User }[] = [
+  { id: "solo", label: "Solo", description: "Just you. Complete every task, every day.", Icon: User },
+  { id: "team", label: "Team", description: "2–10 people. Everyone must complete daily tasks. If one fails, everyone fails.", Icon: Users },
+  { id: "shared_goal", label: "Shared Goal", description: "2–10 people. Work together toward one big target. Log progress anytime.", Icon: Target },
+];
+
+const DEADLINE_OPTIONS: { id: DeadlineTypeUI; label: string; description: string }[] = [
+  { id: "none", label: "No deadline", description: "Finish whenever" },
+  { id: "soft", label: "Soft deadline", description: "Target date (no penalty for missing)" },
+  { id: "hard", label: "Hard deadline", description: "Must complete by this date or the challenge fails" },
+];
+
 const CHALLENGE_TYPES: { id: ChallengeType; label: string; description: string }[] = [
   { id: "standard", label: "Standard", description: "Multi-day challenge with daily tasks" },
   { id: "one_day", label: "24-Hour", description: "One day challenge, can be live or replayable" },
@@ -234,6 +251,7 @@ export default function CreateScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { showGate } = useAuthGate();
+  const { colors } = useTheme();
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -250,6 +268,12 @@ export default function CreateScreen() {
   const [showReplayLabel, setShowReplayLabel] = useState(true);
   const [visibility, setVisibility] = useState<ChallengeVisibility>("FRIENDS");
   const [showPurposeSection, setShowPurposeSection] = useState(false);
+  const [participationType, setParticipationType] = useState<ParticipationTypeUI>("solo");
+  const [teamSize, setTeamSize] = useState(2);
+  const [sharedGoalTarget, setSharedGoalTarget] = useState("");
+  const [sharedGoalUnit, setSharedGoalUnit] = useState("");
+  const [deadlineType, setDeadlineType] = useState<DeadlineTypeUI>("none");
+  const [deadlineDate, setDeadlineDate] = useState("");
 
   const [, setNewTaskTitle] = useState("");
   const [, setNewTaskType] = useState<TaskType | null>(null);
@@ -322,12 +346,30 @@ export default function CreateScreen() {
     [challengeType, durationDays, customDuration]
   );
 
-  const validateTasks = useCallback((): { valid: boolean; error?: string } => validateDraftTasks(tasks), [tasks]);
+  const validateTasks = useCallback(
+    (): { valid: boolean; error?: string } => validateDraftTasks(tasks, participationType),
+    [tasks, participationType]
+  );
 
   const duration = getDuration();
-  const canProceedStep1 = canProceedStep1Helper(title, duration, challengeType, liveDate);
-  const canProceedStep2 = tasks.length > 0;
-  const canCreateChallenge = canProceedStep1 && canProceedStep2 && validateDraftTasks(tasks).valid;
+  const canProceedStep1 = canProceedStep1Helper(
+    title,
+    duration,
+    challengeType,
+    liveDate,
+    participationType,
+    sharedGoalTarget ? parseInt(sharedGoalTarget, 10) : undefined,
+    sharedGoalUnit.trim() || undefined,
+    deadlineType,
+    deadlineDate.trim() || null
+  );
+  const isSharedGoal = participationType === "shared_goal";
+  const isTeamOrShared = participationType === "team" || isSharedGoal;
+  const canProceedStep2 = isSharedGoal ? true : tasks.length > 0;
+  const canCreateChallenge =
+    canProceedStep1 &&
+    canProceedStep2 &&
+    validateDraftTasks(tasks, participationType).valid;
 
   const handleTaskSave = useCallback((task: TaskEditorTask) => {
     const asTemplate = task as unknown as TaskTemplate;
@@ -358,11 +400,24 @@ export default function CreateScreen() {
       Alert.alert("Missing Title", "Please enter a challenge title");
       return;
     }
-    if (getDuration() <= 0) {
+    if (participationType !== "shared_goal" && getDuration() <= 0) {
       Alert.alert("Invalid Duration", "Please select a valid duration");
       return;
     }
-    if (tasks.length === 0) {
+    if (participationType === "shared_goal") {
+      const target = parseInt(sharedGoalTarget, 10);
+      if (!sharedGoalUnit.trim() || !Number.isFinite(target) || target <= 0) {
+        Alert.alert("Invalid Goal", "Enter a positive target and unit (e.g. 100 miles)");
+        return;
+      }
+      if (deadlineType === "hard" && deadlineDate.trim()) {
+        const today = new Date().toISOString().split("T")[0];
+        if (deadlineDate.trim() < today) {
+          Alert.alert("Invalid Deadline", "Hard deadline must be in the future");
+          return;
+        }
+      }
+    } else if (tasks.length === 0) {
       Alert.alert("No Tasks", "Add at least one task to your challenge");
       return;
     }
@@ -383,6 +438,12 @@ export default function CreateScreen() {
       requireSameRules,
       showReplayLabel,
       visibility,
+      participationType,
+      teamSize,
+      sharedGoalTarget: sharedGoalTarget ? parseInt(sharedGoalTarget, 10) : undefined,
+      sharedGoalUnit: sharedGoalUnit.trim() || undefined,
+      deadlineType,
+      deadlineDate: deadlineDate.trim() || undefined,
     };
     const payload = buildCreatePayload(draft);
 
@@ -402,6 +463,7 @@ export default function CreateScreen() {
             tasksCount: String(challenge.tasks?.length ?? tasks.length),
             difficulty: challenge.difficulty ?? "medium",
             isCreateSuccess: "true",
+            waitingForTeam: isTeamOrShared ? "true" : undefined,
           },
         });
         setTitle("");
@@ -416,6 +478,12 @@ export default function CreateScreen() {
         setRequireSameRules(true);
         setShowReplayLabel(true);
         setVisibility("FRIENDS");
+        setParticipationType("solo");
+        setTeamSize(2);
+        setSharedGoalTarget("");
+        setSharedGoalUnit("");
+        setDeadlineType("none");
+        setDeadlineDate("");
         setStep(1);
         setSubmitStatus('idle');
       })
@@ -439,7 +507,7 @@ export default function CreateScreen() {
       .finally(() => {
         createMutationPendingRef.current = false;
       });
-  }, [submitStatus, title, description, challengeType, durationDays, customDuration, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, startWatchdog, clearWatchdog, getDuration, validateTasks, router]);
+  }, [submitStatus, title, description, challengeType, durationDays, customDuration, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, participationType, teamSize, sharedGoalTarget, sharedGoalUnit, deadlineType, deadlineDate, isTeamOrShared, startWatchdog, clearWatchdog, getDuration, validateTasks, router]);
 
   const handleRetryFromModal = useCallback(async () => {
     setShowRecoveryModal(false);
@@ -616,6 +684,103 @@ export default function CreateScreen() {
       </View>
 
       <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Who&apos;s in this challenge?</Text>
+        <View style={styles.challengeTypeRow}>
+          {PARTICIPATION_OPTIONS.map((opt) => {
+            const Icon = opt.Icon;
+            return (
+              <TouchableOpacity
+                key={opt.id}
+                style={[
+                  styles.participationCard,
+                  participationType === opt.id && styles.participationCardActive,
+                ]}
+                onPress={() => setParticipationType(opt.id)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.participationIconWrap, participationType === opt.id && styles.participationIconWrapActive]}>
+                  <Icon size={22} color={participationType === opt.id ? "#fff" : Colors.text.tertiary} />
+                </View>
+                <Text style={[styles.participationLabel, participationType === opt.id && styles.participationLabelActive]}>{opt.label}</Text>
+                <Text style={styles.participationDesc} numberOfLines={2}>{opt.description}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {isTeamOrShared && (
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Team size</Text>
+          <Text style={styles.stepHelper}>How many people? (2–10)</Text>
+          <View style={styles.durationRow}>
+            {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <DurationPill
+                key={n}
+                label={String(n)}
+                selected={teamSize === n}
+                onPress={() => setTeamSize(n)}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
+      {isSharedGoal && (
+        <>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Goal target</Text>
+            <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="e.g. 100"
+                placeholderTextColor={Colors.text.tertiary}
+                value={sharedGoalTarget}
+                onChangeText={setSharedGoalTarget}
+                keyboardType="number-pad"
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="e.g. miles, pages"
+                placeholderTextColor={Colors.text.tertiary}
+                value={sharedGoalUnit}
+                onChangeText={setSharedGoalUnit}
+              />
+            </View>
+          </View>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Deadline</Text>
+            <View style={styles.replayPolicyRow}>
+              {DEADLINE_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.id}
+                  style={[
+                    styles.replayPolicyCard,
+                    deadlineType === opt.id && styles.replayPolicyCardActive,
+                  ]}
+                  onPress={() => setDeadlineType(opt.id)}
+                >
+                  <Text style={[styles.replayPolicyLabel, deadlineType === opt.id && styles.replayPolicyLabelActive]}>{opt.label}</Text>
+                  <Text style={styles.replayPolicyDesc}>{opt.description}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {(deadlineType === "soft" || deadlineType === "hard") && (
+              <TextInput
+                style={[styles.input, { marginTop: 10 }]}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={Colors.text.tertiary}
+                value={deadlineDate}
+                onChangeText={setDeadlineDate}
+              />
+            )}
+          </View>
+        </>
+      )}
+
+      {(participationType === "solo" || participationType === "team") && (
+        <>
+      <View style={styles.fieldGroup}>
         <Text style={styles.label}>Challenge type</Text>
         <View style={styles.challengeTypeRow}>
           {CHALLENGE_TYPES.map((type) => (
@@ -743,6 +908,8 @@ export default function CreateScreen() {
           )}
         </>
       )}
+    </>
+  )}
 
       <View style={styles.fieldGroup}>
         {!showPurposeSection && !description.trim() ? (
@@ -785,8 +952,25 @@ export default function CreateScreen() {
   const renderStep2 = () => (
     <Animated.View style={[styles.stepContent, { transform: [{ translateX: slideAnim }] }]}>
       <Text style={styles.stepTitle}>Daily Tasks</Text>
-      <Text style={styles.stepSubtitle}>Add the actions people must complete daily</Text>
-      <Text style={styles.stepHelper}>The best challenges are simple and repeatable.</Text>
+      <Text style={styles.stepSubtitle}>
+        {isSharedGoal
+          ? "Your team will log progress toward the goal. Add optional daily habits below."
+          : "Add the actions people must complete daily"}
+      </Text>
+      <Text style={styles.stepHelper}>
+        {isSharedGoal
+          ? `Goal: ${sharedGoalTarget || "—"} ${sharedGoalUnit.trim() || ""}. Tasks are optional for shared goals.`
+          : "The best challenges are simple and repeatable."}
+      </Text>
+
+      {isSharedGoal && (
+        <View style={[styles.reviewSummaryCard, { marginBottom: 20 }]}>
+          <Text style={styles.reviewSummaryMetaText}>
+            Your team will log <Text style={{ fontWeight: "700" }}>{sharedGoalUnit.trim() || "units"}</Text> toward the goal of{" "}
+            <Text style={{ fontWeight: "700" }}>{sharedGoalTarget || "—"} {sharedGoalUnit.trim() || ""}</Text>.
+          </Text>
+        </View>
+      )}
 
       <View style={step2Styles.packsSection}>
         <Text style={step2Styles.packsTitle}>Quick start with packs</Text>
@@ -893,8 +1077,27 @@ export default function CreateScreen() {
         <Text style={styles.reviewSummaryTitle}>{title || "Untitled"}</Text>
         <View style={styles.reviewSummaryMeta}>
           <Text style={styles.reviewSummaryMetaText}>
-            {challengeType === "one_day" ? "24-Hour" : "Standard"} · {challengeType === "standard" ? `${getDuration()} days` : liveDate || "—"}
+            {participationType === "solo" && (challengeType === "one_day" ? "24-Hour" : "Standard")}
+            {participationType === "team" && "Team Challenge"}
+            {participationType === "shared_goal" && "Shared Goal"}
+            {participationType === "team" && ` · ${teamSize} people`}
+            {participationType === "shared_goal" && ` · ${teamSize} people`}
+            {(participationType === "solo" || participationType === "team") && (
+              <> · {challengeType === "one_day" ? liveDate || "—" : `${getDuration()} days`}</>
+            )}
+            {participationType === "shared_goal" && (
+              <> · Goal: {sharedGoalTarget || "—"} {sharedGoalUnit.trim() || ""}</>
+            )}
+            {participationType === "shared_goal" && (
+              <> · Deadline: {deadlineType === "none" ? "No deadline" : deadlineType === "soft" ? `Soft: ${deadlineDate || "—"}` : `Hard: ${deadlineDate || "—"}`}</>
+            )}
           </Text>
+          {participationType === "team" && (
+            <Text style={styles.reviewSummaryMetaText}>If anyone misses a day or quits, the challenge fails for everyone.</Text>
+          )}
+          {participationType === "shared_goal" && (
+            <Text style={styles.reviewSummaryMetaText}>Your team works together to reach the goal. Any member can log progress.</Text>
+          )}
           {categories.length > 0 && (
             <Text style={styles.reviewSummaryMetaText}>{categories.join(", ")}</Text>
           )}
@@ -907,7 +1110,9 @@ export default function CreateScreen() {
         ) : null}
       </View>
 
-      <Text style={styles.reviewSectionTitle}>Daily tasks ({tasks.length})</Text>
+      <Text style={styles.reviewSectionTitle}>
+        {isSharedGoal ? "Daily tasks (optional)" : "Daily tasks"} ({tasks.length})
+      </Text>
       <View style={styles.reviewTaskList}>
         {tasks.map((task, idx) => {
           const config = TASK_TYPE_CONFIG[task.type];
@@ -1017,7 +1222,7 @@ export default function CreateScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: tokenColors.bgMain }]} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <CreateFlowHeader
           title="Create Challenge"

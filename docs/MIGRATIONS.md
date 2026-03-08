@@ -15,6 +15,9 @@ Run these in **Supabase SQL Editor** in this order. New projects should run **se
 | 9 | `supabase/migrations/20250228000000_accountability_pairs.sql` | accountability_pairs table + RLS. |
 | 10 | `supabase/migrations/20250305000000_schema_fixes_profiles_challenges_stories.sql` | profiles: user_id, onboarding_completed; challenges: status; active_challenges: created_at; stories + story_views tables if missing; RLS for stories. |
 | 11 | `supabase/migrations/20250305100000_stories_fk_and_challenges_is_featured.sql` | profiles: unique on user_id; stories FK → profiles(user_id); challenges: is_featured. |
+| … | *(other supabase migrations 20250306–20250311 as applicable)* | |
+| N | `supabase/migrations/20250312000000_team_challenges.sql` | challenges: participation_type, team_size, shared_goal_*, deadline_*, started_at, run_status; challenge_members table; shared_goal_logs table; RLS. |
+| N+1 | `supabase/migrations/20250312000001_team_challenge_rpcs.sql` | start_team_challenge, evaluate_team_day RPCs. |
 
 **After running:** In Supabase Dashboard → Settings → API, use “Reload schema” (or run `NOTIFY pgrst, 'reload schema';`); each migration already does this.
 

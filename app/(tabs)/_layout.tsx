@@ -3,23 +3,30 @@ import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import {
-  colors,
   spacing,
   typography,
   shadows,
   measures,
 } from "@/src/theme/tokens";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+  const tabBg = colors.card;
+  const tabBorder = colors.border;
+  const tabActive = colors.accent;
+  const tabInactive = colors.text.tertiary;
+  const centerBtnBg = colors.accent;
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.accentOrangeCreate,
-        tabBarInactiveTintColor: colors.tabInactive,
+        tabBarActiveTintColor: tabActive,
+        tabBarInactiveTintColor: tabInactive,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.borderSubtle,
+          backgroundColor: tabBg,
+          borderTopColor: tabBorder,
           borderTopWidth: 1,
           paddingTop: spacing.sm,
           height: 88,
@@ -51,8 +58,8 @@ export default function TabLayout() {
         options={{
           title: "Create",
           tabBarIcon: () => (
-            <View style={styles.centerButton}>
-              <Plus color={colors.white} size={25} strokeWidth={2.5} />
+            <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
+              <Plus color="#FFFFFF" size={25} strokeWidth={2.5} />
             </View>
           ),
           tabBarLabel: () => null,
@@ -81,7 +88,6 @@ const styles = StyleSheet.create({
     width: measures.centerButtonSize,
     height: measures.centerButtonSize,
     borderRadius: measures.centerButtonSize / 2,
-    backgroundColor: colors.accentOrangeCreate,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,

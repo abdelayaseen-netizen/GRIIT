@@ -19,7 +19,7 @@ const PICKER_OPTIONS = {
 export default function PhotoTaskScreen() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { activeChallenge, completeTask } = useApp();
+  const { activeChallenge, completeTask, computeProgress } = useApp();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,15 +95,20 @@ export default function PhotoTaskScreen() {
       }
       setUploading(false);
 
-      await completeTask({
+      const result = await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
         proofUrl,
       });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Success!", "Photo proof submitted", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      if (result?.firstTaskOfDay && computeProgress.totalRequired > 1) {
+        Alert.alert("Great start!", `${computeProgress.totalRequired - 1} more to secure today.`, [
+          { text: "OK", onPress: () => router.back() },
+        ]);
+      } else {
+        Alert.alert("Success!", "Photo proof submitted", [
+          { text: "OK", onPress: () => router.back() },
+        ]);
+      }
     } catch (error: any) {
       Alert.alert("Error", error?.message ?? "Something went wrong. Please try again.");
     } finally {

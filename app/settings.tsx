@@ -11,11 +11,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ChevronLeft, Users, Bell, Shield } from "lucide-react-native";
+import { ChevronLeft, Users, Bell, Shield, Sun, Moon, Smartphone } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { useIsGuest } from "@/contexts/AuthGateContext";
+import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 
 const REMINDER_PRESETS = [
@@ -52,6 +53,7 @@ const CONSEQUENCES = [
 export default function SettingsScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
+  const { colors: themeColors, mode: themeMode, setMode: setThemeMode } = useTheme();
   const [dailyReminder, setDailyReminder] = useState(true);
   const [reminderTime, setReminderTime] = useState("20:00");
   const [reminderLoading, setReminderLoading] = useState(true);
@@ -121,17 +123,22 @@ export default function SettingsScreen() {
     router.back();
   };
 
+  const handleThemeMode = (mode: ThemeMode) => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setThemeMode(mode);
+  };
+
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.background }]} edges={["top"]}>
+      <View style={[styles.header, { backgroundColor: themeColors.background, borderBottomColor: themeColors.border }]}>
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backBtn}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <ChevronLeft size={24} color={Colors.text.primary} />
+          <ChevronLeft size={24} color={themeColors.text.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.text.primary }]}>Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -140,11 +147,45 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Appearance */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Sun size={18} color={themeColors.text.primary} />
+            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Appearance</Text>
+          </View>
+          <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Dark mode</Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+              {(["system", "light", "dark"] as const).map((m) => (
+                <TouchableOpacity
+                  key={m}
+                  onPress={() => handleThemeMode(m)}
+                  style={[
+                    styles.reminderPill,
+                    { backgroundColor: themeColors.border + "40", flexDirection: "row", alignItems: "center" },
+                    themeMode === m && { backgroundColor: themeColors.accent },
+                  ]}
+                  activeOpacity={0.8}
+                >
+                  {m === "system" && <Smartphone size={14} color={themeMode === m ? "#fff" : themeColors.text.secondary} style={{ marginRight: 4 }} />}
+                  {m === "light" && <Sun size={14} color={themeMode === m ? "#fff" : themeColors.text.secondary} style={{ marginRight: 4 }} />}
+                  {m === "dark" && <Moon size={14} color={themeMode === m ? "#fff" : themeColors.text.secondary} style={{ marginRight: 4 }} />}
+                  <Text style={[styles.reminderPillText, themeMode === m && styles.reminderPillTextActive, { color: themeMode === m ? "#fff" : themeColors.text.secondary }]}>
+                    {m === "system" ? "System" : m === "light" ? "Light" : "Dark"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
         {/* Accountability Circle */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Users size={18} color={Colors.text.primary} />
-            <Text style={styles.sectionTitle}>Accountability Circle</Text>
+            <Users size={18} color={themeColors.text.primary} />
+            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Accountability Circle</Text>
           </View>
           <TouchableOpacity
             style={styles.card}
@@ -166,8 +207,8 @@ export default function SettingsScreen() {
         {/* Notifications */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Bell size={18} color={Colors.text.primary} />
-            <Text style={styles.sectionTitle}>Notifications</Text>
+            <Bell size={18} color={themeColors.text.primary} />
+            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Notifications</Text>
           </View>
           <View style={styles.card}>
             <View style={styles.toggleRow}>

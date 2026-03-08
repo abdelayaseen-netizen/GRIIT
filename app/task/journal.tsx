@@ -81,7 +81,7 @@ export default function JournalTaskScreen() {
     wordLimit: string;
     requirePhotoProof: string;
   }>();
-  const { activeChallenge, completeTask } = useApp();
+  const { activeChallenge, completeTask, computeProgress } = useApp();
 
   const journalPrompt = prompt || "Write your thoughts...";
   const journalTypes: JournalCategory[] = types ? (JSON.parse(types) as JournalCategory[]) : [];
@@ -239,7 +239,7 @@ export default function JournalTaskScreen() {
         setUploading(false);
       }
 
-      await completeTask({
+      const result = await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
         noteText: entryText.trim(),
@@ -248,7 +248,9 @@ export default function JournalTaskScreen() {
 
       await AsyncStorage.removeItem(draftKey);
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (result?.firstTaskOfDay && computeProgress.totalRequired > 1) {
+        Alert.alert("Great start!", `${computeProgress.totalRequired - 1} more to secure today.`);
+      }
       setShowSuccess(true);
 
       Animated.parallel([

@@ -168,28 +168,70 @@ export const challengesRouter = createTRPCRouter({
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       const { data, error } = await ctx.supabase
-        .from('challenges')
-        .select(`
-          *,
-          challenge_tasks (*)
-        `)
-        .eq('id', input.id)
+        .from("challenges")
+        .select("*, challenge_tasks (*)")
+        .eq("id", input.id)
         .single();
 
       if (error) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
 
+      const participationType = (data as { participation_type?: string }).participation_type;
+      const runStatus = (data as { run_status?: string }).run_status;
+      const isTeam = participationType === "team" || participationType === "shared_goal";
+
+      if (isTeam && runStatus === "active" && participationType === "team") {
+        const today = new Date().toISOString().split("T")[0];
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+        await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: yesterday });
+        await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: today });
+      }
+
+      let teamMembers: { id: string; user_id: string; role: string; status: string; joined_at: string; profiles?: { user_id?: string; username?: string | null; display_name?: string | null; avatar_url?: string | null } }[] = [];
+      let sharedGoalTotal: number | null = null;
+
+      if (isTeam) {
+        const { data: members } = await ctx.supabase
+          .from("challenge_members")
+          .select("id, user_id, role, status, joined_at")
+          .eq("challenge_id", input.id)
+          .order("joined_at", { ascending: true });
+        const memberRows = (members ?? []) as { id: string; user_id: string; role: string; status: string; joined_at: string }[];
+        if (memberRows.length > 0) {
+          const { data: profiles } = await ctx.supabase
+            .from("profiles")
+            .select("user_id, username, display_name, avatar_url")
+            .in("user_id", memberRows.map((m) => m.user_id));
+          const profileMap = new Map((profiles ?? []).map((p: { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }) => [p.user_id, p]));
+          teamMembers = memberRows.map((m) => ({
+            ...m,
+            profiles: profileMap.get(m.user_id) ?? undefined,
+          }));
+        } else {
+          teamMembers = memberRows;
+        }
+      }
+
+      if (participationType === "shared_goal") {
+        const { data: sumRow } = await ctx.supabase
+          .from("shared_goal_logs")
+          .select("amount")
+          .eq("challenge_id", input.id);
+        const rows = (sumRow ?? []) as { amount: number }[];
+        sharedGoalTotal = rows.reduce((acc, r) => acc + Number(r.amount), 0);
+      }
+
       return {
         ...data,
         tasks: mapTaskRowsToApi((data.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
+        ...(isTeam ? { teamMembers } : {}),
+        ...(participationType === "shared_goal" ? { sharedGoalTotal } : {}),
       };
     }),
 
   join: protectedProcedure
-    .input(z.object({
-      challengeId: z.string().uuid(),
-    }))
+    .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const { data: existing } = await ctx.supabase
+      const { data: existingActive } = await ctx.supabase
         .from("active_challenges")
         .select("id")
         .eq("user_id", ctx.userId)
@@ -198,21 +240,76 @@ export const challengesRouter = createTRPCRouter({
         .limit(1)
         .maybeSingle();
 
-      if (existing) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "You have already joined this challenge.",
-        });
+      if (existingActive) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
       }
 
-      const { error: challengeError } = await ctx.supabase
+      const { data: challenge, error: challengeError } = await ctx.supabase
         .from("challenges")
-        .select("*, challenge_tasks (*)")
+        .select("id, participation_type, run_status, team_size")
         .eq("id", input.challengeId)
         .single();
 
-      if (challengeError) {
+      if (challengeError || !challenge) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+      }
+
+      const participationType = (challenge as { participation_type?: string }).participation_type ?? "solo";
+      const runStatus = (challenge as { run_status?: string }).run_status;
+      const teamSize = (challenge as { team_size?: number }).team_size ?? 1;
+      const isTeamWaiting = (participationType === "team" || participationType === "shared_goal") && runStatus === "waiting";
+
+      if (isTeamWaiting) {
+        const { data: existingMember } = await ctx.supabase
+          .from("challenge_members")
+          .select("id")
+          .eq("challenge_id", input.challengeId)
+          .eq("user_id", ctx.userId)
+          .maybeSingle();
+
+        if (existingMember) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
+        }
+
+        const { error: insertErr } = await ctx.supabase.from("challenge_members").insert({
+          challenge_id: input.challengeId,
+          user_id: ctx.userId,
+          role: "member",
+          status: "active",
+        });
+
+        if (insertErr) {
+          if ((insertErr as { code?: string }).code === "23505") {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
+          }
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
+        }
+
+        const { count: memberCount } = await ctx.supabase
+          .from("challenge_members")
+          .select("*", { count: "exact", head: true })
+          .eq("challenge_id", input.challengeId);
+
+        if ((memberCount ?? 0) >= teamSize) {
+          await ctx.supabase.rpc("start_team_challenge", {
+            p_challenge_id: input.challengeId,
+          });
+          if (participationType === "team") {
+            const { data: myActive } = await ctx.supabase
+              .from("active_challenges")
+              .select("*")
+              .eq("user_id", ctx.userId)
+              .eq("challenge_id", input.challengeId)
+              .eq("status", "active")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (myActive) return myActive;
+          }
+          return { joined: true, runStatus: "active" as const };
+        }
+
+        return { joined: true, runStatus: "waiting" as const };
       }
 
       const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("join_challenge", {
@@ -224,8 +321,8 @@ export const challengesRouter = createTRPCRouter({
         if (activeChallenge) return activeChallenge;
       }
 
-      const code = (rpcError as any)?.code;
-      const msg = (rpcError as any)?.message ?? "";
+      const code = (rpcError as { code?: string })?.code;
+      const msg = (rpcError as { message?: string })?.message ?? "";
       if (msg.includes("ALREADY_JOINED")) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
       }
@@ -299,6 +396,52 @@ export const challengesRouter = createTRPCRouter({
       return list;
     }),
 
+  startTeamChallenge: protectedProcedure
+    .input(z.object({ challengeId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { error } = await ctx.supabase.rpc("start_team_challenge", {
+        p_challenge_id: input.challengeId,
+      });
+      if (error) {
+        const msg = (error as { message?: string }).message ?? "";
+        if (msg.includes("NOT_FOUND")) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+        if (msg.includes("NOT_TEAM_CHALLENGE")) throw new TRPCError({ code: "BAD_REQUEST", message: "Not a team or shared-goal challenge." });
+        if (msg.includes("RUN_NOT_WAITING")) throw new TRPCError({ code: "BAD_REQUEST", message: "Run is not waiting to start." });
+        if (msg.includes("ONLY_CREATOR_OR_FULL")) throw new TRPCError({ code: "FORBIDDEN", message: "Only the creator can start before the team is full." });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to start challenge." });
+      }
+      return { started: true };
+    }),
+
+  getTeamMembers: protectedProcedure
+    .input(z.object({ challengeId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { data: member } = await ctx.supabase
+        .from("challenge_members")
+        .select("id")
+        .eq("challenge_id", input.challengeId)
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      if (!member) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not a member of this challenge." });
+      }
+      const { data: members } = await ctx.supabase
+        .from("challenge_members")
+        .select("id, user_id, role, status, joined_at")
+        .eq("challenge_id", input.challengeId)
+        .order("joined_at", { ascending: true });
+      const rows = (members ?? []) as { id: string; user_id: string; role: string; status: string; joined_at: string }[];
+      if (rows.length === 0) return [];
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", rows.map((r) => r.user_id));
+      const profileMap = new Map(
+        (profiles ?? []).map((p: { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }) => [p.user_id, p])
+      );
+      return rows.map((m) => ({ ...m, profile: profileMap.get(m.user_id) ?? null }));
+    }),
+
   create: protectedProcedure
     .input(z.object({
       title: z.string().min(1, "Title is required"),
@@ -311,6 +454,12 @@ export const challengesRouter = createTRPCRouter({
       replayPolicy: z.enum(['live_only', 'allow_replay']).optional(),
       requireSameRules: z.boolean().optional(),
       showReplayLabel: z.boolean().optional(),
+      participationType: z.enum(['solo', 'duo', 'team', 'shared_goal']).optional().default('solo'),
+      teamSize: z.number().min(1).max(10).optional().default(1),
+      sharedGoalTarget: z.number().positive().optional(),
+      sharedGoalUnit: z.string().max(50).optional(),
+      deadlineType: z.enum(['none', 'soft', 'hard']).optional(),
+      deadlineDate: z.string().optional(),
       tasks: z.array(z.object({
         title: z.string().min(1, "Task title is required"),
         type: z.string(),
@@ -352,12 +501,13 @@ export const challengesRouter = createTRPCRouter({
         challengeTimezone: z.string().nullable().optional(),
         verificationMethod: z.string().optional(),
         verificationRuleJson: z.record(z.unknown()).nullable().optional(),
-      })).min(1, "At least one task is required"),
-    }))
+      })).min(0),
+    }).refine((data) => data.participationType === "shared_goal" || data.tasks.length >= 1, { message: "At least one task is required for non–shared-goal challenges." }))
     .mutation(async ({ input, ctx }) => {
       logCreateChallenge("start", { userId: ctx.userId, title: input.title?.slice(0, 50), taskCount: input.tasks.length });
 
-      if (input.tasks.length === 0) {
+      const isSharedGoal = input.participationType === "shared_goal";
+      if (!isSharedGoal && input.tasks.length === 0) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "At least one task is required" });
       }
 
@@ -400,23 +550,36 @@ export const challengesRouter = createTRPCRouter({
         }
       }
 
+      const isTeamOrShared = input.participationType === "team" || input.participationType === "shared_goal";
+      const runStatus = isTeamOrShared ? "waiting" : null;
+      const insertPayload: Record<string, unknown> = {
+        creator_id: ctx.userId,
+        title: input.title,
+        description: input.description,
+        duration_type: input.type === "one_day" ? "24h" : "multi_day",
+        duration_days: input.durationDays,
+        category: input.categories?.[0] || "other",
+        difficulty: "medium",
+        status: "published",
+        live_date: input.liveDate || null,
+        replay_policy: input.replayPolicy || "allow_replay",
+        require_same_rules: input.requireSameRules ?? true,
+        show_replay_label: input.showReplayLabel ?? true,
+        visibility: (input.visibility || "FRIENDS").toLowerCase(),
+        participation_type: input.participationType ?? "solo",
+        team_size: input.teamSize ?? 1,
+        run_status: runStatus,
+      };
+      if (input.participationType === "shared_goal") {
+        if (input.sharedGoalTarget != null) insertPayload.shared_goal_target = input.sharedGoalTarget;
+        if (input.sharedGoalUnit != null) insertPayload.shared_goal_unit = input.sharedGoalUnit;
+        if (input.deadlineType != null && input.deadlineType !== "none") insertPayload.deadline_type = input.deadlineType;
+        if (input.deadlineDate != null) insertPayload.deadline_date = input.deadlineDate;
+      }
+
       const { data: challenge, error: challengeError } = await ctx.supabase
-        .from('challenges')
-        .insert({
-          creator_id: ctx.userId,
-          title: input.title,
-          description: input.description,
-          duration_type: input.type === 'one_day' ? '24h' : 'multi_day',
-          duration_days: input.durationDays,
-          category: input.categories?.[0] || 'other',
-          difficulty: 'medium',
-          status: 'published',
-          live_date: input.liveDate || null,
-          replay_policy: input.replayPolicy || 'allow_replay',
-          require_same_rules: input.requireSameRules ?? true,
-          show_replay_label: input.showReplayLabel ?? true,
-          visibility: (input.visibility || 'FRIENDS').toLowerCase(),
-        })
+        .from("challenges")
+        .insert(insertPayload)
         .select()
         .single();
 
@@ -426,6 +589,24 @@ export const challengesRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create challenge.",
         });
+      }
+
+      if (isTeamOrShared) {
+        const { error: memberError } = await ctx.supabase.from("challenge_members").insert({
+          challenge_id: challenge.id,
+          user_id: ctx.userId,
+          role: "creator",
+          status: "active",
+        });
+        if (memberError) {
+          logCreateChallenge("challenge_members insert failed", { code: memberError.code });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create challenge." });
+        }
+      }
+
+      if (input.tasks.length === 0) {
+        logCreateChallenge("success", { challengeId: challenge.id, title: challenge.title });
+        return { ...challenge, tasks: [] };
       }
 
       const tasksToInsert = input.tasks.map((task, i) =>

@@ -37,12 +37,22 @@ interface ConfettiPiece {
 interface CelebrationProps {
   visible: boolean;
   onComplete?: () => void;
+  /** Optional "DAY SECURED ✓" style title with scale-in animation */
+  titleText?: string;
+  /** Streak count for "🔥 X-day streak!" */
+  streakCount?: number;
+  /** Points needed for next tier */
+  pointsToNextTier?: number;
+  /** Next tier name for "X points to [NextTier]!" */
+  nextTierName?: string;
 }
 
-export default function Celebration({ visible, onComplete }: CelebrationProps) {
+export default function Celebration({ visible, onComplete, titleText, streakCount, pointsToNextTier, nextTierName }: CelebrationProps) {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
   const [reduceMotion, setReduceMotion] = useState(false);
   const hasTriggeredRef = useRef(false);
+  const titleScale = useRef(new Animated.Value(0)).current;
+  const streakOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
@@ -63,15 +73,10 @@ export default function Celebration({ visible, onComplete }: CelebrationProps) {
 
   const triggerHaptic = useCallback(() => {
     if (Platform.OS === "web") return;
-    
-    // Haptic feedback - optional, will be ignored if expo-haptics is not installed
     try {
-      // Dynamic import to avoid errors if expo-haptics is not installed
       import("expo-haptics").then((Haptics) => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }).catch(() => {
-        // Silently fail if haptics not available
-      });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }).catch(() => {});
     } catch {
       // Silently fail
     }
@@ -154,31 +159,33 @@ export default function Celebration({ visible, onComplete }: CelebrationProps) {
   useEffect(() => {
     if (visible && !hasTriggeredRef.current) {
       hasTriggeredRef.current = true;
-      
       triggerHaptic();
-      
+      if (titleText) {
+        Animated.sequence([
+          Animated.spring(titleScale, { toValue: 1.1, useNativeDriver: true, tension: 120, friction: 8 }),
+          Animated.spring(titleScale, { toValue: 1, useNativeDriver: true, tension: 200, friction: 10 }),
+        ]).start();
+        Animated.timing(streakOpacity, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+      }
       if (!reduceMotion) {
         const pieces = createConfetti();
         setConfetti(pieces);
-        
         requestAnimationFrame(() => {
           animateConfetti(pieces);
         });
-      } else {
-        setTimeout(() => {
-          onComplete?.();
-        }, 100);
+      } else if (!titleText) {
+        setTimeout(() => onComplete?.(), 100);
       }
     }
-    
     if (!visible) {
       hasTriggeredRef.current = false;
+      titleScale.setValue(0);
+      streakOpacity.setValue(0);
     }
-  }, [visible, reduceMotion, triggerHaptic, createConfetti, animateConfetti, onComplete]);
+  }, [visible, reduceMotion, triggerHaptic, createConfetti, animateConfetti, onComplete, titleText, titleScale, streakOpacity]);
 
-  if (!visible || confetti.length === 0) {
-    return null;
-  }
+  if (!visible) return null;
+  if (!reduceMotion && confetti.length === 0 && !titleText) return null;
 
   return (
     <View style={styles.container} pointerEvents="none">
@@ -217,6 +224,23 @@ export default function Celebration({ visible, onComplete }: CelebrationProps) {
           />
         );
       })}
+      {titleText ? (
+        <View style={styles.titleOverlay} pointerEvents="none">
+          <Animated.Text style={[styles.titleText, { transform: [{ scale: titleScale }] }]}>
+            {titleText}
+          </Animated.Text>
+          {streakCount != null && streakCount > 0 ? (
+            <Animated.Text style={[styles.streakText, { opacity: streakOpacity }]}>
+              🔥 {streakCount}-day streak!
+            </Animated.Text>
+          ) : null}
+          {pointsToNextTier != null && nextTierName && pointsToNextTier > 0 ? (
+            <Animated.Text style={[styles.tierText, { opacity: streakOpacity }]}>
+              {pointsToNextTier} points to {nextTierName}!
+            </Animated.Text>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -229,5 +253,29 @@ const styles = StyleSheet.create({
   },
   confettiPiece: {
     position: "absolute",
+  },
+  titleOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  titleText: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#111",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  streakText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 4,
+  },
+  tierText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#555",
   },
 });

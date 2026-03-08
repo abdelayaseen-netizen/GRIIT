@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Share } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { Share2 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
+import { shareProfile } from "@/lib/share";
 
 export interface ShareDisciplineCardProps {
   name: string;
@@ -21,17 +22,13 @@ export default function ShareDisciplineCard({
 }: ShareDisciplineCardProps) {
   const handleShare = async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const message = `${name} on GRIIT — ${tier} Tier • ${disciplineScore} days secured • ${currentStreak} day streak. Join me!`;
     try {
-      if (Platform.OS === "web") {
-        if (navigator.share) {
-          await navigator.share({ title: "My discipline stats", text: message });
-        } else {
-          await navigator.clipboard.writeText(message);
-        }
-      } else {
-        await Share.share({ message, title: "My discipline stats" });
-      }
+      await shareProfile({
+        username: name,
+        streak: currentStreak,
+        totalDaysSecured: disciplineScore,
+        tier,
+      });
       onShare?.();
     } catch {
       // User cancelled or failed

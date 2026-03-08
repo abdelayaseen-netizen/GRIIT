@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ import * as Haptics from "expo-haptics";
 import { useFocusEffect } from "expo-router";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { track } from "@/lib/analytics";
@@ -353,6 +354,7 @@ function mapApiEntryToLeaderboardEntry(e: any): LeaderboardEntry {
 }
 
 export default function ActivityScreen() {
+  const { colors } = useTheme();
   const { refetchAll, currentUser } = useApp();
   const { requireAuth } = useAuthGate();
   const currentUserId = currentUser?.id ?? null;
@@ -363,6 +365,7 @@ export default function ActivityScreen() {
   const [leaderboardError, setLeaderboardError] = useState(false);
   const [givingRespectId, setGivingRespectId] = useState<string | null>(null);
   const [givingNudgeId, setGivingNudgeId] = useState<string | null>(null);
+  const [optimisticRespectDeltas, setOptimisticRespectDeltas] = useState<Record<string, number>>({});
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
   const [activityFeedError, setActivityFeedError] = useState(false);
 
@@ -451,12 +454,25 @@ export default function ActivityScreen() {
   const handleGiveRespect = useCallback(
     (recipientId: string) => {
       requireAuth("respect", async () => {
+        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setOptimisticRespectDeltas((prev) => ({ ...prev, [recipientId]: (prev[recipientId] ?? 0) + 1 }));
         setGivingRespectId(recipientId);
         try {
           await trpcMutate("respects.give", { recipientId });
           track({ name: "respect_sent", toUserId: recipientId });
+          Alert.alert("Sent!", "");
           await fetchLeaderboard();
+          setOptimisticRespectDeltas((prev) => {
+            const next = { ...prev };
+            delete next[recipientId];
+            return next;
+          });
         } catch (e: any) {
+          setOptimisticRespectDeltas((prev) => {
+            const next = { ...prev };
+            delete next[recipientId];
+            return next;
+          });
           Alert.alert("Error", e?.message ?? "Could not send respect.");
         } finally {
           setGivingRespectId(null);
@@ -469,7 +485,7 @@ export default function ActivityScreen() {
   const handleGiveNudge = useCallback(
     (toUserId: string) => {
       requireAuth("nudge", () => {
-        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setGivingNudgeId(toUserId);
         void trpcMutate("nudges.send", { toUserId })
           .then(() => {
@@ -503,8 +519,17 @@ export default function ActivityScreen() {
     });
   }, [requireAuth]);
 
+  const entriesWithOptimisticRespect = useMemo(
+    () =>
+      leaderboard.entries.map((e) => ({
+        ...e,
+        respectCount: e.respectCount + (optimisticRespectDeltas[e.userId] ?? 0),
+      })),
+    [leaderboard.entries, optimisticRespectDeltas]
+  );
+
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Movement</Text>
@@ -526,20 +551,20 @@ export default function ActivityScreen() {
           <Text style={[styles.filterPillText, feedFilter === "global" && styles.filterPillTextActive]}>Global</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterPill, feedFilter === "friends" && styles.filterPillActive]}
-          onPress={() => setFeedFilter("friends")}
+          style={[styles.filterPill, styles.filterPillDisabled]}
+          onPress={() => Alert.alert("Coming in the next update", "Friends filter will show only your accountability partners.")}
           activeOpacity={0.8}
         >
-          <Users size={14} color={feedFilter === "friends" ? "#fff" : Colors.text.secondary} />
-          <Text style={[styles.filterPillText, feedFilter === "friends" && styles.filterPillTextActive]}>Friends</Text>
+          <Users size={14} color={Colors.text.muted} />
+          <Text style={styles.filterPillTextDisabled}>Friends</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterPill, feedFilter === "team" && styles.filterPillActive]}
-          onPress={() => setFeedFilter("team")}
+          style={[styles.filterPill, styles.filterPillDisabled]}
+          onPress={() => Alert.alert("Coming in the next update", "Team filter will show your team leaderboard.")}
           activeOpacity={0.8}
         >
-          <Users size={14} color={feedFilter === "team" ? "#fff" : Colors.text.secondary} />
-          <Text style={[styles.filterPillText, feedFilter === "team" && styles.filterPillTextActive]}>Team</Text>
+          <Users size={14} color={Colors.text.muted} />
+          <Text style={styles.filterPillTextDisabled}>Team</Text>
         </TouchableOpacity>
       </View>
 
@@ -548,7 +573,7 @@ export default function ActivityScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
         }
       >
         <View style={styles.dailyStatsWrap}>
@@ -606,7 +631,7 @@ export default function ActivityScreen() {
           <LeaderboardSection entries={leaderboard.entries} />
         )}
         <MovementFeedSection
-          entries={leaderboard.entries}
+          entries={entriesWithOptimisticRespect}
           currentUserId={currentUserId}
           onGiveRespect={handleGiveRespect}
           givingRespectId={givingRespectId}
@@ -692,6 +717,15 @@ const styles = StyleSheet.create({
   },
   filterPillTextActive: {
     color: "#fff",
+  },
+  filterPillDisabled: {
+    backgroundColor: Colors.border,
+    opacity: 0.8,
+  },
+  filterPillTextDisabled: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.text.muted,
   },
   dailyStatsWrap: {
     paddingHorizontal: 20,

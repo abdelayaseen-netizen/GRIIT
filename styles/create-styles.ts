@@ -642,6 +642,46 @@ export const styles = StyleSheet.create({
     color: Colors.text.tertiary,
     fontSize: 12,
   },
+  participationCard: {
+    flex: 1,
+    backgroundColor: Colors.card,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minWidth: 100,
+  },
+  participationCardActive: {
+    borderColor: Colors.accent,
+    backgroundColor: Colors.accentLight,
+  },
+  participationIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  participationIconWrapActive: {
+    backgroundColor: Colors.accent,
+  },
+  participationLabel: {
+    ...Typography.cardTitle,
+    color: Colors.text.primary,
+    marginBottom: 4,
+    fontSize: 14,
+  },
+  participationLabelActive: {
+    color: Colors.accent,
+  },
+  participationDesc: {
+    ...Typography.meta,
+    color: Colors.text.tertiary,
+    fontSize: 11,
+    lineHeight: 14,
+  },
   replayPolicyRow: {
     flexDirection: "row",
     gap: 10,

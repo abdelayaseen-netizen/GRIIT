@@ -493,3 +493,11 @@ export interface ChatRoomSettings {
   muteRoom: boolean;
   mentionsOnly: boolean;
 }
+
+/** Placeholder for backend: when subscription is integrated, profile can include these. */
+export type PremiumStatus = "free" | "premium" | "trial";
+export interface ProfilePremiumFields {
+  premiumStatus?: PremiumStatus;
+  premiumExpiresAt?: string | null; // ISO date
+  premiumPlatform?: "ios" | "android" | "web" | null; // where they subscribed
+}

@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
@@ -26,7 +27,7 @@ type AppContextValue = {
   todayDateLocal: string;
   computeProgress: { verifiedCount: number; totalRequired: number; progress: number };
   canSecureDay: boolean;
-  completeTask: (params: { activeChallengeId: string; taskId: string; value?: number; noteText?: string; proofUrl?: string }) => void;
+  completeTask: (params: { activeChallengeId: string; taskId: string; value?: number; noteText?: string; proofUrl?: string }) => Promise<{ firstTaskOfDay?: boolean } | void>;
   secureDay: () => Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined>;
   isLoading: boolean;
   isError: boolean;
@@ -320,20 +321,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     value?: number;
     noteText?: string;
     proofUrl?: string;
-  }): Promise<void> => {
-    return trpcMutate(TRPC.checkins.complete, params).then(() => {
-      if (activeChallenge?.id) fetchTodayCheckins(activeChallenge.id);
-      fetchActiveChallenge();
-      fetchStats();
-    });
-  }, [activeChallenge, fetchTodayCheckins, fetchActiveChallenge, fetchStats]);
+  }): Promise<{ firstTaskOfDay?: boolean } | void> => {
+    const requiredTasks = challenge?.challenge_tasks?.filter((t: any) => t.required) || [];
+    const completedCountBefore = todayCheckins.filter((c: any) =>
+      c.status === 'completed' && requiredTasks.some((rt: any) => rt.id === c.task_id)
+    ).length;
+    const firstTaskOfDay = completedCountBefore === 0 && requiredTasks.length > 1;
+
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    const previousCheckins = todayCheckins.slice();
+    const optimisticCheckin = {
+      active_challenge_id: params.activeChallengeId,
+      task_id: params.taskId,
+      status: "completed" as const,
+    };
+    setTodayCheckins((prev) => [...prev, optimisticCheckin]);
+
+    return trpcMutate(TRPC.checkins.complete, params)
+      .then(() => {
+        if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
+        void fetchActiveChallenge();
+        void fetchStats();
+        return { firstTaskOfDay };
+      })
+      .catch(() => {
+        setTodayCheckins(previousCheckins);
+        throw new Error("Couldn't save. Tap to retry.");
+      });
+  }, [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats]);
 
   const secureDay = useCallback(async (): Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined> => {
     if (!activeChallenge?.id || !canSecureDay) return undefined;
     try {
       const result = await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id }) as { success: boolean; newStreakCount: number; lastStandEarned?: boolean };
-      fetchActiveChallenge();
-      fetchStats();
+      void fetchActiveChallenge();
+      void fetchStats();
       if (Platform.OS !== 'web') {
         const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
         const tomorrow = new Date();

@@ -10,7 +10,6 @@ import {
   RefreshControl,
   Modal,
   Alert,
-  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -27,13 +26,14 @@ import {
   AlertTriangle,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import * as Linking from "expo-linking";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import Colors from "@/constants/colors";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
 import Celebration from "@/components/Celebration";
 import { RETENTION_CONFIG } from "@/lib/retention-config";
+import { getMilestoneForStreak } from "@/lib/constants/milestones";
 import { getYesterdayDateKey } from "@/lib/date-utils";
 import { getHomeRetentionDerived } from "@/lib/home-derived";
 import { track } from "@/lib/analytics";
@@ -97,6 +97,9 @@ function TaskRow({
 }) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const checkAnim = useRef(new Animated.Value(completed ? 1 : 0)).current;
+  const rowScale = useRef(new Animated.Value(1)).current;
+  const pulseOpacity = useRef(new Animated.Value(0)).current;
+  const prevCompletedRef = useRef(completed);
 
   useEffect(() => {
     Animated.timing(scaleAnim, {
@@ -116,6 +119,21 @@ function TaskRow({
     }).start();
   }, [completed, checkAnim]);
 
+  useEffect(() => {
+    if (completed && !prevCompletedRef.current) {
+      prevCompletedRef.current = true;
+      Animated.sequence([
+        Animated.timing(rowScale, { toValue: 1.05, duration: 100, useNativeDriver: true }),
+        Animated.spring(rowScale, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(pulseOpacity, { toValue: 0.15, duration: 200, useNativeDriver: true }),
+        Animated.timing(pulseOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }
+    if (!completed) prevCompletedRef.current = false;
+  }, [completed, rowScale, pulseOpacity]);
+
   const checkScale = checkAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.5, 1],
@@ -125,12 +143,23 @@ function TaskRow({
     <Animated.View
       style={[
         taskStyles.row,
+        { overflow: "hidden" as const, borderRadius: 10 },
         {
           opacity: scaleAnim,
-          transform: [{ translateY: scaleAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+          transform: [
+            { translateY: scaleAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) },
+            { scale: rowScale },
+          ],
         },
       ]}
     >
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: Colors.streak.shield, opacity: pulseOpacity, borderRadius: 10 },
+        ]}
+        pointerEvents="none"
+      />
       <Animated.View style={{ transform: [{ scale: checkScale }] }}>
         <CheckCircle2
           size={20}
@@ -156,6 +185,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { requireAuth } = useAuthGate();
   const isGuest = useIsGuest();
+  const { colors: themeColors } = useTheme();
   const {
     activeChallenge,
     challenge,
@@ -173,6 +203,12 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [optimisticDaySecured, setOptimisticDaySecured] = useState(false);
+  const [celebrationPayload, setCelebrationPayload] = useState<{
+    streak: number;
+    pointsToNextTier?: number;
+    nextTierName?: string;
+  } | null>(null);
   const [showMilestone, setShowMilestone] = useState<number | null>(null);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
@@ -268,7 +304,7 @@ export default function HomeScreen() {
   const nextTierName = (stats as any)?.nextTierName ?? null;
   const pointsToNextTier = (stats as any)?.pointsToNextTier ?? 0;
   const yesterdayKey = getYesterdayDateKey();
-  const daySecured = computeProgress.progress === 100 && !canSecureDay;
+  const daySecured = optimisticDaySecured || (computeProgress.progress === 100 && !canSecureDay);
   const isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
 
   const tasks = useMemo((): { id: string; title: string; completed: boolean }[] => {
@@ -316,9 +352,6 @@ export default function HomeScreen() {
   }, [refetchAll, fetchHomeActiveData]);
 
   const handleSecureDay = useCallback(async () => {
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
     if (daysSinceLastSecure >= RETENTION_CONFIG.comebackModeMinDays) {
       track({ name: "comeback_day_secured" });
     }
@@ -326,40 +359,64 @@ export default function HomeScreen() {
       Animated.timing(secureBtnScale, { toValue: 0.95, duration: 60, useNativeDriver: true }),
       Animated.spring(secureBtnScale, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }),
     ]).start();
-    const result = await secureDay();
+    setOptimisticDaySecured(true);
     setShowCelebration(true);
-    if (result?.lastStandEarned) {
-      track({ name: "last_stand_earned" });
+    try {
+      const result = await secureDay();
+      if (!result) {
+        setOptimisticDaySecured(false);
+        setShowCelebration(false);
+        setCelebrationPayload(null);
+        Alert.alert("Error", "Couldn't secure day. Try again.");
+        return;
+      }
+      const streak = result.newStreakCount ?? stats?.activeStreak ?? 0;
+      const pointsToNext = (stats as any)?.pointsToNextTier ?? 0;
+      const nextTier = (stats as any)?.nextTierName ?? null;
+      setCelebrationPayload({ streak, pointsToNextTier: pointsToNext > 0 ? pointsToNext : undefined, nextTierName: nextTier ?? undefined });
+      if (result.lastStandEarned) {
+        track({ name: "last_stand_earned" });
+      }
+      const { isStreakMilestone } = await import("@/lib/constants/milestones");
+      if (isStreakMilestone(streak)) {
+        setShowMilestone(streak);
+        track({ name: "milestone_unlocked", streak });
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 200);
+        }
+      }
+      void trpcQuery("leaderboard.getWeekly").then((data: any) => {
+        setLeaderboardData({
+          currentUserRank: data?.currentUserRank ?? null,
+          totalSecuredToday: data?.totalSecuredToday ?? 0,
+        });
+      }).catch(() => {});
+      const currentDay = activeChallenge?.current_day || 1;
+      fetchHomeActiveData();
+      setTimeout(() => {
+        setOptimisticDaySecured(false);
+        router.push({
+          pathname: "/secure-confirmation",
+          params: {
+            day: currentDay.toString(),
+            streak: streak.toString(),
+            totalDays: (challenge?.duration_days || 0).toString(),
+            isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
+          },
+        } as any);
+      }, 1200);
+    } catch {
+      setOptimisticDaySecured(false);
+      setShowCelebration(false);
+      setCelebrationPayload(null);
+      Alert.alert("Error", "Couldn't secure day. Try again.");
     }
-    if (result?.newStreakCount === 7 || result?.newStreakCount === 30) {
-      setShowMilestone(result.newStreakCount);
-      track({ name: "milestone_unlocked", streak: result.newStreakCount });
-    }
-    trpcQuery("leaderboard.getWeekly").then((data: any) => {
-      setLeaderboardData({
-        currentUserRank: data?.currentUserRank ?? null,
-        totalSecuredToday: data?.totalSecuredToday ?? 0,
-      });
-    }).catch(() => {});
-    const currentDay = activeChallenge?.current_day || 1;
-    const streak = result?.newStreakCount ?? stats?.activeStreak ?? 0;
-    fetchHomeActiveData();
-    setTimeout(() => {
-      router.push({
-        pathname: "/secure-confirmation",
-        params: {
-          day: currentDay.toString(),
-          streak: streak.toString(),
-          totalDays: (challenge?.duration_days || 0).toString(),
-          isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
-        },
-      } as any);
-    }, 1200);
   }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, fetchHomeActiveData]);
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <HomeScreenSkeleton />
         </ScrollView>
@@ -373,18 +430,25 @@ export default function HomeScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <Celebration visible={showCelebration} onComplete={() => setShowCelebration(false)} />
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
+      <Celebration
+        visible={showCelebration}
+        onComplete={() => { setShowCelebration(false); setCelebrationPayload(null); }}
+        titleText={celebrationPayload ? "DAY SECURED ✓" : undefined}
+        streakCount={celebrationPayload?.streak}
+        pointsToNextTier={celebrationPayload?.pointsToNextTier}
+        nextTierName={celebrationPayload?.nextTierName}
+      />
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: themeColors.background }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={Colors.accent}
+            tintColor={themeColors.accent}
           />
         }
       >
@@ -590,7 +654,7 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
 
-            {canSecureDay && (
+            {canSecureDay && !optimisticDaySecured && (
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => requireAuth("secure", handleSecureDay)}
@@ -673,30 +737,35 @@ export default function HomeScreen() {
         <Text style={styles.footerTagline}>Only discipline shows here.</Text>
       </ScrollView>
 
-      {showMilestone != null && (
+      {showMilestone != null && (() => {
+        const milestoneConfig = getMilestoneForStreak(showMilestone);
+        const title = milestoneConfig?.title ?? `${showMilestone}-Day Streak`;
+        const subtitle = milestoneConfig?.subtitle ?? "You are building discipline.";
+        return (
         <Modal visible transparent animationType="fade">
           <TouchableOpacity style={styles.freezeModalBackdrop} activeOpacity={1} onPress={() => setShowMilestone(null)} />
           <View style={styles.freezeModalCenter}>
             <View style={styles.freezeModalCard}>
-              <Text style={styles.freezeModalTitle}>{showMilestone}-Day Streak</Text>
-              <Text style={styles.freezeModalSub}>You are building discipline.</Text>
+              <Text style={styles.freezeModalTitle}>{title}</Text>
+              <Text style={styles.freezeModalSub}>{subtitle}</Text>
               <TouchableOpacity
                 style={[styles.freezeModalConfirm, { marginBottom: 8 }]}
-                onPress={() => {
+                onPress={async () => {
                   track({ name: "invite_shared", source: "milestone_modal" });
-                  const joinUrl = Linking.createURL("/(tabs)/discover");
-                  const message = `I just hit a ${showMilestone}-day streak on GRIIT. Join me: ${joinUrl}`;
-                  if (Platform.OS === "web") {
-                    try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
-                    Alert.alert("Copied", "Invite message copied.");
-                  } else {
-                    Share.share({ title: "My streak on GRIIT", message }).catch(() => {});
+                  try {
+                    const { shareMilestone } = await import("@/lib/share");
+                    await shareMilestone({
+                      streak: showMilestone,
+                      milestoneMessage: subtitle,
+                    });
+                  } catch {
+                    // User cancelled or failed
                   }
                   setShowMilestone(null);
                 }}
                 activeOpacity={0.85}
               >
-                <Text style={styles.freezeModalConfirmText}>Invite a friend</Text>
+                <Text style={styles.freezeModalConfirmText}>Share</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.freezeModalCancel]}
@@ -708,7 +777,8 @@ export default function HomeScreen() {
             </View>
           </View>
         </Modal>
-      )}
+        );
+      })()}
 
       {showFreezeModal && (
         <Modal visible transparent animationType="fade">

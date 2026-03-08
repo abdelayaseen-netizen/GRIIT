@@ -10,7 +10,6 @@ import {
   Animated,
   Platform,
   Image,
-  Share,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -41,8 +40,8 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { track } from "@/lib/analytics";
-import * as Linking from "expo-linking";
 import { getJoinedStarterIds } from "@/lib/starter-join";
 import { FLAGS } from "@/lib/feature-flags";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
@@ -394,6 +393,7 @@ export default function ChallengeDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
   const router = useRouter();
+  const { colors: themeColors } = useTheme();
   const { requireAuth } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins } = useApp();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -625,7 +625,7 @@ export default function ChallengeDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={s.loadingContainer}>
+      <View style={[s.loadingContainer, { backgroundColor: themeColors.background }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.skeletonHeader} />
         <View style={s.skeletonBody}>
@@ -644,7 +644,7 @@ export default function ChallengeDetailScreen() {
 
   if (!challenge) {
     return (
-      <SafeAreaView style={s.container} edges={["bottom"]}>
+      <SafeAreaView style={[s.container, { backgroundColor: themeColors.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Challenge not found</Text>
@@ -683,7 +683,7 @@ export default function ChallengeDetailScreen() {
     : 0;
 
   return (
-    <View style={s.container}>
+    <View style={[s.container, { backgroundColor: themeColors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
         <ScrollView
@@ -726,33 +726,22 @@ export default function ChallengeDetailScreen() {
                       {
                         text: "Share challenge",
                         onPress: () => {
-                          const message = `${challenge.title} — ${challenge.short_hook || challenge.description}. Join me on GRIIT.`;
-                          if (Platform.OS === "web") {
-                            try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
-                            Alert.alert("Copied", "Challenge details copied to clipboard.");
-                            return;
-                          }
-                          Share.share({
-                            title: challenge.title,
-                            message,
-                            // TODO: backend needs shareable challenge link (deep link or web URL)
-                          }).catch(() => {});
+                          import("@/lib/share").then(({ shareChallenge }) =>
+                            shareChallenge({
+                              name: challenge.title,
+                              duration: challenge.duration_days ?? 0,
+                              id: id ?? "",
+                              tasksPerDay: challenge.tasks?.length,
+                            })
+                          ).catch(() => {});
                         },
                       },
                       {
                         text: "Invite friends",
                         onPress: () => {
-                          const message = `Join me in "${challenge.title}" on GRIIT — build discipline daily.`;
-                          if (Platform.OS === "web") {
-                            try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
-                            Alert.alert("Copied", "Invite message copied. Share it with friends!");
-                            return;
-                          }
-                          Share.share({
-                            title: "Join my challenge",
-                            message,
-                            // TODO: needs deep link or invite endpoint for in-app join
-                          }).catch(() => {});
+                          import("@/lib/share").then(({ inviteToChallenge }) =>
+                            inviteToChallenge({ name: challenge.title, id: id ?? "" })
+                          ).catch(() => {});
                         },
                       },
                     ], { cancelable: true });
@@ -993,15 +982,10 @@ export default function ChallengeDetailScreen() {
             <TouchableOpacity
               style={s.inviteLink}
               onPress={() => {
-                const joinUrl = Linking.createURL(`/challenge/${id}`);
-                const message = `Join me in "${challenge.title}" on GRIIT — build discipline daily. ${joinUrl}`;
-                track({ name: "invite_shared", challengeId: id, source: "challenge_detail" });
-                if (Platform.OS === "web") {
-                  try { navigator.clipboard.writeText(message); } catch { /* ignore */ }
-                  Alert.alert("Copied", "Invite message copied. Share it with friends!");
-                  return;
-                }
-                Share.share({ title: "Join my challenge", message }).catch(() => {});
+                track({ name: "invite_shared", challengeId: id ?? undefined, source: "challenge_detail" });
+                import("@/lib/share").then(({ inviteToChallenge }) =>
+                  inviteToChallenge({ name: challenge.title, id: id ?? "" })
+                ).catch(() => {});
               }}
               activeOpacity={0.7}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}

@@ -20,7 +20,7 @@ const PICKER_OPTIONS = { allowsEditing: true, aspect: [4, 3] as [number, number]
 export default function TimerTaskScreen() {
   const router = useRouter();
   const { taskId, requirePhotoProof: requirePhotoProofParam } = useLocalSearchParams<{ taskId: string; requirePhotoProof?: string }>();
-  const { activeChallenge, completeTask } = useApp();
+  const { activeChallenge, completeTask, computeProgress } = useApp();
   const requirePhotoProof = requirePhotoProofParam === "true";
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -184,17 +184,22 @@ export default function TimerTaskScreen() {
         setUploading(false);
       }
 
-      await completeTask({
+      const result = await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
         value: Math.floor(seconds / 60),
         proofUrl,
       });
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Success!", `Timer completed: ${Math.floor(seconds / 60)} minutes`, [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      if (result?.firstTaskOfDay && computeProgress.totalRequired > 1) {
+        Alert.alert("Great start!", `${computeProgress.totalRequired - 1} more to secure today.`, [
+          { text: "OK", onPress: () => router.back() },
+        ]);
+      } else {
+        Alert.alert("Success!", `Timer completed: ${Math.floor(seconds / 60)} minutes`, [
+          { text: "OK", onPress: () => router.back() },
+        ]);
+      }
     } catch (error: any) {
       Alert.alert("Error", error?.message ?? "Something went wrong");
     } finally {

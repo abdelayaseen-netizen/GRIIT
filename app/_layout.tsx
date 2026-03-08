@@ -2,16 +2,17 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View, Alert } from "react-native";
+import { ActivityIndicator, View, Alert, StatusBar } from "react-native";
 import { onSessionExpired } from "@/lib/auth-expiry";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { supabase } from "@/lib/supabase";
-import { colors } from "@/src/theme/colors";
+import { LIGHT_THEME } from "@/lib/theme-palettes";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -111,10 +112,10 @@ function AuthRedirector() {
         inset: 0,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: colors.bg,
+        backgroundColor: LIGHT_THEME.background,
         zIndex: 999,
       }}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={LIGHT_THEME.accent} />
       </View>
     );
   }
@@ -227,16 +228,29 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <AuthGateProvider>
-          <ApiProvider>
-            <AppProvider>
-              <RootLayoutNav />
-              <AuthRedirector />
-            </AppProvider>
-          </ApiProvider>
-        </AuthGateProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AuthGateProvider>
+            <ApiProvider>
+              <AppProvider>
+                <ThemeAwareStatusBar />
+                <RootLayoutNav />
+                <AuthRedirector />
+              </AppProvider>
+            </ApiProvider>
+          </AuthGateProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function ThemeAwareStatusBar() {
+  const { isDark } = useTheme();
+  return (
+    <StatusBar
+      barStyle={isDark ? "light-content" : "dark-content"}
+      backgroundColor="transparent"
+    />
   );
 }

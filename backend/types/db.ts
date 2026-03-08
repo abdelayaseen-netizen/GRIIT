@@ -27,6 +27,12 @@ export interface ActiveChallengeWithTasks {
   challenges?: { challenge_tasks?: ChallengeTaskRow[] } | null;
 }
 
+/** Participation type: solo (default), duo, team daily discipline, or shared goal. */
+export type ParticipationType = "solo" | "duo" | "team" | "shared_goal";
+
+/** Run status for team/shared_goal only. Solo ignores this. */
+export type RunStatus = "waiting" | "active" | "completed" | "failed";
+
 /** Challenge row with nested challenge_tasks (list/getFeatured). */
 export interface ChallengeWithTasksRow {
   id: string;
@@ -38,7 +44,36 @@ export interface ChallengeWithTasksRow {
   created_at?: string | null;
   category?: string | null;
   challenge_tasks?: ChallengeTaskRow[] | null;
+  participation_type?: ParticipationType | null;
+  team_size?: number | null;
+  shared_goal_target?: number | null;
+  shared_goal_unit?: string | null;
+  deadline_type?: string | null;
+  deadline_date?: string | null;
+  started_at?: string | null;
+  run_status?: RunStatus | null;
   [key: string]: unknown;
+}
+
+/** challenge_members: who is in a challenge (run). */
+export interface ChallengeMemberRow {
+  id: string;
+  challenge_id: string;
+  user_id: string;
+  role: "creator" | "member";
+  status: "active" | "quit" | "failed";
+  joined_at: string;
+}
+
+/** shared_goal_logs: one contribution toward shared goal. Total = SUM(amount). */
+export interface SharedGoalLogRow {
+  id: string;
+  challenge_id: string;
+  user_id: string;
+  amount: number;
+  unit: string;
+  logged_at: string;
+  note?: string | null;
 }
 
 export interface ProfileRow {
