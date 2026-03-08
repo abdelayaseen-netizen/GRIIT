@@ -2,6 +2,32 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const JOINED_CHALLENGES_KEY = "joined_starter_challenges";
 export const DAY1_STARTED_AT_KEY = "day1_quick_win_started_at";
+export const FIRST_SESSION_JUST_FINISHED_KEY = "grit_first_session_just_finished";
+
+export async function getFirstSessionJustFinished(): Promise<boolean> {
+  try {
+    const v = await AsyncStorage.getItem(FIRST_SESSION_JUST_FINISHED_KEY);
+    return v === "1";
+  } catch {
+    return false;
+  }
+}
+
+export async function setFirstSessionJustFinished(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(FIRST_SESSION_JUST_FINISHED_KEY, "1");
+  } catch {
+    // non-critical
+  }
+}
+
+export async function clearFirstSessionJustFinished(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(FIRST_SESSION_JUST_FINISHED_KEY);
+  } catch {
+    // non-critical
+  }
+}
 
 export async function getJoinedStarterIds(): Promise<string[]> {
   try {

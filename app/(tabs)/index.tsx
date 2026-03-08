@@ -36,6 +36,7 @@ import { RETENTION_CONFIG } from "@/lib/retention-config";
 import { getMilestoneForStreak } from "@/lib/constants/milestones";
 import { getYesterdayDateKey } from "@/lib/date-utils";
 import { getHomeRetentionDerived } from "@/lib/home-derived";
+import { getFirstSessionJustFinished, clearFirstSessionJustFinished } from "@/lib/starter-join";
 import { track } from "@/lib/analytics";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -210,6 +211,7 @@ export default function HomeScreen() {
     nextTierName?: string;
   } | null>(null);
   const [showMilestone, setShowMilestone] = useState<number | null>(null);
+  const [showFirstSessionBanner, setShowFirstSessionBanner] = useState(false);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
@@ -267,6 +269,12 @@ export default function HomeScreen() {
       if (!isGuest) {
         refetchAll().then(() => fetchHomeActiveData());
       }
+      getFirstSessionJustFinished().then((justFinished) => {
+        if (justFinished) {
+          setShowFirstSessionBanner(true);
+          clearFirstSessionJustFinished();
+        }
+      });
     }, [isGuest, refetchAll, fetchHomeActiveData])
   );
 
@@ -453,6 +461,18 @@ export default function HomeScreen() {
         }
       >
         {isError && <SyncingBanner />}
+
+        {showFirstSessionBanner && (
+          <TouchableOpacity
+            style={styles.firstSessionBanner}
+            onPress={() => setShowFirstSessionBanner(false)}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.firstSessionBannerText}>
+              Welcome to GRIIT. Your first win is in the books. 🔥
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.header}>
           <View>
@@ -1504,6 +1524,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700" as const,
     color: "#fff",
+  },
+  firstSessionBanner: {
+    backgroundColor: (Colors.accentLight ?? "#FFF5F0"),
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: (Colors.accent ?? "#E87D4F") + "40",
+  },
+  firstSessionBannerText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.text.primary,
+    textAlign: "center",
   },
   recoveryBanner: {
     flexDirection: "row",

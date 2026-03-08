@@ -7,23 +7,29 @@ import {
   Modal,
   Platform,
   Alert,
+  TextInput,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CheckCircle2, Shield } from "lucide-react-native";
+import { CheckCircle2 } from "lucide-react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 import { colors, spacing, radius } from "@/src/theme/tokens";
 import { track } from "@/lib/analytics";
-import { trpcMutate } from "@/lib/trpc";
 import { useApp } from "@/contexts/AppContext";
-import { getDay1TtfvSeconds } from "@/lib/starter-join";
+import { getDay1TtfvSeconds, setFirstSessionJustFinished } from "@/lib/starter-join";
+import Celebration from "@/components/Celebration";
 
 const ACCOUNTABILITY_PROMPT_DISMISSED_KEY = "grit_accountability_prompt_dismissed";
 
+type WinStep = 1 | 2 | 3;
+
 export default function Day1QuickWinScreen() {
   const router = useRouter();
-  const { refetchAll } = useApp();
+  const { colors: themeColors } = useTheme();
+  const { completeTask, refetchAll } = useApp();
   const params = useLocalSearchParams<{
     activeChallengeId?: string;
     taskId?: string;
@@ -35,61 +41,73 @@ export default function Day1QuickWinScreen() {
     primaryGoal?: string;
     dailyTimeBudget?: string;
   }>();
+
+  const [winStep, setWinStep] = useState<WinStep>(1);
   const [taskCompleted, setTaskCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showAccountabilityPrompt, setShowAccountabilityPrompt] = useState(false);
-  const [securing, setSecuring] = useState(false);
+  const [intentionText, setIntentionText] = useState("");
+  const [completing, setCompleting] = useState(false);
 
   const activeChallengeId = params.activeChallengeId ?? "";
   const taskId = params.taskId ?? "";
   const challengeId = params.challengeId ?? "";
   const title = params.title ?? "Starter";
   const taskTitle = params.taskTitle ?? "Complete your first task";
+  const hasRealTask = !!(activeChallengeId && taskId);
+
+  const handleImReady = useCallback(() => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setWinStep(2);
+  }, []);
 
   const handleMarkComplete = useCallback(async () => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (activeChallengeId && taskId) {
-      try {
-        await trpcMutate("checkins.complete", { activeChallengeId, taskId });
+    if (completing) return;
+    setCompleting(true);
+    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    try {
+      if (hasRealTask) {
+        await completeTask({ activeChallengeId, taskId });
         await refetchAll();
-      } catch (e: any) {
-        Alert.alert("Error", e?.message ?? "Could not save completion.");
-        return;
       }
+      setTaskCompleted(true);
+      const ttfv = await getDay1TtfvSeconds();
+      track({
+        name: "day1_task_completed",
+        challengeId,
+        ...(ttfv != null && { ttfv_seconds: ttfv }),
+        ...(params.starterId && { starter_id: params.starterId }),
+        ...(params.primaryGoal && { primary_goal: params.primaryGoal }),
+        ...(params.dailyTimeBudget && { daily_time_budget: params.dailyTimeBudget }),
+      });
+      setShowCelebration(true);
+    } catch (e: unknown) {
+      Alert.alert("Error", (e as Error)?.message ?? "Could not save completion.");
+    } finally {
+      setCompleting(false);
     }
+  }, [hasRealTask, activeChallengeId, taskId, challengeId, completeTask, refetchAll, params.starterId, params.primaryGoal, params.dailyTimeBudget, completing]);
+
+  const handleIntentionDone = useCallback(async () => {
+    if (completing) return;
+    setCompleting(true);
+    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setTaskCompleted(true);
     const ttfv = await getDay1TtfvSeconds();
     track({
       name: "day1_task_completed",
-      challengeId,
+      challengeId: challengeId || "intention",
       ...(ttfv != null && { ttfv_seconds: ttfv }),
-      ...(params.starterId && { starter_id: params.starterId }),
-      ...(params.primaryGoal && { primary_goal: params.primaryGoal }),
-      ...(params.dailyTimeBudget && { daily_time_budget: params.dailyTimeBudget }),
     });
-  }, [activeChallengeId, taskId, challengeId, refetchAll, params.starterId, params.primaryGoal, params.dailyTimeBudget]);
+    setShowCelebration(true);
+    setCompleting(false);
+  }, [challengeId, completing]);
 
-  const handleSecureDay = useCallback(async () => {
-    if (!taskCompleted || securing) return;
-    setSecuring(true);
-    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    try {
-      if (activeChallengeId) {
-        await trpcMutate("checkins.secureDay", { activeChallengeId });
-        await refetchAll();
-      }
-      track({ name: "day1_secured", challengeId });
-      setShowCelebration(true);
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Could not secure day.");
-    } finally {
-      setSecuring(false);
-    }
-  }, [taskCompleted, securing, challengeId, activeChallengeId, refetchAll]);
-
-  const handleGoToHome = useCallback(async () => {
+  const handleLetsKeepGoing = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowCelebration(false);
+    await setFirstSessionJustFinished();
     try {
       const dismissed = await AsyncStorage.getItem(ACCOUNTABILITY_PROMPT_DISMISSED_KEY);
       if (dismissed === "1") {
@@ -114,81 +132,115 @@ export default function Day1QuickWinScreen() {
     router.replace("/(tabs)" as any);
   }, [router]);
 
+  const bg = themeColors.background;
+  const textPrimary = themeColors.text.primary ?? colors.textPrimary;
+  const textSecondary = themeColors.text.secondary ?? colors.textSecondary;
+  const surface = themeColors.card ?? colors.surface;
+  const borderSubtle = themeColors.border ?? colors.borderSubtle;
+  const accentOrange = themeColors.accent ?? colors.accentOrange;
+
   return (
-    <SafeAreaView style={s.container} edges={["top", "bottom"]}>
-      <View style={s.content}>
-        <Text style={s.dayLabel}>Day 1</Text>
-        <Text style={s.title}>{title}</Text>
-
-        <View style={s.taskCard}>
-          <Text style={s.taskTitle}>{taskTitle}</Text>
-          {taskCompleted ? (
-            <View style={s.completedRow}>
-              <CheckCircle2 size={22} color={colors.successGreenText} fill={colors.successGreenText} strokeWidth={0} />
-              <Text style={s.completedText}>Done</Text>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={s.markCompleteBtn}
-              onPress={handleMarkComplete}
-              activeOpacity={0.85}
-            >
-              <Text style={s.markCompleteBtnText}>Mark complete</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <TouchableOpacity
-          style={[s.secureBtn, (!taskCompleted || securing) && s.secureBtnDisabled]}
-          onPress={handleSecureDay}
-          disabled={!taskCompleted || securing}
-          activeOpacity={0.85}
-        >
-          <Text style={s.secureBtnText}>Secure Day</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Modal visible={showCelebration} transparent animationType="fade">
-        <View style={s.celebrationBackdrop}>
-          <View style={s.celebrationCard}>
-            <View style={s.celebrationIconWrap}>
-              <Shield size={48} color="#fff" fill="#fff" />
-            </View>
-            <Text style={s.celebrationTitle}>Day 1 secured.</Text>
-            <Text style={s.celebrationSub}>
-              You{"'"}re officially in motion. Come back tomorrow to protect your streak.
+    <SafeAreaView style={[s.container, { backgroundColor: bg }]} edges={["top", "bottom"]}>
+      <KeyboardAvoidingView style={s.flex1} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        {winStep === 1 && (
+          <View style={s.content}>
+            <Text style={[s.missionHeader, { color: textPrimary }]}>Let&apos;s secure your first win</Text>
+            <Text style={[s.missionBody, { color: textSecondary }]}>
+              Discipline isn&apos;t built in a day. It&apos;s built one task at a time. Let&apos;s start right now.
             </Text>
-            <View style={s.celebrationStats}>
-              <Text style={s.celebrationStatLabel}>Streak</Text>
-              <Text style={s.celebrationStatValue}>1</Text>
-            </View>
-            <View style={s.celebrationStats}>
-              <Text style={s.celebrationStatLabel}>Points</Text>
-              <Text style={s.celebrationStatValue}>+12</Text>
-            </View>
-            <TouchableOpacity style={s.goHomeBtn} onPress={handleGoToHome} activeOpacity={0.85}>
-              <Text style={s.goHomeBtnText}>Go to Home</Text>
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: accentOrange }]} onPress={handleImReady} activeOpacity={0.85}>
+              <Text style={s.primaryBtnText}>I&apos;m Ready</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        )}
+
+        {winStep === 2 && (
+          <View style={s.content}>
+            <Text style={[s.dayLabel, { color: textSecondary }]}>Day 1</Text>
+            <Text style={[s.title, { color: textPrimary }]}>{title}</Text>
+
+            {hasRealTask ? (
+              <View style={[s.taskCard, { backgroundColor: surface, borderColor: borderSubtle }]}>
+                <Text style={[s.taskTitle, { color: textPrimary }]}>{taskTitle}</Text>
+                {taskCompleted ? (
+                  <View style={s.completedRow}>
+                    <CheckCircle2 size={22} color={colors.successGreenText} fill={colors.successGreenText} strokeWidth={0} />
+                    <Text style={s.completedText}>Done</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={[s.markCompleteBtn, { backgroundColor: accentOrange }]}
+                    onPress={handleMarkComplete}
+                    disabled={completing}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={s.markCompleteBtnText}>Mark complete</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <View style={[s.taskCard, { backgroundColor: surface, borderColor: borderSubtle }]}>
+                <Text style={[s.taskTitle, { color: textPrimary }]}>Take a moment to set your intention for today</Text>
+                <Text style={[s.intentionLabel, { color: textSecondary }]}>What&apos;s one thing you want to accomplish today?</Text>
+                <TextInput
+                  style={[s.intentionInput, { color: textPrimary, borderColor: borderSubtle }]}
+                  placeholder="e.g. Finish my workout"
+                  placeholderTextColor={textSecondary}
+                  value={intentionText}
+                  onChangeText={setIntentionText}
+                  multiline
+                  maxLength={200}
+                />
+                <TouchableOpacity
+                  style={[s.markCompleteBtn, { backgroundColor: accentOrange }]}
+                  onPress={handleIntentionDone}
+                  disabled={completing}
+                  activeOpacity={0.85}
+                >
+                  <Text style={s.markCompleteBtnText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
+        {showCelebration && (
+          <>
+            <Celebration
+              visible={true}
+              onComplete={() => {}}
+              titleText="FIRST WIN! 🔥"
+              streakCount={1}
+            />
+            <View style={s.celebrationCtaWrap} pointerEvents="box-none">
+              <Text style={[s.celebrationMessage, { color: textSecondary }]}>
+                You just completed your first task on GRIIT.
+              </Text>
+              <Text style={[s.celebrationStreak, { color: textPrimary }]}>Day 1 — Your streak starts now</Text>
+              <TouchableOpacity
+                style={[s.primaryBtn, s.primaryBtnWide, { backgroundColor: accentOrange }]}
+                onPress={handleLetsKeepGoing}
+                activeOpacity={0.85}
+              >
+                <Text style={s.primaryBtnText}>Let&apos;s Keep Going</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </KeyboardAvoidingView>
 
       <Modal visible={showAccountabilityPrompt} transparent animationType="fade">
         <View style={s.celebrationBackdrop}>
-          <View style={s.celebrationCard}>
-            <Text style={s.celebrationTitle}>Want to make this easier to stick to?</Text>
-            <Text style={s.celebrationSub}>
+          <View style={[s.celebrationCard, { backgroundColor: surface }]}>
+            <Text style={[s.celebrationTitle, { color: textPrimary }]}>Want to make this easier to stick to?</Text>
+            <Text style={[s.celebrationSub, { color: textSecondary }]}>
               Add an accountability partner and stay on track together.
             </Text>
-            <TouchableOpacity style={s.goHomeBtn} onPress={handleAccountabilityAdd} activeOpacity={0.85}>
+            <TouchableOpacity style={[s.goHomeBtn, { backgroundColor: accentOrange }]} onPress={handleAccountabilityAdd} activeOpacity={0.85}>
               <Text style={s.goHomeBtnText}>Add accountability partner</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={s.secondaryBtn}
-              onPress={handleAccountabilityNotNow}
-              activeOpacity={0.85}
-            >
-              <Text style={s.secondaryBtnText}>Not now</Text>
+            <TouchableOpacity style={s.secondaryBtn} onPress={handleAccountabilityNotNow} activeOpacity={0.85}>
+              <Text style={[s.secondaryBtnText, { color: textSecondary }]}>Not now</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -200,8 +252,8 @@ export default function Day1QuickWinScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
+  flex1: { flex: 1 },
   content: {
     flex: 1,
     paddingHorizontal: spacing.screenHorizontal,
@@ -210,29 +262,51 @@ const s = StyleSheet.create({
   dayLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 4,
+  },
+  missionHeader: {
+    fontSize: 26,
+    fontWeight: "800",
+    marginBottom: 16,
+    letterSpacing: -0.5,
+  },
+  missionBody: {
+    fontSize: 16,
+    fontWeight: "500",
+    lineHeight: 24,
+    marginBottom: 32,
   },
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: colors.textPrimary,
     marginBottom: 32,
     letterSpacing: -0.5,
   },
   taskCard: {
-    backgroundColor: colors.surface,
     borderRadius: radius.card,
     padding: spacing.cardPadding,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
   },
   taskTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: colors.textPrimary,
+    marginBottom: 16,
+  },
+  intentionLabel: {
+    fontSize: 15,
+    fontWeight: "500",
+    marginBottom: 10,
+  },
+  intentionInput: {
+    borderWidth: 1,
+    borderRadius: radius.tag,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    minHeight: 80,
+    textAlignVertical: "top",
     marginBottom: 16,
   },
   completedRow: {
@@ -250,27 +324,47 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: radius.tag,
-    backgroundColor: colors.accentOrange,
   },
   markCompleteBtnText: {
     fontSize: 15,
     fontWeight: "700",
     color: "#fff",
   },
-  secureBtn: {
-    backgroundColor: colors.black,
-    paddingVertical: 20,
+  primaryBtn: {
+    paddingVertical: 18,
     borderRadius: radius.primaryButton,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 56,
   },
-  secureBtnDisabled: {
-    opacity: 0.45,
+  primaryBtnWide: {
+    width: "100%",
+    maxWidth: 280,
+    marginTop: 16,
   },
-  secureBtnText: {
+  primaryBtnText: {
     fontSize: 17,
     fontWeight: "700",
     color: "#fff",
+  },
+  celebrationCtaWrap: {
+    position: "absolute",
+    bottom: 48,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  celebrationMessage: {
+    fontSize: 15,
+    fontWeight: "500",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  celebrationStreak: {
+    fontSize: 17,
+    fontWeight: "700",
+    textAlign: "center",
   },
   celebrationBackdrop: {
     flex: 1,
@@ -280,56 +374,27 @@ const s = StyleSheet.create({
     padding: 24,
   },
   celebrationCard: {
-    backgroundColor: colors.surface,
     borderRadius: radius.cardLarge,
     padding: 32,
     width: "100%",
     maxWidth: 360,
     alignItems: "center",
   },
-  celebrationIconWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: colors.successGreenText,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
   celebrationTitle: {
     fontSize: 26,
     fontWeight: "800",
-    color: colors.textPrimary,
     marginBottom: 10,
     textAlign: "center",
   },
   celebrationSub: {
     fontSize: 15,
     fontWeight: "500",
-    color: colors.textSecondary,
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 22,
   },
-  celebrationStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  celebrationStatLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-  },
-  celebrationStatValue: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: colors.textPrimary,
-  },
   goHomeBtn: {
-    marginTop: 28,
-    backgroundColor: colors.accentOrange,
+    marginTop: 8,
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: radius.primaryButton,
@@ -350,6 +415,5 @@ const s = StyleSheet.create({
   secondaryBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    color: colors.textSecondary,
   },
 });

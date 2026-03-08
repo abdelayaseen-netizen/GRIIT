@@ -1,11 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +19,32 @@ import { track } from "@/lib/analytics";
 const GOAL_OPTIONS = ["Fitness", "Mind", "Faith", "Discipline", "Other"];
 const TIME_OPTIONS = ["3 min", "10 min", "20+ min"];
 
+function OnboardingStep4Transition({ onContinue }: { onContinue: () => void }) {
+  const doneRef = useRef(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      onContinue();
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [onContinue]);
+  const handlePress = useCallback(() => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onContinue();
+  }, [onContinue]);
+  return (
+    <>
+      <Text style={s.title}>Your challenge is set. Time for your first win.</Text>
+      <TouchableOpacity style={[s.primaryBtn, s.primaryBtnMargin]} onPress={handlePress} activeOpacity={0.85}>
+        <Text style={s.primaryBtnText}>Continue</Text>
+      </TouchableOpacity>
+    </>
+  );
+}
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ step?: string }>();
@@ -31,13 +56,52 @@ export default function OnboardingScreen() {
   const [dailyTimeBudget, setDailyTimeBudget] = useState("");
   const [selectedStarter, setSelectedStarter] = useState<OnboardingStarter | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [joinResult, setJoinResult] = useState<{ activeChallengeId: string; taskId: string; challengeId: string } | null>(null);
 
-  const handleNextStep3 = useCallback(() => {
-    if (!selectedStarter) return;
+  const goToDay1QuickWin = useCallback(() => {
+    if (!joinResult || !selectedStarter) return;
+    router.replace({
+      pathname: "/day1-quick-win",
+      params: {
+        activeChallengeId: joinResult.activeChallengeId,
+        taskId: joinResult.taskId,
+        challengeId: joinResult.challengeId,
+        title: selectedStarter.title,
+        taskTitle: selectedStarter.taskTitle,
+        taskType: selectedStarter.taskType,
+        starterId: selectedStarter.id,
+        primaryGoal: primaryGoal || undefined,
+        dailyTimeBudget: dailyTimeBudget || undefined,
+      },
+    } as any);
+  }, [joinResult, selectedStarter, primaryGoal, dailyTimeBudget, router]);
+
+  const handleNextStep3 = useCallback(async () => {
+    if (!selectedStarter || submitting) return;
+    setSubmitting(true);
     if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     track({ name: "onboarding_step_completed", step: 3, total: 4 });
-    setStep(4);
-  }, [selectedStarter]);
+    try {
+      track({ name: "starter_challenge_selected", challengeId: selectedStarter.id });
+      const result = await trpcMutate("starters.join", { starterId: selectedStarter.id }) as { activeChallengeId: string; taskId: string; challengeId: string };
+      await saveJoinedStarterId(selectedStarter.id);
+      await trpcMutate("profiles.update", {
+        onboarding_completed: true,
+        onboarding_completed_at: new Date().toISOString(),
+        primary_goal: primaryGoal || undefined,
+        daily_time_budget: dailyTimeBudget || undefined,
+        starter_challenge_id: selectedStarter.id,
+      });
+      track({ name: "onboarding_step_completed", step: 4, total: 4 });
+      await setDay1StartedAt();
+      setJoinResult(result);
+      setStep(4);
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "Something went wrong. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [selectedStarter, primaryGoal, dailyTimeBudget, submitting]);
 
   const starters = filterOnboardingStarters(primaryGoal, dailyTimeBudget);
 
@@ -55,53 +119,20 @@ export default function OnboardingScreen() {
     setStep(3);
   }, [dailyTimeBudget]);
 
-  const handleStartDay1 = useCallback(async () => {
-    if (!selectedStarter || submitting) return;
-    setSubmitting(true);
-    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      track({ name: "starter_challenge_selected", challengeId: selectedStarter.id });
-      const joinResult = await trpcMutate("starters.join", { starterId: selectedStarter.id }) as { activeChallengeId: string; taskId: string; challengeId: string };
-      await saveJoinedStarterId(selectedStarter.id);
-      await trpcMutate("profiles.update", {
-        onboarding_completed: true,
-        onboarding_completed_at: new Date().toISOString(),
-        primary_goal: primaryGoal || undefined,
-        daily_time_budget: dailyTimeBudget || undefined,
-        starter_challenge_id: selectedStarter.id,
-      });
-      track({ name: "onboarding_step_completed", step: 4, total: 4 });
-      await setDay1StartedAt();
-      router.replace({
-        pathname: "/day1-quick-win",
-        params: {
-          activeChallengeId: joinResult.activeChallengeId,
-          taskId: joinResult.taskId,
-          challengeId: joinResult.challengeId,
-          title: selectedStarter.title,
-          taskTitle: selectedStarter.taskTitle,
-          taskType: selectedStarter.taskType,
-          starterId: selectedStarter.id,
-          primaryGoal: primaryGoal || undefined,
-          dailyTimeBudget: dailyTimeBudget || undefined,
-        },
-      } as any);
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Something went wrong. Try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [selectedStarter, primaryGoal, dailyTimeBudget, submitting, router]);
-
   return (
     <SafeAreaView style={s.container} edges={["top", "bottom"]}>
       <View style={s.progressRow}>
-        <Text style={s.progressText}>{step}/4</Text>
+        <View style={s.progressDots}>
+          {[1, 2, 3, 4].map((i) => (
+            <View key={i} style={[s.progressDot, i === step && s.progressDotActive]} />
+          ))}
+        </View>
       </View>
 
       {step === 1 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={s.title}>What are you here to build?</Text>
+          <Text style={s.title}>What drives you?</Text>
+          <Text style={s.subtitle}>No one{"'"}s coming to save you. You have to do it yourself.</Text>
           <View style={s.chipRow}>
             {GOAL_OPTIONS.map((opt) => (
               <TouchableOpacity
@@ -130,7 +161,8 @@ export default function OnboardingScreen() {
 
       {step === 2 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={s.title}>How much time can you give daily?</Text>
+          <Text style={s.title}>How much time do you have?</Text>
+          <Text style={s.subtitle}>Even 3 minutes of discipline beats zero.</Text>
           <View style={s.chipRow}>
             {TIME_OPTIONS.map((opt) => (
               <TouchableOpacity
@@ -159,8 +191,8 @@ export default function OnboardingScreen() {
 
       {step === 3 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={s.title}>Pick a starter challenge</Text>
-          <Text style={s.subtitle}>One task. One day. You’ve got this.</Text>
+          <Text style={s.title}>Pick your first challenge</Text>
+          <Text style={s.subtitle}>This is Day 1. Pick one and commit.</Text>
           <View style={s.cardList}>
             {starters.slice(0, 6).map((c) => (
               <TouchableOpacity
@@ -191,27 +223,7 @@ export default function OnboardingScreen() {
 
       {step === 4 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={s.title}>Build with someone</Text>
-          <Text style={s.subtitle}>Add 1 accountability partner (optional)</Text>
-          <TouchableOpacity
-            style={[s.primaryBtn, s.primaryBtnMargin]}
-            onPress={() => router.push("/accountability/add?from=onboarding" as any)}
-            activeOpacity={0.85}
-          >
-            <Text style={s.primaryBtnText}>Add partner</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.secondaryBtn}
-            onPress={handleStartDay1}
-            disabled={submitting}
-            activeOpacity={0.85}
-          >
-            {submitting ? (
-              <ActivityIndicator color={colors.textPrimary} size="small" />
-            ) : (
-              <Text style={s.secondaryBtnText}>Skip for now</Text>
-            )}
-          </TouchableOpacity>
+          <OnboardingStep4Transition onContinue={goToDay1QuickWin} />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -226,12 +238,23 @@ const s = StyleSheet.create({
   progressRow: {
     paddingHorizontal: spacing.screenHorizontal,
     paddingTop: spacing.md,
-    alignItems: "flex-end",
+    alignItems: "center",
   },
-  progressText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
+  progressDots: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.chipFill,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  progressDotActive: {
+    backgroundColor: colors.black,
+    borderColor: colors.black,
   },
   scrollContent: {
     paddingHorizontal: spacing.screenHorizontal,
