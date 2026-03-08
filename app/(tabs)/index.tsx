@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Modal,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -216,14 +217,18 @@ export default function HomeScreen() {
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<{ currentUserRank: number | null; totalSecuredToday: number } | null>(null);
+  const [leaderboardError, setLeaderboardError] = useState(false);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [homeChallengesWithProgress, setHomeChallengesWithProgress] = useState<ChallengeWithProgress[] | null>(null);
   const [homeTotalRemaining, setHomeTotalRemaining] = useState(0);
   const [homeDataRefreshKey, setHomeDataRefreshKey] = useState(0);
+  const [homeDataError, setHomeDataError] = useState(false);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
 
   const fetchHomeActiveData = useCallback(async () => {
     if (isGuest) return;
+    setHomeDataError(false);
     try {
       const [list, checkins] = await Promise.all([
         trpcQuery(TRPC.challenges.listMyActive) as Promise<any[]>,
@@ -259,6 +264,7 @@ export default function HomeScreen() {
       setHomeChallengesWithProgress(withProgress);
       setHomeTotalRemaining(totalRemaining);
     } catch {
+      setHomeDataError(true);
       setHomeChallengesWithProgress([]);
       setHomeTotalRemaining(0);
     }
@@ -282,14 +288,24 @@ export default function HomeScreen() {
     if (refreshing === false && initialFetchDone) setHomeDataRefreshKey((k) => k + 1);
   }, [refreshing, initialFetchDone]);
 
+  const fetchLeaderboard = useCallback(() => {
+    if (isGuest) return;
+    setLeaderboardLoading(true);
+    setLeaderboardError(false);
+    trpcQuery("leaderboard.getWeekly")
+      .then((data: any) => {
+        setLeaderboardData({
+          currentUserRank: data?.currentUserRank ?? null,
+          totalSecuredToday: data?.totalSecuredToday ?? 0,
+        });
+      })
+      .catch(() => setLeaderboardError(true))
+      .finally(() => setLeaderboardLoading(false));
+  }, [isGuest]);
+
   useEffect(() => {
-    trpcQuery("leaderboard.getWeekly").then((data: any) => {
-      setLeaderboardData({
-        currentUserRank: data?.currentUserRank ?? null,
-        totalSecuredToday: data?.totalSecuredToday ?? 0,
-      });
-    }).catch(() => {});
-  }, [isGuest, stats?.activeStreak]);
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
 
   const todayKey = todayDateLocal;
   const hasActiveChallenge = !!activeChallenge && !!challenge;
@@ -394,12 +410,7 @@ export default function HomeScreen() {
           setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 200);
         }
       }
-      void trpcQuery("leaderboard.getWeekly").then((data: any) => {
-        setLeaderboardData({
-          currentUserRank: data?.currentUserRank ?? null,
-          totalSecuredToday: data?.totalSecuredToday ?? 0,
-        });
-      }).catch(() => {});
+      void fetchLeaderboard();
       const currentDay = activeChallenge?.current_day || 1;
       fetchHomeActiveData();
       setTimeout(() => {
@@ -420,7 +431,7 @@ export default function HomeScreen() {
       setCelebrationPayload(null);
       Alert.alert("Error", "Couldn't secure day. Try again.");
     }
-  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, fetchHomeActiveData]);
+  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, fetchHomeActiveData, fetchLeaderboard]);
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
@@ -530,10 +541,26 @@ export default function HomeScreen() {
               disciplinePointsLabel={tierName ? `${tierName} · ${stats?.totalDaysSecured ?? 0} days secured` : undefined}
             />
             <ExploreChallengesButton />
-            <ActiveChallenges
-              challengesWithProgress={homeChallengesWithProgress}
-              refreshKey={homeDataRefreshKey}
-            />
+            {homeDataError ? (
+              <View style={styles.yourPositionCard}>
+                <AlertTriangle size={28} color={Colors.text.tertiary} />
+                <Text style={styles.yourPositionLabel}>CHALLENGES</Text>
+                <Text style={styles.yourPositionText}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
+                <TouchableOpacity
+                  style={styles.secureNowButton}
+                  onPress={() => fetchHomeActiveData()}
+                  activeOpacity={0.85}
+                >
+                  <RefreshCw size={18} color="#fff" />
+                  <Text style={styles.secureNowButtonText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ActiveChallenges
+                challengesWithProgress={homeChallengesWithProgress}
+                refreshKey={homeDataRefreshKey}
+              />
+            )}
           </>
         )}
 
@@ -727,7 +754,26 @@ export default function HomeScreen() {
           <Text style={styles.liveSub}>People are moving</Text>
         </View>
 
-        {leaderboardData?.currentUserRank != null ? (
+        {!isGuest && leaderboardError ? (
+          <View style={styles.yourPositionCard}>
+            <AlertTriangle size={28} color={Colors.text.tertiary} />
+            <Text style={styles.yourPositionLabel}>LEADERBOARD</Text>
+            <Text style={styles.yourPositionText}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
+            <TouchableOpacity
+              style={styles.secureNowButton}
+              onPress={() => fetchLeaderboard()}
+              activeOpacity={0.85}
+            >
+              <RefreshCw size={18} color="#fff" />
+              <Text style={styles.secureNowButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : !isGuest && leaderboardLoading && leaderboardData == null ? (
+          <View style={styles.yourPositionCard}>
+            <ActivityIndicator size="small" color={Colors.accent} style={{ marginVertical: 8 }} />
+            <Text style={styles.yourPositionText}>Loading leaderboard…</Text>
+          </View>
+        ) : leaderboardData?.currentUserRank != null ? (
           <View style={styles.yourPositionCard}>
             <Target size={28} color={Colors.accent} />
             <Text style={styles.yourPositionLabel}>YOUR POSITION</Text>

@@ -402,7 +402,7 @@ export default function ChallengeDetailScreen() {
   const { colors: themeColors } = useTheme();
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
-  const { activeChallenge, todayCheckins, refetchTodayCheckins } = useApp();
+  const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
   const currentUserId = user?.id ?? undefined;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
@@ -422,6 +422,7 @@ export default function ChallengeDetailScreen() {
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [joinPending] = useState(false);
+  const [leavePending, setLeavePending] = useState(false);
   const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
 
@@ -684,6 +685,34 @@ export default function ChallengeDetailScreen() {
       setRefreshing(false);
     }
   }, [id, isStarter, isJoined, refetchTodayCheckins, refreshing]);
+
+  const handleLeave = useCallback(() => {
+    if (!id || isStarter || leavePending) return;
+    Alert.alert(
+      "Leave Challenge",
+      "Are you sure you want to leave this challenge? You will lose your progress.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Leave",
+          style: "destructive",
+          onPress: async () => {
+            setLeavePending(true);
+            try {
+              await trpcMutate(TRPC.challenges.leave, { challengeId: id });
+              await refetchAll();
+              await refetchTodayCheckins();
+              router.replace("/(tabs)" as any);
+            } catch (e: unknown) {
+              Alert.alert("Error", (e as Error)?.message ?? "Could not leave challenge.");
+            } finally {
+              setLeavePending(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [id, isStarter, leavePending, refetchAll, refetchTodayCheckins, router]);
 
   if (isLoading) {
     return (
@@ -1083,8 +1112,20 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Leave Challenge: hidden until backend supports challenges.leave */}
-            {/* When ready, re-enable with trpcMutate("challenges.leave", { challengeId: id }) + refetch */}
+            {isJoined && !isStarter && id && (
+              <TouchableOpacity
+                style={[s.leaveBtn, { borderWidth: 1, borderColor: themeColors.border, borderRadius: 12 }]}
+                onPress={handleLeave}
+                disabled={leavePending}
+                activeOpacity={0.7}
+              >
+                {leavePending ? (
+                  <ActivityIndicator size="small" color={themeColors.text?.secondary} />
+                ) : (
+                  <Text style={s.leaveBtnText}>Leave Challenge</Text>
+                )}
+              </TouchableOpacity>
+            )}
 
             <View style={s.bottomSpacer} />
           </View>

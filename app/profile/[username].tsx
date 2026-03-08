@@ -63,23 +63,36 @@ export default function PublicProfileScreen() {
     );
   }
 
+  if (isError) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <Text style={[styles.text, { color: colors.text.secondary }]}>Couldn&apos;t load profile. Check your connection and try again.</Text>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: colors.accent }]}
+            onPress={() => {
+              setIsError(false);
+              setIsLoading(true);
+              trpcQuery("profiles.getPublicByUsername", { username: decoded })
+                .then((data) => setProfile(data as PublicProfile | null))
+                .catch(() => setIsError(true))
+                .finally(() => setIsLoading(false));
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  }
+
   if (!profile) {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.centered, { backgroundColor: colors.background }]}>
           <Text style={[styles.text, { color: colors.text.secondary }]}>Profile not found</Text>
-        </View>
-      </>
-    );
-  }
-
-  if (isError) {
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={[styles.centered, { backgroundColor: colors.background }]}>
-          <Text style={[styles.text, { color: colors.text.secondary }]}>Could not load profile</Text>
         </View>
       </>
     );
@@ -142,6 +155,17 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
   },
   displayName: {
     fontSize: 24,

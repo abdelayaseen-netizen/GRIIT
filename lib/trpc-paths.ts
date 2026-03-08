@@ -24,6 +24,7 @@ export const TRPC = {
     getStarterPack: 'challenges.getStarterPack',
     getById: 'challenges.getById',
     join: 'challenges.join',
+    leave: 'challenges.leave',
     getActive: 'challenges.getActive',
     listMyActive: 'challenges.listMyActive',
     create: 'challenges.create',

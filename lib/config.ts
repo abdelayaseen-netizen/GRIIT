@@ -9,9 +9,17 @@ const DEEP_LINK_BASE_URL =
 
 export { DEEP_LINK_BASE_URL };
 
-/** App Store / Play Store URLs for share flows. Update iOS id when live. */
+/** App Store search fallback when no app ID (opens App Store search for "GRIIT"). */
+const APP_STORE_SEARCH_FALLBACK = "https://apps.apple.com/us/search?term=GRIIT";
+
+/** Play Store URL; use env override if package changes. */
+const PLAY_STORE_PACKAGE = (typeof process !== "undefined" && (process.env as Record<string, string | undefined>)?.EXPO_PUBLIC_PLAY_STORE_PACKAGE) || "app.grit.challenge_tracker";
+
+/** App Store / Play Store URLs for share flows. Set EXPO_PUBLIC_APPLE_APP_ID when live. */
 export const APP_STORE_URLS = {
-  ios: "https://apps.apple.com/app/griit/idXXXXXX",
-  android: "https://play.google.com/store/apps/details?id=app.grit.challenge_tracker",
+  ios: (typeof process !== "undefined" && (process.env as Record<string, string | undefined>)?.EXPO_PUBLIC_APPLE_APP_ID)
+    ? `https://apps.apple.com/app/id${(process.env as Record<string, string>).EXPO_PUBLIC_APPLE_APP_ID}`
+    : APP_STORE_SEARCH_FALLBACK,
+  android: `https://play.google.com/store/apps/details?id=${PLAY_STORE_PACKAGE}`,
   default: DEEP_LINK_BASE_URL,
 } as const;

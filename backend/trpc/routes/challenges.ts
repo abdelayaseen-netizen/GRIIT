@@ -405,6 +405,40 @@ export const challengesRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
     }),
 
+  /** Leave a challenge: remove active_challenge (and cascade check_ins) or remove from challenge_members if team waiting. */
+  leave: protectedProcedure
+    .input(z.object({ challengeId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: ac } = await ctx.supabase
+        .from("active_challenges")
+        .select("id")
+        .eq("user_id", ctx.userId)
+        .eq("challenge_id", input.challengeId)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (ac) {
+        const { error: delErr } = await ctx.supabase
+          .from("active_challenges")
+          .delete()
+          .eq("id", ac.id);
+        if (delErr) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
+        }
+        return { left: true };
+      }
+
+      const { error: memberErr } = await ctx.supabase
+        .from("challenge_members")
+        .delete()
+        .eq("challenge_id", input.challengeId)
+        .eq("user_id", ctx.userId);
+      if (memberErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
+      }
+      return { left: true };
+    }),
+
   getActive: protectedProcedure
     .query(async ({ ctx }) => {
       const { data, error } = await ctx.supabase
