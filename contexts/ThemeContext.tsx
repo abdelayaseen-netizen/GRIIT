@@ -18,7 +18,7 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemColorScheme = useColorScheme();
-  const [mode, setModeState] = useState<ThemeMode>("system");
+  const [mode, setModeState] = useState<ThemeMode>("dark");
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isDark = useMemo(() => {
-    if (!hydrated) return false;
+    if (!hydrated) return true;
     if (mode === "light") return false;
     if (mode === "dark") return true;
     return systemColorScheme === "dark";

@@ -150,6 +150,7 @@ export function validateDraftTasks(
 export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, unknown> {
   const partType = draft.participationType ?? "solo";
   let durationDays = getDurationFromDraft(draft.type, draft.durationDays, draft.customDuration);
+  if (draft.type === "standard" && durationDays < 1) durationDays = 1;
   if (partType === "shared_goal" && draft.deadlineDate && (draft.deadlineType === "soft" || draft.deadlineType === "hard")) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

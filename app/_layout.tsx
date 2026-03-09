@@ -13,12 +13,27 @@ import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { supabase } from "@/lib/supabase";
-import { LIGHT_THEME } from "@/lib/theme-palettes";
 
 SplashScreen.preventAutoHideAsync();
 
 const PROFILE_CHECK_TIMEOUT_MS = 2500;
 const SPLASH_MAX_MS = 1800;
+
+function AuthRedirectorLoading() {
+  const { colors } = useTheme();
+  return (
+    <View style={{
+      position: "absolute",
+      inset: 0,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: colors.background,
+      zIndex: 999,
+    }}>
+      <ActivityIndicator size="large" color={colors.accent} />
+    </View>
+  );
+}
 
 function AuthRedirector() {
   const { user, loading } = useAuth();
@@ -107,18 +122,7 @@ function AuthRedirector() {
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, router]);
 
   if (loading || (user && !profileChecked)) {
-    return (
-      <View style={{
-        position: "absolute",
-        inset: 0,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: LIGHT_THEME.background,
-        zIndex: 999,
-      }}>
-        <ActivityIndicator size="large" color={LIGHT_THEME.accent} />
-      </View>
-    );
+    return <AuthRedirectorLoading />;
   }
 
   return null;

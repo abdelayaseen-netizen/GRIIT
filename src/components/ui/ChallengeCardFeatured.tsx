@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Calendar, BookOpen, Users, ChevronRight, Sparkles } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Easy: { bg: t.colors.badgeGreenBg, text: t.colors.badgeGreenText },
@@ -34,10 +35,11 @@ function ChallengeCardFeaturedInner(props: {
     activeTodayCount,
     onPress,
   } = props;
+  const { colors: themeColors } = useTheme();
   const diff = DIFF_STYLES[difficulty] ?? DIFF_STYLES.Medium;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n));
   return (
-    <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={[s.card, { backgroundColor: themeColors.card }]} onPress={onPress} activeOpacity={0.85}>
       <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.topRow}>

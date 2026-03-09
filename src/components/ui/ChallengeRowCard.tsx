@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, Users, Target } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
+import { useTheme } from "@/contexts/ThemeContext";
 
 function ChallengeRowCardInner(props: {
   title: string;
@@ -35,8 +36,9 @@ function ChallengeRowCardInner(props: {
   const isTeam = participationType === "team";
   const isSharedGoal = participationType === "shared_goal";
   const badgeLabel = isTeam && teamSize != null ? `Team · ${teamSize} people` : isSharedGoal && sharedGoalTarget != null && sharedGoalUnit ? `Shared Goal · ${sharedGoalTarget} ${sharedGoalUnit}` : null;
+  const { colors: themeColors } = useTheme();
   return (
-    <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={[s.card, { backgroundColor: themeColors.card }]} onPress={onPress} activeOpacity={0.85}>
       <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.header}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Users, ChevronRight, Clock } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
+import { useTheme } from "@/contexts/ThemeContext";
 
 function useCountdown(endsAt: string | null): string {
   const [text, setText] = useState(() => formatCountdown(endsAt));
@@ -44,8 +45,9 @@ function ChallengeCard24hInner(p: {
   const countdown = p.endsAt != null ? countdownFromHook : (p.countdownText ?? "--:--:--");
   const diff = DIFF_STYLES[p.difficulty] ?? DIFF_STYLES.Medium;
   const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+  const { colors: themeColors } = useTheme();
   return (
-    <TouchableOpacity style={s.card} onPress={p.onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={[s.card, { backgroundColor: themeColors.card }]} onPress={p.onPress} activeOpacity={0.85}>
       <View style={[s.stripe, { backgroundColor: p.stripeColor }]} />
       <View style={s.body}>
         <View style={s.topRow}>

@@ -454,14 +454,22 @@ export default function CreateScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
+        const id = challenge?.id ?? challenge?.data?.id;
+        if (!id) {
+          setSubmitStatus('error');
+          Alert.alert("Create succeeded", "Challenge was created. Opening it now.", [
+            { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+          ]);
+          return;
+        }
         router.push({
           pathname: "/success" as any,
           params: {
-            challengeId: challenge.id,
-            title: challenge.title,
-            duration: String(challenge.duration_days ?? getDuration()),
-            tasksCount: String(challenge.tasks?.length ?? tasks.length),
-            difficulty: challenge.difficulty ?? "medium",
+            challengeId: id,
+            title: challenge?.title ?? title,
+            duration: String(challenge?.duration_days ?? getDuration()),
+            tasksCount: String(challenge?.tasks?.length ?? tasks.length),
+            difficulty: challenge?.difficulty ?? "medium",
             isCreateSuccess: "true",
             waitingForTeam: isTeamOrShared ? "true" : undefined,
           },
@@ -499,7 +507,9 @@ export default function CreateScreen() {
           setRecoveryMessage('Cannot reach server. The backend may be starting up.');
           setShowRecoveryModal(true);
         } else {
-          Alert.alert(errorInfo.title, errorInfo.message, [
+          const title = errorInfo.title || "Create failed";
+          const message = errorInfo.message || (error?.message ?? "Something went wrong. Please try again.");
+          Alert.alert(title, message, [
             { text: "OK", style: "cancel" as const },
           ]);
         }

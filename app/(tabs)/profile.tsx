@@ -47,7 +47,7 @@ import {
 } from "@/components/profile";
 import type { AchievementItem } from "@/components/profile";
 
-const LOADING_TIMEOUT_MS = 10000;
+const LOADING_TIMEOUT_MS = 5000;
 
 type StravaActivity = {
   id: number;
@@ -246,9 +246,7 @@ export default function ProfileScreen() {
     profileMissing,
     autoCreateError,
     stats,
-    isLoading,
     isError,
-    initialFetchDone,
     refetchAll,
   } = useApp();
   const [refreshing, setRefreshing] = useState(false);
@@ -258,12 +256,14 @@ export default function ProfileScreen() {
   const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
   const [accountabilityCount, setAccountabilityCount] = useState(0);
   const [dashboardDataLoading, setDashboardDataLoading] = useState(true);
+  const [dashboardDataError, setDashboardDataError] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerFade = useRef(new Animated.Value(0)).current;
 
   const styles = useMemo(() => createProfileStyles(colors), [colors]);
 
   const fetchDashboardData = useCallback(async () => {
+    setDashboardDataError(false);
     setDashboardDataLoading(true);
     try {
       const [completed, dates, lb, acc] = await Promise.all([
@@ -277,6 +277,7 @@ export default function ProfileScreen() {
       setLeaderboardRank(lb?.currentUserRank ?? null);
       setAccountabilityCount(Array.isArray(acc?.accepted) ? acc.accepted.length : 0);
     } catch {
+      setDashboardDataError(true);
       setCompletedChallengesList([]);
       setSecuredDateKeys([]);
       setLeaderboardRank(null);
@@ -287,12 +288,11 @@ export default function ProfileScreen() {
   }, []);
 
   useEffect(() => {
-    if (isGuest || !profile) return;
+    if (isGuest) return;
     fetchDashboardData();
-  }, [isGuest, profile, fetchDashboardData]);
+  }, [isGuest, fetchDashboardData]);
 
-  const stillLoading =
-    (isLoading && !initialFetchDone) || (profileLoading && !profile);
+  const stillLoading = (profileLoading && !profile) || (!profile && !isError && !loadingTimedOut);
 
   useEffect(() => {
     if (stillLoading) {
@@ -412,7 +412,7 @@ export default function ProfileScreen() {
 
   if (stillLoading && !loadingTimedOut) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <ProfileSkeleton />
         </ScrollView>
@@ -486,7 +486,7 @@ export default function ProfileScreen() {
 
   if (!profile) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <ProfileSkeleton />
         </ScrollView>
@@ -553,6 +553,15 @@ export default function ProfileScreen() {
         <AchievementsSection achievements={achievements} loading={dashboardDataLoading} />
 
         <CompletedChallengesSection challenges={completedChallengesList} loading={dashboardDataLoading} />
+
+        {dashboardDataError && (
+          <View style={[styles.errorCard, { marginHorizontal: 20, marginTop: 16 }]}>
+            <Text style={[styles.errorSubtitle, { marginBottom: 12 }]}>Couldn&apos;t load some sections.</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => fetchDashboardData()} activeOpacity={0.7}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <SocialStatsCard
           friendRank={leaderboardRank}
@@ -641,6 +650,7 @@ export default function ProfileScreen() {
 }
 
 function ProfileSkeleton() {
+  const { colors } = useTheme();
   return (
     <View>
       <View style={skeletonStyles.header}>
@@ -658,7 +668,7 @@ function ProfileSkeleton() {
       </View>
       <View style={skeletonStyles.statsRow}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <View key={i} style={skeletonStyles.statItem}>
+          <View key={i} style={[skeletonStyles.statItem, { backgroundColor: colors.card }]}>
             <Skeleton width={32} height={32} borderRadius={16} />
             <Skeleton width={32} height={22} borderRadius={4} style={{ marginTop: 8 }} />
             <Skeleton width={40} height={10} borderRadius={4} style={{ marginTop: 4 }} />
@@ -703,7 +713,6 @@ const skeletonStyles = StyleSheet.create({
   },
   statItem: {
     flex: 1,
-    backgroundColor: "#fff",
     borderRadius: 14,
     padding: 14,
     alignItems: "center",

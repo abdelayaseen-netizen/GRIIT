@@ -91,10 +91,12 @@ function SkeletonPulse({ style }: { style: any }) {
   return <Animated.View style={[style, { opacity: animValue }]} />;
 }
 
-function SkeletonCard({ featured }: { featured: boolean }) {
+function SkeletonCard({ featured, cardColor }: { featured: boolean; cardColor?: string }) {
+  const { colors } = useTheme();
+  const bg = cardColor ?? colors.card;
   if (featured) {
     return (
-      <View style={styles.skeletonFeaturedCard}>
+      <View style={[styles.skeletonFeaturedCard, { backgroundColor: bg }]}>
         <View style={styles.skeletonAccent} />
         <View style={styles.skeletonFeaturedContent}>
           <View style={styles.skeletonTopRow}>
@@ -114,7 +116,7 @@ function SkeletonCard({ featured }: { featured: boolean }) {
   }
 
   return (
-    <View style={styles.skeletonCompactCard}>
+    <View style={[styles.skeletonCompactCard, { backgroundColor: bg }]}>
       <View style={styles.skeletonCompactBar} />
       <View style={styles.skeletonCompactContent}>
         <SkeletonPulse style={styles.skeletonCompactTitle} />
@@ -125,7 +127,7 @@ function SkeletonCard({ featured }: { featured: boolean }) {
   );
 }
 
-function SkeletonList() {
+function SkeletonList({ cardColor }: { cardColor?: string }) {
   return (
     <ScrollView
       style={styles.scroll}
@@ -150,7 +152,7 @@ function SkeletonList() {
         </View>
         <View style={styles.featuredList}>
           {[0, 1, 2].map((i) => (
-            <SkeletonCard key={`sf-${i}`} featured />
+            <SkeletonCard key={`sf-${i}`} featured cardColor={cardColor} />
           ))}
         </View>
       </View>
@@ -185,7 +187,8 @@ export default function DiscoverScreen() {
       if (searchQuery) params.search = searchQuery;
       if (activeCategory !== "all") params.category = activeCategory;
       const data = await trpcQuery('challenges.getFeatured', params);
-      setFeaturedData(data || []);
+      const list = Array.isArray(data) ? data : (data as { items?: unknown[] })?.items ?? [];
+      setFeaturedData(list);
       setFeaturedError(false);
     } catch {
       setFeaturedError(true);
@@ -336,16 +339,17 @@ export default function DiscoverScreen() {
 
   const renderContent = () => {
     if (isLoading) {
-      return <SkeletonList />;
+      return <SkeletonList cardColor={colors.card} />;
     }
 
     if (totalVisible === 0) {
+      const isFiltered = Boolean(searchQuery || activeCategory !== "all");
       return (
         <EmptyState
-          title="No challenges found"
-          subtitle={searchQuery ? "Try a different search or category" : "New challenges are being added. Check back soon!"}
-          primaryCtaLabel={searchQuery ? "Clear search" : "Start your first challenge ›"}
-          onPrimaryCta={searchQuery ? clearSearch : () => { setActiveCategory("all"); handleRefresh(); }}
+          title={isFiltered ? "No challenges found" : "No challenges yet. Be the first to create one!"}
+          subtitle={searchQuery ? "Try a different search or category" : activeCategory !== "all" ? "Try another category or clear filters." : "Create a challenge and invite others to join."}
+          primaryCtaLabel={searchQuery ? "Clear search" : isFiltered ? "Clear filters" : "Create challenge"}
+          onPrimaryCta={searchQuery ? clearSearch : isFiltered ? () => { setActiveCategory("all"); setSearchQuery(""); handleRefresh(); } : () => router.push("/(tabs)/create" as any)}
           secondaryCtaLabel="Refresh"
           onSecondaryCta={handleRefresh}
         />
@@ -490,8 +494,8 @@ export default function DiscoverScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Discover</Text>
-        <Text style={styles.subtitle}>Find challenges worth committing to</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Discover</Text>
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>Find challenges worth committing to</Text>
       </View>
 
       <View style={styles.searchRow}>
