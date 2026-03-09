@@ -14,10 +14,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/colors';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { colors: themeColors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -67,7 +69,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -77,17 +79,17 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.logo}>GRIIT</Text>
-            <Text style={styles.tagline}>Find your next commitment.</Text>
+            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIIT</Text>
+            <Text style={[styles.tagline, { color: themeColors.text.secondary }]}>Find your next commitment.</Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={[styles.label, { color: themeColors.text.primary }]}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
                 placeholder="your@email.com"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={themeColors.text.tertiary}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -98,11 +100,11 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={[styles.label, { color: themeColors.text.primary }]}>Password</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
                 placeholder="••••••••"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={themeColors.text.tertiary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -112,7 +114,7 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[styles.button, { backgroundColor: themeColors.accent }, loading && styles.buttonDisabled]}
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.8}
@@ -125,18 +127,18 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: themeColors.border }]} />
+              <Text style={[styles.dividerText, { color: themeColors.text.tertiary }]}>or</Text>
+              <View style={[styles.dividerLine, { backgroundColor: themeColors.border }]} />
             </View>
 
             <TouchableOpacity
-              style={styles.secondaryButton}
+              style={[styles.secondaryButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
               onPress={() => router.push('/auth/signup' as any)}
               disabled={loading}
               activeOpacity={0.8}
             >
-              <Text style={styles.secondaryButtonText}>Create Account</Text>
+              <Text style={[styles.secondaryButtonText, { color: themeColors.text.primary }]}>Create Account</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

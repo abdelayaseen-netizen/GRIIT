@@ -29,12 +29,12 @@ export type ThemeColors = {
 };
 
 export const LIGHT_THEME: ThemeColors = {
-  background: "#F7F6F3",
+  background: "#F8F8F8",
   card: "#FFFFFF",
   text: {
-    primary: "#111111",
-    secondary: "#5A5A5A",
-    tertiary: "#8E8E8E",
+    primary: "#000000",
+    secondary: "#333333",
+    tertiary: "#5A5A5A",
     muted: "#B5B5B5",
   },
   accent: "#E87D4F",
@@ -72,7 +72,7 @@ export const DARK_THEME: ThemeColors = {
   background: "#0A0A0A",
   card: "#1A1A1A",
   text: {
-    primary: "#F5F5F5",
+    primary: "#FFFFFF",
     secondary: "#A0A0A0",
     tertiary: "#737373",
     muted: "#525252",

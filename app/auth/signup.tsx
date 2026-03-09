@@ -15,10 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { track } from '@/lib/analytics';
+import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/colors';
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { colors: themeColors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -121,7 +123,7 @@ export default function SignupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -131,17 +133,17 @@ export default function SignupScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.logo}>GRIIT</Text>
-            <Text style={styles.tagline}>Find your next commitment.</Text>
+            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIIT</Text>
+            <Text style={[styles.tagline, { color: themeColors.text.secondary }]}>Find your next commitment.</Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={[styles.label, { color: themeColors.text.primary }]}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
                 placeholder="your@email.com"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={themeColors.text.tertiary}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -152,11 +154,11 @@ export default function SignupScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={[styles.label, { color: themeColors.text.primary }]}>Password</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
                 placeholder="At least 6 characters"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={themeColors.text.tertiary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -166,11 +168,11 @@ export default function SignupScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirm Password</Text>
+              <Text style={[styles.label, { color: themeColors.text.primary }]}>Confirm Password</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
                 placeholder="Re-enter password"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={themeColors.text.tertiary}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -180,7 +182,7 @@ export default function SignupScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.button, (loading || cooldown > 0) && styles.buttonDisabled]}
+              style={[styles.button, { backgroundColor: themeColors.accent }, (loading || cooldown > 0) && styles.buttonDisabled]}
               onPress={handleSignup}
               disabled={loading || cooldown > 0}
               testID="signup-button"
@@ -199,9 +201,9 @@ export default function SignupScreen() {
             </TouchableOpacity>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
+              <Text style={[styles.footerText, { color: themeColors.text.secondary }]}>Already have an account? </Text>
               <TouchableOpacity onPress={() => router.back()} disabled={loading}>
-                <Text style={styles.footerLink}>Sign In</Text>
+                <Text style={[styles.footerLink, { color: themeColors.accent }]}>Sign In</Text>
               </TouchableOpacity>
             </View>
           </View>
