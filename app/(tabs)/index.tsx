@@ -57,16 +57,19 @@ function getTimeUntilMidnight(): { hours: number; minutes: number } {
 }
 
 function SyncingBanner() {
+  const { colors } = useTheme();
   return (
-    <View style={syncingBannerStyles.wrap}>
-      <RefreshCw size={14} color={Colors.accent} />
-      <Text style={syncingBannerStyles.text}>Syncing... we{"'"}ll update when you{"'"}re back online.</Text>
+    <View style={[syncingBannerStyles.wrap, { backgroundColor: colors.accentLight, borderColor: colors.accent + "30" }]}>
+      <RefreshCw size={14} color={colors.accent} />
+      <Text style={[syncingBannerStyles.text, { color: colors.text.secondary }]}>Syncing... we{"'"}ll update when you{"'"}re back online.</Text>
     </View>
   );
 }
 
-function AnimatedProgressBar({ progress, color }: { progress: number; color: string }) {
+function AnimatedProgressBar({ progress, color, trackBg }: { progress: number; color: string; trackBg?: string }) {
   const widthAnim = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
+  const bg = trackBg ?? colors.pill;
 
   useEffect(() => {
     Animated.timing(widthAnim, {
@@ -82,7 +85,7 @@ function AnimatedProgressBar({ progress, color }: { progress: number; color: str
   });
 
   return (
-    <View style={progressStyles.track}>
+    <View style={[progressStyles.track, { backgroundColor: bg }]}>
       <Animated.View style={[progressStyles.fill, { width: barWidth, backgroundColor: color }]} />
     </View>
   );
@@ -97,6 +100,7 @@ function TaskRow({
   completed: boolean;
   index: number;
 }) {
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const checkAnim = useRef(new Animated.Value(completed ? 1 : 0)).current;
   const rowScale = useRef(new Animated.Value(1)).current;
@@ -158,22 +162,23 @@ function TaskRow({
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: Colors.streak.shield, opacity: pulseOpacity, borderRadius: 10 },
+          { backgroundColor: colors.streak.shield, opacity: pulseOpacity, borderRadius: 10 },
         ]}
         pointerEvents="none"
       />
       <Animated.View style={{ transform: [{ scale: checkScale }] }}>
         <CheckCircle2
           size={20}
-          color={completed ? Colors.streak.shield : Colors.border}
-          fill={completed ? Colors.streak.shield : "transparent"}
+          color={completed ? colors.streak.shield : colors.border}
+          fill={completed ? colors.streak.shield : "transparent"}
           strokeWidth={completed ? 0 : 1.5}
         />
       </Animated.View>
       <Text
         style={[
           taskStyles.title,
-          completed && taskStyles.titleCompleted,
+          { color: colors.text.primary },
+          completed && { color: colors.text.tertiary },
         ]}
         numberOfLines={1}
       >
@@ -341,10 +346,10 @@ export default function HomeScreen() {
   }, [challenge?.challenge_tasks, todayCheckins]);
 
   const progressColor = daySecured
-    ? Colors.streak.shield
+    ? themeColors.streak.shield
     : computeProgress.progress >= 50
-    ? Colors.accent
-    : Colors.text.muted;
+    ? themeColors.accent
+    : themeColors.text.muted;
 
   useEffect(() => {
     if (showComebackMode) {
@@ -475,11 +480,11 @@ export default function HomeScreen() {
 
         {showFirstSessionBanner && (
           <TouchableOpacity
-            style={styles.firstSessionBanner}
+            style={[styles.firstSessionBanner, { backgroundColor: themeColors.accentLight, borderColor: themeColors.accent + "40" }]}
             onPress={() => setShowFirstSessionBanner(false)}
             activeOpacity={0.9}
           >
-            <Text style={styles.firstSessionBannerText}>
+            <Text style={[styles.firstSessionBannerText, { color: themeColors.text.primary }]}>
               Welcome to GRIIT. Your first win is in the books. 🔥
             </Text>
           </TouchableOpacity>
@@ -487,26 +492,26 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View>
-            <Text style={styles.logo}>GRIIT</Text>
-            <Text style={styles.logoSubtitle}>Build Discipline Daily</Text>
+            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIIT</Text>
+            <Text style={[styles.logoSubtitle, { color: themeColors.text.tertiary }]}>Build Discipline Daily</Text>
           </View>
           <View style={styles.headerBadges}>
             <View style={styles.headerBadge}>
-              <TrendingUp size={14} color={Colors.text.tertiary} />
-              <Text style={styles.headerBadgeText}>{stats?.longestStreak ?? 0}</Text>
+              <TrendingUp size={14} color={themeColors.text.tertiary} />
+              <Text style={[styles.headerBadgeText, { color: themeColors.text.secondary }]}>{stats?.longestStreak ?? 0}</Text>
             </View>
             <View style={styles.headerBadge}>
-              <Flame size={14} color={Colors.accent} />
-              <Text style={styles.headerBadgeText}>{currentStreak}</Text>
+              <Flame size={14} color={themeColors.accent} />
+              <Text style={[styles.headerBadgeText, { color: themeColors.text.secondary }]}>{currentStreak}</Text>
             </View>
           </View>
         </View>
 
         {showRecoveryBanner && (
-          <View style={styles.recoveryBanner}>
-            <AlertTriangle size={18} color={Colors.warning ?? Colors.accent} />
+          <View style={[styles.recoveryBanner, { backgroundColor: themeColors.warningLight, borderColor: themeColors.warning + "40" }]}>
+            <AlertTriangle size={18} color={themeColors.warning ?? themeColors.accent} />
             <View style={styles.recoveryBannerTextWrap}>
-              <Text style={styles.recoveryBannerTitle}>
+              <Text style={[styles.recoveryBannerTitle, { color: themeColors.text.primary }]}>
                 {showRestartMode
                   ? "Welcome back. Start fresh today."
                   : showComebackMode
@@ -514,17 +519,17 @@ export default function HomeScreen() {
                   : "You missed yesterday. Secure today to stay in the game."}
               </Text>
               {showRecoveryBanner && lastStandsAvailable >= 0 && (
-                <Text style={styles.recoveryBannerSub}>
+                <Text style={[styles.recoveryBannerSub, { color: themeColors.text.secondary }]}>
                   Last Stands remaining: {lastStandsAvailable}
                 </Text>
               )}
               {canUseFreeze && (
                 <TouchableOpacity
-                  style={styles.freezeCta}
+                  style={[styles.freezeCta, { backgroundColor: themeColors.accent }]}
                   onPress={() => setShowFreezeModal(true)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.freezeCtaText}>Use streak freeze</Text>
+                  <Text style={[styles.freezeCtaText, { color: "#FFF" }]}>Use streak freeze</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -542,12 +547,12 @@ export default function HomeScreen() {
             />
             <ExploreChallengesButton />
             {homeDataError ? (
-              <View style={styles.yourPositionCard}>
-                <AlertTriangle size={28} color={Colors.text.tertiary} />
-                <Text style={styles.yourPositionLabel}>CHALLENGES</Text>
-                <Text style={styles.yourPositionText}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
+              <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                <AlertTriangle size={28} color={themeColors.text.tertiary} />
+                <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>CHALLENGES</Text>
+                <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
                 <TouchableOpacity
-                  style={styles.secureNowButton}
+                  style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
                   onPress={() => fetchHomeActiveData()}
                   activeOpacity={0.85}
                 >
@@ -565,24 +570,24 @@ export default function HomeScreen() {
         )}
 
         {!isGuest && (
-          <View style={styles.statsSummaryCard}>
-            <View style={styles.statsSummaryCol}>
-              <Flame size={20} color={Colors.accent} />
-              <Text style={styles.statsSummaryValue}>{currentStreak}</Text>
-              <Text style={styles.statsSummaryLabel}>Streak</Text>
+          <View style={[styles.statsSummaryCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={[styles.statsSummaryCol, { borderRightColor: themeColors.border }]}>
+              <Flame size={20} color={themeColors.accent} />
+              <Text style={[styles.statsSummaryValue, { color: themeColors.text.primary }]}>{currentStreak}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: themeColors.text.secondary }]}>Streak</Text>
               {lastStandsAvailable >= 0 && (
-                <Text style={styles.statsSummaryLastStand}>Last Stands: {lastStandsAvailable}</Text>
+                <Text style={[styles.statsSummaryLastStand, { color: themeColors.text.tertiary }]}>Last Stands: {lastStandsAvailable}</Text>
               )}
             </View>
-            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder]}>
-              <TrendingUp size={20} color={Colors.accent} />
-              <Text style={styles.statsSummaryValue}>{stats?.longestStreak ?? 0}</Text>
-              <Text style={styles.statsSummaryLabel}>Score</Text>
+            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: themeColors.border }]}>
+              <TrendingUp size={20} color={themeColors.accent} />
+              <Text style={[styles.statsSummaryValue, { color: themeColors.text.primary }]}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: themeColors.text.secondary }]}>Score</Text>
             </View>
             <View style={styles.statsSummaryCol}>
-              <Target size={20} color={Colors.text.tertiary} />
-              <Text style={styles.statsSummaryValue}>{tierName}</Text>
-              <Text style={styles.statsSummaryLabel}>Rank</Text>
+              <Target size={20} color={themeColors.text.tertiary} />
+              <Text style={[styles.statsSummaryValue, { color: themeColors.text.primary }]}>{tierName}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: themeColors.text.secondary }]}>Rank</Text>
             </View>
           </View>
         )}
@@ -715,25 +720,25 @@ export default function HomeScreen() {
             )}
 
             {daySecured && (
-              <View style={styles.securedBanner}>
-                <CheckCircle2 size={16} color={Colors.streak.shield} fill={Colors.streak.shield} strokeWidth={0} />
-                <Text style={styles.securedText}>Day {activeChallenge.current_day} Secured</Text>
+              <View style={[styles.securedBanner, { backgroundColor: themeColors.successLight }]}>
+                <CheckCircle2 size={16} color={themeColors.streak.shield} fill={themeColors.streak.shield} strokeWidth={0} />
+                <Text style={[styles.securedText, { color: themeColors.text.primary }]}>Day {activeChallenge.current_day} Secured</Text>
               </View>
             )}
           </View>
         ) : (
-          <View style={styles.welcomeBackCard}>
-            <RefreshCw size={28} color={Colors.accent} />
-            <Text style={styles.welcomeBackTitle}>
+          <View style={[styles.welcomeBackCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <RefreshCw size={28} color={themeColors.accent} />
+            <Text style={[styles.welcomeBackTitle, { color: themeColors.text.primary }]}>
               {isFirstTimeUser ? "Start your first challenge." : "Welcome back."}
             </Text>
-            <Text style={styles.welcomeBackSub}>
+            <Text style={[styles.welcomeBackSub, { color: themeColors.text.secondary }]}>
               {isFirstTimeUser
                 ? "Pick a challenge, commit, and secure your first day."
                 : "Secure 1 day today to restart momentum."}
             </Text>
             <TouchableOpacity
-              style={styles.pickChallengeButton}
+              style={[styles.pickChallengeButton, { backgroundColor: themeColors.accent }]}
               onPress={() => {
                 if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 requireAuth("join", () => router.push("/(tabs)/discover" as any));
@@ -748,19 +753,19 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <View style={styles.liveSection}>
-          <View style={styles.liveDot} />
-          <Text style={styles.liveTitle}>LIVE</Text>
-          <Text style={styles.liveSub}>People are moving</Text>
+        <View style={[styles.liveSection, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={[styles.liveDot, { backgroundColor: themeColors.accent }]} />
+          <Text style={[styles.liveTitle, { color: themeColors.text.primary }]}>LIVE</Text>
+          <Text style={[styles.liveSub, { color: themeColors.text.secondary }]}>People are moving</Text>
         </View>
 
         {!isGuest && leaderboardError ? (
-          <View style={styles.yourPositionCard}>
-            <AlertTriangle size={28} color={Colors.text.tertiary} />
-            <Text style={styles.yourPositionLabel}>LEADERBOARD</Text>
-            <Text style={styles.yourPositionText}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
+          <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <AlertTriangle size={28} color={themeColors.text.tertiary} />
+            <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>LEADERBOARD</Text>
+            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
             <TouchableOpacity
-              style={styles.secureNowButton}
+              style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
               onPress={() => fetchLeaderboard()}
               activeOpacity={0.85}
             >
@@ -769,17 +774,17 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         ) : !isGuest && leaderboardLoading && leaderboardData == null ? (
-          <View style={styles.yourPositionCard}>
-            <ActivityIndicator size="small" color={Colors.accent} style={{ marginVertical: 8 }} />
-            <Text style={styles.yourPositionText}>Loading leaderboard…</Text>
+          <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <ActivityIndicator size="small" color={themeColors.accent} style={{ marginVertical: 8 }} />
+            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Loading leaderboard…</Text>
           </View>
         ) : leaderboardData?.currentUserRank != null ? (
-          <View style={styles.yourPositionCard}>
-            <Target size={28} color={Colors.accent} />
-            <Text style={styles.yourPositionLabel}>YOUR POSITION</Text>
-            <Text style={styles.yourPositionText}>You are ranked <Text style={styles.feedBold}>#{leaderboardData.currentUserRank}</Text> this week.</Text>
+          <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <Target size={28} color={themeColors.accent} />
+            <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>YOUR POSITION</Text>
+            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>You are ranked <Text style={[styles.feedBold, { color: themeColors.text.primary }]}>#{leaderboardData.currentUserRank}</Text> this week.</Text>
             <TouchableOpacity
-              style={styles.secureNowButton}
+              style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
               onPress={() => requireAuth("secure", () => router.push("/(tabs)/discover" as any))}
               activeOpacity={0.85}
             >
@@ -789,18 +794,18 @@ export default function HomeScreen() {
           </View>
         ) : !isGuest && (
           <TouchableOpacity
-            style={styles.yourPositionCard}
+            style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
             onPress={() => router.push("/(tabs)/activity" as any)}
             activeOpacity={0.85}
           >
-            <Target size={28} color={Colors.accent} />
-            <Text style={styles.yourPositionLabel}>LEADERBOARD</Text>
-            <Text style={styles.yourPositionText}>Be the first this week.</Text>
+            <Target size={28} color={themeColors.accent} />
+            <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>LEADERBOARD</Text>
+            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Be the first this week.</Text>
             <Text style={styles.secureNowButtonText}>View Activity</Text>
           </TouchableOpacity>
         )}
 
-        <Text style={styles.footerTagline}>Only discipline shows here.</Text>
+        <Text style={[styles.footerTagline, { color: themeColors.text.tertiary }]}>Only discipline shows here.</Text>
       </ScrollView>
 
       {showMilestone != null && (() => {
@@ -809,13 +814,13 @@ export default function HomeScreen() {
         const subtitle = milestoneConfig?.subtitle ?? "You are building discipline.";
         return (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={styles.freezeModalBackdrop} activeOpacity={1} onPress={() => setShowMilestone(null)} />
+          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => setShowMilestone(null)} />
           <View style={styles.freezeModalCenter}>
-            <View style={styles.freezeModalCard}>
-              <Text style={styles.freezeModalTitle}>{title}</Text>
-              <Text style={styles.freezeModalSub}>{subtitle}</Text>
+            <View style={[styles.freezeModalCard, { backgroundColor: themeColors.card }]}>
+              <Text style={[styles.freezeModalTitle, { color: themeColors.text.primary }]}>{title}</Text>
+              <Text style={[styles.freezeModalSub, { color: themeColors.text.secondary }]}>{subtitle}</Text>
               <TouchableOpacity
-                style={[styles.freezeModalConfirm, { marginBottom: 8 }]}
+                style={[styles.freezeModalConfirm, { marginBottom: 8, backgroundColor: themeColors.accent }]}
                 onPress={async () => {
                   track({ name: "invite_shared", source: "milestone_modal" });
                   try {
@@ -834,11 +839,11 @@ export default function HomeScreen() {
                 <Text style={styles.freezeModalConfirmText}>Share</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.freezeModalCancel]}
+                style={[styles.freezeModalCancel, { borderColor: themeColors.border }]}
                 onPress={() => setShowMilestone(null)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.freezeModalCancelText}>Got it</Text>
+                <Text style={[styles.freezeModalCancelText, { color: themeColors.text.primary }]}>Got it</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -848,15 +853,15 @@ export default function HomeScreen() {
 
       {showFreezeModal && (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={styles.freezeModalBackdrop} activeOpacity={1} onPress={() => !freezeSubmitting && setShowFreezeModal(false)} />
+          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => !freezeSubmitting && setShowFreezeModal(false)} />
           <View style={styles.freezeModalCenter}>
-            <View style={styles.freezeModalCard}>
-              <Text style={styles.freezeModalTitle}>Use your streak freeze?</Text>
-              <Text style={styles.freezeModalSub}>
+            <View style={[styles.freezeModalCard, { backgroundColor: themeColors.card }]}>
+              <Text style={[styles.freezeModalTitle, { color: themeColors.text.primary }]}>Use your streak freeze?</Text>
+              <Text style={[styles.freezeModalSub, { color: themeColors.text.secondary }]}>
                 This will save your streak. You get 1 free freeze per month.{freezesRemaining !== undefined && freezesRemaining >= 0 ? ` (${freezesRemaining} left this month)` : ""}
               </Text>
               <TouchableOpacity
-                style={[styles.freezeModalConfirm, freezeSubmitting && styles.freezeModalConfirmDisabled]}
+                style={[styles.freezeModalConfirm, { backgroundColor: themeColors.accent }, freezeSubmitting && styles.freezeModalConfirmDisabled]}
                 disabled={freezeSubmitting}
                 onPress={async () => {
                   track({ name: "streak_freeze_used" });
@@ -875,8 +880,8 @@ export default function HomeScreen() {
               >
                 <Text style={styles.freezeModalConfirmText}>{freezeSubmitting ? "..." : "Use freeze"}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.freezeModalCancel} onPress={() => setShowFreezeModal(false)} disabled={freezeSubmitting} activeOpacity={0.8}>
-                <Text style={styles.freezeModalCancelText}>Cancel</Text>
+              <TouchableOpacity style={[styles.freezeModalCancel, { borderColor: themeColors.border }]} onPress={() => setShowFreezeModal(false)} disabled={freezeSubmitting} activeOpacity={0.8}>
+                <Text style={[styles.freezeModalCancelText, { color: themeColors.text.primary }]}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -885,13 +890,13 @@ export default function HomeScreen() {
 
       {showLastStandUsedModal && (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={styles.freezeModalBackdrop} activeOpacity={1} onPress={() => setShowLastStandUsedModal(false)} />
+          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => setShowLastStandUsedModal(false)} />
           <View style={styles.freezeModalCenter}>
-            <View style={styles.freezeModalCard}>
-              <Text style={styles.freezeModalTitle}>Last Stand used.</Text>
-              <Text style={styles.freezeModalSub}>Streak preserved.</Text>
+            <View style={[styles.freezeModalCard, { backgroundColor: themeColors.card }]}>
+              <Text style={[styles.freezeModalTitle, { color: themeColors.text.primary }]}>Last Stand used.</Text>
+              <Text style={[styles.freezeModalSub, { color: themeColors.text.secondary }]}>Streak preserved.</Text>
               <TouchableOpacity
-                style={[styles.freezeModalConfirm]}
+                style={[styles.freezeModalConfirm, { backgroundColor: themeColors.accent }]}
                 onPress={() => setShowLastStandUsedModal(false)}
                 activeOpacity={0.85}
               >

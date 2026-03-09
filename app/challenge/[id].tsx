@@ -394,8 +394,9 @@ function MissionRow({
 }
 
 export default function ChallengeDetailScreen() {
-  const params = useLocalSearchParams<{ id: string | string[] }>();
-  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
+  const rawParams = useLocalSearchParams();
+  const params = (rawParams ?? {}) as Record<string, string | string[] | undefined>;
+  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id?.[0] : undefined;
   const p = params as { id?: string; ref?: string; openJoin?: string | boolean };
   const ref = typeof p.ref === "string" ? p.ref : Array.isArray(p.ref) ? p.ref[0] : undefined;
   const router = useRouter();

@@ -47,7 +47,7 @@ import {
 } from "@/components/profile";
 import type { AchievementItem } from "@/components/profile";
 
-const LOADING_TIMEOUT_MS = 5000;
+const LOADING_TIMEOUT_MS = 4000;
 
 type StravaActivity = {
   id: number;

@@ -36,8 +36,102 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
-import Colors from "@/constants/colors";
+import type { ThemeColors } from "@/lib/theme-palettes";
 import { COPY } from "@/lib/constants/copy";
+
+function createActivityStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14, gap: 8 },
+    title: { fontSize: 28, fontWeight: "800" as const, color: c.text.primary, letterSpacing: -0.5 },
+    subtitle: { fontSize: 14, fontWeight: "400" as const, color: c.text.secondary, marginTop: 2 },
+    teamsButton: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: c.pill, marginLeft: "auto" as const },
+    teamsButtonText: { fontSize: 13, fontWeight: "600" as const, color: c.text.secondary },
+    scrollView: { flex: 1 },
+    scrollContent: { paddingBottom: 32 },
+    filterRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, marginBottom: 16 },
+    filterPill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: c.pill },
+    filterPillActive: { backgroundColor: c.text.primary },
+    filterPillText: { fontSize: 13, fontWeight: "600" as const, color: c.text.secondary },
+    filterPillTextActive: { color: "#fff" },
+    filterPillDisabled: { backgroundColor: c.border, opacity: 0.8 },
+    filterPillTextDisabled: { fontSize: 13, fontWeight: "600" as const, color: c.text.muted },
+    dailyStatsWrap: { paddingHorizontal: 20, marginBottom: 20 },
+    dailyStatsCard: { backgroundColor: c.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: c.border, flexDirection: "row", justifyContent: "space-between" },
+    dailyStatRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+    dailyStatValue: { fontSize: 16, fontWeight: "700" as const, color: c.text.primary },
+    dailyStatLabel: { fontSize: 14, fontWeight: "400" as const, color: c.text.primary },
+    topThisWeekSection: { paddingHorizontal: 20, marginBottom: 4 },
+    topThisWeekScroll: { paddingHorizontal: 0, gap: 14, paddingBottom: 8 },
+    topThisWeekItem: { alignItems: "center", width: 80 },
+    topThisWeekAvatarWrap: { position: "relative" as const, marginBottom: 6 },
+    topThisWeekAvatar: { width: 52, height: 52, borderRadius: 26 },
+    topThisWeekRankBadge: { position: "absolute" as const, top: -4, right: -4, width: 20, height: 20, borderRadius: 10, backgroundColor: c.text.tertiary, alignItems: "center", justifyContent: "center" },
+    topThisWeekRankBadgeGold: { backgroundColor: "#D4A853" },
+    topThisWeekRankText: { fontSize: 11, fontWeight: "800" as const, color: "#fff" },
+    topThisWeekName: { fontSize: 12, fontWeight: "600" as const, color: c.text.primary, marginBottom: 2 },
+    topThisWeekScoreRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+    topThisWeekScore: { fontSize: 13, fontWeight: "600" as const, color: c.text.primary },
+    weeklyLeaderboardTitle: { fontSize: 14, fontWeight: "600" as const, color: c.text.primary },
+    weeklyLeaderboardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+    resetsSunday: { fontSize: 12, fontWeight: "400" as const, color: c.text.tertiary },
+    topThreeRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+    topThreeCard: { flex: 1, backgroundColor: c.card, borderRadius: 14, padding: 12, alignItems: "center", borderWidth: 1, borderColor: c.border },
+    topThreeCardFirst: { backgroundColor: c.accentLight, borderColor: c.accent + "80" },
+    topThreeRankCircle: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 8 },
+    topThreeRankText: { fontSize: 14, fontWeight: "800" as const },
+    topThreeAvatar: { width: 44, height: 44, borderRadius: 22, marginBottom: 6 },
+    topThreeName: { fontSize: 12, fontWeight: "600" as const, color: c.text.primary, marginBottom: 2 },
+    topThreeScore: { fontSize: 14, fontWeight: "700" as const, color: c.text.primary, marginBottom: 6 },
+    topThreeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 4 },
+    topThreeBadgeText: { fontSize: 10, fontWeight: "700" as const },
+    leaderboardSection: { marginTop: 24, paddingHorizontal: 20 },
+    sectionHeaderRow: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 12 },
+    sectionTitle: { fontSize: 14, fontWeight: "700" as const, color: c.text.secondary, textTransform: "uppercase" as const, letterSpacing: 0.5 },
+    leaderboardRankNum: { fontSize: 14, fontWeight: "600" as const, color: c.text.tertiary, width: 28 },
+    leaderboardNameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+    leaderboardScoreRight: { fontSize: 14, fontWeight: "700" as const, color: c.text.primary },
+    leaderboardRow: { flexDirection: "row", alignItems: "center", backgroundColor: c.card, borderRadius: 14, padding: 12, marginBottom: 6, borderWidth: 1, borderColor: c.border },
+    leaderboardAvatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },
+    leaderboardInfo: { flex: 1 },
+    leaderboardName: { fontSize: 14, fontWeight: "600" as const, color: c.text.primary },
+    leaderboardMeta: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 },
+    leaderboardStreak: { fontSize: 12, fontWeight: "600" as const, color: c.text.tertiary },
+    movementFeedSection: { marginTop: 24, paddingHorizontal: 20 },
+    movementFeedSectionTitle: { fontSize: 12, fontWeight: "600" as const, color: c.text.tertiary, textTransform: "uppercase" as const, letterSpacing: 0.5, marginBottom: 12 },
+    movementFeedItem: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border },
+    movementFeedAvatarWrap: { marginRight: 12 },
+    movementFeedAvatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: c.streak.shield },
+    movementFeedBody: { flex: 1 },
+    movementFeedNameRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 },
+    movementFeedName: { fontSize: 14, fontWeight: "700" as const, color: c.text.primary },
+    movementFeedBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+    movementFeedBadgeText: { fontSize: 10, fontWeight: "700" as const },
+    movementFeedDesc: { fontSize: 13, fontWeight: "400" as const, color: c.text.primary, marginBottom: 4 },
+    movementFeedMeta: { flexDirection: "row", alignItems: "center", gap: 4 },
+    movementFeedTime: { fontSize: 12, fontWeight: "400" as const, color: c.text.tertiary },
+    movementFeedActions: { flexDirection: "row", alignItems: "center", marginLeft: 8, gap: 10 },
+    movementFeedRespect: { flexDirection: "row", alignItems: "center", gap: 4 },
+    movementFeedRespectCount: { fontSize: 12, fontWeight: "500" as const, color: c.text.tertiary },
+    movementFeedNudge: { flexDirection: "row", alignItems: "center", gap: 4 },
+    movementFeedNudgeText: { fontSize: 12, fontWeight: "500" as const, color: c.text.tertiary },
+    emptyLeaderboardText: { fontSize: 14, fontWeight: "500" as const, color: c.text.secondary, textAlign: "center", paddingVertical: 20 },
+    onlyDisciplineShows: { fontSize: 13, fontWeight: "400" as const, color: c.text.tertiary, textAlign: "center", marginTop: 20, marginBottom: 8 },
+    recentSection: { marginTop: 24, paddingHorizontal: 20 },
+    recentItem: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 10, borderRadius: 10, marginBottom: 2 },
+    recentItemUnread: { backgroundColor: c.accentTint },
+    recentIconWrap: { width: 22, alignItems: "center", marginRight: 6 },
+    recentAvatar: { width: 30, height: 30, borderRadius: 15, marginRight: 8 },
+    recentText: { flex: 1, fontSize: 13, color: c.text.secondary, lineHeight: 18 },
+    recentName: { fontWeight: "700" as const, color: c.text.primary },
+    recentTime: { fontSize: 11, color: c.text.muted, marginLeft: 6 },
+    showMoreBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 10, gap: 4, marginTop: 4 },
+    showMoreText: { fontSize: 13, fontWeight: "500" as const, color: c.text.secondary },
+    bottomSpacer: { height: 40 },
+  });
+}
+
+type ActivityStyles = ReturnType<typeof createActivityStyles>;
 
 type ActivityType = "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined" | "nudge";
 
@@ -72,11 +166,12 @@ interface LeaderboardEntry {
   badge?: "Elite" | "Relentless" | "Builder" | "Starter";
 }
 
-function DailyStatsCard({ securedToday }: { securedToday: number }) {
+function DailyStatsCard({ securedToday, styles }: { securedToday: number; styles: ActivityStyles }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.dailyStatsCard}>
       <View style={styles.dailyStatRow}>
-        <Shield size={18} color={Colors.streak.shield} />
+        <Shield size={18} color={colors.streak.shield} />
         <Text style={styles.dailyStatValue}>{securedToday}</Text>
         <Text style={styles.dailyStatLabel}>secured today</Text>
       </View>
@@ -84,14 +179,17 @@ function DailyStatsCard({ securedToday }: { securedToday: number }) {
   );
 }
 
-const BADGE_STYLES: Record<string, { bg: string; text: string }> = {
-  Elite: { bg: "rgba(212,160,23,0.2)", text: "#B8860B" },
-  Relentless: { bg: "rgba(232,125,79,0.2)", text: Colors.accent },
-  Builder: { bg: "rgba(46,125,74,0.15)", text: Colors.streak.shield },
-  Initiate: { bg: "rgba(107,114,128,0.2)", text: Colors.text.tertiary },
-};
+function getBadgeStyles(c: ThemeColors): Record<string, { bg: string; text: string }> {
+  return {
+    Elite: { bg: "rgba(212,160,23,0.2)", text: "#B8860B" },
+    Relentless: { bg: "rgba(232,125,79,0.2)", text: c.accent },
+    Builder: { bg: "rgba(46,125,74,0.15)", text: c.streak.shield },
+    Initiate: { bg: "rgba(107,114,128,0.2)", text: c.text.tertiary },
+  };
+}
 
-function TopThisWeekRow({ entries }: { entries: LeaderboardEntry[] }) {
+function TopThisWeekRow({ entries, styles }: { entries: LeaderboardEntry[]; styles: ActivityStyles }) {
+  const { colors } = useTheme();
   const top4 = entries.slice(0, 4);
   return (
     <ScrollView
@@ -109,7 +207,7 @@ function TopThisWeekRow({ entries }: { entries: LeaderboardEntry[] }) {
           </View>
           <Text style={styles.topThisWeekName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
           <View style={styles.topThisWeekScoreRow}>
-            <Zap size={12} color={Colors.accent} />
+            <Zap size={12} color={colors.accent} />
             <Text style={styles.topThisWeekScore}>+{entry.score}</Text>
           </View>
         </View>
@@ -118,10 +216,12 @@ function TopThisWeekRow({ entries }: { entries: LeaderboardEntry[] }) {
   );
 }
 
-function LeaderboardSection({ entries }: { entries: LeaderboardEntry[] }) {
+function LeaderboardSection({ entries, styles }: { entries: LeaderboardEntry[]; styles: ActivityStyles }) {
+  const { colors } = useTheme();
+  const badgeStyles = getBadgeStyles(colors);
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
-  const rankCircleColor = (rank: number) => (rank === 1 ? "#D4A017" : rank === 2 ? "#9CA3AF" : Colors.accent);
+  const rankCircleColor = (rank: number) => (rank === 1 ? "#D4A017" : rank === 2 ? "#9CA3AF" : colors.accent);
 
   return (
     <View style={styles.leaderboardSection}>
@@ -142,9 +242,9 @@ function LeaderboardSection({ entries }: { entries: LeaderboardEntry[] }) {
             <Text style={styles.topThreeName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
             <Text style={styles.topThreeScore}>+{entry.score}</Text>
             {entry.badge && (
-              <View style={[styles.topThreeBadge, { backgroundColor: BADGE_STYLES[entry.badge]?.bg || Colors.pill }]}>
+              <View style={[styles.topThreeBadge, { backgroundColor: badgeStyles[entry.badge]?.bg || colors.pill }]}>
                 {entry.rank === 1 && <Crown size={10} color="#B8860B" />}
-                <Text style={[styles.topThreeBadgeText, { color: BADGE_STYLES[entry.badge]?.text || Colors.text.secondary }]}>{entry.badge}</Text>
+                <Text style={[styles.topThreeBadgeText, { color: badgeStyles[entry.badge]?.text || colors.text.secondary }]}>{entry.badge}</Text>
               </View>
             )}
           </View>
@@ -157,10 +257,10 @@ function LeaderboardSection({ entries }: { entries: LeaderboardEntry[] }) {
           <View style={styles.leaderboardInfo}>
             <View style={styles.leaderboardNameRow}>
               <Text style={styles.leaderboardName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
-              {entry.secured && <Shield size={12} color={Colors.streak.shield} style={{ marginLeft: 4 }} />}
+              {entry.secured && <Shield size={12} color={colors.streak.shield} style={{ marginLeft: 4 }} />}
             </View>
             <View style={styles.leaderboardMeta}>
-              <Flame size={11} color={Colors.accent} />
+              <Flame size={11} color={colors.accent} />
               <Text style={styles.leaderboardStreak}>{entry.streak}d</Text>
             </View>
           </View>
@@ -178,6 +278,7 @@ function MovementFeedSection({
   givingRespectId,
   onGiveNudge,
   givingNudgeId,
+  styles,
 }: {
   entries: LeaderboardEntry[];
   currentUserId: string | null;
@@ -185,7 +286,10 @@ function MovementFeedSection({
   givingRespectId: string | null;
   onGiveNudge: (userId: string) => void;
   givingNudgeId: string | null;
+  styles: ActivityStyles;
 }) {
+  const { colors } = useTheme();
+  const badgeStyles = getBadgeStyles(colors);
   return (
     <View style={styles.movementFeedSection}>
       <Text style={styles.movementFeedSectionTitle}>THIS WEEK</Text>
@@ -194,7 +298,7 @@ function MovementFeedSection({
       ) : (
         <>
           {entries.map((entry) => {
-            const badge = entry.badge && BADGE_STYLES[entry.badge];
+            const badge = entry.badge && badgeStyles[entry.badge];
             const isSelf = currentUserId != null && entry.userId === currentUserId;
             return (
               <View key={entry.id} style={styles.movementFeedItem}>
@@ -212,7 +316,7 @@ function MovementFeedSection({
                   </View>
                   <Text style={styles.movementFeedDesc}>{entry.score} day{entry.score !== 1 ? "s" : ""} secured this week • {entry.streak}d streak</Text>
                   <View style={styles.movementFeedMeta}>
-                    <Flame size={11} color={Colors.accent} />
+                    <Flame size={11} color={colors.accent} />
                     <Text style={styles.movementFeedTime}>#{entry.rank}</Text>
                   </View>
                 </View>
@@ -223,7 +327,7 @@ function MovementFeedSection({
                     disabled={givingRespectId === entry.userId}
                     activeOpacity={0.7}
                   >
-                    <ThumbsUp size={14} color={Colors.text.tertiary} />
+                    <ThumbsUp size={14} color={colors.text.tertiary} />
                     <Text style={styles.movementFeedRespectCount}>{entry.respectCount}</Text>
                   </TouchableOpacity>
                   {!isSelf && (
@@ -233,7 +337,7 @@ function MovementFeedSection({
                       disabled={givingNudgeId === entry.userId}
                       activeOpacity={0.7}
                     >
-                      <HandMetal size={14} color={Colors.text.tertiary} />
+                      <HandMetal size={14} color={colors.text.tertiary} />
                       <Text style={styles.movementFeedNudgeText}>Nudge</Text>
                     </TouchableOpacity>
                   )}
@@ -248,7 +352,8 @@ function MovementFeedSection({
   );
 }
 
-function RecentActivitySection({ items, error }: { items: ActivityItem[]; error?: boolean }) {
+function RecentActivitySection({ items, error, styles }: { items: ActivityItem[]; error?: boolean; styles: ActivityStyles }) {
+  const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const visibleItems = expanded ? items : items.slice(0, 3);
 
@@ -266,12 +371,12 @@ function RecentActivitySection({ items, error }: { items: ActivityItem[]; error?
 
   const getActivityIcon = (type: ActivityType) => {
     switch (type) {
-      case "follow": return <UserPlus size={12} color={Colors.text.tertiary} />;
-      case "challenge_joined": return <Users size={12} color={Colors.text.tertiary} />;
-      case "respect": return <Star size={12} color={Colors.accent} fill={Colors.accent} />;
-      case "day_secured": return <Shield size={12} color={Colors.streak.shield} />;
-      case "streak_milestone": return <Flame size={12} color={Colors.streak.fire} />;
-      case "nudge": return <HandMetal size={12} color={Colors.accent} />;
+      case "follow": return <UserPlus size={12} color={colors.text.tertiary} />;
+      case "challenge_joined": return <Users size={12} color={colors.text.tertiary} />;
+      case "respect": return <Star size={12} color={colors.accent} fill={colors.accent} />;
+      case "day_secured": return <Shield size={12} color={colors.streak.shield} />;
+      case "streak_milestone": return <Flame size={12} color={colors.streak.fire} />;
+      case "nudge": return <HandMetal size={12} color={colors.accent} />;
       default: return null;
     }
   };
@@ -282,7 +387,7 @@ function RecentActivitySection({ items, error }: { items: ActivityItem[]; error?
     return (
       <View style={styles.recentSection}>
         <View style={styles.sectionHeaderRow}>
-          <TrendingUp size={15} color={Colors.text.secondary} />
+          <TrendingUp size={15} color={colors.text.secondary} />
           <Text style={styles.sectionTitle}>Recent</Text>
         </View>
         <Text style={styles.emptyLeaderboardText}>
@@ -295,7 +400,7 @@ function RecentActivitySection({ items, error }: { items: ActivityItem[]; error?
   return (
     <View style={styles.recentSection}>
       <View style={styles.sectionHeaderRow}>
-        <TrendingUp size={15} color={Colors.text.secondary} />
+        <TrendingUp size={15} color={colors.text.secondary} />
         <Text style={styles.sectionTitle}>Recent</Text>
       </View>
       {visibleItems.map((activity) => (
@@ -325,9 +430,9 @@ function RecentActivitySection({ items, error }: { items: ActivityItem[]; error?
           activeOpacity={0.7}
         >
           {expanded ? (
-            <ChevronUp size={14} color={Colors.text.secondary} />
+            <ChevronUp size={14} color={colors.text.secondary} />
           ) : (
-            <ChevronDown size={14} color={Colors.text.secondary} />
+            <ChevronDown size={14} color={colors.text.secondary} />
           )}
           <Text style={styles.showMoreText}>
             {expanded ? "Show less" : `Show ${items.length - 3} more`}
@@ -355,6 +460,7 @@ function mapApiEntryToLeaderboardEntry(e: any): LeaderboardEntry {
 
 export default function ActivityScreen() {
   const { colors } = useTheme();
+  const styles = useMemo(() => createActivityStyles(colors), [colors]);
   const { refetchAll, currentUser } = useApp();
   const { requireAuth } = useAuthGate();
   const currentUserId = currentUser?.id ?? null;
@@ -536,7 +642,7 @@ export default function ActivityScreen() {
           <Text style={styles.subtitle}>Proof of discipline</Text>
         </View>
         <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8}>
-          <Users size={16} color={Colors.text.secondary} />
+          <Users size={16} color={colors.text.secondary} />
           <Text style={styles.teamsButtonText}>Teams</Text>
         </TouchableOpacity>
       </View>
@@ -547,7 +653,7 @@ export default function ActivityScreen() {
           onPress={() => setFeedFilter("global")}
           activeOpacity={0.8}
         >
-          <Globe size={14} color={feedFilter === "global" ? "#fff" : Colors.text.secondary} />
+          <Globe size={14} color={feedFilter === "global" ? "#fff" : colors.text.secondary} />
           <Text style={[styles.filterPillText, feedFilter === "global" && styles.filterPillTextActive]}>Global</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -555,7 +661,7 @@ export default function ActivityScreen() {
           onPress={() => Alert.alert("Coming in the next update", "Friends filter will show only your accountability partners.")}
           activeOpacity={0.8}
         >
-          <Users size={14} color={Colors.text.muted} />
+          <Users size={14} color={colors.text.muted} />
           <Text style={styles.filterPillTextDisabled}>Friends</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -563,7 +669,7 @@ export default function ActivityScreen() {
           onPress={() => Alert.alert("Coming in the next update", "Team filter will show your team leaderboard.")}
           activeOpacity={0.8}
         >
-          <Users size={14} color={Colors.text.muted} />
+          <Users size={14} color={colors.text.muted} />
           <Text style={styles.filterPillTextDisabled}>Team</Text>
         </TouchableOpacity>
       </View>
@@ -577,11 +683,11 @@ export default function ActivityScreen() {
         }
       >
         <View style={styles.dailyStatsWrap}>
-          <DailyStatsCard securedToday={leaderboard.totalSecuredToday} />
+          <DailyStatsCard securedToday={leaderboard.totalSecuredToday} styles={styles} />
         </View>
         <View style={styles.topThisWeekSection}>
           <View style={styles.sectionHeaderRow}>
-            <TrendingUp size={16} color={Colors.accent} />
+            <TrendingUp size={16} color={colors.accent} />
             <Text style={styles.weeklyLeaderboardTitle}>Top This Week</Text>
           </View>
           {leaderboardLoading ? (
@@ -591,7 +697,7 @@ export default function ActivityScreen() {
           ) : leaderboard.entries.length === 0 ? (
             <Text style={styles.emptyLeaderboardText}>{COPY.beFirstThisWeek}</Text>
           ) : (
-            <TopThisWeekRow entries={leaderboard.entries} />
+            <TopThisWeekRow entries={leaderboard.entries} styles={styles} />
           )}
         </View>
         {leaderboardLoading ? (
@@ -628,7 +734,7 @@ export default function ActivityScreen() {
             <Text style={styles.emptyLeaderboardText}>{COPY.beFirstThisWeek}</Text>
           </View>
         ) : (
-          <LeaderboardSection entries={leaderboard.entries} />
+          <LeaderboardSection entries={leaderboard.entries} styles={styles} />
         )}
         <MovementFeedSection
           entries={entriesWithOptimisticRespect}
@@ -637,491 +743,13 @@ export default function ActivityScreen() {
           givingRespectId={givingRespectId}
           onGiveNudge={handleGiveNudge}
           givingNudgeId={givingNudgeId}
+          styles={styles}
         />
-        <RecentActivitySection items={activityItems} error={activityFeedError} />
+        <RecentActivitySection items={activityItems} error={activityFeedError} styles={styles} />
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
-    gap: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800" as const,
-    color: Colors.text.primary,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: "400" as const,
-    color: Colors.text.secondary,
-    marginTop: 2,
-  },
-  teamsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: Colors.pill,
-    marginLeft: "auto",
-  },
-  teamsButtonText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.secondary,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  filterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  filterPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: Colors.pill,
-  },
-  filterPillActive: {
-    backgroundColor: Colors.text.primary,
-  },
-  filterPillText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.secondary,
-  },
-  filterPillTextActive: {
-    color: "#fff",
-  },
-  filterPillDisabled: {
-    backgroundColor: Colors.border,
-    opacity: 0.8,
-  },
-  filterPillTextDisabled: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.muted,
-  },
-  dailyStatsWrap: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  dailyStatsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  dailyStatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  dailyStatValue: {
-    fontSize: 16,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-  },
-  dailyStatLabel: {
-    fontSize: 14,
-    fontWeight: "400" as const,
-    color: Colors.text.primary,
-  },
-  topThisWeekSection: {
-    paddingHorizontal: 20,
-    marginBottom: 4,
-  },
-  topThisWeekScroll: {
-    paddingHorizontal: 0,
-    gap: 14,
-    paddingBottom: 8,
-  },
-  topThisWeekItem: {
-    alignItems: "center",
-    width: 80,
-  },
-  topThisWeekAvatarWrap: {
-    position: "relative",
-    marginBottom: 6,
-  },
-  topThisWeekAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-  },
-  topThisWeekRankBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Colors.text.tertiary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topThisWeekRankBadgeGold: {
-    backgroundColor: "#D4A853",
-  },
-  topThisWeekRankText: {
-    fontSize: 11,
-    fontWeight: "800" as const,
-    color: "#fff",
-  },
-  topThisWeekName: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-    marginBottom: 2,
-  },
-  topThisWeekScoreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  topThisWeekScore: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-  },
-  weeklyLeaderboardTitle: {
-    fontSize: 14,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-  },
-  weeklyLeaderboardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  resetsSunday: {
-    fontSize: 12,
-    fontWeight: "400" as const,
-    color: Colors.text.tertiary,
-  },
-  topThreeRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 16,
-  },
-  topThreeCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  topThreeCardFirst: {
-    backgroundColor: "#FDF8E8",
-    borderColor: "#E8D9A0",
-  },
-  topThreeRankCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  topThreeRankText: {
-    fontSize: 14,
-    fontWeight: "800" as const,
-  },
-  topThreeAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginBottom: 6,
-  },
-  topThreeName: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-    marginBottom: 2,
-  },
-  topThreeScore: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-    marginBottom: 6,
-  },
-  topThreeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  topThreeBadgeText: {
-    fontSize: 10,
-    fontWeight: "700" as const,
-  },
-  leaderboardRankNum: {
-    fontSize: 14,
-    fontWeight: "600" as const,
-    color: Colors.text.tertiary,
-    width: 28,
-  },
-  leaderboardNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  leaderboardScoreRight: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-  },
-  movementFeedSection: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  movementFeedSectionTitle: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    color: Colors.text.tertiary,
-    textTransform: "uppercase" as const,
-    letterSpacing: 0.5,
-    marginBottom: 12,
-  },
-  movementFeedItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  movementFeedAvatarWrap: {
-    marginRight: 12,
-  },
-  movementFeedAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: Colors.streak.shield,
-  },
-  movementFeedBody: {
-    flex: 1,
-  },
-  movementFeedNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 2,
-  },
-  movementFeedName: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-  },
-  movementFeedBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  movementFeedBadgeText: {
-    fontSize: 10,
-    fontWeight: "700" as const,
-  },
-  movementFeedDesc: {
-    fontSize: 13,
-    fontWeight: "400" as const,
-    color: Colors.text.primary,
-    marginBottom: 4,
-  },
-  movementFeedMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  movementFeedTime: {
-    fontSize: 12,
-    fontWeight: "400" as const,
-    color: Colors.text.tertiary,
-  },
-  movementFeedActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 8,
-    gap: 10,
-  },
-  movementFeedRespect: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  movementFeedRespectCount: {
-    fontSize: 12,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
-  },
-  movementFeedNudge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  movementFeedNudgeText: {
-    fontSize: 12,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
-  },
-  emptyLeaderboardText: {
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: Colors.text.secondary,
-    textAlign: "center",
-    paddingVertical: 20,
-  },
-  onlyDisciplineShows: {
-    fontSize: 13,
-    fontWeight: "400" as const,
-    color: Colors.text.tertiary,
-    textAlign: "center",
-    marginTop: 20,
-    marginBottom: 8,
-  },
 
-  leaderboardSection: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "700" as const,
-    color: Colors.text.secondary,
-    textTransform: "uppercase" as const,
-    letterSpacing: 0.5,
-  },
-  leaderboardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  leaderboardAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginRight: 10,
-  },
-  leaderboardInfo: {
-    flex: 1,
-  },
-  leaderboardName: {
-    fontSize: 14,
-    fontWeight: "600" as const,
-    color: Colors.text.primary,
-  },
-  leaderboardMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    marginTop: 2,
-  },
-  leaderboardStreak: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    color: Colors.text.tertiary,
-  },
-
-  recentSection: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  recentItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    marginBottom: 2,
-  },
-  recentItemUnread: {
-    backgroundColor: Colors.accentTint,
-  },
-  recentIconWrap: {
-    width: 22,
-    alignItems: "center",
-    marginRight: 6,
-  },
-  recentAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 8,
-  },
-  recentText: {
-    flex: 1,
-    fontSize: 13,
-    color: Colors.text.secondary,
-    lineHeight: 18,
-  },
-  recentName: {
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-  },
-  recentTime: {
-    fontSize: 11,
-    color: Colors.text.muted,
-    marginLeft: 6,
-  },
-  showMoreBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    gap: 4,
-    marginTop: 4,
-  },
-  showMoreText: {
-    fontSize: 13,
-    fontWeight: "500" as const,
-    color: Colors.text.secondary,
-  },
-  bottomSpacer: {
-    height: 40,
-  },
-});

@@ -71,14 +71,17 @@ export default function SignupScreen() {
       return;
     }
 
+    const trimmedEmail = email.trim().toLowerCase();
     setLoading(true);
+    console.log("SIGNUP: attempting with", trimmedEmail);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail,
         password,
       });
 
       if (error) {
+        console.error("SIGNUP: error", error.message);
         if (error.message.toLowerCase().includes('rate limit')) {
           Alert.alert(
             'Rate Limit Reached',
@@ -93,26 +96,30 @@ export default function SignupScreen() {
       }
 
       if (data.session) {
-        router.replace('/' as never);
+        console.log("SIGNUP: success, session", data.session.user?.id);
+        track({ name: "signup_completed" });
+        router.replace("/" as never);
         return;
       }
 
-      // No session returned (e.g. email confirmation was on) — auto sign in
+      console.log("SIGNUP: no session, trying signInWithPassword");
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail,
         password,
       });
 
       if (signInError) {
-        router.replace('/auth/login' as any);
+        console.error("SIGNUP: signIn fallback error", signInError.message);
+        router.replace("/auth/login" as any);
         return;
       }
 
       if (signInData.session) {
+        console.log("SIGNUP: signIn fallback success", signInData.session.user?.id);
         track({ name: "signup_completed" });
-        router.replace('/' as never);
+        router.replace("/" as never);
       } else {
-        router.replace('/auth/login' as any);
+        router.replace("/auth/login" as any);
       }
     } catch (err: any) {
       Alert.alert('Error', err.message || 'An unexpected error occurred');

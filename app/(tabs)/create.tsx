@@ -44,7 +44,7 @@ import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { formatTimeHHMM } from "@/lib/time-enforcement";
 
-import { formatTRPCError, getApiBaseUrl, formatError } from "@/lib/api";
+import { formatTRPCError, formatError } from "@/lib/api";
 import {
   getDurationFromDraft,
   validateDraftTasks,
@@ -125,7 +125,7 @@ interface TaskTemplate {
   verificationRuleJson?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
 }
 
-const DURATION_PRESETS = [7, 14, 30, 75];
+const DURATION_PRESETS = [7, 14, 21, 30, 75];
 const CATEGORIES = ["Fitness", "Mind", "Faith", "Discipline", "Other"];
 
 // TODO: backend may provide challenge packs; using client-side presets for now
@@ -312,7 +312,7 @@ export default function CreateScreen() {
   const [, setLocationName] = useState("");
   const [, setRadiusMeters] = useState("150");
 
-  const { apiStatus, retryNow: retryApi, getDiagnosticsString } = useApi();
+  const { apiStatus, retryNow: retryApi } = useApi();
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
@@ -508,7 +508,10 @@ export default function CreateScreen() {
           setShowRecoveryModal(true);
         } else {
           const title = errorInfo.title || "Couldn't create challenge";
-          const message = errorInfo.message || "Something went wrong. Please check your input and try again.";
+          let message = errorInfo.message || "Something went wrong. Please check your input and try again.";
+          if (typeof message === "string" && (message.startsWith("{") || message.startsWith("["))) {
+            message = "Something went wrong. Please check your input and try again.";
+          }
           Alert.alert(title, message, [
             { text: "OK", style: "cancel" as const },
           ]);
@@ -1175,59 +1178,6 @@ export default function CreateScreen() {
       <View style={styles.reviewNote}>
         <Text style={styles.reviewNoteText}>You can edit this later.</Text>
       </View>
-
-      {__DEV__ && (
-        <View style={diagStyles.container}>
-          <View style={diagStyles.headerRow}>
-            <Text style={diagStyles.headerTitle}>Server</Text>
-            <View style={[
-              diagStyles.statusBadge,
-              apiStatus === 'ready' && diagStyles.statusReady,
-              apiStatus === 'checking' && diagStyles.statusChecking,
-              apiStatus === 'down' && diagStyles.statusDown,
-            ]}>
-              <View style={[
-                diagStyles.statusDot,
-                apiStatus === 'ready' && diagStyles.dotReady,
-                apiStatus === 'checking' && diagStyles.dotChecking,
-                apiStatus === 'down' && diagStyles.dotDown,
-              ]} />
-              <Text style={[
-                diagStyles.statusLabel,
-                apiStatus === 'ready' && diagStyles.labelReady,
-                apiStatus === 'checking' && diagStyles.labelChecking,
-                apiStatus === 'down' && diagStyles.labelDown,
-              ]}>
-                {apiStatus === 'ready' ? 'Ready' : apiStatus === 'checking' ? 'Checking...' : 'Down'}
-              </Text>
-            </View>
-          </View>
-          <View style={diagStyles.infoRow}>
-            <Text style={diagStyles.infoLabel}>Base URL</Text>
-            <Text style={diagStyles.infoValue} numberOfLines={1} ellipsizeMode="middle">
-              {(() => { try { return getApiBaseUrl(); } catch { return 'NOT SET'; } })()}
-            </Text>
-          </View>
-          <View style={diagStyles.actionsRow}>
-            <TouchableOpacity style={diagStyles.actionBtn} onPress={() => retryApi()}>
-              <RefreshCw size={13} color={Colors.accent} />
-              <Text style={diagStyles.actionBtnText}>Re-check</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={diagStyles.actionBtn}
-              onPress={() => {
-                const diagStr = getDiagnosticsString();
-                if (Platform.OS === 'web') {
-                  try { navigator.clipboard.writeText(diagStr); } catch { /* ignore */ }
-                }
-                Alert.alert('Diagnostics', diagStr);
-              }}
-            >
-              <Text style={diagStyles.actionBtnText}>Copy diagnostics</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
     </Animated.View>
   );
 
@@ -1501,134 +1451,6 @@ const recoveryStyles = RNStyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-});
-
-const diagStyles = RNStyleSheet.create({
-  container: {
-    marginTop: 16,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 14,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  headerTitle: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#6B7280',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: '#F3F4F6',
-  },
-  statusReady: {
-    backgroundColor: '#ECFDF5',
-  },
-  statusChecking: {
-    backgroundColor: '#FFFBEB',
-  },
-  statusDown: {
-    backgroundColor: '#FEF2F2',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#9CA3AF',
-  },
-  dotReady: {
-    backgroundColor: '#10B981',
-  },
-  dotChecking: {
-    backgroundColor: '#F59E0B',
-  },
-  dotDown: {
-    backgroundColor: '#EF4444',
-  },
-  statusLabel: {
-    fontSize: 12,
-    fontWeight: '500' as const,
-    color: '#6B7280',
-  },
-  labelReady: {
-    color: '#059669',
-  },
-  labelChecking: {
-    color: '#D97706',
-  },
-  labelDown: {
-    color: '#DC2626',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '500' as const,
-  },
-  infoValue: {
-    fontSize: 12,
-    color: '#4B5563',
-    fontWeight: '400' as const,
-    maxWidth: '65%' as any,
-    textAlign: 'right' as const,
-  },
-  errorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 6,
-    backgroundColor: '#FEF2F2',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  errorText: {
-    fontSize: 11,
-    color: '#DC2626',
-    flex: 1,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingTop: 10,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  actionBtnText: {
-    fontSize: 12,
-    fontWeight: '500' as const,
-    color: '#4B5563',
   },
 });
 
