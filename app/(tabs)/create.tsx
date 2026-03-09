@@ -507,8 +507,8 @@ export default function CreateScreen() {
           setRecoveryMessage('Cannot reach server. The backend may be starting up.');
           setShowRecoveryModal(true);
         } else {
-          const title = errorInfo.title || "Create failed";
-          const message = errorInfo.message || (error?.message ?? "Something went wrong. Please try again.");
+          const title = errorInfo.title || "Couldn't create challenge";
+          const message = errorInfo.message || "Something went wrong. Please check your input and try again.";
           Alert.alert(title, message, [
             { text: "OK", style: "cancel" as const },
           ]);

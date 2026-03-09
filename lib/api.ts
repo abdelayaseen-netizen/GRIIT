@@ -225,6 +225,27 @@ export async function checkDbTables(): Promise<DbSanityResult> {
   }
 }
 
+/** Parse Zod-style validation error (JSON array of { message?, path? }) into a single user-friendly string. */
+function parseZodErrorMessage(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('[') && trimmed.includes('"')) {
+    try {
+      const arr = JSON.parse(trimmed) as unknown[];
+      if (!Array.isArray(arr)) return null;
+      const parts: string[] = [];
+      for (const item of arr) {
+        if (item && typeof item === 'object' && 'message' in item && typeof (item as { message: unknown }).message === 'string') {
+          parts.push((item as { message: string }).message);
+        }
+      }
+      if (parts.length > 0) return parts.join('. ');
+    } catch {
+      /* not valid JSON */
+    }
+  }
+  return null;
+}
+
 export function formatTRPCError(error: unknown): {
   title: string;
   message: string;
@@ -247,19 +268,26 @@ export function formatTRPCError(error: unknown): {
   }
 
   const trpcError = error as any;
-  const shape = trpcError?.shape?.message || trpcError?.data?.message;
+  const shape = trpcError?.shape?.message ?? trpcError?.data?.message ?? trpcError?.message;
   const code = trpcError?.data?.code as string | undefined;
+  const rawMessage = typeof shape === 'string' ? shape : raw;
 
-  let message = shape || raw || 'Something went wrong. Please try again.';
+  const zodParsed = parseZodErrorMessage(rawMessage);
+  const message = zodParsed ?? (rawMessage || 'Something went wrong. Please try again.');
   let title = 'Error';
 
   if (code && (code === TRPC_ERROR_CODE.UNAUTHORIZED || code === TRPC_ERROR_CODE.FORBIDDEN)) {
     title = TRPC_ERROR_TITLES[TRPC_ERROR_CODE.UNAUTHORIZED];
-    message = TRPC_ERROR_USER_MESSAGE[TRPC_ERROR_CODE.UNAUTHORIZED] ?? message;
-  } else if (code && code in TRPC_ERROR_TITLES) {
+    return { title, message: TRPC_ERROR_USER_MESSAGE[TRPC_ERROR_CODE.UNAUTHORIZED] ?? message, isNetwork: false };
+  }
+  if (code === TRPC_ERROR_CODE.BAD_REQUEST && zodParsed) {
+    title = "Couldn't create challenge";
+    return { title, message, isNetwork: false };
+  }
+  if (code && code in TRPC_ERROR_TITLES) {
     title = TRPC_ERROR_TITLES[code as keyof typeof TRPC_ERROR_TITLES];
     if (code in TRPC_ERROR_USER_MESSAGE) {
-      message = TRPC_ERROR_USER_MESSAGE[code as keyof typeof TRPC_ERROR_USER_MESSAGE] ?? message;
+      return { title, message: TRPC_ERROR_USER_MESSAGE[code as keyof typeof TRPC_ERROR_USER_MESSAGE] ?? message, isNetwork: false };
     }
   }
 

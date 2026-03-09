@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { colors, typography, measures } from "@/src/theme/tokens";
+import { colors, measures } from "@/src/theme/tokens";
 
 export function CreateFlowHeader(p: {
   title: string;
@@ -51,16 +51,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
   },
-  left: { minWidth: 60 },
+  left: { minWidth: 64 },
   cancelText: {
     fontSize: 16,
     fontWeight: "500",
     color: colors.accentOrangeCreate,
   },
   title: {
-    fontSize: typography.pageTitle.fontSize,
-    fontWeight: typography.pageTitle.fontWeight,
+    fontSize: 20,
+    fontWeight: "600",
     color: colors.textPrimary,
+    flex: 1,
+    textAlign: "center",
   },
   rightBtn: {
     paddingVertical: 8,

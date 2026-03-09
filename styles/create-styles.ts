@@ -17,7 +17,8 @@ export const styles = StyleSheet.create({
   },
   stepperWrap: {
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   headerTitle: {
     ...Typography.pageTitle,

@@ -161,7 +161,7 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
   }
   const payload: Record<string, unknown> = {
     title: draft.title,
-    description: draft.description,
+    description: draft.description ?? "",
     type: draft.type,
     durationDays,
     categories: draft.categories,
