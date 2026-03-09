@@ -63,6 +63,13 @@ export function PremiumPaywallModal({
           <Text style={[styles.body, { color: colors.text.secondary }]}>
             Upgrade to unlock this and more. Coming soon.
           </Text>
+          <View style={styles.whySection}>
+            <Text style={[styles.whyTitle, { color: colors.text.primary }]}>Why Premium?</Text>
+            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Unlimited challenges</Text>
+            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Advanced analytics</Text>
+            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Exclusive events</Text>
+            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Unlimited streak freezes</Text>
+          </View>
           <TouchableOpacity
             style={[styles.cta, { backgroundColor: colors.accent }]}
             onPress={handleClose}
@@ -117,7 +124,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: "center",
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  whySection: {
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  whyTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  whyItem: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 2,
   },
   cta: {
     paddingVertical: 14,

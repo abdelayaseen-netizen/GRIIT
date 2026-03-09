@@ -66,6 +66,9 @@ import {
   DailyTaskRow,
 } from "@/src/components/ui";
 import { colors as tokenColors } from "@/src/theme/tokens";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type TaskType = "journal" | "timer" | "run" | "simple" | "checkin" | "photo";
 type TrackingMode = "distance" | "time";
@@ -319,6 +322,8 @@ export default function CreateScreen() {
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>('idle');
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryMessage, setRecoveryMessage] = useState('');
+  const [showPaywallAfterCreate, setShowPaywallAfterCreate] = useState(false);
+  const paywallThenNavigateRef = useRef<{ params: Record<string, string> } | null>(null);
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearWatchdog = useCallback(() => {
@@ -448,7 +453,7 @@ export default function CreateScreen() {
     const payload = buildCreatePayload(draft);
 
     trpcMutate('challenges.create', payload)
-      .then((challenge: any) => {
+      .then(async (challenge: any) => {
         clearWatchdog();
         setSubmitStatus('success');
         if (Platform.OS !== 'web') {
@@ -462,18 +467,29 @@ export default function CreateScreen() {
           ]);
           return;
         }
-        router.push({
-          pathname: "/success" as any,
-          params: {
-            challengeId: id,
-            title: challenge?.title ?? title,
-            duration: String(challenge?.duration_days ?? getDuration()),
-            tasksCount: String(challenge?.tasks?.length ?? tasks.length),
-            difficulty: challenge?.difficulty ?? "medium",
-            isCreateSuccess: "true",
-            waitingForTeam: isTeamOrShared ? "true" : undefined,
-          },
-        });
+        const successParams: Record<string, string> = {
+          challengeId: id,
+          title: challenge?.title ?? title,
+          duration: String(challenge?.duration_days ?? getDuration()),
+          tasksCount: String(challenge?.tasks?.length ?? tasks.length),
+          difficulty: challenge?.difficulty ?? "medium",
+          isCreateSuccess: "true",
+        };
+        if (isTeamOrShared) successParams.waitingForTeam = "true";
+        try {
+          const key = "grit_create_count";
+          const raw = await AsyncStorage.getItem(key);
+          const count = Math.min(100, (parseInt(raw ?? "0", 10) || 0) + 1);
+          await AsyncStorage.setItem(key, String(count));
+          if (count === 3) {
+            paywallThenNavigateRef.current = { params: successParams };
+            setShowPaywallAfterCreate(true);
+            return;
+          }
+        } catch {
+          // ignore storage errors
+        }
+        router.push({ pathname: "/success" as any, params: successParams });
         setTitle("");
         setDescription("");
         setChallengeType("standard");
@@ -494,6 +510,7 @@ export default function CreateScreen() {
         setDeadlineDate("");
         setStep(1);
         setSubmitStatus('idle');
+        paywallThenNavigateRef.current = null;
       })
       .catch((error: any) => {
         clearWatchdog();
@@ -1182,9 +1199,10 @@ export default function CreateScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <CreateFlowHeader
+    <ErrorBoundary>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <CreateFlowHeader
           title="Create Challenge"
           onCancel={() => router.back()}
           rightLabel={step === 1 ? "Next" : step === 2 ? "Review" : undefined}
@@ -1274,6 +1292,19 @@ export default function CreateScreen() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+      <PremiumPaywallModal
+        visible={showPaywallAfterCreate}
+        onClose={() => {
+          setShowPaywallAfterCreate(false);
+          const pending = paywallThenNavigateRef.current;
+          if (pending) {
+            router.push({ pathname: "/success" as any, params: pending.params });
+            paywallThenNavigateRef.current = null;
+          }
+        }}
+        featureTitle="Unlimited challenges"
+      />
+    </ErrorBoundary>
   );
 }
 

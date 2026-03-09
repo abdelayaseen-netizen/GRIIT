@@ -14,6 +14,14 @@ import { Shield, Check, Share2 } from "lucide-react-native";
 import Colors from "@/constants/colors";
 import { shareDaySecured } from "@/lib/share";
 
+const SECURE_DAY_MESSAGES = [
+  "Day {day} Secured.",
+  "You showed up. Day {day} locked in.",
+  "Another one. Day {day} secured.",
+  "Discipline wins. Day {day} done.",
+  "Day {day} in the books. Keep going.",
+];
+
 export default function SecureConfirmationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -21,11 +29,18 @@ export default function SecureConfirmationScreen() {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const [shareError, setShareError] = React.useState(false);
 
-  const day = params.day as string;
-  const streak = params.streak as string;
-  const totalDays = params.totalDays as string;
+  const day = params.day as string | undefined;
+  const streak = params.streak as string | undefined;
+  const totalDays = params.totalDays as string | undefined;
   const isHardMode = params.isHardMode === "true";
+
+  const headerMessage = React.useMemo(() => {
+    const d = day ?? "0";
+    const msg = SECURE_DAY_MESSAGES[Math.floor(Math.random() * SECURE_DAY_MESSAGES.length)];
+    return msg.replace(/\{day\}/g, d);
+  }, [day]);
 
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -60,6 +75,20 @@ export default function SecureConfirmationScreen() {
     return () => clearTimeout(timer);
   }, [scaleAnim, fadeAnim, progressAnim, router]);
 
+  if (!day || !streak || !totalDays) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.content}>
+          <Text style={styles.header}>Not found</Text>
+          <TouchableOpacity style={styles.shareButton} onPress={() => router.back()} activeOpacity={0.85}>
+            <Text style={styles.shareButtonText}>Go back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ["0%", `${(parseInt(day) / parseInt(totalDays)) * 100}%`],
@@ -86,7 +115,7 @@ export default function SecureConfirmationScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.header}>Day {day} Secured.</Text>
+          <Text style={styles.header}>{headerMessage}</Text>
 
           <View style={styles.statsCard}>
             <View style={styles.statRow}>
@@ -127,16 +156,20 @@ export default function SecureConfirmationScreen() {
             </View>
           )}
 
+          {shareError && (
+            <Text style={[styles.statLabel, { color: "#B91C1C", marginBottom: 8 }]}>Share failed. Tap to retry.</Text>
+          )}
           <TouchableOpacity
             style={styles.shareButton}
             onPress={() => {
+              setShareError(false);
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
               shareDaySecured({
                 streak: parseInt(streak || "0", 10),
                 dayNumber: parseInt(day || "0", 10),
-              }).catch(() => {});
+              }).catch(() => setShareError(true));
             }}
             activeOpacity={0.85}
           >

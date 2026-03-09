@@ -22,6 +22,7 @@ import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
+import { PremiumBadge } from "@/components/PremiumBadge";
 
 const REMINDER_PRESETS = [
   { label: "6:00 AM", value: "06:00" },
@@ -328,9 +329,10 @@ export default function SettingsScreen() {
 
         {/* Premium (future launch) */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
+          <View style={[styles.sectionHeader, { flexWrap: "wrap" }]}>
             <Crown size={18} color={themeColors.accent} />
             <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Premium</Text>
+            <PremiumBadge size={14} />
           </View>
           <TouchableOpacity
             style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}

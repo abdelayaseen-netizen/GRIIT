@@ -17,6 +17,7 @@ import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
 import { saveJoinedStarterId } from "@/lib/starter-join";
 import { trpcMutate } from "@/lib/trpc";
+import { inviteToChallenge } from "@/lib/share";
 
 export default function CommitmentScreen() {
   const router = useRouter();
@@ -88,7 +89,16 @@ export default function CommitmentScreen() {
           { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
         ]);
       } else {
-        router.replace("/(tabs)" as any);
+        Alert.alert("You're in!", "Invite a friend to join with you?", [
+          { text: "Not now", onPress: () => router.replace("/(tabs)" as any) },
+          {
+            text: "Share",
+            onPress: () => {
+              inviteToChallenge({ name: title, id: challengeId }).catch(() => {});
+              router.replace("/(tabs)" as any);
+            },
+          },
+        ]);
       }
     } catch (err: any) {
       const message = err?.message ?? "Failed to join challenge. Try again.";
@@ -96,7 +106,7 @@ export default function CommitmentScreen() {
     } finally {
       setJoining(false);
     }
-  }, [challengeId, isStarter, joining, router, refetchAll]);
+  }, [challengeId, isStarter, joining, router, refetchAll, title]);
 
   const handleCancel = () => {
     if (joining) return;

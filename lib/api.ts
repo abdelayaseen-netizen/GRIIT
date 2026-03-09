@@ -267,7 +267,12 @@ export function formatTRPCError(error: unknown): {
     };
   }
 
-  const trpcError = error as any;
+  interface TrpcErrorShape {
+    shape?: { message?: string };
+    data?: { code?: string; message?: string };
+    message?: string;
+  }
+  const trpcError = error as TrpcErrorShape;
   const shape = trpcError?.shape?.message ?? trpcError?.data?.message ?? trpcError?.message;
   const code = trpcError?.data?.code as string | undefined;
   const rawMessage = typeof shape === 'string' ? shape : raw;

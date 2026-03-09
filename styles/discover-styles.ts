@@ -371,6 +371,24 @@ export const styles = StyleSheet.create({
   bottomSpacer: {
     height: 32,
   },
+  loadMoreWrap: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  loadMoreBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: t.colors.accentOrange,
+    minWidth: 120,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadMoreText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: "#fff",
+  },
 
   dailyScrollContent: {
     paddingHorizontal: t.spacing.screenHorizontal,

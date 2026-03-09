@@ -32,5 +32,5 @@ export const TRPC_ERROR_USER_MESSAGE: Partial<Record<TrpcErrorCode, string>> = {
   [TRPC_ERROR_CODE.NOT_FOUND]: "We couldn't find what you're looking for. It may have been removed.",
   [TRPC_ERROR_CODE.INTERNAL_SERVER_ERROR]: "Something went wrong on our end. Please try again in a moment.",
   [TRPC_ERROR_CODE.TIMEOUT]: "The request took too long. Please check your connection and try again.",
-  [TRPC_ERROR_CODE.TOO_MANY_REQUESTS]: "You're doing that too fast. Please wait a moment and try again.",
+  [TRPC_ERROR_CODE.TOO_MANY_REQUESTS]: "Slow down. Please wait a moment and try again.",
 };

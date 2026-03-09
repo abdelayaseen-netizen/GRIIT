@@ -38,6 +38,7 @@ import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import type { ThemeColors } from "@/lib/theme-palettes";
 import { COPY } from "@/lib/constants/copy";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function createActivityStyles(c: ThemeColors) {
   return StyleSheet.create({
@@ -635,13 +636,14 @@ export default function ActivityScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Movement</Text>
-          <Text style={styles.subtitle}>Proof of discipline</Text>
-        </View>
-        <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8}>
+    <ErrorBoundary>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>Movement</Text>
+            <Text style={styles.subtitle}>Proof of discipline</Text>
+          </View>
+          <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8}>
           <Users size={16} color={colors.text.secondary} />
           <Text style={styles.teamsButtonText}>Teams</Text>
         </TouchableOpacity>
@@ -749,6 +751,7 @@ export default function ActivityScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

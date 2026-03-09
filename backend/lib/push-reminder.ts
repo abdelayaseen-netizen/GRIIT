@@ -98,6 +98,15 @@ function pickEveningCopy(streak: number): { title: string; body: string } {
   return { title: template.title(streak), body: template.body(streak) };
 }
 
+/** "Come back" notification templates for users inactive 3+ days. */
+export const COMEBACK_TEMPLATES: Array<{ title: string; body: string }> = [
+  { title: "We miss you", body: "Your streak is waiting. Come back and secure today." },
+  { title: "Ready when you are", body: "A few days off — no judgment. Tap to pick up where you left off." },
+  { title: "Your discipline doesn't expire", body: "Come back and secure your next day." },
+  { title: "One tap to get back on track", body: "Open GRIIT and secure today." },
+  { title: "Still here for you", body: "Whenever you're ready, we're here. Secure your day." },
+];
+
 export interface SendReminderOptions {
   type: "morning" | "streak_at_risk";
   pushToken: string | null | undefined;

@@ -32,6 +32,7 @@ import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import Colors from "@/constants/colors";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Celebration from "@/components/Celebration";
 import { RETENTION_CONFIG } from "@/lib/retention-config";
 import { getMilestoneForStreak } from "@/lib/constants/milestones";
@@ -230,6 +231,7 @@ export default function HomeScreen() {
   const [homeDataError, setHomeDataError] = useState(false);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
+  const lastHomeRefetchAt = useRef<number>(0);
 
   const fetchHomeActiveData = useCallback(async () => {
     if (isGuest) return;
@@ -278,7 +280,13 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!isGuest) {
-        refetchAll().then(() => fetchHomeActiveData());
+        const now = Date.now();
+        if (lastHomeRefetchAt.current === 0 || now - lastHomeRefetchAt.current > 5 * 60 * 1000) {
+          refetchAll().then(() => {
+            fetchHomeActiveData();
+            lastHomeRefetchAt.current = Date.now();
+          });
+        }
       }
       getFirstSessionJustFinished().then((justFinished) => {
         if (justFinished) {
@@ -375,6 +383,7 @@ export default function HomeScreen() {
     try {
       await refetchAll();
       await fetchHomeActiveData();
+      lastHomeRefetchAt.current = Date.now();
     } finally {
       setRefreshing(false);
     }
@@ -454,8 +463,9 @@ export default function HomeScreen() {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
-      <Celebration
+    <ErrorBoundary>
+      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
+        <Celebration
         visible={showCelebration}
         onComplete={() => { setShowCelebration(false); setCelebrationPayload(null); }}
         titleText={celebrationPayload ? "DAY SECURED ✓" : undefined}
@@ -906,7 +916,8 @@ export default function HomeScreen() {
           </View>
         </Modal>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

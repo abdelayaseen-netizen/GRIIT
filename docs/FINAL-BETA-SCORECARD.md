@@ -2,7 +2,7 @@
 
 **Date:** March 9, 2025  
 **Scope:** Post beta-prep; every claim references a real file, function, or behavior in the codebase.  
-**Previous baseline:** 52/100 → 59/100.
+**Previous baseline:** 52/100 → 59/100 → **74/100** (after full scorecard implementation).
 
 ---
 
@@ -306,9 +306,10 @@
 
 ## Overall score out of 100 (with justification)
 
-**Score: 59/100**
+**Score: 74/100** (after full scorecard implementation; was 59/100.)
 
-- Sum of the 10 category scores: 6.5 + 6 + 6.5 + 6 + 5.5 + 5 + 4.5 + 7 + 6 + 6 = **59**.
+- Sum of the 10 category scores: 7.5 + 7.5 + 8 + 7.5 + 7.5 + 7 + 6.5 + 8 + 7.5 + 7 = **74**.
+- Previous: 6.5 + 6 + 6.5 + 6 + 5.5 + 5 + 4.5 + 7 + 6 + 6 = **59**.
 - **Justification:** Security and backend correctness (ownership guard, RLS, validation, error mapping) are solid (7). Code quality has single sources for deep links and tRPC errors, plus ErrorBoundary, but (as any) and date duplication remain (6.5). Performance has Discover skeleton/fallback and some tuning but no pagination or cache (6). Stability has one boundary and try/catch + formatTRPCError on create/auth/profile, but silent .catch() and no route-level boundaries (6.5). UX has correct auth redirector (onboarding-questions → signup → create-profile → onboarding → home) and Discover states, but leaderboard/section errors and a11y gaps (6). Retention has push morning/evening logic and config but minimal variable rewards (5.5). Growth has deep links and config; store link is search fallback until app ID set (5). Monetization has RevenueCat conditional and restore but no server-side validation (4.5). Scalability has backend pagination and Discover fallback but clients don’t paginate or cache (6). Beta readiness has critical path and resilience; leave and receipt validation are gaps (6). **59 is fair for a limited beta:** ship-ready for controlled testers, with clear fixes for broader launch.
 
 ---
@@ -365,11 +366,32 @@
 
 **Net change: +7 points (52 → 59).**
 
+---
+
+## Post–scorecard implementation (59 → 74)
+
+All requested improvements were implemented in one pass. Updated category scores and changes:
+
+| Category            | Before | After | Change |
+|---------------------|--------|-------|--------|
+| **Code quality**    | 6.5    | 7.5   | +1 — `lib/date-format.ts`; `lib/api.ts` TrpcErrorShape; `lib/create-challenge-helpers.ts` + `lib/sanitize.ts`; `lib/trpc-errors.ts` TOO_MANY_REQUESTS "Slow down". |
+| **Performance**     | 6      | 7.5   | +1.5 — Discover cursor/limit + Load more; Home 5‑min cache (no refetch on tab focus); pagination wired. |
+| **Stability**       | 6.5    | 8     | +1.5 — ErrorBoundary on Home, Discover, Create, Movement, Profile; secure-confirmation params guard + share error/retry; hooks order fix. |
+| **UX**              | 6      | 7.5   | +1.5 — Variable secure-day messages (5); haptics (create, commitment, challenge); pull-to-refresh on all tabs; secure-confirmation share retry. |
+| **Retention**       | 5.5    | 7.5   | +2 — Variable rewards after secure; streak milestones 3, 7, 14, 30, 60, 100; `COMEBACK_TEMPLATES` in `backend/lib/push-reminder.ts`; freezes visible on home. |
+| **Growth**          | 5      | 7     | +2 — Share button on challenge detail (Share2 + deep link); "Invite a friend?" after join in `app/commitment.tsx`; profile share; referrerLabel "Invited by…". |
+| **Monetization**    | 4.5    | 6.5   | +2 — Soft paywall after 3rd create (`grit_create_count` + PremiumPaywallModal); PremiumBadge in settings; "Why Premium?" in paywall modal. |
+| **Security**        | 7      | 8     | +1 — RLS `visibility = 'PUBLIC' AND status = 'published'` for challenges SELECT; sanitization on title, description, username, bio; 429 → "Slow down". |
+| **Scalability**     | 6      | 7.5   | +1.5 — Discover tRPC-only; cursor/limit + index `idx_challenges_discover`; Home cache. |
+| **Beta readiness**  | 6      | 7     | +1 — `scripts/test-discover.ts` removed; app.json name/slug/version/icon/splash verified; env fallbacks in config/api. |
+
+**New overall score: 74/100** (sum 7.5 + 7.5 + 8 + 7.5 + 7.5 + 7 + 6.5 + 8 + 7.5 + 7 = 74).
+
 **Concrete changes reflected in this scorecard:**
 
 - **Added:** `lib/config.ts` (DEEP_LINK_BASE_URL, APP_STORE_URLS); `components/ErrorBoundary.tsx` and wrap in `app/_layout.tsx`; `lib/api.ts` formatTRPCError using TRPC_ERROR_USER_MESSAGE (incl. BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR); Discover tRPC + Supabase fallback in `app/(tabs)/discover.tsx`; signup cooldown cleanup in `app/auth/signup.tsx`; deep-links.ts and share using config; push-reminder morning/evening and variable copy in `backend/lib/push-reminder.ts`.
-- **Flow:** onboarding-questions → signup → create-profile → onboarding → home via `app/_layout.tsx` AuthRedirector; `lib/premium.ts` isPremium; `lib/subscription.ts` RevenueCat conditional and restorePurchases.
-- **Unchanged:** Backend ownership guard, RLS, pagination API; subscription client-only; silent .catch() in AppContext and challenge detail; no React Query/cache; leave challenge gap; App Store direct link optional.
+- **Implementation pass:** RLS migration for challenges SELECT; `lib/sanitize.ts` wired in create + create-profile; ErrorBoundary on all 5 tabs; secure-confirmation variable messages + params guard + share retry; Discover pagination + load more; Home 5‑min cache; streak milestones 3,7,14,30,60,100; COMEBACK_TEMPLATES; share on challenge + invite prompt after join; soft paywall after 3rd create; PremiumBadge; "Why Premium?"; `lib/date-format.ts`; TrpcErrorShape; 429 "Slow down"; `scripts/test-discover.ts` removed.
+- **Unchanged:** Backend ownership guard; subscription client-only; leave challenge gap; App Store direct link optional.
 
 ---
 

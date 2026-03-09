@@ -9,6 +9,7 @@ import {
   clearOnboardingPending,
   type OnboardingAnswers,
 } from "@/lib/onboarding-pending";
+import { sanitizeUsername, sanitizeDisplayName, sanitizeBio } from "@/lib/sanitize";
 import { Screen, Input, PrimaryButton } from "@/src/components/ui";
 import { H1, Body, Caption } from "@/src/components/Typography";
 import { colors } from "@/src/theme/colors";
@@ -109,9 +110,9 @@ export default function CreateProfileScreen() {
       return;
     }
     handleSubmit({
-      username: username.trim().toLowerCase(),
-      display_name: displayName.trim() || username.trim(),
-      bio: bio.trim(),
+      username: sanitizeUsername(username.trim().toLowerCase()),
+      display_name: sanitizeDisplayName(displayName.trim() || username.trim()),
+      bio: sanitizeBio(bio.trim()),
     });
   };
 

@@ -8,6 +8,7 @@ import {
   Animated,
   FlatList,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -22,7 +23,6 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { trpcQuery } from "@/lib/trpc";
-import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/contexts/ThemeContext";
 import { colors as tokenColors } from "@/src/theme/tokens";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
@@ -36,6 +36,7 @@ import {
   ChallengeCardFeatured,
   ChallengeRowCard,
 } from "@/src/components/ui";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline";
 
@@ -166,11 +167,14 @@ export default function DiscoverScreen() {
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
-  const [featuredData, setFeaturedData] = useState<any[] | null>(null);
+  const [featuredData, setFeaturedData] = useState<unknown[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [featuredError, setFeaturedError] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
-  const [starterPack, setStarterPack] = useState<any[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [starterPack, setStarterPack] = useState<unknown[]>([]);
+  const FEATURED_PAGE_SIZE = 20;
 
   const fetchStarterPack = useCallback(async () => {
     try {
@@ -181,50 +185,38 @@ export default function DiscoverScreen() {
     }
   }, []);
 
-  const fetchFeatured = useCallback(async () => {
-    setIsFetching(true);
-    const params: Record<string, string> = {};
+  const fetchFeatured = useCallback(async (cursor?: string, append = false) => {
+    if (append) setLoadingMore(true);
+    else setIsFetching(true);
+    setFeaturedError(false);
+    const params: Record<string, string | number> = {
+      limit: FEATURED_PAGE_SIZE,
+    };
     if (searchQuery) params.search = searchQuery;
     if (activeCategory !== "all") params.category = activeCategory;
+    if (cursor) params.cursor = cursor;
 
     try {
       const data = await trpcQuery("challenges.getFeatured", params);
-      const list = Array.isArray(data) ? data : (data as { items?: unknown[] })?.items ?? [];
-      if (list.length > 0) {
-        setFeaturedData(list);
-        setFeaturedError(false);
-        setFeaturedLoading(false);
-        setIsFetching(false);
-        return;
-      }
-    } catch {
-      // Fall through to direct Supabase fallback
-    }
-
-    // Direct Supabase fallback (bypass tRPC)
-    try {
-      const { data: directData, error: directError } = await supabase
-        .from("challenges")
-        .select("*, challenge_tasks (*)")
-        .eq("visibility", "PUBLIC")
-        .eq("status", "published")
-        .order("is_featured", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (directError) {
-        setFeaturedError(true);
-      } else if (directData && directData.length > 0) {
-        setFeaturedData(directData);
-        setFeaturedError(false);
+      const isPaginated = data != null && typeof data === "object" && "items" in data;
+      const list = isPaginated
+        ? (data as { items: unknown[]; nextCursor?: string }).items ?? []
+        : Array.isArray(data) ? data : [];
+      const next = isPaginated ? (data as { nextCursor?: string }).nextCursor : undefined;
+      setNextCursor(next);
+      if (append) {
+        setFeaturedData((prev) => [...prev, ...list]);
       } else {
-        setFeaturedError(true);
+        setFeaturedData(list);
       }
+      setFeaturedError(false);
     } catch {
       setFeaturedError(true);
+      if (!append) setFeaturedData([]);
     } finally {
       setFeaturedLoading(false);
       setIsFetching(false);
+      setLoadingMore(false);
     }
   }, [searchQuery, activeCategory]);
 
@@ -316,9 +308,14 @@ export default function DiscoverScreen() {
   const totalVisible = dailyChallenges.length + featuredChallenges.length + otherChallenges.length;
 
   const handleRefresh = useCallback(() => {
+    setNextCursor(undefined);
     fetchStarterPack();
-    fetchFeatured();
+    fetchFeatured(undefined, false);
   }, [fetchStarterPack, fetchFeatured]);
+
+  const loadMore = useCallback(() => {
+    if (nextCursor && !loadingMore) fetchFeatured(nextCursor, true);
+  }, [nextCursor, loadingMore, fetchFeatured]);
 
   const handleChallengePress = useCallback(
     (challengeId: string) => {
@@ -523,51 +520,69 @@ export default function DiscoverScreen() {
           </View>
         )}
 
+        {nextCursor ? (
+          <View style={styles.loadMoreWrap}>
+            <TouchableOpacity
+              style={styles.loadMoreBtn}
+              onPress={loadMore}
+              disabled={loadingMore}
+              activeOpacity={0.8}
+            >
+              {loadingMore ? (
+                <ActivityIndicator size="small" color={tokenColors.accentOrange} />
+              ) : (
+                <Text style={styles.loadMoreText}>Load more</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <View style={styles.bottomSpacer} />
       </ScrollView>
     );
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>Discover</Text>
-        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>Find challenges worth committing to</Text>
-      </View>
+    <ErrorBoundary>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Discover</Text>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>Find challenges worth committing to</Text>
+        </View>
 
-      <View style={styles.searchRow}>
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search challenges…"
-          onClear={clearSearch}
-        />
-      </View>
+        <View style={styles.searchRow}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search challenges…"
+            onClear={clearSearch}
+          />
+        </View>
 
-      <View style={styles.categoryRow}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScroll}
-        >
-          {CATEGORY_FILTERS.map((cat) => {
-            const isActive = activeCategory === cat.key;
-            const IconComp = cat.icon;
-            return (
-              <FilterChip
-                key={cat.key}
-                label={cat.label}
-                selected={isActive}
-                onPress={() => handleCategoryPress(cat.key)}
-                icon={<IconComp size={16} color={isActive ? tokenColors.white : tokenColors.chipText} />}
-              />
-            );
-          })}
-        </ScrollView>
-      </View>
+        <View style={styles.categoryRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryScroll}
+          >
+            {CATEGORY_FILTERS.map((cat) => {
+              const isActive = activeCategory === cat.key;
+              const IconComp = cat.icon;
+              return (
+                <FilterChip
+                  key={cat.key}
+                  label={cat.label}
+                  selected={isActive}
+                  onPress={() => handleCategoryPress(cat.key)}
+                  icon={<IconComp size={16} color={isActive ? tokenColors.white : tokenColors.chipText} />}
+                />
+              );
+            })}
+          </ScrollView>
+        </View>
 
-      {renderContent()}
-    </SafeAreaView>
+        {renderContent()}
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

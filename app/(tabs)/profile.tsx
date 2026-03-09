@@ -46,6 +46,7 @@ import {
   ShareDisciplineCard,
 } from "@/components/profile";
 import type { AchievementItem } from "@/components/profile";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const LOADING_TIMEOUT_MS = 4000;
 
@@ -499,21 +500,22 @@ export default function ProfileScreen() {
   const disciplineScore = Math.max(0, Number(totalDaysSecured) || 0);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.accent}
-          />
-        }
-      >
-        <Animated.View style={{ opacity: headerFade }}>
-          <ProfileHeader
+    <ErrorBoundary>
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.accent}
+            />
+          }
+        >
+          <Animated.View style={{ opacity: headerFade }}>
+            <ProfileHeader
             avatarUrl={profile.avatar_url}
             fullName={profile.display_name || profile.username}
             username={profile.username}
@@ -646,6 +648,7 @@ export default function ProfileScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

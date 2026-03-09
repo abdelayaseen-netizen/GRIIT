@@ -29,6 +29,7 @@ import {
   Shield,
   ChevronLeft,
   MoreHorizontal,
+  Share2,
   TrendingUp,
   Clock,
   Users,
@@ -419,26 +420,41 @@ export default function ChallengeDetailScreen() {
     return STARTER_CHALLENGES.find((c) => c.id === id) ?? null;
   }, [id, isStarter]);
 
-  const [remoteChallenge, setRemoteChallenge] = useState<any>(null);
+  const [remoteChallenge, setRemoteChallenge] = useState<Record<string, unknown> | null>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteLoadError, setRemoteLoadError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [joinPending] = useState(false);
   const [leavePending, setLeavePending] = useState(false);
   const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
+  const referrerLabel = ref ? "Invited by a friend" : null;
 
-  useEffect(() => {
+  const fetchChallenge = useCallback(() => {
     if (!id || isStarter) return;
+    setRemoteLoadError(false);
     setRemoteLoading(true);
-    trpcQuery('challenges.getById', { id })
-      .then((data) => setRemoteChallenge(data))
-      .catch(() => {})
+    trpcQuery("challenges.getById", { id })
+      .then((data) => {
+        setRemoteChallenge(data as Record<string, unknown>);
+        setRemoteLoadError(false);
+      })
+      .catch(() => {
+        setRemoteLoadError(true);
+        setRemoteChallenge(null);
+      })
       .finally(() => setRemoteLoading(false));
   }, [id, isStarter]);
 
   useEffect(() => {
+    fetchChallenge();
+  }, [fetchChallenge]);
+
+  useEffect(() => {
     if (!ref || !currentUserId || !id || isStarter) return;
-    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch(() => {});
+    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch(() => {
+      // Fire-and-forget; no UI needed
+    });
   }, [ref, currentUserId, id, isStarter]);
 
   const [starterJoined, setStarterJoined] = useState(false);
@@ -668,7 +684,12 @@ export default function ChallengeDetailScreen() {
     useCallback(() => {
       if (isJoined) refetchTodayCheckins();
       if (id && !isStarter && (isTeamChallenge || isSharedGoal)) {
-        trpcQuery("challenges.getById", { id }).then((data) => setRemoteChallenge(data)).catch(() => {});
+        trpcQuery("challenges.getById", { id })
+          .then((data) => {
+            setRemoteChallenge(data as Record<string, unknown>);
+            setRemoteLoadError(false);
+          })
+          .catch(() => setRemoteLoadError(true));
       }
     }, [id, isStarter, isJoined, isTeamChallenge, isSharedGoal, refetchTodayCheckins])
   );
@@ -676,12 +697,16 @@ export default function ChallengeDetailScreen() {
   const onRefresh = useCallback(async () => {
     if (!id || refreshing) return;
     setRefreshing(true);
+    setRemoteLoadError(false);
     try {
       if (!isStarter) {
         const data = await trpcQuery("challenges.getById", { id });
-        setRemoteChallenge(data);
+        setRemoteChallenge(data as Record<string, unknown>);
+        setRemoteLoadError(false);
       }
       if (isJoined) await refetchTodayCheckins();
+    } catch {
+      setRemoteLoadError(true);
     } finally {
       setRefreshing(false);
     }
@@ -715,6 +740,20 @@ export default function ChallengeDetailScreen() {
     );
   }, [id, isStarter, leavePending, refetchAll, refetchTodayCheckins, router]);
 
+  if (!id) {
+    return (
+      <SafeAreaView style={[s.container, { backgroundColor: themeColors.background }]} edges={["bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={s.emptyWrap}>
+          <Text style={s.emptyText}>Not found</Text>
+          <TouchableOpacity onPress={() => router.back()} style={s.emptyBtn}>
+            <Text style={s.emptyBtnText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (isLoading) {
     return (
       <View style={[s.loadingContainer, { backgroundColor: themeColors.background }]}>
@@ -731,6 +770,24 @@ export default function ChallengeDetailScreen() {
           <View style={s.skeletonMission} />
         </View>
       </View>
+    );
+  }
+
+  if (remoteLoadError && !isStarter) {
+    return (
+      <SafeAreaView style={[s.container, { backgroundColor: themeColors.background }]} edges={["bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={s.emptyWrap}>
+          <Text style={s.emptyText}>Couldn&apos;t load challenge</Text>
+          <Text style={[s.emptySubtext, { color: themeColors.text.secondary }]}>Check your connection and try again.</Text>
+          <TouchableOpacity onPress={fetchChallenge} style={s.emptyBtn}>
+            <Text style={s.emptyBtnText}>Retry</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 8 }]}>
+            <Text style={s.emptyBtnText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -813,24 +870,32 @@ export default function ChallengeDetailScreen() {
                   activeOpacity={0.7}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   onPress={() => {
+                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    import("@/lib/share").then(({ shareChallenge }) =>
+                      shareChallenge(
+                        {
+                          name: challenge.title,
+                          duration: challenge.duration_days ?? 0,
+                          id: id ?? "",
+                          tasksPerDay: challenge.tasks?.length,
+                        },
+                        currentUserId
+                      )
+                    ).catch(() => {});
+                  }}
+                  accessible
+                  accessibilityLabel="Share challenge"
+                  accessibilityRole="button"
+                >
+                  <Share2 size={18} color="#FFFFFF" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.morePill, { marginLeft: 8 }]}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  onPress={() => {
                     Alert.alert("Challenge", undefined, [
                       { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Share challenge",
-                        onPress: () => {
-                          import("@/lib/share").then(({ shareChallenge }) =>
-                            shareChallenge(
-                              {
-                                name: challenge.title,
-                                duration: challenge.duration_days ?? 0,
-                                id: id ?? "",
-                                tasksPerDay: challenge.tasks?.length,
-                              },
-                              currentUserId
-                            )
-                          ).catch(() => {});
-                        },
-                      },
                       {
                         text: "Invite friends",
                         onPress: () => {
@@ -842,7 +907,7 @@ export default function ChallengeDetailScreen() {
                     ], { cancelable: true });
                   }}
                   accessible
-                  accessibilityLabel="Share or invite"
+                  accessibilityLabel="More options"
                   accessibilityRole="button"
                 >
                   <MoreHorizontal size={18} color="#FFFFFF" />
@@ -859,6 +924,9 @@ export default function ChallengeDetailScreen() {
                 )}
                 <Text style={s.heroTitle}>{challenge.title}</Text>
                 <Text style={s.heroTagline}>{challenge.short_hook || challenge.description}</Text>
+                {referrerLabel ? (
+                  <Text style={s.referrerLabel}>{referrerLabel}</Text>
+                ) : null}
 
                 {/* Info Chips */}
                 <View style={s.chipRow}>
@@ -1246,6 +1314,11 @@ const s = StyleSheet.create({
     color: Colors.text.secondary,
     marginBottom: 16,
   },
+  emptySubtext: {
+    fontSize: 14,
+    marginBottom: 16,
+    textAlign: "center",
+  },
   emptyBtn: {
     paddingHorizontal: 24,
     paddingVertical: 12,
@@ -1326,6 +1399,12 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.65)",
     lineHeight: 21,
     marginBottom: 18,
+  },
+  referrerLabel: {
+    fontSize: 13,
+    fontWeight: "500" as const,
+    color: "rgba(255,255,255,0.8)",
+    marginBottom: 8,
   },
 
   chipRow: {

@@ -4,6 +4,7 @@
  * and future flows (templates, duplication) stay consistent.
  */
 
+import { sanitizeChallengeTitle, sanitizeChallengeDescription } from "@/lib/sanitize";
 import type {
   ChallengeType,
   ReplayPolicy,
@@ -161,8 +162,8 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
   }
   const visibility = (draft.visibility && String(draft.visibility).toUpperCase()) || "FRIENDS";
   const payload: Record<string, unknown> = {
-    title: draft.title,
-    description: draft.description ?? "",
+    title: sanitizeChallengeTitle(draft.title),
+    description: sanitizeChallengeDescription(draft.description ?? ""),
     type: draft.type,
     durationDays,
     categories: draft.categories,
