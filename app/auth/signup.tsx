@@ -73,7 +73,6 @@ export default function SignupScreen() {
 
     const trimmedEmail = email.trim().toLowerCase();
     setLoading(true);
-    console.log("SIGNUP: attempting with", trimmedEmail);
     try {
       const { data, error } = await supabase.auth.signUp({
         email: trimmedEmail,
@@ -81,7 +80,6 @@ export default function SignupScreen() {
       });
 
       if (error) {
-        console.error("SIGNUP: error", error.message);
         if (error.message.toLowerCase().includes('rate limit')) {
           Alert.alert(
             'Rate Limit Reached',
@@ -109,13 +107,11 @@ export default function SignupScreen() {
       });
 
       if (signInError) {
-        console.error("SIGNUP: signIn fallback error", signInError.message);
         router.replace("/auth/login" as any);
         return;
       }
 
       if (signInData.session) {
-        console.log("SIGNUP: signIn fallback success", signInData.session.user?.id);
         track({ name: "signup_completed" });
         router.replace("/" as never);
       } else {

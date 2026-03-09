@@ -29,7 +29,6 @@ export default function CreateProfileScreen() {
   }, []);
 
   const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {
-    console.log("PROFILE_CREATE: submitting", { username: data.username });
     setIsPending(true);
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -82,13 +81,11 @@ export default function CreateProfileScreen() {
         } catch {
           // Non-blocking; user can join from Discover again
         }
-      console.log("PROFILE_CREATE: joined challenge, redirecting to home");
       await clearOnboardingPending();
       router.replace("/(tabs)" as any);
         return;
       }
 
-      console.log("PROFILE_CREATE: success, redirecting to onboarding");
       await clearOnboardingPending();
       router.replace("/onboarding" as any);
     } catch (err: unknown) {

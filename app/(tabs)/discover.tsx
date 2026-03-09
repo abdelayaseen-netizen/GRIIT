@@ -187,15 +187,8 @@ export default function DiscoverScreen() {
     if (searchQuery) params.search = searchQuery;
     if (activeCategory !== "all") params.category = activeCategory;
 
-    console.log("DISCOVER: Supabase URL:", process.env.EXPO_PUBLIC_SUPABASE_URL ?? "(not set)");
-    console.log("DISCOVER: API URL:", process.env.EXPO_PUBLIC_API_URL ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? "(not set)");
-    console.log("DISCOVER: fetching via tRPC...");
-
     try {
       const data = await trpcQuery("challenges.getFeatured", params);
-      const dataPreview = JSON.stringify(data).substring(0, 200);
-      console.log("DISCOVER: tRPC response:", dataPreview);
-
       const list = Array.isArray(data) ? data : (data as { items?: unknown[] })?.items ?? [];
       if (list.length > 0) {
         setFeaturedData(list);
@@ -204,11 +197,8 @@ export default function DiscoverScreen() {
         setIsFetching(false);
         return;
       }
-
-      console.log("DISCOVER: tRPC returned empty, trying direct Supabase...");
-    } catch (err) {
-      console.error("DISCOVER: error:", err);
-      console.log("DISCOVER: tRPC failed, trying direct Supabase...");
+    } catch {
+      // Fall through to direct Supabase fallback
     }
 
     // Direct Supabase fallback (bypass tRPC)
@@ -222,20 +212,15 @@ export default function DiscoverScreen() {
         .order("created_at", { ascending: false })
         .limit(20);
 
-      console.log("DISCOVER DIRECT QUERY:", { count: directData?.length ?? 0, error: directError?.message ?? null });
-      console.log("DISCOVER: direct Supabase result:", directData?.length ?? 0, "challenges");
-
       if (directError) {
-        console.error("DISCOVER: direct Supabase error:", directError.message, directError.code);
-      }
-      if (directData && directData.length > 0) {
+        setFeaturedError(true);
+      } else if (directData && directData.length > 0) {
         setFeaturedData(directData);
         setFeaturedError(false);
       } else {
         setFeaturedError(true);
       }
-    } catch (directErr) {
-      console.error("DISCOVER: error:", directErr);
+    } catch {
       setFeaturedError(true);
     } finally {
       setFeaturedLoading(false);
@@ -362,6 +347,22 @@ export default function DiscoverScreen() {
     return `${days} day${days === 1 ? "" : "s"}`;
   }, []);
 
+  const renderDailyItem = useCallback(
+    ({ item: c }: { item: StarterChallenge }) => (
+      <ChallengeCard24h
+        title={c.title}
+        description={c.short_hook}
+        endsAt={c.ends_at}
+        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
+        stripeColor={c.theme_color || tokenColors.orangeStripe}
+        tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
+        participantsCount={c.participants_count ?? 0}
+        onPress={() => handleChallengePress(c.id)}
+      />
+    ),
+    [handleChallengePress]
+  );
+
   const renderErrorBanner = () => {
     if (!isError) return null;
     return (
@@ -459,20 +460,11 @@ export default function DiscoverScreen() {
               keyExtractor={(item) => item.id}
               horizontal
               initialNumToRender={5}
+              maxToRenderPerBatch={5}
+              windowSize={5}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.dailyScrollContent}
-              renderItem={({ item: c }) => (
-                <ChallengeCard24h
-                  title={c.title}
-                  description={c.short_hook}
-                  endsAt={c.ends_at}
-                  difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-                  stripeColor={c.theme_color || tokenColors.orangeStripe}
-                  tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
-                  participantsCount={c.participants_count ?? 0}
-                  onPress={() => handleChallengePress(c.id)}
-                />
-              )}
+              renderItem={renderDailyItem}
             />
           </View>
         )}
