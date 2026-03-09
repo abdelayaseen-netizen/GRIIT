@@ -99,10 +99,11 @@ function AuthRedirector() {
     const inAuth = (first as any) === "auth";
     const onCreateProfile = (first as any) === "create-profile";
     const inOnboarding = (first as any) === "onboarding";
+    const inOnboardingQuestions = (first as any) === "onboarding-questions";
     const inDay1QuickWin = (first as any) === "day1-quick-win";
 
     if (!user) {
-      if (inAuth) return;
+      if (inAuth || inOnboardingQuestions) return;
       return;
     }
 
@@ -208,6 +209,7 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding-questions" options={{ headerShown: false }} />
       <Stack.Screen name="day1-quick-win" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="+not-found" />
     </Stack>

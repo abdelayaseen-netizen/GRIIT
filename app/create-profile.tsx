@@ -1,7 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, TextInput, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { trpcMutate } from "@/lib/trpc";
+import {
+  getPendingChallengeId,
+  getOnboardingAnswers,
+  clearOnboardingPending,
+  type OnboardingAnswers,
+} from "@/lib/onboarding-pending";
 import { Screen, Input, PrimaryButton } from "@/src/components/ui";
 import { H1, Body, Caption } from "@/src/components/Typography";
 import { colors } from "@/src/theme/colors";
@@ -13,6 +20,13 @@ export default function CreateProfileScreen() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const [pendingChallengeId, setPendingChallengeId] = useState<string | null>(null);
+  const [onboardingAnswers, setOnboardingAnswersState] = useState<OnboardingAnswers | null>(null);
+
+  useEffect(() => {
+    getPendingChallengeId().then(setPendingChallengeId);
+    getOnboardingAnswers().then(setOnboardingAnswersState);
+  }, []);
 
   const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {
     setIsPending(true);
@@ -27,6 +41,7 @@ export default function CreateProfileScreen() {
         return;
       }
       const userId = sessionData.session.user.id;
+      const hasOnboardingPending = onboardingAnswers != null && Object.keys(onboardingAnswers).length > 0;
       const { error } = await supabase
         .from("profiles")
         .upsert(
@@ -36,7 +51,7 @@ export default function CreateProfileScreen() {
             display_name: data.display_name,
             bio: data.bio,
             updated_at: new Date().toISOString(),
-            onboarding_completed: false,
+            onboarding_completed: hasOnboardingPending,
           },
           { onConflict: "user_id" }
         )
@@ -52,6 +67,26 @@ export default function CreateProfileScreen() {
         Alert.alert("Error", error.message || "Failed to create profile");
         return;
       }
+
+      if (hasOnboardingPending && onboardingAnswers) {
+        await trpcMutate("profiles.update", {
+          onboarding_completed: true,
+          onboarding_answers: onboardingAnswers as Record<string, unknown>,
+        });
+      }
+
+      if (pendingChallengeId) {
+        try {
+          await trpcMutate("challenges.join", { challengeId: pendingChallengeId });
+        } catch {
+          // Non-blocking; user can join from Discover again
+        }
+        await clearOnboardingPending();
+        router.replace("/(tabs)" as any);
+        return;
+      }
+
+      await clearOnboardingPending();
       router.replace("/onboarding" as any);
     } catch (err: unknown) {
       Alert.alert("Error", (err as Error).message || "Something went wrong");

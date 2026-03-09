@@ -190,7 +190,8 @@ export default function DiscoverScreen() {
       const list = Array.isArray(data) ? data : (data as { items?: unknown[] })?.items ?? [];
       setFeaturedData(list);
       setFeaturedError(false);
-    } catch {
+    } catch (err) {
+      console.error("[Discover] challenges.getFeatured failed:", err);
       setFeaturedError(true);
     } finally {
       setFeaturedLoading(false);

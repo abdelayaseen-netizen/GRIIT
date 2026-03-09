@@ -401,7 +401,7 @@ export default function ChallengeDetailScreen() {
   const router = useRouter();
   const { colors: themeColors } = useTheme();
   const { user } = useAuth();
-  const { requireAuth } = useAuthGate();
+  useAuthGate(); // Join when guest → onboarding-questions; when logged in → handleJoin
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
   const currentUserId = user?.id ?? undefined;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -1141,7 +1141,7 @@ export default function ChallengeDetailScreen() {
             <Animated.View style={{ transform: [{ scale: ctaScaleAnim }] }}>
               <TouchableOpacity
                 style={[s.ctaButton, { backgroundColor: theme.ctaBg }]}
-                onPress={isJoined ? () => router.push("/(tabs)") : () => requireAuth("join", handleJoin)}
+                onPress={isJoined ? () => router.push("/(tabs)") : user ? () => handleJoin() : () => router.push({ pathname: "/onboarding-questions", params: id ? { challengeId: id } : undefined } as any)}
                 onPressIn={handleCtaPressIn}
                 onPressOut={handleCtaPressOut}
                 disabled={joinDisabled}

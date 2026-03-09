@@ -8,7 +8,8 @@ import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow, StreakRow }
 
 const PROFILE_UPDATE_KEYS = [
   "username", "display_name", "bio", "avatar_url", "cover_url",
-  "onboarding_completed", "onboarding_completed_at", "primary_goal", "daily_time_budget",
+  "onboarding_completed", "onboarding_completed_at", "onboarding_answers",
+  "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
   "subscription_status", "subscription_expiry", "subscription_platform", "subscription_product_id",
 ] as const;
@@ -104,6 +105,7 @@ export const profilesRouter = createTRPCRouter({
       subscription_expiry: z.string().max(64).optional().nullable(),
       subscription_platform: z.enum(["ios", "android"]).optional().nullable(),
       subscription_product_id: z.string().max(128).optional().nullable(),
+      onboarding_answers: z.record(z.string(), z.unknown()).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const updatePayload: Record<string, unknown> = {};

@@ -2,11 +2,24 @@
  * Subscription service: RevenueCat integration and backend sync.
  * When RevenueCat is configured, syncs subscription status to the backend profile.
  * Placeholder product IDs: griit_premium_monthly, griit_premium_annual.
+ * RevenueCat (react-native-purchases) is not loaded in Expo Go to avoid native module crashes.
  */
 
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import { setSubscriptionState } from "./premium";
 import { trpcMutate } from "./trpc";
+
+/** Lazy load Purchases so we never load it in Expo Go (avoids ReactFabric crash). */
+function getPurchases(): { default: { configure: (opts: unknown) => void; getCustomerInfo: () => Promise<unknown>; addCustomerInfoUpdateListener: (cb: (info: unknown) => void) => () => void; restorePurchases: () => Promise<unknown> } } | null {
+  if (Platform.OS === "web") return null;
+  if (Constants.appOwnership === "expo") return null; // Expo Go - native modules not available
+  try {
+    return require("react-native-purchases");
+  } catch {
+    return null;
+  }
+}
 
 const REVENUECAT_API_KEY_APPLE = process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY ?? "";
 const REVENUECAT_API_KEY_GOOGLE = process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY ?? "";
@@ -50,15 +63,17 @@ export async function initSubscription(userId: string): Promise<void> {
   const googleKey = REVENUECAT_API_KEY_GOOGLE.trim();
   if (!appleKey && !googleKey) return;
 
+  const purchasesModule = getPurchases();
+  if (!purchasesModule?.default) return;
+
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Purchases = require("react-native-purchases").default;
+    const Purchases = purchasesModule.default;
     Purchases.configure({
       apiKey: Platform.OS === "ios" ? appleKey : googleKey,
       appUserID: userId,
     });
 
-    const info = await Purchases.getCustomerInfo();
+    const info = (await Purchases.getCustomerInfo()) as { entitlements?: { active?: Record<string, { expirationDate?: string | null; productIdentifier?: string }> } };
     const entitlement = info.entitlements?.active?.["premium"];
     const status = entitlement ? mapEntitlementToStatus(expirationDate(entitlement)) : "free";
     const expiry = entitlement ? expirationDate(entitlement) : null;
@@ -70,7 +85,8 @@ export async function initSubscription(userId: string): Promise<void> {
       subscription_product_id: entitlement?.productIdentifier ?? null,
     });
 
-    purchaserInfoListener = Purchases.addCustomerInfoUpdateListener(async (info: { entitlements?: { active?: Record<string, { expirationDate?: string | null; productIdentifier?: string }> } }) => {
+    purchaserInfoListener = Purchases.addCustomerInfoUpdateListener(async (infoArg: unknown) => {
+      const info = infoArg as { entitlements?: { active?: Record<string, { expirationDate?: string | null; productIdentifier?: string }> } };
       const ent = info.entitlements?.active?.["premium"];
       const st = ent ? mapEntitlementToStatus(expirationDate(ent)) : "free";
       const exp = ent ? expirationDate(ent) : null;
@@ -107,11 +123,12 @@ export function clearSubscription(): void {
  */
 export async function restorePurchases(): Promise<{ success: boolean }> {
   if (Platform.OS === "web") return { success: false };
+  const purchasesModule = getPurchases();
+  if (!purchasesModule?.default) return { success: false };
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Purchases = require("react-native-purchases").default;
-    const info = await Purchases.restorePurchases();
-    const entitlement = info.entitlements.active["premium"];
+    const Purchases = purchasesModule.default;
+    const info = (await Purchases.restorePurchases()) as { entitlements?: { active?: Record<string, { expirationDate?: string | null; productIdentifier?: string }> } };
+    const entitlement = info.entitlements?.active?.["premium"];
     const status = entitlement ? mapEntitlementToStatus(expirationDate(entitlement)) : "free";
     const expiry = entitlement ? expirationDate(entitlement) : null;
     setSubscriptionState(status, expiry);
