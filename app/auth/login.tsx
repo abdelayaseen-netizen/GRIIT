@@ -26,24 +26,40 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (loading || isSubmittingRef.current) return;
     isSubmittingRef.current = true;
-    
+
     if (!email || !password) {
       Alert.alert('Error', 'Please enter email and password');
+      isSubmittingRef.current = false;
       return;
     }
 
+    const trimmedEmail = email.trim().toLowerCase();
+    console.log('SIGNIN: attempting with', trimmedEmail);
+
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
         password,
       });
 
       if (error) {
+        console.error('SIGNIN: error:', error.message, error.status);
         Alert.alert('Login Failed', error.message);
+        return;
       }
-    } catch (e: any) {
-      Alert.alert('Error', e.message || 'An unexpected error occurred');
+
+      if (data?.session) {
+        console.log('SIGNIN: success, session:', data.session.user?.id);
+        // Auth state will update; redirector will send user to create-profile or (tabs)
+      } else {
+        console.error('SIGNIN: no session after signInWithPassword');
+        Alert.alert('Login Failed', 'No session returned. If you just signed up, check your email to confirm, or disable "Confirm email" in Supabase Auth settings.');
+      }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred';
+      console.error('SIGNIN: exception:', message, e);
+      Alert.alert('Error', message);
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;

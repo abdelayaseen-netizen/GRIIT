@@ -22,6 +22,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { trpcQuery } from "@/lib/trpc";
+import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/contexts/ThemeContext";
 import { colors as tokenColors } from "@/src/theme/tokens";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
@@ -182,16 +183,59 @@ export default function DiscoverScreen() {
 
   const fetchFeatured = useCallback(async () => {
     setIsFetching(true);
+    const params: Record<string, string> = {};
+    if (searchQuery) params.search = searchQuery;
+    if (activeCategory !== "all") params.category = activeCategory;
+
+    console.log("DISCOVER: Supabase URL:", process.env.EXPO_PUBLIC_SUPABASE_URL ?? "(not set)");
+    console.log("DISCOVER: API URL:", process.env.EXPO_PUBLIC_API_URL ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? "(not set)");
+    console.log("DISCOVER: fetching via tRPC...");
+
     try {
-      const params: Record<string, string> = {};
-      if (searchQuery) params.search = searchQuery;
-      if (activeCategory !== "all") params.category = activeCategory;
-      const data = await trpcQuery('challenges.getFeatured', params);
+      const data = await trpcQuery("challenges.getFeatured", params);
+      const dataPreview = JSON.stringify(data).substring(0, 200);
+      console.log("DISCOVER: tRPC response:", dataPreview);
+
       const list = Array.isArray(data) ? data : (data as { items?: unknown[] })?.items ?? [];
-      setFeaturedData(list);
-      setFeaturedError(false);
+      if (list.length > 0) {
+        setFeaturedData(list);
+        setFeaturedError(false);
+        setFeaturedLoading(false);
+        setIsFetching(false);
+        return;
+      }
+
+      console.log("DISCOVER: tRPC returned empty, trying direct Supabase...");
     } catch (err) {
-      console.error("[Discover] challenges.getFeatured failed:", err);
+      console.error("DISCOVER: error:", err);
+      console.log("DISCOVER: tRPC failed, trying direct Supabase...");
+    }
+
+    // Direct Supabase fallback (bypass tRPC)
+    try {
+      const { data: directData, error: directError } = await supabase
+        .from("challenges")
+        .select("*, challenge_tasks (*)")
+        .eq("visibility", "PUBLIC")
+        .eq("status", "published")
+        .order("is_featured", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      console.log("DISCOVER DIRECT QUERY:", { count: directData?.length ?? 0, error: directError?.message ?? null });
+      console.log("DISCOVER: direct Supabase result:", directData?.length ?? 0, "challenges");
+
+      if (directError) {
+        console.error("DISCOVER: direct Supabase error:", directError.message, directError.code);
+      }
+      if (directData && directData.length > 0) {
+        setFeaturedData(directData);
+        setFeaturedError(false);
+      } else {
+        setFeaturedError(true);
+      }
+    } catch (directErr) {
+      console.error("DISCOVER: error:", directErr);
       setFeaturedError(true);
     } finally {
       setFeaturedLoading(false);

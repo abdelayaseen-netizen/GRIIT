@@ -96,11 +96,20 @@ function AuthRedirector() {
     if (loading || !profileChecked) return;
 
     const first = segments[0];
+    const path = typeof first === "string" ? first : (Array.isArray(first) ? (first as string[]).join("/") : String(first));
     const inAuth = (first as any) === "auth";
     const onCreateProfile = (first as any) === "create-profile";
     const inOnboarding = (first as any) === "onboarding";
     const inOnboardingQuestions = (first as any) === "onboarding-questions";
     const inDay1QuickWin = (first as any) === "day1-quick-win";
+
+    console.log("REDIRECTOR: user state:", {
+      isAuthenticated: !!user,
+      userId: user?.id ?? null,
+      hasProfile,
+      onboardingCompleted,
+      path,
+    });
 
     if (!user) {
       if (inAuth || inOnboardingQuestions) return;

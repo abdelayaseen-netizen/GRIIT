@@ -19,6 +19,36 @@ After this, `supabase.auth.signUp()` will return a `session` immediately (no con
 
 ---
 
+## If sign-in fails: user created before confirmation was disabled
+
+If a user was created when "Confirm email" was ON, their `email_confirmed_at` in `auth.users` may be `null`. Supabase can block sign-in until the email is confirmed.
+
+**Check in Supabase:**
+
+1. Dashboard → **Authentication** → **Users**.
+2. Find the user by email and open them (or use SQL below).
+3. Or run in **SQL Editor**:
+   ```sql
+   SELECT id, email, email_confirmed_at, created_at
+   FROM auth.users
+   WHERE email = 'the-user@example.com';
+   ```
+   If `email_confirmed_at` is `null`, sign-in may fail with "Email not confirmed".
+
+**Fix (confirm the user manually):**
+
+Run in **SQL Editor** (replace the email):
+
+```sql
+UPDATE auth.users
+SET email_confirmed_at = COALESCE(email_confirmed_at, NOW())
+WHERE email = 'the-user@example.com';
+```
+
+Or in the Dashboard: **Authentication** → **Users** → select user → use "Confirm email" / "Confirm user" if available.
+
+---
+
 ## Verify challenges RLS (Discover page)
 
 If Discover shows "No challenges yet" but the database has PUBLIC published challenges, run this in **Supabase SQL Editor** to list policies on `challenges`:
