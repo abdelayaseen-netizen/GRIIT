@@ -159,6 +159,7 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
     const days = Math.max(1, Math.ceil((end.getTime() - today.getTime()) / 86400000));
     durationDays = days;
   }
+  const visibility = (draft.visibility && String(draft.visibility).toUpperCase()) || "FRIENDS";
   const payload: Record<string, unknown> = {
     title: draft.title,
     description: draft.description ?? "",
@@ -169,7 +170,7 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
     replayPolicy: draft.type === "one_day" ? draft.replayPolicy : undefined,
     requireSameRules: draft.requireSameRules,
     showReplayLabel: draft.showReplayLabel,
-    visibility: draft.visibility,
+    visibility: visibility === "PUBLIC" || visibility === "PRIVATE" ? visibility : "FRIENDS",
     participationType: partType,
     teamSize: partType === "team" || partType === "shared_goal" ? (draft.teamSize ?? 2) : 1,
     tasks: draft.tasks.map((task) => ({

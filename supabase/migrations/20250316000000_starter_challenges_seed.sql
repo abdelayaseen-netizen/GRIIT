@@ -20,11 +20,11 @@ INSERT INTO public.challenges (
   participants_count,
   metadata
 ) VALUES
-  ('a1000001-4000-4000-8000-000000000001', NULL, '75 Hard', 'The ultimate mental toughness challenge. Follow the 75 Hard program daily.', 75, 'multi_day', 'public', 'extreme', 'fitness', 'published', true, 0, '{"short_hook": "The ultimate mental toughness challenge.", "theme_color": "#E8613C"}'::jsonb),
-  ('a1000001-4000-4000-8000-000000000002', NULL, '30 Day Cold Shower', 'Build mental resilience with daily cold showers.', 30, 'multi_day', 'public', 'medium', 'discipline', 'published', true, 0, '{"short_hook": "Build mental resilience with daily cold showers.", "theme_color": "#0EA5E9"}'::jsonb),
-  ('a1000001-4000-4000-8000-000000000003', NULL, 'Morning Routine Challenge', 'Build a powerful morning routine. Wake up early, journal, and move your body.', 21, 'multi_day', 'public', 'medium', 'mind', 'published', true, 0, '{"short_hook": "Build a powerful morning routine.", "theme_color": "#8B5CF6"}'::jsonb),
-  ('a1000001-4000-4000-8000-000000000004', NULL, 'No Phone Before 9am', 'Break the scroll habit. No phone for the first hour after waking.', 14, 'multi_day', 'public', 'easy', 'discipline', 'published', true, 0, '{"short_hook": "Break the scroll habit.", "theme_color": "#10B981"}'::jsonb),
-  ('a1000001-4000-4000-8000-000000000005', NULL, 'Read Every Day', 'Read at least 20 pages every single day. Build the reading habit.', 30, 'multi_day', 'public', 'medium', 'mind', 'published', true, 0, '{"short_hook": "Build the reading habit.", "theme_color": "#F59E0B"}'::jsonb)
+  ('a1000001-4000-4000-8000-000000000001', NULL, '75 Hard', 'The ultimate mental toughness challenge. Follow the 75 Hard program daily.', 75, 'multi_day', 'PUBLIC', 'extreme', 'fitness', 'published', true, 0, '{"short_hook": "The ultimate mental toughness challenge.", "theme_color": "#E8613C"}'::jsonb),
+  ('a1000001-4000-4000-8000-000000000002', NULL, '30 Day Cold Shower', 'Build mental resilience with daily cold showers.', 30, 'multi_day', 'PUBLIC', 'medium', 'discipline', 'published', true, 0, '{"short_hook": "Build mental resilience with daily cold showers.", "theme_color": "#0EA5E9"}'::jsonb),
+  ('a1000001-4000-4000-8000-000000000003', NULL, 'Morning Routine Challenge', 'Build a powerful morning routine. Wake up early, journal, and move your body.', 21, 'multi_day', 'PUBLIC', 'medium', 'mind', 'published', true, 0, '{"short_hook": "Build a powerful morning routine.", "theme_color": "#8B5CF6"}'::jsonb),
+  ('a1000001-4000-4000-8000-000000000004', NULL, 'No Phone Before 9am', 'Break the scroll habit. No phone for the first hour after waking.', 14, 'multi_day', 'PUBLIC', 'easy', 'discipline', 'published', true, 0, '{"short_hook": "Break the scroll habit.", "theme_color": "#10B981"}'::jsonb),
+  ('a1000001-4000-4000-8000-000000000005', NULL, 'Read Every Day', 'Read at least 20 pages every single day. Build the reading habit.', 30, 'multi_day', 'PUBLIC', 'medium', 'mind', 'published', true, 0, '{"short_hook": "Build the reading habit.", "theme_color": "#F59E0B"}'::jsonb)
 ON CONFLICT (id) DO NOTHING;
 
 -- Tasks: use challenge_tasks (challenge_id, title, task_type, order_index, config)

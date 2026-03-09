@@ -54,7 +54,7 @@ export const challengesRouter = createTRPCRouter({
       let query = ctx.supabase
         .from("challenges")
         .select("*, challenge_tasks (*)", { count: "exact" })
-        .eq("visibility", "public")
+        .eq("visibility", "PUBLIC")
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);
 
@@ -90,7 +90,7 @@ export const challengesRouter = createTRPCRouter({
       let query = ctx.supabase
         .from("challenges")
         .select("*, challenge_tasks (*)", { count: "exact" })
-        .eq("visibility", "public")
+        .eq("visibility", "PUBLIC")
         .eq("status", "published")
         .order("is_featured", { ascending: false })
         .order("participants_count", { ascending: false, nullsFirst: false })
@@ -140,7 +140,7 @@ export const challengesRouter = createTRPCRouter({
           challenge_tasks (id, title, task_type, order_index, config)
         `)
         .not('source_starter_id', 'is', null)
-        .eq('visibility', 'public')
+        .eq('visibility', 'PUBLIC')
         .eq('status', 'published');
 
       requireNoError(error, "Failed to load starter pack.");
@@ -664,7 +664,7 @@ export const challengesRouter = createTRPCRouter({
         replay_policy: input.replayPolicy || "allow_replay",
         require_same_rules: input.requireSameRules ?? true,
         show_replay_label: input.showReplayLabel ?? true,
-        visibility: (input.visibility || "FRIENDS").toLowerCase(),
+        visibility: (input.visibility || "FRIENDS").toUpperCase(),
         participation_type: input.participationType ?? "solo",
         team_size: input.teamSize ?? 1,
         run_status: runStatus,
