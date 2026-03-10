@@ -4,6 +4,7 @@ import { Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import LogProgressModal from "./LogProgressModal";
+import { formatShortDate } from "@/lib/date-format";
 
 export interface SharedGoalLogEntry {
   id: string;
@@ -48,7 +49,7 @@ function formatRelativeTime(iso: string): string {
   if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
   if (days === 1) return "Yesterday";
   if (days < 7) return `${days} days ago`;
-  return d.toLocaleDateString();
+  return formatShortDate(d);
 }
 
 export default function SharedGoalProgress({

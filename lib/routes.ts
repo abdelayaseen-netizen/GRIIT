@@ -1,0 +1,49 @@
+/**
+ * Centralized route paths for type-safe navigation.
+ * Use these constants instead of string literals. Use `as never` only when expo-router Href requires it.
+ */
+export const ROUTES = {
+  AUTH: "/auth",
+  AUTH_LOGIN: "/auth/login",
+  AUTH_SIGNUP: "/auth/signup",
+  CREATE_PROFILE: "/create-profile",
+  ONBOARDING: "/onboarding",
+  ONBOARDING_STEP4: "/onboarding?step=4",
+  ONBOARDING_QUESTIONS: "/onboarding-questions",
+  DAY1_QUICK_WIN: "/day1-quick-win",
+  TABS: "/(tabs)",
+  TABS_HOME: "/(tabs)",
+  TABS_DISCOVER: "/(tabs)/discover",
+  TABS_CREATE: "/(tabs)/create",
+  TABS_PROFILE: "/(tabs)/profile",
+  TABS_ACTIVITY: "/(tabs)/activity",
+  TABS_SETTINGS: "/settings",
+  EDIT_PROFILE: "/edit-profile",
+  SETTINGS: "/settings",
+  ACCOUNTABILITY: "/accountability",
+  ACCOUNTABILITY_ADD: "/accountability/add",
+  ACCOUNTABILITY_ADD_DAY1: "/accountability/add?from=day1",
+  SUCCESS: "/success",
+  CHALLENGE_ID: (id: string) => `/challenge/${id}` as const,
+  PROFILE_USERNAME: (username: string) => `/profile/${username}` as const,
+  INVITE_CODE: (code: string) => `/invite/${code}` as const,
+  TASK_JOURNAL: "/task/journal",
+  TASK_PHOTO: "/task/photo",
+  TASK_CHECKIN: "/task/checkin",
+  TASK_RUN: "/task/run",
+  TASK_TIMER: "/task/timer",
+  SECURE_CONFIRMATION: "/secure-confirmation",
+  COMMITMENT: "/commitment",
+  DAY_MISSED: "/day-missed",
+  CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
+  TEAMS: "/teams",
+} as const;
+
+/** Segment names for auth redirect logic (first segment of path). */
+export const SEGMENTS = {
+  AUTH: "auth",
+  CREATE_PROFILE: "create-profile",
+  ONBOARDING: "onboarding",
+  ONBOARDING_QUESTIONS: "onboarding-questions",
+  DAY1_QUICK_WIN: "day1-quick-win",
+} as const;

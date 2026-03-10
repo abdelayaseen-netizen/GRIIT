@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { ROUTES } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/colors';
@@ -128,7 +129,7 @@ export default function LoginScreen() {
 
             <TouchableOpacity
               style={[styles.secondaryButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-              onPress={() => router.push('/auth/signup' as any)}
+              onPress={() => router.push(ROUTES.AUTH_SIGNUP as never)}
               disabled={loading}
               activeOpacity={0.8}
             >

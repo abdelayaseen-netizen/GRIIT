@@ -12,6 +12,7 @@ import {
   Image,
   RefreshControl,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -37,6 +38,7 @@ import {
   Lock,
 } from "lucide-react-native";
 import { formatTimeHHMM, getTimeWindowState } from "@/lib/time-enforcement";
+import { formatTimeRemainingHMS, isChallengeExpired } from "@/lib/challenge-timer";
 import * as Haptics from "expo-haptics";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -50,10 +52,17 @@ import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track } from "@/lib/analytics";
 import { getJoinedStarterIds } from "@/lib/starter-join";
 import { useLeaveChallenge } from "@/lib/mutations";
+import { formatTRPCError } from "@/lib/api";
 import { FLAGS } from "@/lib/feature-flags";
+import { ROUTES } from "@/lib/routes";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
 import type { StarterChallenge, StarterTask } from "@/mocks/starter-challenges";
-import type { ChallengeTaskFromApi } from "@/types";
+import type {
+  ChallengeTaskFromApi,
+  ChallengeDetailFromApi,
+  ActiveChallengeFromApi,
+  CheckinFromApi,
+} from "@/types";
 import Colors from "@/constants/colors";
 
 const AVATAR_URLS = [
@@ -177,15 +186,8 @@ function formatCount(n: number): string {
 
 function getCountdown(endsAt: string | null): { text: string; expired: boolean } {
   if (!endsAt) return { text: "", expired: false };
-  const diff = new Date(endsAt).getTime() - Date.now();
-  if (diff <= 0) return { text: "Expired", expired: true };
-  const h = Math.floor(diff / 3_600_000);
-  const m = Math.floor((diff % 3_600_000) / 60_000);
-  const s = Math.floor((diff % 60_000) / 1000);
-  return {
-    text: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`,
-    expired: false,
-  };
+  const expired = isChallengeExpired(endsAt);
+  return { text: expired ? "Expired" : formatTimeRemainingHMS(endsAt), expired };
 }
 
 function CountdownTimer({ endsAt, theme }: { endsAt: string; theme: DifficultyTheme }) {
@@ -267,7 +269,7 @@ function MissionRow({
   isCompleted: boolean;
   isLast: boolean;
   onStart: () => void;
-  checkin?: any;
+  checkin?: CheckinFromApi | null;
   verificationMethod?: string | null;
   stravaConnected?: boolean | null;
   activeChallengeId?: string;
@@ -441,8 +443,8 @@ export default function ChallengeDetailScreen() {
 
   useEffect(() => {
     if (!ref || !currentUserId || !id || isStarter) return;
-    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch(() => {
-      // Fire-and-forget; no UI needed
+    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch((err) => {
+      if (__DEV__) console.warn("[challenge] referrals.recordOpen failed:", err instanceof Error ? err.message : err);
     });
   }, [ref, currentUserId, id, isStarter]);
 
@@ -487,36 +489,37 @@ export default function ChallengeDetailScreen() {
       };
     }
     if (remoteChallenge) {
-      const d = remoteChallenge as any;
+      const d = remoteChallenge as Record<string, unknown>;
       return {
         ...d,
-        is_daily: d.is_daily ?? d.duration_type === "24h",
-        ends_at: d.ends_at ?? null,
-        category: d.category ?? "default",
-        about: d.about ?? d.description ?? "",
-        active_today_count: d.active_today_count ?? 0,
-        hard_pick_rate: d.hard_pick_rate ?? null,
-        hard_finish_rate: d.hard_finish_rate ?? null,
-        completion_rate: d.completion_rate ?? null,
-        rules: d.rules ?? [],
-        fail_condition: d.fail_condition ?? null,
-        visibility: d.visibility ?? "public",
-      };
+        is_daily: (d.is_daily as boolean | undefined) ?? d.duration_type === "24h",
+        ends_at: (d.ends_at as string | null) ?? null,
+        category: (d.category as string) ?? "default",
+        about: (d.about as string) ?? (d.description as string) ?? "",
+        active_today_count: (d.active_today_count as number) ?? 0,
+        hard_pick_rate: (d.hard_pick_rate as number | null) ?? null,
+        hard_finish_rate: (d.hard_finish_rate as number | null) ?? null,
+        completion_rate: (d.completion_rate as number | null) ?? null,
+        rules: (d.rules as unknown[]) ?? [],
+        fail_condition: (d.fail_condition as string | null) ?? null,
+        visibility: (d.visibility as string) ?? "public",
+      } as unknown as ChallengeDetailFromApi;
     }
     return null;
   }, [isStarter, starterChallenge, remoteChallenge]);
 
-  const participationType = (challenge as any)?.participation_type ?? "solo";
-  const runStatus = (challenge as any)?.run_status as "waiting" | "active" | "completed" | "failed" | undefined;
-  const teamMembers = ((challenge as any)?.teamMembers ?? []) as TeamMemberForList[];
-  const teamSize = (challenge as any)?.team_size ?? 1;
+  const ch = challenge as ChallengeDetailFromApi | null | undefined;
+  const participationType = ch?.participation_type ?? "solo";
+  const runStatus = ch?.run_status;
+  const teamMembers: TeamMemberForList[] = (ch?.teamMembers ?? []) as TeamMemberForList[];
+  const teamSize = ch?.team_size ?? 1;
   const isTeamChallenge = participationType === "team";
   const isSharedGoal = participationType === "shared_goal";
-  const sharedGoalTotal = (challenge as any)?.sharedGoalTotal ?? 0;
-  const sharedGoalTarget = (challenge as any)?.shared_goal_target ?? 0;
-  const sharedGoalUnit = ((challenge as any)?.shared_goal_unit ?? "units") as string;
-  const deadlineType = (challenge as any)?.deadline_type as string | null | undefined;
-  const deadlineDate = (challenge as any)?.deadline_date as string | null | undefined;
+  const sharedGoalTotal = ch?.sharedGoalTotal ?? 0;
+  const sharedGoalTarget = ch?.shared_goal_target ?? 0;
+  const sharedGoalUnit = ch?.shared_goal_unit ?? "units";
+  const deadlineType = ch?.deadline_type ?? undefined;
+  const deadlineDate = ch?.deadline_date ?? undefined;
 
   const [sharedContributions, setSharedContributions] = useState<{ user_id: string; display_name: string; total: number; percent: number }[]>([]);
   const [sharedRecentLogs, setSharedRecentLogs] = useState<{ id: string; user_id: string; amount: number; unit: string; note: string | null; logged_at: string; display_name: string }[]>([]);
@@ -558,7 +561,7 @@ export default function ChallengeDetailScreen() {
   useEffect(() => {
     if (!isDaily || !challenge?.ends_at) return;
     const check = () => {
-      setExpired(new Date(challenge.ends_at!).getTime() <= Date.now());
+      setExpired(isChallengeExpired(challenge.ends_at));
     };
     check();
     const interval = setInterval(check, 5000);
@@ -572,7 +575,7 @@ export default function ChallengeDetailScreen() {
   const userCurrentDay = useMemo(() => {
     if (!isJoined) return 0;
     if (isStarter) return 1;
-    return (activeChallenge as any)?.current_day_index ?? 1;
+    return (activeChallenge as ActiveChallengeFromApi | null)?.current_day_index ?? 1;
   }, [isJoined, isStarter, activeChallenge]);
 
   const userStreak = useMemo(() => {
@@ -584,15 +587,15 @@ export default function ChallengeDetailScreen() {
     if (!challenge || !id) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
-      pathname: "/commitment",
+      pathname: ROUTES.COMMITMENT,
       params: {
         challengeId: id,
         isStarter: isStarter ? "1" : "0",
         title: challenge.title,
-        duration: challenge.duration_days?.toString() || "0",
-        difficulty: challenge.difficulty || "medium",
+        duration: String(challenge.duration_days ?? 0),
+        difficulty: challenge.difficulty ?? "medium",
       },
-    } as any);
+    } as never);
   }, [challenge, id, isStarter, router]);
 
   const handleCtaPressIn = useCallback(() => {
@@ -620,12 +623,12 @@ export default function ChallengeDetailScreen() {
         params.wordLimit = task.wordLimitWords.toString();
       }
       params.requirePhotoProof = needsPhotoProof ? "true" : "false";
-      router.push({ pathname: "/task/journal", params } as any);
+      router.push({ pathname: ROUTES.TASK_JOURNAL, params } as never);
       return;
     }
 
     if (apiTask.type === "manual" && needsPhotoProof) {
-      router.push({ pathname: "/task/photo", params: { taskId: task.id } } as any);
+      router.push({ pathname: ROUTES.TASK_PHOTO, params: { taskId: task.id } } as never);
       return;
     }
     if (task.type === "checkin") {
@@ -636,7 +639,7 @@ export default function ChallengeDetailScreen() {
         );
         return;
       }
-      router.push({ pathname: "/task/checkin", params: { taskId: task.id } } as any);
+      router.push({ pathname: ROUTES.TASK_CHECKIN, params: { taskId: task.id } } as never);
       return;
     }
     const routeMap: Record<string, string> = {
@@ -648,7 +651,7 @@ export default function ChallengeDetailScreen() {
     if (route) {
       const params: Record<string, string> = { taskId: task.id };
       if (needsPhotoProof) params.requirePhotoProof = "true";
-      router.push({ pathname: route as any, params });
+      router.push({ pathname: route, params } as never);
     }
   }, [router]);
 
@@ -657,7 +660,7 @@ export default function ChallengeDetailScreen() {
     activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
   );
   const activeChallengeId = activeChallenge?.id as string | undefined;
-  const hasStravaTasks = allTasks.some((t: any) => t.verification_method === "strava_activity");
+  const hasStravaTasks = allTasks.some((t) => (t as { verification_method?: string }).verification_method === "strava_activity");
 
   useEffect(() => {
     if (!isThisActiveChallenge || !hasStravaTasks) {
@@ -665,7 +668,7 @@ export default function ChallengeDetailScreen() {
       return;
     }
     trpcQuery(TRPC.integrations.getStravaConnection)
-      .then((conn: any) => setStravaConnected(!!conn))
+      .then((conn: unknown) => setStravaConnected(!!conn))
       .catch(() => setStravaConnected(false));
   }, [isThisActiveChallenge, hasStravaTasks]);
 
@@ -699,9 +702,10 @@ export default function ChallengeDetailScreen() {
               await leaveMutation.mutateAsync({ challengeId: id });
               await refetchAll();
               await refetchTodayCheckins();
-              router.replace("/(tabs)" as any);
+              router.replace(ROUTES.TABS as never);
             } catch (e: unknown) {
-              Alert.alert("Error", (e as Error)?.message ?? "Could not leave challenge.");
+              const { title, message } = formatTRPCError(e);
+              Alert.alert(title, message);
             }
           },
         },
@@ -787,6 +791,9 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
+  const headerGradientColors = isDaily ? ["#2D6B4E", "#1A4A35"] as const : ["#1A1A1A", "#2D2D2D"] as const;
+  const ctaBgColor = isDaily && !expired ? themeColors.success : theme.ctaBg;
+  const countdownTheme = isDaily ? { ...theme, accent: themeColors.success } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
   const visibilityLabel = challengeVisibility === "friends" ? "Friends" : challengeVisibility === "private" ? "Only me" : null;
@@ -796,8 +803,9 @@ export default function ChallengeDetailScreen() {
     ? <Lock size={11} color="#fff" />
     : null;
 
-  const progressPercent = isJoined && challenge.duration_days > 0
-    ? Math.min((userCurrentDay / challenge.duration_days) * 100, 100)
+  const durationDays = challenge?.duration_days ?? 0;
+  const progressPercent = isJoined && durationDays > 0
+    ? Math.min((userCurrentDay / durationDays) * 100, 100)
     : 0;
 
   return (
@@ -817,8 +825,8 @@ export default function ChallengeDetailScreen() {
             />
           }
         >
-          {/* HERO HEADER */}
-          <View style={[s.heroHeader, { backgroundColor: theme.headerBg }]}>
+          {/* HERO HEADER: green gradient 24h, dark gradient standard */}
+          <LinearGradient colors={headerGradientColors} style={s.heroHeader}>
             <SafeAreaView edges={["top"]} style={s.heroSafeArea}>
               {/* Top Nav */}
               <View style={s.topNav}>
@@ -850,7 +858,9 @@ export default function ChallengeDetailScreen() {
                         },
                         currentUserId
                       )
-                    ).catch(() => {});
+                    ).catch((err) => {
+                    if (__DEV__) console.warn("[challenge] share failed:", err instanceof Error ? err.message : err);
+                  });
                   }}
                   accessible
                   accessibilityLabel="Share challenge"
@@ -870,7 +880,9 @@ export default function ChallengeDetailScreen() {
                         onPress: () => {
                           import("@/lib/share").then(({ inviteToChallenge }) =>
                             inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                          ).catch(() => {});
+                          ).catch((err) => {
+                            if (__DEV__) console.warn("[challenge] invite failed:", err instanceof Error ? err.message : err);
+                          });
                         },
                       },
                     ], { cancelable: true });
@@ -920,7 +932,7 @@ export default function ChallengeDetailScreen() {
                 </View>
               </View>
             </SafeAreaView>
-          </View>
+          </LinearGradient>
 
           {/* BODY */}
           <View style={s.body}>
@@ -949,7 +961,9 @@ export default function ChallengeDetailScreen() {
                       onInvite={() => {
                         import("@/lib/share").then(({ inviteToChallenge }) =>
                           inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                        ).catch(() => {});
+                        ).catch((err) => {
+                          if (__DEV__) console.warn("[challenge] inviteToChallenge failed:", err instanceof Error ? err.message : err);
+                        });
                       }}
                     />
                     <TeamMemberList
@@ -962,7 +976,7 @@ export default function ChallengeDetailScreen() {
                         <Text style={s.failCtaText}>Challenge failed for all {teamMembers.length} team members</Text>
                         <TouchableOpacity
                           style={[s.failCtaBtn, { backgroundColor: theme.accent }]}
-                          onPress={() => router.replace("/(tabs)" as any)}
+                          onPress={() => router.replace(ROUTES.TABS as never)}
                           activeOpacity={0.85}
                         >
                           <Text style={s.failCtaBtnText}>Back to Home</Text>
@@ -995,7 +1009,7 @@ export default function ChallengeDetailScreen() {
 
             {/* Daily Countdown */}
             {isDaily && challenge.ends_at && !expired && (
-              <CountdownTimer endsAt={challenge.ends_at} theme={theme} />
+              <CountdownTimer endsAt={challenge.ends_at} theme={countdownTheme} />
             )}
             {isDaily && expired && (
               <View style={s.expiredBanner}>
@@ -1034,11 +1048,11 @@ export default function ChallengeDetailScreen() {
               <SocialAvatars />
               <View style={s.socialTextWrap}>
                 <Text style={s.socialPrimary}>
-                  {formatCount(challenge.participants_count)} in this challenge
+                  {formatCount(challenge.participants_count ?? 0)} in this challenge
                 </Text>
-                {challenge.active_today_count > 0 && (
+                {(challenge.active_today_count ?? 0) > 0 && (
                   <Text style={s.socialSecondary}>
-                    {formatCount(challenge.active_today_count)} active today
+                    {formatCount(challenge.active_today_count ?? 0)} active today
                   </Text>
                 )}
               </View>
@@ -1074,11 +1088,11 @@ export default function ChallengeDetailScreen() {
               <Text style={s.sectionTitle}>Today&apos;s Missions</Text>
               <View style={s.missionsCard}>
                 {allTasks.map((task, index) => {
-                  const checkin = todayCheckins.find((c: any) => c.task_id === task.id);
+                  const checkin = todayCheckins.find((c: CheckinFromApi) => c.task_id === task.id);
                   const isCompleted =
                     isJoinedRemote &&
                     todayCheckins.some(
-                      (c: any) => c.task_id === task.id && c.status === "completed"
+                      (c: CheckinFromApi) => c.task_id === task.id && c.status === "completed"
                     );
                   return (
                     <MissionRow
@@ -1089,11 +1103,11 @@ export default function ChallengeDetailScreen() {
                       isLast={index === allTasks.length - 1}
                       onStart={() => handleMissionStart(task)}
                       checkin={checkin}
-                      verificationMethod={(task as any).verification_method}
+                      verificationMethod={(task as { verification_method?: string }).verification_method}
                       stravaConnected={hasStravaTasks ? stravaConnected : null}
                       activeChallengeId={isThisActiveChallenge ? activeChallengeId : undefined}
                       stravaVerifyPending={stravaVerifyPending === task.id}
-                      onConnectStrava={isThisActiveChallenge ? () => router.push("/(tabs)/profile" as any) : undefined}
+                      onConnectStrava={isThisActiveChallenge ? () => router.push(ROUTES.TABS_PROFILE as never) : undefined}
                       onVerifyStrava={async () => {
                         if (!activeChallengeId) return;
                         setStravaVerifyPending(task.id);
@@ -1121,7 +1135,7 @@ export default function ChallengeDetailScreen() {
               <View style={s.rulesSection}>
                 <Text style={s.sectionTitle}>Rules</Text>
                 <View style={s.rulesCard}>
-                  {rules.map((rule: string, i: number) => {
+                  {(rules as string[]).map((rule: string, i: number) => {
                     const isWarning = rule.toLowerCase().includes("miss") || rule.toLowerCase().includes("fail") || rule.toLowerCase().includes("reset");
                     return (
                       <View key={i} style={[s.ruleRow, i < rules.length - 1 && s.ruleRowBorder]}>
@@ -1154,6 +1168,8 @@ export default function ChallengeDetailScreen() {
                 onPress={handleLeave}
                 disabled={leavePending}
                 activeOpacity={0.7}
+                accessibilityLabel="Leave challenge"
+                accessibilityRole="button"
               >
                 {leavePending ? (
                   <ActivityIndicator size="small" color={themeColors.text?.secondary} />
@@ -1176,8 +1192,8 @@ export default function ChallengeDetailScreen() {
           ) : (
             <Animated.View style={{ transform: [{ scale: ctaScaleAnim }] }}>
               <TouchableOpacity
-                style={[s.ctaButton, { backgroundColor: theme.ctaBg }]}
-                onPress={isJoined ? () => router.push("/(tabs)") : user ? () => handleJoin() : () => router.push({ pathname: "/onboarding-questions", params: id ? { challengeId: id } : undefined } as any)}
+                style={[s.ctaButton, { backgroundColor: ctaBgColor }]}
+                onPress={isJoined ? () => router.push(ROUTES.TABS as never) : user ? () => handleJoin() : () => router.push({ pathname: ROUTES.ONBOARDING_QUESTIONS, params: id ? { challengeId: id } : undefined } as never)}
                 onPressIn={handleCtaPressIn}
                 onPressOut={handleCtaPressOut}
                 disabled={joinDisabled}
@@ -1199,7 +1215,9 @@ export default function ChallengeDetailScreen() {
                 track({ name: "invite_shared", challengeId: id ?? undefined, source: "challenge_detail" });
                 import("@/lib/share").then(({ inviteToChallenge }) =>
                   inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                ).catch(() => {});
+                ).catch((err) => {
+                  if (__DEV__) console.warn("[challenge] invite failed:", err instanceof Error ? err.message : err);
+                });
               }}
               activeOpacity={0.7}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -1818,8 +1836,9 @@ const s = StyleSheet.create({
   ctaButton: {
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 52,
     paddingVertical: 17,
-    borderRadius: 14,
+    borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,

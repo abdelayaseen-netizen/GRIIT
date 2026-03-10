@@ -6,13 +6,22 @@ import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/
 import { getTodayDateKey, daysBetweenKeys } from "../../lib/date-utils";
 import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
 
+/** Subscription fields are written only by profiles.validateSubscription (server-side RevenueCat validation). */
 const PROFILE_UPDATE_KEYS = [
   "username", "display_name", "bio", "avatar_url", "cover_url",
   "onboarding_completed", "onboarding_completed_at", "onboarding_answers",
   "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
-  "subscription_status", "subscription_expiry", "subscription_platform", "subscription_product_id",
 ] as const;
+
+type SubscriptionStatus = "free" | "premium" | "trial";
+
+function mapEntitlementToStatus(expiresDate: string | null): SubscriptionStatus {
+  if (!expiresDate) return "free";
+  const expiry = new Date(expiresDate);
+  if (Number.isNaN(expiry.getTime())) return "free";
+  return expiry > new Date() ? "premium" : "free";
+}
 
 export const profilesRouter = createTRPCRouter({
   create: protectedProcedure
@@ -88,6 +97,92 @@ export const profilesRouter = createTRPCRouter({
       return data;
     }),
 
+  /** Validates subscription with RevenueCat and writes to profiles. Client must not write subscription fields. */
+  validateSubscription: protectedProcedure
+    .mutation(async ({ ctx }): Promise<{ subscription_status: SubscriptionStatus; subscription_expiry: string | null }> => {
+      const apiKey = process.env.REVENUECAT_API_KEY?.trim();
+      const appUserId = ctx.userId;
+
+      const getCurrentFromDb = async () => {
+        const { data, error } = await ctx.supabase
+          .from("profiles")
+          .select("subscription_status, subscription_expiry")
+          .eq("user_id", appUserId)
+          .maybeSingle();
+        if (error || !data) {
+          return { subscription_status: "free" as SubscriptionStatus, subscription_expiry: null as string | null };
+        }
+        const row = data as { subscription_status?: string | null; subscription_expiry?: string | null };
+        const status = (row.subscription_status === "premium" || row.subscription_status === "trial" ? row.subscription_status : "free") as SubscriptionStatus;
+        const expiry = typeof row.subscription_expiry === "string" ? row.subscription_expiry : null;
+        return { subscription_status: status, subscription_expiry: expiry };
+      };
+
+      if (!apiKey) {
+        if (process.env.NODE_ENV !== "test") {
+          console.warn("[profiles.validateSubscription] REVENUECAT_API_KEY not set; skipping validation, returning current DB values.");
+        }
+        return getCurrentFromDb();
+      }
+
+      try {
+        const url = `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}`;
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          if (process.env.NODE_ENV !== "test") {
+            console.warn("[profiles.validateSubscription] RevenueCat API error:", res.status, text?.slice(0, 200));
+          }
+          return getCurrentFromDb();
+        }
+
+        const json = (await res.json()) as {
+          subscriber?: {
+            entitlements?: Record<string, { expires_date?: string | null; product_identifier?: string }>;
+          };
+        };
+        const entitlements = json?.subscriber?.entitlements ?? {};
+        const premium = entitlements["premium"];
+        const expiresDate = premium?.expires_date ?? null;
+        const subscription_status = mapEntitlementToStatus(expiresDate);
+        const subscription_expiry = expiresDate;
+
+        const updatePayload: Record<string, unknown> = {
+          subscription_status,
+          subscription_expiry,
+          subscription_platform: null,
+          subscription_product_id: premium?.product_identifier ?? null,
+        };
+
+        const { error: updateError } = await ctx.supabase
+          .from("profiles")
+          .update(updatePayload)
+          .eq("user_id", appUserId);
+
+        if (updateError) {
+          if (process.env.NODE_ENV !== "test") {
+            console.warn("[profiles.validateSubscription] Failed to update profile:", updateError.message);
+          }
+          return getCurrentFromDb();
+        }
+
+        return { subscription_status, subscription_expiry };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (process.env.NODE_ENV !== "test") {
+          console.warn("[profiles.validateSubscription] Error:", message);
+        }
+        return getCurrentFromDb();
+      }
+    }),
+
   update: protectedProcedure
     .input(z.object({
       username: z.string().min(3).max(64).optional(),
@@ -101,10 +196,6 @@ export const profilesRouter = createTRPCRouter({
       daily_time_budget: z.string().max(32).optional(),
       starter_challenge_id: z.string().max(64).optional(),
       preferred_secure_time: z.string().max(16).optional(),
-      subscription_status: z.enum(["free", "premium", "trial"]).optional(),
-      subscription_expiry: z.string().max(64).optional().nullable(),
-      subscription_platform: z.enum(["ios", "android"]).optional().nullable(),
-      subscription_product_id: z.string().max(128).optional().nullable(),
       onboarding_answers: z.record(z.string(), z.unknown()).optional(),
     }))
     .mutation(async ({ input, ctx }) => {

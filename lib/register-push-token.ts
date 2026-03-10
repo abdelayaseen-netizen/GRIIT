@@ -24,7 +24,7 @@ export async function registerPushTokenWithBackend(): Promise<boolean> {
     track({ name: "push_permission_granted" });
 
     const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: (process as any).env?.EXPO_PUBLIC_EAS_PROJECT_ID ?? undefined,
+      projectId: (typeof process !== "undefined" && process.env ? (process.env as { EXPO_PUBLIC_EAS_PROJECT_ID?: string }).EXPO_PUBLIC_EAS_PROJECT_ID : undefined) ?? undefined,
     });
     const token = tokenData?.data;
     if (!token) return false;

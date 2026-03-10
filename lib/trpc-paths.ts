@@ -13,6 +13,7 @@ export const TRPC = {
     get: 'profiles.get',
     create: 'profiles.create',
     update: 'profiles.update',
+    validateSubscription: 'profiles.validateSubscription',
     getStats: 'profiles.getStats',
     getCompletedChallenges: 'profiles.getCompletedChallenges',
     getSecuredDateKeys: 'profiles.getSecuredDateKeys',

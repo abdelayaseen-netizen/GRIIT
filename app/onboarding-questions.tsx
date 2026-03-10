@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { colors, spacing, radius } from "@/src/theme/tokens";
 import { setOnboardingAnswers, setPendingChallengeId, type OnboardingAnswers } from "@/lib/onboarding-pending";
+import { ROUTES } from "@/lib/routes";
 
 const MAIN_GOAL_OPTIONS = [
   "Build discipline",
@@ -65,7 +66,7 @@ export default function OnboardingQuestionsScreen() {
     };
     await setOnboardingAnswers(answers);
     if (challengeId) await setPendingChallengeId(challengeId);
-    router.replace("/auth/signup" as any);
+    router.replace(ROUTES.AUTH_SIGNUP as never);
   }, [step, mainGoal, focus, daysPerWeek, challengePreference, challengeId, router]);
 
   const { width } = useWindowDimensions();

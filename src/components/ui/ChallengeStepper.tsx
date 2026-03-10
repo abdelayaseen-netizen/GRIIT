@@ -1,7 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
-import * as t from "@/src/theme/tokens";
+
+const STEPPER_CIRCLE = 32;
+const CONNECTOR_HEIGHT = 4;
+const GREEN = "#2D8B4E";
+const ORANGE = "#E8734A";
+const GRAY = "#E0DDD8";
 
 interface ChallengeStepperProps {
   currentStep: number;
@@ -31,7 +36,7 @@ export function ChallengeStepper({
               ]}
             >
               {isCompleted ? (
-                <Check size={18} color={t.colors.white} strokeWidth={2.5} />
+                <Check size={18} color="#fff" strokeWidth={2.5} />
               ) : (
                 <Text
                   style={[
@@ -67,41 +72,41 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   circle: {
-    width: t.measures.stepperCircle,
-    height: t.measures.stepperCircle,
-    borderRadius: t.measures.stepperCircle / 2,
+    width: STEPPER_CIRCLE,
+    height: STEPPER_CIRCLE,
+    borderRadius: STEPPER_CIRCLE / 2,
     alignItems: "center",
     justifyContent: "center",
   },
   circleCompleted: {
-    backgroundColor: t.colors.accentGreen,
+    backgroundColor: GREEN,
   },
   circleActive: {
-    backgroundColor: t.colors.accentOrangeCreate,
+    backgroundColor: ORANGE,
   },
   circleInactive: {
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: GRAY,
   },
   circleText: {
     fontSize: 14,
     fontWeight: "700",
-    color: t.colors.textPrimary,
+    color: "#1A1A1A",
   },
   circleTextActive: {
-    color: t.colors.white,
+    color: "#fff",
   },
   circleTextInactive: {
-    color: t.colors.textSecondaryCreate,
+    color: "#6B7280",
   },
   connector: {
     width: 40,
-    height: t.measures.stepperConnectorHeight,
+    height: CONNECTOR_HEIGHT,
     marginHorizontal: 4,
   },
   connectorCompleted: {
-    backgroundColor: t.colors.accentGreen,
+    backgroundColor: GREEN,
   },
   connectorIncomplete: {
-    backgroundColor: t.colors.borderLight,
+    backgroundColor: GRAY,
   },
 });

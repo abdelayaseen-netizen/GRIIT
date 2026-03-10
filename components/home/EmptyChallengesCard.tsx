@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native
 import { Target, ChevronRight } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import Colors from "@/constants/colors";
 
 export default function EmptyChallengesCard() {
@@ -10,7 +11,7 @@ export default function EmptyChallengesCard() {
 
   const handlePress = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push("/(tabs)/discover" as any);
+    router.push(ROUTES.TABS_DISCOVER as never);
   };
 
   return (

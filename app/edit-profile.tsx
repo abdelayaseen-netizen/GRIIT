@@ -63,8 +63,8 @@ export default function EditProfileScreen() {
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Something went wrong');
+    } catch (err: unknown) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setIsPending(false);
     }

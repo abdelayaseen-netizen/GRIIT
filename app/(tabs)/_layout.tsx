@@ -6,7 +6,6 @@ import {
   spacing,
   typography,
   shadows,
-  measures,
 } from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,8 +24,8 @@ export default function TabLayout() {
   const tabBg = colors.card;
   const tabBorder = colors.border;
   const tabActive = colors.accent;
-  const tabInactive = colors.text.tertiary;
-  const centerBtnBg = colors.accent;
+  const tabInactive = colors.text.muted;
+  const centerBtnBg = "#1A1A1A";
 
   return (
     <Tabs
@@ -93,14 +92,15 @@ export default function TabLayout() {
   );
 }
 
+const CENTER_BUTTON_SIZE = 56;
 const styles = StyleSheet.create({
   centerButton: {
-    width: measures.centerButtonSize,
-    height: measures.centerButtonSize,
-    borderRadius: measures.centerButtonSize / 2,
+    width: CENTER_BUTTON_SIZE,
+    height: CENTER_BUTTON_SIZE,
+    borderRadius: CENTER_BUTTON_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 24,
     ...shadows.centerButton,
   },
 });

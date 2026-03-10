@@ -49,10 +49,11 @@ export default function RunTaskScreen() {
   const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
   const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();
   
-  const task = currentChallenge?.tasks.find((t: any) => t.id === taskId);
+  const task = currentChallenge?.tasks.find((t: { id: string }) => t.id === taskId);
   const taskState = taskId ? getTaskStateForTemplate(taskId) : null;
   
-  const minDistanceMiles = task?.rules.minDistanceMiles || 1.0;
+  const taskRules = task?.rules as { minDistanceMiles?: number } | undefined;
+  const minDistanceMiles = taskRules?.minDistanceMiles ?? 1.0;
   const minTimerSeconds = 600;
   
   const [runMode, setRunMode] = useState<RunMode>("outdoor_gps");
@@ -81,14 +82,14 @@ export default function RunTaskScreen() {
   const parsedDistance = parseFloat(distanceInput) || 0;
   const isTreadmillDistanceValid = parsedDistance >= minDistanceMiles;
   
-  const canVerifyGps = isGpsComplete && !isTracking && taskState?.status !== "verified";
+  const canVerifyGps = isGpsComplete && !isTracking && (taskState as { status?: string } | null)?.status !== "verified";
   const canVerifyTreadmill = 
     treadmillStep === "distance" && 
     isTreadmillTimerComplete && 
     !backgroundViolation && 
     proofUri && 
     isTreadmillDistanceValid &&
-    taskState?.status !== "verified";
+    (taskState as { status?: string } | null)?.status !== "verified";
 
   useEffect(() => {
     if (runMode === "outdoor_gps") {
@@ -426,7 +427,7 @@ export default function RunTaskScreen() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  if (taskState?.status === "verified") {
+  if ((taskState as { status?: string } | null)?.status === "verified") {
     return (
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.verifiedContainer}>

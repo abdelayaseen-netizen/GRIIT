@@ -24,7 +24,7 @@ export default function TierProgressBar({
   return (
     <View style={styles.wrap}>
       <View style={styles.pill}>
-        <Flame size={14} color={Colors.accent} />
+        <Flame size={14} color="#fff" />
         <Text style={styles.pillText}>{currentTier}</Text>
       </View>
       <View style={styles.track}>
@@ -49,26 +49,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     marginBottom: 10,
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "#1A1A1A",
   },
   pillText: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: "#fff",
   },
   track: {
-    height: 8,
-    backgroundColor: Colors.pill,
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: "#F0EDE8",
+    borderRadius: 3,
     overflow: "hidden",
   },
   fill: {
     height: "100%",
-    backgroundColor: Colors.accent,
-    borderRadius: 4,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 3,
   },
   ptsText: {
     fontSize: 13,
-    color: Colors.text.secondary,
+    color: Colors.text.muted,
     marginTop: 8,
   },
 });

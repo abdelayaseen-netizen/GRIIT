@@ -15,6 +15,7 @@ import { ApiProvider } from "@/contexts/ApiContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
+import { ROUTES, SEGMENTS } from "@/lib/routes";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -56,7 +57,7 @@ function AuthRedirector() {
         .select("user_id, onboarding_completed")
         .eq("user_id", userId)
         .single()
-        .then(({ data }: { data: any }) => data);
+        .then(({ data }: { data: { user_id?: string; onboarding_completed?: boolean } | null }) => data);
 
       const result = await Promise.race([profilePromise, timeoutPromise]);
 
@@ -89,7 +90,7 @@ function AuthRedirector() {
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {
       Alert.alert("Session expired", "Please sign in again.");
-      router.replace("/auth" as any);
+      router.replace(ROUTES.AUTH as never);
     });
     return unsubscribe;
   }, [router]);
@@ -97,12 +98,12 @@ function AuthRedirector() {
   useEffect(() => {
     if (loading || !profileChecked) return;
 
-    const first = segments[0];
-    const inAuth = (first as any) === "auth";
-    const onCreateProfile = (first as any) === "create-profile";
-    const inOnboarding = (first as any) === "onboarding";
-    const inOnboardingQuestions = (first as any) === "onboarding-questions";
-    const inDay1QuickWin = (first as any) === "day1-quick-win";
+    const first = typeof segments[0] === "string" ? segments[0] : "";
+    const inAuth = first === SEGMENTS.AUTH;
+    const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
+    const inOnboarding = first === SEGMENTS.ONBOARDING;
+    const inOnboardingQuestions = first === SEGMENTS.ONBOARDING_QUESTIONS;
+    const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
 
     if (!user) {
       if (inAuth || inOnboardingQuestions) return;
@@ -110,17 +111,17 @@ function AuthRedirector() {
     }
 
     if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
-      router.replace("/create-profile" as any);
+      router.replace(ROUTES.CREATE_PROFILE as never);
       return;
     }
 
     if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin) {
-      router.replace("/onboarding" as any);
+      router.replace(ROUTES.ONBOARDING as never);
       return;
     }
 
     if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile || inOnboarding)) {
-      router.replace("/(tabs)" as any);
+      router.replace(ROUTES.TABS as never);
     }
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, router]);
 
@@ -148,6 +149,7 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen name="invite/[code]" options={{ headerShown: false }} />
+      <Stack.Screen name="teams" options={{ headerShown: false }} />
       <Stack.Screen name="profile/[username]" options={{ headerShown: false }} />
       <Stack.Screen 
         name="task/run" 

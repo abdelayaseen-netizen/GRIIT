@@ -80,10 +80,10 @@ export async function uploadProofImageFromBase64(
 
     const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
     return { url: urlData.publicUrl };
-  } catch (e: any) {
+  } catch (e: unknown) {
     clearTimeout(timeout);
-    if (e?.name === "AbortError") return { error: "Upload timed out. Please try again." };
-    return { error: e?.message || "Upload failed" };
+    if (e && typeof e === "object" && "name" in e && (e as { name: string }).name === "AbortError") return { error: "Upload timed out. Please try again." };
+    return { error: e instanceof Error ? e.message : "Upload failed" };
   }
 }
 
@@ -130,9 +130,9 @@ export async function uploadProofImageFromUri(uri: string): Promise<UploadProofR
 
     const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
     return { url: urlData.publicUrl };
-  } catch (e: any) {
+  } catch (e: unknown) {
     clearTimeout(timeout);
-    if (e?.name === "AbortError") return { error: "Upload timed out. Please try again." };
-    return { error: e?.message || "Network error. Please try again." };
+    if (e && typeof e === "object" && "name" in e && (e as { name: string }).name === "AbortError") return { error: "Upload timed out. Please try again." };
+    return { error: e instanceof Error ? e.message : "Network error. Please try again." };
   }
 }

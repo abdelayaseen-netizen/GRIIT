@@ -14,14 +14,17 @@ export function TaskTypeCard(p: {
   onPress: () => void;
   icon: React.ReactNode;
   accentColor: string;
+  /** When set, used as selected background instead of accentColor + 08 */
+  selectedBackgroundColor?: string;
 }) {
+  const selectedBg = p.selectedBackgroundColor ?? `${p.accentColor}08`;
   return (
     <TouchableOpacity
       style={[
         styles.card,
         p.selected && {
           borderColor: p.accentColor,
-          backgroundColor: `${p.accentColor}08`,
+          backgroundColor: selectedBg,
         },
       ]}
       onPress={p.onPress}

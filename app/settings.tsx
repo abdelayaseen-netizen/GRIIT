@@ -11,10 +11,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ChevronLeft, Users, Bell, Shield, Sun, Moon, Smartphone, Crown, User, LogOut, FileText } from "lucide-react-native";
+import { ChevronLeft, Sun, Moon, Smartphone, Crown, User, LogOut, FileText } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
 import Colors from "@/constants/colors";
+import { designTokens } from "@/lib/design-tokens";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -23,6 +24,9 @@ import { supabase } from "@/lib/supabase";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
 import { PremiumBadge } from "@/components/PremiumBadge";
+import { restorePurchases } from "@/lib/subscription";
+import { useApp } from "@/contexts/AppContext";
+import { ROUTES } from "@/lib/routes";
 
 const REMINDER_PRESETS = [
   { label: "6:00 AM", value: "06:00" },
@@ -34,29 +38,73 @@ const REMINDER_PRESETS = [
 
 
 const CONSEQUENCES = [
-  {
-    bullet: "orange",
-    title: "Miss 1 day",
-    sub: "Streak breaks (unless grace used)",
-  },
-  {
-    bullet: "orange",
-    title: "Miss 3 in 7 days",
-    sub: "On Thin Ice warning state",
-  },
-  {
-    bullet: "red",
-    title: "Miss 7 days",
-    sub: "Challenge auto-paused, tier drops",
-  },
-  {
-    bullet: "red",
-    title: "Miss 14 days",
-    sub: "Full reset, must rebuild 7 days",
-  },
+  { bulletColor: "#D4A017", title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
+  { bulletColor: "#E8734A", title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
+  { bulletColor: "#E53E3E", title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
+  { bulletColor: "#B91C1C", title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
 ] as const;
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
+
+type VisibilityValue = "public" | "friends" | "private";
+
+function VisibilitySubsection({
+  label,
+  value,
+  onChange,
+  themeColors,
+}: {
+  label: string;
+  value: VisibilityValue;
+  onChange: (v: VisibilityValue) => void;
+  themeColors: import("@/lib/theme-palettes").ThemeColors;
+}) {
+  const options: { key: VisibilityValue; label: string }[] = [
+    { key: "public", label: "Public" },
+    { key: "friends", label: "Friends" },
+    { key: "private", label: "Private" },
+  ];
+  return (
+    <View style={visibilityStyles.wrap}>
+      <Text style={[visibilityStyles.label, { color: themeColors.text.primary }]}>{label}</Text>
+      <View style={visibilityStyles.pillRow}>
+        {options.map((opt) => (
+          <TouchableOpacity
+            key={opt.key}
+            style={[
+              visibilityStyles.pill,
+              value === opt.key && { backgroundColor: "#1A1A1A" },
+              value !== opt.key && { backgroundColor: themeColors.card, borderColor: themeColors.border },
+            ]}
+            onPress={() => onChange(opt.key)}
+            activeOpacity={0.8}
+          >
+            <Text style={[visibilityStyles.pillText, { color: value === opt.key ? "#fff" : themeColors.text.primary }]}>{opt.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Text style={[visibilityStyles.hint, { color: themeColors.text.muted }]}>
+        {value === "public" ? "Anyone can see" : value === "friends" ? "Only friends" : "Only you"}
+      </Text>
+    </View>
+  );
+}
+
+const visibilityStyles = StyleSheet.create({
+  wrap: { marginBottom: 16 },
+  label: { fontSize: 15, fontWeight: "700", marginBottom: 8 },
+  pillRow: { flexDirection: "row", gap: 8 },
+  pill: {
+    flex: 1,
+    height: 36,
+    borderRadius: designTokens.pillBorderRadius,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  pillText: { fontSize: 14, fontWeight: "500" },
+  hint: { fontSize: 13, marginTop: 6 },
+});
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -70,6 +118,11 @@ export default function SettingsScreen() {
   const [friendActivity, setFriendActivity] = useState(false);
   const [accountabilityCount, setAccountabilityCount] = useState(0);
   const [premiumModalVisible, setPremiumModalVisible] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const [profileVisibility, setProfileVisibility] = useState<"public" | "friends" | "private">("public");
+  const [challengeVisibility, setChallengeVisibility] = useState<"public" | "friends" | "private">("public");
+  const [activityVisibility, setActivityVisibility] = useState<"public" | "friends" | "private">("public");
+  const { refetchAll } = useApp();
 
   const loadReminderSettings = useCallback(async () => {
     if (isGuest) {
@@ -157,6 +210,36 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Privacy & Visibility */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitleLarge, { color: themeColors.text.primary }]}>👁 Privacy & Visibility</Text>
+          <Text style={[styles.privacyDesc, { color: themeColors.text.muted }]}>
+            Control who sees your profile, challenges, and activity. Like TikTok privacy settings.
+          </Text>
+          <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <VisibilitySubsection
+              label="Profile Visibility"
+              value={profileVisibility}
+              onChange={setProfileVisibility}
+              themeColors={themeColors}
+            />
+            <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+            <VisibilitySubsection
+              label="Challenge Visibility"
+              value={challengeVisibility}
+              onChange={setChallengeVisibility}
+              themeColors={themeColors}
+            />
+            <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+            <VisibilitySubsection
+              label="Activity Visibility"
+              value={activityVisibility}
+              onChange={setActivityVisibility}
+              themeColors={themeColors}
+            />
+          </View>
+        </View>
+
         {/* Profile */}
         {!isGuest && user && (
           <View style={styles.section}>
@@ -166,7 +249,7 @@ export default function SettingsScreen() {
             </View>
             <TouchableOpacity
               style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-              onPress={() => router.push("/edit-profile" as any)}
+              onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
               activeOpacity={0.9}
             >
               <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>{user.email ?? "Signed in"}</Text>
@@ -219,40 +302,39 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Accountability Circle */}
+        {/* Friends */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Users size={18} color={themeColors.text.primary} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Accountability Circle</Text>
-          </View>
+          <Text style={[styles.sectionTitleFriends, { color: themeColors.text.primary }]}>👥 Friends</Text>
           <TouchableOpacity
-            style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-            onPress={() => router.push("/accountability" as any)}
+            style={[styles.card, styles.friendsCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            onPress={() => router.push(ROUTES.ACCOUNTABILITY as never)}
             activeOpacity={0.9}
           >
-            <View style={styles.friendsRow}>
+            <View style={styles.friendsTwoCol}>
               <View style={styles.friendsCol}>
                 <Text style={[styles.friendsNum, { color: themeColors.text.primary }]}>{accountabilityCount}</Text>
-                <Text style={[styles.friendsLabel, { color: themeColors.text.secondary }]}>PARTNERS (MAX 3)</Text>
+                <Text style={[styles.friendsLabel, { color: themeColors.text.muted }]}>FRIENDS</Text>
+              </View>
+              <View style={[styles.friendsColDivider, { backgroundColor: themeColors.border }]} />
+              <View style={styles.friendsCol}>
+                <Text style={[styles.friendsNum, { color: themeColors.text.primary }]}>0</Text>
+                <Text style={[styles.friendsLabel, { color: themeColors.text.muted }]}>PENDING</Text>
               </View>
             </View>
-            <Text style={[styles.friendsDesc, { color: themeColors.text.secondary }]}>
-              Add 1–3 accountability partners. Manage invites and partners here.
+            <Text style={[styles.friendsDesc, { color: themeColors.text.muted }]}>
+              Friends can see your FRIENDS-only content. Find friends on the Movement tab.
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Notifications */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Bell size={18} color={themeColors.text.primary} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Notifications</Text>
-          </View>
+          <Text style={[styles.sectionTitleFriends, { color: themeColors.text.primary }]}>🔔 Notifications</Text>
           <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
                 <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Daily Reminder</Text>
-                <Text style={[styles.toggleSub, { color: themeColors.text.tertiary }]}>Time to secure your day (saved to server)</Text>
+                <Text style={[styles.toggleSub, { color: themeColors.text.muted }]}>Remind if not started by evening</Text>
               </View>
               {reminderLoading ? (
                 <ActivityIndicator size="small" color={themeColors.accent} />
@@ -260,8 +342,8 @@ export default function SettingsScreen() {
                 <Switch
                   value={dailyReminder}
                   onValueChange={handleReminderToggle}
-                  trackColor={{ false: themeColors.border, true: themeColors.accent }}
-                  thumbColor="#FFFFFF"
+                  trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
+                  thumbColor={dailyReminder ? themeColors.accent : "#f4f3f4"}
                 />
               )}
             </View>
@@ -296,7 +378,7 @@ export default function SettingsScreen() {
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
                 <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Last Call</Text>
-                <Text style={[styles.toggleSub, { color: themeColors.text.tertiary }]}>60 min before day resets</Text>
+                <Text style={[styles.toggleSub, { color: themeColors.text.muted }]}>60 minutes before day resets</Text>
               </View>
               <Switch
                 value={lastCall}
@@ -304,15 +386,15 @@ export default function SettingsScreen() {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setLastCall(v);
                 }}
-                trackColor={{ false: themeColors.border, true: themeColors.accent }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
+                thumbColor={lastCall ? themeColors.accent : "#f4f3f4"}
               />
             </View>
             <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
                 <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Friend Activity</Text>
-                <Text style={[styles.toggleSub, { color: themeColors.text.tertiary }]}>When friends respect or secure</Text>
+                <Text style={[styles.toggleSub, { color: themeColors.text.muted }]}>When friends respect or secure</Text>
               </View>
               <Switch
                 value={friendActivity}
@@ -320,14 +402,14 @@ export default function SettingsScreen() {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setFriendActivity(v);
                 }}
-                trackColor={{ false: themeColors.border, true: themeColors.accent }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
+                thumbColor={friendActivity ? themeColors.accent : "#f4f3f4"}
               />
             </View>
           </View>
         </View>
 
-        {/* Premium (future launch) */}
+        {/* Premium */}
         <View style={styles.section}>
           <View style={[styles.sectionHeader, { flexWrap: "wrap" }]}>
             <Crown size={18} color={themeColors.accent} />
@@ -355,6 +437,33 @@ export default function SettingsScreen() {
               <ChevronLeft size={20} color={themeColors.text.tertiary} style={{ transform: [{ rotate: "-90deg" }] }} />
             </View>
           </TouchableOpacity>
+          {!isGuest && Platform.OS !== "web" && (
+            <TouchableOpacity
+              style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border, marginTop: 10 }]}
+              onPress={async () => {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setRestoreLoading(true);
+                try {
+                  const { success } = await restorePurchases();
+                  if (success) await refetchAll();
+                } finally {
+                  setRestoreLoading(false);
+                }
+              }}
+              activeOpacity={0.9}
+              disabled={restoreLoading}
+            >
+              <View style={styles.toggleRow}>
+                <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Restore Purchases</Text>
+                {restoreLoading ? (
+                  <ActivityIndicator size="small" color={themeColors.accent} />
+                ) : null}
+              </View>
+              <Text style={[styles.toggleSub, { color: themeColors.text.tertiary, marginTop: 4 }]}>
+                Restore premium if you already purchased on another device.
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Account */}
@@ -368,7 +477,7 @@ export default function SettingsScreen() {
             onPress={async () => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               await supabase.auth.signOut();
-              router.replace("/auth" as any);
+              router.replace(ROUTES.AUTH as never);
             }}
             activeOpacity={0.9}
           >
@@ -390,22 +499,14 @@ export default function SettingsScreen() {
 
         {/* Consequences */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Shield size={18} color={themeColors.text.primary} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Consequences</Text>
-          </View>
-          <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <Text style={[styles.sectionTitleFriends, { color: themeColors.text.primary }]}>🛡 Consequences</Text>
+          <View style={[styles.card, styles.consequenceCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             {CONSEQUENCES.map((item, i) => (
-              <View key={i} style={[i > 0 ? styles.consequenceRowBordered : styles.consequenceRow, i > 0 && { borderTopColor: themeColors.border }]}>
-                <View
-                  style={[
-                    styles.bullet,
-                    item.bullet === "red" ? styles.bulletRed : { backgroundColor: themeColors.accent },
-                  ]}
-                />
+              <View key={i} style={styles.consequenceRow}>
+                <View style={[styles.bullet, { backgroundColor: item.bulletColor }]} />
                 <View style={styles.consequenceTextWrap}>
                   <Text style={[styles.consequenceTitle, { color: themeColors.text.primary }]}>{item.title}</Text>
-                  <Text style={[styles.consequenceSub, { color: themeColors.text.tertiary }]}>{item.sub}</Text>
+                  <Text style={[styles.consequenceSub, { color: themeColors.text.muted }]}>{item.sub}</Text>
                 </View>
               </View>
             ))}
@@ -469,17 +570,37 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.text.primary,
   },
+  sectionTitleLarge: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.text.primary,
+    marginBottom: 8,
+  },
+  sectionTitleFriends: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.text.primary,
+    marginBottom: 10,
+  },
+  privacyDesc: {
+    fontSize: 14,
+    marginBottom: 12,
+    lineHeight: 20,
+    color: "#6B7280",
+  },
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 12,
+    borderRadius: designTokens.cardRadius,
     borderWidth: 1,
     borderColor: Colors.border,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
+    ...designTokens.cardShadow,
+  },
+  friendsCard: {},
+  friendsTwoCol: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
   },
   friendsRow: {
     flexDirection: "row",
@@ -487,6 +608,12 @@ const styles = StyleSheet.create({
   },
   friendsCol: {
     flex: 1,
+    alignItems: "center",
+  },
+  friendsColDivider: {
+    width: 1,
+    height: 36,
+    marginHorizontal: 8,
   },
   friendsNum: {
     fontSize: 28,
@@ -494,15 +621,14 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   friendsLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
-    color: Colors.text.secondary,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    marginTop: 2,
   },
   friendsDesc: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   cardDivider: {
     height: 1,
@@ -528,6 +654,7 @@ const styles = StyleSheet.create({
     color: Colors.text.tertiary,
     marginTop: 2,
   },
+  consequenceCard: { gap: 16 },
   consequenceRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -535,23 +662,17 @@ const styles = StyleSheet.create({
   consequenceRowBordered: {
     flexDirection: "row",
     alignItems: "flex-start",
-    paddingTop: 12,
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    paddingTop: 16,
+    marginTop: 16,
+    borderTopWidth: 0,
+    borderTopColor: "transparent",
   },
   bullet: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 6,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 4,
     marginRight: 12,
-  },
-  bulletOrange: {
-    backgroundColor: Colors.accent,
-  },
-  bulletRed: {
-    backgroundColor: "#C62828",
   },
   consequenceTextWrap: {
     flex: 1,

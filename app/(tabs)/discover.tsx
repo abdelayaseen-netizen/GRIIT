@@ -18,7 +18,6 @@ import {
   Brain,
   Shield,
   TrendingUp,
-  WifiOff,
   Zap,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
@@ -38,8 +37,41 @@ import {
   ChallengeRowCard,
 } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ROUTES } from "@/lib/routes";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline";
+
+/** Backend challenges.getFeatured can return paginated { items, nextCursor } or legacy array. */
+type GetFeaturedResponse =
+  | { items: FeaturedChallengeRaw[]; nextCursor?: string | null }
+  | FeaturedChallengeRaw[];
+
+type FeaturedChallengeRaw = {
+  id: string;
+  title?: string;
+  description?: string;
+  short_hook?: string;
+  theme_color?: string;
+  difficulty?: string;
+  duration_type?: string;
+  duration_days?: number;
+  category?: string;
+  visibility?: string;
+  status?: string;
+  is_featured?: boolean;
+  is_daily?: boolean;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  participants_count?: number;
+  active_today_count?: number;
+  tasks?: unknown[];
+  challenge_tasks?: unknown[];
+  participation_type?: string;
+  run_status?: string;
+  team_size?: number;
+  shared_goal_target?: number;
+  shared_goal_unit?: string;
+};
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   easy: "Easy",
@@ -77,7 +109,7 @@ function matchesSearch(c: StarterChallenge, q: string): boolean {
   );
 }
 
-function SkeletonPulse({ style }: { style: any }) {
+function SkeletonPulse({ style }: { style: import("react-native").StyleProp<import("react-native").ViewStyle> }) {
   const animValue = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -187,12 +219,10 @@ export default function DiscoverScreen() {
         category: activeCategory !== "all" ? activeCategory : undefined,
         search: searchQuery || undefined,
       };
-      const data = await trpcQuery("challenges.getFeatured", params);
-      const isPaginated = data != null && typeof data === "object" && "items" in data;
-      const items = isPaginated
-        ? (data as { items: unknown[]; nextCursor?: string | null }).items ?? []
-        : Array.isArray(data) ? data : [];
-      const nextCursor = isPaginated ? (data as { nextCursor?: string | null }).nextCursor ?? undefined : undefined;
+      const data = (await trpcQuery("challenges.getFeatured", params)) as GetFeaturedResponse;
+      const isPaginated = data != null && typeof data === "object" && !Array.isArray(data) && "items" in data;
+      const items = isPaginated ? (data.items ?? []) : Array.isArray(data) ? data : [];
+      const nextCursor = isPaginated && "nextCursor" in data ? data.nextCursor ?? undefined : undefined;
       return { items, nextCursor: nextCursor ?? undefined };
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -207,14 +237,23 @@ export default function DiscoverScreen() {
 
   const isLoading = featuredQuery.isLoading;
   const isError = featuredQuery.isError;
-  const allChallenges = useMemo((): StarterChallenge[] => {
-    const serverData = featuredData;
+  /** Extends StarterChallenge with optional team/shared-goal fields from API. */
+  type DiscoverChallenge = StarterChallenge & {
+    participation_type?: string;
+    run_status?: string;
+    team_size?: number;
+    shared_goal_target?: number;
+    shared_goal_unit?: string;
+  };
+
+  const allChallenges = useMemo((): DiscoverChallenge[] => {
+    const serverData = featuredData as FeaturedChallengeRaw[];
     if (serverData && serverData.length > 0) {
-      return serverData.map((c: any) => {
+      return serverData.map((c) => {
         const tasks = c.tasks ?? c.challenge_tasks ?? [];
         return {
           id: c.id,
-          title: c.title,
+          title: c.title ?? "",
           description: c.description ?? "",
           short_hook: c.short_hook ?? c.description ?? "",
           theme_color: c.theme_color ?? tokenColors.accentOrange,
@@ -230,8 +269,8 @@ export default function DiscoverScreen() {
           ends_at: c.ends_at ?? null,
           participants_count: c.participants_count ?? 0,
           active_today_count: c.active_today_count ?? 0,
-          challenge_tasks: tasks,
-          tasks,
+          challenge_tasks: tasks as StarterChallenge["challenge_tasks"],
+          tasks: tasks as StarterChallenge["tasks"],
           participation_type: c.participation_type,
           run_status: c.run_status,
           team_size: c.team_size,
@@ -278,7 +317,7 @@ export default function DiscoverScreen() {
       try {
         if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       } catch { /* ignore */ }
-      router.push(`/challenge/${id}` as any);
+      router.push(ROUTES.CHALLENGE_ID(id) as never);
     },
     [router]
   );
@@ -318,17 +357,13 @@ export default function DiscoverScreen() {
     if (!isError) return null;
     return (
       <View style={styles.errorBanner}>
-        <View style={styles.errorBannerLeft}>
-          <WifiOff size={12} color="#B5B5B5" />
-          <Text style={styles.errorBannerText}>Offline mode</Text>
-        </View>
+        <Text style={styles.errorBannerText}>📡 Offline mode</Text>
         <TouchableOpacity
-          style={styles.retryPill}
           onPress={handleRefresh}
           activeOpacity={0.7}
           testID="discover-retry-button"
         >
-          <Text style={styles.retryPillText}>Retry</Text>
+          <Text style={[styles.retryPillText, { color: colors.accent }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
@@ -346,7 +381,7 @@ export default function DiscoverScreen() {
           title={isFiltered ? "No challenges found" : "No challenges yet. Be the first to create one!"}
           subtitle={searchQuery ? "Try a different search or category" : activeCategory !== "all" ? "Try another category or clear filters." : "Create a challenge and invite others to join."}
           primaryCtaLabel={searchQuery ? "Clear search" : isFiltered ? "Clear filters" : "Create challenge"}
-          onPrimaryCta={searchQuery ? clearSearch : isFiltered ? () => { setActiveCategory("all"); setSearchQuery(""); handleRefresh(); } : () => router.push("/(tabs)/create" as any)}
+          onPrimaryCta={searchQuery ? clearSearch : isFiltered ? () => { setActiveCategory("all"); setSearchQuery(""); handleRefresh(); } : () => router.push(ROUTES.TABS_CREATE as never)}
           secondaryCtaLabel="Refresh"
           onSecondaryCta={handleRefresh}
         />
@@ -378,11 +413,11 @@ export default function DiscoverScreen() {
               caption="Join in 2 taps · Easy"
             />
             <View style={styles.compactList}>
-              {starterPack.map((c: any) => (
+              {(starterPack as FeaturedChallengeRaw[]).map((c) => (
                 <ChallengeRowCard
                   key={c.id}
-                  title={c.title}
-                  description={c.short_hook || c.description}
+                  title={c.title ?? ""}
+                  description={(c.short_hook || c.description) ?? ""}
                   stripeColor={c.theme_color || tokenColors.orangeStripe}
                   durationLabel={c.duration_type === "24h" ? "24H" : `${c.duration_days ?? 1} day${(c.duration_days ?? 1) === 1 ? "" : "s"}`}
                   taskCount={c.tasks?.length ?? 0}
@@ -464,10 +499,10 @@ export default function DiscoverScreen() {
                   participantsCount={c.participants_count ?? 0}
                   statusDotColor={c.theme_color}
                   onPress={() => handleChallengePress(c.id)}
-                  participationType={(c as any).participation_type}
-                  teamSize={(c as any).team_size}
-                  sharedGoalTarget={(c as any).shared_goal_target}
-                  sharedGoalUnit={(c as any).shared_goal_unit}
+                  participationType={c.participation_type}
+                  teamSize={c.team_size}
+                  sharedGoalTarget={c.shared_goal_target}
+                  sharedGoalUnit={c.shared_goal_unit}
                 />
               ))}
             </View>
@@ -507,7 +542,7 @@ export default function DiscoverScreen() {
           <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search challenges…"
+            placeholder="Search challenges..."
             onClear={clearSearch}
           />
         </View>

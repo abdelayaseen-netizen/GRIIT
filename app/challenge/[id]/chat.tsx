@@ -22,6 +22,7 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { formatTimeAgo } from "@/lib/formatTimeAgo";
 import { FLAGS } from "@/lib/feature-flags";
+import { ROUTES } from "@/lib/routes";
 import Colors from "@/constants/colors";
 import { ChatMessage } from "@/types";
 
@@ -41,9 +42,10 @@ export default function ChallengeChatScreen() {
     activeUserChallenge,
   } = useApp();
 
-  const challenge = (challenges as any[]).find((c: any) => c.id === id);
-  const room = getChallengeRoom(id || "");
-  const messages = getChatMessages(room?.roomId || "");
+  type ChallengeWithChat = { id: string; roomId?: string; title?: string; participantsCount?: number };
+  const challenge = (challenges as ChallengeWithChat[]).find((c) => c.id === id);
+  const room = getChallengeRoom(id || "") as { roomId?: string } | null;
+  const messages = getChatMessages(room?.roomId || "") as import("@/types").ChatMessage[];
   const canSend = isChallengeMember(id || "");
 
   const [composerText, setComposerText] = useState("");
@@ -52,7 +54,7 @@ export default function ChallengeChatScreen() {
 
   useEffect(() => {
     if (!FLAGS.CHAT_ENABLED && id) {
-      router.replace(`/challenge/${id}` as any);
+      router.replace(ROUTES.CHALLENGE_ID(id) as never);
       return;
     }
   }, [id, router]);
@@ -270,17 +272,17 @@ export default function ChallengeChatScreen() {
           headerTitle: () => (
             <View style={styles.headerTitle}>
               <Text style={styles.headerTitleText} numberOfLines={1}>
-                {challenge.title}
+                {challenge?.title ?? "Chat"}
               </Text>
               <Text style={styles.headerSubtitle}>
-                {challenge.participantsCount.toLocaleString()} members
+                {(challenge?.participantsCount ?? 0).toLocaleString()} members
               </Text>
             </View>
           ),
           headerRight: () => (
             <TouchableOpacity
               style={styles.headerButton}
-              onPress={() => router.push(`/challenge/${id}/chat-info` as any)}
+              onPress={() => router.push(ROUTES.CHAT_INFO(id) as never)}
             >
               <Info size={22} color={Colors.text.primary} />
             </TouchableOpacity>

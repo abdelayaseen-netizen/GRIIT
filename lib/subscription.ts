@@ -40,15 +40,19 @@ function mapEntitlementToStatus(expirationDate: string | null): SubscriptionStat
   return expiry > new Date() ? "premium" : "free";
 }
 
-async function syncSubscriptionToBackend(params: {
-  subscription_status: SubscriptionStatus;
-  subscription_expiry: string | null;
-  subscription_platform: "ios" | "android" | null;
-  subscription_product_id: string | null;
-}): Promise<void> {
+/** Calls server-side validation (RevenueCat API + DB write). Updates local state from response. */
+async function validateAndSyncSubscription(): Promise<void> {
   try {
-    await trpcMutate("profiles.update", params);
-  } catch {
+    const result = await trpcMutate("profiles.validateSubscription") as {
+      subscription_status: SubscriptionStatus;
+      subscription_expiry: string | null;
+    };
+    setSubscriptionState(result.subscription_status, result.subscription_expiry);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (__DEV__) {
+      console.warn("[subscription] validateSubscription failed:", message);
+    }
     // Non-blocking; user can retry or status will sync on next launch
   }
 }
@@ -73,38 +77,18 @@ export async function initSubscription(userId: string): Promise<void> {
       appUserID: userId,
     });
 
-    const info = (await Purchases.getCustomerInfo()) as { entitlements?: { active?: Record<string, { expirationDate?: string | null; productIdentifier?: string }> } };
-    const entitlement = info.entitlements?.active?.["premium"];
-    const status = entitlement ? mapEntitlementToStatus(expirationDate(entitlement)) : "free";
-    const expiry = entitlement ? expirationDate(entitlement) : null;
-    setSubscriptionState(status, expiry);
-    await syncSubscriptionToBackend({
-      subscription_status: status,
-      subscription_expiry: expiry,
-      subscription_platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : null,
-      subscription_product_id: entitlement?.productIdentifier ?? null,
-    });
+    await validateAndSyncSubscription();
 
-    purchaserInfoListener = Purchases.addCustomerInfoUpdateListener(async (infoArg: unknown) => {
-      const info = infoArg as { entitlements?: { active?: Record<string, { expirationDate?: string | null; productIdentifier?: string }> } };
-      const ent = info.entitlements?.active?.["premium"];
-      const st = ent ? mapEntitlementToStatus(expirationDate(ent)) : "free";
-      const exp = ent ? expirationDate(ent) : null;
-      setSubscriptionState(st, exp);
-      await syncSubscriptionToBackend({
-        subscription_status: st,
-        subscription_expiry: exp,
-        subscription_platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : null,
-        subscription_product_id: ent?.productIdentifier ?? null,
-      });
+    purchaserInfoListener = Purchases.addCustomerInfoUpdateListener(async () => {
+      await validateAndSyncSubscription();
     });
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (__DEV__) {
+      console.warn("[subscription] initSubscription error:", message);
+    }
     // RevenueCat not linked or config error — keep free tier
   }
-}
-
-function expirationDate(entitlement: { expirationDate?: string | null }): string | null {
-  return entitlement?.expirationDate ?? null;
 }
 
 /**
@@ -127,19 +111,14 @@ export async function restorePurchases(): Promise<{ success: boolean }> {
   if (!purchasesModule?.default) return { success: false };
   try {
     const Purchases = purchasesModule.default;
-    const info = (await Purchases.restorePurchases()) as { entitlements?: { active?: Record<string, { expirationDate?: string | null; productIdentifier?: string }> } };
-    const entitlement = info.entitlements?.active?.["premium"];
-    const status = entitlement ? mapEntitlementToStatus(expirationDate(entitlement)) : "free";
-    const expiry = entitlement ? expirationDate(entitlement) : null;
-    setSubscriptionState(status, expiry);
-    await syncSubscriptionToBackend({
-      subscription_status: status,
-      subscription_expiry: expiry,
-      subscription_platform: Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : null,
-      subscription_product_id: entitlement?.productIdentifier ?? null,
-    });
+    await Purchases.restorePurchases();
+    await validateAndSyncSubscription();
     return { success: true };
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (__DEV__) {
+      console.warn("[subscription] restorePurchases error:", message);
+    }
     return { success: false };
   }
 }

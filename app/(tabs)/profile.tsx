@@ -41,6 +41,7 @@ import {
   TierProgressBar,
   LifetimeStatsCard,
   DisciplineCalendar,
+  DisciplineGrowthCard,
   AchievementsSection,
   CompletedChallengesSection,
   SocialStatsCard,
@@ -49,6 +50,9 @@ import {
 } from "@/components/profile";
 import type { AchievementItem } from "@/components/profile";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { formatMonthYearLong } from "@/lib/date-format";
+import { ROUTES } from "@/lib/routes";
+import type { StatsFromApi } from "@/types";
 
 
 type StravaActivity = {
@@ -329,8 +333,8 @@ export default function ProfileScreen() {
   const bestStreak = stats?.longestStreak || 0;
   const activeChallenges = stats?.activeChallenges || 0;
   const completedChallengesCount = stats?.completedChallenges || 0;
-  const totalDaysSecured = (stats as any)?.totalDaysSecured ?? 0;
-  const tierName = (stats as any)?.tier ?? "Starter";
+  const totalDaysSecured = (stats as StatsFromApi)?.totalDaysSecured ?? 0;
+  const tierName = (stats as StatsFromApi)?.tier ?? "Starter";
 
   const handleShare = useCallback(async () => {
     if (Platform.OS !== "web") {
@@ -348,13 +352,12 @@ export default function ProfileScreen() {
       // Share cancelled or failed — no user feedback needed
     }
   }, [profile?.username, currentStreak, totalDaysSecured, tierName]);
-  const ptsToNext = (stats as any)?.pointsToNextTier ?? 0;
-  const nextTierName = (stats as any)?.nextTierName ?? null;
+  const ptsToNext = (stats as StatsFromApi)?.pointsToNextTier ?? 0;
+  const nextTierName = (stats as StatsFromApi)?.nextTierName ?? null;
 
   const joinedDate = useMemo(() => {
     if (!profile?.created_at) return "";
-    const d = new Date(profile.created_at);
-    return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    return formatMonthYearLong(profile.created_at);
   }, [profile?.created_at]);
 
   const achievements: AchievementItem[] = useMemo(() => {
@@ -492,18 +495,20 @@ export default function ProfileScreen() {
         >
           <Animated.View style={{ opacity: headerFade }}>
             <ProfileHeader
-            avatarUrl={profile.avatar_url}
-            fullName={profile.display_name || profile.username}
-            username={profile.username}
-            currentTier={tierName}
+            avatarUrl={profile.avatar_url ?? undefined}
+            fullName={(profile.display_name || profile.username || "").trim() || "User"}
+            username={profile.username ?? ""}
+            currentTier={tierName ?? "Starter"}
             joinDate={joinedDate || undefined}
             onShare={handleShare}
+            bio={bioText || undefined}
           />
         </Animated.View>
 
         <DisciplineScoreCard
           disciplineScore={disciplineScore}
           tier={tierName}
+          daysSecured={totalDaysSecured}
           friendRank={leaderboardRank}
           zeroStateHint={disciplineScore === 0 ? "Complete today's tasks to start your streak." : undefined}
         />
@@ -516,6 +521,7 @@ export default function ProfileScreen() {
         />
 
         <LifetimeStatsCard
+          currentStreak={currentStreak}
           longestStreak={bestStreak}
           daysSecured={totalDaysSecured}
           challengesCompleted={completedChallengesCount}
@@ -526,6 +532,13 @@ export default function ProfileScreen() {
           securedDateKeys={securedDateKeys}
           currentStreak={currentStreak}
           longestStreak={bestStreak}
+        />
+
+        <DisciplineGrowthCard
+          pastValue={0}
+          currentValue={disciplineScore}
+          delta={disciplineScore}
+          periodLabel="30 days"
         />
 
         <AchievementsSection achievements={achievements} loading={dashboardDataLoading} />
@@ -555,10 +568,10 @@ export default function ProfileScreen() {
         />
 
         <ShareDisciplineCard
-          name={profile.display_name || profile.username}
+          name={(profile.display_name || profile.username || "").trim() || "User"}
           disciplineScore={disciplineScore}
           currentStreak={currentStreak}
-          tier={tierName}
+          tier={tierName ?? "Starter"}
           onShare={handleShare}
         />
 
@@ -571,7 +584,7 @@ export default function ProfileScreen() {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              router.push("/edit-profile" as any);
+              router.push(ROUTES.EDIT_PROFILE as never);
             }}
             activeOpacity={0.7}
           >
@@ -591,7 +604,7 @@ export default function ProfileScreen() {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              router.push("/settings" as any);
+              router.push(ROUTES.SETTINGS as never);
             }}
             activeOpacity={0.7}
           >
@@ -617,7 +630,7 @@ export default function ProfileScreen() {
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.signOutText}>→ Sign Out</Text>
+            <Text style={[styles.signOutText, { color: colors.danger }]}>↪ Sign Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -904,9 +917,9 @@ function createProfileStyles(c: ThemeColors) {
       color: c.text.primary,
     },
     menuSubtext: { fontSize: 11, color: c.text.muted, marginTop: 1 },
-    dangerSection: { paddingHorizontal: 16, paddingTop: 28, alignItems: "center" as const },
+    dangerSection: { paddingHorizontal: 16, paddingTop: 24, marginTop: 8, alignItems: "center" as const },
     signOutButton: { paddingVertical: 10, paddingHorizontal: 20 },
-    signOutText: { fontSize: 14, fontWeight: "600" as const, color: "#B91C1C" },
+    signOutText: { fontSize: 16, fontWeight: "600" as const },
     bottomSpacer: { height: 20 },
   });
 }

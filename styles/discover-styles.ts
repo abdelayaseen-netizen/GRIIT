@@ -12,18 +12,15 @@ export const styles = StyleSheet.create({
     paddingBottom: t.spacing.searchBottom,
   },
   title: {
-    fontSize: t.typography.discoverTitle.fontSize,
-    fontWeight: t.typography.discoverTitle.fontWeight,
-    letterSpacing: t.typography.discoverTitle.letterSpacing,
-    lineHeight: t.typography.discoverTitle.lineHeight,
+    fontSize: 32,
+    fontWeight: "700" as const,
     color: t.colors.textPrimary,
   },
   subtitle: {
-    fontSize: t.typography.subtitle.fontSize,
-    fontWeight: t.typography.subtitle.fontWeight,
-    lineHeight: t.typography.subtitle.lineHeight,
+    fontSize: 14,
+    fontWeight: "400" as const,
     color: t.colors.textSecondary,
-    marginTop: 2,
+    marginTop: 4,
   },
   searchRow: {
     paddingHorizontal: t.spacing.screenHorizontal,

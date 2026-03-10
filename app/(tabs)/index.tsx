@@ -25,6 +25,7 @@ import {
   Circle,
   RefreshCw,
   AlertTriangle,
+  Shield,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
@@ -46,7 +47,11 @@ import { TRPC } from "@/lib/trpc-paths";
 import DailyStatus from "@/components/home/DailyStatus";
 import ExploreChallengesButton from "@/components/home/ExploreChallengesButton";
 import ActiveChallenges, { type ChallengeWithProgress } from "@/components/home/ActiveChallenges";
-import type { TodayCheckinForUser, ChallengeTaskFromApi } from "@/types";
+import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedCard";
+import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
+import { ROUTES } from "@/lib/routes";
+import { designTokens } from "@/lib/design-tokens";
+import { formatTimeRemaining } from "@/lib/challenge-timer";
 
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
@@ -249,17 +254,18 @@ export default function HomeScreen() {
         if (c.status === "completed") checkinsByAcId[c.active_challenge_id].add(c.task_id);
       }
       let totalRemaining = 0;
-      const withProgress: ChallengeWithProgress[] = acList.map((ac: any) => {
+      interface AcRow { id: string; challenge_id: string; challenges?: { id?: string; title?: string; challenge_tasks?: { id: string; title?: string; type?: string; required?: boolean }[] }; current_day?: number }
+      const withProgress: ChallengeWithProgress[] = acList.map((ac: AcRow) => {
         const ch = ac.challenges;
         const tasks = ch?.challenge_tasks ?? [];
-        const required = tasks.filter((t: any) => t.required !== false);
+        const required = tasks.filter((t: { required?: boolean }) => t.required !== false);
         const completedSet = checkinsByAcId[ac.id] ?? new Set();
-        const todayTasks = required.map((t: any) => ({
+        const todayTasks = required.map((t: { id: string; title?: string; type?: string }) => ({
           id: t.id,
           title: t.title ?? t.type ?? "Task",
           completed: completedSet.has(t.id),
         }));
-        const completedCount = todayTasks.filter((t: any) => t.completed).length;
+        const completedCount = todayTasks.filter((t: { completed: boolean }) => t.completed).length;
         totalRemaining += Math.max(0, required.length - completedCount);
         return {
           activeChallengeId: ac.id,
@@ -306,9 +312,9 @@ export default function HomeScreen() {
     lastStandsAvailable,
     isDaySecured,
   } = retention;
-  const tierName = (stats as any)?.tier ?? null;
-  const nextTierName = (stats as any)?.nextTierName ?? null;
-  const pointsToNextTier = (stats as any)?.pointsToNextTier ?? 0;
+  const tierName = (stats as StatsFromApi)?.tier ?? null;
+  const nextTierName = (stats as StatsFromApi)?.nextTierName ?? null;
+  const pointsToNextTier = (stats as StatsFromApi)?.pointsToNextTier ?? 0;
   const yesterdayKey = getYesterdayDateKey();
   const daySecured = optimisticDaySecured || (computeProgress.progress === 100 && !canSecureDay);
   const isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
@@ -374,8 +380,8 @@ export default function HomeScreen() {
         return;
       }
       const streak = result.newStreakCount ?? stats?.activeStreak ?? 0;
-      const pointsToNext = (stats as any)?.pointsToNextTier ?? 0;
-      const nextTier = (stats as any)?.nextTierName ?? null;
+  const pointsToNext = (stats as StatsFromApi)?.pointsToNextTier ?? 0;
+  const nextTier = (stats as StatsFromApi)?.nextTierName ?? null;
       setCelebrationPayload({ streak, pointsToNextTier: pointsToNext > 0 ? pointsToNext : undefined, nextTierName: nextTier ?? undefined });
       if (result.lastStandEarned) {
         track({ name: "last_stand_earned" });
@@ -395,14 +401,14 @@ export default function HomeScreen() {
       setTimeout(() => {
         setOptimisticDaySecured(false);
         router.push({
-          pathname: "/secure-confirmation",
+          pathname: ROUTES.SECURE_CONFIRMATION,
           params: {
             day: currentDay.toString(),
             streak: streak.toString(),
             totalDays: (challenge?.duration_days || 0).toString(),
             isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
           },
-        } as any);
+        } as never);
       }, 1200);
     } catch {
       setOptimisticDaySecured(false);
@@ -467,17 +473,17 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View>
-            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIIT</Text>
-            <Text style={[styles.logoSubtitle, { color: themeColors.text.tertiary }]}>Build Discipline Daily</Text>
+            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIT</Text>
+            <Text style={[styles.logoSubtitle, { color: themeColors.text.muted }]}>Build Discipline Daily</Text>
           </View>
           <View style={styles.headerBadges}>
-            <View style={styles.headerBadge}>
+            <View style={[styles.headerBadge, { borderColor: themeColors.border }]}>
               <TrendingUp size={14} color={themeColors.text.tertiary} />
-              <Text style={[styles.headerBadgeText, { color: themeColors.text.secondary }]}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={[styles.headerBadgeText, { color: themeColors.text.primary }]}>{stats?.longestStreak ?? 0}</Text>
             </View>
-            <View style={styles.headerBadge}>
+            <View style={[styles.headerBadge, { borderColor: themeColors.border }]}>
               <Flame size={14} color={themeColors.accent} />
-              <Text style={[styles.headerBadgeText, { color: themeColors.text.secondary }]}>{currentStreak}</Text>
+              <Text style={[styles.headerBadgeText, { color: themeColors.text.primary }]}>{currentStreak}</Text>
             </View>
           </View>
         </View>
@@ -506,6 +512,36 @@ export default function HomeScreen() {
                 >
                   <Text style={[styles.freezeCtaText, { color: "#FFF" }]}>Use streak freeze</Text>
                 </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+
+        {!isGuest && hasActiveChallenge && !isDaySecured && (
+          <View style={styles.mainPromptBlock}>
+            <Text style={[styles.secureTodayTitle, { color: themeColors.text.primary }]}>Secure today to protect your streak.</Text>
+            <Text style={[styles.secureTodaySub, { color: themeColors.text.muted }]}>
+              {(() => {
+                const ac = activeChallenge as { ends_at?: string } | undefined;
+                if (ac?.ends_at) return `${formatTimeRemaining(ac.ends_at)} remaining.`;
+                const { hours, minutes } = getTimeUntilMidnight();
+                return `${hours}h ${minutes}m remaining.`;
+              })()}
+            </Text>
+            <View style={[styles.metricsCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              {nextTierName != null && pointsToNextTier > 0 && (
+                <View style={styles.metricsRow}>
+                  <Flame size={18} color={themeColors.text.secondary} />
+                  <Text style={[styles.metricsText, { color: themeColors.text.secondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
+                </View>
+              )}
+              {leaderboardData != null && (
+                <View style={styles.metricsRow}>
+                  <Users size={18} color={themeColors.text.secondary} />
+                  <Text style={[styles.metricsText, { color: themeColors.text.secondary }]}>
+                    {leaderboardData.totalSecuredToday} friends secured today
+                  </Text>
+                </View>
               )}
             </View>
           </View>
@@ -541,6 +577,31 @@ export default function HomeScreen() {
                 refreshKey={homeActiveQuery.dataUpdatedAt ?? 0}
               />
             )}
+            {hasActiveChallenge && tasks.length > 0 && (
+              <View style={[styles.todaysResetCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                <View style={styles.todaysResetHeader}>
+                  <Clock size={18} color={themeColors.text.primary} />
+                  <Text style={[styles.todaysResetTitle, { color: themeColors.text.primary }]}>Today&apos;s Reset</Text>
+                  <Text style={[styles.todaysResetTime, { color: themeColors.text.muted }]}>
+                    {(() => {
+                      const ac = activeChallenge as { ends_at?: string } | undefined;
+                      if (ac?.ends_at) return formatTimeRemaining(ac.ends_at) + " left";
+                      const { hours, minutes } = getTimeUntilMidnight();
+                      return `${hours}h ${minutes}m left`;
+                    })()}
+                  </Text>
+                </View>
+                <View style={[styles.todaysResetDivider, { backgroundColor: themeColors.border }]} />
+                <View style={styles.todaysResetTaskList}>
+                  {tasks.map((task) => (
+                    <View key={task.id} style={styles.todaysResetTaskRow}>
+                      <Circle size={18} color={themeColors.border} strokeWidth={2} />
+                      <Text style={[styles.todaysResetTaskText, { color: themeColors.text.primary }, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
           </>
         )}
 
@@ -563,6 +624,20 @@ export default function HomeScreen() {
               <Target size={20} color={themeColors.text.tertiary} />
               <Text style={[styles.statsSummaryValue, { color: themeColors.text.primary }]}>{tierName}</Text>
               <Text style={[styles.statsSummaryLabel, { color: themeColors.text.secondary }]}>Rank</Text>
+            </View>
+          </View>
+        )}
+
+        {!isGuest && (
+          <View style={[styles.disciplineWeekCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={[styles.disciplineWeekIconWrap, { backgroundColor: themeColors.successLight }]}>
+              <TrendingUp size={20} color={themeColors.success} />
+            </View>
+            <View style={styles.disciplineWeekBody}>
+              <Text style={[styles.disciplineWeekTitle, { color: themeColors.text.primary }]}>
+                <Text style={[styles.disciplineWeekNum, { color: themeColors.success }]}>+{stats?.longestStreak ?? 0}</Text> Discipline this week
+              </Text>
+              <Text style={[styles.disciplineWeekSub, { color: themeColors.success }]}>+100% from last week</Text>
             </View>
           </View>
         )}
@@ -651,10 +726,10 @@ export default function HomeScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.challengeCard, (challenge.difficulty === "hard" || challenge.difficulty === "extreme") && styles.challengeCardHard]}
+              style={[styles.challengeCard, ((challenge as Record<string, unknown>)?.difficulty === "hard" || (challenge as Record<string, unknown>)?.difficulty === "extreme") && styles.challengeCardHard]}
               onPress={() => {
                 if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push(`/challenge/${activeChallenge.challenge_id}` as any);
+                if (activeChallenge) router.push(ROUTES.CHALLENGE_ID(activeChallenge.challenge_id) as never);
               }}
               activeOpacity={0.85}
               testID="home-challenge-card"
@@ -697,42 +772,64 @@ export default function HomeScreen() {
             {daySecured && (
               <View style={[styles.securedBanner, { backgroundColor: themeColors.successLight }]}>
                 <CheckCircle2 size={16} color={themeColors.streak.shield} fill={themeColors.streak.shield} strokeWidth={0} />
-                <Text style={[styles.securedText, { color: themeColors.text.primary }]}>Day {activeChallenge.current_day} Secured</Text>
+                <Text style={[styles.securedText, { color: themeColors.text.primary }]}>Day {(activeChallenge as { current_day?: number })?.current_day ?? 1} Secured</Text>
               </View>
             )}
           </View>
         ) : (
-          <View style={[styles.welcomeBackCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={[styles.welcomeBackCard, { backgroundColor: themeColors.accentLight, borderColor: themeColors.accent }]}>
             <RefreshCw size={28} color={themeColors.accent} />
             <Text style={[styles.welcomeBackTitle, { color: themeColors.text.primary }]}>
-              {isFirstTimeUser ? "Start your first challenge." : "Welcome back."}
+              {isFirstTimeUser ? "Start your first challenge." : "Ready to restart?"}
             </Text>
             <Text style={[styles.welcomeBackSub, { color: themeColors.text.secondary }]}>
               {isFirstTimeUser
                 ? "Pick a challenge, commit, and secure your first day."
-                : "Secure 1 day today to restart momentum."}
+                : "Your progress is saved. Pick up where you left off."}
             </Text>
             <TouchableOpacity
-              style={[styles.pickChallengeButton, { backgroundColor: themeColors.accent }]}
+              style={[styles.pickChallengeButton, isFirstTimeUser ? { backgroundColor: themeColors.accent } : styles.pickChallengeButtonOutlined, isFirstTimeUser ? undefined : { borderColor: themeColors.border }]}
               onPress={() => {
                 if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                requireAuth("join", () => router.push("/(tabs)/discover" as any));
+                requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never));
               }}
               activeOpacity={0.85}
               testID="discover-cta"
             >
-              <Text style={styles.pickChallengeButtonText}>
+              <Text style={[styles.pickChallengeButtonText, isFirstTimeUser ? undefined : { color: themeColors.text.primary }]}>
                 {isFirstTimeUser ? "Find a challenge" : "Pick a Challenge"}
               </Text>
             </TouchableOpacity>
           </View>
         )}
 
-        <View style={[styles.liveSection, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-          <View style={[styles.liveDot, { backgroundColor: themeColors.accent }]} />
+        <View style={styles.liveSectionHeader}>
+          <View style={[styles.liveDot, { backgroundColor: themeColors.danger }]} />
           <Text style={[styles.liveTitle, { color: themeColors.text.primary }]}>LIVE</Text>
-          <Text style={[styles.liveSub, { color: themeColors.text.secondary }]}>People are moving</Text>
+          <Text style={[styles.liveSubItalic, { color: themeColors.text.muted }]}>People are moving</Text>
         </View>
+
+        {!isGuest && leaderboardData?.currentUserRank != null && (
+          <View style={[styles.yourPositionInFeedCard, { backgroundColor: themeColors.accentLight, borderColor: themeColors.accent }]}>
+            <Target size={28} color={themeColors.accent} />
+            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>YOUR POSITION</Text>
+            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>
+              You are ranked <Text style={styles.feedBold}>#{leaderboardData.currentUserRank}</Text> among friends this week.
+            </Text>
+            <Text style={[styles.yourPositionSub, { color: themeColors.text.secondary }]}>
+              You&apos;re <Text style={[styles.feedBold, { color: themeColors.accent }]}>{Math.max(0, (stats?.longestStreak ?? 0) - currentStreak)} days</Text> away from your best streak.
+            </Text>
+          </View>
+        )}
+
+        {(() => {
+          const placeholderFeed: LiveFeedCardData[] = [
+            { type: "secured_day", username: "hasan_k", day: 14, challengeName: "75 Day Hard", streakDays: 14, minutesAgo: 9, respectCount: 7 },
+            { type: "challenge_promo", percentSecured: 62, challengeName: "75 Day Hard", openChallengeId: "1" },
+            { type: "rank_up", username: "omar_z", rankName: "Relentless", disciplineDelta: 84 },
+          ];
+          return placeholderFeed.map((item, i) => <LiveFeedCard key={i} data={item} />);
+        })()}
 
         {!isGuest && leaderboardError ? (
           <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
@@ -756,21 +853,21 @@ export default function HomeScreen() {
         ) : leaderboardData?.currentUserRank != null ? (
           <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <Target size={28} color={themeColors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>YOUR POSITION</Text>
-            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>You are ranked <Text style={[styles.feedBold, { color: themeColors.text.primary }]}>#{leaderboardData.currentUserRank}</Text> this week.</Text>
+            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>YOUR STATUS</Text>
+            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>You&apos;re ranked #{leaderboardData.currentUserRank} among friends this week.</Text>
             <TouchableOpacity
-              style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
-              onPress={() => requireAuth("secure", () => router.push("/(tabs)/discover" as any))}
+              style={[styles.secureNowButton, { backgroundColor: themeColors.success }]}
+              onPress={() => requireAuth("secure", () => router.push(ROUTES.TABS_DISCOVER as never))}
               activeOpacity={0.85}
             >
-              <CheckCircle2 size={18} color="#fff" />
+              <Shield size={18} color="#fff" />
               <Text style={styles.secureNowButtonText}>Secure Now</Text>
             </TouchableOpacity>
           </View>
         ) : !isGuest && (
           <TouchableOpacity
             style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-            onPress={() => router.push("/(tabs)/activity" as any)}
+            onPress={() => router.push(ROUTES.TABS_ACTIVITY as never)}
             activeOpacity={0.85}
           >
             <Target size={28} color={themeColors.accent} />
@@ -845,8 +942,8 @@ export default function HomeScreen() {
                     await trpcMutate("streaks.useFreeze", { dateKeyToFreeze: yesterdayKey });
                     await refetchAll();
                     setShowFreezeModal(false);
-                  } catch (e: any) {
-                    Alert.alert("Error", e?.message ?? "Could not use freeze.");
+                  } catch (e: unknown) {
+                    Alert.alert("Error", e instanceof Error ? e.message : "Could not use freeze.");
                   } finally {
                     setFreezeSubmitting(false);
                   }
@@ -962,44 +1059,51 @@ const styles = StyleSheet.create({
   headerBadges: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   headerBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   headerBadgeText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: Colors.text.primary,
   },
   logo: {
-    fontSize: 26,
-    fontWeight: "900" as const,
+    fontSize: 28,
+    fontWeight: "800" as const,
     color: Colors.text.primary,
-    letterSpacing: 1.5,
+    letterSpacing: 6,
   },
   logoSubtitle: {
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    fontSize: 13,
+    fontWeight: "400" as const,
+    color: Colors.text.muted,
     marginTop: 4,
   },
+  mainPromptBlock: {
+    marginBottom: 16,
+  },
   secureTodayTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "700" as const,
     color: Colors.text.primary,
     marginBottom: 4,
   },
   secureTodaySub: {
     fontSize: 14,
-    color: Colors.text.tertiary,
-    marginBottom: 16,
+    color: Colors.text.muted,
+    marginBottom: 12,
   },
   metricsCard: {
     backgroundColor: Colors.card,
-    borderRadius: 12,
+    borderRadius: designTokens.cardRadius,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -1018,11 +1122,12 @@ const styles = StyleSheet.create({
   },
   todaysResetCard: {
     backgroundColor: Colors.card,
-    borderRadius: 12,
+    borderRadius: designTokens.cardRadius,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border,
+    ...designTokens.cardShadow,
   },
   todaysResetHeader: {
     flexDirection: "row",
@@ -1033,12 +1138,16 @@ const styles = StyleSheet.create({
   todaysResetTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: "600" as const,
+    fontWeight: "700" as const,
     color: Colors.text.primary,
   },
   todaysResetTime: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: Colors.text.muted,
+  },
+  todaysResetDivider: {
+    height: 1,
+    marginBottom: 12,
   },
   todaysResetTaskList: {
     gap: 8,
@@ -1060,11 +1169,12 @@ const styles = StyleSheet.create({
   statsSummaryCard: {
     flexDirection: "row",
     backgroundColor: Colors.card,
-    borderRadius: 12,
+    borderRadius: designTokens.cardRadius,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: Colors.border,
+    ...designTokens.cardShadow,
   },
   statsSummaryCol: {
     flex: 1,
@@ -1077,14 +1187,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   statsSummaryValue: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: "700" as const,
     color: Colors.text.primary,
   },
   statsSummaryLabel: {
-    fontSize: 12,
-    fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    fontSize: 11,
+    fontWeight: "600" as const,
+    color: Colors.text.muted,
+    letterSpacing: 1,
   },
   statsSummaryLastStand: {
     fontSize: 11,
@@ -1092,13 +1203,45 @@ const styles = StyleSheet.create({
     color: Colors.text.tertiary,
     marginTop: 2,
   },
+  disciplineWeekCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: designTokens.cardRadius,
+    borderWidth: 1,
+    ...designTokens.cardShadow,
+  },
+  disciplineWeekIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  disciplineWeekBody: {
+    flex: 1,
+  },
+  disciplineWeekTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  disciplineWeekNum: {
+    fontWeight: "700",
+  },
+  disciplineWeekSub: {
+    fontSize: 14,
+    marginTop: 2,
+  },
   welcomeBackCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 12,
+    backgroundColor: Colors.accentLight,
+    borderRadius: designTokens.cardRadius,
     padding: 24,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: Colors.accent,
     alignItems: "center",
   },
   welcomeBackTitle: {
@@ -1109,23 +1252,34 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   welcomeBackSub: {
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.text.secondary,
     marginBottom: 16,
     textAlign: "center",
   },
   pickChallengeButton: {
-    backgroundColor: Colors.pill,
+    backgroundColor: Colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
   },
+  pickChallengeButtonOutlined: {
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderStyle: "solid",
+  },
   pickChallengeButtonText: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: "#fff",
   },
   liveSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  liveSectionHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -1135,17 +1289,38 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#C62828",
   },
   liveTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "700" as const,
+    letterSpacing: 1,
+    textTransform: "uppercase" as const,
     color: Colors.text.primary,
   },
   liveSub: {
     fontSize: 13,
     color: Colors.text.tertiary,
     flex: 1,
+  },
+  liveSubItalic: {
+    fontSize: 13,
+    fontStyle: "italic",
+    flex: 1,
+    textAlign: "right",
+    color: Colors.text.muted,
+  },
+  yourPositionInFeedCard: {
+    padding: 20,
+    marginBottom: 16,
+    borderRadius: designTokens.cardRadius,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignItems: "center",
+  },
+  yourPositionSub: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    marginTop: 4,
   },
   feedCard: {
     backgroundColor: Colors.card,
@@ -1290,17 +1465,18 @@ const styles = StyleSheet.create({
   },
   yourPositionCard: {
     backgroundColor: Colors.card,
-    borderRadius: 12,
+    borderRadius: designTokens.cardRadius,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
     borderColor: Colors.border,
     alignItems: "center",
+    ...designTokens.cardShadow,
   },
   yourPositionLabel: {
     fontSize: 11,
     fontWeight: "600" as const,
-    color: Colors.text.tertiary,
+    color: Colors.text.muted,
     letterSpacing: 1,
     marginBottom: 8,
   },

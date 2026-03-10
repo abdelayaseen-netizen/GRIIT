@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Colors from "@/constants/colors";
+import { designTokens } from "@/lib/design-tokens";
+import { formatMonthShort } from "@/lib/date-format";
 export interface DisciplineCalendarProps {
   securedDateKeys: string[];
   currentStreak: number;
@@ -39,18 +41,19 @@ export default function DisciplineCalendar({
       d.setDate(d.getDate() - TOTAL_CELLS + 1 + i * 7);
       const m = d.getMonth();
       if (m !== lastMonth) {
-        months.push(d.toLocaleString("en-US", { month: "short" }));
+        months.push(formatMonthShort(d));
         lastMonth = m;
       }
     }
     return months.length ? months : ["Jan", "Feb", "Mar"];
   }, []);
 
+  const securedCount = securedDateKeys.length;
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Discipline Calendar</Text>
-        <Text style={styles.subtitle}>Secured days</Text>
+        <Text style={styles.title}>Activity</Text>
+        <Text style={styles.subtitle}>{securedCount} day{securedCount === 1 ? "" : "s"} secured</Text>
       </View>
       <View style={styles.streakRow}>
         <Text style={styles.streakLabel}>Current streak: {currentStreak} days</Text>
@@ -96,25 +99,28 @@ export default function DisciplineCalendar({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 14,
+    borderRadius: designTokens.cardRadius,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: Colors.border,
+    ...designTokens.cardShadow,
   },
   header: {
-    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
   title: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
     color: Colors.text.primary,
   },
   subtitle: {
     fontSize: 13,
-    color: Colors.text.secondary,
-    marginTop: 2,
+    color: Colors.text.muted,
   },
   streakRow: {
     flexDirection: "row",
@@ -150,30 +156,31 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   cell: {
-    width: 10,
-    height: 10,
+    width: 12,
+    height: 12,
     borderRadius: 2,
-    backgroundColor: Colors.pill,
+    backgroundColor: "#F0EDE8",
   },
   cellFilled: {
-    backgroundColor: Colors.success + "88",
+    backgroundColor: "#68D391",
   },
   legend: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginTop: 8,
   },
   legendText: {
     fontSize: 10,
-    color: Colors.text.tertiary,
+    color: Colors.text.muted,
   },
   legendSquares: {
     flexDirection: "row",
     gap: 2,
   },
   legendSquare: {
-    width: 10,
-    height: 10,
+    width: 12,
+    height: 12,
     borderRadius: 2,
   },
 });

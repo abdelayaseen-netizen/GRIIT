@@ -10,6 +10,7 @@ import {
   type OnboardingAnswers,
 } from "@/lib/onboarding-pending";
 import { sanitizeUsername, sanitizeDisplayName, sanitizeBio } from "@/lib/sanitize";
+import { ROUTES } from "@/lib/routes";
 import { Screen, Input, PrimaryButton } from "@/src/components/ui";
 import { H1, Body, Caption } from "@/src/components/Typography";
 import { colors } from "@/src/theme/colors";
@@ -37,7 +38,7 @@ export default function CreateProfileScreen() {
         Alert.alert(
           "Session Expired",
           "Your session has expired. Please log in again.",
-          [{ text: "OK", onPress: () => router.replace("/auth/login" as any) }]
+          [{ text: "OK", onPress: () => router.replace(ROUTES.AUTH_LOGIN as never) }]
         );
         return;
       }
@@ -83,12 +84,12 @@ export default function CreateProfileScreen() {
           // Non-blocking; user can join from Discover again
         }
       await clearOnboardingPending();
-      router.replace("/(tabs)" as any);
+      router.replace(ROUTES.TABS as never);
         return;
       }
 
       await clearOnboardingPending();
-      router.replace("/onboarding" as any);
+      router.replace(ROUTES.ONBOARDING as never);
     } catch (err: unknown) {
       Alert.alert("Error", (err as Error).message || "Something went wrong");
     } finally {

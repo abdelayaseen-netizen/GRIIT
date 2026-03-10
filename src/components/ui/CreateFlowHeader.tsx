@@ -10,15 +10,18 @@ export function CreateFlowHeader(p: {
   rightDisabled?: boolean;
   /** "soft" = accentOrangeSoft bg + orange text (e.g. modal Add); "primary" = filled orange (default) */
   rightButtonVariant?: "primary" | "soft";
+  /** When true, right button uses borderRadius 20, paddingH 20 (pill style for Edit Task Save) */
+  rightButtonPill?: boolean;
 }) {
   const variant = p.rightButtonVariant ?? "primary";
   const isSoft = variant === "soft";
+  const isPill = p.rightButtonPill === true;
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={p.onCancel} style={styles.left}>
         <Text style={styles.cancelText}>Cancel</Text>
       </TouchableOpacity>
-      <Text style={styles.title}>{p.title}</Text>
+      <Text style={[styles.title, isPill && styles.titleEditTask]}>{p.title}</Text>
       {p.rightLabel != null && p.onRight != null ? (
         <TouchableOpacity
           onPress={p.onRight}
@@ -26,6 +29,7 @@ export function CreateFlowHeader(p: {
           style={[
             styles.rightBtn,
             isSoft && styles.rightBtnSoft,
+            isPill && styles.rightBtnPill,
             p.rightDisabled && styles.rightBtnDisabled,
           ]}
         >
@@ -64,6 +68,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
   },
+  titleEditTask: { fontSize: 18, fontWeight: "700" },
   rightBtn: {
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -73,6 +78,11 @@ const styles = StyleSheet.create({
     height: 38,
     alignItems: "center",
     justifyContent: "center",
+  },
+  rightBtnPill: {
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    height: 40,
   },
   rightBtnSoft: {
     backgroundColor: colors.accentOrangeSoft,

@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Trophy, Lock } from "lucide-react-native";
 import Colors from "@/constants/colors";
+import { formatShortDate } from "@/lib/date-format";
 
 export type AchievementCategory = "consistency" | "challenge" | "discipline";
 
@@ -45,8 +46,7 @@ export default function AchievementsSection({ achievements, loading }: Achieveme
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Trophy size={18} color={Colors.text.primary} />
-        <Text style={styles.sectionTitle}>Achievements</Text>
+        <Text style={styles.sectionTitle}>🏆 Achievements</Text>
       </View>
       <ScrollView
         horizontal
@@ -84,7 +84,7 @@ export default function AchievementsSection({ achievements, loading }: Achieveme
               ) : null}
               {a.unlocked && a.unlockDate ? (
                 <Text style={styles.badgeDate}>
-                  {new Date(a.unlockDate).toLocaleDateString()}
+                  {formatShortDate(a.unlockDate)}
                 </Text>
               ) : null}
             </View>
@@ -123,26 +123,20 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   badge: {
-    width: 120,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+    width: 80,
+    alignItems: "center",
+    paddingBottom: 8,
   },
-  badgeUnlocked: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.accent + "40",
-  },
-  badgeLocked: {
-    backgroundColor: Colors.pill,
-    borderColor: Colors.border,
-  },
+  badgeUnlocked: {},
+  badgeLocked: {},
   badgeIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
+    backgroundColor: Colors.pill,
   },
   badgeTitle: {
     fontSize: 13,

@@ -45,6 +45,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { formatTimeHHMM } from "@/lib/time-enforcement";
 
 import { formatTRPCError, formatError } from "@/lib/api";
+import { ROUTES } from "@/lib/routes";
 import {
   getDurationFromDraft,
   validateDraftTasks,
@@ -241,7 +242,7 @@ const VISIBILITY_OPTIONS: { value: ChallengeVisibility; label: string; descripti
   { value: "PRIVATE", label: "Only me", description: "Just for you. No one can see or join.", icon: Lock },
 ];
 
-const TASK_TYPE_CONFIG: Record<TaskType, { icon: any; label: string; color: string }> = {
+const TASK_TYPE_CONFIG: Record<TaskType, { icon: React.ComponentType<{ size?: number; color?: string }>; label: string; color: string }> = {
   journal: { icon: BookOpen, label: "Journal", color: "#6366F1" },
   timer: { icon: Timer, label: "Timer", color: "#F59E0B" },
   run: { icon: Footprints, label: "Run / Workout", color: "#10B981" },
@@ -452,8 +453,9 @@ export default function CreateScreen() {
     };
     const payload = buildCreatePayload(draft);
 
+    interface CreateChallengeResponse { id?: string; data?: { id?: string }; title?: string; duration_days?: number; tasks?: unknown[]; difficulty?: string }
     trpcMutate('challenges.create', payload)
-      .then(async (challenge: any) => {
+      .then(async (challenge: CreateChallengeResponse) => {
         clearWatchdog();
         setSubmitStatus('success');
         if (Platform.OS !== 'web') {
@@ -463,7 +465,7 @@ export default function CreateScreen() {
         if (!id) {
           setSubmitStatus('error');
           Alert.alert("Create succeeded", "Challenge was created. Opening it now.", [
-            { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+            { text: "OK", onPress: () => router.replace(ROUTES.TABS as never) },
           ]);
           return;
         }
@@ -489,7 +491,7 @@ export default function CreateScreen() {
         } catch {
           // ignore storage errors
         }
-        router.push({ pathname: "/success" as any, params: successParams });
+        router.push({ pathname: ROUTES.SUCCESS, params: successParams } as never);
         setTitle("");
         setDescription("");
         setChallengeType("standard");
@@ -512,7 +514,7 @@ export default function CreateScreen() {
         setSubmitStatus('idle');
         paywallThenNavigateRef.current = null;
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         clearWatchdog();
         setSubmitStatus('error');
         const errorInfo = formatTRPCError(error);
@@ -700,8 +702,8 @@ export default function CreateScreen() {
 
   const renderStep1 = () => (
     <Animated.View style={[styles.stepContent, { transform: [{ translateX: slideAnim }] }]}>
-      <Text style={styles.stepTitle}>Define your challenge</Text>
-      <Text style={styles.stepSubtitle}>Set up your challenge</Text>
+      <Text style={styles.stepTitle}>Challenge Basics</Text>
+      <Text style={styles.stepSubtitle}>What are you building?</Text>
       <Text style={styles.stepHelper}>Most people finish this in under 2 minutes.</Text>
 
       <View style={styles.fieldGroup}>
@@ -985,7 +987,7 @@ export default function CreateScreen() {
       <Text style={styles.stepSubtitle}>
         {isSharedGoal
           ? "Your team will log progress toward the goal. Add optional daily habits below."
-          : "Add the actions people must complete daily"}
+          : "What must be done each day?"}
       </Text>
       <Text style={styles.stepHelper}>
         {isSharedGoal
@@ -1298,7 +1300,7 @@ export default function CreateScreen() {
           setShowPaywallAfterCreate(false);
           const pending = paywallThenNavigateRef.current;
           if (pending) {
-            router.push({ pathname: "/success" as any, params: pending.params });
+            router.push({ pathname: ROUTES.SUCCESS, params: pending.params } as never);
             paywallThenNavigateRef.current = null;
           }
         }}

@@ -11,6 +11,16 @@ import {
 } from "../../lib/challenge-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 
+/** Ensure 24h challenges have ends_at for frontend countdown (derive from live_date if missing). */
+function with24hEndsAt<T extends { duration_type?: string; ends_at?: string | null; live_date?: string | null }>(row: T): T {
+  if (row.duration_type !== "24h") return row;
+  if (row.ends_at) return row;
+  if (!row.live_date) return row;
+  const start = new Date(row.live_date).getTime();
+  if (Number.isNaN(start)) return row;
+  return { ...row, ends_at: new Date(start + 24 * 60 * 60 * 1000).toISOString() };
+}
+
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
   return type === "simple" || type === "photo" ? "manual" : type;
@@ -103,10 +113,13 @@ export const challengesRouter = createTRPCRouter({
 
       const { data, error, count } = await query;
       requireNoError(error, "Failed to load featured challenges.");
-      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
-        ...challenge,
-        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
-      }));
+      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => {
+        const normalized = with24hEndsAt(challenge as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & ChallengeWithTasksRow);
+        return {
+          ...normalized,
+          tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
+        };
+      });
       const nextOffset = safeOffset + items.length;
       const hasMore = count != null && nextOffset < count;
       const withCursor = { items, nextCursor: hasMore ? String(nextOffset) : undefined };
@@ -287,14 +300,16 @@ export const challengesRouter = createTRPCRouter({
         sharedGoalTotal = rows.reduce((acc, r) => acc + Number(r.amount), 0);
       }
 
+      const normalized = with24hEndsAt(data as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & typeof data);
       return {
-        ...data,
+        ...normalized,
         tasks: mapTaskRowsToApi((data.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
         ...(isTeam ? { teamMembers } : {}),
         ...(participationType === "shared_goal" ? { sharedGoalTotal } : {}),
       };
     }),
 
+  // Premium status read from profiles table (validated server-side only). When enforcing join limits, read subscription_status from DB.
   join: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
@@ -543,6 +558,7 @@ export const challengesRouter = createTRPCRouter({
       return rows.map((m) => ({ ...m, profile: profileMap.get(m.user_id) ?? null }));
     }),
 
+  // Premium status read from profiles table (validated server-side only). When enforcing create limits, read subscription_status from DB.
   create: protectedProcedure
     .input(z.object({
       title: z.string().min(1, "Title is required"),
@@ -651,11 +667,12 @@ export const challengesRouter = createTRPCRouter({
 
       const isTeamOrShared = input.participationType === "team" || input.participationType === "shared_goal";
       const runStatus = isTeamOrShared ? "waiting" : null;
+      const isOneDay = input.type === "one_day";
       const insertPayload: Record<string, unknown> = {
         creator_id: ctx.userId,
         title: input.title,
         description: input.description,
-        duration_type: input.type === "one_day" ? "24h" : "multi_day",
+        duration_type: isOneDay ? "24h" : "multi_day",
         duration_days: input.durationDays,
         category: input.categories?.[0] || "other",
         difficulty: "medium",
@@ -669,6 +686,15 @@ export const challengesRouter = createTRPCRouter({
         team_size: input.teamSize ?? 1,
         run_status: runStatus,
       };
+      if (isOneDay) {
+        const start = input.liveDate ? new Date(input.liveDate) : new Date();
+        if (Number.isNaN(start.getTime())) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid live date for 24-hour challenge." });
+        }
+        const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+        insertPayload.starts_at = start.toISOString();
+        insertPayload.ends_at = end.toISOString();
+      }
       if (input.participationType === "shared_goal") {
         if (input.sharedGoalTarget != null) insertPayload.shared_goal_target = input.sharedGoalTarget;
         if (input.sharedGoalUnit != null) insertPayload.shared_goal_unit = input.sharedGoalUnit;

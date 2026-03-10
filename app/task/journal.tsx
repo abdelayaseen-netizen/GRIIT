@@ -135,7 +135,9 @@ export default function JournalTaskScreen() {
     if (!draftLoaded) return;
     draftTimerRef.current = setInterval(() => {
       const draft = JSON.stringify({ entryText, mood, energy, bodyState });
-      AsyncStorage.setItem(draftKey, draft).catch(() => {});
+      AsyncStorage.setItem(draftKey, draft).catch((err) => {
+        if (__DEV__) console.warn("[journal] save draft failed:", err instanceof Error ? err.message : err);
+      });
     }, 3000);
     return () => {
       if (draftTimerRef.current) clearInterval(draftTimerRef.current);
@@ -257,8 +259,8 @@ export default function JournalTaskScreen() {
         Animated.spring(successScale, { toValue: 1, useNativeDriver: true, speed: 12, bounciness: 8 }),
         Animated.timing(confettiOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]).start();
-    } catch (error: any) {
-      Alert.alert("Error", error?.message ?? "Something went wrong");
+    } catch (error: unknown) {
+      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);
       setUploading(false);

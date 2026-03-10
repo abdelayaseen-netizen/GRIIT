@@ -45,8 +45,9 @@ export default function ChallengeChatInfoScreen() {
     updateChatRoomSettings,
   } = useApp();
 
-  const challenge = (challenges as any[]).find((c: any) => c.id === id);
-  const room = getChallengeRoom(id || "");
+  type ChallengeWithChat = { id: string; roomId?: string; title?: string; themeColor?: string; participantsCount?: number; participants_count?: number; activeTodayCount?: number };
+  const challenge = (challenges as ChallengeWithChat[]).find((c) => c.id === id);
+  const room = getChallengeRoom(id || "") as { roomId?: string } | null;
   const settings = chatRoomSettings[room?.roomId || ""] || {
     muteRoom: false,
     mentionsOnly: false,
@@ -57,7 +58,7 @@ export default function ChallengeChatInfoScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    updateChatRoomSettings(room.roomId, { muteRoom: !settings.muteRoom });
+    updateChatRoomSettings(room.roomId!, { muteRoom: !settings.muteRoom });
   };
 
   const handleToggleMentions = () => {
@@ -65,7 +66,7 @@ export default function ChallengeChatInfoScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    updateChatRoomSettings(room.roomId, { mentionsOnly: !settings.mentionsOnly });
+    updateChatRoomSettings(room.roomId!, { mentionsOnly: !settings.mentionsOnly });
   };
 
   const handleReport = () => {
@@ -116,12 +117,12 @@ export default function ChallengeChatInfoScreen() {
         <View style={styles.challengeHeader}>
           <View style={[styles.challengeIcon, { backgroundColor: challenge.themeColor || Colors.accent }]}>
             <Text style={styles.challengeIconText}>
-              {challenge.title.charAt(0)}
+              {(challenge.title ?? "?").charAt(0)}
             </Text>
           </View>
-          <Text style={styles.challengeTitle}>{challenge.title}</Text>
+          <Text style={styles.challengeTitle}>{challenge.title ?? "Challenge"}</Text>
           <Text style={styles.challengeSubtitle}>
-            {challenge.participantsCount.toLocaleString()} members
+            {(challenge.participantsCount ?? challenge.participants_count ?? 0).toLocaleString()} members
           </Text>
         </View>
 
@@ -155,7 +156,7 @@ export default function ChallengeChatInfoScreen() {
             <Users size={18} color={Colors.text.secondary} />
             <Text style={styles.sectionTitle}>Members</Text>
             <Text style={styles.sectionCount}>
-              {challenge.participantsCount.toLocaleString()}
+              {(challenge.participantsCount ?? challenge.participants_count ?? 0).toLocaleString()}
             </Text>
           </View>
           <TouchableOpacity style={styles.membersCard}>
@@ -171,7 +172,7 @@ export default function ChallengeChatInfoScreen() {
                 />
               ))}
               <View style={[styles.stackAvatar, styles.moreAvatar, { marginLeft: -10 }]}>
-                <Text style={styles.moreAvatarText}>+{challenge.participantsCount - 5}</Text>
+                <Text style={styles.moreAvatarText}>+{Math.max(0, (challenge.participantsCount ?? challenge.participants_count ?? 0) - 5)}</Text>
               </View>
             </View>
             <View style={styles.membersText}>

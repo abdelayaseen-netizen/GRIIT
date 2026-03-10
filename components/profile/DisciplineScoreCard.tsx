@@ -1,10 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Colors from "@/constants/colors";
+import { designTokens } from "@/lib/design-tokens";
 
 export interface DisciplineScoreCardProps {
   disciplineScore: number;
   tier: string;
+  daysSecured?: number;
   friendRank?: number | null;
   /** Shown when disciplineScore is 0 to give context. */
   zeroStateHint?: string;
@@ -13,20 +15,30 @@ export interface DisciplineScoreCardProps {
 export default function DisciplineScoreCard({
   disciplineScore,
   tier,
+  daysSecured,
   friendRank,
   zeroStateHint,
 }: DisciplineScoreCardProps) {
+  const days = daysSecured ?? disciplineScore;
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.label}>Discipline Score</Text>
+        <Text style={styles.label}>DISCIPLINE SCORE</Text>
         <View style={styles.tierBadge}>
           <View style={styles.tierDot} />
           <Text style={styles.tierText}>{tier}</Text>
         </View>
       </View>
       <Text style={styles.score}>{disciplineScore}</Text>
-      <Text style={styles.tierFooter}>{tier} tier</Text>
+      <View style={styles.divider} />
+      <View style={styles.footerRow}>
+        <Text style={styles.daysValue}>{days}</Text>
+        <View style={styles.footerLabels}>
+          <Text style={styles.daysLabel}>DAYS SECURED</Text>
+          <Text style={styles.tierFooter}>{tier} tier</Text>
+        </View>
+      </View>
       {disciplineScore === 0 && zeroStateHint && (
         <Text style={styles.zeroStateHint}>{zeroStateHint}</Text>
       )}
@@ -40,12 +52,13 @@ export default function DisciplineScoreCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 14,
+    borderRadius: designTokens.cardRadius,
     padding: 20,
     marginHorizontal: 20,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border,
+    ...designTokens.cardShadow,
   },
   header: {
     flexDirection: "row",
@@ -54,10 +67,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
-    color: Colors.text.tertiary,
-    letterSpacing: 0.5,
+    color: Colors.text.muted,
+    letterSpacing: 1,
   },
   tierBadge: {
     flexDirection: "row",
@@ -65,8 +78,8 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: Colors.pill,
     borderRadius: 12,
+    backgroundColor: Colors.pill,
   },
   tierDot: {
     width: 6,
@@ -80,14 +93,36 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   score: {
-    fontSize: 36,
-    fontWeight: "800",
+    fontSize: 48,
+    fontWeight: "700",
     color: Colors.text.primary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#F0EDE8",
+    marginVertical: 16,
+  },
+  footerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  daysValue: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: Colors.text.primary,
+  },
+  footerLabels: {},
+  daysLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.text.muted,
+    letterSpacing: 1,
   },
   tierFooter: {
     fontSize: 13,
     color: Colors.text.secondary,
-    marginTop: 4,
+    marginTop: 2,
   },
   zeroStateHint: {
     fontSize: 12,

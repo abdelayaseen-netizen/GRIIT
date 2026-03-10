@@ -18,3 +18,5 @@ export { default as ProfileCompletionCard } from "./ProfileCompletionCard";
 export type { ProfileCompletionCardProps } from "./ProfileCompletionCard";
 export { default as ShareDisciplineCard } from "./ShareDisciplineCard";
 export type { ShareDisciplineCardProps } from "./ShareDisciplineCard";
+export { default as DisciplineGrowthCard } from "./DisciplineGrowthCard";
+export type { DisciplineGrowthCardProps } from "./DisciplineGrowthCard";

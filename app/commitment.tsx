@@ -12,12 +12,14 @@ import {
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Shield, X } from "lucide-react-native";
+import { Shield, X, Check } from "lucide-react-native";
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
 import { saveJoinedStarterId } from "@/lib/starter-join";
 import { trpcMutate } from "@/lib/trpc";
 import { inviteToChallenge } from "@/lib/share";
+import { formatTRPCError } from "@/lib/api";
+import { ROUTES } from "@/lib/routes";
 
 export default function CommitmentScreen() {
   const router = useRouter();
@@ -30,6 +32,7 @@ export default function CommitmentScreen() {
   }>();
   const { refetchAll } = useApp();
   const [joining, setJoining] = useState(false);
+  const [understood, setUnderstood] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -69,7 +72,7 @@ export default function CommitmentScreen() {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
         Alert.alert("You're in!", "Let's go.", [
-          { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+          { text: "OK", onPress: () => router.replace(ROUTES.TABS as never) },
         ]);
         return;
       }
@@ -86,23 +89,25 @@ export default function CommitmentScreen() {
       const runStatus = result?.runStatus;
       if (runStatus === "waiting") {
         Alert.alert("You're in!", "Waiting for more people to join. Share the challenge so the team can start.", [
-          { text: "OK", onPress: () => router.replace("/(tabs)" as any) },
+          { text: "OK", onPress: () => router.replace(ROUTES.TABS as never) },
         ]);
       } else {
         Alert.alert("You're in!", "Invite a friend to join with you?", [
-          { text: "Not now", onPress: () => router.replace("/(tabs)" as any) },
+          { text: "Not now", onPress: () => router.replace(ROUTES.TABS as never) },
           {
             text: "Share",
             onPress: () => {
-              inviteToChallenge({ name: title, id: challengeId }).catch(() => {});
-              router.replace("/(tabs)" as any);
+              inviteToChallenge({ name: title, id: challengeId }).catch((err) => {
+                if (__DEV__) console.warn("[commitment] inviteToChallenge failed:", err instanceof Error ? err.message : err);
+              });
+              router.replace(ROUTES.TABS as never);
             },
           },
         ]);
       }
-    } catch (err: any) {
-      const message = err?.message ?? "Failed to join challenge. Try again.";
-      Alert.alert("Error", message);
+    } catch (err: unknown) {
+      const { title, message } = formatTRPCError(err);
+      Alert.alert(title, message);
     } finally {
       setJoining(false);
     }
@@ -148,7 +153,7 @@ export default function CommitmentScreen() {
             <Shield size={32} color={isHardMode ? "#E87D4F" : Colors.text.primary} strokeWidth={2} />
           </View>
 
-          <Text style={styles.header}>You are committing to this challenge.</Text>
+          <Text style={styles.header}>challenge.</Text>
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
@@ -175,15 +180,31 @@ export default function CommitmentScreen() {
 
           {isHardMode && (
             <View style={styles.warningCard}>
-              <Text style={styles.warningText}>One missed day resets progress.</Text>
+              <Text style={styles.warningText}>⚠️ One missed day resets progress to Day 1.</Text>
             </View>
           )}
 
           <TouchableOpacity
-            style={[styles.confirmButton, isHardMode && styles.confirmButtonHard, joining && styles.confirmButtonDisabled]}
+            style={[styles.checkboxRow]}
+            onPress={() => setUnderstood((u) => !u)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.checkbox, understood && styles.checkboxChecked]}>
+              {understood ? <Check size={14} color="#fff" strokeWidth={3} /> : null}
+            </View>
+            <Text style={styles.checkboxLabel}>I understand the rules and reset conditions.</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.confirmButton,
+              { backgroundColor: Colors.accent },
+              isHardMode && !understood && styles.confirmButtonFaded,
+              joining && styles.confirmButtonDisabled,
+            ]}
             onPress={handleConfirm}
             activeOpacity={0.85}
-            disabled={joining}
+            disabled={joining || (isHardMode && !understood)}
           >
             {joining ? (
               <ActivityIndicator color="#fff" />
@@ -275,7 +296,32 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   hardModeText: {
-    color: "#E87D4F",
+    color: Colors.accent,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    gap: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.text.primary,
+    borderColor: Colors.text.primary,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "500" as const,
+    color: Colors.text.primary,
   },
   divider: {
     height: 1,
@@ -298,14 +344,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   confirmButton: {
-    backgroundColor: "#111",
-    borderRadius: 16,
+    borderRadius: 12,
     paddingVertical: 18,
     alignItems: "center",
     marginBottom: 10,
   },
-  confirmButtonHard: {
-    backgroundColor: "#E87D4F",
+  confirmButtonFaded: {
+    opacity: 0.5,
   },
   confirmButtonDisabled: {
     opacity: 0.7,

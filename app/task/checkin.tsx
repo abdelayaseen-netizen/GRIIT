@@ -45,14 +45,20 @@ export default function CheckinTaskScreen() {
   const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
   const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();
 
-  const task = currentChallenge?.tasks.find((t: any) => t.id === taskId);
+  const task = currentChallenge?.tasks.find((t: { id: string }) => t.id === taskId);
   const taskState = taskId ? getTaskStateForTemplate(taskId) : null;
 
-  const locationPolicy = task?.rules.locationPolicy;
-  const timeWindowPolicy = task?.rules.timeWindowPolicy;
-  const sessionPolicy = task?.rules.sessionPolicy;
+  type TaskRules = {
+    locationPolicy?: { allowedLocations?: AllowedLocation[]; requireContinuousPresence?: boolean; maxOutsideRadiusSeconds?: number };
+    timeWindowPolicy?: { enabled?: boolean; startTimeLocal?: string; allowGraceSeconds?: number; startWindowMinutes?: number };
+    sessionPolicy?: { minSessionSeconds?: number; allowBackgroundSeconds?: number; lockScreenDuringSession?: boolean };
+  };
+  const rules = task?.rules as TaskRules | undefined;
+  const locationPolicy = rules?.locationPolicy;
+  const timeWindowPolicy = rules?.timeWindowPolicy;
+  const sessionPolicy = rules?.sessionPolicy;
 
-  const allowedLocations = locationPolicy?.allowedLocations || [];
+  const allowedLocations = (locationPolicy?.allowedLocations || []) as AllowedLocation[];
   const minSessionSeconds = sessionPolicy?.minSessionSeconds || 900;
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -253,9 +259,9 @@ export default function CheckinTaskScreen() {
     }
 
     const now = new Date();
-    const [hours, minutes] = timeWindowPolicy.startTimeLocal.split(":").map(Number);
-    const graceSeconds = timeWindowPolicy.allowGraceSeconds || 30;
-    const windowMinutes = timeWindowPolicy.startWindowMinutes || 10;
+    const [hours, minutes] = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":").map(Number);
+    const graceSeconds = timeWindowPolicy.allowGraceSeconds ?? 30;
+    const windowMinutes = timeWindowPolicy.startWindowMinutes ?? 10;
 
     const windowStart = new Date(now);
     windowStart.setHours(hours, minutes, 0, 0);
@@ -370,7 +376,7 @@ export default function CheckinTaskScreen() {
 
   const getTimeWindowDisplay = () => {
     if (!timeWindowPolicy?.enabled) return "Anytime";
-    const [hours, minutes] = timeWindowPolicy.startTimeLocal.split(":").map(Number);
+    const [hours, minutes] = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":").map(Number);
     const endMinutes = minutes + (timeWindowPolicy.startWindowMinutes || 10);
     const endHours = hours + Math.floor(endMinutes / 60);
     const endMins = endMinutes % 60;
@@ -401,7 +407,7 @@ export default function CheckinTaskScreen() {
     }
   };
 
-  if (taskState?.status === "verified") {
+  if ((taskState as { status?: string } | null)?.status === "verified") {
     return (
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.verifiedContainer}>

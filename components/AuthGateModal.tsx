@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import { colors, spacing, radius } from "@/src/theme/tokens";
 import { PrimaryButton } from "@/src/components/ui/PrimaryButton";
 
@@ -37,9 +38,9 @@ export function AuthGateModal({ visible, onClose, context }: AuthGateModalProps)
   const openSignup = (method: "email" | "apple" | "google") => {
     onClose();
     if (method === "email") {
-      router.push("/auth/signup" as any);
+      router.push(ROUTES.AUTH_SIGNUP as never);
     } else {
-      router.push("/auth/signup" as any);
+      router.push(ROUTES.AUTH_SIGNUP as never);
     }
   };
 

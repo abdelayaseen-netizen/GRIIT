@@ -109,8 +109,8 @@ export default function PhotoTaskScreen() {
           { text: "OK", onPress: () => router.back() },
         ]);
       }
-    } catch (error: any) {
-      Alert.alert("Error", error?.message ?? "Something went wrong. Please try again.");
+    } catch (error: unknown) {
+      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
       setUploading(false);

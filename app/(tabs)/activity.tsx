@@ -34,7 +34,9 @@ import { useAuthGate } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
+import { useRouter } from "expo-router";
 import { track } from "@/lib/analytics";
+import { ROUTES } from "@/lib/routes";
 import { FLAGS } from "@/lib/feature-flags";
 import type { ThemeColors } from "@/lib/theme-palettes";
 import { COPY } from "@/lib/constants/copy";
@@ -44,7 +46,7 @@ function createActivityStyles(c: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
     header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14, gap: 8 },
-    title: { fontSize: 28, fontWeight: "800" as const, color: c.text.primary, letterSpacing: -0.5 },
+    title: { fontSize: 32, fontWeight: "700" as const, color: c.text.primary },
     subtitle: { fontSize: 14, fontWeight: "400" as const, color: c.text.secondary, marginTop: 2 },
     teamsButton: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: c.pill, marginLeft: "auto" as const },
     teamsButtonText: { fontSize: 13, fontWeight: "600" as const, color: c.text.secondary },
@@ -444,18 +446,18 @@ function RecentActivitySection({ items, error, styles }: { items: ActivityItem[]
   );
 }
 
-function mapApiEntryToLeaderboardEntry(e: any): LeaderboardEntry {
+function mapApiEntryToLeaderboardEntry(e: import("@/types").LeaderboardEntryFromApi): LeaderboardEntry {
   return {
-    id: e.userId,
-    userId: e.userId,
-    username: e.username,
-    displayName: e.displayName || e.username,
-    avatar: e.avatarUrl || "",
-    streak: e.currentStreak ?? 0,
-    rank: e.rank ?? 0,
-    secured: (e.securedDaysThisWeek ?? 0) > 0,
-    score: e.securedDaysThisWeek ?? 0,
-    respectCount: e.respectCount ?? 0,
+    id: e.userId ?? "",
+    userId: e.userId ?? "",
+    username: e.username ?? "",
+    displayName: e.displayName ?? e.username ?? "",
+    avatar: e.avatarUrl ?? "",
+    streak: Number(e.currentStreak) || 0,
+    rank: Number(e.rank) || 0,
+    secured: (Number(e.securedDaysThisWeek) || 0) > 0,
+    score: Number(e.securedDaysThisWeek) || 0,
+    respectCount: Number(e.respectCount) || 0,
   };
 }
 
@@ -474,7 +476,7 @@ export default function ActivityScreen() {
     queryKey: ["movement", "leaderboard", feedFilter],
     queryFn: async () => {
       const data = await trpcQuery("leaderboard.getWeekly") as { entries?: unknown[]; totalSecuredToday?: number };
-      const entries = (data?.entries ?? []).map((e: unknown) => mapApiEntryToLeaderboardEntry(e as any));
+      const entries = (data?.entries ?? []).map((e: unknown) => mapApiEntryToLeaderboardEntry(e as import("@/types").LeaderboardEntryFromApi));
       return { entries, totalSecuredToday: data?.totalSecuredToday ?? 0 };
     },
     staleTime: 5 * 60 * 1000,
@@ -543,13 +545,13 @@ export default function ActivityScreen() {
             delete next[recipientId];
             return next;
           });
-        } catch (e: any) {
+        } catch (e: unknown) {
           setOptimisticRespectDeltas((prev) => {
             const next = { ...prev };
             delete next[recipientId];
             return next;
           });
-          Alert.alert("Error", e?.message ?? "Could not send respect.");
+          Alert.alert("Error", e instanceof Error ? e.message : "Could not send respect.");
         } finally {
           setGivingRespectId(null);
         }
@@ -569,9 +571,10 @@ export default function ActivityScreen() {
             Alert.alert("Nudged!", "");
             return activityFeedQuery.refetch();
           })
-          .catch((e: any) => {
-            const code = e?.data?.code ?? e?.code;
-            const msg = e?.message ?? "";
+          .catch((e: unknown) => {
+            const err = e as { data?: { code?: string }; code?: string; message?: string };
+            const code = err?.data?.code ?? err?.code;
+            const msg = err?.message ?? "";
             if (code === "TOO_MANY_REQUESTS" || msg.includes("already nudged")) {
               Alert.alert("Limit", "You already nudged them today.");
             } else {
@@ -586,14 +589,17 @@ export default function ActivityScreen() {
     [requireAuth, activityFeedQuery]
   );
 
+  const router = useRouter();
   const handleTeamsPress = useCallback(() => {
     requireAuth("team", () => {
       if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       if (FLAGS.IS_BETA) {
         Alert.alert("Teams", "Teams and accountability groups are coming soon.");
+      } else {
+        router.push(ROUTES.TEAMS as never);
       }
     });
-  }, [requireAuth]);
+  }, [requireAuth, router]);
 
   const entriesWithOptimisticRespect = useMemo(
     () =>

@@ -20,6 +20,7 @@ import { colors, spacing, radius } from "@/src/theme/tokens";
 import { track } from "@/lib/analytics";
 import { useApp } from "@/contexts/AppContext";
 import { getDay1TtfvSeconds, setFirstSessionJustFinished } from "@/lib/starter-join";
+import { ROUTES } from "@/lib/routes";
 import Celebration from "@/components/Celebration";
 
 const ACCOUNTABILITY_PROMPT_DISMISSED_KEY = "grit_accountability_prompt_dismissed";
@@ -111,25 +112,25 @@ export default function Day1QuickWinScreen() {
     try {
       const dismissed = await AsyncStorage.getItem(ACCOUNTABILITY_PROMPT_DISMISSED_KEY);
       if (dismissed === "1") {
-        router.replace("/(tabs)" as any);
+        router.replace(ROUTES.TABS as never);
         return;
       }
       setShowAccountabilityPrompt(true);
     } catch {
-      router.replace("/(tabs)" as any);
+      router.replace(ROUTES.TABS as never);
     }
   }, [router]);
 
   const handleAccountabilityAdd = useCallback(async () => {
     await AsyncStorage.setItem(ACCOUNTABILITY_PROMPT_DISMISSED_KEY, "1");
     setShowAccountabilityPrompt(false);
-    router.replace("/accountability/add?from=day1" as any);
+    router.replace(ROUTES.ACCOUNTABILITY_ADD_DAY1 as never);
   }, [router]);
 
   const handleAccountabilityNotNow = useCallback(async () => {
     await AsyncStorage.setItem(ACCOUNTABILITY_PROMPT_DISMISSED_KEY, "1");
     setShowAccountabilityPrompt(false);
-    router.replace("/(tabs)" as any);
+    router.replace(ROUTES.TABS as never);
   }, [router]);
 
   const bg = themeColors.background;

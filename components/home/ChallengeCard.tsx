@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native
 import { ChevronRight, Circle, CheckCircle2, Users, Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import Colors from "@/constants/colors";
 
 export interface TodayTaskItem {
@@ -45,7 +46,7 @@ export default function ChallengeCard({
   const handleOpen = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onOpenChallenge?.();
-    router.push(`/challenge/${challengeId}` as any);
+    router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
   };
 
   return (

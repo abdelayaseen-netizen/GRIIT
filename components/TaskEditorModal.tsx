@@ -129,31 +129,41 @@ const JOURNAL_PROMPTS = [
   "Write about one win and one loss from today.",
 ];
 
+const TASK_TYPE_STYLES: Record<TaskType, { color: string; selectedBg: string }> = {
+  journal: { color: "#A855F7", selectedBg: "#F3E8FF" },
+  timer: { color: "#E8734A", selectedBg: "#FFF5F0" },
+  photo: { color: "#EC4899", selectedBg: "#FFF0F5" },
+  run: { color: "#2D8B4E", selectedBg: "#F0FFF4" },
+  simple: { color: "#6B7280", selectedBg: "#F3F4F6" },
+  checkin: { color: "#3B82F6", selectedBg: "#EFF6FF" },
+};
+
 const TASK_TYPES: {
   id: TaskType;
   icon: React.ComponentType<any>;
   label: string;
   description: string;
   color: string;
+  selectedBg: string;
 }[] = [
-  { id: "journal", icon: BookOpen, label: "Journal", description: "Write a short reflection", color: tokenColors.accentPurple },
-  { id: "timer", icon: Timer, label: "Timer", description: "Stay focused for a set duration", color: tokenColors.accentYellow },
-  { id: "photo", icon: Camera, label: "Photo", description: "Upload proof", color: tokenColors.accentPink },
-  { id: "run", icon: Footprints, label: "Run", description: "Track distance or time", color: tokenColors.accentGreen },
-  { id: "simple", icon: CheckCircle, label: "Basic", description: "Mark complete manually", color: tokenColors.accentGray },
-  { id: "checkin", icon: MapPin, label: "Check-in", description: "Verify at a place", color: tokenColors.accentBlue },
+  { id: "journal", icon: BookOpen, label: "Journal", description: "Write a short reflection", ...TASK_TYPE_STYLES.journal },
+  { id: "timer", icon: Timer, label: "Timer", description: "Stay focused for a set duration", ...TASK_TYPE_STYLES.timer },
+  { id: "photo", icon: Camera, label: "Photo", description: "Upload proof", ...TASK_TYPE_STYLES.photo },
+  { id: "run", icon: Footprints, label: "Run", description: "Track distance or time", ...TASK_TYPE_STYLES.run },
+  { id: "simple", icon: CheckCircle, label: "Simple", description: "Mark complete manually", ...TASK_TYPE_STYLES.simple },
+  { id: "checkin", icon: MapPin, label: "Check-in", description: "Verify at a place", ...TASK_TYPE_STYLES.checkin },
 ];
 
 const TASK_TYPE_MAP: Record<
   TaskType,
   { icon: React.ComponentType<any>; label: string; color: string }
 > = {
-  journal: { icon: BookOpen, label: "Journal", color: tokenColors.accentPurple },
-  timer: { icon: Timer, label: "Timer", color: tokenColors.accentYellow },
-  photo: { icon: Camera, label: "Photo", color: tokenColors.accentPink },
-  run: { icon: Footprints, label: "Run / Workout", color: tokenColors.accentGreen },
-  simple: { icon: CheckCircle, label: "Basic", color: tokenColors.accentGray },
-  checkin: { icon: MapPin, label: "Location Check-in", color: tokenColors.accentBlue },
+  journal: { icon: BookOpen, label: "Journal", color: TASK_TYPE_STYLES.journal.color },
+  timer: { icon: Timer, label: "Timer", color: TASK_TYPE_STYLES.timer.color },
+  photo: { icon: Camera, label: "Photo", color: TASK_TYPE_STYLES.photo.color },
+  run: { icon: Footprints, label: "Run / Workout", color: TASK_TYPE_STYLES.run.color },
+  simple: { icon: CheckCircle, label: "Basic", color: TASK_TYPE_STYLES.simple.color },
+  checkin: { icon: MapPin, label: "Location Check-in", color: TASK_TYPE_STYLES.checkin.color },
 };
 
 export default function TaskEditorModal({
@@ -610,8 +620,9 @@ export default function TaskEditorModal({
               description={t.description}
               selected={taskType === t.id}
               onPress={() => setTaskType(t.id)}
-              icon={<Icon size={22} color={t.color} />}
+              icon={<Icon size={28} color={t.color} />}
               accentColor={t.color}
+              selectedBackgroundColor={t.selectedBg}
             />
           </View>
         );
@@ -641,8 +652,9 @@ export default function TaskEditorModal({
 
   const renderJournalSettings = () => (
     <View style={cfs.settingsCard}>
+      <Text style={s.sectionLabel}>JOURNAL SETTINGS</Text>
       <View style={cfs.fieldGroup}>
-        <Text style={s.inputLabel}>Prompt (optional)</Text>
+        <Text style={s.inputLabel}>Prompt (what should they write about?)</Text>
         <Text style={s.inputHint}>Appears at the top when the user journals.</Text>
         <CreateFlowInput
           value={journalPrompt}
@@ -746,6 +758,7 @@ export default function TaskEditorModal({
 
   const renderTimerSettings = () => (
     <View style={cfs.settingsCard}>
+      <Text style={s.sectionLabel}>TIMER SETTINGS</Text>
       <View style={cfs.fieldGroup}>
         <CreateFlowInput label="Target minutes" value={duration} onChangeText={setDuration} placeholder="10" />
       </View>
@@ -755,12 +768,14 @@ export default function TaskEditorModal({
         onToggle={() => setAdvancedTimerOpen(!advancedTimerOpen)}
       >
         <CreateFlowCheckbox checked={mustComplete} onPress={() => setMustComplete(!mustComplete)} label="Must complete without exiting" />
+        <Text style={s.inputHint}>When on, user must complete without exiting the timer screen.</Text>
       </CollapsibleSection>
     </View>
   );
 
   const renderPhotoSettings = () => (
     <View style={cfs.settingsCard}>
+      <Text style={s.sectionLabel}>PHOTO SETTINGS</Text>
       <View style={s.lockedRow}>
         <Camera size={18} color={tokenColors.textSecondaryCreate} />
         <Text style={s.lockedText}>User uploads 1 photo</Text>
@@ -811,6 +826,7 @@ export default function TaskEditorModal({
 
   const renderCheckinSettings = () => (
     <View style={cfs.settingsCard}>
+      <Text style={s.sectionLabel}>LOCATION CHECK-IN SETTINGS</Text>
       <View style={cfs.fieldGroup}>
         <CreateFlowInput label="Location Name" value={locationName} onChangeText={setLocationName} placeholder="e.g. LA Fitness, Central Park" />
       </View>
@@ -1061,7 +1077,8 @@ export default function TaskEditorModal({
           rightLabel={editingTask ? "Save" : "Add"}
           onRight={handleSave}
           rightDisabled={!canSave()}
-          rightButtonVariant="soft"
+          rightButtonVariant="primary"
+          rightButtonPill={!!editingTask}
         />
 
         <KeyboardAvoidingView
@@ -1075,8 +1092,8 @@ export default function TaskEditorModal({
             showsVerticalScrollIndicator={false}
           >
             <View style={cfs.section}>
+              <Text style={s.inputLabel}>TASK NAME</Text>
               <CreateFlowInput
-                label="Task name"
                 value={title}
                 onChangeText={setTitle}
                 placeholder="e.g. Morning run, Journal, Meditate..."
@@ -1084,7 +1101,7 @@ export default function TaskEditorModal({
             </View>
 
             <View style={cfs.section}>
-              <Text style={cfs.sectionLabel}>Task type</Text>
+              <Text style={cfs.sectionLabel}>TASK TYPE</Text>
               {renderTypeSelector()}
             </View>
 
@@ -1260,10 +1277,18 @@ const s = StyleSheet.create({
     color: tokenColors.textPrimary,
     textAlign: "center",
   },
-  inputLabel: {
-    fontSize: 12,
+  sectionLabel: {
+    fontSize: 11,
     fontWeight: "600",
-    color: tokenColors.textPrimary,
+    color: "#9CA3AF",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#9CA3AF",
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,

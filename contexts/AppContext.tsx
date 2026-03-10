@@ -15,17 +15,18 @@ import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription } from '@/lib/subscription';
+import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 
 type AppContextValue = {
-  profile: any;
+  profile: ProfileFromApi | null;
   profileLoading: boolean;
   profileMissing: boolean;
   autoCreateError: string | null;
-  stats: any;
-  activeChallenge: any;
-  challenge: any;
-  stories: any[];
-  todayCheckins: any[];
+  stats: StatsFromApi | null;
+  activeChallenge: ActiveChallengeFromApi | null;
+  challenge: Record<string, unknown> | null;
+  stories: unknown[];
+  todayCheckins: TodayCheckinForUser[];
   todayDateLocal: string;
   computeProgress: { verifiedCount: number; totalRequired: number; progress: number };
   canSecureDay: boolean;
@@ -36,19 +37,19 @@ type AppContextValue = {
   initialFetchDone: boolean;
   refetchAll: () => Promise<void>;
   refetchTodayCheckins: () => Promise<void>;
-  challenges: any[];
-  getChallengeRoom: (challengeId: string) => any;
-  getChatMessages: (roomId: string) => any[];
-  sendChatMessage: (params: any) => Promise<void>;
+  challenges: unknown[];
+  getChallengeRoom: (challengeId: string) => unknown;
+  getChatMessages: (roomId: string) => unknown[];
+  sendChatMessage: (params: Record<string, unknown>) => Promise<void>;
   toggleMessageReaction: (messageId: string, emoji: string) => Promise<void>;
   isChallengeMember: (challengeId: string) => boolean;
   currentUser: { id: string; name: string; avatarUrl: string };
   activeUserChallenge: { currentDayIndex: number } | null;
   chatRoomSettings: Record<string, { muteRoom: boolean; mentionsOnly: boolean }>;
-  updateChatRoomSettings: (roomId: string, settings: any) => Promise<void>;
-  currentChallenge: { tasks: any[] } | null;
-  verifyTask: (taskId: string, verificationData: any, task: any) => { success: boolean; failureReason: string | undefined };
-  getTaskStateForTemplate: (taskId: string) => any;
+  updateChatRoomSettings: (roomId: string, settings: Record<string, unknown>) => Promise<void>;
+  currentChallenge: { tasks: ChallengeTaskFromApi[] } | null;
+  verifyTask: (taskId: string, verificationData: unknown, task: unknown) => { success: boolean; failureReason: string | undefined };
+  getTaskStateForTemplate: (taskId: string) => unknown;
 };
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -65,21 +66,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [autoCreateAttempted, setAutoCreateAttempted] = useState(false);
   const [autoCreateError, setAutoCreateError] = useState<string | null>(null);
-  const [fallbackProfile, setFallbackProfile] = useState<Record<string, any> | null>(null);
+  const [fallbackProfile, setFallbackProfile] = useState<Record<string, unknown> | null>(null);
   const [fallbackAttempted, setFallbackAttempted] = useState(false);
   const [profileAutoCreating, setProfileAutoCreating] = useState(false);
 
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileFromApi | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(false);
   const [profileFetched, setProfileFetched] = useState(false);
 
-  const [stats, setStats] = useState<any>(null);
-  const [activeChallenge, setActiveChallenge] = useState<any>(null);
+  const [stats, setStats] = useState<StatsFromApi | null>(null);
+  const [activeChallenge, setActiveChallenge] = useState<ActiveChallengeFromApi | null>(null);
   const [, setActiveChallengeError] = useState(false);
   const [activeChallengeLoaded, setActiveChallengeLoaded] = useState(false);
-  const [stories, setStories] = useState<any[]>([]);
-  const [todayCheckins, setTodayCheckins] = useState<any[]>([]);
+  const [stories, setStories] = useState<unknown[]>([]);
+  const [todayCheckins, setTodayCheckins] = useState<TodayCheckinForUser[]>([]);
 
   const [hardTimeout, setHardTimeout] = useState(false);
 
@@ -95,9 +96,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery(TRPC.profiles.get);
       setProfile(data);
-      setSubscriptionState((data as any)?.subscription_status, (data as any)?.subscription_expiry);
+      setSubscriptionState((data as ProfileFromApi)?.subscription_status ?? undefined, (data as ProfileFromApi)?.subscription_expiry ?? undefined);
       setProfileError(false);
-      initSubscription(user.id).catch(() => {});
+      initSubscription(user.id).catch((err: unknown) => {
+        if (__DEV__) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn("[AppContext] initSubscription failed:", msg);
+        }
+      });
     } catch {
       setProfileError(true);
     } finally {
@@ -169,7 +175,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     requestNotificationPermissions().then((ok) => {
       if (ok) {
         setupNotificationChannel();
-        registerPushTokenWithBackend().catch(() => {});
+        registerPushTokenWithBackend().catch((err: unknown) => {
+          if (__DEV__) console.warn("[AppContext] registerPushTokenWithBackend failed:", err instanceof Error ? err.message : err);
+        });
       }
     });
   }, [user]);
@@ -178,20 +186,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (Platform.OS === 'web' || !user || !stats) return;
     const todayKey = getTodayDateKey();
     const lastKey = stats.lastCompletedDateKey ?? null;
-    const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
-    const lastStands = (stats as any)?.lastStandsAvailable ?? 0;
+    const preferred = (stats as StatsFromApi)?.preferredSecureTime ?? '20:00';
+    const lastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
     if (lastKey === todayKey) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      scheduleNextSecureReminder(preferred, tomorrow, lastStands).catch(() => {});
+      scheduleNextSecureReminder(preferred, tomorrow, lastStands).catch((err: unknown) => {
+        if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
+      });
     } else {
-      scheduleNextSecureReminder(preferred, undefined, lastStands).catch(() => {});
+      scheduleNextSecureReminder(preferred, undefined, lastStands).catch((err: unknown) => {
+        if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
+      });
     }
     return () => {
       cancelSecureReminders();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- deps derived from stats; listing stats would re-run on any stats change
-  }, [user, stats?.lastCompletedDateKey, (stats as any)?.preferredSecureTime, (stats as any)?.lastStandsAvailable]);
+  }, [user, stats?.lastCompletedDateKey, (stats as StatsFromApi)?.preferredSecureTime, (stats as StatsFromApi)?.lastStandsAvailable]);
 
   useEffect(() => {
     if (activeChallenge?.id) {
@@ -261,8 +273,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }).then(() => {
         fetchProfile();
         fetchStats();
-      }).catch((err: any) => {
-        setAutoCreateError(err.message);
+      }).catch((err: unknown) => {
+        setAutoCreateError(err instanceof Error ? err.message : String(err));
       }).finally(() => {
         setProfileAutoCreating(false);
       });
@@ -298,7 +310,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const challenge = activeChallenge?.challenges as any;
+  const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
 
   const todayDateLocal = useMemo(() => getTodayDateKey(), []);
 
@@ -307,9 +319,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return { verifiedCount: 0, totalRequired: 0, progress: 0 };
     }
 
-    const requiredTasks = challenge.challenge_tasks?.filter((t: any) => t.required) || [];
-    const completedCount = todayCheckins.filter((c: any) =>
-      c.status === 'completed' && requiredTasks.some((rt: any) => rt.id === c.task_id)
+    const requiredTasks = (challenge.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
+    const completedCount = todayCheckins.filter((c: TodayCheckinForUser) =>
+      c.status === 'completed' && requiredTasks.some((rt: { id: string }) => rt.id === c.task_id)
     ).length;
 
     const progress = requiredTasks.length > 0 ? (completedCount / requiredTasks.length) * 100 : 0;
@@ -332,9 +344,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     noteText?: string;
     proofUrl?: string;
   }): Promise<{ firstTaskOfDay?: boolean } | void> => {
-    const requiredTasks = challenge?.challenge_tasks?.filter((t: any) => t.required) || [];
-    const completedCountBefore = todayCheckins.filter((c: any) =>
-      c.status === 'completed' && requiredTasks.some((rt: any) => rt.id === c.task_id)
+    const requiredTasks = (challenge?.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
+    const completedCountBefore = todayCheckins.filter((c: TodayCheckinForUser) =>
+      c.status === 'completed' && requiredTasks.some((rt: { id: string }) => rt.id === c.task_id)
     ).length;
     const firstTaskOfDay = completedCountBefore === 0 && requiredTasks.length > 1;
 
@@ -370,12 +382,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       void fetchActiveChallenge();
       void fetchStats();
       if (Platform.OS !== 'web') {
-        const preferred = (stats as any)?.preferredSecureTime ?? '20:00';
+        const preferred = (stats as StatsFromApi)?.preferredSecureTime ?? '20:00';
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        const currentLastStands = (stats as any)?.lastStandsAvailable ?? 0;
+        const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
         const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands).catch(() => {});
+        scheduleNextSecureReminder(preferred, tomorrow, newLastStands).catch((err: unknown) => {
+          if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
+        });
       }
       return result;
     } catch {
@@ -434,20 +448,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refetchTodayCheckins,
 
     challenges: [],
-    getChallengeRoom: (_challengeId: string) => null as any,
+    getChallengeRoom: (_challengeId: string) => null,
     getChatMessages: (_roomId: string) => [],
-    sendChatMessage: async (_params: any) => {},
+    sendChatMessage: async (_params: Record<string, unknown>) => {},
     toggleMessageReaction: async (_messageId: string, _emoji: string) => {},
     isChallengeMember: (_challengeId: string) => false,
-    currentUser: { id: user?.id || '', name: resolvedProfile?.display_name || '', avatarUrl: resolvedProfile?.avatar_url || '' },
+    currentUser: { id: user?.id || '', name: String((resolvedProfile as { display_name?: string } | null)?.display_name ?? ''), avatarUrl: String((resolvedProfile as { avatar_url?: string } | null)?.avatar_url ?? '') },
     activeUserChallenge: activeChallenge ? { currentDayIndex: 1 } : null,
 
     chatRoomSettings: {} as Record<string, { muteRoom: boolean; mentionsOnly: boolean }>,
-    updateChatRoomSettings: async (_roomId: string, _settings: any) => {},
+    updateChatRoomSettings: async (_roomId: string, _settings: Record<string, unknown>) => {},
 
-    currentChallenge: activeChallenge ? { tasks: challenge?.challenge_tasks || [] } : null,
-    verifyTask: (_taskId: string, _verificationData: any, _task: any) => ({ success: true, failureReason: undefined }),
-    getTaskStateForTemplate: (_taskId: string) => null as any,
+    currentChallenge: activeChallenge ? { tasks: (challenge?.challenge_tasks as ChallengeTaskFromApi[]) || [] } : null,
+    verifyTask: (_taskId: string, _verificationData: unknown, _task: unknown) => ({ success: true, failureReason: undefined }),
+    getTaskStateForTemplate: (_taskId: string) => null,
   }), [
     resolvedProfile,
     profileLoading,

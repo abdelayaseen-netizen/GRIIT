@@ -13,6 +13,7 @@ import {
   getTaskVerification,
   isTaskRequired,
 } from "../../lib/challenge-tasks";
+import { isChallengeExpired } from "../../lib/challenge-timer";
 
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
@@ -26,6 +27,19 @@ export const checkinsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
       const dateKey = getTodayDateKey();
+
+      const { data: chRow } = await ctx.supabase
+        .from("challenges")
+        .select("duration_type, ends_at, live_date")
+        .eq("id", challenge_id)
+        .single();
+      const ch = chRow as { duration_type?: string; ends_at?: string | null; live_date?: string | null } | null;
+      if (ch?.duration_type === "24h") {
+        const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
+        if (isChallengeExpired(endsAt)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
+        }
+      }
 
       const { data: taskRow } = await ctx.supabase
         .from('challenge_tasks')
@@ -159,7 +173,20 @@ export const checkinsRouter = createTRPCRouter({
       activeChallengeId: z.string().uuid(),
     }))
     .mutation(async ({ input, ctx }) => {
-      await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+      const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+
+      const { data: chRow } = await ctx.supabase
+        .from("challenges")
+        .select("duration_type, ends_at, live_date")
+        .eq("id", challenge_id)
+        .single();
+      const ch = chRow as { duration_type?: string; ends_at?: string | null; live_date?: string | null } | null;
+      if (ch?.duration_type === "24h") {
+        const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
+        if (isChallengeExpired(endsAt)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer secure the day." });
+        }
+      }
 
       const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", {
         p_active_challenge_id: input.activeChallengeId,

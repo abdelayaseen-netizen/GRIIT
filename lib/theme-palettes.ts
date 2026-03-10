@@ -1,6 +1,6 @@
 /**
  * Light and dark color palettes for ThemeContext.
- * Shape matches @/constants/colors so components can swap to useTheme().colors.
+ * Light theme matches reference: #FAFAF8 background, #E8734A accent, #2D8B4E success, etc.
  */
 
 export type ThemeColors = {
@@ -20,6 +20,8 @@ export type ThemeColors = {
   successLight: string;
   warning: string;
   warningLight: string;
+  danger: string;
+  dangerLight: string;
   shadow: string;
   shadowMedium: string;
   pill: string;
@@ -29,34 +31,36 @@ export type ThemeColors = {
 };
 
 export const LIGHT_THEME: ThemeColors = {
-  background: "#F8F8F8",
+  background: "#FAFAF8",
   card: "#FFFFFF",
   text: {
-    primary: "#000000",
-    secondary: "#333333",
-    tertiary: "#5A5A5A",
-    muted: "#B5B5B5",
+    primary: "#1A1A1A",
+    secondary: "#6B7280",
+    tertiary: "#6B7280",
+    muted: "#9CA3AF",
   },
-  accent: "#E87D4F",
+  accent: "#E8734A",
   accentLight: "#FFF5F0",
-  accentTint: "#FFF9F6",
-  border: "#E8E6E1",
-  success: "#2E7D4A",
-  successLight: "#E8F5E9",
-  warning: "#E87D4F",
-  warningLight: "#FFF5F0",
+  accentTint: "#FFF5F0",
+  border: "#F0EDE8",
+  success: "#2D8B4E",
+  successLight: "#F0FFF4",
+  warning: "#D4A017",
+  warningLight: "#FFFBEB",
+  danger: "#E53E3E",
+  dangerLight: "#FEF2F2",
   shadow: "rgba(0, 0, 0, 0.04)",
   shadowMedium: "rgba(0, 0, 0, 0.08)",
-  pill: "#F0EEEB",
+  pill: "#F3F4F6",
   category: {
-    fitness: "#E8613C",
+    fitness: "#E8734A",
     mind: "#7C6BC4",
     discipline: "#1A1A1A",
     faith: "#2563EB",
   },
   streak: {
-    fire: "#FF6B35",
-    shield: "#2E7D4A",
+    fire: "#E8734A",
+    shield: "#2D8B4E",
     gold: "#D4A017",
     platinum: "#6B7280",
   },
@@ -77,27 +81,29 @@ export const DARK_THEME: ThemeColors = {
     tertiary: "#737373",
     muted: "#525252",
   },
-  accent: "#E87D4F",
-  accentLight: "rgba(232, 125, 79, 0.15)",
-  accentTint: "rgba(232, 125, 79, 0.08)",
+  accent: "#E8734A",
+  accentLight: "rgba(232, 115, 74, 0.15)",
+  accentTint: "rgba(232, 115, 74, 0.08)",
   border: "#2A2A2A",
-  success: "#22C55E",
-  successLight: "rgba(34, 197, 94, 0.15)",
-  warning: "#F97316",
-  warningLight: "rgba(249, 115, 22, 0.15)",
+  success: "#2D8B4E",
+  successLight: "rgba(45, 139, 78, 0.15)",
+  warning: "#D4A017",
+  warningLight: "rgba(212, 160, 23, 0.15)",
+  danger: "#E53E3E",
+  dangerLight: "rgba(229, 62, 62, 0.15)",
   shadow: "rgba(0, 0, 0, 0.3)",
   shadowMedium: "rgba(0, 0, 0, 0.4)",
   pill: "#262626",
   category: {
-    fitness: "#E8613C",
+    fitness: "#E8734A",
     mind: "#8B7CD4",
     discipline: "#E5E5E5",
     faith: "#3B82F6",
   },
   streak: {
-    fire: "#FF6B35",
-    shield: "#22C55E",
-    gold: "#EAB308",
+    fire: "#E8734A",
+    shield: "#2D8B4E",
+    gold: "#D4A017",
     platinum: "#71717A",
   },
   milestone: {

@@ -16,6 +16,7 @@ import { ChevronLeft, UserPlus, UserMinus, Check, X } from "lucide-react-native"
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { ROUTES } from "@/lib/routes";
 
 type ListData = {
   accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[];
@@ -74,8 +75,8 @@ export default function AccountabilityScreen() {
               try {
                 await trpcMutate("accountability.remove", { partnerId });
                 await load();
-              } catch (e: any) {
-                Alert.alert("Error", e?.message ?? "Could not remove.");
+              } catch (e: unknown) {
+                Alert.alert("Error", e instanceof Error ? e.message : "Could not remove.");
               } finally {
                 setActingId(null);
               }
@@ -93,8 +94,8 @@ export default function AccountabilityScreen() {
       try {
         await trpcMutate("accountability.respond", { inviteId, action });
         await load();
-      } catch (e: any) {
-        Alert.alert("Error", e?.message ?? "Could not update invite.");
+      } catch (e: unknown) {
+        Alert.alert("Error", e instanceof Error ? e.message : "Could not update invite.");
       } finally {
         setActingId(null);
       }
@@ -108,8 +109,8 @@ export default function AccountabilityScreen() {
       try {
         await trpcMutate("accountability.remove", { partnerId });
         await load();
-      } catch (e: any) {
-        Alert.alert("Error", e?.message ?? "Could not cancel invite.");
+      } catch (e: unknown) {
+        Alert.alert("Error", e instanceof Error ? e.message : "Could not cancel invite.");
       } finally {
         setActingId(null);
       }
@@ -244,7 +245,7 @@ export default function AccountabilityScreen() {
 
         <TouchableOpacity
           style={styles.addBtn}
-          onPress={() => router.push("/accountability/add" as any)}
+          onPress={() => router.push(ROUTES.ACCOUNTABILITY_ADD as never)}
           activeOpacity={0.85}
         >
           <UserPlus size={22} color="#fff" />

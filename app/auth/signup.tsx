@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { ROUTES } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
 import { track } from '@/lib/analytics';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -94,20 +95,20 @@ export default function SignupScreen() {
       }
 
       if (data.session) {
-        console.log("SIGNUP: success, session", data.session.user?.id);
+        if (__DEV__) console.log("SIGNUP: success, session", data.session.user?.id);
         track({ name: "signup_completed" });
         router.replace("/" as never);
         return;
       }
 
-      console.log("SIGNUP: no session, trying signInWithPassword");
+      if (__DEV__) console.log("SIGNUP: no session, trying signInWithPassword");
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password,
       });
 
       if (signInError) {
-        router.replace("/auth/login" as any);
+        router.replace(ROUTES.AUTH_LOGIN as never);
         return;
       }
 
@@ -115,10 +116,10 @@ export default function SignupScreen() {
         track({ name: "signup_completed" });
         router.replace("/" as never);
       } else {
-        router.replace("/auth/login" as any);
+        router.replace(ROUTES.AUTH_LOGIN as never);
       }
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'An unexpected error occurred');
+    } catch (err: unknown) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;

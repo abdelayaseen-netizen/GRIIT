@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from "react-native";
-import { Pencil, Share2 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import Colors from "@/constants/colors";
 
 export interface ProfileHeaderProps {
@@ -13,14 +13,12 @@ export interface ProfileHeaderProps {
   currentTier: string;
   joinDate?: string;
   onShare?: () => void;
+  bio?: string;
+  /** Only show Edit button on own profile. Default true. */
+  showEditButton?: boolean;
 }
 
-const DISCIPLINE_LABELS: Record<string, string> = {
-  Starter: "Discipline Athlete",
-  Builder: "Discipline Athlete",
-  Relentless: "Discipline Athlete",
-  Elite: "Discipline Elite",
-};
+const AVATAR_SIZE = 80;
 
 export default function ProfileHeader({
   avatarUrl,
@@ -30,10 +28,11 @@ export default function ProfileHeader({
   currentTier,
   joinDate,
   onShare,
+  bio,
+  showEditButton = true,
 }: ProfileHeaderProps) {
   const router = useRouter();
-  const label = disciplineTitle ?? DISCIPLINE_LABELS[currentTier] ?? "Discipline Athlete";
-  const identityLine = `${currentTier} Tier • ${label}`;
+  const displayName = fullName || username || "User";
 
   return (
     <View style={styles.container}>
@@ -42,38 +41,46 @@ export default function ProfileHeader({
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarLetter}>{fullName.charAt(0).toUpperCase()}</Text>
+            <Text style={styles.avatarLetter}>{displayName.charAt(0).toUpperCase()}</Text>
           </View>
         )}
       </View>
-      <Text style={styles.fullName}>{fullName}</Text>
-      <Text style={styles.username}>@{username}</Text>
+      <Text style={styles.fullName}>{displayName}</Text>
+      <Text style={styles.username}>@{username || "user"}</Text>
+      {bio ? (
+        <View style={styles.bioPill}>
+          <Text style={styles.bioPillText}>{bio}</Text>
+        </View>
+      ) : null}
       <View style={styles.tierBadge}>
-        <Text style={styles.tierBadgeText}>{identityLine}</Text>
+        <View style={[styles.tierDot, { backgroundColor: Colors.accent }]} />
+        <Text style={styles.tierBadgeText}>{currentTier}</Text>
       </View>
       {joinDate ? (
         <Text style={styles.joinDate}>Joined {joinDate}</Text>
       ) : null}
       <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.editBtn}
-          onPress={() => {
-            if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push("/edit-profile" as any);
-          }}
-          activeOpacity={0.7}
-        >
-          <Pencil size={14} color={Colors.text.primary} />
-          <Text style={styles.editBtnText}>Edit</Text>
-        </TouchableOpacity>
+        {showEditButton && (
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push(ROUTES.EDIT_PROFILE as never);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.editBtnText}>✏️ Edit</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.shareBtn} onPress={onShare} activeOpacity={0.7}>
-          <Share2 size={14} color={Colors.text.primary} />
-          <Text style={styles.shareBtnText}>Share</Text>
+          <Text style={styles.shareBtnText}>🔗 Share</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+const BORDER_PILL = "#E0DDD8";
 
 const styles = StyleSheet.create({
   container: {
@@ -85,39 +92,62 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
   },
   avatarPlaceholder: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: Colors.accentLight,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: "#1A1A1A",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarLetter: {
     fontSize: 32,
     fontWeight: "700",
-    color: Colors.accent,
+    color: "#fff",
   },
   fullName: {
     fontSize: 22,
     fontWeight: "700",
     color: Colors.text.primary,
+    textAlign: "center",
   },
   username: {
-    fontSize: 15,
-    color: Colors.text.secondary,
+    fontSize: 14,
+    color: Colors.text.muted,
     marginTop: 4,
+    textAlign: "center",
+  },
+  bioPill: {
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#F0EDE8",
+  },
+  bioPillText: {
+    fontSize: 14,
+    color: Colors.text.secondary,
   },
   tierBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginTop: 10,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: Colors.pill,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tierDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   tierBadgeText: {
     fontSize: 13,
@@ -126,8 +156,9 @@ const styles = StyleSheet.create({
   },
   joinDate: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: Colors.text.muted,
     marginTop: 8,
+    textAlign: "center",
   },
   actions: {
     flexDirection: "row",
@@ -135,14 +166,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   editBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    paddingHorizontal: 24,
+    height: 40,
+    justifyContent: "center",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: BORDER_PILL,
+    backgroundColor: Colors.card,
   },
   editBtnText: {
     fontSize: 14,
@@ -150,14 +181,14 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   shareBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    paddingHorizontal: 24,
+    height: 40,
+    justifyContent: "center",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: BORDER_PILL,
+    backgroundColor: Colors.card,
   },
   shareBtnText: {
     fontSize: 14,

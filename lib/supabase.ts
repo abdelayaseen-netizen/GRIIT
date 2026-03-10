@@ -12,7 +12,8 @@ const storage = Platform.OS === 'web'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: storage as any,
+    // RN/Expo: AsyncStorage or localStorage adapter; Supabase types expect browser storage interface
+    storage: storage as import('@supabase/supabase-js').SupabaseClient['auth']['storage'],
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,

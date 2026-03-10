@@ -73,7 +73,7 @@ export default function OnboardingScreen() {
         primaryGoal: primaryGoal || undefined,
         dailyTimeBudget: dailyTimeBudget || undefined,
       },
-    } as any);
+    } as never);
   }, [joinResult, selectedStarter, primaryGoal, dailyTimeBudget, router]);
 
   const handleNextStep3 = useCallback(async () => {
@@ -96,8 +96,8 @@ export default function OnboardingScreen() {
       await setDay1StartedAt();
       setJoinResult(result);
       setStep(4);
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Something went wrong. Try again.");
+    } catch (e: unknown) {
+      Alert.alert("Error", e instanceof Error ? e.message : "Something went wrong. Try again.");
     } finally {
       setSubmitting(false);
     }

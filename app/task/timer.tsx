@@ -201,8 +201,8 @@ export default function TimerTaskScreen() {
           { text: "OK", onPress: () => router.back() },
         ]);
       }
-    } catch (error: any) {
-      Alert.alert("Error", error?.message ?? "Something went wrong");
+    } catch (error: unknown) {
+      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);
       setUploading(false);
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     fontSize: 72,
     fontWeight: '700' as const,
     color: Colors.text.primary,
-    fontVariant: ['tabular-nums' as any],
+    fontVariant: ['tabular-nums'],
   },
   timerLabel: {
     fontSize: 18,

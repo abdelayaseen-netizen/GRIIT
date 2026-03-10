@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Award, ChevronRight } from "lucide-react-native";
 import Colors from "@/constants/colors";
+import { formatShortDate } from "@/lib/date-format";
 
 export interface CompletedChallengeItem {
   id: string;
@@ -60,7 +61,7 @@ export default function CompletedChallengesSection({
                 {c.challengeName}
               </Text>
               <Text style={styles.completedAt}>
-                Completed {new Date(c.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                Completed {formatShortDate(c.completedAt)}
               </Text>
             </View>
             <ChevronRight size={18} color={Colors.text.muted} />

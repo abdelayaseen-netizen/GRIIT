@@ -1,10 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcQuery } from "@/lib/trpc";
+import { ROUTES } from "@/lib/routes";
+import {
+  ProfileHeader,
+  DisciplineScoreCard,
+  TierProgressBar,
+  LifetimeStatsCard,
+  DisciplineCalendar,
+  DisciplineGrowthCard,
+  AchievementsSection,
+} from "@/components/profile";
+import type { AchievementItem } from "@/components/profile";
+import { formatMonthYearLong } from "@/lib/date-format";
 
 type PublicProfile = {
   user_id: string;
@@ -14,6 +26,8 @@ type PublicProfile = {
   total_days_secured: number;
   tier: string;
   active_streak: number;
+  bio?: string | null;
+  created_at?: string | null;
 };
 
 /**
@@ -33,7 +47,7 @@ export default function PublicProfileScreen() {
 
   useEffect(() => {
     if (!decoded) {
-      router.replace("/(tabs)" as any);
+      router.replace(ROUTES.TABS as never);
       return;
     }
     let cancelled = false;
@@ -100,7 +114,7 @@ export default function PublicProfileScreen() {
 
   const isOwnProfile = user?.id === profile.user_id;
   if (isOwnProfile) {
-    router.replace("/(tabs)/profile" as any);
+    router.replace(ROUTES.TABS_PROFILE as never);
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.accent} />
@@ -108,86 +122,103 @@ export default function PublicProfileScreen() {
     );
   }
 
+  const displayName = profile.display_name || profile.username || "User";
+  const joinedDate = profile.created_at ? formatMonthYearLong(profile.created_at) : undefined;
+  const disciplineScore = Math.max(0, profile.total_days_secured ?? 0);
+  const achievements: AchievementItem[] = [
+    { id: "7_streak", title: "7-Day Streak", description: "7-day streak", category: "consistency", unlocked: (profile.active_streak ?? 0) >= 7, unlockDate: null },
+    { id: "14_streak", title: "14-Day Streak", description: "14-day streak", category: "consistency", unlocked: (profile.active_streak ?? 0) >= 14, unlockDate: null },
+    { id: "30_streak", title: "30-Day Streak", description: "30-day streak", category: "consistency", unlocked: (profile.active_streak ?? 0) >= 30, unlockDate: null },
+    { id: "75_legend", title: "75-Day Legend", description: "75-day streak", category: "consistency", unlocked: (profile.active_streak ?? 0) >= 75, unlockDate: null },
+    { id: "consistent", title: "Consistent", description: "Keep showing up", category: "consistency", unlocked: profile.total_days_secured >= 7, unlockDate: null },
+    { id: "elite", title: "Elite", description: "90+ days secured", category: "discipline", unlocked: profile.total_days_secured >= 90, unlockDate: null },
+    { id: "challenge_done", title: "Challenge Done", description: "Complete a challenge", category: "challenge", unlocked: false, unlockDate: null },
+  ];
+
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: profile.display_name || profile.username || "Profile",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={24} color={colors.text.primary} />
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.displayName, { color: colors.text.primary }]}>
-          {profile.display_name || profile.username}
-        </Text>
-        <Text style={[styles.username, { color: colors.text.secondary }]}>@{profile.username}</Text>
-        <View style={styles.stats}>
-          <Text style={[styles.statValue, { color: colors.accent }]}>{profile.active_streak}</Text>
-          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>day streak</Text>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+            <ChevronLeft size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Profile</Text>
+          <View style={styles.headerSpacer} />
         </View>
-        <View style={styles.stats}>
-          <Text style={[styles.statValue, { color: colors.text.primary }]}>{profile.total_days_secured}</Text>
-          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>days secured</Text>
-        </View>
-        <Text style={[styles.tier, { color: colors.text.tertiary }]}>{profile.tier} tier</Text>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ProfileHeader
+            avatarUrl={profile.avatar_url ?? undefined}
+            fullName={displayName}
+            username={profile.username ?? ""}
+            currentTier={profile.tier ?? "Starter"}
+            joinDate={joinedDate}
+            bio={profile.bio ?? undefined}
+            showEditButton={false}
+          />
+          <DisciplineScoreCard
+            disciplineScore={disciplineScore}
+            tier={profile.tier ?? "Starter"}
+            daysSecured={profile.total_days_secured}
+          />
+          <TierProgressBar
+            currentPoints={profile.total_days_secured}
+            pointsRequiredForNextTier={0}
+            currentTier={profile.tier ?? "Starter"}
+            nextTier={null}
+          />
+          <LifetimeStatsCard
+            currentStreak={profile.active_streak ?? 0}
+            longestStreak={profile.active_streak ?? 0}
+            daysSecured={profile.total_days_secured}
+            challengesCompleted={0}
+          />
+          <DisciplineCalendar securedDateKeys={[]} currentStreak={profile.active_streak ?? 0} longestStreak={profile.active_streak ?? 0} />
+          <DisciplineGrowthCard
+            pastValue={0}
+            currentValue={disciplineScore}
+            delta={disciplineScore}
+            periodLabel="30 days"
+          />
+          <AchievementsSection achievements={achievements} loading={false} />
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-  },
+  container: { flex: 1 },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  backBtn: {
-    padding: 8,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
-  text: {
-    fontSize: 16,
-  },
+  backBtn: { padding: 4 },
+  headerTitle: { fontSize: 18, fontWeight: "700" },
+  headerSpacer: { width: 40 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 40 },
+  bottomSpacer: { height: 24 },
+  text: { fontSize: 16 },
   retryButton: {
     marginTop: 16,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
   },
-  retryButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  displayName: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  username: {
-    fontSize: 16,
-    marginBottom: 24,
-  },
-  stats: {
-    marginBottom: 12,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: "700",
-  },
-  statLabel: {
-    fontSize: 14,
-  },
-  tier: {
-    fontSize: 14,
-    marginTop: 8,
-  },
+  retryButtonText: { fontSize: 16, fontWeight: "600", color: "#fff" },
 });

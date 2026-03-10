@@ -501,3 +501,110 @@ export interface ProfilePremiumFields {
   premiumExpiresAt?: string | null; // ISO date
   premiumPlatform?: "ios" | "android" | "web" | null; // where they subscribed
 }
+
+/** Challenge detail as returned by challenges.getById (with optional team/shared goal fields). */
+export interface ChallengeDetailFromApi {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  duration_type?: string;
+  duration_days?: number;
+  visibility?: string;
+  status?: string;
+  difficulty?: string;
+  participation_type?: string;
+  run_status?: "waiting" | "active" | "completed" | "failed";
+  team_size?: number;
+  shared_goal_target?: number | null;
+  shared_goal_unit?: string | null;
+  deadline_type?: string | null;
+  deadline_date?: string | null;
+  ends_at?: string | null;
+  is_daily?: boolean;
+  live_date?: string | null;
+  tasks?: ChallengeTaskFromApi[];
+  teamMembers?: TeamMemberForListApi[];
+  sharedGoalTotal?: number | null;
+  short_hook?: string | null;
+  about?: string | null;
+  rules?: unknown[];
+  fail_condition?: string | null;
+  participants_count?: number;
+  active_today_count?: number;
+  hard_pick_rate?: number | null;
+  hard_finish_rate?: number | null;
+  completion_rate?: number | null;
+}
+
+export interface TeamMemberForListApi {
+  id: string;
+  user_id: string;
+  role: string;
+  status: string;
+  joined_at: string;
+  profiles?: { display_name?: string | null; username?: string | null; avatar_url?: string | null } | null;
+  secured_today?: boolean;
+  tasks_completed?: number;
+  tasks_total?: number;
+}
+
+/** Active challenge as returned by activeChallenges.getMine (with current_day_index, challenge_id). */
+export interface ActiveChallengeFromApi {
+  id: string;
+  challenge_id: string;
+  current_day_index?: number;
+  current_day?: number;
+  challenges?: Record<string, unknown>;
+}
+
+/** Stats as returned by stats.getForHome (tier, nextTierName, pointsToNextTier, etc.). */
+export interface StatsFromApi {
+  tier?: string | null;
+  nextTierName?: string | null;
+  pointsToNextTier?: number | null;
+  totalDaysSecured?: number | null;
+  preferredSecureTime?: string | null;
+  lastStandsAvailable?: number | null;
+  lastCompletedDateKey?: string | null;
+  longestStreak?: number;
+  activeStreak?: number;
+  completedChallenges?: number;
+  activeChallenges?: number;
+}
+
+/** Profile as returned by profiles.get (subscription_status, subscription_expiry, etc.). */
+export interface ProfileFromApi {
+  subscription_status?: string | null;
+  subscription_expiry?: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  username?: string | null;
+  created_at?: string | null;
+  bio?: string | null;
+}
+
+/** Check-in row from getTodayCheckins (task_id, status, etc.). */
+export interface CheckinFromApi {
+  task_id: string;
+  status: string;
+  id?: string;
+  value?: number | null;
+  note_text?: string | null;
+  proof_url?: string | null;
+  proof_source?: string | null;
+}
+
+/** Leaderboard/activity entry from API for mapping. */
+export interface LeaderboardEntryFromApi {
+  userId?: string;
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  rank?: number;
+  value?: number;
+  unit?: string;
+  currentStreak?: number;
+  securedDaysThisWeek?: number;
+  respectCount?: number;
+}

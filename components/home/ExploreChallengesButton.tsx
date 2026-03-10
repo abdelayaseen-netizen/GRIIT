@@ -3,14 +3,16 @@ import { TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
 import { ChevronRight, Sparkles } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import Colors from "@/constants/colors";
+import { designTokens } from "@/lib/design-tokens";
 
 export default function ExploreChallengesButton() {
   const router = useRouter();
 
   const handlePress = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push("/(tabs)/discover" as any);
+    router.push(ROUTES.TABS_DISCOVER as never);
   };
 
   return (
@@ -37,7 +39,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
     backgroundColor: Colors.accentLight,
-    borderRadius: 12,
+    borderRadius: designTokens.cardRadius,
     borderWidth: 1,
     borderColor: Colors.accent + "30",
   },

@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { ROUTES } from "@/lib/routes";
 
 type SearchHit = { user_id: string; username: string; display_name: string };
 
@@ -66,12 +67,12 @@ export default function AddAccountabilityPartnerScreen() {
         await trpcMutate("accountability.invite", { partnerId });
         Alert.alert("Invite sent", "They'll see your request in their Accountability Circle.");
         if (params.from === "onboarding" || params.from === "day1") {
-          router.replace(params.from === "onboarding" ? "/onboarding?step=4" : "/(tabs)" as any);
+          router.replace((params.from === "onboarding" ? ROUTES.ONBOARDING_STEP4 : ROUTES.TABS) as never);
         } else {
           router.back();
         }
-      } catch (e: any) {
-        Alert.alert("Error", e?.message ?? "Could not send invite.");
+      } catch (e: unknown) {
+        Alert.alert("Error", e instanceof Error ? e.message : "Could not send invite.");
       } finally {
         setInvitingId(null);
       }
@@ -82,9 +83,9 @@ export default function AddAccountabilityPartnerScreen() {
   const handleBack = useCallback(() => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (params.from === "onboarding") {
-      router.replace("/onboarding?step=4" as any);
+      router.replace(ROUTES.ONBOARDING_STEP4 as never);
     } else if (params.from === "day1") {
-      router.replace("/(tabs)" as any);
+      router.replace(ROUTES.TABS as never);
     } else {
       router.back();
     }
