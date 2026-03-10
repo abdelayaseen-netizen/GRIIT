@@ -76,7 +76,7 @@ export default function Celebration({ visible, onComplete, titleText, streakCoun
     try {
       import("expo-haptics").then((Haptics) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }).catch(() => {});
+      }).catch(() => { /* haptics not available */ });
     } catch {
       // Silently fail
     }

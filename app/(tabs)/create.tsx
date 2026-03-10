@@ -729,6 +729,8 @@ export default function CreateScreen() {
                 ]}
                 onPress={() => setParticipationType(opt.id)}
                 activeOpacity={0.7}
+                accessibilityLabel={`Select ${opt.label} participation`}
+                accessibilityRole="button"
               >
                 <View style={[styles.participationIconWrap, participationType === opt.id && styles.participationIconWrapActive]}>
                   <Icon size={22} color={participationType === opt.id ? "#fff" : Colors.text.tertiary} />
@@ -1017,6 +1019,8 @@ export default function CreateScreen() {
                 setTasks(pack.buildTasks());
               }}
               activeOpacity={0.7}
+              accessibilityLabel={`Apply ${pack.title} tasks`}
+              accessibilityRole="button"
             >
               <Text style={step2Styles.packIcon}>{pack.icon}</Text>
               <Text style={step2Styles.packTitle} numberOfLines={1}>{pack.title}</Text>
@@ -1093,6 +1097,8 @@ export default function CreateScreen() {
         style={step2Styles.addBtn}
         onPress={() => { setEditingTask(null); setShowTaskBuilder(true); }}
         activeOpacity={0.7}
+        accessibilityLabel="Add a new task"
+        accessibilityRole="button"
       >
         <Plus size={18} color="#fff" />
         <Text style={step2Styles.addBtnText}>{tasks.length === 0 ? "Add your first daily task" : "+ Add Task"}</Text>
@@ -1254,7 +1260,7 @@ export default function CreateScreen() {
 
         <View style={styles.footer}>
           {step > 1 && (
-            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <TouchableOpacity style={styles.backButton} onPress={handleBack} accessibilityLabel="Go to previous step" accessibilityRole="button">
               <ChevronLeft size={20} color={Colors.text.secondary} />
               <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
@@ -1268,6 +1274,7 @@ export default function CreateScreen() {
                 variant="orange"
                 fullWidth
                 disabled={!(step === 1 ? canProceedStep1 : canProceedStep2)}
+                accessibilityLabel={step === 2 ? "Review your challenge" : "Continue to add tasks"}
               />
             </View>
           ) : (
@@ -1288,6 +1295,7 @@ export default function CreateScreen() {
                 fullWidth
                 disabled={submitStatus === "submitting" || !canCreateChallenge}
                 loading={submitStatus === "submitting"}
+                accessibilityLabel="Create this challenge"
               />
             </View>
           )}

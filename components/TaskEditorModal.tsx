@@ -130,6 +130,7 @@ const JOURNAL_PROMPTS = [
 ];
 
 const TASK_TYPE_STYLES: Record<TaskType, { color: string; selectedBg: string }> = {
+  // Task type tint — not in theme
   journal: { color: "#A855F7", selectedBg: "#F3E8FF" },
   timer: { color: "#E8734A", selectedBg: "#FFF5F0" },
   photo: { color: "#EC4899", selectedBg: "#FFF0F5" },
@@ -868,6 +869,7 @@ export default function TaskEditorModal({
             if (!teEnabled) setTeDetailsExpanded(true);
           }}
           label="Require completion at a specific time"
+          accessibilityLabel="Require completion at specific time"
         />
 
         {teEnabled && (
@@ -947,6 +949,7 @@ export default function TaskEditorModal({
                 checked={teHardEnabled}
                 onPress={() => setTeHardEnabled(!teHardEnabled)}
                 label="Strict window"
+                accessibilityLabel="Enable hard mode time window"
               />
               {teHardEnabled && (
                 <>
@@ -1079,6 +1082,8 @@ export default function TaskEditorModal({
           rightDisabled={!canSave()}
           rightButtonVariant="primary"
           rightButtonPill={!!editingTask}
+          accessibilityCancelLabel="Cancel editing task"
+          accessibilityRightLabel="Save task"
         />
 
         <KeyboardAvoidingView

@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   RefreshControl,
   Platform,
@@ -253,23 +254,31 @@ function LeaderboardSection({ entries, styles }: { entries: LeaderboardEntry[]; 
           </View>
         ))}
       </View>
-      {rest.map((entry) => (
-        <View key={entry.id} style={styles.leaderboardRow}>
-          <Text style={styles.leaderboardRankNum}>#{entry.rank}</Text>
-          <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.leaderboardAvatar} contentFit="cover" />
-          <View style={styles.leaderboardInfo}>
-            <View style={styles.leaderboardNameRow}>
-              <Text style={styles.leaderboardName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
-              {entry.secured && <Shield size={12} color={colors.streak.shield} style={{ marginLeft: 4 }} />}
+      <FlatList
+        data={rest}
+        keyExtractor={(item) => item.id}
+        scrollEnabled={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        renderItem={({ item: entry }) => (
+          <View style={styles.leaderboardRow}>
+            <Text style={styles.leaderboardRankNum}>#{entry.rank}</Text>
+            <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.leaderboardAvatar} contentFit="cover" />
+            <View style={styles.leaderboardInfo}>
+              <View style={styles.leaderboardNameRow}>
+                <Text style={styles.leaderboardName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
+                {entry.secured && <Shield size={12} color={colors.streak.shield} style={{ marginLeft: 4 }} />}
+              </View>
+              <View style={styles.leaderboardMeta}>
+                <Flame size={11} color={colors.accent} />
+                <Text style={styles.leaderboardStreak}>{entry.streak}d</Text>
+              </View>
             </View>
-            <View style={styles.leaderboardMeta}>
-              <Flame size={11} color={colors.accent} />
-              <Text style={styles.leaderboardStreak}>{entry.streak}d</Text>
-            </View>
+            <Text style={styles.leaderboardScoreRight}>+{entry.score}</Text>
           </View>
-          <Text style={styles.leaderboardScoreRight}>+{entry.score}</Text>
-        </View>
-      ))}
+        )}
+      />
     </View>
   );
 }
@@ -300,54 +309,66 @@ function MovementFeedSection({
         <Text style={styles.onlyDisciplineShows}>Be the first this week.</Text>
       ) : (
         <>
-          {entries.map((entry) => {
-            const badge = entry.badge && badgeStyles[entry.badge];
-            const isSelf = currentUserId != null && entry.userId === currentUserId;
-            return (
-              <View key={entry.id} style={styles.movementFeedItem}>
-                <View style={styles.movementFeedAvatarWrap}>
-                  <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.movementFeedAvatar} contentFit="cover" />
-                </View>
-                <View style={styles.movementFeedBody}>
-                  <View style={styles.movementFeedNameRow}>
-                    <Text style={styles.movementFeedName}>{entry.displayName || entry.username}</Text>
-                    {badge && (
-                      <View style={[styles.movementFeedBadge, { backgroundColor: badge.bg }]}>
-                        <Text style={[styles.movementFeedBadgeText, { color: badge.text }]}>{entry.badge}</Text>
-                      </View>
+          <FlatList
+            data={entries}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            renderItem={({ item: entry }) => {
+              const badge = entry.badge && badgeStyles[entry.badge];
+              const isSelf = currentUserId != null && entry.userId === currentUserId;
+              return (
+                <View style={styles.movementFeedItem}>
+                  <View style={styles.movementFeedAvatarWrap}>
+                    <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.movementFeedAvatar} contentFit="cover" />
+                  </View>
+                  <View style={styles.movementFeedBody}>
+                    <View style={styles.movementFeedNameRow}>
+                      <Text style={styles.movementFeedName}>{entry.displayName || entry.username}</Text>
+                      {badge && (
+                        <View style={[styles.movementFeedBadge, { backgroundColor: badge.bg }]}>
+                          <Text style={[styles.movementFeedBadgeText, { color: badge.text }]}>{entry.badge}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.movementFeedDesc}>{entry.score} day{entry.score !== 1 ? "s" : ""} secured this week • {entry.streak}d streak</Text>
+                    <View style={styles.movementFeedMeta}>
+                      <Flame size={11} color={colors.accent} />
+                      <Text style={styles.movementFeedTime}>#{entry.rank}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.movementFeedActions}>
+                    <TouchableOpacity
+                      style={styles.movementFeedRespect}
+                      onPress={() => onGiveRespect(entry.userId)}
+                      disabled={givingRespectId === entry.userId}
+                      activeOpacity={0.7}
+                      accessibilityLabel={`Send respect to ${entry.displayName || entry.username || "user"}`}
+                      accessibilityRole="button"
+                    >
+                      <ThumbsUp size={14} color={colors.text.tertiary} />
+                      <Text style={styles.movementFeedRespectCount}>{entry.respectCount}</Text>
+                    </TouchableOpacity>
+                    {!isSelf && (
+                      <TouchableOpacity
+                        style={styles.movementFeedNudge}
+                        onPress={() => onGiveNudge(entry.userId)}
+                        disabled={givingNudgeId === entry.userId}
+                        activeOpacity={0.7}
+                        accessibilityLabel={`Nudge ${entry.displayName || entry.username || "user"}`}
+                        accessibilityRole="button"
+                      >
+                        <HandMetal size={14} color={colors.text.tertiary} />
+                        <Text style={styles.movementFeedNudgeText}>Nudge</Text>
+                      </TouchableOpacity>
                     )}
                   </View>
-                  <Text style={styles.movementFeedDesc}>{entry.score} day{entry.score !== 1 ? "s" : ""} secured this week • {entry.streak}d streak</Text>
-                  <View style={styles.movementFeedMeta}>
-                    <Flame size={11} color={colors.accent} />
-                    <Text style={styles.movementFeedTime}>#{entry.rank}</Text>
-                  </View>
                 </View>
-                <View style={styles.movementFeedActions}>
-                  <TouchableOpacity
-                    style={styles.movementFeedRespect}
-                    onPress={() => onGiveRespect(entry.userId)}
-                    disabled={givingRespectId === entry.userId}
-                    activeOpacity={0.7}
-                  >
-                    <ThumbsUp size={14} color={colors.text.tertiary} />
-                    <Text style={styles.movementFeedRespectCount}>{entry.respectCount}</Text>
-                  </TouchableOpacity>
-                  {!isSelf && (
-                    <TouchableOpacity
-                      style={styles.movementFeedNudge}
-                      onPress={() => onGiveNudge(entry.userId)}
-                      disabled={givingNudgeId === entry.userId}
-                      activeOpacity={0.7}
-                    >
-                      <HandMetal size={14} color={colors.text.tertiary} />
-                      <Text style={styles.movementFeedNudgeText}>Nudge</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            );
-          })}
+              );
+            }}
+          />
           <Text style={styles.onlyDisciplineShows}>Only discipline shows here.</Text>
         </>
       )}
@@ -406,26 +427,33 @@ function RecentActivitySection({ items, error, styles }: { items: ActivityItem[]
         <TrendingUp size={15} color={colors.text.secondary} />
         <Text style={styles.sectionTitle}>Recent</Text>
       </View>
-      {visibleItems.map((activity) => (
-        <View
-          key={activity.id}
-          style={[styles.recentItem, !activity.read && styles.recentItemUnread]}
-        >
-          <View style={styles.recentIconWrap}>
-            {getActivityIcon(activity.type)}
+      <FlatList
+        data={visibleItems}
+        keyExtractor={(item) => item.id}
+        scrollEnabled={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        renderItem={({ item: activity }) => (
+          <View
+            style={[styles.recentItem, !activity.read && styles.recentItemUnread]}
+          >
+            <View style={styles.recentIconWrap}>
+              {getActivityIcon(activity.type)}
+            </View>
+            <Image
+              source={{ uri: getUserAvatar(activity.actorId) }}
+              style={styles.recentAvatar}
+              contentFit="cover"
+            />
+            <Text style={styles.recentText} numberOfLines={2}>
+              <Text style={styles.recentName}>{activity.actorDisplayName}</Text>
+              {" "}{getActivityText(activity)}
+            </Text>
+            <Text style={styles.recentTime}>{formatTimeAgoCompact(activity.createdAt)}</Text>
           </View>
-          <Image
-            source={{ uri: getUserAvatar(activity.actorId) }}
-            style={styles.recentAvatar}
-            contentFit="cover"
-          />
-          <Text style={styles.recentText} numberOfLines={2}>
-            <Text style={styles.recentName}>{activity.actorDisplayName}</Text>
-            {" "}{getActivityText(activity)}
-          </Text>
-          <Text style={styles.recentTime}>{formatTimeAgoCompact(activity.createdAt)}</Text>
-        </View>
-      ))}
+        )}
+      />
       {items.length > 3 && (
         <TouchableOpacity
           style={styles.showMoreBtn}
@@ -618,7 +646,7 @@ export default function ActivityScreen() {
             <Text style={styles.title}>Movement</Text>
             <Text style={styles.subtitle}>Proof of discipline</Text>
           </View>
-          <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8} accessibilityLabel="Open teams" accessibilityRole="button">
           <Users size={16} color={colors.text.secondary} />
           <Text style={styles.teamsButtonText}>Teams</Text>
         </TouchableOpacity>
@@ -628,6 +656,8 @@ export default function ActivityScreen() {
         <TouchableOpacity
           style={[styles.filterPill, feedFilter === "global" && styles.filterPillActive]}
           onPress={() => setFeedFilter("global")}
+          accessibilityLabel="Show global activity"
+          accessibilityRole="button"
           activeOpacity={0.8}
         >
           <Globe size={14} color={feedFilter === "global" ? "#fff" : colors.text.secondary} />
@@ -636,6 +666,8 @@ export default function ActivityScreen() {
         <TouchableOpacity
           style={[styles.filterPill, styles.filterPillDisabled]}
           onPress={() => Alert.alert("Coming in the next update", "Friends filter will show only your accountability partners.")}
+          accessibilityLabel="Show friends activity"
+          accessibilityRole="button"
           activeOpacity={0.8}
         >
           <Users size={14} color={colors.text.muted} />
@@ -644,6 +676,8 @@ export default function ActivityScreen() {
         <TouchableOpacity
           style={[styles.filterPill, styles.filterPillDisabled]}
           onPress={() => Alert.alert("Coming in the next update", "Team filter will show your team leaderboard.")}
+          accessibilityLabel="Show team activity"
+          accessibilityRole="button"
           activeOpacity={0.8}
         >
           <Users size={14} color={colors.text.muted} />

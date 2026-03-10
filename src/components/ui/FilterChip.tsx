@@ -14,7 +14,13 @@ export function FilterChip({
   icon?: React.ReactNode;
 }) {
   return (
-    <TouchableOpacity style={[s.chip, selected && s.chipActive]} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={[s.chip, selected && s.chipActive]}
+      onPress={onPress}
+      activeOpacity={0.8}
+      accessibilityLabel={`Filter by ${label}`}
+      accessibilityRole="button"
+    >
       {icon != null && <>{icon}</>}
       <Text style={[s.text, selected && s.textActive]}>{label}</Text>
     </TouchableOpacity>

@@ -30,9 +30,11 @@ export function SearchBar(props: {
         onChangeText={onChangeText}
         editable={editable}
         returnKeyType="search"
+        accessibilityLabel="Search challenges"
+        accessibilityRole="search"
       />
       {value.length > 0 && onClear && (
-        <TouchableOpacity onPress={onClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity onPress={onClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityLabel="Clear search" accessibilityRole="button">
           <X size={16} color={colors.searchIcon} />
         </TouchableOpacity>
       )}

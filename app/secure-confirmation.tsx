@@ -81,7 +81,7 @@ export default function SecureConfirmationScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.content}>
           <Text style={styles.header}>Not found</Text>
-          <TouchableOpacity style={styles.shareButton} onPress={() => router.back()} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.shareButton} onPress={() => router.back()} activeOpacity={0.85} accessibilityLabel="Return to home" accessibilityRole="button">
             <Text style={styles.shareButtonText}>Go back</Text>
           </TouchableOpacity>
         </View>
@@ -172,6 +172,8 @@ export default function SecureConfirmationScreen() {
               }).catch(() => setShareError(true));
             }}
             activeOpacity={0.85}
+            accessibilityLabel="Share your achievement"
+            accessibilityRole="button"
           >
             <Share2 size={18} color={Colors.accent} />
             <Text style={styles.shareButtonText}>Share Your Win</Text>

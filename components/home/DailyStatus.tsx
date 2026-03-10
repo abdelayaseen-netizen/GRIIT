@@ -66,6 +66,8 @@ export default function DailyStatus({
           onPress={handleSecurePress}
           activeOpacity={0.85}
           testID="daily-status-secure-today"
+          accessibilityLabel="Secure your day"
+          accessibilityRole="button"
         >
           <Shield size={18} color="#fff" />
           <Text style={styles.secureButtonText}>Secure Today</Text>

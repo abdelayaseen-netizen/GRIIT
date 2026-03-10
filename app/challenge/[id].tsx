@@ -389,6 +389,8 @@ function MissionRow({
           onPress={onStart}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel={`Start ${task.title ?? "task"}`}
+          accessibilityRole="button"
         >
           <Text style={[s.startActionText, { color: isJournal ? "#6366F1" : theme.accent }]}>Start</Text>
           <ChevronRight size={14} color={isJournal ? "#6366F1" : theme.accent} />
@@ -863,7 +865,7 @@ export default function ChallengeDetailScreen() {
                   });
                   }}
                   accessible
-                  accessibilityLabel="Share challenge"
+                  accessibilityLabel="Share this challenge"
                   accessibilityRole="button"
                 >
                   <Share2 size={18} color="#FFFFFF" />
@@ -888,7 +890,7 @@ export default function ChallengeDetailScreen() {
                     ], { cancelable: true });
                   }}
                   accessible
-                  accessibilityLabel="More options"
+                  accessibilityLabel="Challenge options"
                   accessibilityRole="button"
                 >
                   <MoreHorizontal size={18} color="#FFFFFF" />
@@ -1168,7 +1170,7 @@ export default function ChallengeDetailScreen() {
                 onPress={handleLeave}
                 disabled={leavePending}
                 activeOpacity={0.7}
-                accessibilityLabel="Leave challenge"
+                accessibilityLabel="Leave this challenge"
                 accessibilityRole="button"
               >
                 {leavePending ? (
@@ -1199,6 +1201,8 @@ export default function ChallengeDetailScreen() {
                 disabled={joinDisabled}
                 activeOpacity={0.85}
                 testID="join-challenge-button"
+                accessibilityLabel="Join this challenge"
+                accessibilityRole="button"
               >
                 {isPending ? (
                   <ActivityIndicator color={theme.ctaText} />

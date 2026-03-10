@@ -353,6 +353,44 @@ export default function DiscoverScreen() {
     [handleChallengePress]
   );
 
+  const renderFeaturedItem = useCallback(
+    ({ item: c }: { item: DiscoverChallenge }) => (
+      <ChallengeCardFeatured
+        title={c.title}
+        description={c.short_hook ?? c.description}
+        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
+        stripeColor={c.theme_color || tokenColors.orangeStripe}
+        tasksPreview={c.tasks.slice(0, 3).map((t) => ({ icon: t.type, label: t.title }))}
+        durationLabel={getDurationLabel(c)}
+        taskCount={c.tasks.length}
+        participantsCount={c.participants_count ?? 0}
+        activeTodayCount={c.active_today_count ?? 0}
+        onPress={() => handleChallengePress(c.id)}
+      />
+    ),
+    [handleChallengePress, getDurationLabel]
+  );
+
+  const renderOtherItem = useCallback(
+    ({ item: c }: { item: DiscoverChallenge }) => (
+      <ChallengeRowCard
+        title={c.title}
+        description={c.short_hook ?? c.description}
+        stripeColor={c.theme_color || tokenColors.orangeStripe}
+        durationLabel={getDurationLabel(c)}
+        taskCount={c.tasks.length}
+        participantsCount={c.participants_count ?? 0}
+        statusDotColor={c.theme_color}
+        onPress={() => handleChallengePress(c.id)}
+        participationType={c.participation_type}
+        teamSize={c.team_size}
+        sharedGoalTarget={c.shared_goal_target}
+        sharedGoalUnit={c.shared_goal_unit}
+      />
+    ),
+    [handleChallengePress, getDurationLabel]
+  );
+
   const renderErrorBanner = () => {
     if (!isError) return null;
     return (
@@ -362,6 +400,8 @@ export default function DiscoverScreen() {
           onPress={handleRefresh}
           activeOpacity={0.7}
           testID="discover-retry-button"
+          accessibilityLabel="Retry loading"
+          accessibilityRole="button"
         >
           <Text style={[styles.retryPillText, { color: colors.accent }]}>Retry</Text>
         </TouchableOpacity>
@@ -461,23 +501,16 @@ export default function DiscoverScreen() {
               title="Featured"
               icon={<TrendingUp size={18} color={tokenColors.accentOrange} />}
             />
-            <View style={styles.featuredList}>
-              {featuredChallenges.map((c) => (
-                <ChallengeCardFeatured
-                  key={c.id}
-                  title={c.title}
-                  description={c.short_hook ?? c.description}
-                  difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-                  stripeColor={c.theme_color || tokenColors.orangeStripe}
-                  tasksPreview={c.tasks.slice(0, 3).map((t) => ({ icon: t.type, label: t.title }))}
-                  durationLabel={getDurationLabel(c)}
-                  taskCount={c.tasks.length}
-                  participantsCount={c.participants_count ?? 0}
-                  activeTodayCount={c.active_today_count ?? 0}
-                  onPress={() => handleChallengePress(c.id)}
-                />
-              ))}
-            </View>
+            <FlatList
+              data={featuredChallenges}
+              keyExtractor={(item) => item.id}
+              renderItem={renderFeaturedItem}
+              scrollEnabled={false}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              style={styles.featuredList}
+            />
           </View>
         )}
 
@@ -487,25 +520,16 @@ export default function DiscoverScreen() {
               title="More Challenges"
               icon={<Sparkles size={18} color={tokenColors.textSecondary} />}
             />
-            <View style={styles.compactList}>
-              {otherChallenges.map((c) => (
-                <ChallengeRowCard
-                  key={c.id}
-                  title={c.title}
-                  description={c.short_hook || c.description}
-                  stripeColor={c.theme_color || tokenColors.orangeStripe}
-                  durationLabel={getDurationLabel(c)}
-                  taskCount={c.tasks.length}
-                  participantsCount={c.participants_count ?? 0}
-                  statusDotColor={c.theme_color}
-                  onPress={() => handleChallengePress(c.id)}
-                  participationType={c.participation_type}
-                  teamSize={c.team_size}
-                  sharedGoalTarget={c.shared_goal_target}
-                  sharedGoalUnit={c.shared_goal_unit}
-                />
-              ))}
-            </View>
+            <FlatList
+              data={otherChallenges}
+              keyExtractor={(item) => item.id}
+              renderItem={renderOtherItem}
+              scrollEnabled={false}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              style={styles.compactList}
+            />
           </View>
         )}
 
@@ -516,6 +540,8 @@ export default function DiscoverScreen() {
               onPress={() => featuredQuery.fetchNextPage()}
               disabled={featuredQuery.isFetchingNextPage}
               activeOpacity={0.8}
+              accessibilityLabel="Load more challenges"
+              accessibilityRole="button"
             >
               {featuredQuery.isFetchingNextPage ? (
                 <ActivityIndicator size="small" color={tokenColors.accentOrange} />

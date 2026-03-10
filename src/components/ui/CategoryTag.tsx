@@ -16,6 +16,9 @@ export function CategoryTag({
       style={[s.tag, selected && s.tagSelected]}
       onPress={onPress}
       activeOpacity={0.8}
+      accessibilityLabel={`Select ${label} category`}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
     >
       <Text style={[s.text, selected && s.textSelected]}>{label}</Text>
     </TouchableOpacity>

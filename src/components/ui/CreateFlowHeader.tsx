@@ -12,13 +12,17 @@ export function CreateFlowHeader(p: {
   rightButtonVariant?: "primary" | "soft";
   /** When true, right button uses borderRadius 20, paddingH 20 (pill style for Edit Task Save) */
   rightButtonPill?: boolean;
+  /** Override cancel button a11y (e.g. "Cancel editing task") */
+  accessibilityCancelLabel?: string;
+  /** Override right button a11y (e.g. "Save task") */
+  accessibilityRightLabel?: string;
 }) {
   const variant = p.rightButtonVariant ?? "primary";
   const isSoft = variant === "soft";
   const isPill = p.rightButtonPill === true;
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={p.onCancel} style={styles.left}>
+      <TouchableOpacity onPress={p.onCancel} style={styles.left} accessibilityLabel={p.accessibilityCancelLabel ?? "Cancel"} accessibilityRole="button">
         <Text style={styles.cancelText}>Cancel</Text>
       </TouchableOpacity>
       <Text style={[styles.title, isPill && styles.titleEditTask]}>{p.title}</Text>
@@ -32,6 +36,8 @@ export function CreateFlowHeader(p: {
             isPill && styles.rightBtnPill,
             p.rightDisabled && styles.rightBtnDisabled,
           ]}
+          accessibilityLabel={p.accessibilityRightLabel ?? p.rightLabel}
+          accessibilityRole="button"
         >
           <Text style={[styles.rightText, isSoft && styles.rightTextSoft]}>
             {p.rightLabel}

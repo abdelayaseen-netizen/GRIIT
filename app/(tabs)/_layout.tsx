@@ -53,6 +53,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarAccessibilityLabel: "Home tab",
         }}
       />
       <Tabs.Screen
@@ -60,6 +61,7 @@ export default function TabLayout() {
         options={{
           title: "Discover",
           tabBarIcon: ({ color, size }) => <Compass color={color} size={size} />,
+          tabBarAccessibilityLabel: "Discover tab",
         }}
       />
       <Tabs.Screen
@@ -72,6 +74,7 @@ export default function TabLayout() {
             </View>
           ),
           tabBarLabel: () => null,
+          tabBarAccessibilityLabel: "Create tab",
         }}
       />
       <Tabs.Screen
@@ -79,6 +82,7 @@ export default function TabLayout() {
         options={{
           title: "Movement",
           tabBarIcon: ({ color, size }) => <Flame color={color} size={size} />,
+          tabBarAccessibilityLabel: "Movement tab",
         }}
       />
       <Tabs.Screen
@@ -86,6 +90,7 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarAccessibilityLabel: "Profile tab",
         }}
       />
     </Tabs>

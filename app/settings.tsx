@@ -73,11 +73,14 @@ function VisibilitySubsection({
             key={opt.key}
             style={[
               visibilityStyles.pill,
-              value === opt.key && { backgroundColor: "#1A1A1A" },
+              value === opt.key && { backgroundColor: themeColors.text.primary },
               value !== opt.key && { backgroundColor: themeColors.card, borderColor: themeColors.border },
             ]}
             onPress={() => onChange(opt.key)}
             activeOpacity={0.8}
+            accessibilityLabel={`Set ${label} visibility to ${opt.label}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: value === opt.key }}
           >
             <Text style={[visibilityStyles.pillText, { color: value === opt.key ? "#fff" : themeColors.text.primary }]}>{opt.label}</Text>
           </TouchableOpacity>
@@ -276,6 +279,8 @@ export default function SettingsScreen() {
                 }}
                 trackColor={{ false: themeColors.border, true: themeColors.accent }}
                 thumbColor="#FFFFFF"
+                accessibilityLabel="Toggle dark mode"
+                accessibilityRole="switch"
               />
             </View>
             <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
@@ -344,6 +349,8 @@ export default function SettingsScreen() {
                   onValueChange={handleReminderToggle}
                   trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
                   thumbColor={dailyReminder ? themeColors.accent : "#f4f3f4"}
+                  accessibilityLabel="Toggle daily reminder"
+                  accessibilityRole="switch"
                 />
               )}
             </View>
@@ -388,6 +395,8 @@ export default function SettingsScreen() {
                 }}
                 trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
                 thumbColor={lastCall ? themeColors.accent : "#f4f3f4"}
+                accessibilityLabel="Toggle last call reminder"
+                accessibilityRole="switch"
               />
             </View>
             <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
@@ -404,6 +413,8 @@ export default function SettingsScreen() {
                 }}
                 trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
                 thumbColor={friendActivity ? themeColors.accent : "#f4f3f4"}
+                accessibilityLabel="Toggle friend activity notifications"
+                accessibilityRole="switch"
               />
             </View>
           </View>

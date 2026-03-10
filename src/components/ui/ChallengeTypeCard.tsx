@@ -16,6 +16,9 @@ export function ChallengeTypeCard({ title, description, selected, onPress, icon 
       style={[styles.card, selected && styles.cardSelected]}
       onPress={onPress}
       activeOpacity={0.85}
+      accessibilityLabel={`Select ${title} challenge type`}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
     >
       {icon != null && <View style={styles.iconWrap}>{icon}</View>}
       <Text style={[styles.title, selected && styles.titleSelected]}>{title}</Text>

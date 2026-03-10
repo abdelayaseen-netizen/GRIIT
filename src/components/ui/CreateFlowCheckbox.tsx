@@ -9,11 +9,20 @@ type Props = {
   checked: boolean;
   onPress: () => void;
   label: string;
+  /** Override for screen reader (e.g. "Require completion at specific time") */
+  accessibilityLabel?: string;
 };
 
-export function CreateFlowCheckbox({ checked, onPress, label }: Props) {
+export function CreateFlowCheckbox({ checked, onPress, label, accessibilityLabel: a11yLabel }: Props) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      activeOpacity={0.8}
+      accessibilityLabel={a11yLabel ?? label}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+    >
       <View style={[styles.box, checked && styles.boxChecked]}>
         {checked && <Check size={14} color={colors.white} strokeWidth={2.5} />}
       </View>

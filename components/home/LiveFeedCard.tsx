@@ -13,6 +13,7 @@ import {
 } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { designTokens } from "@/lib/design-tokens";
+import Colors from "@/constants/colors";
 
 const STRIPE_WIDTH = 3 as const;
 
@@ -83,6 +84,8 @@ export default function LiveFeedCard({ data }: LiveFeedCardProps) {
               style={[styles.pillBtn, { borderColor: colors.border }]}
               onPress={data.onRespect}
               activeOpacity={0.8}
+              accessibilityLabel="Send respect"
+              accessibilityRole="button"
             >
               <Flame size={14} color={colors.accent} />
               <Text style={[styles.pillBtnText, { color: colors.accent }]}>Respect {data.respectCount ?? 0}</Text>
@@ -91,6 +94,8 @@ export default function LiveFeedCard({ data }: LiveFeedCardProps) {
               style={[styles.pillBtn, { borderColor: colors.border }]}
               onPress={data.onChase}
               activeOpacity={0.8}
+              accessibilityLabel="Chase this user"
+              accessibilityRole="button"
             >
               <Users size={14} color={colors.text.secondary} />
               <Text style={[styles.pillBtnText, { color: colors.text.secondary }]}>Chase</Text>
@@ -117,7 +122,7 @@ export default function LiveFeedCard({ data }: LiveFeedCardProps) {
               <Text style={[styles.metaMuted, { color: colors.text.muted }]}>
                 Top {data.topPercent ?? 0}% this week
               </Text>
-              <TouchableOpacity style={[styles.pillBtn, { borderColor: colors.border, alignSelf: "flex-start", marginTop: 8 }]} onPress={data.onRespect} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.pillBtn, { borderColor: colors.border, alignSelf: "flex-start", marginTop: 8 }]} onPress={data.onRespect} activeOpacity={0.8} accessibilityLabel="Send respect" accessibilityRole="button">
                 <Flame size={14} color={colors.accent} />
                 <Text style={[styles.pillBtnText, { color: colors.accent }]}>Respect {data.respectCount ?? 0}</Text>
               </TouchableOpacity>
@@ -148,6 +153,8 @@ export default function LiveFeedCard({ data }: LiveFeedCardProps) {
                 style={[styles.openChallengeBtn, { backgroundColor: colors.accent }]}
                 onPress={() => data.openChallengeId && data.onOpenChallenge?.(data.openChallengeId)}
                 activeOpacity={0.85}
+                accessibilityLabel="Open challenge"
+                accessibilityRole="button"
               >
                 <Text style={styles.openChallengeBtnText}>Open Challenge &gt;</Text>
               </TouchableOpacity>
@@ -175,6 +182,8 @@ export default function LiveFeedCard({ data }: LiveFeedCardProps) {
                 style={[styles.viewProfileBtn, { borderColor: colors.border }]}
                 onPress={data.onViewProfile}
                 activeOpacity={0.8}
+                accessibilityLabel="View profile"
+                accessibilityRole="button"
               >
                 <Text style={[styles.viewProfileBtnText, { color: colors.text.secondary }]}>View Profile &gt;</Text>
               </TouchableOpacity>
@@ -206,7 +215,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatar: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: Colors.pill,
   },
   iconCircle: {
     width: 40,

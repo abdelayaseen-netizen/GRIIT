@@ -477,11 +477,11 @@ export default function HomeScreen() {
             <Text style={[styles.logoSubtitle, { color: themeColors.text.muted }]}>Build Discipline Daily</Text>
           </View>
           <View style={styles.headerBadges}>
-            <View style={[styles.headerBadge, { borderColor: themeColors.border }]}>
+            <View style={[styles.headerBadge, { borderColor: themeColors.border }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
               <TrendingUp size={14} color={themeColors.text.tertiary} />
               <Text style={[styles.headerBadgeText, { color: themeColors.text.primary }]}>{stats?.longestStreak ?? 0}</Text>
             </View>
-            <View style={[styles.headerBadge, { borderColor: themeColors.border }]}>
+            <View style={[styles.headerBadge, { borderColor: themeColors.border }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
               <Flame size={14} color={themeColors.accent} />
               <Text style={[styles.headerBadgeText, { color: themeColors.text.primary }]}>{currentStreak}</Text>
             </View>
@@ -566,6 +566,8 @@ export default function HomeScreen() {
                   style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
                   onPress={() => homeActiveQuery.refetch()}
                   activeOpacity={0.85}
+                  accessibilityLabel="Retry loading"
+                  accessibilityRole="button"
                 >
                   <RefreshCw size={18} color="#fff" />
                   <Text style={styles.secureNowButtonText}>Retry</Text>
@@ -733,6 +735,8 @@ export default function HomeScreen() {
               }}
               activeOpacity={0.85}
               testID="home-challenge-card"
+              accessibilityLabel="Open challenge"
+              accessibilityRole="button"
             >
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
@@ -761,6 +765,8 @@ export default function HomeScreen() {
                 activeOpacity={0.85}
                 onPress={() => requireAuth("secure", handleSecureDay)}
                 testID="secure-day-button"
+                accessibilityLabel="Secure your day"
+                accessibilityRole="button"
               >
                 <Animated.View style={[styles.secureDayButton, { transform: [{ scale: secureBtnScale }] }]}>
                   <Animated.View style={[styles.secureDayGlow, { opacity: glowOpacity }]} />
@@ -795,6 +801,8 @@ export default function HomeScreen() {
               }}
               activeOpacity={0.85}
               testID="discover-cta"
+              accessibilityLabel="Pick a challenge"
+              accessibilityRole="button"
             >
               <Text style={[styles.pickChallengeButtonText, isFirstTimeUser ? undefined : { color: themeColors.text.primary }]}>
                 {isFirstTimeUser ? "Find a challenge" : "Pick a Challenge"}
@@ -840,6 +848,8 @@ export default function HomeScreen() {
               style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
               onPress={() => leaderboardQuery.refetch()}
               activeOpacity={0.85}
+              accessibilityLabel="Retry loading"
+              accessibilityRole="button"
             >
               <RefreshCw size={18} color="#fff" />
               <Text style={styles.secureNowButtonText}>Retry</Text>
@@ -859,6 +869,8 @@ export default function HomeScreen() {
               style={[styles.secureNowButton, { backgroundColor: themeColors.success }]}
               onPress={() => requireAuth("secure", () => router.push(ROUTES.TABS_DISCOVER as never))}
               activeOpacity={0.85}
+              accessibilityLabel="Secure your day"
+              accessibilityRole="button"
             >
               <Shield size={18} color="#fff" />
               <Text style={styles.secureNowButtonText}>Secure Now</Text>
@@ -869,6 +881,8 @@ export default function HomeScreen() {
             style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
             onPress={() => router.push(ROUTES.TABS_ACTIVITY as never)}
             activeOpacity={0.85}
+            accessibilityLabel="View activity"
+            accessibilityRole="button"
           >
             <Target size={28} color={themeColors.accent} />
             <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>LEADERBOARD</Text>

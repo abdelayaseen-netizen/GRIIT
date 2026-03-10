@@ -188,6 +188,9 @@ export default function CommitmentScreen() {
             style={[styles.checkboxRow]}
             onPress={() => setUnderstood((u) => !u)}
             activeOpacity={0.8}
+            accessibilityLabel="I understand the rules"
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: understood }}
           >
             <View style={[styles.checkbox, understood && styles.checkboxChecked]}>
               {understood ? <Check size={14} color="#fff" strokeWidth={3} /> : null}
@@ -205,6 +208,8 @@ export default function CommitmentScreen() {
             onPress={handleConfirm}
             activeOpacity={0.85}
             disabled={joining || (isHardMode && !understood)}
+            accessibilityLabel="Confirm commitment to join"
+            accessibilityRole="button"
           >
             {joining ? (
               <ActivityIndicator color="#fff" />
@@ -217,6 +222,8 @@ export default function CommitmentScreen() {
             style={styles.cancelButton}
             onPress={handleCancel}
             activeOpacity={0.7}
+            accessibilityLabel="Cancel and go back"
+            accessibilityRole="button"
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>

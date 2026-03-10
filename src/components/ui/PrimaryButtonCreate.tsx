@@ -11,6 +11,7 @@ interface PrimaryButtonCreateProps {
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
+  accessibilityLabel?: string;
 }
 
 export function PrimaryButtonCreate({
@@ -20,6 +21,7 @@ export function PrimaryButtonCreate({
   disabled = false,
   loading = false,
   fullWidth = true,
+  accessibilityLabel: a11yLabel,
 }: PrimaryButtonCreateProps) {
   const isGreen = variant === "green";
   return (
@@ -33,6 +35,8 @@ export function PrimaryButtonCreate({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.85}
+      accessibilityLabel={a11yLabel ?? label}
+      accessibilityRole="button"
     >
       {loading ? (
         <ActivityIndicator size="small" color={t.colors.white} />

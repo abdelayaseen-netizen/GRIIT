@@ -68,11 +68,13 @@ export default function ProfileHeader({
               router.push(ROUTES.EDIT_PROFILE as never);
             }}
             activeOpacity={0.7}
+            accessibilityLabel="Edit your profile"
+            accessibilityRole="button"
           >
             <Text style={styles.editBtnText}>✏️ Edit</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity style={styles.shareBtn} onPress={onShare} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.shareBtn} onPress={onShare} activeOpacity={0.7} accessibilityLabel="Share your profile" accessibilityRole="button">
           <Text style={styles.shareBtnText}>🔗 Share</Text>
         </TouchableOpacity>
       </View>

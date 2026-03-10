@@ -47,7 +47,13 @@ function ChallengeCard24hInner(p: {
   const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
   const { colors: themeColors } = useTheme();
   return (
-    <TouchableOpacity style={[s.card, { backgroundColor: themeColors.card }]} onPress={p.onPress} activeOpacity={0.85}>
+    <TouchableOpacity
+      style={[s.card, { backgroundColor: themeColors.card }]}
+      onPress={p.onPress}
+      activeOpacity={0.85}
+      accessibilityLabel={`24 hour challenge: ${p.title}, ${p.participantsCount} participants`}
+      accessibilityRole="button"
+    >
       <View style={[s.stripe, { backgroundColor: p.stripeColor }]} />
       <View style={s.body}>
         <View style={s.topRow}>

@@ -587,6 +587,8 @@ export default function ProfileScreen() {
               router.push(ROUTES.EDIT_PROFILE as never);
             }}
             activeOpacity={0.7}
+            accessibilityLabel="Edit your profile"
+            accessibilityRole="button"
           >
             <View style={styles.menuIconWrap}>
               <Globe size={18} color={colors.text.secondary} />
@@ -607,6 +609,8 @@ export default function ProfileScreen() {
               router.push(ROUTES.SETTINGS as never);
             }}
             activeOpacity={0.7}
+            accessibilityLabel="Open settings"
+            accessibilityRole="button"
           >
             <View style={styles.menuIconWrap}>
               <Settings size={18} color={colors.text.secondary} />
@@ -629,6 +633,8 @@ export default function ProfileScreen() {
               handleLogout();
             }}
             activeOpacity={0.7}
+            accessibilityLabel="Sign out of your account"
+            accessibilityRole="button"
           >
             <Text style={[styles.signOutText, { color: colors.danger }]}>↪ Sign Out</Text>
           </TouchableOpacity>

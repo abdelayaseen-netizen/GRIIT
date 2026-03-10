@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  FlatList,
   Modal,
   TextInput,
   Platform,
@@ -98,7 +99,7 @@ export default function TeamsScreen() {
                   {team.securedToday}/{team.totalMembers} secured
                 </Text>
               </View>
-              <View style={[styles.progressBarTrack, { backgroundColor: "#F0EDE8" }]}>
+              <View style={[styles.progressBarTrack, { backgroundColor: colors.border }]}>
                 <View
                   style={[
                     styles.progressBarFill,
@@ -126,7 +127,7 @@ export default function TeamsScreen() {
 
             <View style={styles.tabRow}>
               <TouchableOpacity
-                style={[styles.tabPill, teamTab === "roster" && { backgroundColor: "#1A1A1A" }]}
+                style={[styles.tabPill, teamTab === "roster" && { backgroundColor: colors.text.primary }]}
                 onPress={() => setTeamTab("roster")}
                 activeOpacity={0.8}
                 accessibilityLabel="Roster"
@@ -135,7 +136,7 @@ export default function TeamsScreen() {
                 <Text style={[styles.tabPillText, teamTab === "roster" && styles.tabPillTextActive]}>Roster</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.tabPill, teamTab === "chat" && { backgroundColor: "#1A1A1A" }]}
+                style={[styles.tabPill, teamTab === "chat" && { backgroundColor: colors.text.primary }]}
                 onPress={() => setTeamTab("chat")}
                 activeOpacity={0.8}
                 accessibilityLabel="Chat"
@@ -147,9 +148,15 @@ export default function TeamsScreen() {
 
             {teamTab === "roster" && (
               <View style={[styles.rosterCard, { backgroundColor: colors.card }, designTokens.cardShadow]}>
-                {team.members.map((m, i) => (
-                  <React.Fragment key={m.id}>
-                    {i > 0 && <View style={[styles.rosterDivider, { backgroundColor: colors.border }]} />}
+                <FlatList
+                  data={team.members}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  initialNumToRender={10}
+                  maxToRenderPerBatch={10}
+                  windowSize={5}
+                  ItemSeparatorComponent={() => <View style={[styles.rosterDivider, { backgroundColor: colors.border }]} />}
+                  renderItem={({ item: m }) => (
                     <View style={styles.rosterRow}>
                       <View style={[styles.rosterAvatar, { backgroundColor: colors.pill }]}>
                         <Text style={[styles.rosterAvatarText, { color: colors.text.primary }]}>{m.name.charAt(0)}</Text>
@@ -161,22 +168,29 @@ export default function TeamsScreen() {
                         </View>
                         <Text style={[styles.rosterMeta, { color: colors.text.muted }]}>🔥 {m.streak} · {m.points} pts</Text>
                       </View>
-                      <View style={[styles.rosterDot, { backgroundColor: m.securedToday ? colors.success : "#9CA3AF" }]} />
+                      <View style={[styles.rosterDot, { backgroundColor: m.securedToday ? colors.success : colors.text.muted }]} />
                     </View>
-                  </React.Fragment>
-                ))}
+                  )}
+                />
               </View>
             )}
 
             {teamTab === "chat" && (
               <>
-                <View style={styles.chatMessages}>
-                  {team.systemMessages.map((msg) => (
-                    <View key={msg.id} style={[styles.systemMessage, { backgroundColor: colors.pill }]}>
+                <FlatList
+                  data={team.systemMessages}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  initialNumToRender={10}
+                  maxToRenderPerBatch={10}
+                  windowSize={5}
+                  style={styles.chatMessages}
+                  renderItem={({ item: msg }) => (
+                    <View style={[styles.systemMessage, { backgroundColor: colors.pill }]}>
                       <Text style={[styles.systemMessageText, { color: colors.text.muted }]}>{msg.text}</Text>
                     </View>
-                  ))}
-                </View>
+                  )}
+                />
                 <View style={[styles.chatInputRow, { borderColor: colors.border }]}>
                   <TextInput
                     style={[styles.chatInput, { backgroundColor: colors.background, color: colors.text.primary }]}
@@ -254,7 +268,7 @@ export default function TeamsScreen() {
             Teams of 5-10 have 3x higher retention. Create or join a squad to hold each other accountable.
           </Text>
           <TouchableOpacity
-            style={[styles.createBtn, { backgroundColor: "#1A1A1A" }]}
+            style={[styles.createBtn, { backgroundColor: colors.text.primary }]}
             onPress={handleCreateTeam}
             activeOpacity={0.85}
             accessibilityLabel="Create a team"
@@ -395,9 +409,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: Colors.pill,
   },
-  tabPillText: { fontSize: 14, fontWeight: "600", color: "#1A1A1A" },
+  tabPillText: { fontSize: 14, fontWeight: "600", color: Colors.text.primary },
   tabPillTextActive: { color: "#fff" },
   rosterCard: {
     borderRadius: designTokens.cardRadius,
@@ -465,11 +479,11 @@ const styles = StyleSheet.create({
   inviteModalOk: {
     height: 48,
     borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.card,
     alignItems: "center",
     justifyContent: "center",
   },
-  inviteModalOkText: { fontSize: 16, fontWeight: "600", color: "#1A1A1A" },
+  inviteModalOkText: { fontSize: 16, fontWeight: "600", color: Colors.text.primary },
   leaveModalCard: {
     width: "100%",
     maxWidth: 320,
@@ -484,11 +498,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.card,
     alignItems: "center",
     justifyContent: "center",
   },
-  leaveModalCancelText: { fontSize: 16, fontWeight: "600", color: "#1A1A1A" },
+  leaveModalCancelText: { fontSize: 16, fontWeight: "600", color: Colors.text.primary },
   leaveModalLeave: {
     flex: 1,
     height: 48,
@@ -496,7 +510,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  leaveModalLeaveText: { fontSize: 16, fontWeight: "600", color: "#E53E3E" },
+  leaveModalLeaveText: { fontSize: 16, fontWeight: "600", color: Colors.danger },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.5)",

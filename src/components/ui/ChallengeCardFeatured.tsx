@@ -39,7 +39,13 @@ function ChallengeCardFeaturedInner(props: {
   const diff = DIFF_STYLES[difficulty] ?? DIFF_STYLES.Medium;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n));
   return (
-    <TouchableOpacity style={[s.card, { backgroundColor: themeColors.card }]} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity
+      style={[s.card, { backgroundColor: themeColors.card }]}
+      onPress={onPress}
+      activeOpacity={0.85}
+      accessibilityLabel={`${title}, ${participantsCount} participants`}
+      accessibilityRole="button"
+    >
       <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.topRow}>

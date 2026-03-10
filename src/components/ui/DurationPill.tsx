@@ -16,6 +16,9 @@ export function DurationPill({
       style={[s.pill, selected && s.pillSelected]}
       onPress={onPress}
       activeOpacity={0.8}
+      accessibilityLabel={`Set duration to ${label}`}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
     >
       <Text style={[s.text, selected && s.textSelected]}>{label}</Text>
     </TouchableOpacity>
