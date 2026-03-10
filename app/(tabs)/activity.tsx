@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -28,7 +28,7 @@ import {
 } from "lucide-react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
-import { useFocusEffect } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -465,43 +465,27 @@ export default function ActivityScreen() {
   const { refetchAll, currentUser } = useApp();
   const { requireAuth } = useAuthGate();
   const currentUserId = currentUser?.id ?? null;
-  const [refreshing, setRefreshing] = useState(false);
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("global");
-  const [leaderboard, setLeaderboard] = useState<{ entries: LeaderboardEntry[]; totalSecuredToday: number }>({ entries: [], totalSecuredToday: 0 });
-  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
-  const [leaderboardError, setLeaderboardError] = useState(false);
   const [givingRespectId, setGivingRespectId] = useState<string | null>(null);
   const [givingNudgeId, setGivingNudgeId] = useState<string | null>(null);
   const [optimisticRespectDeltas, setOptimisticRespectDeltas] = useState<Record<string, number>>({});
-  const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
-  const [activityFeedError, setActivityFeedError] = useState(false);
 
-  const fetchLeaderboard = useCallback(async () => {
-    setLeaderboardLoading(true);
-    setLeaderboardError(false);
-    try {
-      const data = await trpcQuery("leaderboard.getWeekly") as any;
-      const entries = (data?.entries ?? []).map(mapApiEntryToLeaderboardEntry);
-      setLeaderboard({
-        entries,
-        totalSecuredToday: data?.totalSecuredToday ?? 0,
-      });
-    } catch {
-      setLeaderboard({ entries: [], totalSecuredToday: 0 });
-      setLeaderboardError(true);
-    } finally {
-      setLeaderboardLoading(false);
-    }
-  }, []);
+  const leaderboardQuery = useQuery({
+    queryKey: ["movement", "leaderboard", feedFilter],
+    queryFn: async () => {
+      const data = await trpcQuery("leaderboard.getWeekly") as { entries?: unknown[]; totalSecuredToday?: number };
+      const entries = (data?.entries ?? []).map((e: unknown) => mapApiEntryToLeaderboardEntry(e as any));
+      return { entries, totalSecuredToday: data?.totalSecuredToday ?? 0 };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const leaderboard = leaderboardQuery.data ?? { entries: [], totalSecuredToday: 0 };
+  const leaderboardLoading = leaderboardQuery.isLoading;
+  const leaderboardError = leaderboardQuery.isError;
 
-  const fetchActivityFeed = useCallback(async () => {
-    if (!currentUserId) {
-      setActivityItems([]);
-      setActivityFeedError(false);
-      return;
-    }
-    setActivityFeedError(false);
-    try {
+  const activityFeedQuery = useQuery({
+    queryKey: ["movement", "activityFeed", currentUserId],
+    queryFn: async (): Promise<ActivityItem[]> => {
       const [respectsData, nudgesData] = await Promise.all([
         trpcQuery("respects.getForUser") as Promise<{ recent: { id: string; actorId: string; actorDisplayName: string; actorUsername: string; at: string }[] }>,
         trpcQuery("nudges.getForUser") as Promise<{ items: { id: string; fromUserId: string; fromDisplayName: string; message: string; createdAt: string }[] }>,
@@ -525,38 +509,23 @@ export default function ActivityScreen() {
         read: false,
         message: n.message,
       }));
-      const merged = [...respectItems, ...nudgeItems].sort(
+      return [...respectItems, ...nudgeItems].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-      setActivityItems(merged);
-    } catch {
-      setActivityItems([]);
-      setActivityFeedError(true);
-    }
-  }, [currentUserId]);
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [fetchLeaderboard]);
-
-  useEffect(() => {
-    fetchActivityFeed();
-  }, [fetchActivityFeed]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchLeaderboard();
-      if (currentUserId) fetchActivityFeed();
-    }, [fetchLeaderboard, fetchActivityFeed, currentUserId])
-  );
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!currentUserId,
+  });
+  const activityItems = activityFeedQuery.data ?? [];
+  const activityFeedError = activityFeedQuery.isError;
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
     await refetchAll();
-    await fetchLeaderboard();
-    await fetchActivityFeed();
-    setRefreshing(false);
-  }, [refetchAll, fetchLeaderboard, fetchActivityFeed]);
+    await leaderboardQuery.refetch();
+    await activityFeedQuery.refetch();
+  }, [refetchAll, leaderboardQuery, activityFeedQuery]);
+
+  const isRefetching = leaderboardQuery.isRefetching || activityFeedQuery.isRefetching;
 
   const handleGiveRespect = useCallback(
     (recipientId: string) => {
@@ -568,7 +537,7 @@ export default function ActivityScreen() {
           await trpcMutate("respects.give", { recipientId });
           track({ name: "respect_sent", toUserId: recipientId });
           Alert.alert("Sent!", "");
-          await fetchLeaderboard();
+          await leaderboardQuery.refetch();
           setOptimisticRespectDeltas((prev) => {
             const next = { ...prev };
             delete next[recipientId];
@@ -586,7 +555,7 @@ export default function ActivityScreen() {
         }
       });
     },
-    [requireAuth, fetchLeaderboard]
+    [requireAuth, leaderboardQuery]
   );
 
   const handleGiveNudge = useCallback(
@@ -598,7 +567,7 @@ export default function ActivityScreen() {
           .then(() => {
             track({ name: "nudge_sent", toUserId });
             Alert.alert("Nudged!", "");
-            return fetchActivityFeed();
+            return activityFeedQuery.refetch();
           })
           .catch((e: any) => {
             const code = e?.data?.code ?? e?.code;
@@ -614,7 +583,7 @@ export default function ActivityScreen() {
           });
       });
     },
-    [requireAuth, fetchActivityFeed]
+    [requireAuth, activityFeedQuery]
   );
 
   const handleTeamsPress = useCallback(() => {
@@ -681,7 +650,7 @@ export default function ActivityScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor={colors.accent} />
         }
       >
         <View style={styles.dailyStatsWrap}>

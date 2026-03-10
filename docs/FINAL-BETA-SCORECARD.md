@@ -387,7 +387,24 @@ All requested improvements were implemented in one pass. Updated category scores
 
 **New overall score: 74/100** (sum 7.5 + 7.5 + 8 + 7.5 + 7.5 + 7 + 6.5 + 8 + 7.5 + 7 = 74).
 
-**Concrete changes reflected in this scorecard:**
+---
+
+## Post–React Query implementation (Performance & Scalability)
+
+React Query (TanStack Query) was added as the app-wide data fetching and caching layer, with pagination on list screens.
+
+| Category            | Before (74 total) | After RQ | Change |
+|---------------------|------------------|----------|--------|
+| **Performance**     | 7.5              | 8.5      | +1 — `lib/query-client.ts` (staleTime 5 min, gcTime 10 min, retry 2, no refetch on focus/mount). Home, Discover, Profile, Activity, Challenge detail use `useQuery`/`useInfiniteQuery`; pull-to-refresh uses `refetch()`/`invalidateQueries`; no manual 5‑min cache or refetch-on-focus. Discover infinite scroll with `fetchNextPage` and `hasNextPage`. |
+| **Scalability**     | 7.5              | 8        | +0.5 — Centralized cache and invalidation; `lib/mutations.ts` (join, leave, secureDay, create) invalidates `['challenge']`, `['home']`, `['profile']`, `['discover']`, `['movement']` so all affected screens update after actions. Backend `getFeatured` already supports cursor/limit and `{ items, nextCursor }`. |
+
+**New overall score after React Query: 76/100** (sum 7.5 + 8.5 + 8 + 7.5 + 7.5 + 7 + 6.5 + 8 + 8 + 7 = 76).
+
+**Concrete changes:**
+- **Added:** `lib/query-client.ts`, `lib/mutations.ts`; `QueryClientProvider` in `app/_layout.tsx`.
+- **Converted to React Query:** Home (`useQuery` leaderboard + active list), Discover (`useInfiniteQuery` featured, `useQuery` starter pack), Profile (per-section `useQuery`), Activity (leaderboard + activity feed `useQuery`), Challenge detail (`useQuery` getById). Removed manual fetch state, 5‑min cache timer, Supabase fallback in Discover, refetch-on-focus where replaced by cache.
+
+**Concrete changes reflected in this scorecard (original 74 pass):**
 
 - **Added:** `lib/config.ts` (DEEP_LINK_BASE_URL, APP_STORE_URLS); `components/ErrorBoundary.tsx` and wrap in `app/_layout.tsx`; `lib/api.ts` formatTRPCError using TRPC_ERROR_USER_MESSAGE (incl. BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR); Discover tRPC + Supabase fallback in `app/(tabs)/discover.tsx`; signup cooldown cleanup in `app/auth/signup.tsx`; deep-links.ts and share using config; push-reminder morning/evening and variable copy in `backend/lib/push-reminder.ts`.
 - **Implementation pass:** RLS migration for challenges SELECT; `lib/sanitize.ts` wired in create + create-profile; ErrorBoundary on all 5 tabs; secure-confirmation variable messages + params guard + share retry; Discover pagination + load more; Home 5‑min cache; streak milestones 3,7,14,30,60,100; COMEBACK_TEMPLATES; share on challenge + invite prompt after join; soft paywall after 3rd create; PremiumBadge; "Why Premium?"; `lib/date-format.ts`; TrpcErrorShape; 429 "Slow down"; `scripts/test-discover.ts` removed.

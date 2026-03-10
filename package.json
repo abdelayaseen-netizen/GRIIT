@@ -67,6 +67,7 @@
     "react-native-worklets": "0.5.1",
     "superjson": "^2.2.6",
     "react-native-purchases": "^8.0.0",
+    "@tanstack/react-query": "^5.59.0",
     "zod": "^3.24.0",
     "zustand": "^5.0.2"
   },
@@ -82,13 +83,5 @@
     "typescript": "~5.9.2",
     "vitest": "^2.1.0"
   },
-  "private": true,
-  "resolutions": {
-    "@tanstack/react-query": "5.51.24",
-    "@tanstack/query-core": "5.51.23"
-  },
-  "overrides": {
-    "@tanstack/react-query": "5.51.24",
-    "@tanstack/query-core": "5.51.23"
-  }
+  "private": true
 }

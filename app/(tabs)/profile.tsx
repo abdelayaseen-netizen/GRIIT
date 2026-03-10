@@ -24,7 +24,9 @@ import {
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ThemeColors } from "@/lib/theme-palettes";
@@ -48,7 +50,6 @@ import {
 import type { AchievementItem } from "@/components/profile";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-const LOADING_TIMEOUT_MS = 4000;
 
 type StravaActivity = {
   id: number;
@@ -240,7 +241,9 @@ export default function ProfileScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { showGate } = useAuthGate();
+  const { user } = useAuth();
   const { colors } = useTheme();
+  const queryClient = useQueryClient();
   const {
     profile,
     profileLoading,
@@ -250,64 +253,43 @@ export default function ProfileScreen() {
     isError,
     refetchAll,
   } = useApp();
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
-  const [completedChallengesList, setCompletedChallengesList] = useState<{ id: string; challengeId: string; challengeName: string; completedAt: string }[]>([]);
-  const [securedDateKeys, setSecuredDateKeys] = useState<string[]>([]);
-  const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
-  const [accountabilityCount, setAccountabilityCount] = useState(0);
-  const [dashboardDataLoading, setDashboardDataLoading] = useState(true);
-  const [dashboardDataError, setDashboardDataError] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerFade = useRef(new Animated.Value(0)).current;
 
   const styles = useMemo(() => createProfileStyles(colors), [colors]);
 
-  const fetchDashboardData = useCallback(async () => {
-    setDashboardDataError(false);
-    setDashboardDataLoading(true);
-    try {
-      const [completed, dates, lb, acc] = await Promise.all([
-        trpcQuery(TRPC.profiles.getCompletedChallenges) as Promise<{ id: string; challengeId: string; challengeName: string; completedAt: string }[]>,
-        trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
-        trpcQuery(TRPC.leaderboard.getWeekly) as Promise<{ currentUserRank?: number | null }>,
-        trpcQuery(TRPC.accountability.listMine) as Promise<{ accepted: unknown[] }>,
-      ]);
-      setCompletedChallengesList(Array.isArray(completed) ? completed : []);
-      setSecuredDateKeys(Array.isArray(dates) ? dates : []);
-      setLeaderboardRank(lb?.currentUserRank ?? null);
-      setAccountabilityCount(Array.isArray(acc?.accepted) ? acc.accepted.length : 0);
-    } catch {
-      setDashboardDataError(true);
-      setCompletedChallengesList([]);
-      setSecuredDateKeys([]);
-      setLeaderboardRank(null);
-      setAccountabilityCount(0);
-    } finally {
-      setDashboardDataLoading(false);
-    }
-  }, []);
+  const completedQuery = useQuery({
+    queryKey: ["profile", user?.id, "completedChallenges"],
+    queryFn: () => trpcQuery(TRPC.profiles.getCompletedChallenges) as Promise<{ id: string; challengeId: string; challengeName: string; completedAt: string }[]>,
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  const securedDatesQuery = useQuery({
+    queryKey: ["profile", user?.id, "securedDateKeys"],
+    queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  const leaderboardProfileQuery = useQuery({
+    queryKey: ["profile", user?.id, "leaderboard"],
+    queryFn: () => trpcQuery(TRPC.leaderboard.getWeekly) as Promise<{ currentUserRank?: number | null }>,
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  const accountabilityQuery = useQuery({
+    queryKey: ["profile", user?.id, "accountability"],
+    queryFn: () => trpcQuery(TRPC.accountability.listMine) as Promise<{ accepted: unknown[] }>,
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
 
-  useEffect(() => {
-    if (isGuest) return;
-    fetchDashboardData();
-  }, [isGuest, fetchDashboardData]);
+  const completedChallengesList = Array.isArray(completedQuery.data) ? completedQuery.data : [];
+  const securedDateKeys = Array.isArray(securedDatesQuery.data) ? securedDatesQuery.data : [];
+  const leaderboardRank = leaderboardProfileQuery.data?.currentUserRank ?? null;
+  const accountabilityCount = Array.isArray(accountabilityQuery.data?.accepted) ? accountabilityQuery.data.accepted.length : 0;
+  const dashboardDataLoading = completedQuery.isLoading || securedDatesQuery.isLoading || leaderboardProfileQuery.isLoading || accountabilityQuery.isLoading;
+  const dashboardDataError = completedQuery.isError || securedDatesQuery.isError || leaderboardProfileQuery.isError || accountabilityQuery.isError;
 
-  const stillLoading = (profileLoading && !profile) || (!profile && !isError && !loadingTimedOut);
-
-  useEffect(() => {
-    if (stillLoading) {
-      timeoutRef.current = setTimeout(() => {
-        setLoadingTimedOut(true);
-      }, LOADING_TIMEOUT_MS);
-    } else {
-      setLoadingTimedOut(false);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    }
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [stillLoading]);
+  const stillLoading = (profileLoading && !profile) || (!profile && !isError);
 
   useEffect(() => {
     if (profile) {
@@ -320,15 +302,15 @@ export default function ProfileScreen() {
   }, [profile, headerFade]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    setLoadingTimedOut(false);
-    try {
-      await refetchAll();
-      await fetchDashboardData();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetchAll, fetchDashboardData]);
+    await refetchAll();
+    await queryClient.refetchQueries({ queryKey: ["profile"] });
+  }, [refetchAll, queryClient]);
+
+  const isRefetching =
+    completedQuery.isRefetching ||
+    securedDatesQuery.isRefetching ||
+    leaderboardProfileQuery.isRefetching ||
+    accountabilityQuery.isRefetching;
 
   const handleLogout = useCallback(() => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -411,7 +393,7 @@ export default function ProfileScreen() {
     );
   }
 
-  if (stillLoading && !loadingTimedOut) {
+  if (stillLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -421,11 +403,9 @@ export default function ProfileScreen() {
     );
   }
 
-  if (loadingTimedOut || ((isError || profileMissing) && !profile)) {
+  if ((isError || profileMissing) && !profile) {
     const errorMsg = autoCreateError
       ? `Profile setup failed: ${autoCreateError}`
-      : loadingTimedOut
-      ? "Server is taking too long to respond. Pull down to retry."
       : "Network error. Can't reach server. Pull down to retry.";
 
     return (
@@ -435,7 +415,7 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.errorScrollContent}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={isRefetching}
               onRefresh={onRefresh}
               tintColor={colors.accent}
             />
@@ -446,11 +426,7 @@ export default function ProfileScreen() {
               <Shield size={28} color={colors.text.muted} strokeWidth={1.5} />
             </View>
             <Text style={styles.errorTitle}>
-              {loadingTimedOut
-                ? "Taking too long"
-                : autoCreateError
-                ? "Profile Setup Issue"
-                : "Connection Issue"}
+              {autoCreateError ? "Profile Setup Issue" : "Connection Issue"}
             </Text>
             <Text style={styles.errorSubtitle}>{errorMsg}</Text>
             <TouchableOpacity
@@ -508,7 +484,7 @@ export default function ProfileScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={isRefetching}
               onRefresh={onRefresh}
               tintColor={colors.accent}
             />
@@ -559,7 +535,7 @@ export default function ProfileScreen() {
         {dashboardDataError && (
           <View style={[styles.errorCard, { marginHorizontal: 20, marginTop: 16 }]}>
             <Text style={[styles.errorSubtitle, { marginBottom: 12 }]}>Couldn&apos;t load some sections.</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => fetchDashboardData()} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.retryButton} onPress={() => queryClient.invalidateQueries({ queryKey: ["profile"] })} activeOpacity={0.7}>
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>

@@ -22,6 +22,7 @@ import {
   Zap,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
 import { colors as tokenColors } from "@/src/theme/tokens";
@@ -162,92 +163,50 @@ function SkeletonList({ cardColor }: { cardColor?: string }) {
   );
 }
 
+const FEATURED_PAGE_SIZE = 20;
+
 export default function DiscoverScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
-  const [featuredData, setFeaturedData] = useState<unknown[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
-  const [featuredError, setFeaturedError] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [starterPack, setStarterPack] = useState<unknown[]>([]);
-  const FEATURED_PAGE_SIZE = 20;
 
-  const fetchStarterPack = useCallback(async () => {
-    try {
-      const data = await trpcQuery("challenges.getStarterPack");
-      setStarterPack(Array.isArray(data) ? data : []);
-    } catch {
-      setStarterPack([]);
-    }
-  }, []);
+  const starterPackQuery = useQuery({
+    queryKey: ["discover", "starterPack"],
+    queryFn: () => trpcQuery("challenges.getStarterPack") as Promise<unknown[]>,
+    staleTime: 5 * 60 * 1000,
+  });
+  const starterPack = Array.isArray(starterPackQuery.data) ? starterPackQuery.data : [];
 
-  const fetchFeatured = useCallback(async (cursor?: string, append = false) => {
-    if (append) setLoadingMore(true);
-    else setIsFetching(true);
-    setFeaturedError(false);
-    const params: Record<string, string | number> = {
-      limit: FEATURED_PAGE_SIZE,
-    };
-    if (searchQuery) params.search = searchQuery;
-    if (activeCategory !== "all") params.category = activeCategory;
-    if (cursor) params.cursor = cursor;
-
-    try {
+  const featuredQuery = useInfiniteQuery({
+    queryKey: ["discover", "featured", activeCategory, searchQuery],
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
+      const params: Record<string, string | number | undefined> = {
+        limit: FEATURED_PAGE_SIZE,
+        cursor: pageParam ?? undefined,
+        category: activeCategory !== "all" ? activeCategory : undefined,
+        search: searchQuery || undefined,
+      };
       const data = await trpcQuery("challenges.getFeatured", params);
       const isPaginated = data != null && typeof data === "object" && "items" in data;
-      const list = isPaginated
-        ? (data as { items: unknown[]; nextCursor?: string }).items ?? []
+      const items = isPaginated
+        ? (data as { items: unknown[]; nextCursor?: string | null }).items ?? []
         : Array.isArray(data) ? data : [];
-      const next = isPaginated ? (data as { nextCursor?: string }).nextCursor : undefined;
-      setNextCursor(next);
-      if (append) {
-        setFeaturedData((prev) => [...prev, ...list]);
-      } else {
-        setFeaturedData(list);
-      }
-      setFeaturedError(false);
-    } catch {
-      setFeaturedError(true);
-      if (!append) setFeaturedData([]);
-    } finally {
-      setFeaturedLoading(false);
-      setIsFetching(false);
-      setLoadingMore(false);
-    }
-  }, [searchQuery, activeCategory]);
+      const nextCursor = isPaginated ? (data as { nextCursor?: string | null }).nextCursor ?? undefined : undefined;
+      return { items, nextCursor: nextCursor ?? undefined };
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: undefined as string | undefined,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchStarterPack();
-  }, [fetchStarterPack]);
+  const featuredData = useMemo(
+    () => featuredQuery.data?.pages.flatMap((p) => p.items ?? []) ?? [],
+    [featuredQuery.data?.pages]
+  );
 
-  useEffect(() => {
-    setFeaturedLoading(true);
-    const timer = setTimeout(() => {
-      fetchFeatured();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchFeatured]);
-
-  const [timedOut, setTimedOut] = useState(false);
-
-  useEffect(() => {
-    if (!featuredLoading) {
-      setTimedOut(false);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setTimedOut(true);
-      setFeaturedLoading(false);
-    }, 6000);
-    return () => clearTimeout(timer);
-  }, [featuredLoading]);
-
-  const isLoading = featuredLoading && !timedOut;
-  const isError = featuredError || timedOut;
+  const isLoading = featuredQuery.isLoading;
+  const isError = featuredQuery.isError;
   const allChallenges = useMemo((): StarterChallenge[] => {
     const serverData = featuredData;
     if (serverData && serverData.length > 0) {
@@ -308,14 +267,9 @@ export default function DiscoverScreen() {
   const totalVisible = dailyChallenges.length + featuredChallenges.length + otherChallenges.length;
 
   const handleRefresh = useCallback(() => {
-    setNextCursor(undefined);
-    fetchStarterPack();
-    fetchFeatured(undefined, false);
-  }, [fetchStarterPack, fetchFeatured]);
-
-  const loadMore = useCallback(() => {
-    if (nextCursor && !loadingMore) fetchFeatured(nextCursor, true);
-  }, [nextCursor, loadingMore, fetchFeatured]);
+    starterPackQuery.refetch();
+    featuredQuery.refetch();
+  }, [starterPackQuery, featuredQuery]);
 
   const handleChallengePress = useCallback(
     (challengeId: string) => {
@@ -408,7 +362,7 @@ export default function DiscoverScreen() {
         nestedScrollEnabled
         refreshControl={
           <RefreshControl
-            refreshing={isFetching && !featuredLoading}
+            refreshing={featuredQuery.isRefetching && !featuredQuery.isFetchingNextPage}
             onRefresh={handleRefresh}
             tintColor={tokenColors.accentOrange}
           />
@@ -520,15 +474,15 @@ export default function DiscoverScreen() {
           </View>
         )}
 
-        {nextCursor ? (
+        {featuredQuery.hasNextPage ? (
           <View style={styles.loadMoreWrap}>
             <TouchableOpacity
               style={styles.loadMoreBtn}
-              onPress={loadMore}
-              disabled={loadingMore}
+              onPress={() => featuredQuery.fetchNextPage()}
+              disabled={featuredQuery.isFetchingNextPage}
               activeOpacity={0.8}
             >
-              {loadingMore ? (
+              {featuredQuery.isFetchingNextPage ? (
                 <ActivityIndicator size="small" color={tokenColors.accentOrange} />
               ) : (
                 <Text style={styles.loadMoreText}>Load more</Text>

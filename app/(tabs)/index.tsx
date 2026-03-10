@@ -40,6 +40,7 @@ import { getYesterdayDateKey } from "@/lib/date-utils";
 import { getHomeRetentionDerived } from "@/lib/home-derived";
 import { getFirstSessionJustFinished, clearFirstSessionJustFinished } from "@/lib/starter-join";
 import { track } from "@/lib/analytics";
+import { useQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import DailyStatus from "@/components/home/DailyStatus";
@@ -209,7 +210,6 @@ export default function HomeScreen() {
     todayDateLocal,
   } = useApp();
 
-  const [refreshing, setRefreshing] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [optimisticDaySecured, setOptimisticDaySecured] = useState(false);
   const [celebrationPayload, setCelebrationPayload] = useState<{
@@ -222,21 +222,22 @@ export default function HomeScreen() {
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
-  const [leaderboardData, setLeaderboardData] = useState<{ currentUserRank: number | null; totalSecuredToday: number } | null>(null);
-  const [leaderboardError, setLeaderboardError] = useState(false);
-  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
-  const [homeChallengesWithProgress, setHomeChallengesWithProgress] = useState<ChallengeWithProgress[] | null>(null);
-  const [homeTotalRemaining, setHomeTotalRemaining] = useState(0);
-  const [homeDataRefreshKey, setHomeDataRefreshKey] = useState(0);
-  const [homeDataError, setHomeDataError] = useState(false);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
-  const lastHomeRefetchAt = useRef<number>(0);
 
-  const fetchHomeActiveData = useCallback(async () => {
-    if (isGuest) return;
-    setHomeDataError(false);
-    try {
+  const leaderboardQuery = useQuery({
+    queryKey: ["home", "leaderboard"],
+    queryFn: () => trpcQuery("leaderboard.getWeekly", {}) as Promise<{ currentUserRank: number | null; totalSecuredToday: number; entries?: unknown[] }>,
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest,
+  });
+  const leaderboardData = leaderboardQuery.data ? { currentUserRank: leaderboardQuery.data.currentUserRank ?? null, totalSecuredToday: leaderboardQuery.data.totalSecuredToday ?? 0 } : null;
+  const leaderboardError = leaderboardQuery.isError;
+  const leaderboardLoading = leaderboardQuery.isLoading;
+
+  const homeActiveQuery = useQuery({
+    queryKey: ["home", "activeList"],
+    queryFn: async (): Promise<{ challengesWithProgress: ChallengeWithProgress[]; totalRemaining: number }> => {
       const [list, checkins] = await Promise.all([
         trpcQuery(TRPC.challenges.listMyActive) as Promise<any[]>,
         trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
@@ -268,57 +269,25 @@ export default function HomeScreen() {
           todayTasks,
         };
       });
-      setHomeChallengesWithProgress(withProgress);
-      setHomeTotalRemaining(totalRemaining);
-    } catch {
-      setHomeDataError(true);
-      setHomeChallengesWithProgress([]);
-      setHomeTotalRemaining(0);
-    }
-  }, [isGuest]);
+      return { challengesWithProgress: withProgress, totalRemaining };
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest,
+  });
+  const homeChallengesWithProgress = homeActiveQuery.data?.challengesWithProgress ?? null;
+  const homeTotalRemaining = homeActiveQuery.data?.totalRemaining ?? 0;
+  const homeDataError = homeActiveQuery.isError;
 
   useFocusEffect(
     useCallback(() => {
-      if (!isGuest) {
-        const now = Date.now();
-        if (lastHomeRefetchAt.current === 0 || now - lastHomeRefetchAt.current > 5 * 60 * 1000) {
-          refetchAll().then(() => {
-            fetchHomeActiveData();
-            lastHomeRefetchAt.current = Date.now();
-          });
-        }
-      }
       getFirstSessionJustFinished().then((justFinished) => {
         if (justFinished) {
           setShowFirstSessionBanner(true);
           clearFirstSessionJustFinished();
         }
       });
-    }, [isGuest, refetchAll, fetchHomeActiveData])
+    }, [])
   );
-
-  useEffect(() => {
-    if (refreshing === false && initialFetchDone) setHomeDataRefreshKey((k) => k + 1);
-  }, [refreshing, initialFetchDone]);
-
-  const fetchLeaderboard = useCallback(() => {
-    if (isGuest) return;
-    setLeaderboardLoading(true);
-    setLeaderboardError(false);
-    trpcQuery("leaderboard.getWeekly")
-      .then((data: any) => {
-        setLeaderboardData({
-          currentUserRank: data?.currentUserRank ?? null,
-          totalSecuredToday: data?.totalSecuredToday ?? 0,
-        });
-      })
-      .catch(() => setLeaderboardError(true))
-      .finally(() => setLeaderboardLoading(false));
-  }, [isGuest]);
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [fetchLeaderboard]);
 
   const todayKey = todayDateLocal;
   const hasActiveChallenge = !!activeChallenge && !!challenge;
@@ -379,15 +348,11 @@ export default function HomeScreen() {
   }, [canSecureDay, secureBtnGlow]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refetchAll();
-      await fetchHomeActiveData();
-      lastHomeRefetchAt.current = Date.now();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetchAll, fetchHomeActiveData]);
+    await refetchAll();
+    await Promise.all([leaderboardQuery.refetch(), homeActiveQuery.refetch()]);
+  }, [refetchAll, leaderboardQuery, homeActiveQuery]);
+
+  const isRefetching = leaderboardQuery.isRefetching || homeActiveQuery.isRefetching;
 
   const handleSecureDay = useCallback(async () => {
     if (daysSinceLastSecure >= RETENTION_CONFIG.comebackModeMinDays) {
@@ -424,9 +389,9 @@ export default function HomeScreen() {
           setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 200);
         }
       }
-      void fetchLeaderboard();
+      leaderboardQuery.refetch();
+      homeActiveQuery.refetch();
       const currentDay = activeChallenge?.current_day || 1;
-      fetchHomeActiveData();
       setTimeout(() => {
         setOptimisticDaySecured(false);
         router.push({
@@ -445,7 +410,7 @@ export default function HomeScreen() {
       setCelebrationPayload(null);
       Alert.alert("Error", "Couldn't secure day. Try again.");
     }
-  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, fetchHomeActiveData, fetchLeaderboard]);
+  }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, leaderboardQuery, homeActiveQuery]);
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
@@ -480,7 +445,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={isRefetching}
             onRefresh={onRefresh}
             tintColor={themeColors.accent}
           />
@@ -563,7 +528,7 @@ export default function HomeScreen() {
                 <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
                 <TouchableOpacity
                   style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
-                  onPress={() => fetchHomeActiveData()}
+                  onPress={() => homeActiveQuery.refetch()}
                   activeOpacity={0.85}
                 >
                   <RefreshCw size={18} color="#fff" />
@@ -573,7 +538,7 @@ export default function HomeScreen() {
             ) : (
               <ActiveChallenges
                 challengesWithProgress={homeChallengesWithProgress}
-                refreshKey={homeDataRefreshKey}
+                refreshKey={homeActiveQuery.dataUpdatedAt ?? 0}
               />
             )}
           </>
@@ -776,7 +741,7 @@ export default function HomeScreen() {
             <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
             <TouchableOpacity
               style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
-              onPress={() => fetchLeaderboard()}
+              onPress={() => leaderboardQuery.refetch()}
               activeOpacity={0.85}
             >
               <RefreshCw size={18} color="#fff" />

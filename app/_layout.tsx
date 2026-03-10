@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, Alert, StatusBar } from "react-native";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
@@ -13,6 +14,7 @@ import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { supabase } from "@/lib/supabase";
+import { queryClient } from "@/lib/query-client";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -237,21 +239,23 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider>
-          <AuthProvider>
-            <AuthGateProvider>
-              <ApiProvider>
-                <AppProvider>
-                  <ThemeAwareStatusBar />
-                  <RootLayoutNav />
-                  <AuthRedirector />
-                </AppProvider>
-              </ApiProvider>
-            </AuthGateProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </GestureHandlerRootView>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <ThemeProvider>
+            <AuthProvider>
+              <AuthGateProvider>
+                <ApiProvider>
+                  <AppProvider>
+                    <ThemeAwareStatusBar />
+                    <RootLayoutNav />
+                    <AuthRedirector />
+                  </AppProvider>
+                </ApiProvider>
+              </AuthGateProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   ChevronRight,
@@ -48,6 +49,7 @@ import TeamMemberList, { type TeamMemberForList } from "@/components/challenge/T
 import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track } from "@/lib/analytics";
 import { getJoinedStarterIds } from "@/lib/starter-join";
+import { useLeaveChallenge } from "@/lib/mutations";
 import { FLAGS } from "@/lib/feature-flags";
 import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
 import type { StarterChallenge, StarterTask } from "@/mocks/starter-challenges";
@@ -420,35 +422,22 @@ export default function ChallengeDetailScreen() {
     return STARTER_CHALLENGES.find((c) => c.id === id) ?? null;
   }, [id, isStarter]);
 
-  const [remoteChallenge, setRemoteChallenge] = useState<Record<string, unknown> | null>(null);
-  const [remoteLoading, setRemoteLoading] = useState(false);
-  const [remoteLoadError, setRemoteLoadError] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+  const challengeQuery = useQuery({
+    queryKey: ["challenge", id],
+    queryFn: () => trpcQuery("challenges.getById", { id: id! }),
+    enabled: !!id && !isStarter,
+    staleTime: 5 * 60 * 1000,
+  });
+  const remoteChallenge = (challengeQuery.data as Record<string, unknown> | undefined) ?? null;
+  const remoteLoading = challengeQuery.isLoading;
+  const remoteLoadError = challengeQuery.isError;
   const [joinPending] = useState(false);
-  const [leavePending, setLeavePending] = useState(false);
+  const leaveMutation = useLeaveChallenge();
+  const leavePending = leaveMutation.isPending;
   const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
   const referrerLabel = ref ? "Invited by a friend" : null;
-
-  const fetchChallenge = useCallback(() => {
-    if (!id || isStarter) return;
-    setRemoteLoadError(false);
-    setRemoteLoading(true);
-    trpcQuery("challenges.getById", { id })
-      .then((data) => {
-        setRemoteChallenge(data as Record<string, unknown>);
-        setRemoteLoadError(false);
-      })
-      .catch(() => {
-        setRemoteLoadError(true);
-        setRemoteChallenge(null);
-      })
-      .finally(() => setRemoteLoading(false));
-  }, [id, isStarter]);
-
-  useEffect(() => {
-    fetchChallenge();
-  }, [fetchChallenge]);
 
   useEffect(() => {
     if (!ref || !currentUserId || !id || isStarter) return;
@@ -684,33 +673,16 @@ export default function ChallengeDetailScreen() {
     useCallback(() => {
       if (isJoined) refetchTodayCheckins();
       if (id && !isStarter && (isTeamChallenge || isSharedGoal)) {
-        trpcQuery("challenges.getById", { id })
-          .then((data) => {
-            setRemoteChallenge(data as Record<string, unknown>);
-            setRemoteLoadError(false);
-          })
-          .catch(() => setRemoteLoadError(true));
+        challengeQuery.refetch();
       }
-    }, [id, isStarter, isJoined, isTeamChallenge, isSharedGoal, refetchTodayCheckins])
+    }, [id, isStarter, isJoined, isTeamChallenge, isSharedGoal, refetchTodayCheckins, challengeQuery])
   );
 
   const onRefresh = useCallback(async () => {
-    if (!id || refreshing) return;
-    setRefreshing(true);
-    setRemoteLoadError(false);
-    try {
-      if (!isStarter) {
-        const data = await trpcQuery("challenges.getById", { id });
-        setRemoteChallenge(data as Record<string, unknown>);
-        setRemoteLoadError(false);
-      }
-      if (isJoined) await refetchTodayCheckins();
-    } catch {
-      setRemoteLoadError(true);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [id, isStarter, isJoined, refetchTodayCheckins, refreshing]);
+    if (!id) return;
+    if (!isStarter) await challengeQuery.refetch();
+    if (isJoined) await refetchTodayCheckins();
+  }, [id, isStarter, isJoined, refetchTodayCheckins, challengeQuery]);
 
   const handleLeave = useCallback(() => {
     if (!id || isStarter || leavePending) return;
@@ -723,22 +695,19 @@ export default function ChallengeDetailScreen() {
           text: "Leave",
           style: "destructive",
           onPress: async () => {
-            setLeavePending(true);
             try {
-              await trpcMutate(TRPC.challenges.leave, { challengeId: id });
+              await leaveMutation.mutateAsync({ challengeId: id });
               await refetchAll();
               await refetchTodayCheckins();
               router.replace("/(tabs)" as any);
             } catch (e: unknown) {
               Alert.alert("Error", (e as Error)?.message ?? "Could not leave challenge.");
-            } finally {
-              setLeavePending(false);
             }
           },
         },
       ]
     );
-  }, [id, isStarter, leavePending, refetchAll, refetchTodayCheckins, router]);
+  }, [id, isStarter, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router]);
 
   if (!id) {
     return (
@@ -780,7 +749,7 @@ export default function ChallengeDetailScreen() {
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Couldn&apos;t load challenge</Text>
           <Text style={[s.emptySubtext, { color: themeColors.text.secondary }]}>Check your connection and try again.</Text>
-          <TouchableOpacity onPress={fetchChallenge} style={s.emptyBtn}>
+          <TouchableOpacity onPress={() => challengeQuery.refetch()} style={s.emptyBtn}>
             <Text style={s.emptyBtnText}>Retry</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 8 }]}>
@@ -842,7 +811,7 @@ export default function ChallengeDetailScreen() {
           bounces={true}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={challengeQuery.isRefetching}
               onRefresh={onRefresh}
               tintColor={theme.ctaText}
             />
@@ -972,8 +941,7 @@ export default function ChallengeDetailScreen() {
                         if (!id) return;
                         try {
                           await trpcMutate(TRPC.challenges.startTeamChallenge, { challengeId: id });
-                          const data = await trpcQuery("challenges.getById", { id });
-                          setRemoteChallenge(data);
+                          queryClient.invalidateQueries({ queryKey: ["challenge", id] });
                         } catch (e: unknown) {
                           Alert.alert("Error", (e as Error)?.message ?? "Could not start challenge.");
                         }
@@ -1017,8 +985,7 @@ export default function ChallengeDetailScreen() {
                     onLogProgress={async (amount, note) => {
                       if (!id) return;
                       await trpcMutate(TRPC.sharedGoal.logProgress, { challengeId: id, amount, unit: sharedGoalUnit, note: note || undefined });
-                      const data = await trpcQuery("challenges.getById", { id });
-                      setRemoteChallenge(data);
+                      queryClient.invalidateQueries({ queryKey: ["challenge", id] });
                       await fetchSharedGoalData();
                     }}
                   />
