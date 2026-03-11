@@ -37,19 +37,22 @@ export default function LoginScreen() {
       return;
     }
 
+    if (__DEV__) console.log('[Login] handleLogin called');
+
     const trimmed = email.trim().toLowerCase();
     let loginEmail = trimmed;
     if (!trimmed.includes('@')) {
       try {
         const result = await trpcQuery<{ email: string } | null>('auth.getEmailForUsername', { username: trimmed });
         if (!result?.email) {
-          Alert.alert('Login Failed', 'No account found with that username.');
+          Alert.alert('Login Failed', 'No account found with that username. Try signing in with your email address.');
           isSubmittingRef.current = false;
           return;
         }
         loginEmail = result.email;
-      } catch {
-        Alert.alert('Login Failed', 'Could not look up username. Try signing in with your email.');
+      } catch (err) {
+        if (__DEV__) console.log('[Login] getEmailForUsername error', err);
+        Alert.alert('Login Failed', 'Could not look up username. Try signing in with your email address instead.');
         isSubmittingRef.current = false;
         return;
       }
@@ -61,6 +64,8 @@ export default function LoginScreen() {
         email: loginEmail,
         password,
       });
+
+      if (__DEV__) console.log('[Login] signInWithPassword result', { hasSession: !!data?.session, error: error?.message });
 
       if (error) {
         Alert.alert('Login Failed', error.message);

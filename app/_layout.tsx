@@ -54,23 +54,24 @@ function AuthRedirector() {
 
       const profilePromise = supabase
         .from("profiles")
-        .select("user_id, onboarding_completed")
+        .select("user_id, username, onboarding_completed")
         .eq("user_id", userId)
         .single()
-        .then(({ data }: { data: { user_id?: string; onboarding_completed?: boolean } | null }) => data);
+        .then(({ data }: { data: { user_id?: string; username?: string | null; onboarding_completed?: boolean } | null }) => data);
 
       const result = await Promise.race([profilePromise, timeoutPromise]);
 
       if (result === null) {
-        setHasProfile(true);
-        setOnboardingCompleted(true);
+        setHasProfile(false);
+        setOnboardingCompleted(false);
       } else {
-        setHasProfile(!!result);
-        setOnboardingCompleted(result?.onboarding_completed === true);
+        const hasValidProfile = !!result && typeof result.username === "string" && result.username.trim().length > 0;
+        setHasProfile(hasValidProfile);
+        setOnboardingCompleted(hasValidProfile && result?.onboarding_completed === true);
       }
     } catch {
-      setHasProfile(true);
-      setOnboardingCompleted(true);
+      setHasProfile(false);
+      setOnboardingCompleted(false);
     } finally {
       setProfileChecked(true);
     }
@@ -106,7 +107,14 @@ function AuthRedirector() {
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
 
     if (!user) {
-      if (inAuth || inOnboardingQuestions) return;
+      if (inAuth || inOnboardingQuestions) {
+        router.replace(ROUTES.TABS_DISCOVER as never);
+        return;
+      }
+      if (onCreateProfile || inOnboarding) {
+        router.replace(ROUTES.TABS_DISCOVER as never);
+        return;
+      }
       return;
     }
 
