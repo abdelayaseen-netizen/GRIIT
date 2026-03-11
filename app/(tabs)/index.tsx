@@ -314,6 +314,18 @@ export default function HomeScreen() {
   });
   const suggestedChallenges = suggestedChallengesQuery.data ?? [];
 
+  const guestFeaturedQuery = useQuery({
+    queryKey: ["home", "guestFeatured"],
+    queryFn: async () => {
+      const data = (await trpcQuery("challenges.getFeatured", { limit: 6 })) as { items?: { id: string; title?: string; description?: string; short_hook?: string }[] } | { id: string; title?: string; short_hook?: string }[];
+      const items = Array.isArray(data) ? data : data?.items ?? [];
+      return items;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: isGuest,
+  });
+  const guestFeatured = guestFeaturedQuery.data ?? [];
+
   const retention = useMemo(
     () => getHomeRetentionDerived(stats ?? null, todayKey, hasActiveChallenge, isGuest),
     [stats, todayKey, hasActiveChallenge, isGuest]
@@ -440,6 +452,44 @@ export default function HomeScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <HomeScreenSkeleton />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 20 }]} showsVerticalScrollIndicator={false}>
+          <View style={{ marginTop: 32, marginBottom: 24 }}>
+            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIIT</Text>
+            <Text style={[styles.logoSubtitle, { color: themeColors.text.muted }]}>Build discipline daily</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.guestBarCta, { backgroundColor: themeColors.accent }]}
+            onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.guestBarCtaText}>Browse challenges</Text>
+            <ChevronRight size={18} color="#fff" />
+          </TouchableOpacity>
+          {guestFeatured.length > 0 && (
+            <View style={{ marginTop: 28 }}>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: themeColors.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Suggested for you</Text>
+              {guestFeatured.slice(0, 6).map((item: { id: string; title?: string; short_hook?: string }) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.yourPositionCard, styles.guestChallengeCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                  onPress={() => router.push(ROUTES.CHALLENGE_ID(item.id) as never)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontSize: 16, fontWeight: "600", color: themeColors.text.primary }} numberOfLines={1}>{item.title ?? "Challenge"}</Text>
+                  {item.short_hook ? <Text style={{ fontSize: 13, color: themeColors.text.secondary, marginTop: 4 }} numberOfLines={1}>{item.short_hook}</Text> : null}
+                  <ChevronRight size={18} color={themeColors.text.tertiary} style={{ position: "absolute", right: 12, top: 18 }} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     );
@@ -1588,6 +1638,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...designTokens.cardShadow,
   },
+  guestChallengeCard: {
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
   yourPositionLabel: {
     fontSize: 11,
     fontWeight: "600" as const,
@@ -1834,8 +1888,12 @@ const styles = StyleSheet.create({
   },
   guestBarCta: {
     backgroundColor: Colors.accent,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     borderRadius: 12,
   },
   guestBarCtaText: {

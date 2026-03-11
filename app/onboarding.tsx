@@ -24,6 +24,8 @@ import { colors, spacing, radius } from "@/src/theme/tokens";
 import { trpcMutate } from "@/lib/trpc";
 import { saveJoinedStarterId, setDay1StartedAt } from "@/lib/starter-join";
 import { filterOnboardingStarters, type OnboardingStarter } from "@/lib/onboarding-starters";
+import { getPendingChallengeId, setPendingChallengeId } from "@/lib/onboarding-pending";
+import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
 
 const HOW_HEARD_OPTIONS = ["Friend", "Social media", "App Store", "YouTube", "Podcast", "Other"];
@@ -66,7 +68,13 @@ export default function OnboardingScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [joinResult, setJoinResult] = useState<{ activeChallengeId: string; taskId: string; challengeId: string } | null>(null);
 
-  const goToDay1QuickWin = useCallback(() => {
+  const goToDay1QuickWin = useCallback(async () => {
+    const pendingId = await getPendingChallengeId();
+    if (pendingId) {
+      await setPendingChallengeId(null);
+      router.replace(ROUTES.CHALLENGE_ID(pendingId) as never);
+      return;
+    }
     if (!joinResult || !selectedStarter) {
       router.replace("/(tabs)" as never);
       return;

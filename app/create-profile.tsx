@@ -6,7 +6,7 @@ import { trpcMutate } from "@/lib/trpc";
 import {
   getPendingChallengeId,
   getOnboardingAnswers,
-  clearOnboardingPending,
+  clearOnboardingAnswers,
   type OnboardingAnswers,
 } from "@/lib/onboarding-pending";
 import { sanitizeUsername, sanitizeDisplayName, sanitizeBio } from "@/lib/sanitize";
@@ -85,7 +85,7 @@ export default function CreateProfileScreen() {
           // Non-blocking; user can join from Discover again
         }
       }
-      await clearOnboardingPending();
+      await clearOnboardingAnswers();
       router.replace(ROUTES.ONBOARDING as never);
     } catch (err: unknown) {
       Alert.alert("Error", (err as Error).message || "Something went wrong");

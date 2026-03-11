@@ -66,7 +66,6 @@ import {
   PrimaryButtonCreate,
   DailyTaskRow,
 } from "@/src/components/ui";
-import { colors as tokenColors } from "@/src/theme/tokens";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -397,6 +396,10 @@ export default function CreateScreen() {
     if (submitStatus === 'submitting' || createMutationPendingRef.current) {
       return;
     }
+    if (isGuest) {
+      showGate("create");
+      return;
+    }
     const validation = validateTasks();
     if (!validation.valid) {
       Alert.alert("Invalid Task", validation.error || "Please fix task configuration");
@@ -539,7 +542,7 @@ export default function CreateScreen() {
       .finally(() => {
         createMutationPendingRef.current = false;
       });
-  }, [submitStatus, title, description, challengeType, durationDays, customDuration, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, participationType, teamSize, sharedGoalTarget, sharedGoalUnit, deadlineType, deadlineDate, isTeamOrShared, startWatchdog, clearWatchdog, getDuration, validateTasks, router]);
+  }, [submitStatus, title, description, challengeType, durationDays, customDuration, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, participationType, teamSize, sharedGoalTarget, sharedGoalUnit, deadlineType, deadlineDate, isTeamOrShared, startWatchdog, clearWatchdog, getDuration, validateTasks, router, isGuest, showGate]);
 
   const handleRetryFromModal = useCallback(async () => {
     setShowRecoveryModal(false);
@@ -552,22 +555,6 @@ export default function CreateScreen() {
     setShowRecoveryModal(false);
     setSubmitStatus('idle');
   }, []);
-
-  if (isGuest) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.bgMain ?? "#F7F7F6", justifyContent: "center", alignItems: "center", padding: 24 }}>
-        <Text style={{ fontSize: 22, fontWeight: "700", color: tokenColors.textPrimary ?? "#111", marginBottom: 8, textAlign: "center" }}>Sign up to create challenges</Text>
-        <Text style={{ fontSize: 15, color: tokenColors.textSecondaryCreate ?? "#6E6E6C", marginBottom: 24, textAlign: "center" }}>Create an account to design and launch your own challenges.</Text>
-        <TouchableOpacity
-          style={{ backgroundColor: tokenColors.accentOrangeCreate ?? "#E17847", paddingVertical: 16, paddingHorizontal: 32, borderRadius: 14 }}
-          onPress={() => showGate("create")}
-          activeOpacity={0.85}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>Sign up</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
 
   const animateStep = (direction: "next" | "prev") => {
     const toValue = direction === "next" ? -20 : 20;

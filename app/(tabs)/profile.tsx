@@ -27,7 +27,7 @@ import * as Haptics from "expo-haptics";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
+import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ThemeColors } from "@/lib/theme-palettes";
 import { supabase } from "@/lib/supabase";
@@ -244,7 +244,6 @@ function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
 export default function ProfileScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
-  const { showGate } = useAuthGate();
   const { user } = useAuth();
   const { colors } = useTheme();
   const queryClient = useQueryClient();
@@ -381,14 +380,21 @@ export default function ProfileScreen() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <View style={styles.guestIdentityCard}>
             <Lock size={32} color={colors.text.tertiary} style={{ marginBottom: 12 }} />
-            <Text style={styles.guestIdentityTitle}>Create your identity</Text>
-            <Text style={styles.guestIdentitySub}>Sign up to build your profile, track streaks, and earn ranks.</Text>
+            <Text style={styles.guestIdentityTitle}>Sign in to view your profile</Text>
+            <Text style={styles.guestIdentitySub}>Sign in to see your stats, streaks, and achievements.</Text>
             <TouchableOpacity
               style={styles.guestIdentityCta}
-              onPress={() => showGate("other")}
+              onPress={() => router.push(ROUTES.AUTH_LOGIN as never)}
               activeOpacity={0.85}
             >
-              <Text style={styles.guestIdentityCtaText}>Sign up</Text>
+              <Text style={styles.guestIdentityCtaText}>Sign in</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.guestIdentityCta, { backgroundColor: "transparent", borderWidth: 1, borderColor: colors.border, marginTop: 12 }]}
+              onPress={() => router.push(ROUTES.AUTH_SIGNUP as never)}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.guestIdentityCtaText, { color: colors.text.primary }]}>Sign up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

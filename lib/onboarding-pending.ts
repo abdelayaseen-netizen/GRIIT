@@ -42,3 +42,8 @@ export async function setOnboardingAnswers(answers: OnboardingAnswers | null): P
 export async function clearOnboardingPending(): Promise<void> {
   await AsyncStorage.multiRemove([PENDING_CHALLENGE_ID_KEY, ONBOARDING_ANSWERS_KEY]);
 }
+
+/** Clear only onboarding answers (e.g. after profile save). Keeps pending challenge ID for redirect after onboarding. */
+export async function clearOnboardingAnswers(): Promise<void> {
+  await AsyncStorage.removeItem(ONBOARDING_ANSWERS_KEY);
+}

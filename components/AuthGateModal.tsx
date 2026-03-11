@@ -35,13 +35,14 @@ const BENEFITS = [
 export function AuthGateModal({ visible, onClose, context }: AuthGateModalProps) {
   const router = useRouter();
 
-  const openSignup = (method: "email" | "apple" | "google") => {
+  const openSignup = () => {
     onClose();
-    if (method === "email") {
-      router.push(ROUTES.AUTH_SIGNUP as never);
-    } else {
-      router.push(ROUTES.AUTH_SIGNUP as never);
-    }
+    router.push(ROUTES.AUTH_SIGNUP as never);
+  };
+
+  const openLogin = () => {
+    onClose();
+    router.push(ROUTES.AUTH_LOGIN as never);
   };
 
   return (
@@ -67,13 +68,13 @@ export function AuthGateModal({ visible, onClose, context }: AuthGateModalProps)
           </View>
           <PrimaryButton
             title="Continue with email"
-            onPress={() => openSignup("email")}
+            onPress={openLogin}
             variant="black"
             style={styles.primaryBtn}
           />
           <TouchableOpacity
             style={styles.secondaryBtn}
-            onPress={() => openSignup("email")}
+            onPress={openSignup}
             activeOpacity={0.8}
           >
             <Text style={styles.secondaryBtnText}>Sign up with email</Text>

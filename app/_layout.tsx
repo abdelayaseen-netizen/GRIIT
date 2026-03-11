@@ -103,18 +103,9 @@ function AuthRedirector() {
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inOnboardingQuestions = first === SEGMENTS.ONBOARDING_QUESTIONS;
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
 
     if (!user) {
-      if (inAuth || inOnboardingQuestions) {
-        router.replace(ROUTES.TABS_DISCOVER as never);
-        return;
-      }
-      if (onCreateProfile || inOnboarding) {
-        router.replace(ROUTES.TABS_DISCOVER as never);
-        return;
-      }
       return;
     }
 

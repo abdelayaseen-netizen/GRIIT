@@ -54,6 +54,7 @@ import { useLeaveChallenge } from "@/lib/mutations";
 import { formatTRPCError } from "@/lib/api";
 import { FLAGS } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
+import { setPendingChallengeId } from "@/lib/onboarding-pending";
 import type {
   ChallengeTaskFromApi,
   ChallengeDetailFromApi,
@@ -406,7 +407,7 @@ export default function ChallengeDetailScreen() {
   const router = useRouter();
   const { colors: themeColors } = useTheme();
   const { user } = useAuth();
-  useAuthGate(); // Join when guest → onboarding-questions; when logged in → handleJoin
+  const { showGate } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
   const currentUserId = user?.id ?? undefined;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -1146,7 +1147,7 @@ export default function ChallengeDetailScreen() {
             <Animated.View style={{ transform: [{ scale: ctaScaleAnim }] }}>
               <TouchableOpacity
                 style={[s.ctaButton, { backgroundColor: ctaBgColor }]}
-                onPress={isJoined ? () => router.push(ROUTES.TABS as never) : user ? () => handleJoin() : () => router.push({ pathname: ROUTES.ONBOARDING_QUESTIONS, params: id ? { challengeId: id } : undefined } as never)}
+                onPress={isJoined ? () => router.push(ROUTES.TABS as never) : user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
                 onPressIn={handleCtaPressIn}
                 onPressOut={handleCtaPressOut}
                 disabled={joinDisabled}
