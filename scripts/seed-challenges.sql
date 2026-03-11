@@ -2,6 +2,9 @@
 -- Run in Supabase SQL Editor. Safe to re-run (ON CONFLICT DO NOTHING / WHERE NOT EXISTS).
 -- Ensures: getFeatured returns rows (visibility=PUBLIC, status=published), getStarterPack returns rows (source_starter_id set).
 
+-- Allow system challenges without a creator
+ALTER TABLE public.challenges ALTER COLUMN creator_id DROP NOT NULL;
+
 -- Ensure columns exist
 ALTER TABLE challenges ADD COLUMN IF NOT EXISTS duration_type TEXT DEFAULT 'multi_day';
 ALTER TABLE challenges ADD COLUMN IF NOT EXISTS source_starter_id TEXT;

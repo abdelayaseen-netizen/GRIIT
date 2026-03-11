@@ -460,36 +460,69 @@ export default function HomeScreen() {
   if (isGuest) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
-        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 20 }]} showsVerticalScrollIndicator={false}>
-          <View style={{ marginTop: 32, marginBottom: 24 }}>
-            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIIT</Text>
-            <Text style={[styles.logoSubtitle, { color: themeColors.text.muted }]}>Build discipline daily</Text>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.heroSection}>
+            <Text style={styles.heroEmoji}>🔥</Text>
+            <Text style={[styles.heroTitle, { color: themeColors.text.primary }]}>Your discipline journey{'\n'}starts here.</Text>
+            <Text style={[styles.heroSubtitle, { color: themeColors.text.secondary }]}>
+              Join thousands building better habits.{'\n'}
+              One day at a time. No excuses.
+            </Text>
+            <TouchableOpacity style={[styles.heroCTA, { backgroundColor: themeColors.accent ?? "#E8734A" }]} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} activeOpacity={0.85}>
+              <Text style={styles.heroCTAText}>Explore challenges</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={[styles.guestBarCta, { backgroundColor: themeColors.accent }]}
-            onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.guestBarCtaText}>Browse challenges</Text>
-            <ChevronRight size={18} color="#fff" />
-          </TouchableOpacity>
-          {guestFeatured.length > 0 && (
-            <View style={{ marginTop: 28 }}>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: themeColors.text.secondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Suggested for you</Text>
-              {guestFeatured.slice(0, 6).map((item: { id: string; title?: string; short_hook?: string }) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[styles.yourPositionCard, styles.guestChallengeCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-                  onPress={() => router.push(ROUTES.CHALLENGE_ID(item.id) as never)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={{ fontSize: 16, fontWeight: "600", color: themeColors.text.primary }} numberOfLines={1}>{item.title ?? "Challenge"}</Text>
-                  {item.short_hook ? <Text style={{ fontSize: 13, color: themeColors.text.secondary, marginTop: 4 }} numberOfLines={1}>{item.short_hook}</Text> : null}
-                  <ChevronRight size={18} color={themeColors.text.tertiary} style={{ position: "absolute", right: 12, top: 18 }} />
-                </TouchableOpacity>
-              ))}
+          <View style={[styles.motivationCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <Text style={[styles.motivationQuote, { color: themeColors.text.secondary }]}>
+              {'"The only discipline that lasts is the one you build yourself."'}
+            </Text>
+            <Text style={[styles.motivationAuthor, { color: themeColors.text.muted }]}>— Start today</Text>
+          </View>
+          <View style={styles.howItWorks}>
+            <Text style={[styles.guestSectionTitle, { color: themeColors.text.primary }]}>How GRIIT works</Text>
+            <View style={styles.stepRow}>
+              <Text style={styles.stepEmoji}>🎯</Text>
+              <View style={styles.stepContent}>
+                <Text style={[styles.stepTitle, { color: themeColors.text.primary }]}>Pick a challenge</Text>
+                <Text style={[styles.stepDesc, { color: themeColors.text.secondary }]}>Choose from 7-day sprints to 75-day transformations</Text>
+              </View>
             </View>
-          )}
+            <View style={styles.stepRow}>
+              <Text style={styles.stepEmoji}>✅</Text>
+              <View style={styles.stepContent}>
+                <Text style={[styles.stepTitle, { color: themeColors.text.primary }]}>Complete daily tasks</Text>
+                <Text style={[styles.stepDesc, { color: themeColors.text.secondary }]}>Workouts, journaling, cold showers — you decide</Text>
+              </View>
+            </View>
+            <View style={styles.stepRow}>
+              <Text style={styles.stepEmoji}>🔒</Text>
+              <View style={styles.stepContent}>
+                <Text style={[styles.stepTitle, { color: themeColors.text.primary }]}>Secure your day</Text>
+                <Text style={[styles.stepDesc, { color: themeColors.text.secondary }]}>Lock in your progress. Build your streak. Earn your rank.</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.guestFeaturedSection}>
+            <Text style={[styles.guestSectionTitle, { color: themeColors.text.primary }]}>Popular challenges</Text>
+            {(guestFeatured as { id: string; title?: string; short_hook?: string }[]).map((challenge) => (
+              <TouchableOpacity
+                key={challenge.id}
+                style={[styles.guestChallengeCard, styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                onPress={() => router.push(ROUTES.CHALLENGE_ID(challenge.id) as never)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.guestChallengeTitle, { color: themeColors.text.primary }]} numberOfLines={1}>{challenge.title ?? "Challenge"}</Text>
+                {challenge.short_hook ? <Text style={[styles.guestChallengeHook, { color: themeColors.text.secondary }]} numberOfLines={1}>{challenge.short_hook}</Text> : null}
+                <ChevronRight size={18} color={themeColors.text.tertiary} style={{ position: "absolute", right: 12, top: 18 }} />
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.seeAllButton} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} activeOpacity={0.8}>
+              <Text style={[styles.seeAllText, { color: themeColors.accent }]}>See all challenges →</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.socialProof}>
+            <Text style={[styles.socialProofText, { color: themeColors.text.secondary }]}>🔥 Join the movement. Every day counts.</Text>
+          </View>
         </ScrollView>
       </SafeAreaView>
     );
@@ -1641,6 +1674,117 @@ const styles = StyleSheet.create({
   guestChallengeCard: {
     alignItems: "flex-start",
     marginBottom: 12,
+  },
+  guestScrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 48,
+  },
+  heroSection: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 28,
+  },
+  heroEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 12,
+    lineHeight: 34,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  heroCTA: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignSelf: "stretch",
+    alignItems: "center",
+    marginHorizontal: 0,
+  },
+  heroCTAText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  motivationCard: {
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+    marginBottom: 28,
+    borderWidth: 1,
+  },
+  motivationQuote: {
+    fontSize: 16,
+    fontStyle: "italic",
+    textAlign: "center",
+    lineHeight: 24,
+  },
+  motivationAuthor: {
+    fontSize: 14,
+    marginTop: 8,
+  },
+  howItWorks: {
+    marginBottom: 28,
+  },
+  guestSectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  stepEmoji: {
+    fontSize: 32,
+    width: 40,
+    textAlign: "center",
+  },
+  stepContent: { flex: 1 },
+  stepTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  stepDesc: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  guestFeaturedSection: {
+    marginBottom: 28,
+  },
+  guestChallengeTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  guestChallengeHook: {
+    fontSize: 13,
+    marginTop: 4,
+  },
+  seeAllButton: {
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  seeAllText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  socialProof: {
+    alignItems: "center",
+    paddingVertical: 24,
+  },
+  socialProofText: {
+    fontSize: 15,
+    fontWeight: "600",
   },
   yourPositionLabel: {
     fontSize: 11,

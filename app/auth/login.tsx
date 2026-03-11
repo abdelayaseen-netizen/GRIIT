@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -25,64 +25,49 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const isSubmittingRef = useRef(false);
-
   const handleLogin = async () => {
-    if (loading || isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
-
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter email and password');
-      isSubmittingRef.current = false;
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Missing fields', 'Please enter your email and password.');
       return;
     }
 
-    if (__DEV__) console.log('[Login] handleLogin called');
+    setLoading(true);
 
-    const trimmed = email.trim().toLowerCase();
-    let loginEmail = trimmed;
-    if (!trimmed.includes('@')) {
-      try {
-        const result = await trpcQuery<{ email: string } | null>('auth.getEmailForUsername', { username: trimmed });
-        if (!result?.email) {
-          Alert.alert('Login Failed', 'No account found with that username. Try signing in with your email address.');
-          isSubmittingRef.current = false;
+    try {
+      let loginEmail = email.trim();
+
+      if (!loginEmail.includes('@')) {
+        try {
+          const result = await trpcQuery<{ email: string } | null>('auth.getEmailForUsername', { username: loginEmail.toLowerCase() });
+          if (result?.email) {
+            loginEmail = result.email;
+          } else {
+            Alert.alert('Not found', 'No account found with that username. Try your email address.');
+            setLoading(false);
+            return;
+          }
+        } catch {
+          Alert.alert('Not found', 'No account found with that username. Try your email address.');
+          setLoading(false);
           return;
         }
-        loginEmail = result.email;
-      } catch (err) {
-        if (__DEV__) console.log('[Login] getEmailForUsername error', err);
-        Alert.alert('Login Failed', 'Could not look up username. Try signing in with your email address instead.');
-        isSubmittingRef.current = false;
-        return;
+      } else {
+        loginEmail = loginEmail.toLowerCase();
       }
-    }
 
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
-        password,
+        password: password,
       });
 
-      if (__DEV__) console.log('[Login] signInWithPassword result', { hasSession: !!data?.session, error: error?.message });
-
       if (error) {
-        Alert.alert('Login Failed', error.message);
-        return;
+        Alert.alert('Login failed', error.message || 'Invalid email or password.');
       }
-
-      if (data?.session) {
-        // Auth state will update; redirector will send user to create-profile or (tabs)
-      } else {
-        Alert.alert('Login Failed', 'No session returned. If you just signed up, check your email to confirm, or disable "Confirm email" in Supabase Auth settings.');
-      }
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'An unexpected error occurred';
-      Alert.alert('Error', message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      Alert.alert('Login failed', message);
     } finally {
       setLoading(false);
-      isSubmittingRef.current = false;
     }
   };
 

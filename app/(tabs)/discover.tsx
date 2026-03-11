@@ -38,6 +38,7 @@ import {
 } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
+import { useIsGuest } from "@/contexts/AuthGateContext";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline";
 
@@ -200,6 +201,7 @@ const FEATURED_PAGE_SIZE = 20;
 export default function DiscoverScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const isGuest = useIsGuest();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
 
@@ -420,6 +422,20 @@ export default function DiscoverScreen() {
 
     if (totalVisible === 0) {
       const isFiltered = Boolean(searchQuery || activeCategory !== "all");
+      if (isGuest) {
+        return (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIcon}>
+              <Text style={{ fontSize: 28 }}>🚀</Text>
+            </View>
+            <Text style={styles.emptyTitle}>Challenges are loading...</Text>
+            <Text style={styles.emptySubtext}>We&apos;re setting things up. Check back in a moment.</Text>
+            <TouchableOpacity style={styles.emptyRefreshButton} onPress={handleRefresh} activeOpacity={0.7}>
+              <Text style={styles.emptyRefreshText}>↻ Refresh</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      }
       return (
         <EmptyState
           title={isFiltered ? "No challenges found" : "No challenges yet. Be the first to create one!"}
