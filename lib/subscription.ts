@@ -33,13 +33,6 @@ export type SubscriptionStatus = "free" | "premium" | "trial";
 
 let purchaserInfoListener: (() => void) | null = null;
 
-function mapEntitlementToStatus(expirationDate: string | null): SubscriptionStatus {
-  if (!expirationDate) return "free";
-  const expiry = new Date(expirationDate);
-  if (Number.isNaN(expiry.getTime())) return "free";
-  return expiry > new Date() ? "premium" : "free";
-}
-
 /** Calls server-side validation (RevenueCat API + DB write). Updates local state from response. */
 async function validateAndSyncSubscription(): Promise<void> {
   try {

@@ -81,7 +81,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   extreme: "Extreme",
 };
 
-const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.ComponentType<any> }[] = [
+const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.ComponentType<{ size?: number; color?: string }> }[] = [
   { key: "all", label: "All", icon: Sparkles },
   { key: "fitness", label: "Fitness", icon: Dumbbell },
   { key: "mind", label: "Mind", icon: Brain },

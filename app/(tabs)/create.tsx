@@ -235,7 +235,7 @@ const REPLAY_POLICIES: { id: ReplayPolicy; label: string; description: string }[
   { id: "allow_replay", label: "Allow Replay", description: "Users can attempt later" },
 ];
 
-const VISIBILITY_OPTIONS: { value: ChallengeVisibility; label: string; description: string; icon: React.ComponentType<any> }[] = [
+const VISIBILITY_OPTIONS: { value: ChallengeVisibility; label: string; description: string; icon: React.ComponentType<{ size?: number; color?: string }> }[] = [
   { value: "PUBLIC", label: "Everyone", description: "Shown on Discover. Anyone can join.", icon: Globe },
   { value: "FRIENDS", label: "Friends", description: "Only your friends can see and join.", icon: Users },
   { value: "PRIVATE", label: "Only me", description: "Just for you. No one can see or join.", icon: Lock },

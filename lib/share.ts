@@ -1,5 +1,4 @@
 import { Share, Platform, Alert } from "react-native";
-import * as Haptics from "expo-haptics";
 import {
   challengeDeepLink,
   inviteDeepLink,
