@@ -3,6 +3,7 @@
  * Run every hour (e.g. via GET /api/cron/send-reminders?secret=CRON_SECRET).
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getTodayDateKey } from "./date-utils";
 import {
   shouldSendMorningReminder,
@@ -23,8 +24,7 @@ interface StreakRow {
   active_streak_count: number | null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function runReminderCron(supabase: any): Promise<{
+export async function runReminderCron(supabase: SupabaseClient): Promise<{
   morning: number;
   streakAtRisk: number;
   errors: string[];

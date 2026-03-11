@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, Share2, Award, TrendingUp } from "lucide-react-native";
 import Colors from "@/constants/colors";
+import { ROUTES } from "@/lib/routes";
 import { shareChallenge, shareChallengeComplete } from "@/lib/share";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -67,7 +68,7 @@ export default function SuccessScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.replace("/(tabs)");
+    router.replace(ROUTES.TABS as never);
   };
 
   const handleShare = async () => {

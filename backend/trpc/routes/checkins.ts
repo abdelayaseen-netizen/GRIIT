@@ -308,8 +308,8 @@ export const checkinsRouter = createTRPCRouter({
       const currentLastStands = Math.min(2, Math.max(0, streakRow?.last_stands_available ?? 0));
       let lastStandEarned = false;
       if (shouldEarnLastStand(countLast7, currentLastStands)) {
-        (streakPayload as any).last_stands_available = newAvailableAfterEarn(currentLastStands);
-        (streakPayload as any).last_stand_earned_at = now.toISOString();
+        streakPayload.last_stands_available = newAvailableAfterEarn(currentLastStands);
+        streakPayload.last_stand_earned_at = now.toISOString();
         lastStandEarned = true;
       }
 

@@ -60,7 +60,7 @@ export const streaksRouter = createTRPCRouter({
         date_key: input.dateKeyToFreeze,
       });
       if (insertErr) {
-        if ((insertErr as any).code === "23505") {
+        if ((insertErr as { code?: string }).code === "23505") {
           throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze already used for this day." });
         }
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });

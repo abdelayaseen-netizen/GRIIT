@@ -4,6 +4,7 @@
  * Creates a challenge with creator_id null, visibility PUBLIC, status published.
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildTaskInsertPayload } from "./challenge-tasks";
 import { DAILY_CHALLENGE_TEMPLATES } from "./daily-challenge-templates";
 
@@ -17,8 +18,7 @@ export function pickTemplateForDate(date: Date): (typeof DAILY_CHALLENGE_TEMPLAT
 }
 
 /** Create one daily (24h) challenge for the given date. Idempotent per day: check for existing before insert. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createDailyChallengeIfMissing(supabase: any, date: Date): Promise<{ created: boolean; id?: string }> {
+export async function createDailyChallengeIfMissing(supabase: SupabaseClient, date: Date): Promise<{ created: boolean; id?: string }> {
   const start = new Date(date);
   start.setUTCHours(0, 0, 0, 0);
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);

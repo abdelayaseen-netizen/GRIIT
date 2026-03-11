@@ -26,8 +26,8 @@ export default function CreateProfileScreen() {
   const [onboardingAnswers, setOnboardingAnswersState] = useState<OnboardingAnswers | null>(null);
 
   useEffect(() => {
-    getPendingChallengeId().then(setPendingChallengeId);
-    getOnboardingAnswers().then(setOnboardingAnswersState);
+    getPendingChallengeId().then(setPendingChallengeId).catch(() => {});
+    getOnboardingAnswers().then(setOnboardingAnswersState).catch(() => {});
   }, []);
 
   const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {

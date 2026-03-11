@@ -5,6 +5,7 @@ import { requireNoError } from "../errors";
 import type { ChallengeWithTasksRow } from "../../types/db";
 import {
   type ChallengeTaskRowRaw,
+  type ChallengeTaskApiShape,
   mapTaskRowsToApi,
   buildTaskInsertPayload,
   isTaskRequired,
@@ -161,9 +162,10 @@ export const challengesRouter = createTRPCRouter({
         ...c,
         tasks: mapTaskRowsToApi(c.challenge_tasks ?? []),
       }));
-      list.sort((a: any, b: any) => {
-        const ai = ORDER.indexOf(a.source_starter_id);
-        const bi = ORDER.indexOf(b.source_starter_id);
+      type StarterListEntry = { source_starter_id?: string; tasks: ChallengeTaskApiShape[]; challenge_tasks?: ChallengeTaskRowRaw[] };
+      list.sort((a: StarterListEntry, b: StarterListEntry) => {
+        const ai = ORDER.indexOf(a.source_starter_id ?? "");
+        const bi = ORDER.indexOf(b.source_starter_id ?? "");
         if (ai === -1 && bi === -1) return 0;
         if (ai === -1) return 1;
         if (bi === -1) return -1;

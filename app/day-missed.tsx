@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { AlertCircle } from "lucide-react-native";
 import Colors from "@/constants/colors";
+import { ROUTES } from "@/lib/routes";
 
 export default function DayMissedScreen() {
   const router = useRouter();
@@ -92,7 +93,7 @@ export default function DayMissedScreen() {
 
         <TouchableOpacity
           style={styles.homeButton}
-          onPress={() => router.push("/(tabs)")}
+          onPress={() => router.push(ROUTES.TABS as never)}
           activeOpacity={0.7}
         >
           <Text style={styles.homeButtonText}>Back to Home</Text>
