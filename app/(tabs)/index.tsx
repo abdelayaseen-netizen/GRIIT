@@ -65,6 +65,15 @@ function getTimeUntilMidnight(): { hours: number; minutes: number } {
   return { hours, minutes };
 }
 
+const MOTIVATION_QUOTES: { text: string; author: string }[] = [
+  { text: "Discipline is choosing between what you want now and what you want most.", author: "— Start today" },
+  { text: "Small daily improvements lead to staggering long-term results.", author: "— Start today" },
+  { text: "You don't have to be extreme, just consistent.", author: "— Start today" },
+  { text: "The pain of discipline weighs ounces. The pain of regret weighs tons.", author: "— Start today" },
+  { text: "Champions do consistently what others do occasionally.", author: "— Start today" },
+  { text: "The only discipline that lasts is the one you build yourself.", author: "— Start today" },
+];
+
 function SyncingBanner() {
   const { colors } = useTheme();
   return (
@@ -202,6 +211,10 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const isGuest = useIsGuest();
+  const guestQuote = useMemo(
+    () => MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)],
+    []
+  );
   const { colors: themeColors } = useTheme();
   const {
     activeChallenge,
@@ -474,9 +487,9 @@ export default function HomeScreen() {
           </View>
           <View style={[styles.motivationCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <Text style={[styles.motivationQuote, { color: themeColors.text.secondary }]}>
-              {'"The only discipline that lasts is the one you build yourself."'}
+              {`"${guestQuote.text}"`}
             </Text>
-            <Text style={[styles.motivationAuthor, { color: themeColors.text.muted }]}>— Start today</Text>
+            <Text style={[styles.motivationAuthor, { color: themeColors.text.muted }]}>{guestQuote.author}</Text>
           </View>
           <View style={styles.howItWorks}>
             <Text style={[styles.guestSectionTitle, { color: themeColors.text.primary }]}>How GRIIT works</Text>

@@ -724,7 +724,10 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Challenge not found</Text>
-          <TouchableOpacity onPress={() => router.back()} style={s.emptyBtn}>
+          <TouchableOpacity onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} style={s.emptyBtn}>
+            <Text style={s.emptyBtnText}>Browse challenges</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 12 }]}>
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>

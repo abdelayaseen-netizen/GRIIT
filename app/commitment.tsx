@@ -15,7 +15,6 @@ import * as Haptics from "expo-haptics";
 import { Shield, X, Check } from "lucide-react-native";
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
-import { saveJoinedStarterId } from "@/lib/starter-join";
 import { trpcMutate } from "@/lib/trpc";
 import { inviteToChallenge } from "@/lib/share";
 import { formatTRPCError } from "@/lib/api";
@@ -25,7 +24,6 @@ export default function CommitmentScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     challengeId?: string;
-    isStarter?: string;
     title?: string;
     duration?: string;
     difficulty?: string;
@@ -38,7 +36,6 @@ export default function CommitmentScreen() {
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   const challengeId = params.challengeId ?? "";
-  const isStarter = params.isStarter === "1";
   const title = params.title ?? "Challenge";
   const duration = params.duration ?? "0";
   const difficulty = (params.difficulty as string) || "medium";
@@ -66,18 +63,6 @@ export default function CommitmentScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     try {
-      if (isStarter) {
-        await trpcMutate("starters.join", { starterId: challengeId });
-        await saveJoinedStarterId(challengeId);
-        await refetchAll();
-        if (Platform.OS !== "web") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-        Alert.alert("You're in!", "Let's go.", [
-          { text: "OK", onPress: () => router.replace(ROUTES.TABS as never) },
-        ]);
-        return;
-      }
       const result = await trpcMutate("challenges.join", { challengeId }) as { joined?: boolean; runStatus?: string } | undefined;
       if (Platform.OS !== "web") {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -113,7 +98,7 @@ export default function CommitmentScreen() {
     } finally {
       setJoining(false);
     }
-  }, [challengeId, isStarter, joining, router, refetchAll, title]);
+  }, [challengeId, joining, router, refetchAll, title]);
 
   const handleCancel = () => {
     if (joining) return;

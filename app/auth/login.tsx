@@ -15,7 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ROUTES } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
-import { trpcQuery } from '@/lib/trpc';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/colors';
 
@@ -34,38 +33,17 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      let loginEmail = email.trim();
-
-      if (!loginEmail.includes('@')) {
-        try {
-          const result = await trpcQuery<{ email: string } | null>('auth.getEmailForUsername', { username: loginEmail.toLowerCase() });
-          if (result?.email) {
-            loginEmail = result.email;
-          } else {
-            Alert.alert('Not found', 'No account found with that username. Try your email address.');
-            setLoading(false);
-            return;
-          }
-        } catch {
-          Alert.alert('Not found', 'No account found with that username. Try your email address.');
-          setLoading(false);
-          return;
-        }
-      } else {
-        loginEmail = loginEmail.toLowerCase();
-      }
-
       const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
+        email: email.trim().toLowerCase(),
         password: password,
       });
 
       if (error) {
-        Alert.alert('Login failed', error.message || 'Invalid email or password.');
+        Alert.alert('Login Failed', error.message || 'Invalid email or password.');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
-      Alert.alert('Login failed', message);
+      Alert.alert('Login Failed', message);
     } finally {
       setLoading(false);
     }
@@ -88,10 +66,10 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: themeColors.text.primary }]}>Email or username</Text>
+              <Text style={[styles.label, { color: themeColors.text.primary }]}>Email</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
-                placeholder="email@example.com or username"
+                placeholder="Enter your email"
                 placeholderTextColor={themeColors.text.tertiary}
                 value={email}
                 onChangeText={setEmail}

@@ -428,8 +428,8 @@ export default function DiscoverScreen() {
             <View style={styles.emptyIcon}>
               <Text style={{ fontSize: 28 }}>🚀</Text>
             </View>
-            <Text style={styles.emptyTitle}>Challenges are loading...</Text>
-            <Text style={styles.emptySubtext}>We&apos;re setting things up. Check back in a moment.</Text>
+            <Text style={styles.emptyTitle}>Challenges coming soon</Text>
+            <Text style={styles.emptySubtext}>We&apos;re building something great. Check back soon.</Text>
             <TouchableOpacity style={styles.emptyRefreshButton} onPress={handleRefresh} activeOpacity={0.7}>
               <Text style={styles.emptyRefreshText}>↻ Refresh</Text>
             </TouchableOpacity>
