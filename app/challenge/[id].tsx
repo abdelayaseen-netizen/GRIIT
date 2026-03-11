@@ -50,13 +50,10 @@ import TeamStatusHeader from "@/components/challenge/TeamStatusHeader";
 import TeamMemberList, { type TeamMemberForList } from "@/components/challenge/TeamMemberList";
 import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track } from "@/lib/analytics";
-import { getJoinedStarterIds } from "@/lib/starter-join";
 import { useLeaveChallenge } from "@/lib/mutations";
 import { formatTRPCError } from "@/lib/api";
 import { FLAGS } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
-import { STARTER_CHALLENGES } from "@/mocks/starter-challenges";
-import type { StarterChallenge, StarterTask } from "@/mocks/starter-challenges";
 import type {
   ChallengeTaskFromApi,
   ChallengeDetailFromApi,
@@ -264,7 +261,7 @@ function MissionRow({
   onConnectStrava,
   onVerifyStrava,
 }: {
-  task: StarterTask;
+  task: ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null; timeEnforcementEnabled?: boolean; anchorTimeLocal?: string; verification_method?: string | null };
   theme: DifficultyTheme;
   isCompleted: boolean;
   isLast: boolean;
@@ -289,8 +286,8 @@ function MissionRow({
     anchorTimeLocal: task.anchorTimeLocal!,
     durationMinutes: null,
     windowMode: "WINDOW",
-    windowStartOffsetMin: task.windowStartOffsetMin ?? 0,
-    windowEndOffsetMin: task.windowEndOffsetMin ?? 60,
+    windowStartOffsetMin: Number((task as { windowStartOffsetMin?: number | null }).windowStartOffsetMin ?? 0),
+    windowEndOffsetMin: Number((task as { windowEndOffsetMin?: number | null }).windowEndOffsetMin ?? 60),
     hardWindowStartOffsetMin: null,
     hardWindowEndOffsetMin: null,
     timezoneMode: "USER_LOCAL",
@@ -419,18 +416,11 @@ export default function ChallengeDetailScreen() {
     Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
   }, [fadeAnim]);
 
-  const isStarter = (id?.startsWith("starter-") || id?.startsWith("daily-")) ?? false;
-
-  const starterChallenge = useMemo((): StarterChallenge | null => {
-    if (!isStarter) return null;
-    return STARTER_CHALLENGES.find((c) => c.id === id) ?? null;
-  }, [id, isStarter]);
-
   const queryClient = useQueryClient();
   const challengeQuery = useQuery({
     queryKey: ["challenge", id],
     queryFn: () => trpcQuery("challenges.getById", { id: id! }),
-    enabled: !!id && !isStarter,
+    enabled: !!id,
     staleTime: 5 * 60 * 1000,
   });
   const remoteChallenge = (challengeQuery.data as Record<string, unknown> | undefined) ?? null;
@@ -444,52 +434,13 @@ export default function ChallengeDetailScreen() {
   const referrerLabel = ref ? "Invited by a friend" : null;
 
   useEffect(() => {
-    if (!ref || !currentUserId || !id || isStarter) return;
+    if (!ref || !currentUserId || !id) return;
     trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch((err) => {
       if (__DEV__) console.warn("[challenge] referrals.recordOpen failed:", err instanceof Error ? err.message : err);
     });
-  }, [ref, currentUserId, id, isStarter]);
-
-  const [starterJoined, setStarterJoined] = useState(false);
-  const [joiningStarter] = useState(false);
-
-  useEffect(() => {
-    if (!isStarter || !id) return;
-    getJoinedStarterIds().then((ids) => {
-      if (ids.includes(id)) setStarterJoined(true);
-    });
-  }, [isStarter, id]);
+  }, [ref, currentUserId, id]);
 
   const challenge = useMemo(() => {
-    if (isStarter && starterChallenge) {
-      return {
-        id: starterChallenge.id,
-        title: starterChallenge.title,
-        description: starterChallenge.description,
-        short_hook: starterChallenge.short_hook,
-        about: starterChallenge.about ?? starterChallenge.description,
-        duration_type: starterChallenge.duration_type,
-        duration_days: starterChallenge.duration_days,
-        difficulty: starterChallenge.difficulty,
-        theme_color: starterChallenge.theme_color,
-        participants_count: starterChallenge.participants_count,
-        active_today_count: starterChallenge.active_today_count ?? Math.floor(starterChallenge.participants_count * 0.4),
-        hard_pick_rate: starterChallenge.hard_pick_rate ?? null,
-        hard_finish_rate: starterChallenge.hard_finish_rate ?? null,
-        completion_rate: starterChallenge.completion_rate ?? null,
-        rules: starterChallenge.rules ?? [],
-        fail_condition: starterChallenge.fail_condition ?? null,
-        rules_text: null as string | null,
-        visibility: starterChallenge.visibility ?? "public",
-        is_daily: starterChallenge.is_daily,
-        ends_at: starterChallenge.ends_at,
-        category: starterChallenge.category,
-        tasks: starterChallenge.tasks.map((t) => ({
-          ...t,
-          required: true,
-        })),
-      };
-    }
     if (remoteChallenge) {
       const d = remoteChallenge as Record<string, unknown>;
       return {
@@ -508,7 +459,7 @@ export default function ChallengeDetailScreen() {
       } as unknown as ChallengeDetailFromApi;
     }
     return null;
-  }, [isStarter, starterChallenge, remoteChallenge]);
+  }, [remoteChallenge]);
 
   const ch = challenge as ChallengeDetailFromApi | null | undefined;
   const participationType = ch?.participation_type ?? "solo";
@@ -570,15 +521,14 @@ export default function ChallengeDetailScreen() {
     return () => clearInterval(interval);
   }, [isDaily, challenge?.ends_at]);
 
-  const isLoading = !isStarter && remoteLoading;
+  const isLoading = remoteLoading;
   const isJoinedRemote = activeChallenge?.challenge_id === id;
-  const isJoined = isJoinedRemote || (isStarter && starterJoined);
+  const isJoined = isJoinedRemote;
 
   const userCurrentDay = useMemo(() => {
     if (!isJoined) return 0;
-    if (isStarter) return 1;
     return (activeChallenge as ActiveChallengeFromApi | null)?.current_day_index ?? 1;
-  }, [isJoined, isStarter, activeChallenge]);
+  }, [isJoined, activeChallenge]);
 
   const userStreak = useMemo(() => {
     if (!isJoined) return 0;
@@ -592,13 +542,13 @@ export default function ChallengeDetailScreen() {
       pathname: ROUTES.COMMITMENT,
       params: {
         challengeId: id,
-        isStarter: isStarter ? "1" : "0",
+        isStarter: "0",
         title: challenge.title,
         duration: String(challenge.duration_days ?? 0),
         difficulty: challenge.difficulty ?? "medium",
       },
     } as never);
-  }, [challenge, id, isStarter, router]);
+  }, [challenge, id, router]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -608,21 +558,22 @@ export default function ChallengeDetailScreen() {
     Animated.spring(ctaScaleAnim, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
   }, [ctaScaleAnim]);
 
-  const handleMissionStart = useCallback((task: StarterTask) => {
+  const handleMissionStart = useCallback((task: ChallengeTaskFromApi) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const apiTask = task as ChallengeTaskFromApi;
+    const apiTask = task;
     const needsPhotoProof = apiTask.require_photo_proof === true;
 
+    const taskExt = task as ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null };
     if (task.type === "journal") {
       const params: Record<string, string> = { taskId: task.id };
-      if (task.journalPrompt) params.prompt = task.journalPrompt;
-      if (task.journalTypes && task.journalTypes.length > 0) params.types = JSON.stringify(task.journalTypes);
-      params.captureMood = task.captureMood !== false ? "true" : "false";
-      params.captureEnergy = task.captureEnergy !== false ? "true" : "false";
-      params.captureBody = task.captureBodyState === true ? "true" : "false";
-      if (task.wordLimitEnabled && task.wordLimitWords) {
-        params.wordLimit = task.wordLimitWords.toString();
+      if (taskExt.journalPrompt) params.prompt = taskExt.journalPrompt;
+      if (taskExt.journalTypes && taskExt.journalTypes.length > 0) params.types = JSON.stringify(taskExt.journalTypes);
+      params.captureMood = taskExt.captureMood !== false ? "true" : "false";
+      params.captureEnergy = taskExt.captureEnergy !== false ? "true" : "false";
+      params.captureBody = taskExt.captureBodyState === true ? "true" : "false";
+      if (taskExt.wordLimitEnabled && taskExt.wordLimitWords) {
+        params.wordLimit = taskExt.wordLimitWords.toString();
       }
       params.requirePhotoProof = needsPhotoProof ? "true" : "false";
       router.push({ pathname: ROUTES.TASK_JOURNAL, params } as never);
@@ -657,7 +608,7 @@ export default function ChallengeDetailScreen() {
     }
   }, [router]);
 
-  const allTasks = (challenge?.tasks ?? []) as StarterTask[];
+  const allTasks = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
   const isThisActiveChallenge = !!(
     activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
   );
@@ -677,20 +628,20 @@ export default function ChallengeDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isJoined) refetchTodayCheckins();
-      if (id && !isStarter && (isTeamChallenge || isSharedGoal)) {
+      if (id && (isTeamChallenge || isSharedGoal)) {
         challengeQuery.refetch();
       }
-    }, [id, isStarter, isJoined, isTeamChallenge, isSharedGoal, refetchTodayCheckins, challengeQuery])
+    }, [id, isJoined, isTeamChallenge, isSharedGoal, refetchTodayCheckins, challengeQuery])
   );
 
   const onRefresh = useCallback(async () => {
     if (!id) return;
-    if (!isStarter) await challengeQuery.refetch();
+    await challengeQuery.refetch();
     if (isJoined) await refetchTodayCheckins();
-  }, [id, isStarter, isJoined, refetchTodayCheckins, challengeQuery]);
+  }, [id, isJoined, refetchTodayCheckins, challengeQuery]);
 
   const handleLeave = useCallback(() => {
-    if (!id || isStarter || leavePending) return;
+    if (!id || leavePending) return;
     Alert.alert(
       "Leave Challenge",
       "Are you sure you want to leave this challenge? You will lose your progress.",
@@ -713,7 +664,7 @@ export default function ChallengeDetailScreen() {
         },
       ]
     );
-  }, [id, isStarter, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router]);
+  }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router]);
 
   if (!id) {
     return (
@@ -748,7 +699,7 @@ export default function ChallengeDetailScreen() {
     );
   }
 
-  if (remoteLoadError && !isStarter) {
+  if (remoteLoadError) {
     return (
       <SafeAreaView style={[s.container, { backgroundColor: themeColors.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -780,7 +731,7 @@ export default function ChallengeDetailScreen() {
     );
   }
 
-  const isPending = isStarter ? joiningStarter : joinPending;
+  const isPending = joinPending;
   const difficulty = (challenge.difficulty || "medium") as string;
   const theme = getTheme(difficulty);
   const rules = challenge.rules || [];
@@ -940,7 +891,7 @@ export default function ChallengeDetailScreen() {
           <View style={s.body}>
 
             {/* Team / Shared Goal sections (remote only) */}
-            {!isStarter && id && (isTeamChallenge || isSharedGoal) && (
+            {id && (isTeamChallenge || isSharedGoal) && (
               <>
                 {isTeamChallenge && runStatus && (
                   <>
@@ -1099,7 +1050,7 @@ export default function ChallengeDetailScreen() {
                   return (
                     <MissionRow
                       key={task.id}
-                      task={task}
+                      task={task as ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null; timeEnforcementEnabled?: boolean; anchorTimeLocal?: string; verification_method?: string | null }}
                       theme={theme}
                       isCompleted={isCompleted}
                       isLast={index === allTasks.length - 1}
@@ -1164,7 +1115,7 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {isJoined && !isStarter && id && (
+            {isJoined && id && (
               <TouchableOpacity
                 style={[s.leaveBtn, { borderWidth: 1, borderColor: themeColors.border, borderRadius: 12 }]}
                 onPress={handleLeave}

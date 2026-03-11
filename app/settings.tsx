@@ -153,6 +153,17 @@ export default function SettingsScreen() {
     }
   }, [isGuest]);
 
+  const loadProfileVisibility = useCallback(async () => {
+    if (isGuest) return;
+    try {
+      const data = await trpcQuery("profiles.get") as { profile_visibility?: string | null };
+      const v = data?.profile_visibility;
+      if (v === "public" || v === "friends" || v === "private") setProfileVisibility(v);
+    } catch {
+      // ignore
+    }
+  }, [isGuest]);
+
   useEffect(() => {
     loadReminderSettings();
   }, [loadReminderSettings]);
@@ -160,6 +171,10 @@ export default function SettingsScreen() {
   useEffect(() => {
     loadAccountabilityCount();
   }, [loadAccountabilityCount]);
+
+  useEffect(() => {
+    loadProfileVisibility();
+  }, [loadProfileVisibility]);
 
   const handleReminderToggle = async (v: boolean) => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -223,7 +238,15 @@ export default function SettingsScreen() {
             <VisibilitySubsection
               label="Profile Visibility"
               value={profileVisibility}
-              onChange={setProfileVisibility}
+              onChange={async (v) => {
+                setProfileVisibility(v);
+                if (isGuest) return;
+                try {
+                  await trpcMutate("profiles.update", { profile_visibility: v });
+                } catch {
+                  loadProfileVisibility();
+                }
+              }}
               themeColors={themeColors}
             />
             <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />

@@ -43,6 +43,7 @@ export default function CreateProfileScreen() {
         return;
       }
       const userId = sessionData.session.user.id;
+      // If user came via onboarding-questions (pre-signup), persist those answers and mark onboarding_answers set
       const hasOnboardingPending = onboardingAnswers != null && Object.keys(onboardingAnswers).length > 0;
       const { error } = await supabase
         .from("profiles")
@@ -83,11 +84,7 @@ export default function CreateProfileScreen() {
         } catch {
           // Non-blocking; user can join from Discover again
         }
-      await clearOnboardingPending();
-      router.replace(ROUTES.TABS as never);
-        return;
       }
-
       await clearOnboardingPending();
       router.replace(ROUTES.ONBOARDING as never);
     } catch (err: unknown) {

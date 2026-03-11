@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
 const AUTH_ERROR_MESSAGE = "Invalid email or password.";
 
@@ -53,5 +54,18 @@ export const authRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const { data: { session } } = await ctx.supabase.auth.getSession();
       return { session };
+    }),
+
+  /** Resolve username to email for login. Uses service role to look up auth.users. Returns null if not found or admin unavailable. */
+  getEmailForUsername: publicProcedure
+    .input(z.object({ username: z.string().min(1).max(64).transform((s) => s.trim().toLowerCase()) }))
+    .query(async ({ input }) => {
+      if (!hasSupabaseAdmin()) return null;
+      const admin = getSupabaseAdmin();
+      const { data: profile } = await admin.from("profiles").select("user_id").eq("username", input.username).maybeSingle();
+      if (!profile?.user_id) return null;
+      const { data: { user }, error } = await admin.auth.admin.getUserById(profile.user_id);
+      if (error || !user?.email) return null;
+      return { email: user.email };
     }),
 });

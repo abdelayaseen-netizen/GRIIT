@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ROUTES } from '@/lib/routes';
 import { supabase } from '@/lib/supabase';
+import { trpcQuery } from '@/lib/trpc';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/colors';
 
@@ -36,11 +37,28 @@ export default function LoginScreen() {
       return;
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    const trimmed = email.trim().toLowerCase();
+    let loginEmail = trimmed;
+    if (!trimmed.includes('@')) {
+      try {
+        const result = await trpcQuery<{ email: string } | null>('auth.getEmailForUsername', { username: trimmed });
+        if (!result?.email) {
+          Alert.alert('Login Failed', 'No account found with that username.');
+          isSubmittingRef.current = false;
+          return;
+        }
+        loginEmail = result.email;
+      } catch {
+        Alert.alert('Login Failed', 'Could not look up username. Try signing in with your email.');
+        isSubmittingRef.current = false;
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
+        email: loginEmail,
         password,
       });
 
@@ -80,10 +98,10 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: themeColors.text.primary }]}>Email</Text>
+              <Text style={[styles.label, { color: themeColors.text.primary }]}>Email or username</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
-                placeholder="your@email.com"
+                placeholder="email@example.com or username"
                 placeholderTextColor={themeColors.text.tertiary}
                 value={email}
                 onChangeText={setEmail}
@@ -106,6 +124,13 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 editable={!loading}
               />
+              <TouchableOpacity
+                style={styles.forgotLink}
+                onPress={() => router.push(ROUTES.AUTH_FORGOT_PASSWORD as never)}
+                disabled={loading}
+              >
+                <Text style={[styles.forgotLinkText, { color: themeColors.accent }]}>Forgot password?</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -237,5 +262,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.text.primary,
+  },
+  forgotLink: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+  },
+  forgotLinkText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
   },
 });

@@ -205,7 +205,11 @@ export default function DiscoverScreen() {
 
   const starterPackQuery = useQuery({
     queryKey: ["discover", "starterPack"],
-    queryFn: () => trpcQuery("challenges.getStarterPack") as Promise<unknown[]>,
+    queryFn: async () => {
+      const data = (await trpcQuery("challenges.getStarterPack")) as unknown[];
+      if (__DEV__) console.log("[Discover] getStarterPack result length:", Array.isArray(data) ? data.length : "non-array", data);
+      return data;
+    },
     staleTime: 5 * 60 * 1000,
   });
   const starterPack = Array.isArray(starterPackQuery.data) ? starterPackQuery.data : [];
@@ -577,7 +581,7 @@ export default function DiscoverScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryScroll}
+            contentContainerStyle={[styles.categoryScroll, { paddingRight: 20 }]}
           >
             {CATEGORY_FILTERS.map((cat) => {
               const isActive = activeCategory === cat.key;

@@ -29,6 +29,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import Colors from "@/constants/colors";
@@ -48,6 +49,7 @@ import DailyStatus from "@/components/home/DailyStatus";
 import ExploreChallengesButton from "@/components/home/ExploreChallengesButton";
 import ActiveChallenges, { type ChallengeWithProgress } from "@/components/home/ActiveChallenges";
 import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedCard";
+import { SuggestedFollows } from "@/components/SuggestedFollows";
 import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
 import { designTokens } from "@/lib/design-tokens";
@@ -197,6 +199,7 @@ function TaskRow({
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const isGuest = useIsGuest();
   const { colors: themeColors } = useTheme();
@@ -237,6 +240,7 @@ export default function HomeScreen() {
     enabled: !isGuest,
   });
   const leaderboardData = leaderboardQuery.data ? { currentUserRank: leaderboardQuery.data.currentUserRank ?? null, totalSecuredToday: leaderboardQuery.data.totalSecuredToday ?? 0 } : null;
+  const leaderboardEntries = (leaderboardQuery.data as { entries?: { userId: string; username: string; displayName?: string; avatarUrl?: string | null; currentStreak?: number; securedDaysThisWeek?: number }[] })?.entries ?? [];
   const leaderboardError = leaderboardQuery.isError;
   const leaderboardLoading = leaderboardQuery.isLoading;
 
@@ -297,6 +301,19 @@ export default function HomeScreen() {
 
   const todayKey = todayDateLocal;
   const hasActiveChallenge = !!activeChallenge && !!challenge;
+
+  const suggestedChallengesQuery = useQuery({
+    queryKey: ["home", "suggestedChallenges"],
+    queryFn: async () => {
+      const data = (await trpcQuery("challenges.getFeatured", { limit: 3 })) as { items?: { id: string; title?: string; description?: string }[] } | { id: string; title?: string }[];
+      const items = Array.isArray(data) ? data : data?.items ?? [];
+      return items;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest && !hasActiveChallenge,
+  });
+  const suggestedChallenges = suggestedChallengesQuery.data ?? [];
+
   const retention = useMemo(
     () => getHomeRetentionDerived(stats ?? null, todayKey, hasActiveChallenge, isGuest),
     [stats, todayKey, hasActiveChallenge, isGuest]
@@ -811,6 +828,26 @@ export default function HomeScreen() {
           </View>
         )}
 
+        {!hasActiveChallenge && suggestedChallenges.length > 0 && (
+          <View style={styles.suggestedChallengesSection}>
+            <Text style={[styles.suggestedChallengesTitle, { color: themeColors.text.primary }]}>Suggested for you</Text>
+            {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string }) => (
+              <TouchableOpacity
+                key={c.id}
+                style={[styles.suggestedChallengeRow, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                onPress={() => {
+                  if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  requireAuth("join", () => router.push(ROUTES.CHALLENGE_ID(c.id) as never));
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.suggestedChallengeTitle, { color: themeColors.text.primary }]} numberOfLines={1}>{c.title ?? "Challenge"}</Text>
+                <ChevronRight size={18} color={themeColors.text.muted} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
         <View style={styles.liveSectionHeader}>
           <View style={[styles.liveDot, { backgroundColor: themeColors.danger }]} />
           <Text style={[styles.liveTitle, { color: themeColors.text.primary }]}>LIVE</Text>
@@ -831,12 +868,34 @@ export default function HomeScreen() {
         )}
 
         {(() => {
-          const placeholderFeed: LiveFeedCardData[] = [
-            { type: "secured_day", username: "hasan_k", day: 14, challengeName: "75 Day Hard", streakDays: 14, minutesAgo: 9, respectCount: 7 },
-            { type: "challenge_promo", percentSecured: 62, challengeName: "75 Day Hard", openChallengeId: "1" },
-            { type: "rank_up", username: "omar_z", rankName: "Relentless", disciplineDelta: 84 },
-          ];
-          return placeholderFeed.map((item, i) => <LiveFeedCard key={i} data={item} />);
+          const liveFeedItems: LiveFeedCardData[] = [];
+          if (liveFeedItems.length === 0) {
+            return (
+              <>
+                <View style={[styles.liveFeedEmpty, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                  <Users size={32} color={themeColors.text.muted} style={{ marginBottom: 8 }} />
+                  <Text style={[styles.liveFeedEmptyTitle, { color: themeColors.text.primary }]}>No activity yet</Text>
+                  <Text style={[styles.liveFeedEmptySub, { color: themeColors.text.muted }]}>Join a challenge to see the community in action.</Text>
+                </View>
+                {!isGuest && leaderboardEntries.length > 0 && (
+                  <SuggestedFollows
+                    title="People to follow"
+                    users={leaderboardEntries.map((e) => ({
+                      userId: e.userId,
+                      username: e.username,
+                      displayName: e.displayName,
+                      avatarUrl: e.avatarUrl ?? null,
+                      currentStreak: e.currentStreak,
+                      securedDaysThisWeek: e.securedDaysThisWeek,
+                    }))}
+                    currentUserId={user?.id}
+                    onUserPress={(u) => router.push(ROUTES.PROFILE_USERNAME(u.username) as never)}
+                  />
+                )}
+              </>
+            );
+          }
+          return liveFeedItems.map((item, i) => <LiveFeedCard key={i} data={item} />);
         })()}
 
         {!isGuest && leaderboardError ? (
@@ -1322,6 +1381,48 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
     color: Colors.text.muted,
+  },
+  liveFeedEmpty: {
+    padding: 24,
+    marginBottom: 16,
+    borderRadius: designTokens.cardRadius,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  liveFeedEmptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  liveFeedEmptySub: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  suggestedChallengesSection: {
+    marginBottom: 20,
+  },
+  suggestedChallengesTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  suggestedChallengeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  suggestedChallengeTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
+    marginRight: 8,
   },
   yourPositionInFeedCard: {
     padding: 20,

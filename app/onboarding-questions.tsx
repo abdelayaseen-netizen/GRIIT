@@ -1,3 +1,12 @@
+/**
+ * Onboarding Questions — PRE-SIGNUP (optional).
+ * Shown when a guest taps Join: collects 4 answers (goal, focus, days/week, solo/group)
+ * and stores them in AsyncStorage. Then redirects to signup. These answers are NOT
+ * written to Supabase here. After signup, create-profile reads them and persists
+ * via profiles.update (onboarding_answers, onboarding_completed). The user then
+ * goes to onboarding.tsx (post-signup, required) which sets onboarding_completed
+ * and onboarding_answers from its own 7-step survey.
+ */
 import React, { useState, useCallback } from "react";
 import {
   View,

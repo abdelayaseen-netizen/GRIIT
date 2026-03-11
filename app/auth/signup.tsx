@@ -97,7 +97,7 @@ export default function SignupScreen() {
       if (data.session) {
         if (__DEV__) console.log("SIGNUP: success, session", data.session.user?.id);
         track({ name: "signup_completed" });
-        router.replace(ROUTES.TABS as never);
+        router.replace(ROUTES.CREATE_PROFILE as never);
         return;
       }
 
@@ -114,7 +114,7 @@ export default function SignupScreen() {
 
       if (signInData.session) {
         track({ name: "signup_completed" });
-        router.replace(ROUTES.TABS as never);
+        router.replace(ROUTES.CREATE_PROFILE as never);
       } else {
         router.replace(ROUTES.AUTH_LOGIN as never);
       }

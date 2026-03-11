@@ -28,7 +28,8 @@ export type AnalyticsEvent =
   | { name: "comeback_mode_started" }
   | { name: "comeback_day_secured" }
   | { name: "milestone_unlocked"; streak: number }
-  | { name: "invite_shared"; challengeId?: string; source: "challenge_detail" | "milestone_modal" };
+  | { name: "invite_shared"; challengeId?: string; source: "challenge_detail" | "milestone_modal" }
+  | { name: "follow_suggested_click"; username?: string };
 
 export type UserProperties = {
   days_since_signup?: number;

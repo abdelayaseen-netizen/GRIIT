@@ -42,6 +42,7 @@ import { FLAGS } from "@/lib/feature-flags";
 import type { ThemeColors } from "@/lib/theme-palettes";
 import { COPY } from "@/lib/constants/copy";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SuggestedFollows } from "@/components/SuggestedFollows";
 
 function createActivityStyles(c: ThemeColors) {
   return StyleSheet.create({
@@ -664,14 +665,14 @@ export default function ActivityScreen() {
           <Text style={[styles.filterPillText, feedFilter === "global" && styles.filterPillTextActive]}>Global</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterPill, styles.filterPillDisabled]}
-          onPress={() => Alert.alert("Coming in the next update", "Friends filter will show only your accountability partners.")}
+          style={[styles.filterPill, feedFilter === "friends" && styles.filterPillActive]}
+          onPress={() => setFeedFilter("friends")}
           accessibilityLabel="Show friends activity"
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <Users size={14} color={colors.text.muted} />
-          <Text style={styles.filterPillTextDisabled}>Friends</Text>
+          <Users size={14} color={feedFilter === "friends" ? "#fff" : colors.text.secondary} />
+          <Text style={[styles.filterPillText, feedFilter === "friends" && styles.filterPillTextActive]}>Friends</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterPill, styles.filterPillDisabled]}
@@ -696,6 +697,23 @@ export default function ActivityScreen() {
         <View style={styles.dailyStatsWrap}>
           <DailyStatsCard securedToday={leaderboard.totalSecuredToday} styles={styles} />
         </View>
+        {feedFilter === "friends" && (
+          <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+            <SuggestedFollows
+              title="Find people to follow"
+              users={leaderboard.entries.map((e) => ({
+                userId: e.userId,
+                username: e.username,
+                displayName: e.displayName,
+                avatarUrl: e.avatar || null,
+                currentStreak: e.streak,
+                securedDaysThisWeek: e.score,
+              }))}
+              currentUserId={currentUserId}
+              onUserPress={(u) => router.push(ROUTES.PROFILE_USERNAME(u.username) as never)}
+            />
+          </View>
+        )}
         <View style={styles.topThisWeekSection}>
           <View style={styles.sectionHeaderRow}>
             <TrendingUp size={16} color={colors.accent} />

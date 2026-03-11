@@ -1,3 +1,12 @@
+/**
+ * Onboarding — POST-SIGNUP (required).
+ * Shown after create-profile when onboarding_completed is false. 7 steps: Welcome,
+ * How heard, Notifications, Goal, Time, Pick challenge, Done. Persists to Supabase
+ * via profiles.update (onboarding_completed, onboarding_answers, primary_goal,
+ * daily_time_budget, starter_challenge_id) and calls starters.join for the chosen
+ * starter. This is the canonical place where onboarding_completed is set to true.
+ * See onboarding-questions.tsx for the optional pre-signup flow (AsyncStorage only).
+ */
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
@@ -10,25 +19,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
+import * as Notifications from "expo-notifications";
 import { colors, spacing, radius } from "@/src/theme/tokens";
 import { trpcMutate } from "@/lib/trpc";
 import { saveJoinedStarterId, setDay1StartedAt } from "@/lib/starter-join";
 import { filterOnboardingStarters, type OnboardingStarter } from "@/lib/onboarding-starters";
 import { track } from "@/lib/analytics";
 
+const HOW_HEARD_OPTIONS = ["Friend", "Social media", "App Store", "YouTube", "Podcast", "Other"];
+const NOTIFICATION_OPTIONS = ["Daily", "Weekly", "Don't remind me"];
 const GOAL_OPTIONS = ["Fitness", "Mind", "Faith", "Discipline", "Other"];
 const TIME_OPTIONS = ["3 min", "10 min", "20+ min"];
+const TOTAL_STEPS = 7;
 
-function OnboardingStep4Transition({ onContinue }: { onContinue: () => void }) {
+function OnboardingDoneStep({ onContinue }: { onContinue: () => void }) {
   const doneRef = useRef(false);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (doneRef.current) return;
-      doneRef.current = true;
-      onContinue();
-    }, 2000);
-    return () => clearTimeout(t);
-  }, [onContinue]);
   const handlePress = useCallback(() => {
     if (doneRef.current) return;
     doneRef.current = true;
@@ -37,9 +42,10 @@ function OnboardingStep4Transition({ onContinue }: { onContinue: () => void }) {
   }, [onContinue]);
   return (
     <>
-      <Text style={s.title}>Your challenge is set. Time for your first win.</Text>
+      <Text style={s.title}>You{"'"}re all set! 🎉</Text>
+      <Text style={s.subtitle}>Your first challenge is ready. Secure your day.</Text>
       <TouchableOpacity style={[s.primaryBtn, s.primaryBtnMargin]} onPress={handlePress} activeOpacity={0.85}>
-        <Text style={s.primaryBtnText}>Continue</Text>
+        <Text style={s.primaryBtnText}>Let{"'"}s go</Text>
       </TouchableOpacity>
     </>
   );
@@ -52,6 +58,8 @@ export default function OnboardingScreen() {
   useEffect(() => {
     if (params.step === "4") setStep(4);
   }, [params.step]);
+  const [howHeard, setHowHeard] = useState("");
+  const [notificationPreference, setNotificationPreference] = useState("");
   const [primaryGoal, setPrimaryGoal] = useState("");
   const [dailyTimeBudget, setDailyTimeBudget] = useState("");
   const [selectedStarter, setSelectedStarter] = useState<OnboardingStarter | null>(null);
@@ -59,7 +67,10 @@ export default function OnboardingScreen() {
   const [joinResult, setJoinResult] = useState<{ activeChallengeId: string; taskId: string; challengeId: string } | null>(null);
 
   const goToDay1QuickWin = useCallback(() => {
-    if (!joinResult || !selectedStarter) return;
+    if (!joinResult || !selectedStarter) {
+      router.replace("/(tabs)" as never);
+      return;
+    }
     router.replace({
       pathname: "/day1-quick-win",
       params: {
@@ -76,11 +87,53 @@ export default function OnboardingScreen() {
     } as never);
   }, [joinResult, selectedStarter, primaryGoal, dailyTimeBudget, router]);
 
+  const requestNotificationPermission = useCallback(async () => {
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (__DEV__) console.log("[Onboarding] notification permission:", status);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleNextStep1 = useCallback(() => {
+    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    track({ name: "onboarding_step_completed", step: 1, total: TOTAL_STEPS });
+    setStep(2);
+  }, []);
+
+  const handleNextStep2 = useCallback(() => {
+    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    track({ name: "onboarding_step_completed", step: 2, total: TOTAL_STEPS });
+    setStep(3);
+  }, []);
+
   const handleNextStep3 = useCallback(async () => {
+    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await requestNotificationPermission();
+    track({ name: "onboarding_step_completed", step: 3, total: TOTAL_STEPS });
+    setStep(4);
+  }, [requestNotificationPermission]);
+
+  const handleNextStep4 = useCallback(() => {
+    if (!primaryGoal) return;
+    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    track({ name: "onboarding_step_completed", step: 4, total: TOTAL_STEPS });
+    setStep(5);
+  }, [primaryGoal]);
+
+  const handleNextStep5 = useCallback(() => {
+    if (!dailyTimeBudget) return;
+    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    track({ name: "onboarding_step_completed", step: 5, total: TOTAL_STEPS });
+    setStep(6);
+  }, [dailyTimeBudget]);
+
+  const handleNextStep6 = useCallback(async () => {
     if (!selectedStarter || submitting) return;
     setSubmitting(true);
     if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    track({ name: "onboarding_step_completed", step: 3, total: 4 });
+    track({ name: "onboarding_step_completed", step: 6, total: TOTAL_STEPS });
     try {
       track({ name: "starter_challenge_selected", challengeId: selectedStarter.id });
       const result = await trpcMutate("starters.join", { starterId: selectedStarter.id }) as { activeChallengeId: string; taskId: string; challengeId: string };
@@ -88,48 +141,100 @@ export default function OnboardingScreen() {
       await trpcMutate("profiles.update", {
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString(),
+        onboarding_answers: {
+          how_heard: howHeard || undefined,
+          notification_preference: notificationPreference || undefined,
+          primary_goal: primaryGoal || undefined,
+          daily_time_budget: dailyTimeBudget || undefined,
+        },
         primary_goal: primaryGoal || undefined,
         daily_time_budget: dailyTimeBudget || undefined,
         starter_challenge_id: selectedStarter.id,
       });
-      track({ name: "onboarding_step_completed", step: 4, total: 4 });
+      track({ name: "onboarding_step_completed", step: 7, total: TOTAL_STEPS });
       await setDay1StartedAt();
       setJoinResult(result);
-      setStep(4);
+      setStep(7);
     } catch (e: unknown) {
       Alert.alert("Error", e instanceof Error ? e.message : "Something went wrong. Try again.");
     } finally {
       setSubmitting(false);
     }
-  }, [selectedStarter, primaryGoal, dailyTimeBudget, submitting]);
+  }, [selectedStarter, primaryGoal, dailyTimeBudget, howHeard, notificationPreference, submitting]);
 
   const starters = filterOnboardingStarters(primaryGoal, dailyTimeBudget);
-
-  const handleNextStep1 = useCallback(() => {
-    if (!primaryGoal) return;
-    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    track({ name: "onboarding_step_completed", step: 1, total: 3 });
-    setStep(2);
-  }, [primaryGoal]);
-
-  const handleNextStep2 = useCallback(() => {
-    if (!dailyTimeBudget) return;
-    if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    track({ name: "onboarding_step_completed", step: 2, total: 3 });
-    setStep(3);
-  }, [dailyTimeBudget]);
 
   return (
     <SafeAreaView style={s.container} edges={["top", "bottom"]}>
       <View style={s.progressRow}>
         <View style={s.progressDots}>
-          {[1, 2, 3, 4].map((i) => (
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((i) => (
             <View key={i} style={[s.progressDot, i === step && s.progressDotActive]} />
           ))}
         </View>
       </View>
 
       {step === 1 && (
+        <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={s.title}>Welcome to GRIIT</Text>
+          <Text style={s.subtitle}>Build discipline, one day at a time.</Text>
+          <TouchableOpacity style={s.primaryBtn} onPress={handleNextStep1} activeOpacity={0.85}>
+            <Text style={s.primaryBtnText}>Let{"'"}s set you up</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
+      {step === 2 && (
+        <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={s.title}>How did you hear about us?</Text>
+          <Text style={s.subtitle}>Optional — helps us improve.</Text>
+          <View style={s.chipRow}>
+            {HOW_HEARD_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt}
+                style={[s.chip, howHeard === opt && s.chipActive]}
+                onPress={() => {
+                  setHowHeard(opt);
+                  if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={[s.chipText, howHeard === opt && s.chipTextActive]}>{opt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity style={s.primaryBtn} onPress={handleNextStep2} activeOpacity={0.85}>
+            <Text style={s.primaryBtnText}>Next</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
+      {step === 3 && (
+        <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={s.title}>How would you like to be reminded?</Text>
+          <Text style={s.subtitle}>We{"'"}ll ask for notification permission.</Text>
+          <View style={s.chipRow}>
+            {NOTIFICATION_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt}
+                style={[s.chip, notificationPreference === opt && s.chipActive]}
+                onPress={() => {
+                  setNotificationPreference(opt);
+                  if (typeof Haptics?.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={[s.chipText, notificationPreference === opt && s.chipTextActive]}>{opt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity style={s.primaryBtn} onPress={handleNextStep3} activeOpacity={0.85}>
+            <Text style={s.primaryBtnText}>Next</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
+      {step === 4 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={s.title}>What drives you?</Text>
           <Text style={s.subtitle}>No one{"'"}s coming to save you. You have to do it yourself.</Text>
@@ -150,7 +255,7 @@ export default function OnboardingScreen() {
           </View>
           <TouchableOpacity
             style={[s.primaryBtn, !primaryGoal && s.primaryBtnDisabled]}
-            onPress={handleNextStep1}
+            onPress={handleNextStep4}
             disabled={!primaryGoal}
             activeOpacity={0.85}
           >
@@ -159,7 +264,7 @@ export default function OnboardingScreen() {
         </ScrollView>
       )}
 
-      {step === 2 && (
+      {step === 5 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={s.title}>How much time do you have?</Text>
           <Text style={s.subtitle}>Even 3 minutes of discipline beats zero.</Text>
@@ -180,7 +285,7 @@ export default function OnboardingScreen() {
           </View>
           <TouchableOpacity
             style={[s.primaryBtn, !dailyTimeBudget && s.primaryBtnDisabled]}
-            onPress={handleNextStep2}
+            onPress={handleNextStep5}
             disabled={!dailyTimeBudget}
             activeOpacity={0.85}
           >
@@ -189,7 +294,7 @@ export default function OnboardingScreen() {
         </ScrollView>
       )}
 
-      {step === 3 && (
+      {step === 6 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={s.title}>Pick your first challenge</Text>
           <Text style={s.subtitle}>This is Day 1. Pick one and commit.</Text>
@@ -212,7 +317,7 @@ export default function OnboardingScreen() {
           </View>
           <TouchableOpacity
             style={[s.primaryBtn, !selectedStarter && s.primaryBtnDisabled]}
-            onPress={handleNextStep3}
+            onPress={handleNextStep6}
             disabled={!selectedStarter}
             activeOpacity={0.85}
           >
@@ -221,9 +326,9 @@ export default function OnboardingScreen() {
         </ScrollView>
       )}
 
-      {step === 4 && (
+      {step === 7 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          <OnboardingStep4Transition onContinue={goToDay1QuickWin} />
+          <OnboardingDoneStep onContinue={goToDay1QuickWin} />
         </ScrollView>
       )}
     </SafeAreaView>

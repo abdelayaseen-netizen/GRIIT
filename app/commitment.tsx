@@ -67,7 +67,9 @@ export default function CommitmentScreen() {
     }
     try {
       if (isStarter) {
+        await trpcMutate("starters.join", { starterId: challengeId });
         await saveJoinedStarterId(challengeId);
+        await refetchAll();
         if (Platform.OS !== "web") {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }

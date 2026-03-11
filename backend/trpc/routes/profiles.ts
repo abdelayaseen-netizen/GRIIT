@@ -12,6 +12,7 @@ const PROFILE_UPDATE_KEYS = [
   "onboarding_completed", "onboarding_completed_at", "onboarding_answers",
   "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
+  "profile_visibility",
 ] as const;
 
 type SubscriptionStatus = "free" | "premium" | "trial";
@@ -197,6 +198,7 @@ export const profilesRouter = createTRPCRouter({
       starter_challenge_id: z.string().max(64).optional(),
       preferred_secure_time: z.string().max(16).optional(),
       onboarding_answers: z.record(z.string(), z.unknown()).optional(),
+      profile_visibility: z.enum(["public", "friends", "private"]).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const updatePayload: Record<string, unknown> = {};
