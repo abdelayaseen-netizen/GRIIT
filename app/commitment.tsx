@@ -12,8 +12,7 @@ import {
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Shield, X, Check } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { Shield, X } from "lucide-react-native";
 import { useApp } from "@/contexts/AppContext";
 import { trpcMutate } from "@/lib/trpc";
 import { inviteToChallenge } from "@/lib/share";
@@ -30,7 +29,6 @@ export default function CommitmentScreen() {
   }>();
   const { refetchAll } = useApp();
   const [joining, setJoining] = useState(false);
-  const [understood, setUnderstood] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -132,15 +130,17 @@ export default function CommitmentScreen() {
             style={styles.closeButton}
             onPress={handleCancel}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityLabel="Close"
+            accessibilityRole="button"
           >
-            <X size={22} color={Colors.text.tertiary} />
+            <X size={22} color="#666666" />
           </TouchableOpacity>
 
           <View style={styles.iconContainer}>
-            <Shield size={32} color={isHardMode ? "#E87D4F" : Colors.text.primary} strokeWidth={2} />
+            <Shield size={28} color="#ED7E4C" strokeWidth={2} />
           </View>
 
-          <Text style={styles.header}>challenge.</Text>
+          <Text style={styles.header}>You are committing to this challenge.</Text>
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
@@ -167,34 +167,15 @@ export default function CommitmentScreen() {
 
           {isHardMode && (
             <View style={styles.warningCard}>
-              <Text style={styles.warningText}>⚠️ One missed day resets progress to Day 1.</Text>
+              <Text style={styles.warningText}>One missed day resets progress.</Text>
             </View>
           )}
 
           <TouchableOpacity
-            style={[styles.checkboxRow]}
-            onPress={() => setUnderstood((u) => !u)}
-            activeOpacity={0.8}
-            accessibilityLabel="I understand the rules"
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: understood }}
-          >
-            <View style={[styles.checkbox, understood && styles.checkboxChecked]}>
-              {understood ? <Check size={14} color="#fff" strokeWidth={3} /> : null}
-            </View>
-            <Text style={styles.checkboxLabel}>I understand the rules and reset conditions.</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.confirmButton,
-              { backgroundColor: Colors.accent },
-              isHardMode && !understood && styles.confirmButtonFaded,
-              joining && styles.confirmButtonDisabled,
-            ]}
+            style={[styles.confirmButton, joining && styles.confirmButtonDisabled]}
             onPress={handleConfirm}
             activeOpacity={0.85}
-            disabled={joining || (isHardMode && !understood)}
+            disabled={joining}
             accessibilityLabel="Confirm commitment to join"
             accessibilityRole="button"
           >
@@ -214,6 +195,8 @@ export default function CommitmentScreen() {
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
+
+          <View style={styles.bottomHandle} />
         </Animated.View>
       </SafeAreaView>
     </View>
@@ -233,43 +216,43 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   content: {
-    backgroundColor: Colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingTop: 18,
+    paddingBottom: 24,
   },
   closeButton: {
     alignSelf: "flex-end",
-    padding: 4,
+    padding: 8,
+    marginBottom: 4,
   },
   iconContainer: {
     alignSelf: "center",
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.pill,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#EEEEEE",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   header: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: "#333333",
     textAlign: "center",
     marginBottom: 28,
-    letterSpacing: -0.5,
-    lineHeight: 30,
+    lineHeight: 26,
+    paddingHorizontal: 8,
   },
   detailsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
   detailRow: {
     flexDirection: "row",
@@ -277,91 +260,71 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   detailLabel: {
-    fontSize: 15,
-    fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    fontSize: 16,
+    fontWeight: "400" as const,
+    color: "#666666",
   },
   detailValue: {
-    fontSize: 15,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
+    fontSize: 16,
+    fontWeight: "500" as const,
+    color: "#333333",
     textAlign: "right",
     flex: 1,
     marginLeft: 16,
   },
   hardModeText: {
-    color: Colors.accent,
-  },
-  checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    gap: 12,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxChecked: {
-    backgroundColor: Colors.text.primary,
-    borderColor: Colors.text.primary,
-  },
-  checkboxLabel: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: "#ED7E4C",
+    fontWeight: "600" as const,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: "#DDDDDD",
     marginVertical: 16,
   },
   warningCard: {
-    backgroundColor: "rgba(232,125,79,0.08)",
+    backgroundColor: "#FDF0EA",
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "rgba(232,125,79,0.2)",
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    marginBottom: 24,
   },
   warningText: {
-    fontSize: 14,
-    fontWeight: "600" as const,
-    color: "#C86A3A",
+    fontSize: 15,
+    fontWeight: "500" as const,
+    color: "#ED7E4C",
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 22,
   },
   confirmButton: {
-    borderRadius: 12,
+    backgroundColor: "#ED7E4C",
+    borderRadius: 14,
     paddingVertical: 18,
     alignItems: "center",
-    marginBottom: 10,
-  },
-  confirmButtonFaded: {
-    opacity: 0.5,
+    marginBottom: 12,
   },
   confirmButtonDisabled: {
     opacity: 0.7,
   },
   confirmButtonText: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "700" as const,
-    color: "#fff",
-    letterSpacing: 0.2,
+    color: "#FFFFFF",
   },
   cancelButton: {
     paddingVertical: 14,
     alignItems: "center",
   },
   cancelButtonText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: "#666666",
+  },
+  bottomHandle: {
+    alignSelf: "center",
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#CCCCCC",
+    marginTop: 16,
   },
 });

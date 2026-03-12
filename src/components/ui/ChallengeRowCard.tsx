@@ -62,7 +62,7 @@ function ChallengeRowCardInner(props: {
         <Text style={s.desc} numberOfLines={1}>{description}</Text>
         <View style={s.meta}>
           <Text style={s.metaLeft}>
-            {durationLabel} · {taskCount} tasks
+            {durationLabel} • {taskCount} tasks
           </Text>
           {participantsCount > 0 && (
             <Text style={s.metaRight}>{formatCount(participantsCount)} joined</Text>

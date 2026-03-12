@@ -209,7 +209,6 @@ export default function DiscoverScreen() {
     queryKey: ["discover", "starterPack"],
     queryFn: async () => {
       const data = (await trpcQuery("challenges.getStarterPack")) as unknown[];
-      if (__DEV__) console.log("[Discover] getStarterPack result length:", Array.isArray(data) ? data.length : "non-array", data);
       return data;
     },
     staleTime: 5 * 60 * 1000,
@@ -295,19 +294,22 @@ export default function DiscoverScreen() {
       .filter((c) => matchesSearch(c, searchQuery));
   }, [allChallenges, activeCategory, searchQuery]);
 
-  const featuredChallenges = useMemo(() => {
+  const nonDailyChallenges = useMemo(() => {
     return allChallenges
-      .filter((c) => !c.is_daily && c.is_featured)
+      .filter((c) => !c.is_daily)
       .filter((c) => matchesCategory(c, activeCategory))
       .filter((c) => matchesSearch(c, searchQuery));
   }, [allChallenges, activeCategory, searchQuery]);
 
-  const otherChallenges = useMemo(() => {
-    return allChallenges
-      .filter((c) => !c.is_daily && !c.is_featured)
-      .filter((c) => matchesCategory(c, activeCategory))
-      .filter((c) => matchesSearch(c, searchQuery));
-  }, [allChallenges, activeCategory, searchQuery]);
+  const FEATURED_SECTION_SIZE = 5;
+  const featuredChallenges = useMemo(
+    () => nonDailyChallenges.slice(0, FEATURED_SECTION_SIZE),
+    [nonDailyChallenges]
+  );
+  const otherChallenges = useMemo(
+    () => nonDailyChallenges.slice(FEATURED_SECTION_SIZE),
+    [nonDailyChallenges]
+  );
 
   const totalVisible = dailyChallenges.length + featuredChallenges.length + otherChallenges.length;
 
@@ -470,7 +472,7 @@ export default function DiscoverScreen() {
             <SectionHeader
               title="Starter Pack"
               icon={<Shield size={18} color={tokenColors.accentOrange} />}
-              caption="Join in 2 taps · Easy"
+              caption="Join in 2 taps • Easy"
             />
             <View style={styles.compactList}>
               {(starterPack as FeaturedChallengeRaw[]).map((c) => (

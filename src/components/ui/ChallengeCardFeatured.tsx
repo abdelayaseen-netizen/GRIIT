@@ -1,13 +1,13 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Calendar, BookOpen, Users, ChevronRight, Sparkles } from "lucide-react-native";
+import { Calendar, BookOpen, Users, ChevronRight } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Easy: { bg: t.colors.badgeGreenBg, text: t.colors.badgeGreenText },
-  Medium: { bg: t.colors.badgeOrangeBg, text: t.colors.badgeOrangeText },
-  Hard: { bg: t.colors.badgeRedBg, text: t.colors.badgeRedText },
+  Medium: { bg: t.colors.badgeYellowGreenBg, text: t.colors.badgeYellowGreenText },
+  Hard: { bg: t.colors.badgeOrangeBg, text: t.colors.badgeOrangeText },
   Extreme: { bg: t.colors.badgeRedBg, text: t.colors.badgeRedText },
 };
 
@@ -49,9 +49,8 @@ function ChallengeCardFeaturedInner(props: {
       <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.topRow}>
-          <View style={[s.featuredBadge, { backgroundColor: t.colors.badgeOrangeBg }]}>
-            <Sparkles size={11} color={t.colors.accentOrange} />
-            <Text style={[s.featuredBadgeText, { color: t.colors.accentOrange }]}>FEATURED</Text>
+          <View style={[s.featuredBadge, { backgroundColor: "#FFF5F0" }]}>
+            <Text style={[s.featuredBadgeText, { color: t.colors.accentOrange }]}>🔥 FEATURED</Text>
           </View>
           <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
             <Text style={[s.diffText, { color: diff.text }]}>{difficulty.toUpperCase()}</Text>
@@ -132,14 +131,14 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    paddingHorizontal: 9,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   featuredBadgeText: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.6,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
   diffPill: {
     paddingHorizontal: 10,
@@ -172,13 +171,13 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: "#F3F4F6",
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   taskChipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "500",
     color: t.colors.textSecondary,
     maxWidth: 120,
@@ -215,14 +214,14 @@ const s = StyleSheet.create({
     backgroundColor: t.colors.textSecondary,
   },
   activeToday: {
-    fontSize: t.typography.metaRow.fontSize,
-    fontWeight: t.typography.metaRow.fontWeight,
-    color: t.colors.successGreenText,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#2D8B4E",
   },
   arrowWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: t.radius.iconButton,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: t.colors.chipFill,
     alignItems: "center",
     justifyContent: "center",

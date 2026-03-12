@@ -101,7 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       initSubscription(user.id).catch((err: unknown) => {
         if (__DEV__) {
           const msg = err instanceof Error ? err.message : String(err);
-          console.warn("[AppContext] initSubscription failed:", msg);
+          if (__DEV__) console.warn("[AppContext] initSubscription failed:", msg);
         }
       });
     } catch {

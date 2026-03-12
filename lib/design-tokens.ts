@@ -1,12 +1,12 @@
 /**
- * Reference design tokens from cursor-prompt-complete-frontend-ui.md.
- * Use for pixel-accurate card radius, shadows, spacing.
+ * Global design system: colors, typography, card styling, spacing.
+ * Use for pixel-accurate card radius, shadows, spacing across all screens.
  */
 
 export const designTokens = {
   /** Card border radius on all cards */
   cardRadius: 16,
-  /** Subtle card shadow per reference */
+  /** Subtle card shadow — no heavy/bubbly look */
   cardShadow: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -14,21 +14,42 @@ export const designTokens = {
     shadowRadius: 4,
     elevation: 1,
   },
+  /** Card border: 1px warm gray */
+  cardBorderWidth: 1,
+  cardBorderColor: "#F0EDE8",
   /** Header pill badges (score, streak): height and radius */
   pillHeight: 36,
   pillBorderRadius: 20,
-  /** Border for pills/cards where reference uses #E0DDD8 */
   pillBorderColor: "#E0DDD8",
   /** Screen horizontal padding */
-  screenPaddingH: 16,
+  screenPaddingH: 20,
   /** Between sections */
   sectionGap: 24,
+  sectionGapLarge: 32,
   /** Between cards */
   cardGap: 12,
-  /** App title letter-spacing */
+  cardGapLarge: 16,
+  /** Typography */
+  screenTitleSize: 28,
+  screenTitleWeight: "800" as const,
+  sectionHeaderSize: 20,
+  sectionHeaderWeight: "700" as const,
+  cardTitleSize: 20,
+  bodySize: 15,
+  bodyWeight: "400" as const,
+  descriptionSize: 14,
+  smallLabelSize: 12,
+  smallLabelWeight: "500" as const,
+  statNumberSize: 28,
+  statLabelSize: 11,
+  statLabelWeight: "600" as const,
+  buttonTextSize: 16,
+  buttonTextWeight: "600" as const,
+  /** App title */
   logoLetterSpacing: 6,
-  /** App title font size */
   logoFontSize: 28,
-  /** Subtitle under logo */
   logoSubtitleFontSize: 13,
+  /** CTA button height */
+  ctaButtonHeight: 52,
+  ctaBorderRadius: 16,
 } as const;

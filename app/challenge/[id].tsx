@@ -31,7 +31,6 @@ import {
   Shield,
   ChevronLeft,
   MoreHorizontal,
-  Share2,
   TrendingUp,
   Clock,
   Users,
@@ -223,9 +222,16 @@ function CountdownTimer({ endsAt, theme }: { endsAt: string; theme: DifficultyTh
   );
 }
 
-function InfoChip({ label, theme }: { label: string; theme: DifficultyTheme }) {
+function InfoChip({ label, theme, dark }: { label: string; theme: DifficultyTheme; dark?: boolean }) {
   return (
-    <View style={[s.infoChip, { borderColor: theme.chipBorder, backgroundColor: "rgba(255,255,255,0.12)" }]}>
+    <View
+      style={[
+        s.infoChip,
+        dark
+          ? { borderColor: "rgba(255,255,255,0.25)", backgroundColor: "#2D2D2D" }
+          : { borderColor: theme.chipBorder, backgroundColor: "rgba(255,255,255,0.12)" },
+      ]}
+    >
       <Text style={s.infoChipText}>{label}</Text>
     </View>
   );
@@ -295,13 +301,21 @@ function MissionRow({
     challengeTimezone: null,
   }) : null;
 
+  const iconBg = isCompleted
+    ? Colors.successLight
+    : isJournal
+    ? "#F5ECFF"
+    : task.type === "run"
+    ? "#FFEFEB"
+    : theme.missionIconBg;
+  const iconColor = isCompleted ? Colors.success : isJournal ? "#8E44AD" : task.type === "run" ? "#FF6B35" : theme.accent;
   return (
     <View style={[s.missionRow, !isLast && s.missionRowBorder]}>
-      <View style={[s.missionIcon, { backgroundColor: isCompleted ? Colors.successLight : isJournal ? "rgba(99,102,241,0.10)" : theme.missionIconBg }]}>
+      <View style={[s.missionIcon, { backgroundColor: iconBg }]}>
         {isCompleted ? (
           <Check size={16} color={Colors.success} />
         ) : (
-          <IconComp size={16} color={isJournal ? "#6366F1" : theme.accent} />
+          <IconComp size={16} color={iconColor} />
         )}
       </View>
       <View style={s.missionContent}>
@@ -390,8 +404,8 @@ function MissionRow({
           accessibilityLabel={`Start ${task.title ?? "task"}`}
           accessibilityRole="button"
         >
-          <Text style={[s.startActionText, { color: isJournal ? "#6366F1" : theme.accent }]}>Start</Text>
-          <ChevronRight size={14} color={isJournal ? "#6366F1" : theme.accent} />
+          <Text style={[s.startActionText, { color: isJournal ? "#6B8BFF" : theme.accent }]}>Start</Text>
+          <ChevronRight size={14} color={isJournal ? "#6B8BFF" : theme.accent} />
         </TouchableOpacity>
       )}
     </View>
@@ -748,7 +762,12 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const headerGradientColors = isDaily ? ["#2D6B4E", "#1A4A35"] as const : ["#1A1A1A", "#2D2D2D"] as const;
+  const isDarkHeader = !isDaily && (difficulty === "extreme" || difficulty === "hard");
+  const headerGradientColors = isDaily
+    ? (["#2D6B4E", "#1A4A35"] as const)
+    : isDarkHeader
+    ? (["#1A1A1A", "#141414"] as const)
+    : ([theme.headerBg, theme.headerGradientEnd] as const);
   const ctaBgColor = isDaily && !expired ? themeColors.success : theme.ctaBg;
   const countdownTheme = isDaily ? { ...theme, accent: themeColors.success } : theme;
 
@@ -804,34 +823,27 @@ export default function ChallengeDetailScreen() {
                   activeOpacity={0.7}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   onPress={() => {
-                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    import("@/lib/share").then(({ shareChallenge }) =>
-                      shareChallenge(
-                        {
-                          name: challenge.title,
-                          duration: challenge.duration_days ?? 0,
-                          id: id ?? "",
-                          tasksPerDay: challenge.tasks?.length,
-                        },
-                        currentUserId
-                      )
-                    ).catch((err) => {
-                    if (__DEV__) console.warn("[challenge] share failed:", err instanceof Error ? err.message : err);
-                  });
-                  }}
-                  accessible
-                  accessibilityLabel="Share this challenge"
-                  accessibilityRole="button"
-                >
-                  <Share2 size={18} color="#FFFFFF" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[s.morePill, { marginLeft: 8 }]}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  onPress={() => {
                     Alert.alert("Challenge", undefined, [
                       { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Share",
+                        onPress: () => {
+                          if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          import("@/lib/share").then(({ shareChallenge }) =>
+                            shareChallenge(
+                              {
+                                name: challenge.title,
+                                duration: challenge.duration_days ?? 0,
+                                id: id ?? "",
+                                tasksPerDay: challenge.tasks?.length,
+                              },
+                              currentUserId
+                            )
+                          ).catch((err) => {
+                            if (__DEV__) console.warn("[challenge] share failed:", err instanceof Error ? err.message : err);
+                          });
+                        },
+                      },
                       {
                         text: "Invite friends",
                         onPress: () => {
@@ -848,7 +860,7 @@ export default function ChallengeDetailScreen() {
                   accessibilityLabel="Challenge options"
                   accessibilityRole="button"
                 >
-                  <MoreHorizontal size={18} color="#FFFFFF" />
+                  <MoreHorizontal size={20} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
 
@@ -868,20 +880,20 @@ export default function ChallengeDetailScreen() {
 
                 {/* Info Chips */}
                 <View style={s.chipRow}>
-                  <InfoChip label={durationLabel} theme={theme} />
+                  <InfoChip label={durationLabel} theme={theme} dark={isDarkHeader} />
                   {isJoined && !isDaily && (
                     <>
-                      <InfoChip label={`${userStreak}-day streak`} theme={theme} />
-                      <InfoChip label={`Day ${userCurrentDay} / ${challenge.duration_days}`} theme={theme} />
+                      <InfoChip label={`${userStreak}-day streak`} theme={theme} dark={isDarkHeader} />
+                      <InfoChip label={`Day ${userCurrentDay} / ${challenge.duration_days}`} theme={theme} dark={isDarkHeader} />
                     </>
                   )}
                   {difficulty === "hard" || difficulty === "extreme" ? (
-                    <InfoChip label={`${difficultyLabel} Mode`} theme={theme} />
+                    <InfoChip label={`${difficultyLabel} Mode`} theme={theme} dark={isDarkHeader} />
                   ) : (
-                    <InfoChip label={difficultyLabel} theme={theme} />
+                    <InfoChip label={difficultyLabel} theme={theme} dark={isDarkHeader} />
                   )}
                   {visibilityLabel && (
-                    <View style={[s.infoChip, s.visibilityChip, { borderColor: theme.chipBorder }]}>
+                    <View style={[s.infoChip, s.visibilityChip, { borderColor: isDarkHeader ? "rgba(255,255,255,0.25)" : theme.chipBorder, backgroundColor: isDarkHeader ? "#2D2D2D" : undefined }]}>
                       {visibilityIcon}
                       <Text style={s.infoChipText}>{visibilityLabel}</Text>
                     </View>
@@ -1000,44 +1012,44 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Social Proof */}
-            <View style={s.socialSection}>
-              <SocialAvatars />
-              <View style={s.socialTextWrap}>
-                <Text style={s.socialPrimary}>
-                  {formatCount(challenge.participants_count ?? 0)} in this challenge
-                </Text>
-                {(challenge.active_today_count ?? 0) > 0 && (
-                  <Text style={s.socialSecondary}>
-                    {formatCount(challenge.active_today_count ?? 0)} active today
+            {/* Participant + Stats: one card (matches reference layout) */}
+            <View style={s.participantStatsCard}>
+              <View style={s.socialRow}>
+                <SocialAvatars />
+                <View style={s.socialTextWrap}>
+                  <Text style={s.socialPrimary}>
+                    {formatCount(challenge.participants_count ?? 0)} in this challenge
                   </Text>
-                )}
+                  {(challenge.active_today_count ?? 0) > 0 && (
+                    <Text style={s.socialSecondary}>
+                      {formatCount(challenge.active_today_count ?? 0)} active today
+                    </Text>
+                  )}
+                </View>
               </View>
+              {(challenge.hard_pick_rate != null || challenge.completion_rate != null) && (
+                <View style={s.statsRowInner}>
+                  {challenge.hard_pick_rate != null && (
+                    <View style={s.statItem}>
+                      <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.hard_pick_rate}%</Text>
+                      <Text style={s.statLabel}>pick Hard Mode</Text>
+                    </View>
+                  )}
+                  {challenge.hard_finish_rate != null && (
+                    <View style={s.statItem}>
+                      <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.hard_finish_rate}%</Text>
+                      <Text style={s.statLabel}>finish Hard Mode</Text>
+                    </View>
+                  )}
+                  {challenge.completion_rate != null && !challenge.hard_pick_rate && (
+                    <View style={s.statItem}>
+                      <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.completion_rate}%</Text>
+                      <Text style={s.statLabel}>completion rate</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
-
-            {/* Stats Row */}
-            {(challenge.hard_pick_rate != null || challenge.completion_rate != null) && (
-              <View style={s.statsRow}>
-                {challenge.hard_pick_rate != null && (
-                  <View style={s.statItem}>
-                    <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.hard_pick_rate}%</Text>
-                    <Text style={s.statLabel}>pick Hard Mode</Text>
-                  </View>
-                )}
-                {challenge.hard_finish_rate != null && (
-                  <View style={s.statItem}>
-                    <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.hard_finish_rate}%</Text>
-                    <Text style={s.statLabel}>finish Hard Mode</Text>
-                  </View>
-                )}
-                {challenge.completion_rate != null && !challenge.hard_pick_rate && (
-                  <View style={s.statItem}>
-                    <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.completion_rate}%</Text>
-                    <Text style={s.statLabel}>completion rate</Text>
-                  </View>
-                )}
-              </View>
-            )}
 
             {/* Today's Missions (hidden when team failed or shared-goal-only) */}
             {!(isTeamChallenge && runStatus === "failed") && (
@@ -1096,11 +1108,11 @@ export default function ChallengeDetailScreen() {
                     const isWarning = rule.toLowerCase().includes("miss") || rule.toLowerCase().includes("fail") || rule.toLowerCase().includes("reset");
                     return (
                       <View key={i} style={[s.ruleRow, i < rules.length - 1 && s.ruleRowBorder]}>
-                        <View style={[s.ruleBullet, isWarning && { backgroundColor: "rgba(185,28,28,0.10)" }]}>
+                        <View style={[s.ruleBullet, isWarning && s.ruleBulletWarning]}>
                           {isWarning ? (
-                            <AlertTriangle size={12} color="#B91C1C" />
+                            <AlertTriangle size={12} color="#F44336" />
                           ) : (
-                            <Check size={12} color={theme.accent} />
+                            <Check size={12} color="#4CAF50" />
                           )}
                         </View>
                         <Text style={[s.ruleText, isWarning && s.ruleTextWarning]}>{rule}</Text>
@@ -1300,9 +1312,9 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   topNavTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600" as const,
-    color: "rgba(255,255,255,0.8)",
+    color: "#FFFFFF",
     letterSpacing: 0.3,
   },
   morePill: {
@@ -1516,20 +1528,27 @@ const s = StyleSheet.create({
     color: "#fff",
   },
 
-  socialSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    marginBottom: 16,
-    backgroundColor: "#FFFFFF",
+  participantStatsCard: {
+    backgroundColor: "#F8F8F8",
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
+    marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
+  },
+  socialRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  statsRowInner: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
   },
   avatarStack: {
     flexDirection: "row",
@@ -1548,33 +1567,23 @@ const s = StyleSheet.create({
   socialPrimary: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: "#333333",
     letterSpacing: -0.1,
   },
   socialSecondary: {
     fontSize: 13,
     fontWeight: "400" as const,
-    color: Colors.text.secondary,
+    color: "#888888",
     marginTop: 2,
   },
 
-  statsRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 20,
-  },
   statItem: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
+    backgroundColor: "#EDEDED",
+    borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 14,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   statNumber: {
     fontSize: 24,
@@ -1585,7 +1594,7 @@ const s = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: "#333333",
     textAlign: "center" as const,
   },
 
@@ -1593,15 +1602,15 @@ const s = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: "#333333",
     letterSpacing: -0.2,
     marginBottom: 12,
   },
   missionsCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
     overflow: "hidden" as const,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -1618,13 +1627,13 @@ const s = StyleSheet.create({
     gap: 14,
   },
   missionRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F0F0F0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
   missionIcon: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1637,7 +1646,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   journalPill: {
-    backgroundColor: "rgba(99,102,241,0.12)",
+    backgroundColor: "#D1C4E9",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -1645,7 +1654,7 @@ const s = StyleSheet.create({
   journalPillText: {
     fontSize: 10,
     fontWeight: "600" as const,
-    color: "#6366F1",
+    color: "#7E57C2",
   },
   timePill: {
     flexDirection: "row" as const,
@@ -1662,19 +1671,19 @@ const s = StyleSheet.create({
     color: "#0EA5E9",
   },
   missionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: "#333333",
     letterSpacing: -0.1,
   },
   missionTitleDone: {
-    color: Colors.text.tertiary,
+    color: "#888888",
     textDecorationLine: "line-through" as const,
   },
   missionMeta: {
     fontSize: 12,
     fontWeight: "400" as const,
-    color: Colors.text.tertiary,
+    color: "#888888",
     marginTop: 3,
   },
   missionMetaActive: {
@@ -1713,8 +1722,8 @@ const s = StyleSheet.create({
     marginBottom: 24,
   },
   rulesCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
     overflow: "hidden" as const,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -1730,25 +1739,28 @@ const s = StyleSheet.create({
     gap: 12,
   },
   ruleRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F0F0F0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
   ruleBullet: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     borderRadius: 8,
-    backgroundColor: "rgba(77,139,106,0.08)",
+    backgroundColor: "#E8F5E9",
     alignItems: "center",
     justifyContent: "center",
+  },
+  ruleBulletWarning: {
+    backgroundColor: "#FFEBEE",
   },
   ruleText: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: "#333333",
     flex: 1,
   },
   ruleTextWarning: {
-    color: "#B91C1C",
+    color: "#F44336",
     fontWeight: "600" as const,
   },
 
@@ -1758,7 +1770,7 @@ const s = StyleSheet.create({
   aboutText: {
     fontSize: 15,
     fontWeight: "400" as const,
-    color: Colors.text.secondary,
+    color: "#555555",
     lineHeight: 23,
     letterSpacing: -0.1,
   },
@@ -1827,7 +1839,7 @@ const s = StyleSheet.create({
   ctaMicro: {
     fontSize: 12,
     fontWeight: "400" as const,
-    color: Colors.text.tertiary,
+    color: "#AAAAAA",
     marginTop: 8,
   },
   disabledCta: {
