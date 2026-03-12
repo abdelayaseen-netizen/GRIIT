@@ -103,8 +103,6 @@ export const challengesRouter = createTRPCRouter({
         .select("*, challenge_tasks (*)", { count: "exact" })
         .eq("visibility", "PUBLIC")
         .eq("status", "published")
-        .order("is_featured", { ascending: false })
-        .order("participants_count", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);
 
@@ -146,7 +144,6 @@ export const challengesRouter = createTRPCRouter({
           title,
           description,
           duration_days,
-          difficulty,
           category,
           visibility,
           status,
@@ -330,7 +327,7 @@ export const challengesRouter = createTRPCRouter({
 
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from("challenges")
-        .select("id, participation_type, run_status, team_size")
+        .select("id")
         .eq("id", input.challengeId)
         .single();
 
@@ -338,10 +335,10 @@ export const challengesRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
       }
 
-      const participationType = (challenge as { participation_type?: string }).participation_type ?? "solo";
-      const runStatus = (challenge as { run_status?: string }).run_status;
-      const teamSize = (challenge as { team_size?: number }).team_size ?? 1;
-      const isTeamWaiting = (participationType === "team" || participationType === "shared_goal") && runStatus === "waiting";
+      const participationType = "solo" as "solo" | "team" | "shared_goal";
+      const runStatus: string | undefined = undefined;
+      const teamSize = 1;
+      const isTeamWaiting = false;
 
       if (isTeamWaiting) {
         const { data: existingMember } = await ctx.supabase
