@@ -96,14 +96,14 @@ async function trpcPreMiddleware(c: Context, next: () => Promise<void>) {
   const requestId = req.headers.get("x-request-id")?.trim() || crypto.randomUUID();
   const newHeaders = new Headers(req.headers);
   newHeaders.set("x-request-id", requestId);
-  // Replace request so downstream sees x-request-id (Hono req is mutable in practice)
   type RequestInitWithDuplex = RequestInit & { duplex?: "half" };
-  (c as unknown as { req: Request }).req = new Request(req.url, {
+  const requestWithId = new Request(req.url, {
     method: req.method,
     headers: newHeaders,
     body: req.body,
     ...(req.body != null && { duplex: "half" as const }),
   } as RequestInitWithDuplex);
+  c.set("request", requestWithId);
 
   const contentLength = req.headers.get("content-length");
   if (req.method === "POST" && contentLength) {
@@ -138,7 +138,8 @@ app.use(
   trpcServer({
     endpoint: "/api/trpc",
     router: appRouter,
-    createContext,
+    createContext: async (opts, c) =>
+      createContext({ req: (c?.get?.("request") as Request | undefined) ?? opts.req }),
   })
 );
 
@@ -148,7 +149,8 @@ app.use(
   trpcServer({
     endpoint: "/trpc",
     router: appRouter,
-    createContext,
+    createContext: async (opts, c) =>
+      createContext({ req: (c?.get?.("request") as Request | undefined) ?? opts.req }),
   })
 );
 
