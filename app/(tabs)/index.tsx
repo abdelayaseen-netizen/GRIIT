@@ -222,6 +222,9 @@ function TaskRow({
 
 export default function HomeScreen() {
   const router = useRouter();
+  const handleUserPress = useCallback((u: { username: string }) => {
+    router.push(ROUTES.PROFILE_USERNAME(u.username) as never);
+  }, [router]);
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const isGuest = useIsGuest();
@@ -1037,7 +1040,7 @@ export default function HomeScreen() {
                       securedDaysThisWeek: e.securedDaysThisWeek,
                     }))}
                     currentUserId={user?.id}
-                    onUserPress={(u) => router.push(ROUTES.PROFILE_USERNAME(u.username) as never)}
+                    onUserPress={handleUserPress}
                   />
                 )}
               </>

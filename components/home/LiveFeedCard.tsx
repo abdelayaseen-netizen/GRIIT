@@ -54,7 +54,7 @@ function AvatarPlaceholder({ size = 40 }: { size?: number }) {
   );
 }
 
-export default function LiveFeedCard({ data }: LiveFeedCardProps) {
+const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps) {
   const { colors } = useTheme();
 
   if (data.type === "secured_day") {
@@ -194,7 +194,9 @@ export default function LiveFeedCard({ data }: LiveFeedCardProps) {
   }
 
   return null;
-}
+};
+
+export default React.memo(LiveFeedCardInner);
 
 const styles = StyleSheet.create({
   card: {
