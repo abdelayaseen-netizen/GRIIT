@@ -21,6 +21,10 @@ import { ROUTES, SEGMENTS } from "@/lib/routes";
 
 const HAS_LAUNCHED_KEY = "griit_has_launched";
 
+if (__DEV__) {
+  console.log("[ENV] Supabase URL:", process.env.EXPO_PUBLIC_SUPABASE_URL ? "set" : "MISSING");
+}
+
 SplashScreen.preventAutoHideAsync();
 
 const PROFILE_CHECK_TIMEOUT_MS = 2500;
@@ -90,7 +94,8 @@ function AuthRedirector() {
         setOnboardingCompleted(hasValidProfile && result?.onboarding_completed === true);
       }
       done();
-    } catch {
+    } catch (err) {
+      console.error('[AUTH] checkProfile failed:', err);
       if (retry < maxRetries) {
         await checkProfile(userId, retry + 1);
         return;
@@ -123,7 +128,6 @@ function AuthRedirector() {
   useEffect(() => {
     if (loading || hasLaunched === null) return;
     if (user) {
-      // Let profile check run; we'll redirect after profileChecked
       return;
     }
 

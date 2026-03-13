@@ -27,6 +27,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
 
@@ -36,6 +37,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!canSubmit) return;
+    setFormError(null);
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -46,19 +48,27 @@ export default function LoginScreen() {
       if (error) {
         setLoading(false);
         const msg = mapAuthError(error);
+        setFormError(msg);
+        console.error("[AUTH] Sign-in error:", error);
         Alert.alert("Login Failed", msg);
         return;
       }
 
       if (data.session) {
+        setLoading(false);
         return;
       }
 
       setLoading(false);
-      Alert.alert("Login Failed", "Something went wrong. Please try again.");
+      const fallbackMsg = "Something went wrong. Please try again.";
+      setFormError(fallbackMsg);
+      console.error("[AUTH] No session in response");
+      Alert.alert("Login Failed", fallbackMsg);
     } catch (err: unknown) {
       setLoading(false);
       const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setFormError(message);
+      console.error("[AUTH] Error caught:", err);
       Alert.alert("Login Failed", message);
     }
   };
@@ -135,6 +145,9 @@ export default function LoginScreen() {
               <Text style={styles.forgotLinkText}>Forgot password?</Text>
             </TouchableOpacity>
 
+            {formError ? (
+              <Text style={[styles.inlineError, { color: DS_COLORS.danger }]}>{formError}</Text>
+            ) : null}
             <TouchableOpacity
               style={[styles.button, (!canSubmit || loading) && styles.buttonDisabled]}
               onPress={handleLogin}
@@ -213,6 +226,11 @@ const styles = StyleSheet.create({
   },
   forgotLink: { alignSelf: "flex-end", marginBottom: DS_SPACING.lg },
   forgotLinkText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
+  inlineError: {
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.danger,
+    marginBottom: DS_SPACING.sm,
+  },
   button: {
     backgroundColor: DS_COLORS.accent,
     borderRadius: DS_RADIUS.buttonPill,

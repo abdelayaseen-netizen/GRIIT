@@ -102,7 +102,8 @@ export default function SignupScreen() {
         { username: norm }
       );
       setUsernameStatus(result ? "taken" : "available");
-    } catch {
+    } catch (err) {
+      if (__DEV__) console.error("[AUTH] checkUsername failed:", err);
       setUsernameStatus("idle");
     }
   }, []);
@@ -178,8 +179,8 @@ export default function SignupScreen() {
       track({ name: "signup_completed" });
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
+      console.error("[AUTH] Signup failed:", err);
       Alert.alert("Something went wrong", "Please try again.");
-      if (__DEV__) console.error(err);
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;

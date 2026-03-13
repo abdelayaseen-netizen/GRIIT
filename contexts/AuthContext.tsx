@@ -35,9 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
         clearTimeout(timeout);
         setLoading(false);
+        console.error('[AUTH] getSession failed:', err);
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
