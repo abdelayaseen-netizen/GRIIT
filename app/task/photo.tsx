@@ -215,9 +215,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   preview: {
-    flex: 1,
+    width: "100%",
+    height: 240,
     borderRadius: 16,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   retakeButton: {
     backgroundColor: '#fff',

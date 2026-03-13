@@ -40,10 +40,13 @@ export function SuggestedFollows({
           onPress={() => onUserPress?.(user)}
           activeOpacity={0.85}
         >
-          <Image
-            source={user.avatarUrl ? { uri: user.avatarUrl } : undefined}
-            style={[styles.avatar, { backgroundColor: colors.pill }]}
-          />
+          {user.avatarUrl ? (
+            <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: colors.pill, alignItems: "center", justifyContent: "center" }]}>
+              <Text style={[styles.avatarLetter, { color: colors.text.primary }]}>{(user.displayName || user.username || "?").charAt(0).toUpperCase()}</Text>
+            </View>
+          )}
           <View style={styles.info}>
             <Text style={[styles.username, { color: colors.text.primary }]} numberOfLines={1}>
               @{user.username}
@@ -96,6 +99,10 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
+  },
+  avatarLetter: {
+    fontSize: 18,
+    fontWeight: "700",
   },
   info: {
     flex: 1,

@@ -168,7 +168,13 @@ export default function ChallengeChatScreen() {
     return (
       <View style={[styles.messageRow, isOwnMessage && styles.messageRowOwn]}>
         {!isOwnMessage && (
-          <Image source={{ uri: msg.senderAvatarUrl }} style={styles.avatar} />
+          msg.senderAvatarUrl ? (
+            <Image source={{ uri: msg.senderAvatarUrl }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+              <Text style={styles.avatarPlaceholderText}>{msg.senderName?.charAt(0)?.toUpperCase() ?? "?"}</Text>
+            </View>
+          )
         )}
         <View style={[styles.messageBubble, isOwnMessage && styles.messageBubbleOwn]}>
           {!isOwnMessage && (
@@ -453,6 +459,16 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     marginRight: 8,
+  },
+  avatarPlaceholder: {
+    backgroundColor: DS_COLORS.chipFill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarPlaceholderText: {
+    color: DS_COLORS.textSecondary,
+    fontWeight: "700",
+    fontSize: 14,
   },
   messageBubble: {
     maxWidth: "75%",
