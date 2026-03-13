@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_TYPOGRAPHY } from "./griit-design-tokens";
+import { GRIIT_COLORS, GRIIT_RADII, GRIIT_TYPOGRAPHY, GRIIT_SHADOWS } from "./griit-design-tokens";
 
 /**
  * Shared style objects for cards, buttons, section headers, and screen containers.
@@ -9,19 +9,19 @@ export const sharedStyles = StyleSheet.create({
   card: {
     backgroundColor: GRIIT_COLORS.cardBackground,
     borderRadius: GRIIT_RADII.card,
-    borderWidth: 1,
-    borderColor: GRIIT_COLORS.borderLight,
-    padding: 16,
+    padding: 18,
+    ...GRIIT_SHADOWS.card,
   },
   pillButton: {
     backgroundColor: GRIIT_COLORS.primaryAccent,
     borderRadius: GRIIT_RADII.buttonPill,
-    paddingVertical: 14,
+    paddingVertical: 16,
     alignItems: "center" as const,
+    ...GRIIT_SHADOWS.button,
   },
   pillButtonText: {
-    color: "#FFFFFF",
-    fontSize: GRIIT_TYPOGRAPHY.buttonText,
+    color: GRIIT_COLORS.white,
+    fontSize: 17,
     fontWeight: "700" as const,
   },
   sectionHeader: {

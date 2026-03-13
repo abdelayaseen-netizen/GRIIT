@@ -54,7 +54,7 @@ import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/
 import { ROUTES } from "@/lib/routes";
 import { designTokens } from "@/lib/design-tokens";
 import { formatTimeRemaining } from "@/lib/challenge-timer";
-import { GRIIT_COLORS, GRIIT_SPACING, GRIIT_TYPOGRAPHY } from "@/src/theme";
+import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS, GRIIT_SPACING, GRIIT_TYPOGRAPHY } from "@/src/theme";
 
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
@@ -75,12 +75,19 @@ const MOTIVATION_QUOTES: { text: string; author: string }[] = [
   { text: "The only discipline that lasts is the one you build yourself.", author: "— Start today" },
 ];
 
-function SyncingBanner() {
+function SyncingBanner({ onDismiss }: { onDismiss?: () => void }) {
   const { colors } = useTheme();
   return (
-    <View style={[syncingBannerStyles.wrap, { backgroundColor: colors.accentLight, borderColor: colors.accent + "30" }]}>
+    <View style={[syncingBannerStyles.wrap, { backgroundColor: "#FFF8E1" }]}>
       <RefreshCw size={14} color={colors.accent} />
-      <Text style={[syncingBannerStyles.text, { color: colors.text.secondary }]}>Syncing... we{"'"}ll update when you{"'"}re back online.</Text>
+      <Text style={[syncingBannerStyles.text, { color: GRIIT_COLORS.textPrimary }]} numberOfLines={1}>
+        Syncing... we{"'"}ll update when you{"'"}re back online.
+      </Text>
+      {onDismiss && (
+        <TouchableOpacity onPress={onDismiss} hitSlop={12} style={syncingBannerStyles.dismiss}>
+          <Text style={syncingBannerStyles.dismissText}>×</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -245,6 +252,7 @@ export default function HomeScreen() {
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [showStreakLostModal, setShowStreakLostModal] = useState(false);
   const streakLostShownRef = useRef(false);
+  const [syncingBannerDismissed, setSyncingBannerDismissed] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
@@ -407,6 +415,10 @@ export default function HomeScreen() {
     }
   }, [canSecureDay, secureBtnGlow]);
 
+  useEffect(() => {
+    if (!isError) setSyncingBannerDismissed(false);
+  }, [isError]);
+
   const onRefresh = useCallback(async () => {
     await refetchAll();
     await Promise.all([leaderboardQuery.refetch(), homeActiveQuery.refetch()]);
@@ -532,7 +544,7 @@ export default function HomeScreen() {
             {(guestFeatured as { id: string; title?: string; short_hook?: string }[]).map((challenge) => (
               <TouchableOpacity
                 key={challenge.id}
-                style={[styles.guestChallengeCard, styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                style={[styles.guestChallengeCard, styles.yourPositionCard]}
                 onPress={() => router.push(ROUTES.CHALLENGE_ID(challenge.id) as never)}
                 activeOpacity={0.8}
               >
@@ -582,7 +594,9 @@ export default function HomeScreen() {
           />
         }
       >
-        {isError && <SyncingBanner />}
+        {isError && !syncingBannerDismissed && (
+          <SyncingBanner onDismiss={() => setSyncingBannerDismissed(true)} />
+        )}
 
         {showFirstSessionBanner && (
           <TouchableOpacity
@@ -602,11 +616,11 @@ export default function HomeScreen() {
             <Text style={[styles.logoSubtitle, { color: GRIIT_COLORS.textSecondary }]}>Build Discipline Daily</Text>
           </View>
           <View style={styles.headerBadges}>
-            <View style={[styles.headerBadge, { borderColor: GRIIT_COLORS.borderLight }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
+            <View style={styles.headerBadge} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
               <TrendingUp size={14} color={GRIIT_COLORS.secondaryGreen} />
               <Text style={[styles.headerBadgeText, { color: GRIIT_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
             </View>
-            <View style={[styles.headerBadge, { borderColor: GRIIT_COLORS.borderLight }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
+            <View style={styles.headerBadge} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
               <Flame size={14} color={GRIIT_COLORS.primaryAccent} />
               <Text style={[styles.headerBadgeText, { color: GRIIT_COLORS.textPrimary }]}>{currentStreak}</Text>
             </View>
@@ -653,7 +667,7 @@ export default function HomeScreen() {
                 return `${hours}h ${minutes}m remaining.`;
               })()}
             </Text>
-            <View style={[styles.metricsCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={styles.metricsCard}>
               {nextTierName != null && pointsToNextTier > 0 && (
                 <View style={styles.metricsRow}>
                   <Flame size={18} color={themeColors.text.secondary} />
@@ -683,7 +697,7 @@ export default function HomeScreen() {
             />
             <ExploreChallengesButton />
             {homeDataError ? (
-              <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <View style={styles.yourPositionCard}>
                 <AlertTriangle size={28} color={themeColors.text.tertiary} />
                 <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>CHALLENGES</Text>
                 <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
@@ -705,7 +719,7 @@ export default function HomeScreen() {
               />
             )}
             {hasActiveChallenge && tasks.length > 0 && (
-              <View style={[styles.todaysResetCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <View style={styles.todaysResetCard}>
                 <View style={styles.todaysResetHeader}>
                   <Clock size={18} color={themeColors.text.primary} />
                   <Text style={[styles.todaysResetTitle, { color: themeColors.text.primary }]}>Today&apos;s Reset</Text>
@@ -733,7 +747,7 @@ export default function HomeScreen() {
         )}
 
         {!isGuest && (
-          <View style={[styles.statsSummaryCard, { backgroundColor: GRIIT_COLORS.cardBackground, borderColor: GRIIT_COLORS.borderLight }]}>
+          <View style={styles.statsSummaryCard}>
             <View style={[styles.statsSummaryCol, { borderRightColor: GRIIT_COLORS.borderLight }]}>
               <Flame size={20} color={GRIIT_COLORS.primaryAccent} />
               <Text style={[styles.statsSummaryValue, { color: GRIIT_COLORS.textPrimary }]}>{currentStreak}</Text>
@@ -756,7 +770,7 @@ export default function HomeScreen() {
         )}
 
         {!isGuest && (
-          <View style={[styles.disciplineWeekCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={styles.disciplineWeekCard}>
             <View style={[styles.disciplineWeekIconWrap, { backgroundColor: themeColors.successLight }]}>
               <TrendingUp size={20} color={themeColors.success} />
             </View>
@@ -908,7 +922,7 @@ export default function HomeScreen() {
             )}
           </View>
         ) : (
-          <View style={[styles.welcomeBackCard, { backgroundColor: themeColors.accentLight, borderColor: themeColors.accent }]}>
+          <View style={[styles.welcomeBackCard, { backgroundColor: GRIIT_COLORS.primaryAccentLight, borderColor: GRIIT_COLORS.primaryAccent }]}>
             <RefreshCw size={28} color={themeColors.accent} />
             <Text style={[styles.welcomeBackTitle, { color: themeColors.text.primary }]}>
               {isFirstTimeUser ? "Start your first challenge." : "Ready to restart?"}
@@ -1007,7 +1021,7 @@ export default function HomeScreen() {
         })()}
 
         {!isGuest && leaderboardError ? (
-          <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={styles.yourPositionCard}>
             <AlertTriangle size={28} color={themeColors.text.tertiary} />
             <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>LEADERBOARD</Text>
             <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
@@ -1023,12 +1037,12 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         ) : !isGuest && leaderboardLoading && leaderboardData == null ? (
-          <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={styles.yourPositionCard}>
             <ActivityIndicator size="small" color={themeColors.accent} style={{ marginVertical: 8 }} />
             <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Loading leaderboard…</Text>
           </View>
         ) : leaderboardData?.currentUserRank != null ? (
-          <View style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={styles.yourPositionCard}>
             <Target size={28} color={themeColors.accent} />
             <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>YOUR STATUS</Text>
             <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>You&apos;re ranked #{leaderboardData.currentUserRank} among friends this week.</Text>
@@ -1045,7 +1059,7 @@ export default function HomeScreen() {
           </View>
         ) : !isGuest && (
           <TouchableOpacity
-            style={[styles.yourPositionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            style={styles.yourPositionCard}
             onPress={() => router.push(ROUTES.TABS_ACTIVITY as never)}
             activeOpacity={0.85}
             accessibilityLabel="View activity"
@@ -1189,22 +1203,20 @@ const syncingBannerStyles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: Colors.accentLight,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 10,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.accent + "30",
+    minHeight: 32,
   },
   text: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
     flex: 1,
   },
+  dismiss: { padding: 4 },
+  dismissText: { fontSize: 18, color: GRIIT_COLORS.textSecondary, fontWeight: "600" as const },
 });
 
 const progressStyles = StyleSheet.create({
@@ -1267,11 +1279,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
-    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: GRIIT_RADII.card,
     backgroundColor: GRIIT_COLORS.cardBackground,
+    ...GRIIT_SHADOWS.card,
   },
   headerBadgeText: {
     fontSize: 14,
@@ -1296,7 +1308,7 @@ const styles = StyleSheet.create({
   },
   secureTodayTitle: {
     fontSize: 24,
-    fontWeight: "700" as const,
+    fontWeight: "800" as const,
     color: Colors.text.primary,
     marginBottom: 4,
   },
@@ -1306,13 +1318,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   metricsCard: {
-    backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: GRIIT_RADII.card,
+    padding: GRIIT_SPACING.cardPadding,
+    marginBottom: GRIIT_SPACING.cardGap,
     gap: 10,
+    ...GRIIT_SHADOWS.card,
   },
   metricsRow: {
     flexDirection: "row",
@@ -1325,13 +1336,11 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   todaysResetCard: {
-    backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...designTokens.cardShadow,
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: GRIIT_RADII.card,
+    padding: GRIIT_SPACING.cardPadding,
+    marginBottom: GRIIT_SPACING.cardGap,
+    ...GRIIT_SHADOWS.card,
   },
   todaysResetHeader: {
     flexDirection: "row",
@@ -1372,13 +1381,11 @@ const styles = StyleSheet.create({
   },
   statsSummaryCard: {
     flexDirection: "row",
-    backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...designTokens.cardShadow,
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: GRIIT_RADII.card,
+    padding: GRIIT_SPACING.cardPadding + 2,
+    marginBottom: GRIIT_SPACING.sectionGap,
+    ...GRIIT_SHADOWS.card,
   },
   statsSummaryCol: {
     flex: 1,
@@ -1410,11 +1417,11 @@ const styles = StyleSheet.create({
   disciplineWeekCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    marginBottom: 16,
-    borderRadius: designTokens.cardRadius,
-    borderWidth: 1,
-    ...designTokens.cardShadow,
+    padding: GRIIT_SPACING.cardPadding,
+    marginBottom: GRIIT_SPACING.sectionGap,
+    borderRadius: GRIIT_RADII.card,
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    ...GRIIT_SHADOWS.card,
   },
   disciplineWeekIconWrap: {
     width: 40,
@@ -1439,14 +1446,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   welcomeBackCard: {
-    backgroundColor: Colors.accentLight,
-    borderRadius: designTokens.cardRadius,
+    borderRadius: GRIIT_RADII.card,
     padding: 24,
-    marginBottom: 20,
+    marginBottom: GRIIT_SPACING.sectionGap,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: Colors.accent,
     alignItems: "center",
+    ...GRIIT_SHADOWS.card,
   },
   welcomeBackTitle: {
     fontSize: 20,
@@ -1462,10 +1468,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   pickChallengeButton: {
-    backgroundColor: Colors.accent,
-    paddingVertical: 14,
+    backgroundColor: GRIIT_COLORS.primaryAccent,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: GRIIT_RADII.buttonPill,
+    alignItems: "center",
+    ...GRIIT_SHADOWS.button,
   },
   pickChallengeButtonOutlined: {
     backgroundColor: "transparent",
@@ -1473,9 +1481,9 @@ const styles = StyleSheet.create({
     borderStyle: "solid",
   },
   pickChallengeButtonText: {
-    fontSize: 16,
-    fontWeight: "600" as const,
-    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700" as const,
+    color: "#FFFFFF",
   },
   liveSection: {
     flexDirection: "row",
@@ -1710,14 +1718,12 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   yourPositionCard: {
-    backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: GRIIT_RADII.card,
+    padding: GRIIT_SPACING.cardPadding + 2,
+    marginBottom: GRIIT_SPACING.sectionGap,
     alignItems: "center",
-    ...designTokens.cardShadow,
+    ...GRIIT_SHADOWS.card,
   },
   guestChallengeCard: {
     alignItems: "flex-start",
@@ -1752,15 +1758,16 @@ const styles = StyleSheet.create({
   heroCTA: {
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 16,
+    borderRadius: GRIIT_RADII.buttonPill,
     alignSelf: "stretch",
     alignItems: "center",
     marginHorizontal: 0,
+    ...GRIIT_SHADOWS.button,
   },
   heroCTAText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: "#FFFFFF",
   },
   motivationCard: {
     borderRadius: 16,
@@ -1852,15 +1859,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: Colors.accent,
-    paddingVertical: 14,
+    backgroundColor: GRIIT_COLORS.primaryAccent,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: GRIIT_RADII.buttonPill,
+    ...GRIIT_SHADOWS.button,
   },
   secureNowButtonText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: "#FFFFFF",
   },
   footerTagline: {
     fontSize: 13,

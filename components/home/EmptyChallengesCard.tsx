@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import Colors from "@/constants/colors";
+import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
 
 export default function EmptyChallengesCard() {
   const router = useRouter();
@@ -34,12 +35,11 @@ export default function EmptyChallengesCard() {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 12,
+    borderRadius: GRIIT_RADII.card,
     padding: 24,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
     alignItems: "center",
+    ...GRIIT_SHADOWS.card,
   },
   title: {
     fontSize: 16,
@@ -55,15 +55,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   button: {
-    backgroundColor: "#E8733A",
-    paddingVertical: 14,
+    backgroundColor: GRIIT_COLORS.primaryAccent,
+    paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 28,
+    borderRadius: GRIIT_RADII.buttonPill,
     marginTop: 16,
+    alignItems: "center",
+    ...GRIIT_SHADOWS.button,
   },
   buttonText: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: "#FFFFFF",
   },
 });

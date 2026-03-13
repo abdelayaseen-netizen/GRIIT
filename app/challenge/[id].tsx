@@ -63,7 +63,7 @@ import type {
   CheckinFromApi,
 } from "@/types";
 import Colors from "@/constants/colors";
-import { GRIIT_COLORS, GRIIT_RADII } from "@/src/theme";
+import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
 
 const AVATAR_URLS = [
   "https://i.pravatar.cc/80?img=10",
@@ -1487,6 +1487,11 @@ const s = StyleSheet.create({
     paddingTop: 24,
     paddingHorizontal: 20,
     paddingBottom: 120,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 5,
   },
 
   countdownCard: {
@@ -1494,16 +1499,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#FFFFFF",
-    borderRadius: 14,
+    borderRadius: GRIIT_RADII.card,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 16,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...GRIIT_SHADOWS.card,
   },
   countdownLeft: {
     flexDirection: "row",
@@ -1626,16 +1626,12 @@ const s = StyleSheet.create({
   },
 
   participantStatsCard: {
-    backgroundColor: "#F8F8F8",
-    borderRadius: 14,
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: GRIIT_RADII.card,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...GRIIT_SHADOWS.card,
   },
   socialRow: {
     flexDirection: "row",
@@ -1676,11 +1672,12 @@ const s = StyleSheet.create({
 
   statItem: {
     flex: 1,
-    backgroundColor: "#EDEDED",
-    borderRadius: 12,
+    backgroundColor: "#F5F5F5",
+    borderRadius: GRIIT_RADII.card,
     paddingVertical: 16,
     paddingHorizontal: 14,
     alignItems: "center",
+    ...GRIIT_SHADOWS.card,
   },
   statNumber: {
     fontSize: 24,
@@ -1706,14 +1703,10 @@ const s = StyleSheet.create({
     marginBottom: 12,
   },
   missionsCard: {
-    backgroundColor: "#F8F8F8",
-    borderRadius: 12,
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: GRIIT_RADII.card,
     overflow: "hidden" as const,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...GRIIT_SHADOWS.card,
   },
 
   missionRow: {
@@ -1911,12 +1904,8 @@ const s = StyleSheet.create({
     justifyContent: "center",
     minHeight: 52,
     paddingVertical: 16,
-    borderRadius: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
+    borderRadius: GRIIT_RADII.buttonPill,
+    ...GRIIT_SHADOWS.button,
     width: Platform.OS === "web" ? 400 : undefined,
     alignSelf: "stretch" as const,
     minWidth: 320,
@@ -1925,6 +1914,7 @@ const s = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700" as const,
     letterSpacing: -0.1,
+    color: "#FFFFFF",
   },
   inviteLink: {
     marginTop: 10,
@@ -2047,18 +2037,19 @@ const s = StyleSheet.create({
     flex: 1,
   },
   commitmentConfirmBtn: {
-    backgroundColor: "#E8733A",
-    borderRadius: 28,
-    paddingVertical: 15,
+    backgroundColor: GRIIT_COLORS.primaryAccent,
+    borderRadius: GRIIT_RADII.buttonPill,
+    paddingVertical: 16,
     alignItems: "center",
     width: "100%",
     marginTop: 18,
+    ...GRIIT_SHADOWS.button,
   },
   commitmentConfirmDisabled: {
-    opacity: 0.7,
+    opacity: 0.4,
   },
   commitmentConfirmText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     color: "#FFFFFF",
   },

@@ -17,7 +17,7 @@ import { Eye, EyeOff } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { mapAuthError } from "@/lib/auth-helpers";
-import { GRIIT_COLORS, GRIIT_RADII } from "@/src/theme";
+import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -171,14 +171,15 @@ const styles = StyleSheet.create({
   keyboardView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    justifyContent: "center",
+    paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 40,
   },
   logoArea: { alignItems: "center", marginBottom: 32 },
   logo: {
-    fontSize: 32,
-    fontWeight: "700",
+    fontSize: 34,
+    fontWeight: "bold",
     color: GRIIT_COLORS.textPrimary,
     letterSpacing: 8,
     fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
@@ -189,8 +190,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   formTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "800",
     color: GRIIT_COLORS.textPrimary,
     marginTop: 32,
     marginBottom: 24,
@@ -200,43 +201,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: GRIIT_COLORS.textPrimary,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: GRIIT_RADII.card,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderRadius: GRIIT_RADII.input,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     fontSize: 16,
+    color: GRIIT_COLORS.textPrimary,
     marginBottom: 16,
   },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: GRIIT_RADII.card,
-    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderRadius: GRIIT_RADII.input,
+    paddingHorizontal: 18,
     marginBottom: 8,
   },
   passwordInput: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 16,
     fontSize: 16,
   },
   forgotLink: { alignSelf: "flex-end", marginBottom: 16 },
-  forgotLinkText: { fontSize: 14, fontWeight: "500", color: GRIIT_COLORS.primaryAccent },
+  forgotLinkText: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.primaryAccent },
   button: {
     backgroundColor: GRIIT_COLORS.primaryAccent,
     borderRadius: GRIIT_RADII.buttonPill,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 8,
+    ...GRIIT_SHADOWS.button,
   },
-  buttonDisabled: { opacity: 0.5 },
+  buttonDisabled: { opacity: 0.4 },
   buttonText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: GRIIT_COLORS.white,
   },
   footer: {
     flexDirection: "row",

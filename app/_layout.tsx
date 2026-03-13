@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, Alert, StatusBar } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
@@ -16,6 +17,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
+
+const HAS_LAUNCHED_KEY = "griit_has_launched";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,9 +45,14 @@ function AuthRedirector() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [hasLaunched, setHasLaunched] = useState<boolean | null>(null);
   const [profileChecked, setProfileChecked] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem(HAS_LAUNCHED_KEY).then((v) => setHasLaunched(v === "true"));
+  }, []);
 
   const checkProfile = useCallback(async (userId: string, retry = 0) => {
     const maxRetries = 1;
@@ -112,22 +120,37 @@ function AuthRedirector() {
   }, [router]);
 
   useEffect(() => {
-    if (loading || !profileChecked) return;
+    if (loading || hasLaunched === null) return;
+    if (user) {
+      // Let profile check run; we'll redirect after profileChecked
+      return;
+    }
+
+    const first = (typeof segments[0] === "string" ? segments[0] : "") as string;
+    const inWelcome = first === SEGMENTS.WELCOME;
+    const inAuth = first === SEGMENTS.AUTH;
+    const inOnboardingQuestions = first === SEGMENTS.ONBOARDING_QUESTIONS;
+
+    if (!user) {
+      if (!hasLaunched && !inWelcome) {
+        router.replace(ROUTES.WELCOME as never);
+        return;
+      }
+      if (hasLaunched && !inAuth && !inOnboardingQuestions) {
+        router.replace(ROUTES.AUTH as never);
+      }
+      return;
+    }
+  }, [user, loading, segments, hasLaunched, router]);
+
+  useEffect(() => {
+    if (loading || !profileChecked || !user) return;
 
     const first = typeof segments[0] === "string" ? segments[0] : "";
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
-
-    if (!user) {
-      // Unauthenticated: send to login unless already on auth or pre-signup onboarding
-      const inOnboardingQuestions = first === SEGMENTS.ONBOARDING_QUESTIONS;
-      if (!inAuth && !inOnboardingQuestions) {
-        router.replace(ROUTES.AUTH as never);
-      }
-      return;
-    }
 
     if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
       router.replace(ROUTES.CREATE_PROFILE as never);
@@ -144,7 +167,7 @@ function AuthRedirector() {
     }
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, router]);
 
-  if (loading || (user && !profileChecked)) {
+  if (loading || (user && !profileChecked) || (!user && hasLaunched === null)) {
     return <AuthRedirectorLoading />;
   }
 
@@ -155,6 +178,7 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

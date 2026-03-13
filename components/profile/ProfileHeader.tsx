@@ -20,6 +20,25 @@ export interface ProfileHeaderProps {
 
 const AVATAR_SIZE = 80;
 
+const AVATAR_COLORS = [
+  "#E8733A",
+  "#2E7D32",
+  "#5C6BC0",
+  "#EF5350",
+  "#26A69A",
+  "#FFA726",
+  "#8D6E63",
+  "#66BB6A",
+];
+
+function getAvatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 export default function ProfileHeader({
   avatarUrl,
   fullName,
@@ -33,6 +52,7 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   const router = useRouter();
   const displayName = fullName || username || "User";
+  const avatarBg = getAvatarColor(username || fullName || "U");
 
   return (
     <View style={styles.container}>
@@ -40,7 +60,7 @@ export default function ProfileHeader({
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         ) : (
-          <View style={styles.avatarPlaceholder}>
+          <View style={[styles.avatarPlaceholder, { backgroundColor: avatarBg }]}>
             <Text style={styles.avatarLetter}>{displayName.charAt(0).toUpperCase()}</Text>
           </View>
         )}
@@ -102,14 +122,13 @@ const styles = StyleSheet.create({
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
-    backgroundColor: "#1A1A1A",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarLetter: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#fff",
+    color: "#FFFFFF",
   },
   fullName: {
     fontSize: 22,

@@ -52,6 +52,7 @@ import type { AchievementItem } from "@/components/profile";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { formatMonthYearLong } from "@/lib/date-format";
 import { ROUTES } from "@/lib/routes";
+import { GRIIT_COLORS } from "@/src/theme";
 import type { StatsFromApi } from "@/types";
 
 
@@ -463,7 +464,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="profile-signout-button"
             >
-              <Text style={styles.signOutLinkText}>Sign Out</Text>
+              <Text style={[styles.signOutLinkText, { color: GRIIT_COLORS.primaryAccent }]}>Sign Out</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -643,7 +644,7 @@ export default function ProfileScreen() {
             accessibilityLabel="Sign out of your account"
             accessibilityRole="button"
           >
-            <Text style={[styles.signOutText, { color: colors.danger }]}>↪ Sign Out</Text>
+            <Text style={[styles.signOutText, { color: GRIIT_COLORS.primaryAccent }]}>↪ Sign Out</Text>
           </TouchableOpacity>
         </View>
 

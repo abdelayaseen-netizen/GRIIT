@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native
 import { CheckCircle2, Shield } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
-import { designTokens } from "@/lib/design-tokens";
+import { GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
 
 export type DailyStatusState = "NOT_SECURED" | "SECURED";
 
@@ -82,11 +82,10 @@ export default function DailyStatus({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
+    borderRadius: GRIIT_RADII.card,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    ...GRIIT_SHADOWS.card,
   },
   securedRow: {
     flexDirection: "row",
@@ -150,14 +149,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: Colors.accent,
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 28,
     marginTop: 14,
+    ...GRIIT_SHADOWS.button,
   },
   secureButtonText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: "#FFFFFF",
   },
 });

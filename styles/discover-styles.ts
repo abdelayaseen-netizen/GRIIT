@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
 import * as t from "@/src/theme/tokens";
+import { GRIIT_SHADOWS } from "@/src/theme";
 
 export const styles = StyleSheet.create({
   container: {
@@ -13,7 +14,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "700" as const,
+    fontWeight: "800" as const,
     color: "#1A1A2E",
   },
   subtitle: {
@@ -162,13 +163,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#F0EDE8",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...GRIIT_SHADOWS.card,
   },
   featuredAccent: {
     width: 3,
@@ -301,13 +296,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#F0EDE8",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    ...GRIIT_SHADOWS.card,
   },
   compactColorBar: {
     width: 3,
@@ -402,13 +391,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: t.colors.borderSubtle,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    ...GRIIT_SHADOWS.card,
   },
   dailyColorBar: {
     width: 5,

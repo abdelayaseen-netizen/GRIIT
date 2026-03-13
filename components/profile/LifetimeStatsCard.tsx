@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Trophy, Target, Award } from "lucide-react-native";
 import Colors from "@/constants/colors";
-import { designTokens } from "@/lib/design-tokens";
+import { GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
 
 export interface LifetimeStatsCardProps {
   currentStreak?: number;
@@ -54,13 +54,11 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
+    borderRadius: GRIIT_RADII.card,
     marginHorizontal: 20,
     marginBottom: 16,
     paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...designTokens.cardShadow,
+    ...GRIIT_SHADOWS.card,
   },
   cell: {
     flex: 1,

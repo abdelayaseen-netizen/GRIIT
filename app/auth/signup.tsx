@@ -19,7 +19,7 @@ import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { trpcQuery } from "@/lib/trpc";
-import { GRIIT_COLORS, GRIIT_RADII } from "@/src/theme";
+import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
@@ -158,7 +158,7 @@ export default function SignupScreen() {
             username: normalizedUsername,
             display_name: displayName.trim(),
             updated_at: new Date().toISOString(),
-            onboarding_completed: false,
+            onboarding_completed: true,
           },
           { onConflict: "user_id" }
         );
@@ -168,7 +168,7 @@ export default function SignupScreen() {
       }
 
       track({ name: "signup_completed" });
-      router.replace(ROUTES.ONBOARDING as never);
+      router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
       Alert.alert("Something went wrong", "Please try again.");
       if (__DEV__) console.error(err);
@@ -416,8 +416,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   formTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "800",
     color: GRIIT_COLORS.textPrimary,
     marginTop: 32,
     marginBottom: 24,
@@ -426,14 +426,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: GRIIT_RADII.card,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderRadius: GRIIT_RADII.input,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     fontSize: 16,
+    color: GRIIT_COLORS.textPrimary,
     marginBottom: 16,
   },
   usernameHint: { flexDirection: "row", alignItems: "center", marginTop: -8, marginBottom: 8 },
@@ -442,14 +443,14 @@ const styles = StyleSheet.create({
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: GRIIT_RADII.card,
-    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderRadius: GRIIT_RADII.input,
+    paddingHorizontal: 18,
     marginBottom: 8,
   },
   passwordInput: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 16,
     fontSize: 16,
   },
   strengthRow: {
@@ -481,12 +482,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 8,
+    ...GRIIT_SHADOWS.button,
   },
-  buttonDisabled: { opacity: 0.5 },
+  buttonDisabled: { opacity: 0.4 },
   buttonText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: GRIIT_COLORS.white,
   },
   footer: {
     flexDirection: "row",

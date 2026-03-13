@@ -7,13 +7,16 @@ export const GRIIT_COLORS = {
   background: "#F9F6F1",
   cardBackground: "#FFFFFF",
   primaryAccent: "#E8733A",
+  primaryAccentLight: "#FFF0E8",
   secondaryGreen: "#2E7D32",
+  secondaryGreenLight: "#E8F5E9",
   textPrimary: "#1A1A2E",
   textSecondary: "#8A8A8A",
   textMuted: "#B0B0B0",
   warningAmber: "#F5A623",
   errorRed: "#D32F2F",
-  borderLight: "#EDEDED",
+  borderLight: "#E0E0E0",
+  white: "#FFFFFF",
   peachBackground: "#FFF0E8",
   peachBorder: "#E8733A",
   greenLightBg: "#E8F5E9",
@@ -28,10 +31,10 @@ export const GRIIT_COLORS = {
 } as const;
 
 export const GRIIT_SPACING = {
-  screenPadding: 16,
-  cardPadding: 16,
-  sectionGap: 24,
-  cardGap: 12,
+  screenPadding: 20,
+  cardPadding: 18,
+  sectionGap: 28,
+  cardGap: 14,
   xs: 4,
   sm: 8,
   md: 12,
@@ -40,9 +43,10 @@ export const GRIIT_SPACING = {
 } as const;
 
 export const GRIIT_RADII = {
-  card: 12,
+  card: 16,
   buttonPill: 28,
   chip: 20,
+  input: 14,
   avatar: 999,
   modalCard: 20,
   contentOverlap: 24,
@@ -74,8 +78,22 @@ export const GRIIT_SHADOWS = {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowRadius: 12,
     elevation: 3,
+  },
+  button: {
+    shadowColor: "#E8733A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  inputFocused: {
+    shadowColor: "#E8733A",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   centerButton: {
     shadowColor: "#000",

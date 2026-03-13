@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Colors from "@/constants/colors";
-import { designTokens } from "@/lib/design-tokens";
+import { GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
 
 export interface DisciplineScoreCardProps {
   disciplineScore: number;
@@ -52,13 +52,11 @@ export default function DisciplineScoreCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
+    borderRadius: GRIIT_RADII.card,
     padding: 20,
     marginHorizontal: 20,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...designTokens.cardShadow,
+    ...GRIIT_SHADOWS.card,
   },
   header: {
     flexDirection: "row",

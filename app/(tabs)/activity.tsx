@@ -48,7 +48,7 @@ function createActivityStyles(c: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
     header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14, gap: 8 },
-    title: { fontSize: 32, fontWeight: "700" as const, color: c.text.primary },
+    title: { fontSize: 28, fontWeight: "800" as const, color: c.text.primary },
     subtitle: { fontSize: 14, fontWeight: "400" as const, color: c.text.secondary, marginTop: 2 },
     teamsButton: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: c.pill, marginLeft: "auto" as const },
     teamsButtonText: { fontSize: 13, fontWeight: "600" as const, color: c.text.secondary },

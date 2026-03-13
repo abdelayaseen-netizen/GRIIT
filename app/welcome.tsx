@@ -1,0 +1,641 @@
+/**
+ * Welcome — First-time user flow (pre-auth).
+ * 4 steps: Welcome → Goals → Discipline level → Signup.
+ * On signup success: save onboarding answers to profile, set onboarding_completed,
+ * set griit_has_launched in AsyncStorage, navigate to Home.
+ */
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { ChevronLeft, Check, Eye, EyeOff } from "lucide-react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
+import { ROUTES } from "@/lib/routes";
+import { supabase } from "@/lib/supabase";
+import { trpcQuery } from "@/lib/trpc";
+import { mapAuthError } from "@/lib/auth-helpers";
+import { track } from "@/lib/analytics";
+import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+
+const HAS_LAUNCHED_KEY = "griit_has_launched";
+const TOTAL_STEPS = 4;
+
+const GOAL_OPTIONS: { id: string; label: string; emoji: string }[] = [
+  { id: "fitness", label: "Fitness", emoji: "🏋️" },
+  { id: "mental", label: "Mental clarity", emoji: "🧠" },
+  { id: "learning", label: "Learning", emoji: "📚" },
+  { id: "habits", label: "Break habits", emoji: "🔥" },
+  { id: "morning", label: "Morning routine", emoji: "⏰" },
+  { id: "consistency", label: "Consistency", emoji: "💪" },
+];
+
+const DISCIPLINE_OPTIONS: { id: string; label: string; subtitle: string; emoji: string }[] = [
+  { id: "starting", label: "Just starting out", subtitle: "Building from zero", emoji: "🌱" },
+  { id: "inconsistent", label: "Inconsistent", subtitle: "I try but can't stick with it", emoji: "🔄" },
+  { id: "solid", label: "Pretty solid", subtitle: "I follow through most days", emoji: "💪" },
+  { id: "relentless", label: "Relentless", subtitle: "I never miss", emoji: "🔥" },
+];
+
+function getPasswordStrength(password: string): "weak" | "medium" | "strong" {
+  if (!password || password.length < 8) return "weak";
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSymbol = /[^a-zA-Z0-9]/.test(password);
+  const types = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+  if (types >= 3) return "strong";
+  if (types >= 2) return "medium";
+  return "weak";
+}
+
+function isValidEmail(s: string): boolean {
+  const t = s.trim();
+  return t.includes("@") && t.includes(".") && t.length > 5;
+}
+
+type UsernameStatus = "idle" | "checking" | "available" | "taken";
+
+export default function WelcomeScreen() {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [disciplineLevel, setDisciplineLevel] = useState<string | null>(null);
+
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [touched, setTouched] = useState({ displayName: false, username: false, email: false, password: false });
+  const isSubmittingRef = useRef(false);
+
+  const normalizedUsername = username.replace(/^@+/, "").trim().toLowerCase();
+  const usernameValid = normalizedUsername.length >= 3 && /^[a-z0-9_.]+$/.test(normalizedUsername);
+  const displayNameValid = displayName.trim().length >= 2;
+  const emailValid = isValidEmail(email);
+  const passwordValid = password.length >= 8;
+  const canSubmit =
+    displayNameValid &&
+    usernameValid &&
+    usernameStatus === "available" &&
+    emailValid &&
+    passwordValid &&
+    !loading;
+
+  const checkUsername = useCallback(async (value: string) => {
+    const norm = value.replace(/^@+/, "").trim().toLowerCase();
+    if (norm.length < 3 || !/^[a-z0-9_.]+$/.test(norm)) {
+      setUsernameStatus("idle");
+      return;
+    }
+    setUsernameStatus("checking");
+    try {
+      const result = await trpcQuery<{ user_id: string } | null>("profiles.getPublicByUsername", { username: norm });
+      setUsernameStatus(result ? "taken" : "available");
+    } catch {
+      setUsernameStatus("idle");
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => checkUsername(username), 500);
+    return () => clearTimeout(t);
+  }, [username, checkUsername]);
+
+  const toggleGoal = useCallback((id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedGoals((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }, []);
+
+  const selectDiscipline = useCallback((id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setDisciplineLevel(id);
+  }, []);
+
+  const goNext = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (step < TOTAL_STEPS) setStep((s) => s + 1);
+  }, [step]);
+
+  const goBack = useCallback(() => {
+    if (step > 1) setStep((s) => s - 1);
+  }, [step]);
+
+  const handleSkip = useCallback(() => {
+    router.replace(ROUTES.AUTH_SIGNUP as never);
+  }, [router]);
+
+  const handleSignup = async () => {
+    if (!canSubmit || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setLoading(true);
+    try {
+      const trimmedEmail = email.trim().toLowerCase();
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+        options: {
+          data: {
+            display_name: displayName.trim(),
+            username: normalizedUsername,
+          },
+        },
+      });
+
+      if (signUpError) {
+        Alert.alert("Signup Failed", mapAuthError(signUpError));
+        return;
+      }
+
+      if (!data.session) {
+        Alert.alert(
+          "Check Your Email",
+          `We sent a confirmation link to ${trimmedEmail}. Tap it to activate your account, then come back and log in.`,
+          [{ text: "OK", onPress: () => router.replace(ROUTES.AUTH_LOGIN as never) }]
+        );
+        return;
+      }
+
+      const userId = data.user?.id;
+      if (!userId) {
+        Alert.alert("Something went wrong", "Please try again.");
+        return;
+      }
+
+      await supabase.from("profiles").upsert(
+        {
+          user_id: userId,
+          username: normalizedUsername,
+          display_name: displayName.trim(),
+          updated_at: new Date().toISOString(),
+          onboarding_completed: true,
+          onboarding_answers: {
+            goals: selectedGoals,
+            discipline_level: disciplineLevel,
+          },
+        },
+        { onConflict: "user_id" }
+      );
+
+      await AsyncStorage.setItem(HAS_LAUNCHED_KEY, "true");
+      track({ name: "signup_completed" });
+      router.replace(ROUTES.TABS as never);
+    } catch (err: unknown) {
+      Alert.alert("Something went wrong", "Please try again.");
+      if (__DEV__) console.error(err);
+    } finally {
+      setLoading(false);
+      isSubmittingRef.current = false;
+    }
+  };
+
+  const strength = getPasswordStrength(password);
+  const displayNameInvalid = displayName.trim().length > 0 && displayName.trim().length < 2;
+  const usernameInvalid = (normalizedUsername.length > 0 && normalizedUsername.length < 3) || (normalizedUsername.length >= 3 && !/^[a-z0-9_.]+$/.test(normalizedUsername));
+  const emailInvalid = email.trim().length > 0 && !isValidEmail(email);
+  const passwordInvalid = password.length > 0 && password.length < 8;
+
+  const getInputBorderColor = (field: keyof typeof touched, isValid: boolean) => {
+    if (touched[field] && !isValid) return GRIIT_COLORS.errorRed;
+    if (focusedField === field) return GRIIT_COLORS.primaryAccent;
+    return GRIIT_COLORS.borderLight;
+  };
+
+  const progressDots = (
+    <View style={s.progressRow}>
+      {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+        <View
+          key={i}
+          style={[s.dot, i + 1 === step && s.dotActive]}
+        />
+      ))}
+      <Text style={s.progressText}>{step} of {TOTAL_STEPS}</Text>
+    </View>
+  );
+
+  if (step === 1) {
+    return (
+      <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
+        <TouchableOpacity style={s.skipBtn} onPress={handleSkip}>
+          <Text style={s.skipText}>Skip</Text>
+        </TouchableOpacity>
+        <View style={s.step1Center}>
+          <Text style={s.logo} allowFontScaling={false}>G R I I T</Text>
+          <Text style={s.heroTitle}>Build discipline that lasts.</Text>
+          <Text style={s.heroSubtitle}>
+            Commit to daily challenges. Prove yourself through action.
+          </Text>
+        </View>
+        <View style={s.step1Bottom}>
+          <TouchableOpacity style={s.primaryBtn} onPress={goNext} activeOpacity={0.85}>
+            <Text style={s.primaryBtnText}>Let&apos;s go</Text>
+          </TouchableOpacity>
+        </View>
+        {progressDots}
+      </SafeAreaView>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
+        <TouchableOpacity style={s.backBtn} onPress={goBack}>
+          <ChevronLeft size={24} color={GRIIT_COLORS.textPrimary} />
+        </TouchableOpacity>
+        <Text style={s.stepTitle}>What do you want to build?</Text>
+        <Text style={s.stepSubtitle}>Pick as many as you like</Text>
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.goalsGrid}
+          showsVerticalScrollIndicator={false}
+        >
+          {GOAL_OPTIONS.map((g) => {
+            const selected = selectedGoals.includes(g.id);
+            return (
+              <TouchableOpacity
+                key={g.id}
+                style={[s.goalCard, selected && s.goalCardSelected]}
+                onPress={() => toggleGoal(g.id)}
+                activeOpacity={0.8}
+              >
+                {selected && (
+                  <View style={s.checkBadge}>
+                    <Check size={14} color={GRIIT_COLORS.primaryAccent} />
+                  </View>
+                )}
+                <Text style={s.goalEmoji}>{g.emoji}</Text>
+                <Text style={s.goalLabel}>{g.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        <TouchableOpacity
+          style={[s.primaryBtn, selectedGoals.length === 0 && s.btnDisabled]}
+          onPress={goNext}
+          disabled={selectedGoals.length === 0}
+          activeOpacity={0.85}
+        >
+          <Text style={s.primaryBtnText}>Continue</Text>
+        </TouchableOpacity>
+        {progressDots}
+      </SafeAreaView>
+    );
+  }
+
+  if (step === 3) {
+    return (
+      <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
+        <TouchableOpacity style={s.backBtn} onPress={goBack}>
+          <ChevronLeft size={24} color={GRIIT_COLORS.textPrimary} />
+        </TouchableOpacity>
+        <Text style={s.stepTitle}>How disciplined are you right now?</Text>
+        <Text style={s.stepSubtitle}>Be honest — there&apos;s no wrong answer</Text>
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.disciplineList}
+          showsVerticalScrollIndicator={false}
+        >
+          {DISCIPLINE_OPTIONS.map((d) => {
+            const selected = disciplineLevel === d.id;
+            return (
+              <TouchableOpacity
+                key={d.id}
+                style={[s.disciplineRow, selected && s.disciplineRowSelected]}
+                onPress={() => selectDiscipline(d.id)}
+                activeOpacity={0.8}
+              >
+                <View style={s.disciplineIconWrap}>
+                  <Text style={s.disciplineEmoji}>{d.emoji}</Text>
+                </View>
+                <View style={s.disciplineTextWrap}>
+                  <Text style={s.disciplineLabel}>{d.label}</Text>
+                  <Text style={s.disciplineSubtitle}>{d.subtitle}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        <TouchableOpacity
+          style={[s.primaryBtn, !disciplineLevel && s.btnDisabled]}
+          onPress={goNext}
+          disabled={!disciplineLevel}
+          activeOpacity={0.85}
+        >
+          <Text style={s.primaryBtnText}>Continue</Text>
+        </TouchableOpacity>
+        {progressDots}
+      </SafeAreaView>
+    );
+  }
+
+  // Step 4 — Signup
+  return (
+    <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
+      <TouchableOpacity style={s.backBtn} onPress={goBack}>
+        <ChevronLeft size={24} color={GRIIT_COLORS.textPrimary} />
+      </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={s.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={s.formScroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={s.stepTitle}>Lock in your commitment</Text>
+          <Text style={s.stepSubtitle}>Create your GRIIT account to start your first challenge.</Text>
+
+          <Text style={s.label}>Display Name</Text>
+          <TextInput
+            style={[s.input, { borderColor: getInputBorderColor("displayName", !displayNameInvalid) }]}
+            placeholder="What should we call you?"
+            placeholderTextColor={GRIIT_COLORS.textMuted}
+            value={displayName}
+            onChangeText={setDisplayName}
+            onFocus={() => setFocusedField("displayName")}
+            onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, displayName: true })); }}
+            editable={!loading}
+          />
+          {touched.displayName && displayNameInvalid && (
+            <Text style={s.inlineError}>Name must be at least 2 characters</Text>
+          )}
+
+          <Text style={s.label}>Username</Text>
+          <TextInput
+            style={[s.input, { borderColor: getInputBorderColor("username", !usernameInvalid && usernameStatus !== "taken") }]}
+            placeholder="@username"
+            placeholderTextColor={GRIIT_COLORS.textMuted}
+            value={username}
+            onChangeText={(t) => setUsername(t.replace(/^@+/, ""))}
+            onFocus={() => setFocusedField("username")}
+            onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, username: true })); }}
+            editable={!loading}
+          />
+          {username.length > 0 && (
+            <View style={s.usernameHint}>
+              {usernameStatus === "checking" && <ActivityIndicator size="small" color={GRIIT_COLORS.textSecondary} />}
+              {usernameStatus === "available" && <Text style={s.availableText}>✓ Available</Text>}
+              {usernameStatus === "taken" && <Text style={s.takenText}>✗ Username taken</Text>}
+            </View>
+          )}
+
+          <Text style={s.label}>Email</Text>
+          <TextInput
+            style={[s.input, { borderColor: getInputBorderColor("email", !emailInvalid) }]}
+            placeholder="you@example.com"
+            placeholderTextColor={GRIIT_COLORS.textMuted}
+            value={email}
+            onChangeText={setEmail}
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, email: true })); }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading}
+          />
+          {touched.email && emailInvalid && <Text style={s.inlineError}>Enter a valid email</Text>}
+
+          <Text style={s.label}>Password</Text>
+          <View style={[s.passwordRow, { borderColor: getInputBorderColor("password", !passwordInvalid) }]}>
+            <TextInput
+              style={s.passwordInput}
+              placeholder="At least 8 characters"
+              placeholderTextColor={GRIIT_COLORS.textMuted}
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => setFocusedField("password")}
+              onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, password: true })); }}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              editable={!loading}
+            />
+            <TouchableOpacity onPress={() => setShowPassword((p) => !p)} hitSlop={12}>
+              {showPassword ? <EyeOff size={22} color={GRIIT_COLORS.textSecondary} /> : <Eye size={22} color={GRIIT_COLORS.textSecondary} />}
+            </TouchableOpacity>
+          </View>
+          {password.length > 0 && (
+            <View style={s.strengthRow}>
+              <View style={[s.strengthBar, strength !== "weak" && s.strengthInactive, { backgroundColor: GRIIT_COLORS.errorRed }]} />
+              <View style={[s.strengthBar, strength === "weak" && s.strengthInactive, { backgroundColor: GRIIT_COLORS.warningAmber }]} />
+              <View style={[s.strengthBar, strength !== "strong" && s.strengthInactive, { backgroundColor: GRIIT_COLORS.secondaryGreen }]} />
+              <Text style={s.strengthLabel}>{strength === "weak" ? "Weak" : strength === "medium" ? "Medium" : "Strong"}</Text>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={[s.primaryBtn, !canSubmit && s.btnDisabled]}
+            onPress={handleSignup}
+            disabled={!canSubmit}
+            activeOpacity={0.85}
+          >
+            {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.primaryBtnText}>Create Account</Text>}
+          </TouchableOpacity>
+
+          <TouchableOpacity style={s.footer} onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)} disabled={loading}>
+            <Text style={s.footerText}>Already have an account? </Text>
+            <Text style={s.footerLink}>Log in</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      {progressDots}
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: GRIIT_COLORS.background,
+  },
+  keyboardView: { flex: 1 },
+  skipBtn: { position: "absolute", top: 16, right: 20, zIndex: 1 },
+  skipText: { fontSize: 14, color: GRIIT_COLORS.textSecondary },
+  backBtn: { position: "absolute", top: 16, left: 16, zIndex: 1 },
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: GRIIT_COLORS.borderLight,
+  },
+  dotActive: { backgroundColor: GRIIT_COLORS.primaryAccent },
+  progressText: { fontSize: 12, color: GRIIT_COLORS.textMuted },
+  step1Center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  step1Bottom: { paddingHorizontal: 20, paddingBottom: 24 },
+  logo: {
+    fontSize: 40,
+    fontWeight: "bold",
+    letterSpacing: 8,
+    color: GRIIT_COLORS.textPrimary,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: GRIIT_COLORS.textPrimary,
+    textAlign: "center",
+    marginTop: 24,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: GRIIT_COLORS.textSecondary,
+    textAlign: "center",
+    marginTop: 12,
+    maxWidth: 280,
+  },
+  primaryBtn: {
+    backgroundColor: GRIIT_COLORS.primaryAccent,
+    borderRadius: GRIIT_RADII.buttonPill,
+    paddingVertical: 16,
+    alignItems: "center",
+    ...GRIIT_SHADOWS.button,
+  },
+  primaryBtnText: {
+    color: GRIIT_COLORS.white,
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  btnDisabled: { opacity: 0.4 },
+  stepTitle: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: GRIIT_COLORS.textPrimary,
+    marginTop: 48,
+    marginHorizontal: 20,
+  },
+  stepSubtitle: {
+    fontSize: 14,
+    color: GRIIT_COLORS.textSecondary,
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  scroll: { flex: 1 },
+  goalsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 20,
+    gap: 14,
+    paddingBottom: 24,
+  },
+  goalCard: {
+    width: "47%",
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    ...GRIIT_SHADOWS.card,
+  },
+  goalCardSelected: {
+    backgroundColor: GRIIT_COLORS.primaryAccentLight,
+    borderWidth: 2,
+    borderColor: GRIIT_COLORS.primaryAccent,
+  },
+  checkBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: GRIIT_COLORS.primaryAccentLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  goalEmoji: { fontSize: 28, marginBottom: 8 },
+  goalLabel: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.textPrimary },
+  disciplineList: { paddingHorizontal: 20, gap: 14, paddingBottom: 24 },
+  disciplineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 18,
+    ...GRIIT_SHADOWS.card,
+  },
+  disciplineRowSelected: {
+    backgroundColor: GRIIT_COLORS.primaryAccentLight,
+    borderLeftWidth: 4,
+    borderLeftColor: GRIIT_COLORS.primaryAccent,
+  },
+  disciplineIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: GRIIT_COLORS.primaryAccentLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  disciplineEmoji: { fontSize: 22 },
+  disciplineTextWrap: { flex: 1 },
+  disciplineLabel: { fontSize: 16, fontWeight: "600", color: GRIIT_COLORS.textPrimary },
+  disciplineSubtitle: { fontSize: 13, color: GRIIT_COLORS.textSecondary, marginTop: 2 },
+  formScroll: {
+    paddingHorizontal: 20,
+    paddingTop: 56,
+    paddingBottom: 40,
+  },
+  label: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.textPrimary, marginBottom: 8, marginTop: 16 },
+  input: {
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderWidth: 1.5,
+    borderRadius: GRIIT_RADII.input,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: GRIIT_COLORS.textPrimary,
+  },
+  usernameHint: { flexDirection: "row", alignItems: "center", marginTop: 6, marginBottom: 4 },
+  availableText: { fontSize: 12, color: GRIIT_COLORS.secondaryGreen, fontWeight: "500" },
+  takenText: { fontSize: 12, color: GRIIT_COLORS.errorRed, fontWeight: "500" },
+  passwordRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GRIIT_COLORS.cardBackground,
+    borderWidth: 1.5,
+    borderRadius: GRIIT_RADII.input,
+    paddingHorizontal: 18,
+    marginTop: 0,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: GRIIT_COLORS.textPrimary,
+  },
+  strengthRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8, marginBottom: 8 },
+  strengthBar: { width: 48, height: 4, borderRadius: 2 },
+  strengthInactive: { opacity: 0.25 },
+  strengthLabel: { fontSize: 12, color: GRIIT_COLORS.textSecondary, marginLeft: 4 },
+  inlineError: { fontSize: 12, color: GRIIT_COLORS.errorRed, marginTop: 4 },
+  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 20 },
+  footerText: { fontSize: 14, color: GRIIT_COLORS.textSecondary },
+  footerLink: { fontSize: 14, fontWeight: "700", color: GRIIT_COLORS.primaryAccent },
+});
