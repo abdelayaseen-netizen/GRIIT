@@ -53,28 +53,31 @@ export const leaderboardRouter = createTRPCRouter({
         return noPagination ? empty : { ...empty, nextCursor: undefined };
       }
 
-      const { data: profiles } = await ctx.supabase
-        .from("profiles")
-        .select("user_id, username, display_name, avatar_url")
-        .in("user_id", sortedUserIds);
-
-      const { data: streaks } = await ctx.supabase
-        .from("streaks")
-        .select("user_id, active_streak_count")
-        .in("user_id", sortedUserIds);
-
-      const { data: todaySecures } = await ctx.supabase
-        .from("day_secures")
-        .select("user_id")
-        .eq("date_key", todayKey);
+      const [profilesResult, streaksResult, todaySecuresResult, respectCountsResult] = await Promise.all([
+        ctx.supabase
+          .from("profiles")
+          .select("user_id, username, display_name, avatar_url")
+          .in("user_id", sortedUserIds),
+        ctx.supabase
+          .from("streaks")
+          .select("user_id, active_streak_count")
+          .in("user_id", sortedUserIds),
+        ctx.supabase
+          .from("day_secures")
+          .select("user_id")
+          .eq("date_key", todayKey),
+        ctx.supabase
+          .from("respects")
+          .select("recipient_id")
+          .in("recipient_id", sortedUserIds),
+      ]);
+      const profiles = profilesResult.data;
+      const streaks = streaksResult.data;
+      const todaySecures = todaySecuresResult.data;
       const totalSecuredToday = new Set(
         (todaySecures ?? []).map((r: { user_id: string }) => r.user_id)
       ).size;
-
-      const { data: respectCounts } = await ctx.supabase
-        .from("respects")
-        .select("recipient_id")
-        .in("recipient_id", sortedUserIds);
+      const respectCounts = respectCountsResult.data;
       const respectByUser = new Map<string, number>();
       for (const r of respectCounts ?? []) {
         const id = (r as { recipient_id: string }).recipient_id;
