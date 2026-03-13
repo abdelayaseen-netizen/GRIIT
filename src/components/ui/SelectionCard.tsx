@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
     fontWeight: DS_TYPOGRAPHY.cardTitle.fontWeight,
     color: DS_COLORS.textPrimary,
-    lineHeight: DS_TYPOGRAPHY.cardTitle.lineHeight,
+    lineHeight: 26,
   },
   subtitle: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,

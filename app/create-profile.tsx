@@ -39,6 +39,7 @@ export default function CreateProfileScreen() {
         setUsername(meta.username.trim().replace(/^@+/, ""));
       }
     }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only run on mount to prefill from auth
   }, []);
 
   const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {

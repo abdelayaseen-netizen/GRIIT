@@ -6,6 +6,7 @@ import { createTRPCRouter } from "./create-context";
  * All other procedures are protected (require Authorization: Bearer <token>).
  */
 import { authRouter } from "./routes/auth";
+import { userRouter } from "./routes/user";
 import { profilesRouter } from "./routes/profiles";
 import { challengesRouter } from "./routes/challenges";
 import { checkinsRouter } from "./routes/checkins";
@@ -26,6 +27,7 @@ import { referralsRouter } from "./routes/referrals";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
+  user: userRouter,
   profiles: profilesRouter,
   challenges: challengesRouter,
   checkins: checkinsRouter,

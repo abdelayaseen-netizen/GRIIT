@@ -132,17 +132,13 @@ function AuthRedirector() {
     }
 
     const first = (typeof segments[0] === "string" ? segments[0] : "") as string;
+    const inOnboarding = first === SEGMENTS.ONBOARDING;
     const inWelcome = first === SEGMENTS.WELCOME;
     const inAuth = first === SEGMENTS.AUTH;
-    const inOnboardingQuestions = first === SEGMENTS.ONBOARDING_QUESTIONS;
 
     if (!user) {
-      if (!hasLaunched && !inWelcome) {
-        router.replace(ROUTES.WELCOME as never);
-        return;
-      }
-      if (hasLaunched && !inAuth && !inOnboardingQuestions) {
-        router.replace(ROUTES.AUTH as never);
+      if (!inOnboarding && !inWelcome && !inAuth) {
+        router.replace(ROUTES.ONBOARDING as never);
       }
       return;
     }
@@ -163,11 +159,11 @@ function AuthRedirector() {
     }
 
     if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin) {
-      router.replace(ROUTES.ONBOARDING as never);
+      router.replace(ROUTES.TABS as never);
       return;
     }
 
-    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile || inOnboarding)) {
+    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile)) {
       router.replace(ROUTES.TABS as never);
     }
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, router]);

@@ -1,0 +1,124 @@
+import * as z from "zod";
+import { TRPCError } from "@trpc/server";
+import { createTRPCRouter, protectedProcedure } from "../create-context";
+import type { PgError } from "../../types/db";
+
+/** Map onboarding challenge id to DB challenge uuid (must match seed). */
+const STARTER_CHALLENGE_IDS: Record<string, string> = {
+  "75_hard": "a1000001-4000-4000-8000-000000000001",
+  cold_shower_30: "a1000001-4000-4000-8000-000000000002",
+  read_10_pages: "a1000001-4000-4000-8000-000000000005",
+};
+
+function notificationTimeFromTrainingTime(trainingTime: string | null | undefined): string {
+  const map: Record<string, string> = {
+    morning: "08:00",
+    midday: "12:00",
+    evening: "20:00",
+    whenever: "20:00",
+  };
+  return (trainingTime && map[trainingTime]) || "20:00";
+}
+
+export const userRouter = createTRPCRouter({
+  /**
+   * After signup from onboarding: create/update profile with onboarding answers,
+   * set onboarding_completed, and join the selected starter challenge.
+   */
+  completeOnboarding: protectedProcedure
+    .input(
+      z.object({
+        motivation: z.string().optional(),
+        persona: z.string().optional(),
+        barrier: z.string().optional(),
+        intensity: z.string().optional(),
+        socialStyle: z.string().optional(),
+        trainingTime: z.string().optional(),
+        selectedChallengeId: z.string().optional(),
+        displayName: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      const displayName = (input.displayName ?? "").trim() || "User";
+      const username =
+        displayName
+          .toLowerCase()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-z0-9_]/g, "")
+          .slice(0, 24) || "user";
+      const uniqueUsername = username.length >= 3 ? `${username}_${userId.slice(0, 6)}` : `user_${userId.slice(0, 8)}`;
+
+      const { error: profileError } = await ctx.supabase.from("profiles").upsert(
+        {
+          user_id: userId,
+          username: uniqueUsername,
+          display_name: displayName,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+          onboarding_motivation: input.motivation ?? null,
+          onboarding_persona: input.persona ?? null,
+          onboarding_barrier: input.barrier ?? null,
+          onboarding_intensity: input.intensity ?? null,
+          onboarding_social_style: input.socialStyle ?? null,
+          onboarding_training_time: input.trainingTime ?? null,
+          notification_time_preference: notificationTimeFromTrainingTime(input.trainingTime),
+          preferred_secure_time: notificationTimeFromTrainingTime(input.trainingTime),
+          initial_challenge_id: input.selectedChallengeId
+            ? STARTER_CHALLENGE_IDS[input.selectedChallengeId] ?? null
+            : null,
+          onboarding_answers: {
+            motivation: input.motivation,
+            persona: input.persona,
+            barrier: input.barrier,
+            intensity: input.intensity,
+            social_style: input.socialStyle,
+            training_time: input.trainingTime,
+          },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+      if (profileError) {
+        const code = (profileError as PgError).code;
+        if (code === "23505") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Username already taken." });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to save profile.",
+        });
+      }
+
+      const challengeUuid = input.selectedChallengeId
+        ? STARTER_CHALLENGE_IDS[input.selectedChallengeId]
+        : null;
+
+      if (challengeUuid) {
+        const { data: existing } = await ctx.supabase
+          .from("active_challenges")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("challenge_id", challengeUuid)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error: rpcError } = await ctx.supabase.rpc("join_challenge", {
+            p_challenge_id: challengeUuid,
+          });
+          if (rpcError && (rpcError as { message?: string }).message?.includes("ALREADY_JOINED")) {
+            // already joined, ignore
+          } else if (rpcError) {
+            if (__DEV__) {
+              console.warn("[user.completeOnboarding] join_challenge failed:", rpcError.message);
+            }
+          }
+        }
+      }
+
+      return { ok: true };
+    }),
+});

@@ -1,6 +1,5 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import * as tokens from "@/src/theme/tokens";
 
 export function FilterChip({
   label,
