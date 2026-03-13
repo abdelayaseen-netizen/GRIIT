@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { ChevronLeft, UserPlus, UserMinus, Check, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
+import { sharedStyles } from "@/src/theme";
 import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { ROUTES } from "@/lib/routes";
@@ -120,7 +121,7 @@ export default function AccountabilityScreen() {
 
   if (loading && !data) {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
@@ -139,7 +140,7 @@ export default function AccountabilityScreen() {
   const acceptedCount = list.accepted.length;
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
+    <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
@@ -259,7 +260,6 @@ export default function AccountabilityScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS_COLORS.background },
   header: {
     flexDirection: "row",
     alignItems: "center",
