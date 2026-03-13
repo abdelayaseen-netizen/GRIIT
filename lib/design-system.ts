@@ -1,37 +1,37 @@
 /**
- * GRIIT Design System — 2026 premium mobile.
+ * GRIIT Design System — Rork visual spec.
  * Single source of truth: colors, typography, spacing, radius, borders, shadows.
- * Use across onboarding, Home, Discover, Challenge Detail, Movement, Profile, Settings.
  */
 
-// ─── COLORS ─────────────────────────────────────────────────────────────────
+// ─── COLORS (Rork exact) ───────────────────────────────────────────────────
 export const DS_COLORS = {
   // Base
-  background: "#F6F5F2",
-  backgroundAlt: "#F8F7F4",
+  background: "#F0EDE6",
+  backgroundAlt: "#F8F6F2",
   surface: "#FFFFFF",
   surfaceWarm: "#FCFCFA",
   surfaceMuted: "#F2F0EB",
 
   // Text
-  textPrimary: "#111111",
+  textPrimary: "#1A1A1A",
   textPrimaryAlt: "#141414",
-  textSecondary: "#6F6F6F",
-  textSecondaryAlt: "#8A8A8A",
-  textMuted: "#8A8A8A",
+  textSecondary: "#888884",
+  textSecondaryAlt: "#888884",
+  textMuted: "#AAAAAA",
 
   // Borders
-  border: "#E5E2DC",
-  borderAlt: "#E8E6E1",
+  border: "#E8E5DE",
+  borderAlt: "#E8E5DE",
+  filterPillInactiveBorder: "#E0DDD6",
 
   // Accent
-  accent: "#E97A45",
+  accent: "#E07B4A",
   accentDark: "#D96A3E",
   accentSoft: "#FFF5F0",
 
   // Semantic
-  success: "#2D8B4E",
-  successSoft: "#E8F5E9",
+  success: "#2F7A52",
+  successSoft: "#EAF5F0",
   warning: "#F5A623",
   warningSoft: "#FFFBEB",
   danger: "#E53E3E",
@@ -39,52 +39,68 @@ export const DS_COLORS = {
 
   // UI
   white: "#FFFFFF",
-  black: "#111111",
-  chipFill: "#F3F2EF",
-  chipStroke: "#E5E2DC",
-  inputPlaceholder: "#8A8A8A",
-  tabInactive: "#8A8A8A",
-  centerButtonBg: "#111111",
+  black: "#1A1A1A",
+  chipFill: "#F0EDE6",
+  chipStroke: "#E0DDD6",
+  inputPlaceholder: "#888884",
+  tabInactive: "#888884",
+  centerButtonBg: "#1C1C1E",
+
+  // Difficulty badges
+  difficultyMediumBg: "#FFF0E8",
+  difficultyMediumText: "#C85A20",
+  difficultyHardBg: "#FFEAEA",
+  difficultyHardText: "#C83030",
+  difficultyExtremeBg: "#FFE5E5",
+  difficultyExtremeText: "#AA1111",
+  featuredLabelBg: "#EAF5F0",
+  featuredLabelText: "#2F7A52",
+  activeTodayText: "#2F7A52",
+  challengePausedBg: "#FFF0EE",
+  challengePausedTitle: "#C84030",
+  rebuildModeText: "#E07B4A",
+
+  // Settings
+  settingsPageBg: "#EAF0F0",
+  settingsBackCircle: "#EDF0F0",
+
+  // Challenge detail 24h header
+  challenge24hHeaderBg: "#3E7A55",
 } as const;
 
-// ─── TYPOGRAPHY ─────────────────────────────────────────────────────────────
+// ─── TYPOGRAPHY (Rork) ─────────────────────────────────────────────────────
 export const DS_TYPOGRAPHY = {
-  // Wordmark / brand
-  wordmark: {
-    fontSize: 28,
-    fontWeight: "700" as const,
-    letterSpacing: 3,
-    lineHeight: 34,
-  },
-  wordmarkSubtitle: {
-    fontSize: 13,
-    fontWeight: "500" as const,
-    lineHeight: 18,
-  },
+  screenTitle: { fontSize: 30, fontWeight: "800" as const, color: "#1A1A1A", letterSpacing: -0.5 },
+  screenSubtitle: { fontSize: 15, fontWeight: "400" as const, color: "#888884" },
+  sectionHeader: { fontSize: 17, fontWeight: "700" as const, color: "#1A1A1A" },
+  cardTitle: { fontSize: 18, fontWeight: "700" as const, color: "#1A1A1A" },
+  cardSubtitle: { fontSize: 14, fontWeight: "400" as const, color: "#888884" },
+  metaRow: { fontSize: 12, fontWeight: "400" as const, color: "#AAAAAA" },
+  featuredLabel: { fontSize: 11, fontWeight: "700" as const, letterSpacing: 1, color: "#2F7A52" },
+  difficultyBadge: { fontSize: 12, fontWeight: "600" as const },
+  tabLabel: { fontSize: 10, fontWeight: "400" as const },
+  ctaButton: { fontSize: 16, fontWeight: "600" as const, color: "#FFFFFF" },
+  activeTodayCount: { fontSize: 13, fontWeight: "600" as const, color: "#2F7A52" },
 
-  // Headlines
+  wordmark: { fontSize: 16, fontWeight: "800" as const, letterSpacing: 3, lineHeight: 20 },
+  wordmarkSubtitle: { fontSize: 13, fontWeight: "500" as const, lineHeight: 18 },
   pageTitleLarge: { fontSize: 44, fontWeight: "800" as const, letterSpacing: -0.8, lineHeight: 50 },
   pageTitle: { fontSize: 28, fontWeight: "800" as const, letterSpacing: -0.5, lineHeight: 34 },
   sectionTitle: { fontSize: 20, fontWeight: "700" as const, letterSpacing: -0.2, lineHeight: 26 },
-  cardTitle: { fontSize: 20, fontWeight: "700" as const, lineHeight: 26 },
 
-  // Body
   body: { fontSize: 16, fontWeight: "500" as const, lineHeight: 24 },
   bodySmall: { fontSize: 15, fontWeight: "400" as const, lineHeight: 22 },
   secondary: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
   metadata: { fontSize: 13, fontWeight: "500" as const, lineHeight: 18 },
-
-  // UI
   eyebrow: { fontSize: 12, fontWeight: "600" as const, letterSpacing: 1, lineHeight: 16 },
   button: { fontSize: 17, fontWeight: "700" as const, lineHeight: 22 },
   buttonSmall: { fontSize: 16, fontWeight: "600" as const },
-  tabLabel: { fontSize: 11, fontWeight: "500" as const },
   chip: { fontSize: 15, fontWeight: "600" as const },
   statValue: { fontSize: 28, fontWeight: "700" as const },
   statLabel: { fontSize: 12, fontWeight: "600" as const, letterSpacing: 0.5 },
 } as const;
 
-// ─── SPACING (4/8/12/16/20/24/32/40) ───────────────────────────────────────
+// ─── SPACING (Rork) ────────────────────────────────────────────────────────
 export const DS_SPACING = {
   xs: 4,
   sm: 8,
@@ -94,27 +110,33 @@ export const DS_SPACING = {
   xxl: 24,
   xxxl: 32,
   section: 40,
-  screenHorizontal: 24,
+  screenHorizontal: 20,
   screenHorizontalAlt: 20,
-  sectionGap: 24,
+  screenTopPadding: 16,
+  sectionGap: 12,
   sectionGapLarge: 32,
-  cardPadding: 20,
-  cardGap: 16,
+  cardPadding: 16,
+  cardGap: 12,
   inputLabelGap: 8,
   listItemGap: 12,
 } as const;
 
-// ─── RADIUS ─────────────────────────────────────────────────────────────────
+// ─── RADIUS (Rork) ─────────────────────────────────────────────────────────
 export const DS_RADIUS = {
-  input: 20,
-  card: 26,
-  cardAlt: 24,
+  input: 12,
+  card: 16,
+  cardAlt: 16,
   pill: 999,
-  button: 22,
-  buttonPill: 24,
+  button: 14,
+  buttonPill: 14,
   chip: 999,
   iconButton: 22,
   centerNavButton: 999,
+  searchBar: 12,
+  filterPill: 999,
+  ctaButton: 14,
+  featuredBadge: 6,
+  modal: 24,
 } as const;
 
 // ─── BORDERS ───────────────────────────────────────────────────────────────
@@ -125,7 +147,7 @@ export const DS_BORDERS = {
   colorStrong: DS_COLORS.textPrimary,
 } as const;
 
-// ─── SHADOWS (minimal, soft) ───────────────────────────────────────────────
+// ─── SHADOWS (Rork: shadowColor #000, opacity 0.04, radius 8, elevation 2) ─
 export const DS_SHADOWS = {
   card: {
     shadowColor: "#000",
@@ -137,9 +159,9 @@ export const DS_SHADOWS = {
   button: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
   },
   centerButton: {
     shadowColor: "#000",
@@ -150,16 +172,20 @@ export const DS_SHADOWS = {
   },
 } as const;
 
-// ─── COMPONENT MEASURES ────────────────────────────────────────────────────
+// ─── COMPONENT MEASURES (Rork) ─────────────────────────────────────────────
 export const DS_MEASURES = {
-  ctaHeight: 58,
+  ctaHeight: 56,
   ctaHeightCompact: 52,
   inputHeight: 56,
-  searchHeight: 52,
+  searchHeight: 44,
+  searchBarRadius: 12,
+  filterPillHeight: 36,
   tabBarHeight: 88,
-  centerNavButtonSize: 58,
+  centerNavButtonSize: 56,
   headerHeight: 56,
   progressBarHeight: 6,
+  featuredStripeWidth: 4,
+  sectionHeaderIconSize: 18,
 } as const;
 
 export type DSColors = typeof DS_COLORS;

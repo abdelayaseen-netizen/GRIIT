@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
 
 export interface DisciplineScoreCardProps {
   disciplineScore: number;
@@ -50,33 +50,36 @@ export default function DisciplineScoreCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.card,
-    padding: DS_SPACING.xl,
-    marginHorizontal: DS_SPACING.screenHorizontalAlt,
-    marginBottom: DS_SPACING.md,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E8E5DE",
     ...DS_SHADOWS.card,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: DS_SPACING.sm,
+    marginBottom: 8,
   },
   label: {
-    fontSize: DS_TYPOGRAPHY.tabLabel.fontSize,
+    fontSize: 11,
     fontWeight: "600",
-    color: DS_COLORS.textMuted,
+    color: "#AAAAAA",
     letterSpacing: 1,
+    textTransform: "uppercase",
   },
   tierBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 10,
-    paddingVertical: DS_SPACING.xs,
-    borderRadius: DS_RADIUS.button,
-    backgroundColor: DS_COLORS.chipFill,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#F0EDE6",
   },
   tierDot: {
     width: 6,
@@ -85,40 +88,42 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.accent,
   },
   tierText: {
-    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    fontSize: 12,
     fontWeight: "600",
     color: DS_COLORS.textPrimary,
   },
   score: {
     fontSize: 48,
-    fontWeight: "700",
-    color: DS_COLORS.textPrimary,
+    fontWeight: "800",
+    color: "#1A1A1A",
   },
   divider: {
     height: 1,
-    backgroundColor: DS_COLORS.borderAlt,
-    marginVertical: DS_SPACING.lg,
+    backgroundColor: "#E8E5DE",
+    marginVertical: 16,
   },
   footerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_SPACING.md,
+    gap: 12,
   },
   daysValue: {
-    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
+    fontSize: 28,
     fontWeight: "700",
     color: DS_COLORS.textPrimary,
   },
   footerLabels: {},
   daysLabel: {
-    fontSize: DS_TYPOGRAPHY.tabLabel.fontSize,
+    fontSize: 11,
     fontWeight: "600",
-    color: DS_COLORS.textMuted,
+    color: "#AAAAAA",
     letterSpacing: 1,
+    textTransform: "uppercase",
   },
   tierFooter: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    color: DS_COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#888884",
     marginTop: 2,
   },
   zeroStateHint: {

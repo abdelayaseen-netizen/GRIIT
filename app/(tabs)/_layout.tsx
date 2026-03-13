@@ -1,13 +1,14 @@
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
+  const pathname = usePathname();
   const { colors } = useTheme();
   const { user } = useAuth();
   const pushRegistrationAttempted = useRef(false);
@@ -17,11 +18,12 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = colors.card ?? DS_COLORS.surface;
-  const tabBorder = colors.border ?? DS_COLORS.border;
+  const tabBg = "#FFFFFF";
+  const tabBorder = "#E8E5DE";
   const tabActive = colors.accent ?? DS_COLORS.accent;
-  const tabInactive = colors.text?.muted ?? DS_COLORS.textMuted;
-  const centerBtnBg = DS_COLORS.centerButtonBg;
+  const tabInactive = colors.text?.muted ?? DS_COLORS.tabInactive;
+  const isCreateScreen = typeof pathname === "string" && pathname.includes("create");
+  const centerBtnBg = isCreateScreen ? DS_COLORS.accent : DS_COLORS.centerButtonBg;
 
   return (
     <Tabs
@@ -37,8 +39,8 @@ export default function TabLayout() {
           height: DS_MEASURES.tabBarHeight,
         },
         tabBarLabelStyle: {
-          fontSize: DS_TYPOGRAPHY.tabLabel.fontSize,
-          fontWeight: DS_TYPOGRAPHY.tabLabel.fontWeight,
+          fontSize: 10,
+          fontWeight: "400" as const,
           marginTop: 4,
           marginBottom: 8,
         },
@@ -48,7 +50,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size || 24} />,
           tabBarAccessibilityLabel: "Home tab",
         }}
       />
@@ -56,7 +58,7 @@ export default function TabLayout() {
         name="discover"
         options={{
           title: "Discover",
-          tabBarIcon: ({ color, size }) => <Compass color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Compass color={color} size={size || 24} />,
           tabBarAccessibilityLabel: "Discover tab",
         }}
       />
@@ -66,7 +68,7 @@ export default function TabLayout() {
           title: "Create",
           tabBarIcon: () => (
             <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
-              <Plus color="#FFFFFF" size={25} strokeWidth={2.5} />
+              <Plus color="#FFFFFF" size={24} strokeWidth={2.5} />
             </View>
           ),
           tabBarLabel: () => null,
@@ -77,7 +79,7 @@ export default function TabLayout() {
         name="activity"
         options={{
           title: "Movement",
-          tabBarIcon: ({ color, size }) => <Flame color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Flame color={color} size={size || 24} />,
           tabBarAccessibilityLabel: "Movement tab",
         }}
       />
@@ -85,7 +87,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <User color={color} size={size || 24} />,
           tabBarAccessibilityLabel: "Profile tab",
         }}
       />

@@ -647,12 +647,12 @@ export default function HomeScreen() {
           <GRIITWordmark compact />
           <View style={styles.headerBadges}>
             <View style={styles.headerBadge} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
-              <TrendingUp size={14} color={DS_COLORS.success} />
-              <Text style={[styles.headerBadgeText, { color: DS_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
+              <TrendingUp size={14} color="#FFFFFF" />
+              <Text style={styles.headerBadgeText}>{stats?.longestStreak ?? 0}</Text>
             </View>
             <View style={styles.headerBadge} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
-              <Flame size={14} color={DS_COLORS.accent} />
-              <Text style={[styles.headerBadgeText, { color: DS_COLORS.textPrimary }]}>{currentStreak}</Text>
+              <Flame size={14} color="#FFFFFF" />
+              <Text style={styles.headerBadgeText}>{currentStreak}</Text>
             </View>
           </View>
         </View>
@@ -1299,61 +1299,59 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingHorizontal: 20,
     paddingBottom: DS_SPACING.section,
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    paddingTop: DS_SPACING.md,
-    paddingBottom: DS_SPACING.lg,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
   headerBadges: {
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_SPACING.sm,
+    gap: 8,
   },
   headerBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_SPACING.xs,
-    paddingHorizontal: DS_SPACING.md,
-    paddingVertical: DS_SPACING.sm,
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: DS_COLORS.surface,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    backgroundColor: "#1A1A1A",
   },
   headerBadgeText: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontSize: 13,
     fontWeight: "700" as const,
-    color: DS_COLORS.textPrimary,
+    color: "#FFFFFF",
   },
   mainPromptBlock: {
-    marginBottom: DS_SPACING.lg,
+    marginBottom: 16,
   },
   secureTodayTitle: {
-    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
-    fontWeight: DS_TYPOGRAPHY.pageTitle.fontWeight,
-    letterSpacing: DS_TYPOGRAPHY.pageTitle.letterSpacing,
-    color: DS_COLORS.textPrimary,
-    marginBottom: DS_SPACING.xs,
-    lineHeight: DS_TYPOGRAPHY.pageTitle.lineHeight,
+    fontSize: 22,
+    fontWeight: "700" as const,
+    color: "#1A1A1A",
+    marginBottom: 4,
+    lineHeight: 28,
   },
   secureTodaySub: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    color: DS_COLORS.textMuted,
-    marginBottom: DS_SPACING.md,
+    fontSize: 14,
+    fontWeight: "400" as const,
+    color: "#888884",
+    marginBottom: 16,
   },
   metricsCard: {
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
-    padding: DS_SPACING.cardPadding,
-    marginBottom: DS_SPACING.cardGap,
-    gap: DS_SPACING.md,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#E8E5DE",
   },
   metricsRow: {
     flexDirection: "row",
@@ -1449,12 +1447,12 @@ const styles = StyleSheet.create({
   disciplineWeekCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: DS_SPACING.cardPadding,
+    padding: 16,
     marginBottom: DS_SPACING.sectionGap,
-    borderRadius: DS_RADIUS.cardAlt,
-    backgroundColor: DS_COLORS.surface,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E8E5DE",
   },
   disciplineWeekIconWrap: {
     width: 44,
@@ -1462,16 +1460,18 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: DS_SPACING.md,
+    marginRight: 12,
   },
   disciplineWeekBody: { flex: 1 },
   disciplineWeekTitle: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    fontSize: 15,
     fontWeight: "700",
   },
-  disciplineWeekNum: { fontWeight: "700" },
+  disciplineWeekNum: { fontWeight: "700", color: "#2F7A52" },
   disciplineWeekSub: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#2F7A52",
     marginTop: 2,
   },
   welcomeBackCard: {
@@ -1530,17 +1530,19 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    backgroundColor: "#E53E3E",
   },
   liveTitle: {
     fontSize: 12,
     fontWeight: "700" as const,
     letterSpacing: 1,
     textTransform: "uppercase" as const,
-    color: DS_COLORS.textPrimary,
+    color: "#1A1A1A",
   },
   liveSub: {
     fontSize: 13,
-    color: DS_COLORS.textMuted,
+    fontWeight: "400" as const,
+    color: "#888884",
     flex: 1,
   },
   liveSubItalic: {
@@ -2232,55 +2234,65 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textSecondary,
   },
   streakLostCard: {
-    borderRadius: 16,
-    padding: 32,
+    borderRadius: 24,
+    padding: 28,
     width: "80%",
     maxWidth: 340,
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
   streakLostClose: {
     position: "absolute",
     top: 12,
     right: 12,
     zIndex: 1,
-    padding: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F0EDE6",
+    alignItems: "center",
+    justifyContent: "center",
   },
   streakLostCloseText: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "600" as const,
+    color: "#888884",
   },
   streakLostIconWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#E8E8E8",
+    backgroundColor: "#F0EDE6",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
   },
   streakLostTitle: {
     fontSize: 22,
-    fontWeight: "700" as const,
+    fontWeight: "800" as const,
+    color: "#1A1A1A",
     marginBottom: 6,
     textAlign: "center",
   },
   streakLostSub: {
     fontSize: 15,
+    fontWeight: "400" as const,
+    color: "#888884",
     marginBottom: 20,
     textAlign: "center",
   },
   streakLostButton: {
-    backgroundColor: "#1A1A2E",
-    borderRadius: 28,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 14,
+    height: 52,
     width: "100%",
     alignItems: "center",
+    justifyContent: "center",
   },
   streakLostButtonText: {
     fontSize: 16,
-    fontWeight: "700" as const,
-    color: "#fff",
+    fontWeight: "600" as const,
+    color: "#FFFFFF",
   },
   emptyTitleNew: {
     fontSize: 26,

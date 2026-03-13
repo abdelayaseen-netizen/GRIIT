@@ -2,11 +2,11 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
 
-const STEPPER_CIRCLE = 32;
+const STEPPER_CIRCLE = 28;
 const CONNECTOR_HEIGHT = 4;
-const GREEN = "#2D8B4E";
-const ORANGE = "#E8734A";
-const GRAY = "#E0DDD8";
+const GREEN = "#2F7A52";
+const ORANGE = "#E07B4A";
+const GRAY = "#D0CEC8";
 
 interface ChallengeStepperProps {
   currentStep: number;
@@ -36,7 +36,7 @@ export function ChallengeStepper({
               ]}
             >
               {isCompleted ? (
-                <Check size={18} color="#fff" strokeWidth={2.5} />
+                <Check size={16} color="#fff" strokeWidth={2.5} />
               ) : (
                 <Text
                   style={[
@@ -96,10 +96,10 @@ const s = StyleSheet.create({
     color: "#fff",
   },
   circleTextInactive: {
-    color: "#6B7280",
+    color: "#888884",
   },
   connector: {
-    width: 40,
+    width: 32,
     height: CONNECTOR_HEIGHT,
     marginHorizontal: 4,
   },

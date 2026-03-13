@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Trophy, Target, Award } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS } from "@/lib/design-system";
 
 export interface LifetimeStatsCardProps {
   currentStreak?: number;
@@ -22,10 +22,10 @@ export default function LifetimeStatsCard({
 }: LifetimeStatsCardProps) {
   const safe = (n: number) => Math.max(0, Number(n) || 0);
   const items = [
-    { icon: Flame, color: DS_COLORS.accent, bg: DS_COLORS.accentSoft, value: safe(currentStreak), label: "STREAK" },
-    { icon: Trophy, color: DS_COLORS.warning, bg: DS_COLORS.warningSoft, value: safe(longestStreak), label: "BEST" },
-    { icon: Target, color: DS_COLORS.success, bg: DS_COLORS.successSoft, value: safe(daysSecured), label: "SECURED" },
-    { icon: Award, color: DS_COLORS.accent, bg: DS_COLORS.accentSoft, value: safe(challengesCompleted), label: "DONE" },
+    { icon: Flame, color: DS_COLORS.accent, value: safe(currentStreak), label: "STREAK" },
+    { icon: Trophy, color: "#D4A017", value: safe(longestStreak), label: "BEST" },
+    { icon: Target, color: DS_COLORS.success, value: safe(daysSecured), label: "SECURED" },
+    { icon: Award, color: DS_COLORS.accent, value: safe(challengesCompleted), label: "DONE" },
   ];
 
   return (
@@ -33,16 +33,13 @@ export default function LifetimeStatsCard({
       {items.map((item, i) => {
         const Icon = item.icon;
         return (
-          <React.Fragment key={i}>
-            {i > 0 && <View style={styles.divider} />}
-            <View style={styles.cell}>
-              <View style={[styles.iconWrap, { backgroundColor: item.bg }]}>
-                <Icon size={18} color={item.color} />
-              </View>
-              <Text style={styles.value}>{item.value}</Text>
-              <Text style={styles.label}>{item.label}</Text>
+          <View key={i} style={styles.cell}>
+            <View style={styles.iconWrap}>
+              <Icon size={18} color={item.color} />
             </View>
-          </React.Fragment>
+            <Text style={styles.value}>{item.value}</Text>
+            <Text style={styles.label}>{item.label}</Text>
+          </View>
         );
       })}
     </View>
@@ -52,23 +49,17 @@ export default function LifetimeStatsCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
-    marginHorizontal: DS_SPACING.screenHorizontalAlt,
-    marginBottom: DS_SPACING.lg,
-    paddingVertical: DS_SPACING.lg,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    gap: 12,
   },
   cell: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-  },
-  divider: {
-    width: 1,
-    backgroundColor: DS_COLORS.border,
-    alignSelf: "stretch",
+    backgroundColor: "#F8F6F2",
+    borderRadius: 12,
+    paddingVertical: 16,
   },
   iconWrap: {
     width: ICON_CIRCLE,
@@ -76,18 +67,19 @@ const styles = StyleSheet.create({
     borderRadius: ICON_CIRCLE / 2,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: DS_SPACING.sm,
+    marginBottom: 8,
   },
   value: {
-    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
+    fontSize: 20,
     fontWeight: "700",
-    color: DS_COLORS.textPrimary,
+    color: "#1A1A1A",
   },
   label: {
-    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    fontSize: 11,
     fontWeight: "600",
-    color: DS_COLORS.textMuted,
+    color: "#AAAAAA",
     letterSpacing: 1,
+    textTransform: "uppercase",
     marginTop: 2,
   },
 });

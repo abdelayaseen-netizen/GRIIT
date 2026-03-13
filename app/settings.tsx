@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ChevronLeft, Sun, Moon, Smartphone, Crown, User, LogOut, FileText } from "lucide-react-native";
+import { ChevronLeft, Sun, Moon, Smartphone, Crown, User, LogOut, FileText, Eye } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
@@ -213,16 +213,18 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.background }]} edges={["top"]}>
-      <View style={[styles.header, { backgroundColor: themeColors.background, borderBottomColor: themeColors.border }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: "#EAF0F0" }]} edges={["top"]}>
+      <View style={[styles.header, { backgroundColor: "#EAF0F0", borderBottomColor: "#E8E5DE" }]}>
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backBtn}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <ChevronLeft size={24} color={themeColors.text.primary} />
+          <View style={styles.backBtnCircle}>
+            <ChevronLeft size={22} color="#1A1A1A" />
+          </View>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text.primary }]}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: "#1A1A1A" }]}>Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -233,8 +235,11 @@ export default function SettingsScreen() {
       >
         {/* Privacy & Visibility */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitleLarge, { color: themeColors.text.primary }]}>👁 Privacy & Visibility</Text>
-          <Text style={[styles.privacyDesc, { color: themeColors.text.muted }]}>
+          <View style={styles.sectionHeaderRow}>
+            <Eye size={18} color="#1A1A1A" />
+            <Text style={[styles.sectionTitleLarge, { color: "#1A1A1A" }]}>Privacy & Visibility</Text>
+          </View>
+          <Text style={[styles.privacyDesc, { color: "#888884" }]}>
             Control who sees your profile, challenges, and activity. Like TikTok privacy settings.
           </Text>
           <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
@@ -562,26 +567,40 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS_COLORS.background },
+  safe: { flex: 1, backgroundColor: "#EAF0F0" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: DS_SPACING.sm,
-    paddingVertical: DS_SPACING.md,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.border,
+    borderBottomColor: "#E8E5DE",
   },
-  backBtn: { padding: DS_SPACING.xs },
+  backBtn: { padding: 4 },
+  backBtnCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#EDF0F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerTitle: {
-    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
-    fontWeight: "700",
-    color: DS_COLORS.textPrimary,
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#1A1A1A",
   },
-  headerSpacer: { width: 36 },
+  headerSpacer: { width: 40 },
   scroll: { flex: 1 },
   scrollContent: { padding: DS_SPACING.screenHorizontal },
   section: { marginBottom: DS_SPACING.xxl },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",

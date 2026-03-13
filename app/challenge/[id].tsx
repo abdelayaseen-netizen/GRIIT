@@ -804,9 +804,9 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const headerGradientColors = [DS_COLORS.accent, DS_COLORS.accentDark] as const;
-  const ctaBgColor = isDaily && !expired ? themeColors.success : DS_COLORS.accent;
-  const countdownTheme = isDaily ? { ...theme, accent: themeColors.success } : theme;
+  const headerGradientColors = isDaily ? ["#3E7A55", "#3E7A55"] as const : [DS_COLORS.accent, DS_COLORS.accentDark] as const;
+  const ctaBgColor = isDaily && !expired ? "#2F7A52" : DS_COLORS.accent;
+  const countdownTheme = isDaily ? { ...theme, accent: "#2F7A52" } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
   const visibilityLabel = challengeVisibility === "friends" ? "Friends" : challengeVisibility === "private" ? "Only me" : null;
@@ -822,7 +822,7 @@ export default function ChallengeDetailScreen() {
     : 0;
 
   return (
-    <View style={[s.container, { backgroundColor: themeColors.background }]}>
+    <View style={[s.container, { backgroundColor: isDaily ? "#F0EDE6" : themeColors.background }]}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
@@ -839,12 +839,12 @@ export default function ChallengeDetailScreen() {
             />
           }
         >
-          {/* HERO: warm orange, rounded bottom, premium spacing */}
-          <LinearGradient colors={headerGradientColors} style={s.heroHeader}>
+          {/* HERO: green for 24h, orange gradient otherwise */}
+          <LinearGradient colors={headerGradientColors} style={[s.heroHeader, isDaily && s.heroHeader24h]}>
             <SafeAreaView edges={["top"]} style={s.heroSafeArea}>
               <View style={s.topNav}>
                 <TouchableOpacity
-                  style={s.backPill}
+                  style={[s.backPill, isDaily && s.backPill24h]}
                   onPress={() => router.back()}
                   activeOpacity={0.7}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -854,9 +854,9 @@ export default function ChallengeDetailScreen() {
                 >
                   <ChevronLeft size={24} color={DS_COLORS.white} />
                 </TouchableOpacity>
-                <Text style={s.topNavTitle}>Challenge</Text>
+                <Text style={[s.topNavTitle, isDaily && s.topNavTitle24h]}>Challenge</Text>
                 <TouchableOpacity
-                  style={s.morePill}
+                  style={[s.morePill, isDaily && s.backPill24h]}
                   activeOpacity={0.7}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   onPress={() => {
@@ -904,7 +904,7 @@ export default function ChallengeDetailScreen() {
               <View style={s.heroContent}>
                 {isDaily ? (
                   <View style={s.dailyLabel}>
-                    <Zap size={11} color="rgba(255,255,255,0.9)" />
+                    <Zap size={11} color="rgba(255,255,255,0.8)" />
                     <Text style={s.dailyLabelText}>24-HOUR CHALLENGE</Text>
                   </View>
                 ) : (
@@ -1382,8 +1382,13 @@ const s = StyleSheet.create({
     borderBottomLeftRadius: DS_RADIUS.card,
     borderBottomRightRadius: DS_RADIUS.card,
   },
+  heroHeader24h: {
+    backgroundColor: "#3E7A55",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
   heroSafeArea: {
-    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingHorizontal: 20,
   },
   topNav: {
     flexDirection: "row",
@@ -1400,11 +1405,20 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  backPill24h: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
   topNavTitle: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "600" as const,
     color: DS_COLORS.white,
     letterSpacing: 0.5,
+  },
+  topNavTitle24h: {
+    fontSize: 15,
+    fontWeight: "400" as const,
   },
   morePill: {
     width: 44,
@@ -1432,23 +1446,24 @@ const s = StyleSheet.create({
   },
   dailyLabelText: {
     fontSize: 11,
-    fontWeight: "700" as const,
-    color: "rgba(255,255,255,0.85)",
-    letterSpacing: 1.2,
+    fontWeight: "600" as const,
+    color: "rgba(255,255,255,0.8)",
+    letterSpacing: 1,
+    textTransform: "uppercase" as const,
   },
   heroTitle: {
-    fontSize: DS_TYPOGRAPHY.pageTitleLarge.fontSize,
-    fontWeight: DS_TYPOGRAPHY.pageTitleLarge.fontWeight,
+    fontSize: 30,
+    fontWeight: "800" as const,
     color: DS_COLORS.white,
-    letterSpacing: DS_TYPOGRAPHY.pageTitleLarge.letterSpacing,
-    lineHeight: DS_TYPOGRAPHY.pageTitleLarge.lineHeight,
+    letterSpacing: -0.5,
+    lineHeight: 36,
     marginBottom: DS_SPACING.sm,
   },
   heroTagline: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    fontSize: 15,
     fontWeight: "400" as const,
     color: "rgba(255,255,255,0.8)",
-    lineHeight: DS_TYPOGRAPHY.secondary.lineHeight,
+    lineHeight: 22,
     marginBottom: DS_SPACING.lg,
   },
   referrerLabel: {
@@ -1480,12 +1495,12 @@ const s = StyleSheet.create({
     letterSpacing: 0.1,
   },
   body: {
-    backgroundColor: DS_COLORS.background,
+    backgroundColor: "#F0EDE6",
     borderTopLeftRadius: DS_RADIUS.card,
     borderTopRightRadius: DS_RADIUS.card,
     marginTop: -DS_RADIUS.card * 0.5,
     paddingTop: DS_SPACING.xxl,
-    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingHorizontal: 20,
     paddingBottom: 140,
     borderWidth: 0,
     shadowColor: "#000",
@@ -1499,13 +1514,13 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
-    paddingHorizontal: DS_SPACING.cardPadding,
-    paddingVertical: DS_SPACING.lg,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     marginBottom: DS_SPACING.lg,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    borderWidth: 1,
+    borderColor: "#E8E5DE",
   },
   countdownLeft: {
     flexDirection: "row",
@@ -1523,8 +1538,8 @@ const s = StyleSheet.create({
     color: DS_COLORS.textSecondary,
   },
   countdownValue: {
-    fontSize: 22,
-    fontWeight: "800" as const,
+    fontSize: 24,
+    fontWeight: "700" as const,
     fontVariant: ["tabular-nums"] as const,
     letterSpacing: 0.5,
   },

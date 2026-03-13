@@ -254,7 +254,7 @@ export default function CreateScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { showGate } = useAuthGate();
-  const { colors } = useTheme();
+  useTheme();
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -972,8 +972,8 @@ export default function CreateScreen() {
 
   const renderStep2 = () => (
     <Animated.View style={[styles.stepContent, { transform: [{ translateX: slideAnim }] }]}>
-      <Text style={styles.stepTitle}>Daily Tasks</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={step2Styles.sectionTitle}>Daily Tasks</Text>
+      <Text style={step2Styles.sectionSubtitle}>
         {isSharedGoal
           ? "Your team will log progress toward the goal. Add optional daily habits below."
           : "What must be done each day?"}
@@ -994,7 +994,7 @@ export default function CreateScreen() {
       )}
 
       <View style={step2Styles.packsSection}>
-        <Text style={step2Styles.packsTitle}>Quick start with packs</Text>
+        <Text style={step2Styles.packsTitle}>QUICK START WITH PACKS</Text>
         <Text style={step2Styles.packsSubtitle}>One tap applies a full set of daily tasks</Text>
         <View style={step2Styles.packsGrid}>
           {CHALLENGE_PACKS.map((pack) => (
@@ -1021,11 +1021,10 @@ export default function CreateScreen() {
       {tasks.length === 0 ? (
         <View style={step2Styles.emptyState}>
           <View style={step2Styles.emptyIcon}>
-            <Plus size={28} color={DS_COLORS.textMuted} />
+            <Plus size={28} color="#888884" />
           </View>
-          <Text style={step2Styles.emptyTitle}>Add your daily tasks</Text>
-          <Text style={step2Styles.emptyDesc}>Start with 1–3 tasks people can realistically complete every day.</Text>
-          <Text style={step2Styles.emptyHelper}>Best challenges usually have 2–5 daily tasks.</Text>
+          <Text style={step2Styles.emptyTitle}>No tasks yet</Text>
+          <Text style={step2Styles.emptyDesc}>Add your first daily task to get started</Text>
         </View>
       ) : (
         <View style={step2Styles.taskList}>
@@ -1195,7 +1194,7 @@ export default function CreateScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <CreateFlowHeader
           title="Create Challenge"
@@ -1483,6 +1482,18 @@ const recoveryStyles = RNStyleSheet.create({
 });
 
 const step2Styles = RNStyleSheet.create({
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: '400' as const,
+    color: '#888884',
+    marginBottom: 16,
+  },
   taskList: {
     gap: 10,
     marginBottom: 16,
@@ -1490,17 +1501,17 @@ const step2Styles = RNStyleSheet.create({
   taskCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     padding: 14,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: '#E8E5DE',
     gap: 12,
   },
   taskIcon: {
     width: 44,
     height: 44,
-    borderRadius: 11,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1516,7 +1527,7 @@ const step2Styles = RNStyleSheet.create({
   taskTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: DS_COLORS.textPrimary,
+    color: '#1A1A1A',
     flexShrink: 1,
   },
   typePill: {
@@ -1532,7 +1543,7 @@ const step2Styles = RNStyleSheet.create({
   },
   taskMeta: {
     fontSize: 13,
-    color: DS_COLORS.textMuted,
+    color: '#888884',
     lineHeight: 18,
     marginBottom: 2,
   },
@@ -1564,15 +1575,15 @@ const step2Styles = RNStyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: DS_COLORS.accent,
-    paddingVertical: 16,
+    backgroundColor: '#E07B4A',
+    height: 56,
     borderRadius: 14,
     marginTop: 8,
   },
   addBtnText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: '#FFFFFF',
   },
   emptyState: {
     alignItems: 'center',
@@ -1583,26 +1594,21 @@ const step2Styles = RNStyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: DS_COLORS.chipFill,
+    backgroundColor: '#E8E5DE',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   emptyTitle: {
     fontSize: 17,
-    fontWeight: '600' as const,
-    color: DS_COLORS.textPrimary,
+    fontWeight: '700' as const,
+    color: '#1A1A1A',
   },
   emptyDesc: {
     fontSize: 14,
-    color: DS_COLORS.textMuted,
+    fontWeight: '400' as const,
+    color: '#888884',
     textAlign: 'center',
-  },
-  emptyHelper: {
-    fontSize: 12,
-    color: DS_COLORS.textMuted,
-    textAlign: 'center',
-    marginTop: 2,
   },
   packsSection: {
     marginBottom: 20,
@@ -1610,14 +1616,15 @@ const step2Styles = RNStyleSheet.create({
   packsTitle: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: DS_COLORS.textSecondary,
+    color: '#AAAAAA',
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   packsSubtitle: {
     fontSize: 14,
-    color: DS_COLORS.textMuted,
+    fontWeight: '400' as const,
+    color: '#888884',
     marginBottom: 16,
   },
   packsGrid: {
@@ -1628,10 +1635,10 @@ const step2Styles = RNStyleSheet.create({
   packCard: {
     width: '47%',
     minWidth: 140,
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 14,
+    padding: 16,
   },
   packIcon: {
     fontSize: 28,
@@ -1645,12 +1652,14 @@ const step2Styles = RNStyleSheet.create({
   },
   packDesc: {
     fontSize: 13,
-    color: DS_COLORS.textMuted,
+    fontWeight: '400' as const,
+    color: '#888884',
     lineHeight: 18,
     marginBottom: 8,
   },
   packTaskCount: {
     fontSize: 12,
-    color: DS_COLORS.textMuted,
+    fontWeight: '400' as const,
+    color: '#AAAAAA',
   },
 });

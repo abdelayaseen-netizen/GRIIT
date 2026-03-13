@@ -2,75 +2,74 @@
  * Design tokens: colors, typography, spacing. Matches lib/design-tokens + constants/colors.
  */
 
-// ─── COLORS (prompt: #FAFAF8, #E8734A, #2D8B4E, #F0EDE8) ───────────────────
+// ─── COLORS (Rork) ──────────────────────────────────────────────────────────
 export const colors = {
-  background: "#FAFAF8",
+  background: "#F0EDE6",
   surface: "#FFFFFF",
   textPrimary: "#1A1A1A",
-  textSecondary: "#6B7280",
-  borderSubtle: "#F0EDE8",
+  textSecondary: "#888884",
+  borderSubtle: "#E8E5DE",
   shadowColor: "rgba(0,0,0,0.04)",
-  accentOrange: "#E8734A",
+  accentOrange: "#E07B4A",
   accentOrangeDark: "#D96A3E",
-  chipFill: "#F3F4F6",
-  chipStroke: "#E0DDD8",
-  chipText: "#6B7280",
-  successGreenText: "#2D8B4E",
-  badgeRedText: "#E53E3E",
-  badgeRedBg: "#FEE2E2",
-  badgeOrangeText: "#C86A3A",
-  badgeOrangeBg: "#FFF5F0",
-  badgeGreenText: "#2D8B4E",
-  badgeGreenBg: "#F0FFF4",
+  chipFill: "#F0EDE6",
+  chipStroke: "#E0DDD6",
+  chipText: "#444",
+  successGreenText: "#2F7A52",
+  badgeRedText: "#AA1111",
+  badgeRedBg: "#FFE5E5",
+  badgeOrangeText: "#C85A20",
+  badgeOrangeBg: "#FFF0E8",
+  badgeGreenText: "#2F7A52",
+  badgeGreenBg: "#EAF5F0",
   badgeYellowGreenText: "#7C9B2E",
   badgeYellowGreenBg: "#ECFCCB",
   purpleStripe: "#7C6BC4",
   blueStripe: "#2563EB",
-  greenStripe: "#2D8B4E",
-  orangeStripe: "#E8734A",
+  greenStripe: "#2F7A52",
+  orangeStripe: "#E07B4A",
   redStripe: "#E53E3E",
-  searchIcon: "#9CA3AF",
-  searchPlaceholder: "#9CA3AF",
-  tabInactive: "#9CA3AF",
-  centerButtonBg: "#1A1A1A",
+  searchIcon: "#888884",
+  searchPlaceholder: "#888884",
+  tabInactive: "#888884",
+  centerButtonBg: "#1C1C1E",
   white: "#FFFFFF",
   black: "#1A1A1A",
 
-  bgMain: "#FAFAF8",
+  bgMain: "#F0EDE6",
   cardBg: "#FFFFFF",
-  borderLight: "#F0EDE8",
-  textSecondaryCreate: "#6B7280",
-  accentOrangeCreate: "#E8734A",
+  borderLight: "#E8E5DE",
+  textSecondaryCreate: "#888884",
+  accentOrangeCreate: "#E07B4A",
   accentOrangeSoft: "#FFF5F0",
-  accentGreen: "#2D8B4E",
-  accentGreenSoft: "#F0FFF4",
+  accentGreen: "#2F7A52",
+  accentGreenSoft: "#EAF5F0",
   accentBlue: "#3B82F6",
   accentPurple: "#6366F1",
   accentYellow: "#D4A017",
   accentRed: "#E53E3E",
   accentRedSoft: "#FEF2F2",
   accentPink: "#EC4899",
-  accentGray: "#6B7280",
+  accentGray: "#888884",
 } as const;
 
-// ─── TYPOGRAPHY (Rork hierarchy) ───────────────────────────────────────────
+// ─── TYPOGRAPHY (Rork) ──────────────────────────────────────────────────────
 export const typography = {
-  discoverTitle: { fontSize: 40, fontWeight: "800" as const, letterSpacing: -0.5, lineHeight: 44 },
-  subtitle: { fontSize: 16, fontWeight: "500" as const, lineHeight: 22 },
-  sectionHeader: { fontSize: 22, fontWeight: "800" as const, lineHeight: 28 },
-  cardTitle: { fontSize: 26, fontWeight: "800" as const, lineHeight: 30 },
-  cardTitleLarge: { fontSize: 22, fontWeight: "700" as const, lineHeight: 28 },
+  discoverTitle: { fontSize: 30, fontWeight: "800" as const, letterSpacing: -0.5, lineHeight: 36 },
+  subtitle: { fontSize: 15, fontWeight: "400" as const, lineHeight: 22 },
+  sectionHeader: { fontSize: 17, fontWeight: "700" as const, lineHeight: 22 },
+  cardTitle: { fontSize: 18, fontWeight: "700" as const, lineHeight: 24 },
+  cardTitleLarge: { fontSize: 18, fontWeight: "700" as const, lineHeight: 24 },
   cardDescription: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
-  metaRow: { fontSize: 12, fontWeight: "500" as const, lineHeight: 18 },
-  chipLabel: { fontSize: 15, fontWeight: "700" as const },
-  badgeLabel: { fontSize: 10, fontWeight: "800" as const },
+  metaRow: { fontSize: 12, fontWeight: "400" as const, lineHeight: 18 },
+  chipLabel: { fontSize: 15, fontWeight: "400" as const },
+  badgeLabel: { fontSize: 12, fontWeight: "600" as const },
   compactTitle: { fontSize: 16, fontWeight: "700" as const, lineHeight: 22 },
-  compactDesc: { fontSize: 13, fontWeight: "400" as const, lineHeight: 18 },
-  emptyTitle: { fontSize: 18, fontWeight: "700" as const, lineHeight: 24 },
-  emptySub: { fontSize: 14, fontWeight: "500" as const, lineHeight: 20 },
-  tabLabel: { fontSize: 11, fontWeight: "500" as const },
+  compactDesc: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
+  emptyTitle: { fontSize: 17, fontWeight: "700" as const, lineHeight: 24 },
+  emptySub: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
+  tabLabel: { fontSize: 10, fontWeight: "400" as const },
 
-  // Create flow
   pageTitle: { fontSize: 32, fontWeight: "700" as const, lineHeight: 40 },
   sectionTitle: { fontSize: 20, fontWeight: "600" as const, lineHeight: 28 },
   label: { fontSize: 12, fontWeight: "600" as const, lineHeight: 16 },
@@ -127,36 +126,36 @@ export const radius = {
   previewCard: 16,
 } as const;
 
-// ─── SHADOWS (soft, Rork) ──────────────────────────────────────────────────
+// ─── SHADOWS (Rork: opacity 0.04, radius 8, elevation 2) ────────────────────
 export const shadows = {
   card: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.06,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   subtle: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
   centerButton: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 10,
+    elevation: 6,
   },
 } as const;
 
-// ─── BORDERS ───────────────────────────────────────────────────────────────
+// ─── BORDERS (Rork: #E8E5DE) ───────────────────────────────────────────────
 export const borders = {
-  card: { borderWidth: 1, borderColor: colors.borderSubtle },
-  chip: { borderWidth: 1, borderColor: colors.chipStroke },
-  search: { borderWidth: 1, borderColor: colors.borderSubtle },
+  card: { borderWidth: 1, borderColor: "#E8E5DE" },
+  chip: { borderWidth: 1, borderColor: "#E0DDD6" },
+  search: { borderWidth: 1, borderColor: "#E8E5DE" },
 } as const;
 
 // ─── ICON SIZES ────────────────────────────────────────────────────────────
@@ -171,24 +170,26 @@ export const iconSizes = {
   emptyIcon: 32,
 } as const;
 
-// ─── COMPONENT MEASURES ────────────────────────────────────────────────────
+// ─── COMPONENT MEASURES (Rork) ─────────────────────────────────────────────
 export const measures = {
-  searchHeight: 54,
-  chipPaddingH: 17,
-  chipPaddingV: 11,
-  stripeWidth: 3,
+  searchHeight: 44,
+  chipPaddingH: 16,
+  chipPaddingV: 10,
+  stripeWidth: 4,
   dailyCardWidth: 280,
   dailyCardHeight: 200,
   headerHeight: 56,
   inputHeight: 52,
-  primaryButtonHeight: 52,
+  primaryButtonHeight: 56,
   taskTypeCardHeight: 120,
   taskTypeIconCircle: 44,
   dailyTaskRowHeight: 72,
   previewIconSize: 48,
   stepperConnectorHeight: 4,
-  stepperCircle: 36,
+  stepperCircle: 28,
   centerButtonSize: 56,
+  filterPillHeight: 36,
+  cardMeta: 13,
 } as const;
 
 export type Colors = typeof colors;

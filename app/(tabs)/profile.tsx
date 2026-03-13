@@ -502,7 +502,7 @@ export default function ProfileScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
