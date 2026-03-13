@@ -23,7 +23,7 @@ import { useApp } from "@/contexts/AppContext";
 import { formatTimeAgo } from "@/lib/formatTimeAgo";
 import { FLAGS } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { ChatMessage } from "@/types";
 
 const REACTION_EMOJIS = ["🔥", "💪", "🙌", "💯", "❤️"];
@@ -142,7 +142,7 @@ export default function ChallengeChatScreen() {
           style={styles.checkinPill}
           onLongPress={() => setSelectedMessageId(msg.id)}
         >
-          <Check size={14} color={Colors.success} />
+          <Check size={14} color={DS_COLORS.success} />
           <Text style={styles.checkinText}>
             {msg.senderName} checked in (Day {msg.dayIndex})
           </Text>
@@ -243,7 +243,7 @@ export default function ChallengeChatScreen() {
             onPress={() => router.back()}
             activeOpacity={0.7}
           >
-            <ChevronLeft size={24} color={Colors.text.primary} />
+            <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             <Text style={styles.chatDisabledBackText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.chatDisabledTitle}>Chat not available</Text>
@@ -284,7 +284,7 @@ export default function ChallengeChatScreen() {
               style={styles.headerButton}
               onPress={() => router.push(ROUTES.CHAT_INFO(id) as never)}
             >
-              <Info size={22} color={Colors.text.primary} />
+              <Info size={22} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
           ),
           headerLeft: () => (
@@ -292,7 +292,7 @@ export default function ChallengeChatScreen() {
               style={styles.headerButton}
               onPress={() => router.back()}
             >
-              <ChevronLeft size={24} color={Colors.text.primary} />
+              <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
           ),
         }}
@@ -328,7 +328,7 @@ export default function ChallengeChatScreen() {
             <>
               <View style={styles.composerActions}>
                 <TouchableOpacity style={styles.actionButton} onPress={handleQuickCheckIn}>
-                  <Check size={20} color={Colors.success} />
+                  <Check size={20} color={DS_COLORS.success} />
                 </TouchableOpacity>
               </View>
 
@@ -337,7 +337,7 @@ export default function ChallengeChatScreen() {
                 value={composerText}
                 onChangeText={setComposerText}
                 placeholder="Encourage someone..."
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 multiline
                 maxLength={500}
               />
@@ -352,7 +352,7 @@ export default function ChallengeChatScreen() {
               >
                 <Send
                   size={20}
-                  color={composerText.trim() ? "#FFF" : Colors.text.tertiary}
+                  color={composerText.trim() ? DS_COLORS.white : DS_COLORS.textMuted}
                 />
               </TouchableOpacity>
             </>
@@ -366,7 +366,7 @@ export default function ChallengeChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   chatDisabledWrap: {
     flex: 1,
@@ -383,17 +383,17 @@ const styles = StyleSheet.create({
   chatDisabledBackText: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   chatDisabledTitle: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 12,
   },
   chatDisabledSub: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     lineHeight: 20,
   },
   errorContainer: {
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 15,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   headerTitle: {
     alignItems: "center",
@@ -411,11 +411,11 @@ const styles = StyleSheet.create({
   headerTitleText: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   headerButton: {
     padding: 8,
@@ -433,8 +433,8 @@ const styles = StyleSheet.create({
   },
   dateHeaderText: {
     fontSize: 12,
-    color: Colors.text.tertiary,
-    backgroundColor: Colors.pill,
+    color: DS_COLORS.textMuted,
+    backgroundColor: DS_COLORS.chipFill,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 10,
@@ -456,30 +456,30 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     maxWidth: "75%",
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 18,
     borderBottomLeftRadius: 4,
     padding: 12,
     position: "relative",
   },
   messageBubbleOwn: {
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 4,
   },
   senderName: {
     fontSize: 12,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     marginBottom: 4,
   },
   messageText: {
     fontSize: 15,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     lineHeight: 20,
   },
   messageTextOwn: {
-    color: "#FFF",
+    color: DS_COLORS.white,
   },
   proofImage: {
     width: 200,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     fontSize: 10,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   messageTimeOwn: {
     color: "rgba(255,255,255,0.7)",
@@ -523,14 +523,14 @@ const styles = StyleSheet.create({
   },
   reactionCount: {
     fontSize: 11,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   reactionPicker: {
     position: "absolute",
     top: -44,
     left: 0,
     flexDirection: "row",
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 20,
     padding: 6,
     gap: 2,
@@ -552,8 +552,8 @@ const styles = StyleSheet.create({
   },
   systemMessageText: {
     fontSize: 13,
-    color: Colors.text.tertiary,
-    backgroundColor: Colors.pill,
+    color: DS_COLORS.textMuted,
+    backgroundColor: DS_COLORS.chipFill,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "center",
-    backgroundColor: Colors.successLight,
+    backgroundColor: DS_COLORS.successSoft,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
@@ -575,11 +575,11 @@ const styles = StyleSheet.create({
   checkinText: {
     fontSize: 13,
     fontWeight: "500" as const,
-    color: Colors.success,
+    color: DS_COLORS.success,
   },
   checkinTime: {
     fontSize: 11,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   reactionBadge: {
     flexDirection: "row",
@@ -600,9 +600,9 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: DS_COLORS.border,
     gap: 8,
   },
   composerActions: {
@@ -613,30 +613,30 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.successLight,
+    backgroundColor: DS_COLORS.successSoft,
     justifyContent: "center",
     alignItems: "center",
   },
   composerInput: {
     flex: 1,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     maxHeight: 100,
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     justifyContent: "center",
     alignItems: "center",
   },
   sendButtonDisabled: {
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   disabledComposer: {
     flex: 1,
@@ -645,6 +645,6 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     fontSize: 14,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
 });

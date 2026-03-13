@@ -31,6 +31,8 @@ export const ROUTES = {
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
   TASK_JOURNAL: "/task/journal",
   TASK_PHOTO: "/task/photo",
+  TASK_MANUAL: "/task/manual",
+  TASK_COMPLETE: "/task/complete",
   TASK_CHECKIN: "/task/checkin",
   TASK_RUN: "/task/run",
   TASK_TIMER: "/task/timer",

@@ -111,7 +111,7 @@ export async function checkRouteRateLimit(
   opts: { ip: string; userId: string | null }
 ): Promise<RouteLimitResult> {
   const authPaths = ["auth.signIn", "auth.signUp"];
-  const writePaths = ["checkins.secureDay", "challenges.join", "nudges.send", "accountability.invite"];
+  const writePaths = ["checkins.secureDay", "checkins.complete", "challenges.join", "nudges.send", "accountability.invite", "respects.give"];
   const limiters = await getRedisLimiters();
 
   if (limiters) {

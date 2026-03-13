@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Award, ChevronRight } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 import { formatShortDate } from "@/lib/date-format";
 
 export interface CompletedChallengeItem {
@@ -24,7 +24,7 @@ export default function CompletedChallengesSection({
     return (
       <View style={styles.section}>
         <View style={styles.header}>
-          <Award size={18} color={Colors.text.primary} />
+          <Award size={18} color={DS_COLORS.textPrimary} />
           <Text style={styles.title}>Challenge History</Text>
         </View>
         <Text style={styles.loading}>Loading…</Text>
@@ -36,7 +36,7 @@ export default function CompletedChallengesSection({
     return (
       <View style={styles.section}>
         <View style={styles.header}>
-          <Award size={18} color={Colors.text.primary} />
+          <Award size={18} color={DS_COLORS.textPrimary} />
           <Text style={styles.title}>Challenge History</Text>
         </View>
         <View style={styles.empty}>
@@ -50,7 +50,7 @@ export default function CompletedChallengesSection({
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Award size={18} color={Colors.text.primary} />
+        <Award size={18} color={DS_COLORS.textPrimary} />
         <Text style={styles.title}>Challenge History</Text>
       </View>
       <View style={styles.list}>
@@ -64,7 +64,7 @@ export default function CompletedChallengesSection({
                 Completed {formatShortDate(c.completedAt)}
               </Text>
             </View>
-            <ChevronRight size={18} color={Colors.text.muted} />
+            <ChevronRight size={18} color={DS_COLORS.textMuted} />
           </View>
         ))}
       </View>
@@ -74,70 +74,70 @@ export default function CompletedChallengesSection({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 20,
+    marginBottom: DS_SPACING.xl,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    gap: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginBottom: DS_SPACING.md,
   },
   title: {
-    fontSize: 18,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize - 2,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   loading: {
-    fontSize: 14,
-    color: Colors.text.tertiary,
-    paddingHorizontal: 20,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textMuted,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
   },
   empty: {
-    backgroundColor: Colors.card,
-    marginHorizontal: 20,
-    padding: 24,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: DS_COLORS.surface,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    padding: DS_SPACING.xxl,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
     alignItems: "center",
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   emptySub: {
-    fontSize: 13,
-    color: Colors.text.secondary,
-    marginTop: 4,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textSecondary,
+    marginTop: DS_SPACING.xs,
   },
   list: {
-    marginHorizontal: 20,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
     overflow: "hidden",
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    padding: DS_SPACING.lg,
+    borderBottomWidth: DS_BORDERS.width,
+    borderBottomColor: DS_COLORS.border,
   },
   rowContent: {
     flex: 1,
   },
   challengeName: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   completedAt: {
-    fontSize: 13,
-    color: Colors.text.secondary,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
 });

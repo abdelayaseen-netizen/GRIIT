@@ -3,6 +3,8 @@
   "compilerOptions": {
     "baseUrl": null,
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "paths": {
       "@/*": [
         "./*"

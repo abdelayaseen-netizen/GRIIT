@@ -2,8 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { CheckCircle2, Shield } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import Colors from "@/constants/colors";
-import { GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 export type DailyStatusState = "NOT_SECURED" | "SECURED";
 
@@ -31,7 +30,7 @@ export default function DailyStatus({
     return (
       <View style={styles.card}>
         <View style={styles.securedRow}>
-          <CheckCircle2 size={24} color={Colors.streak.shield} fill={Colors.streak.shield} strokeWidth={0} />
+          <CheckCircle2 size={24} color={DS_COLORS.success} fill={DS_COLORS.success} strokeWidth={0} />
           <View style={styles.securedTextWrap}>
             <Text style={styles.securedTitle}>Day Secured</Text>
             <Text style={styles.securedSub}>Streak continues</Text>
@@ -39,7 +38,7 @@ export default function DailyStatus({
               <Text style={styles.securedSub}>{disciplinePointsLabel}</Text>
             )}
             {currentStreak > 0 && (
-              <Text style={styles.streakBadge}>{currentStreak} day streak</Text>
+              <Text style={[styles.streakBadge, { color: DS_COLORS.success }]}>{currentStreak} day streak</Text>
             )}
           </View>
         </View>
@@ -64,14 +63,14 @@ export default function DailyStatus({
       </View>
       {onSecureToday && (
         <TouchableOpacity
-          style={styles.secureButton}
+          style={[styles.secureButton, { backgroundColor: DS_COLORS.black }]}
           onPress={handleSecurePress}
           activeOpacity={0.85}
           testID="daily-status-secure-today"
           accessibilityLabel="Secure your day"
           accessibilityRole="button"
         >
-          <Shield size={18} color="#fff" />
+          <Shield size={18} color={DS_COLORS.white} />
           <Text style={styles.secureButtonText}>Secure Today</Text>
         </TouchableOpacity>
       )}
@@ -81,83 +80,76 @@ export default function DailyStatus({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: GRIIT_RADII.card,
-    padding: 16,
-    marginBottom: 12,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.md,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   securedRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
+    gap: DS_SPACING.md,
   },
-  securedTextWrap: {
-    flex: 1,
-  },
+  securedTextWrap: { flex: 1 },
   securedTitle: {
-    fontSize: 18,
+    fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   securedSub: {
-    fontSize: 14,
-    color: Colors.text.secondary,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   streakBadge: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "600",
-    color: Colors.streak.shield,
-    marginTop: 6,
+    marginTop: DS_SPACING.sm,
   },
   notSecuredRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
+    gap: DS_SPACING.md,
   },
   amberCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F5A623",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: DS_COLORS.warning,
     alignItems: "center",
     justifyContent: "center",
   },
   amberCircleText: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
-  notSecuredTextWrap: {
-    flex: 1,
-    marginLeft: 0,
-  },
+  notSecuredTextWrap: { flex: 1 },
   notSecuredTitle: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   notSecuredSub: {
-    fontSize: 14,
-    color: Colors.text.secondary,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   secureButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    backgroundColor: Colors.accent,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 28,
-    marginTop: 14,
-    ...GRIIT_SHADOWS.button,
+    gap: DS_SPACING.sm,
+    paddingVertical: DS_SPACING.lg,
+    paddingHorizontal: DS_SPACING.xl,
+    borderRadius: DS_RADIUS.button,
+    marginTop: DS_SPACING.lg,
   },
   secureButtonText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
 });

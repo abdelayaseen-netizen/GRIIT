@@ -11,7 +11,7 @@ import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, Share2, Award, TrendingUp } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { shareChallenge, shareChallengeComplete } from "@/lib/share";
 import { useAuth } from "@/contexts/AuthContext";
@@ -139,7 +139,7 @@ export default function SuccessScreen() {
           >
             <View style={styles.statRow}>
               <View style={styles.statItem}>
-                <TrendingUp size={18} color={Colors.streak.shield} />
+                <TrendingUp size={18} color={DS_COLORS.success} />
                 <Text style={styles.statLabel}>Final Streak</Text>
               </View>
               <Text style={styles.statValue}>{finalStreak ?? "0"} days</Text>
@@ -149,7 +149,7 @@ export default function SuccessScreen() {
 
             <View style={styles.statRow}>
               <View style={styles.statItem}>
-                <Shield size={18} color={Colors.streak.shield} />
+                <Shield size={18} color={DS_COLORS.success} />
                 <Text style={styles.statLabel}>Days Secured</Text>
               </View>
               <Text style={styles.statValue}>{daysCompleted ?? "0"}/{duration}</Text>
@@ -181,7 +181,7 @@ export default function SuccessScreen() {
             onPress={handleShare}
             activeOpacity={0.7}
           >
-            <Share2 size={18} color={Colors.text.secondary} />
+            <Share2 size={18} color={DS_COLORS.textSecondary} />
             <Text style={styles.secondaryButtonText}>{isCreateSuccess ? "Share challenge" : "Share Completion"}</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -193,7 +193,7 @@ export default function SuccessScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   content: {
     flex: 1,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: Colors.streak.shield + "15",
+    backgroundColor: DS_COLORS.success + "15",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.streak.shield,
+    backgroundColor: DS_COLORS.success,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 38,
     fontWeight: "900" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 16,
     letterSpacing: -1,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   challengeTitle: {
     fontSize: 22,
     fontWeight: "700" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     letterSpacing: -0.3,
   },
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     padding: 22,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   statRow: {
     flexDirection: "row",
@@ -286,21 +286,21 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   statValue: {
     fontSize: 19,
     fontWeight: "800" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: DS_COLORS.border,
     marginVertical: 18,
   },
   recognitionCard: {
     width: "100%",
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     borderRadius: 14,
     padding: 18,
     marginBottom: 32,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   recognitionText: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
     lineHeight: 22,
   },
@@ -341,11 +341,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   secondaryButtonText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
 });

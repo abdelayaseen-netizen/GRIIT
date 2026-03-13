@@ -1,10 +1,10 @@
 import { StyleSheet } from "react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   keyboardView: {
     flex: 1,
@@ -20,18 +20,18 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginBottom: 20,
   },
   modeSelector: {
     flexDirection: "row",
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 12,
     padding: 4,
     marginBottom: 16,
@@ -46,12 +46,12 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
   },
   modeButtonActive: {
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
   },
   modeButtonText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   modeButtonTextActive: {
     color: "#FFFFFF",
@@ -98,21 +98,21 @@ export const styles = StyleSheet.create({
   distanceValue: {
     fontSize: 64,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   distanceComplete: {
-    color: Colors.success,
+    color: DS_COLORS.success,
   },
   distanceLabel: {
     fontSize: 16,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginTop: 4,
   },
   secondaryStats: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
@@ -126,17 +126,17 @@ export const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   statLabel: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: Colors.border,
+    backgroundColor: DS_COLORS.border,
     marginHorizontal: 16,
   },
   progressBarContainer: {
@@ -152,11 +152,11 @@ export const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     borderRadius: 4,
   },
   progressFillComplete: {
-    backgroundColor: Colors.success,
+    backgroundColor: DS_COLORS.success,
   },
   progressFillError: {
     backgroundColor: "#DC2626",
@@ -164,7 +164,7 @@ export const styles = StyleSheet.create({
   progressText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
   },
   controlsContainer: {
@@ -175,13 +175,13 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 20,
     paddingHorizontal: 40,
     borderRadius: 30,
   },
   startButtonComplete: {
-    backgroundColor: Colors.success,
+    backgroundColor: DS_COLORS.success,
   },
   startButtonError: {
     backgroundColor: "#9CA3AF",
@@ -213,7 +213,7 @@ export const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   trackingIndicator: {
     flexDirection: "row",
@@ -225,7 +225,7 @@ export const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.success,
+    backgroundColor: DS_COLORS.success,
   },
   trackingDotTimer: {
     backgroundColor: "#F59E0B",
@@ -233,7 +233,7 @@ export const styles = StyleSheet.create({
   trackingText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.success,
+    color: DS_COLORS.success,
   },
   trackingTextTimer: {
     color: "#F59E0B",
@@ -254,10 +254,10 @@ export const styles = StyleSheet.create({
     backgroundColor: "#E5E5E5",
   },
   stepDotActive: {
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
   },
   stepDotComplete: {
-    backgroundColor: Colors.success,
+    backgroundColor: DS_COLORS.success,
   },
   stepLine: {
     width: 40,
@@ -265,7 +265,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#E5E5E5",
   },
   stepLineComplete: {
-    backgroundColor: Colors.success,
+    backgroundColor: DS_COLORS.success,
   },
   stepsLabels: {
     flexDirection: "row",
@@ -276,10 +276,10 @@ export const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   stepLabelActive: {
-    color: Colors.accent,
+    color: DS_COLORS.accent,
     fontWeight: "600" as const,
   },
   timerSection: {
@@ -320,13 +320,13 @@ export const styles = StyleSheet.create({
   proofTitle: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
   proofSubtitle: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginBottom: 24,
     paddingHorizontal: 20,
@@ -335,7 +335,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 20,
     paddingHorizontal: 40,
     borderRadius: 16,
@@ -354,7 +354,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     height: 200,
     borderRadius: 12,
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     marginBottom: 12,
   },
   retakeButton: {
@@ -365,18 +365,18 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   retakeButtonText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   continueButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -397,7 +397,7 @@ export const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 10,
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
   },
   proofCheck: {
     position: "absolute",
@@ -406,7 +406,7 @@ export const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.success,
+    backgroundColor: DS_COLORS.success,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -417,18 +417,18 @@ export const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   inputError: {
     borderColor: "#DC2626",
@@ -441,7 +441,7 @@ export const styles = StyleSheet.create({
   },
   summaryCard: {
     width: "100%",
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
@@ -449,7 +449,7 @@ export const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 14,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 12,
   },
   summaryRow: {
@@ -461,7 +461,7 @@ export const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   summaryValue: {
     flexDirection: "row",
@@ -471,14 +471,14 @@ export const styles = StyleSheet.create({
   summaryValueText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   footer: {
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.background,
+    borderTopColor: DS_COLORS.border,
+    backgroundColor: DS_COLORS.background,
   },
   verifyButton: {
     backgroundColor: "#1F1F1F",
@@ -496,7 +496,7 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   verifyButtonTextDisabled: {
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   verifiedContainer: {
     flex: 1,
@@ -508,7 +508,7 @@ export const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.successLight,
+    backgroundColor: DS_COLORS.successSoft,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -516,27 +516,27 @@ export const styles = StyleSheet.create({
   verifiedTitle: {
     fontSize: 24,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
   verifiedSubtitle: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginBottom: 32,
   },
   backButton: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   backButtonText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
 });

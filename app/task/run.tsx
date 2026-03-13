@@ -29,7 +29,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { RunMode } from "@/types";
 import { styles } from "@/styles/run-styles";
 import Celebration from "@/components/Celebration";
@@ -432,7 +432,7 @@ export default function RunTaskScreen() {
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.verifiedContainer}>
           <View style={styles.verifiedBadge}>
-            <Navigation size={32} color={Colors.success} />
+            <Navigation size={32} color={DS_COLORS.success} />
           </View>
           <Text style={styles.verifiedTitle}>Run Verified</Text>
           <Text style={styles.verifiedSubtitle}>Your run has been verified.</Text>
@@ -462,7 +462,7 @@ export default function RunTaskScreen() {
               style={[styles.modeButton, runMode === "outdoor_gps" && styles.modeButtonActive]}
               onPress={() => handleModeChange("outdoor_gps")}
             >
-              <MapPin size={18} color={runMode === "outdoor_gps" ? "#FFFFFF" : Colors.text.secondary} />
+              <MapPin size={18} color={runMode === "outdoor_gps" ? DS_COLORS.white : DS_COLORS.textSecondary} />
               <Text style={[styles.modeButtonText, runMode === "outdoor_gps" && styles.modeButtonTextActive]}>
                 Outdoor
               </Text>
@@ -471,7 +471,7 @@ export default function RunTaskScreen() {
               style={[styles.modeButton, runMode === "treadmill_proof" && styles.modeButtonActive]}
               onPress={() => handleModeChange("treadmill_proof")}
             >
-              <Clock size={18} color={runMode === "treadmill_proof" ? "#FFFFFF" : Colors.text.secondary} />
+              <Clock size={18} color={runMode === "treadmill_proof" ? DS_COLORS.white : DS_COLORS.textSecondary} />
               <Text style={[styles.modeButtonText, runMode === "treadmill_proof" && styles.modeButtonTextActive]}>
                 Treadmill
               </Text>
@@ -481,14 +481,14 @@ export default function RunTaskScreen() {
           <View style={styles.requirementCard}>
             {runMode === "outdoor_gps" ? (
               <>
-                <MapPin size={16} color="#FFFFFF" />
+                <MapPin size={16} color={DS_COLORS.white} />
                 <Text style={styles.requirementText}>
                   {minDistanceMiles} mile{minDistanceMiles !== 1 ? "s" : ""} minimum · GPS verified
                 </Text>
               </>
             ) : (
               <>
-                <Camera size={16} color="#FFFFFF" />
+                <Camera size={16} color={DS_COLORS.white} />
                 <Text style={styles.requirementText}>
                   {minDistanceMiles} mile{minDistanceMiles !== 1 ? "s" : ""} minimum · Proof + Timer required
                 </Text>
@@ -516,13 +516,13 @@ export default function RunTaskScreen() {
 
               <View style={styles.secondaryStats}>
                 <View style={styles.statItem}>
-                  <Clock size={18} color={Colors.text.secondary} />
+                  <Clock size={18} color={DS_COLORS.textSecondary} />
                   <Text style={styles.statValue}>{formatSecondsToMMSS(elapsedSeconds)}</Text>
                   <Text style={styles.statLabel}>Duration</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Navigation size={18} color={Colors.text.secondary} />
+                  <Navigation size={18} color={DS_COLORS.textSecondary} />
                   <Text style={styles.statValue}>{formatPace()}</Text>
                   <Text style={styles.statLabel}>Pace /mi</Text>
                 </View>
@@ -550,14 +550,14 @@ export default function RunTaskScreen() {
                     onPress={startGpsTracking}
                     disabled={isGpsComplete}
                   >
-                    <Play size={32} color="#FFFFFF" fill="#FFFFFF" />
+                    <Play size={32} color={DS_COLORS.white} fill={DS_COLORS.white} />
                     <Text style={styles.startButtonText}>
                       {isGpsComplete ? "Run Complete" : "Start Run"}
                     </Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity style={styles.stopButton} onPress={stopGpsTracking}>
-                    <Square size={28} color="#FFFFFF" fill="#FFFFFF" />
+                    <Square size={28} color={DS_COLORS.white} fill={DS_COLORS.white} />
                     <Text style={styles.stopButtonText}>Stop</Text>
                   </TouchableOpacity>
                 )}
@@ -638,12 +638,12 @@ export default function RunTaskScreen() {
                         >
                           {isTreadmillTimerComplete ? (
                             <>
-                              <ChevronRight size={28} color="#FFFFFF" />
+                              <ChevronRight size={28} color={DS_COLORS.white} />
                               <Text style={styles.startButtonText}>Continue</Text>
                             </>
                           ) : (
                             <>
-                              <Play size={32} color="#FFFFFF" fill="#FFFFFF" />
+                              <Play size={32} color={DS_COLORS.white} fill={DS_COLORS.white} />
                               <Text style={styles.startButtonText}>
                                 {timerSeconds > 0 ? "Resume Timer" : "Start Timer"}
                               </Text>
@@ -658,7 +658,7 @@ export default function RunTaskScreen() {
                       </>
                     ) : (
                       <TouchableOpacity style={styles.stopButton} onPress={finishTreadmillTimer}>
-                        <Square size={28} color="#FFFFFF" fill="#FFFFFF" />
+                        <Square size={28} color={DS_COLORS.white} fill={DS_COLORS.white} />
                         <Text style={styles.stopButtonText}>Finish Timer</Text>
                       </TouchableOpacity>
                     )}
@@ -687,13 +687,13 @@ export default function RunTaskScreen() {
                         style={styles.retakeButton}
                         onPress={captureProof}
                       >
-                        <Camera size={18} color={Colors.text.primary} />
+                        <Camera size={18} color={DS_COLORS.textPrimary} />
                         <Text style={styles.retakeButtonText}>Retake</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
                     <TouchableOpacity style={styles.captureButton} onPress={captureProof}>
-                      <Camera size={32} color="#FFFFFF" />
+                      <Camera size={32} color={DS_COLORS.white} />
                       <Text style={styles.captureButtonText}>Open Camera</Text>
                     </TouchableOpacity>
                   )}
@@ -704,7 +704,7 @@ export default function RunTaskScreen() {
                       onPress={() => setTreadmillStep("distance")}
                     >
                       <Text style={styles.continueButtonText}>Continue</Text>
-                      <ChevronRight size={20} color="#FFFFFF" />
+                      <ChevronRight size={20} color={DS_COLORS.white} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -721,7 +721,7 @@ export default function RunTaskScreen() {
                     <View style={styles.proofThumbnail}>
                       <Image source={{ uri: proofUri }} style={styles.thumbnailImage} />
                       <View style={styles.proofCheck}>
-                        <Check size={14} color="#FFFFFF" />
+                        <Check size={14} color={DS_COLORS.white} />
                       </View>
                     </View>
                   )}
@@ -733,7 +733,7 @@ export default function RunTaskScreen() {
                       value={distanceInput}
                       onChangeText={setDistanceInput}
                       placeholder="e.g. 1.5"
-                      placeholderTextColor={Colors.text.tertiary}
+                      placeholderTextColor={DS_COLORS.textMuted}
                       keyboardType="decimal-pad"
                     />
                     {!isTreadmillDistanceValid && distanceInput.length > 0 && (
@@ -750,7 +750,7 @@ export default function RunTaskScreen() {
                       value={durationInput}
                       onChangeText={setDurationInput}
                       placeholder="e.g. 15:30"
-                      placeholderTextColor={Colors.text.tertiary}
+                      placeholderTextColor={DS_COLORS.textMuted}
                     />
                   </View>
 
@@ -759,14 +759,14 @@ export default function RunTaskScreen() {
                     <View style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Timer</Text>
                       <View style={styles.summaryValue}>
-                        <Check size={14} color={Colors.success} />
+                        <Check size={14} color={DS_COLORS.success} />
                         <Text style={styles.summaryValueText}>{formatSecondsToMMSS(timerSeconds)}</Text>
                       </View>
                     </View>
                     <View style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Photo proof</Text>
                       <View style={styles.summaryValue}>
-                        <Check size={14} color={Colors.success} />
+                        <Check size={14} color={DS_COLORS.success} />
                         <Text style={styles.summaryValueText}>Captured</Text>
                       </View>
                     </View>
@@ -774,7 +774,7 @@ export default function RunTaskScreen() {
                       <Text style={styles.summaryLabel}>Distance</Text>
                       <View style={styles.summaryValue}>
                         {isTreadmillDistanceValid ? (
-                          <Check size={14} color={Colors.success} />
+                          <Check size={14} color={DS_COLORS.success} />
                         ) : (
                           <AlertTriangle size={14} color="#F59E0B" />
                         )}

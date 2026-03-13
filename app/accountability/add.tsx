@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { ROUTES } from "@/lib/routes";
 
@@ -136,7 +136,7 @@ export default function AddAccountabilityPartnerScreen() {
           <TextInput
             style={styles.input}
             placeholder="Search by username..."
-            placeholderTextColor={Colors.text.tertiary}
+            placeholderTextColor={DS_COLORS.textMuted}
             value={query}
             onChangeText={onQueryChange}
             autoCapitalize="none"
@@ -144,7 +144,7 @@ export default function AddAccountabilityPartnerScreen() {
           />
           {searching && (
             <View style={styles.searchingWrap}>
-              <ActivityIndicator size="small" color={Colors.accent} />
+              <ActivityIndicator size="small" color={DS_COLORS.accent} />
             </View>
           )}
         </View>
@@ -169,7 +169,7 @@ export default function AddAccountabilityPartnerScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: DS_COLORS.background },
   flex: { flex: 1 },
   header: {
     flexDirection: "row",
@@ -178,26 +178,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: DS_COLORS.border,
   },
   backBtn: {},
-  backText: { fontSize: 16, color: Colors.accent, fontWeight: "600" },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: Colors.text.primary },
+  backText: { fontSize: 16, color: DS_COLORS.accent, fontWeight: "600" },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: DS_COLORS.textPrimary },
   headerSpacer: { width: 56 },
   inputWrap: { padding: 16, position: "relative" },
   input: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   searchingWrap: { position: "absolute", right: 28, top: 28 },
   empty: { padding: 24, alignItems: "center" },
-  emptyText: { fontSize: 15, color: Colors.text.secondary },
+  emptyText: { fontSize: 15, color: DS_COLORS.textSecondary },
   listContent: { paddingHorizontal: 16, paddingBottom: 32 },
   row: {
     flexDirection: "row",
@@ -205,13 +205,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: DS_COLORS.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: "600", color: Colors.text.primary },
-  rowSub: { fontSize: 13, color: Colors.text.secondary, marginTop: 2 },
+  rowTitle: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
   inviteBtn: {
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 10,

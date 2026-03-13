@@ -1,8 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Trophy, Target, Award } from "lucide-react-native";
-import Colors from "@/constants/colors";
-import { GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 export interface LifetimeStatsCardProps {
   currentStreak?: number;
@@ -19,14 +18,14 @@ export default function LifetimeStatsCard({
   longestStreak,
   daysSecured,
   challengesCompleted,
-  totalDisciplinePoints = 0,
+  totalDisciplinePoints: _totalDisciplinePoints = 0,
 }: LifetimeStatsCardProps) {
   const safe = (n: number) => Math.max(0, Number(n) || 0);
   const items = [
-    { icon: Flame, color: Colors.accent, bg: Colors.accentLight, value: safe(currentStreak), label: "STREAK" },
-    { icon: Trophy, color: Colors.streak.gold, bg: "#FFFBEB", value: safe(longestStreak), label: "BEST" },
-    { icon: Target, color: Colors.success, bg: Colors.successLight, value: safe(daysSecured), label: "SECURED" },
-    { icon: Award, color: Colors.accent, bg: Colors.accentLight, value: safe(challengesCompleted), label: "DONE" },
+    { icon: Flame, color: DS_COLORS.accent, bg: DS_COLORS.accentSoft, value: safe(currentStreak), label: "STREAK" },
+    { icon: Trophy, color: DS_COLORS.warning, bg: DS_COLORS.warningSoft, value: safe(longestStreak), label: "BEST" },
+    { icon: Target, color: DS_COLORS.success, bg: DS_COLORS.successSoft, value: safe(daysSecured), label: "SECURED" },
+    { icon: Award, color: DS_COLORS.accent, bg: DS_COLORS.accentSoft, value: safe(challengesCompleted), label: "DONE" },
   ];
 
   return (
@@ -53,12 +52,13 @@ export default function LifetimeStatsCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: Colors.card,
-    borderRadius: GRIIT_RADII.card,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    paddingVertical: 16,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginBottom: DS_SPACING.lg,
+    paddingVertical: DS_SPACING.lg,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   cell: {
     flex: 1,
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: 1,
-    backgroundColor: "#F0EDE8",
+    backgroundColor: DS_COLORS.border,
     alignSelf: "stretch",
   },
   iconWrap: {
@@ -76,17 +76,17 @@ const styles = StyleSheet.create({
     borderRadius: ICON_CIRCLE / 2,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: DS_SPACING.sm,
   },
   value: {
-    fontSize: 28,
+    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   label: {
-    fontSize: 11,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     fontWeight: "600",
-    color: Colors.text.muted,
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
     marginTop: 2,
   },

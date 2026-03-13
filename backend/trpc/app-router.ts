@@ -19,6 +19,7 @@ import { notificationsRouter } from "./routes/notifications";
 import { accountabilityRouter } from "./routes/accountability";
 import { metaRouter } from "./routes/meta";
 import { feedRouter } from "./routes/feed";
+import { achievementsRouter } from "./routes/achievements";
 import { integrationsRouter } from "./routes/integrations";
 import { sharedGoalRouter } from "./routes/sharedGoal";
 import { referralsRouter } from "./routes/referrals";
@@ -38,6 +39,7 @@ export const appRouter = createTRPCRouter({
   accountability: accountabilityRouter,
   meta: metaRouter,
   feed: feedRouter,
+  achievements: achievementsRouter,
   integrations: integrationsRouter,
   sharedGoal: sharedGoalRouter,
   referrals: referralsRouter,

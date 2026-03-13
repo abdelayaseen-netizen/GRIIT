@@ -1,40 +1,40 @@
 import { StyleSheet } from "react-native";
-import * as t from "@/src/theme/tokens";
-import { GRIIT_SHADOWS } from "@/src/theme";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_RADIUS, DS_SHADOWS } from "@/lib/design-system";
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9F6F1",
+    backgroundColor: DS_COLORS.background,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingTop: DS_SPACING.md,
+    paddingBottom: DS_SPACING.md,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "800" as const,
-    color: "#1A1A2E",
+    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
+    fontWeight: DS_TYPOGRAPHY.pageTitle.fontWeight,
+    letterSpacing: DS_TYPOGRAPHY.pageTitle.letterSpacing,
+    color: DS_COLORS.textPrimary,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "400" as const,
-    color: "#8A8A8A",
-    marginTop: 4,
+    color: DS_COLORS.textSecondary,
+    marginTop: DS_SPACING.xs,
   },
   searchRow: {
-    paddingHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 12,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    marginTop: DS_SPACING.lg,
+    marginBottom: DS_SPACING.md,
   },
   categoryRow: {
-    marginTop: 12,
-    marginBottom: 12,
+    marginTop: DS_SPACING.md,
+    marginBottom: DS_SPACING.md,
   },
   categoryScroll: {
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    gap: DS_SPACING.sm,
   },
   errorBanner: {
     flexDirection: "row",
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
   errorBannerText: {
     fontSize: 11,
     fontWeight: "500" as const,
-    color: t.colors.chipText,
+    color: DS_COLORS.textSecondary,
   },
   retryPill: {
     flexDirection: "row",
@@ -66,7 +66,7 @@ export const styles = StyleSheet.create({
   retryPillText: {
     fontSize: 11,
     fontWeight: "600" as const,
-    color: t.colors.chipText,
+    color: DS_COLORS.textSecondary,
     textDecorationLine: "underline" as const,
   },
   emptyContainer: {
@@ -79,7 +79,7 @@ export const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -87,26 +87,26 @@ export const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: t.colors.textPrimary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 6,
   },
   emptySubtext: {
     fontSize: 14,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     lineHeight: 20,
   },
   clearButton: {
     marginTop: 16,
-    paddingHorizontal: t.spacing.screenHorizontal,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: t.colors.textPrimary,
+    backgroundColor: DS_COLORS.textPrimary,
   },
   clearButtonText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   emptyRefreshButton: {
     flexDirection: "row",
@@ -117,12 +117,12 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: t.colors.accentOrange,
+    borderColor: DS_COLORS.accent,
   },
   emptyRefreshText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: t.colors.accentOrange,
+    color: DS_COLORS.accent,
   },
   scroll: {
     flex: 1,
@@ -132,7 +132,7 @@ export const styles = StyleSheet.create({
   },
   section: {
     marginTop: 24,
-    marginBottom: t.spacing.sectionVertical,
+    marginBottom: DS_SPACING.xl,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -145,25 +145,25 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: t.colors.textPrimary,
+    color: DS_COLORS.textPrimary,
     letterSpacing: -0.2,
   },
   sectionCaption: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     marginLeft: "auto" as const,
   },
   featuredList: {
-    paddingHorizontal: t.spacing.screenHorizontal,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
     gap: 16,
   },
   featuredCard: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
     overflow: "hidden",
-    ...GRIIT_SHADOWS.card,
+    ...DS_SHADOWS.card,
   },
   featuredAccent: {
     width: 3,
@@ -208,13 +208,13 @@ export const styles = StyleSheet.create({
   featuredTitle: {
     fontSize: 20,
     fontWeight: "800" as const,
-    color: t.colors.textPrimary,
+    color: DS_COLORS.textPrimary,
     letterSpacing: -0.4,
     marginBottom: 6,
   },
   featuredHook: {
     fontSize: 14,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -228,7 +228,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
@@ -239,7 +239,7 @@ export const styles = StyleSheet.create({
   taskChipText: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     maxWidth: 120,
   },
   featuredBottomRow: {
@@ -265,38 +265,38 @@ export const styles = StyleSheet.create({
   statText: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
   },
   statDot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: t.colors.textSecondary,
+    backgroundColor: DS_COLORS.textSecondary,
   },
   activeTodayText: {
     fontSize: 12,
     fontWeight: "600" as const,
-    color: t.colors.successGreenText,
+    color: DS_COLORS.success,
   },
   featuredArrowWrap: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
     alignItems: "center",
     justifyContent: "center",
   },
   compactList: {
-    paddingHorizontal: t.spacing.screenHorizontal,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
     gap: 10,
   },
   compactCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
     overflow: "hidden",
-    ...GRIIT_SHADOWS.card,
+    ...DS_SHADOWS.card,
   },
   compactColorBar: {
     width: 3,
@@ -317,7 +317,7 @@ export const styles = StyleSheet.create({
   compactTitle: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: t.colors.textPrimary,
+    color: DS_COLORS.textPrimary,
     flex: 1,
     letterSpacing: -0.2,
   },
@@ -328,7 +328,7 @@ export const styles = StyleSheet.create({
   },
   compactDesc: {
     fontSize: 13,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     lineHeight: 18,
     marginBottom: 8,
   },
@@ -342,18 +342,18 @@ export const styles = StyleSheet.create({
   compactMetaText: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
   },
   compactParticipants: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
   },
   compactArrowWrap: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,
@@ -369,7 +369,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: t.colors.accentOrange,
+    backgroundColor: DS_COLORS.accent,
     minWidth: 120,
     alignItems: "center",
     justifyContent: "center",
@@ -377,21 +377,21 @@ export const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 
   dailyScrollContent: {
-    paddingHorizontal: t.spacing.screenHorizontal,
-    gap: t.spacing.listItemGap,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    gap: DS_SPACING.listItemGap,
     paddingBottom: 4,
   },
   dailyCard: {
     width: 240,
     flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
     overflow: "hidden",
-    ...GRIIT_SHADOWS.card,
+    ...DS_SHADOWS.card,
   },
   dailyColorBar: {
     width: 5,
@@ -415,12 +415,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    backgroundColor: t.colors.badgeRedBg,
+    backgroundColor: DS_COLORS.dangerSoft,
   },
   dailyCountdownText: {
     fontSize: 11,
     fontWeight: "700" as const,
-    color: t.colors.badgeRedText,
+    color: DS_COLORS.danger,
     letterSpacing: 0.3,
   },
   dailyDiffPill: {
@@ -437,13 +437,13 @@ export const styles = StyleSheet.create({
   dailyTitle: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: t.colors.textPrimary,
+    color: DS_COLORS.textPrimary,
     letterSpacing: -0.3,
     marginBottom: 6,
   },
   dailyHook: {
     fontSize: 12,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     lineHeight: 17,
     marginBottom: 10,
   },
@@ -457,7 +457,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
     paddingHorizontal: 7,
     paddingVertical: 4,
     borderRadius: 6,
@@ -468,7 +468,7 @@ export const styles = StyleSheet.create({
   dailyChipText: {
     fontSize: 11,
     fontWeight: "500" as const,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     maxWidth: 80,
   },
   dailyFooter: {
@@ -484,13 +484,13 @@ export const styles = StyleSheet.create({
   dailyParticipantsText: {
     fontSize: 11,
     fontWeight: "500" as const,
-    color: t.colors.textSecondary,
+    color: DS_COLORS.textSecondary,
   },
   dailyArrow: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -501,7 +501,7 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: t.colors.borderSubtle,
+    borderColor: DS_COLORS.border,
   },
   skeletonAccent: {
     width: 4,
@@ -520,25 +520,25 @@ export const styles = StyleSheet.create({
     width: 72,
     height: 20,
     borderRadius: 6,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonDiffPill: {
     width: 52,
     height: 20,
     borderRadius: 6,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonTitle: {
     width: "75%" as const,
     height: 20,
     borderRadius: 6,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonHook: {
     width: "90%" as const,
     height: 14,
     borderRadius: 4,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonChipsRow: {
     flexDirection: "row",
@@ -548,19 +548,19 @@ export const styles = StyleSheet.create({
     width: 80,
     height: 24,
     borderRadius: 8,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonChipMed: {
     width: 100,
     height: 24,
     borderRadius: 8,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonMeta: {
     width: "50%" as const,
     height: 14,
     borderRadius: 4,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonCompactCard: {
     flexDirection: "row",
@@ -569,7 +569,7 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: t.colors.borderSubtle,
+    borderColor: DS_COLORS.border,
   },
   skeletonCompactBar: {
     width: 4,
@@ -586,40 +586,40 @@ export const styles = StyleSheet.create({
     width: "60%" as const,
     height: 16,
     borderRadius: 4,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonCompactDesc: {
     width: "80%" as const,
     height: 13,
     borderRadius: 4,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonCompactMeta: {
     width: "40%" as const,
     height: 12,
     borderRadius: 4,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonSectionIcon: {
     width: 16,
     height: 16,
     borderRadius: 4,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonSectionLabel: {
     width: 80,
     height: 16,
     borderRadius: 4,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   skeletonDailyScroll: {
-    paddingHorizontal: t.spacing.screenHorizontal,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
     gap: 12,
   },
   skeletonDailyCard: {
     width: 220,
     height: 180,
     borderRadius: 16,
-    backgroundColor: t.colors.chipFill,
+    backgroundColor: DS_COLORS.chipFill,
   },
 });

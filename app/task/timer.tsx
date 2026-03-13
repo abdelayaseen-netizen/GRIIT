@@ -6,7 +6,7 @@ import { Play, Pause, Check, Camera, ImagePlus } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useApp } from "@/contexts/AppContext";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import type { ChallengeTaskFromApi } from "@/types";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
@@ -224,12 +224,12 @@ export default function TimerTaskScreen() {
         >
           {isRunning ? (
             <>
-              <Pause size={24} color="#fff" />
+              <Pause size={24} color={DS_COLORS.white} />
               <Text style={styles.controlButtonText}>Pause</Text>
             </>
           ) : (
             <>
-              <Play size={24} color="#fff" />
+              <Play size={24} color={DS_COLORS.white} />
               <Text style={styles.controlButtonText}>Start Timer</Text>
             </>
           )}
@@ -248,11 +248,11 @@ export default function TimerTaskScreen() {
                 <Image source={{ uri: photoUri }} style={styles.photoThumb} />
                 <View style={styles.photoActions}>
                   <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
-                    <Camera size={18} color={Colors.text.primary} />
+                    <Camera size={18} color={DS_COLORS.textPrimary} />
                     <Text style={styles.photoBtnText}>Retake</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.photoBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
-                    <ImagePlus size={18} color={Colors.text.primary} />
+                    <ImagePlus size={18} color={DS_COLORS.textPrimary} />
                     <Text style={styles.photoBtnText}>Change</Text>
                   </TouchableOpacity>
                 </View>
@@ -260,11 +260,11 @@ export default function TimerTaskScreen() {
             ) : (
               <View style={styles.photoEmpty}>
                 <TouchableOpacity style={styles.photoPrimaryBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
-                  <Camera size={20} color="#fff" />
+                  <Camera size={20} color={DS_COLORS.white} />
                   <Text style={styles.photoPrimaryBtnText}>Take photo</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.photoSecondaryBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
-                  <ImagePlus size={18} color={Colors.text.secondary} />
+                  <ImagePlus size={18} color={DS_COLORS.textSecondary} />
                   <Text style={styles.photoSecondaryBtnText}>Upload from gallery</Text>
                 </TouchableOpacity>
               </View>
@@ -283,12 +283,12 @@ export default function TimerTaskScreen() {
           >
             {loading ? (
               <>
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={DS_COLORS.white} size="small" />
                 <Text style={styles.submitButtonText}>{uploading ? "Uploading…" : "Submitting…"}</Text>
               </>
             ) : (
               <>
-                <Check size={20} color="#fff" />
+                <Check size={20} color={DS_COLORS.white} />
                 <Text style={styles.submitButtonText}>Complete Task</Text>
               </>
             )}
@@ -302,7 +302,7 @@ export default function TimerTaskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   content: {
     flex: 1,
@@ -316,12 +316,12 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 72,
     fontWeight: '700' as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     fontVariant: ['tabular-nums'],
   },
   timerLabel: {
     fontSize: 18,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     marginTop: 8,
   },
   controlButton: {
@@ -343,17 +343,17 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   photoSection: { marginBottom: 20 },
-  photoLabel: { fontSize: 13, fontWeight: "600", color: Colors.text.secondary, marginBottom: 10 },
+  photoLabel: { fontSize: 13, fontWeight: "600", color: DS_COLORS.textSecondary, marginBottom: 10 },
   photoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   photoThumb: { width: 80, height: 60, borderRadius: 8, backgroundColor: "#eee" },
   photoActions: { flexDirection: "row", gap: 10 },
-  photoBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#fff", borderRadius: 10, borderWidth: 1, borderColor: Colors.border },
-  photoBtnText: { fontSize: 13, fontWeight: "600", color: Colors.text.primary },
+  photoBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#fff", borderRadius: 10, borderWidth: 1, borderColor: DS_COLORS.border },
+  photoBtnText: { fontSize: 13, fontWeight: "600", color: DS_COLORS.textPrimary },
   photoEmpty: { gap: 10 },
   photoPrimaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#6366F1", borderRadius: 12, paddingVertical: 12 },
   photoPrimaryBtnText: { fontSize: 14, fontWeight: "600", color: "#fff" },
-  photoSecondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, backgroundColor: "#fff" },
-  photoSecondaryBtnText: { fontSize: 13, fontWeight: "500", color: Colors.text.secondary },
+  photoSecondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: DS_COLORS.border, backgroundColor: "#fff" },
+  photoSecondaryBtnText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.textSecondary },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',

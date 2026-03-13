@@ -35,7 +35,7 @@ import {
   Lock,
   Target,
 } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import * as Haptics from 'expo-haptics';
 import { ChallengeType, ReplayPolicy, JournalCategory, WordLimitMode, ScheduleType, WindowMode, TimezoneMode, ChallengeVisibility } from "@/types";
 import { trpcMutate } from "@/lib/trpc";
@@ -206,9 +206,9 @@ const CHALLENGE_PACKS: {
 ];
 
 const PACK_CARD_BORDER: Record<string, string> = {
-  athlete: Colors.border,
+  athlete: DS_COLORS.border,
   faith: "#93C5FD",
-  entrepreneur: Colors.border,
+  entrepreneur: DS_COLORS.border,
   hyrox: "#FDBA74",
   morning: "#FDBA74",
 };
@@ -720,7 +720,7 @@ export default function CreateScreen() {
                 accessibilityRole="button"
               >
                 <View style={[styles.participationIconWrap, participationType === opt.id && styles.participationIconWrapActive]}>
-                  <Icon size={22} color={participationType === opt.id ? "#fff" : Colors.text.tertiary} />
+                  <Icon size={22} color={participationType === opt.id ? "#fff" : DS_COLORS.textMuted} />
                 </View>
                 <Text style={[styles.participationLabel, participationType === opt.id && styles.participationLabelActive]}>{opt.label}</Text>
                 <Text style={styles.participationDesc} numberOfLines={2}>{opt.description}</Text>
@@ -755,7 +755,7 @@ export default function CreateScreen() {
               <TextInput
                 style={[styles.input, { flex: 1 }]}
                 placeholder="e.g. 100"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 value={sharedGoalTarget}
                 onChangeText={setSharedGoalTarget}
                 keyboardType="number-pad"
@@ -763,7 +763,7 @@ export default function CreateScreen() {
               <TextInput
                 style={[styles.input, { flex: 1 }]}
                 placeholder="e.g. miles, pages"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 value={sharedGoalUnit}
                 onChangeText={setSharedGoalUnit}
               />
@@ -790,7 +790,7 @@ export default function CreateScreen() {
               <TextInput
                 style={[styles.input, { marginTop: 10 }]}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 value={deadlineDate}
                 onChangeText={setDeadlineDate}
               />
@@ -846,7 +846,7 @@ export default function CreateScreen() {
               <TextInput
                 style={[styles.durationInput, customDuration && styles.durationInputActive]}
                 placeholder="Days"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 value={customDuration}
                 onChangeText={(v) => {
                   setCustomDuration(v);
@@ -865,7 +865,7 @@ export default function CreateScreen() {
             <TextInput
               style={styles.input}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={Colors.text.tertiary}
+              placeholderTextColor={DS_COLORS.textMuted}
               value={liveDate}
               onChangeText={setLiveDate}
             />
@@ -1000,7 +1000,7 @@ export default function CreateScreen() {
           {CHALLENGE_PACKS.map((pack) => (
             <TouchableOpacity
               key={pack.id}
-              style={[step2Styles.packCard, { borderColor: PACK_CARD_BORDER[pack.id] ?? Colors.border }]}
+              style={[step2Styles.packCard, { borderColor: PACK_CARD_BORDER[pack.id] ?? DS_COLORS.border }]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setTasks(pack.buildTasks());
@@ -1021,7 +1021,7 @@ export default function CreateScreen() {
       {tasks.length === 0 ? (
         <View style={step2Styles.emptyState}>
           <View style={step2Styles.emptyIcon}>
-            <Plus size={28} color={Colors.text.tertiary} />
+            <Plus size={28} color={DS_COLORS.textMuted} />
           </View>
           <Text style={step2Styles.emptyTitle}>Add your daily tasks</Text>
           <Text style={step2Styles.emptyDesc}>Start with 1–3 tasks people can realistically complete every day.</Text>
@@ -1071,7 +1071,7 @@ export default function CreateScreen() {
                     onPress={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Trash2 size={15} color={Colors.text.tertiary} />
+                    <Trash2 size={15} color={DS_COLORS.textMuted} />
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -1170,7 +1170,7 @@ export default function CreateScreen() {
                 testID={`visibility-${opt.value}`}
               >
                 <View style={[visStyles.iconWrap, isSelected && visStyles.iconWrapSelected]}>
-                  <IconComp size={18} color={isSelected ? "#fff" : Colors.text.tertiary} />
+                  <IconComp size={18} color={isSelected ? "#fff" : DS_COLORS.textMuted} />
                 </View>
                 <View style={visStyles.cardContent}>
                   <Text style={[visStyles.cardTitle, isSelected && visStyles.cardTitleSelected]}>{opt.label}</Text>
@@ -1248,7 +1248,7 @@ export default function CreateScreen() {
         <View style={styles.footer}>
           {step > 1 && (
             <TouchableOpacity style={styles.backButton} onPress={handleBack} accessibilityLabel="Go to previous step" accessibilityRole="button">
-              <ChevronLeft size={20} color={Colors.text.secondary} />
+              <ChevronLeft size={20} color={DS_COLORS.textSecondary} />
               <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
           )}
@@ -1312,7 +1312,7 @@ const visStyles = RNStyleSheet.create({
   },
   subtitle: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginBottom: 14,
     lineHeight: 18,
   },
@@ -1326,23 +1326,23 @@ const visStyles = RNStyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     gap: 12,
   },
   cardSelected: {
-    borderColor: Colors.accent,
+    borderColor: DS_COLORS.accent,
     backgroundColor: "rgba(230,126,85,0.04)",
   },
   iconWrap: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   iconWrapSelected: {
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
   },
   cardContent: {
     flex: 1,
@@ -1350,22 +1350,22 @@ const visStyles = RNStyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 2,
   },
   cardTitleSelected: {
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
   cardDesc: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     lineHeight: 17,
   },
   checkCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
@@ -1494,7 +1494,7 @@ const step2Styles = RNStyleSheet.create({
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     gap: 12,
   },
   taskIcon: {
@@ -1516,7 +1516,7 @@ const step2Styles = RNStyleSheet.create({
   taskTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     flexShrink: 1,
   },
   typePill: {
@@ -1532,7 +1532,7 @@ const step2Styles = RNStyleSheet.create({
   },
   taskMeta: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     lineHeight: 18,
     marginBottom: 2,
   },
@@ -1554,7 +1554,7 @@ const step2Styles = RNStyleSheet.create({
   editLabel: {
     fontSize: 13,
     fontWeight: '500' as const,
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
   deleteBtn: {
     padding: 4,
@@ -1564,7 +1564,7 @@ const step2Styles = RNStyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 16,
     borderRadius: 14,
     marginTop: 8,
@@ -1583,7 +1583,7 @@ const step2Styles = RNStyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -1591,16 +1591,16 @@ const step2Styles = RNStyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   emptyDesc: {
     fontSize: 14,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     textAlign: 'center',
   },
   emptyHelper: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     textAlign: 'center',
     marginTop: 2,
   },
@@ -1610,14 +1610,14 @@ const step2Styles = RNStyleSheet.create({
   packsTitle: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   packsSubtitle: {
     fontSize: 14,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginBottom: 16,
   },
   packsGrid: {
@@ -1628,7 +1628,7 @@ const step2Styles = RNStyleSheet.create({
   packCard: {
     width: '47%',
     minWidth: 140,
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 12,
     borderWidth: 1,
     padding: 14,
@@ -1640,17 +1640,17 @@ const step2Styles = RNStyleSheet.create({
   packTitle: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
   packDesc: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     lineHeight: 18,
     marginBottom: 8,
   },
   packTaskCount: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
 });

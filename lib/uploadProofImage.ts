@@ -2,13 +2,13 @@
  * Upload a completion proof image to Supabase storage and return the public URL.
  * Used when a task requires photo proof (requires_photo_proof or photo task type).
  *
- * Requires a Supabase storage bucket named "proofs" with policy allowing
+ * Requires a Supabase storage bucket named "task-proofs" with policy allowing
  * authenticated users to upload (e.g. INSERT for auth.uid()).
  */
 
 import { supabase } from "@/lib/supabase";
 
-const BUCKET = "proofs";
+const BUCKET = "task-proofs";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const UPLOAD_TIMEOUT_MS = 20000;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];

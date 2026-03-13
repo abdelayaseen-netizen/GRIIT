@@ -24,7 +24,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 
 const MEMBER_AVATARS = [
   "https://i.pravatar.cc/150?img=2",
@@ -108,14 +108,14 @@ export default function ChallengeChatInfoScreen() {
               style={styles.headerButton}
               onPress={() => router.back()}
             >
-              <ChevronLeft size={24} color={Colors.text.primary} />
+              <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
           ),
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.challengeHeader}>
-          <View style={[styles.challengeIcon, { backgroundColor: challenge.themeColor || Colors.accent }]}>
+          <View style={[styles.challengeIcon, { backgroundColor: challenge.themeColor || DS_COLORS.accent }]}>
             <Text style={styles.challengeIconText}>
               {(challenge.title ?? "?").charAt(0)}
             </Text>
@@ -128,7 +128,7 @@ export default function ChallengeChatInfoScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Shield size={18} color={Colors.text.secondary} />
+            <Shield size={18} color={DS_COLORS.textSecondary} />
             <Text style={styles.sectionTitle}>Room Rules</Text>
           </View>
           <View style={styles.rulesCard}>
@@ -153,7 +153,7 @@ export default function ChallengeChatInfoScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Users size={18} color={Colors.text.secondary} />
+            <Users size={18} color={DS_COLORS.textSecondary} />
             <Text style={styles.sectionTitle}>Members</Text>
             <Text style={styles.sectionCount}>
               {(challenge.participantsCount ?? challenge.participants_count ?? 0).toLocaleString()}
@@ -181,19 +181,19 @@ export default function ChallengeChatInfoScreen() {
                 {challenge.activeTodayCount?.toLocaleString() || 0} active today
               </Text>
             </View>
-            <ChevronRight size={20} color={Colors.text.tertiary} />
+            <ChevronRight size={20} color={DS_COLORS.textMuted} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Bell size={18} color={Colors.text.secondary} />
+            <Bell size={18} color={DS_COLORS.textSecondary} />
             <Text style={styles.sectionTitle}>Notifications</Text>
           </View>
           <View style={styles.settingsCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
-                <BellOff size={20} color={Colors.text.secondary} />
+                <BellOff size={20} color={DS_COLORS.textSecondary} />
                 <View>
                   <Text style={styles.settingTitle}>Mute chat</Text>
                   <Text style={styles.settingSubtitle}>
@@ -204,14 +204,14 @@ export default function ChallengeChatInfoScreen() {
               <Switch
                 value={settings.muteRoom}
                 onValueChange={handleToggleMute}
-                trackColor={{ false: Colors.border, true: Colors.accent }}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
                 thumbColor="#FFF"
               />
             </View>
             <View style={styles.settingDivider} />
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
-                <AtSign size={20} color={Colors.text.secondary} />
+                <AtSign size={20} color={DS_COLORS.textSecondary} />
                 <View>
                   <Text style={styles.settingTitle}>Mentions only</Text>
                   <Text style={styles.settingSubtitle}>
@@ -222,7 +222,7 @@ export default function ChallengeChatInfoScreen() {
               <Switch
                 value={settings.mentionsOnly}
                 onValueChange={handleToggleMentions}
-                trackColor={{ false: Colors.border, true: Colors.accent }}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
                 thumbColor="#FFF"
                 disabled={settings.muteRoom}
               />
@@ -231,7 +231,7 @@ export default function ChallengeChatInfoScreen() {
         </View>
 
         <TouchableOpacity style={styles.reportButton} onPress={handleReport} activeOpacity={0.7}>
-          <AlertCircle size={18} color={Colors.warning} />
+          <AlertCircle size={18} color={DS_COLORS.warning} />
           <Text style={styles.reportText}>Report an issue</Text>
         </TouchableOpacity>
 
@@ -244,7 +244,7 @@ export default function ChallengeChatInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   content: {
     padding: 20,
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 15,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   headerButton: {
     padding: 8,
@@ -281,12 +281,12 @@ const styles = StyleSheet.create({
   challengeTitle: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
   challengeSubtitle: {
     fontSize: 14,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   section: {
     marginBottom: 24,
@@ -300,15 +300,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   sectionCount: {
     fontSize: 14,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   rulesCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 16,
     gap: 12,
@@ -322,19 +322,19 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.text.tertiary,
+    backgroundColor: DS_COLORS.textMuted,
     marginTop: 6,
   },
   ruleText: {
     flex: 1,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     lineHeight: 20,
   },
   membersCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 14,
     gap: 12,
@@ -347,17 +347,17 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: Colors.card,
+    borderColor: DS_COLORS.surface,
   },
   moreAvatar: {
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     justifyContent: "center",
     alignItems: "center",
   },
   moreAvatarText: {
     fontSize: 10,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   membersText: {
     flex: 1,
@@ -365,15 +365,15 @@ const styles = StyleSheet.create({
   membersTitle: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   membersSubtitle: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginTop: 2,
   },
   settingsCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 4,
   },
@@ -392,16 +392,16 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   settingSubtitle: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginTop: 2,
   },
   settingDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: DS_COLORS.border,
     marginHorizontal: 12,
   },
   reportButton: {
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   reportText: {
     fontSize: 14,
-    color: Colors.warning,
+    color: DS_COLORS.warning,
     fontWeight: "500" as const,
   },
 });

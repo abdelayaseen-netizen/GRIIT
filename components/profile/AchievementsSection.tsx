@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Trophy, Lock } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { formatShortDate } from "@/lib/date-format";
 
 export type AchievementCategory = "consistency" | "challenge" | "discipline";
@@ -35,7 +35,7 @@ export default function AchievementsSection({ achievements, loading }: Achieveme
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Trophy size={18} color={Colors.text.primary} />
+          <Trophy size={18} color={DS_COLORS.textPrimary} />
           <Text style={styles.sectionTitle}>Achievements</Text>
         </View>
         <Text style={styles.loadingText}>Loading…</Text>
@@ -62,13 +62,13 @@ export default function AchievementsSection({ achievements, loading }: Achieveme
               <View
                 style={[
                   styles.badgeIcon,
-                  { backgroundColor: a.unlocked ? Colors.accent + "18" : "#F0EEEB" },
+                  { backgroundColor: a.unlocked ? DS_COLORS.accent + "18" : DS_COLORS.surfaceMuted },
                 ]}
               >
                 {a.unlocked ? (
-                  <Trophy size={16} color={Colors.accent} />
+                  <Trophy size={16} color={DS_COLORS.accent} />
                 ) : (
-                  <Lock size={16} color={Colors.text.muted} />
+                  <Lock size={16} color={DS_COLORS.textMuted} />
                 )}
               </View>
               <Text
@@ -97,35 +97,35 @@ export default function AchievementsSection({ achievements, loading }: Achieveme
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 20,
+    marginBottom: DS_SPACING.xl,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    gap: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginBottom: DS_SPACING.md,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize - 2,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   loadingText: {
-    fontSize: 14,
-    color: Colors.text.tertiary,
-    paddingHorizontal: 20,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textMuted,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
+    gap: DS_SPACING.md,
     flexDirection: "row",
-    paddingBottom: 8,
+    paddingBottom: DS_SPACING.sm,
   },
   badge: {
     width: 80,
     alignItems: "center",
-    paddingBottom: 8,
+    paddingBottom: DS_SPACING.sm,
   },
   badgeUnlocked: {},
   badgeLocked: {},
@@ -135,25 +135,25 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
-    backgroundColor: Colors.pill,
+    marginBottom: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.chipFill,
   },
   badgeTitle: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   badgeTitleLocked: {
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   badgeDesc: {
-    fontSize: 11,
-    color: Colors.text.secondary,
+    fontSize: DS_TYPOGRAPHY.tabLabel.fontSize,
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   badgeDate: {
     fontSize: 10,
-    color: Colors.text.tertiary,
-    marginTop: 4,
+    color: DS_COLORS.textMuted,
+    marginTop: DS_SPACING.xs,
   },
 });

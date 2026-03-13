@@ -17,7 +17,8 @@ import { Eye, EyeOff } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { mapAuthError } from "@/lib/auth-helpers";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system";
+import { GRIITWordmark } from "@/src/components/ui";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function LoginScreen() {
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
   const inputBorder = (key: string) =>
-    focusedField === key ? GRIIT_COLORS.primaryAccent : GRIIT_COLORS.borderLight;
+    focusedField === key ? DS_COLORS.accent : DS_COLORS.border;
 
   const handleLogin = async () => {
     if (!canSubmit) return;
@@ -63,7 +64,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -74,10 +75,7 @@ export default function LoginScreen() {
           keyboardDismissMode="on-drag"
         >
           <View style={styles.logoArea}>
-            <Text style={styles.logo} allowFontScaling={false}>
-              G R I I T
-            </Text>
-            <Text style={styles.tagline}>Build Discipline Daily</Text>
+            <GRIITWordmark subtitle="Build Discipline Daily" compact />
           </View>
 
           <Text style={styles.formTitle}>Welcome back</Text>
@@ -86,9 +84,9 @@ export default function LoginScreen() {
             <Text style={styles.label}>Email</Text>
             <TextInput
               ref={emailRef}
-              style={[styles.input, { borderColor: inputBorder("email"), backgroundColor: GRIIT_COLORS.cardBackground, color: GRIIT_COLORS.textPrimary }]}
+              style={[styles.input, { borderColor: inputBorder("email"), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary }]}
               placeholder="you@example.com"
-              placeholderTextColor={GRIIT_COLORS.textSecondary}
+              placeholderTextColor={DS_COLORS.inputPlaceholder}
               value={email}
               onChangeText={setEmail}
               onFocus={() => setFocusedField("email")}
@@ -102,12 +100,12 @@ export default function LoginScreen() {
             />
 
             <Text style={styles.label}>Password</Text>
-            <View style={[styles.passwordRow, { borderColor: inputBorder("password"), backgroundColor: GRIIT_COLORS.cardBackground }]}>
+            <View style={[styles.passwordRow, { borderColor: inputBorder("password"), backgroundColor: DS_COLORS.surface }]}>
               <TextInput
                 ref={passwordRef}
-                style={[styles.passwordInput, { color: GRIIT_COLORS.textPrimary }]}
+                style={[styles.passwordInput, { color: DS_COLORS.textPrimary }]}
                 placeholder="••••••••"
-                placeholderTextColor={GRIIT_COLORS.textSecondary}
+                placeholderTextColor={DS_COLORS.inputPlaceholder}
                 value={password}
                 onChangeText={setPassword}
                 onFocus={() => setFocusedField("password")}
@@ -123,9 +121,9 @@ export default function LoginScreen() {
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
                 {showPassword ? (
-                  <EyeOff size={22} color={GRIIT_COLORS.textSecondary} />
+                  <EyeOff size={22} color={DS_COLORS.textSecondary} />
                 ) : (
-                  <Eye size={22} color={GRIIT_COLORS.textSecondary} />
+                  <Eye size={22} color={DS_COLORS.textSecondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -144,7 +142,7 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={DS_COLORS.white} size="small" />
               ) : (
                 <Text style={styles.buttonText}>Log In</Text>
               )}
@@ -172,81 +170,69 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingTop: DS_SPACING.xxl,
+    paddingBottom: DS_SPACING.section,
   },
-  logoArea: { alignItems: "center", marginBottom: 32 },
-  logo: {
-    fontSize: 34,
-    fontWeight: "bold",
-    color: GRIIT_COLORS.textPrimary,
-    letterSpacing: 8,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
-  },
-  tagline: {
-    fontSize: 14,
-    color: GRIIT_COLORS.textSecondary,
-    marginTop: 4,
-  },
+  logoArea: { alignItems: "center", marginBottom: DS_SPACING.xxxl },
   formTitle: {
-    fontSize: 28,
+    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
     fontWeight: "800",
-    color: GRIIT_COLORS.textPrimary,
-    marginTop: 32,
-    marginBottom: 24,
+    color: DS_COLORS.textPrimary,
+    marginTop: DS_SPACING.xxxl,
+    marginBottom: DS_SPACING.xxl,
   },
   form: { width: "100%" },
   label: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "600",
-    color: GRIIT_COLORS.textPrimary,
-    marginBottom: 8,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.sm,
   },
   input: {
-    borderWidth: 1.5,
-    borderRadius: GRIIT_RADII.input,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: GRIIT_COLORS.textPrimary,
-    marginBottom: 16,
+    borderWidth: DS_BORDERS.width,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: DS_SPACING.xl,
+    paddingVertical: DS_SPACING.lg,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.lg,
   },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1.5,
-    borderRadius: GRIIT_RADII.input,
-    paddingHorizontal: 18,
-    marginBottom: 8,
+    borderWidth: DS_BORDERS.width,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: DS_SPACING.xl,
+    marginBottom: DS_SPACING.sm,
   },
   passwordInput: {
     flex: 1,
-    paddingVertical: 16,
-    fontSize: 16,
+    paddingVertical: DS_SPACING.lg,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
   },
-  forgotLink: { alignSelf: "flex-end", marginBottom: 16 },
-  forgotLinkText: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.primaryAccent },
+  forgotLink: { alignSelf: "flex-end", marginBottom: DS_SPACING.lg },
+  forgotLinkText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
   button: {
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    borderRadius: GRIIT_RADII.buttonPill,
-    paddingVertical: 16,
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: DS_RADIUS.buttonPill,
+    paddingVertical: DS_SPACING.lg,
     alignItems: "center",
-    marginTop: 8,
-    ...GRIIT_SHADOWS.button,
+    marginTop: DS_SPACING.sm,
+    ...DS_SHADOWS.button,
   },
-  buttonDisabled: { opacity: 0.4 },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700",
-    color: GRIIT_COLORS.white,
+    color: DS_COLORS.white,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 16,
+    marginTop: DS_SPACING.lg,
   },
-  footerText: { fontSize: 14, color: GRIIT_COLORS.textSecondary },
-  footerLink: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.primaryAccent },
+  footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
+  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
 });

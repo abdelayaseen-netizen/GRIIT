@@ -20,3 +20,7 @@ export { CreateFlowInput } from "./CreateFlowInput";
 export { CreateFlowCheckbox } from "./CreateFlowCheckbox";
 export { EnforcementBlock } from "./EnforcementBlock";
 export { DailyTaskRow } from "./DailyTaskRow";
+export { GRIITWordmark } from "./GRIITWordmark";
+export { OnboardingProgress } from "./OnboardingProgress";
+export { OnboardingCTA } from "./OnboardingCTA";
+export { SelectionCard } from "./SelectionCard";

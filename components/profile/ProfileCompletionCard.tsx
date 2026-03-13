@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { CheckCircle2, Circle } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 export interface ProfileCompletionCardProps {
   bioAdded: boolean;
@@ -38,9 +38,9 @@ export default function ProfileCompletionCard({
         {items.map((item, i) => (
           <View key={i} style={styles.row}>
             {item.done ? (
-              <CheckCircle2 size={20} color={Colors.streak.shield} fill={Colors.streak.shield} strokeWidth={0} />
+              <CheckCircle2 size={20} color={DS_COLORS.success} fill={DS_COLORS.success} strokeWidth={0} />
             ) : (
-              <Circle size={20} color={Colors.border} strokeWidth={2} />
+              <Circle size={20} color={DS_COLORS.border} strokeWidth={2} />
             )}
             <Text style={[styles.label, !item.done && styles.labelMuted]}>{item.label}</Text>
           </View>
@@ -52,55 +52,55 @@ export default function ProfileCompletionCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: DS_COLORS.surface,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginBottom: DS_SPACING.lg,
+    padding: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: DS_SPACING.sm,
   },
   title: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   percent: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "700",
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
   barTrack: {
     height: 6,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     borderRadius: 3,
     overflow: "hidden",
-    marginBottom: 14,
+    marginBottom: DS_SPACING.lg,
   },
   barFill: {
     height: "100%",
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     borderRadius: 3,
   },
   list: {
-    gap: 10,
+    gap: DS_SPACING.sm,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: DS_SPACING.sm,
   },
   label: {
-    fontSize: 15,
-    color: Colors.text.primary,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    color: DS_COLORS.textPrimary,
   },
   labelMuted: {
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
 });

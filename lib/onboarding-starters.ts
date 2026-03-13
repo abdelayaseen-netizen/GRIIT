@@ -28,7 +28,7 @@ export function filterOnboardingStarters(primaryGoal: string, dailyTimeBudget: s
   }
   if (dailyTimeBudget) {
     const preferShort = dailyTimeBudget === "3 min";
-    list = list.sort((a, b) => (preferShort && a.timeBudget === "3 min" ? -1 : 0));
+    list = list.sort((a, _b) => (preferShort && a.timeBudget === "3 min" ? -1 : 0));
   }
   return list.length >= 3 ? list : ONBOARDING_STARTERS;
 }

@@ -62,8 +62,14 @@ import type {
   ActiveChallengeFromApi,
   CheckinFromApi,
 } from "@/types";
-import Colors from "@/constants/colors";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import {
+  DS_COLORS,
+  DS_SPACING,
+  DS_RADIUS,
+  DS_TYPOGRAPHY,
+  DS_BORDERS,
+  DS_MEASURES,
+} from "@/lib/design-system";
 
 const AVATAR_URLS = [
   "https://i.pravatar.cc/80?img=10",
@@ -231,14 +237,12 @@ function CountdownTimer({ endsAt, theme }: { endsAt: string; theme: DifficultyTh
   );
 }
 
-function InfoChip({ label, theme, dark }: { label: string; theme: DifficultyTheme; dark?: boolean }) {
+function InfoChip({ label, theme: _theme, dark }: { label: string; theme: DifficultyTheme; dark?: boolean }) {
   return (
     <View
       style={[
         s.infoChip,
-        dark
-          ? { borderColor: "rgba(255,255,255,0.25)", backgroundColor: "#2D2D2D" }
-          : { borderColor: theme.chipBorder, backgroundColor: "rgba(255,255,255,0.12)" },
+        { borderColor: "rgba(255,255,255,0.35)", backgroundColor: dark ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.18)" },
       ]}
     >
       <Text style={s.infoChipText}>{label}</Text>
@@ -311,18 +315,18 @@ function MissionRow({
   }) : null;
 
   const iconBg = isCompleted
-    ? Colors.successLight
+    ? DS_COLORS.successSoft
     : isJournal
     ? "#F5ECFF"
     : task.type === "run"
     ? "#FFEFEB"
     : theme.missionIconBg;
-  const iconColor = isCompleted ? Colors.success : isJournal ? "#8E44AD" : task.type === "run" ? "#FF6B35" : theme.accent;
+  const iconColor = isCompleted ? DS_COLORS.success : isJournal ? "#8E44AD" : task.type === "run" ? "#FF6B35" : theme.accent;
   return (
     <View style={[s.missionRow, !isLast && s.missionRowBorder]}>
       <View style={[s.missionIcon, { backgroundColor: iconBg }]}>
         {isCompleted ? (
-          <Check size={16} color={Colors.success} />
+          <Check size={16} color={DS_COLORS.success} />
         ) : (
           <IconComp size={16} color={iconColor} />
         )}
@@ -374,7 +378,7 @@ function MissionRow({
       </View>
       {isCompleted ? (
         <View style={s.completedBadge}>
-          <Check size={12} color={Colors.success} />
+          <Check size={12} color={DS_COLORS.success} />
           <Text style={s.completedBadgeText}>{verifiedByStrava ? "Verified by Strava" : "Done"}</Text>
         </View>
       ) : needsStrava && stravaConnected === false && onConnectStrava ? (
@@ -602,29 +606,21 @@ export default function ChallengeDetailScreen() {
   const handleMissionStart = useCallback((task: ChallengeTaskFromApi) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const apiTask = task;
-    const needsPhotoProof = apiTask.require_photo_proof === true;
+    const apiTask = task as ChallengeTaskFromApi & {
+      require_photo?: boolean;
+      timer_direction?: string;
+      timer_hard_mode?: boolean;
+      require_heart_rate?: boolean;
+      heart_rate_threshold?: number;
+      require_location?: boolean;
+      location_name?: string;
+      location_latitude?: number;
+      location_longitude?: number;
+      location_radius_meters?: number;
+      min_duration_minutes?: number;
+    };
+    const needsPhotoProof = apiTask.require_photo_proof === true || apiTask.require_photo === true;
 
-    const taskExt = task as ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null };
-    if (task.type === "journal") {
-      const params: Record<string, string> = { taskId: task.id };
-      if (taskExt.journalPrompt) params.prompt = taskExt.journalPrompt;
-      if (taskExt.journalTypes && taskExt.journalTypes.length > 0) params.types = JSON.stringify(taskExt.journalTypes);
-      params.captureMood = taskExt.captureMood !== false ? "true" : "false";
-      params.captureEnergy = taskExt.captureEnergy !== false ? "true" : "false";
-      params.captureBody = taskExt.captureBodyState === true ? "true" : "false";
-      if (taskExt.wordLimitEnabled && taskExt.wordLimitWords) {
-        params.wordLimit = taskExt.wordLimitWords.toString();
-      }
-      params.requirePhotoProof = needsPhotoProof ? "true" : "false";
-      router.push({ pathname: ROUTES.TASK_JOURNAL, params } as never);
-      return;
-    }
-
-    if (apiTask.type === "manual" && needsPhotoProof) {
-      router.push({ pathname: ROUTES.TASK_PHOTO, params: { taskId: task.id } } as never);
-      return;
-    }
     if (task.type === "checkin") {
       if (!FLAGS.LOCATION_CHECKIN_ENABLED) {
         Alert.alert(
@@ -636,18 +632,38 @@ export default function ChallengeDetailScreen() {
       router.push({ pathname: ROUTES.TASK_CHECKIN, params: { taskId: task.id } } as never);
       return;
     }
-    const routeMap: Record<string, string> = {
-      run: "/task/run",
-      timer: "/task/timer",
-      photo: "/task/photo",
-    };
-    const route = routeMap[task.type];
-    if (route) {
-      const params: Record<string, string> = { taskId: task.id };
-      if (needsPhotoProof) params.requirePhotoProof = "true";
-      router.push({ pathname: route, params } as never);
+    if (task.type === "run") {
+      router.push({ pathname: ROUTES.TASK_RUN, params: { taskId: task.id } } as never);
+      return;
     }
-  }, [router]);
+
+    // Unified completion screen for manual, simple, journal, timer, photo (with optional advanced verification)
+    const taskConfig = {
+      require_photo: needsPhotoProof || apiTask.require_photo === true,
+      min_duration_minutes: apiTask.min_duration_minutes ?? apiTask.duration_minutes ?? undefined,
+      min_words: apiTask.min_words ?? undefined,
+      timer_direction: (apiTask.timer_direction === "countup" ? "countup" : "countdown") as "countdown" | "countup",
+      timer_hard_mode: apiTask.timer_hard_mode === true || apiTask.strict_timer_mode === true,
+      require_heart_rate: apiTask.require_heart_rate === true,
+      heart_rate_threshold: apiTask.heart_rate_threshold ?? 100,
+      require_location: apiTask.require_location === true,
+      location_name: apiTask.location_name ?? undefined,
+      location_latitude: apiTask.location_latitude ?? undefined,
+      location_longitude: apiTask.location_longitude ?? undefined,
+      location_radius_meters: apiTask.location_radius_meters ?? 200,
+    };
+    router.push({
+      pathname: ROUTES.TASK_COMPLETE,
+      params: {
+        taskId: task.id,
+        activeChallengeId: activeChallenge?.id ?? "",
+        taskType: task.type,
+        taskName: task.title ?? "",
+        taskDescription: (task as { description?: string }).description ?? "",
+        taskConfig: JSON.stringify(taskConfig),
+      },
+    } as never);
+  }, [router, activeChallenge?.id]);
 
   const allTasks = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
   const isThisActiveChallenge = !!(
@@ -788,13 +804,8 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const isDarkHeader = !isDaily && (difficulty === "extreme" || difficulty === "hard");
-  const headerGradientColors = isDaily
-    ? (["#2D6B4E", "#1A4A35"] as const)
-    : isDarkHeader
-    ? (["#1A1A1A", "#141414"] as const)
-    : ([theme.headerBg, theme.headerGradientEnd] as const);
-  const ctaBgColor = isDaily && !expired ? themeColors.success : theme.ctaBg;
+  const headerGradientColors = [DS_COLORS.accent, DS_COLORS.accentDark] as const;
+  const ctaBgColor = isDaily && !expired ? themeColors.success : DS_COLORS.accent;
   const countdownTheme = isDaily ? { ...theme, accent: themeColors.success } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
@@ -828,10 +839,9 @@ export default function ChallengeDetailScreen() {
             />
           }
         >
-          {/* HERO HEADER: green gradient 24h, dark gradient standard */}
+          {/* HERO: warm orange, rounded bottom, premium spacing */}
           <LinearGradient colors={headerGradientColors} style={s.heroHeader}>
             <SafeAreaView edges={["top"]} style={s.heroSafeArea}>
-              {/* Top Nav */}
               <View style={s.topNav}>
                 <TouchableOpacity
                   style={s.backPill}
@@ -842,7 +852,7 @@ export default function ChallengeDetailScreen() {
                   accessibilityLabel="Go back"
                   accessibilityRole="button"
                 >
-                  <ChevronLeft size={24} color={theme.backArrowColor} />
+                  <ChevronLeft size={24} color={DS_COLORS.white} />
                 </TouchableOpacity>
                 <Text style={s.topNavTitle}>Challenge</Text>
                 <TouchableOpacity
@@ -887,40 +897,37 @@ export default function ChallengeDetailScreen() {
                   accessibilityLabel="Challenge options"
                   accessibilityRole="button"
                 >
-                  <MoreHorizontal size={20} color="#FFFFFF" />
+                  <MoreHorizontal size={20} color={DS_COLORS.white} />
                 </TouchableOpacity>
               </View>
 
-              {/* Title Block */}
               <View style={s.heroContent}>
-                {isDaily && (
+                {isDaily ? (
                   <View style={s.dailyLabel}>
                     <Zap size={11} color="rgba(255,255,255,0.9)" />
                     <Text style={s.dailyLabelText}>24-HOUR CHALLENGE</Text>
                   </View>
+                ) : (
+                  <Text style={s.heroEyebrow}>CHALLENGE</Text>
                 )}
-                <Text style={[s.heroTitle, s.heroTitleSerif]}>{challenge.title}</Text>
-                <Text style={s.heroTagline}>{challenge.short_hook || challenge.description}</Text>
-                {referrerLabel ? (
-                  <Text style={s.referrerLabel}>{referrerLabel}</Text>
-                ) : null}
-
-                {/* Info Chips */}
+                <Text style={s.heroTitle}>{challenge.title}</Text>
+                <Text style={s.heroTagline} numberOfLines={2}>{challenge.short_hook || challenge.description}</Text>
+                {referrerLabel ? <Text style={s.referrerLabel}>{referrerLabel}</Text> : null}
                 <View style={s.chipRow}>
-                  <InfoChip label={durationLabel} theme={theme} dark={isDarkHeader} />
+                  <InfoChip label={durationLabel} theme={theme} dark />
                   {isJoined && !isDaily && (
                     <>
-                      <InfoChip label={`${userStreak}-day streak`} theme={theme} dark={isDarkHeader} />
-                      <InfoChip label={`Day ${userCurrentDay} / ${challenge.duration_days}`} theme={theme} dark={isDarkHeader} />
+                      <InfoChip label={`${userStreak}-day streak`} theme={theme} dark />
+                      <InfoChip label={`Day ${userCurrentDay} / ${challenge.duration_days}`} theme={theme} dark />
                     </>
                   )}
                   {difficulty === "hard" || difficulty === "extreme" ? (
-                    <InfoChip label={`${difficultyLabel} Mode`} theme={theme} dark={isDarkHeader} />
+                    <InfoChip label={`${difficultyLabel} Mode`} theme={theme} dark />
                   ) : (
-                    <InfoChip label={difficultyLabel} theme={theme} dark={isDarkHeader} />
+                    <InfoChip label={difficultyLabel} theme={theme} dark />
                   )}
                   {visibilityLabel && (
-                    <View style={[s.infoChip, s.visibilityChip, { borderColor: isDarkHeader ? "rgba(255,255,255,0.25)" : theme.chipBorder, backgroundColor: isDarkHeader ? "#2D2D2D" : undefined }]}>
+                    <View style={[s.infoChip, s.visibilityChip, { borderColor: "rgba(255,255,255,0.35)", backgroundColor: "rgba(255,255,255,0.15)" }]}>
                       {visibilityIcon}
                       <Text style={s.infoChipText}>{visibilityLabel}</Text>
                     </View>
@@ -930,7 +937,7 @@ export default function ChallengeDetailScreen() {
             </SafeAreaView>
           </LinearGradient>
 
-          {/* BODY */}
+          {/* BODY: warm background, large radius cards, premium spacing */}
           <View style={s.body}>
 
             {/* Team / Shared Goal sections (remote only) */}
@@ -1039,7 +1046,7 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Participant + Stats: one card (matches reference layout) */}
+            {/* Participants summary card */}
             <View style={s.participantStatsCard}>
               <View style={s.socialRow}>
                 <SocialAvatars />
@@ -1054,29 +1061,29 @@ export default function ChallengeDetailScreen() {
                   )}
                 </View>
               </View>
-              {(challenge.hard_pick_rate != null || challenge.completion_rate != null) && (
-                <View style={s.statsRowInner}>
-                  {challenge.hard_pick_rate != null && (
-                    <View style={s.statItem}>
-                      <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.hard_pick_rate}%</Text>
-                      <Text style={s.statLabel}>pick Hard Mode</Text>
-                    </View>
-                  )}
-                  {challenge.hard_finish_rate != null && (
-                    <View style={s.statItem}>
-                      <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.hard_finish_rate}%</Text>
-                      <Text style={s.statLabel}>finish Hard Mode</Text>
-                    </View>
-                  )}
-                  {challenge.completion_rate != null && !challenge.hard_pick_rate && (
-                    <View style={s.statItem}>
-                      <Text style={[s.statNumber, { color: theme.accent }]}>{challenge.completion_rate}%</Text>
-                      <Text style={s.statLabel}>completion rate</Text>
-                    </View>
-                  )}
-                </View>
-              )}
             </View>
+
+            {/* Progress stats card (two metrics, divider between) */}
+            {(() => {
+              const items: { value: number; label: string }[] = [];
+              if (challenge.hard_pick_rate != null) items.push({ value: challenge.hard_pick_rate, label: "pick Hard Mode" });
+              if (challenge.hard_finish_rate != null) items.push({ value: challenge.hard_finish_rate, label: "finish Hard Mode" });
+              if (challenge.completion_rate != null && challenge.hard_pick_rate == null) items.push({ value: challenge.completion_rate, label: "completion rate" });
+              if (items.length === 0) return null;
+              return (
+                <View style={s.progressStatsCard}>
+                  {items.map((item, i) => (
+                    <React.Fragment key={item.label}>
+                      {i > 0 && <View style={s.progressStatDivider} />}
+                      <View style={s.progressStatItem}>
+                        <Text style={s.progressStatValue}>{item.value}%</Text>
+                        <Text style={s.progressStatLabel}>{item.label}</Text>
+                      </View>
+                    </React.Fragment>
+                  ))}
+                </View>
+              );
+            })()}
 
             {/* Today's Missions (hidden when team failed or shared-goal-only) */}
             {!(isTeamChallenge && runStatus === "failed") && (
@@ -1160,7 +1167,7 @@ export default function ChallengeDetailScreen() {
 
             {isJoined && id && (
               <TouchableOpacity
-                style={[s.leaveBtn, { borderWidth: 1, borderColor: themeColors.border, borderRadius: 12 }]}
+                style={[s.leaveBtn, { borderWidth: DS_BORDERS.width, borderColor: DS_COLORS.border, borderRadius: DS_RADIUS.button }]}
                 onPress={handleLeave}
                 disabled={leavePending}
                 activeOpacity={0.7}
@@ -1180,13 +1187,13 @@ export default function ChallengeDetailScreen() {
         </ScrollView>
 
         {/* STICKY CTA */}
-        <View style={[s.stickyFooter, { paddingBottom: insets.bottom + 14 }]}>
+        <View style={[s.stickyFooter, { paddingBottom: insets.bottom + DS_SPACING.lg }]}>
           {isDaily && expired ? (
             <View style={s.disabledCta}>
               <Text style={s.disabledCtaText}>Expired</Text>
             </View>
           ) : (
-            <Animated.View style={{ transform: [{ scale: ctaScaleAnim }] }}>
+            <Animated.View style={{ transform: [{ scale: ctaScaleAnim }], alignSelf: "stretch" }}>
               <TouchableOpacity
                 style={[s.ctaButton, { backgroundColor: ctaBgColor }]}
                 onPress={isJoined ? () => router.push(ROUTES.TABS as never) : user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
@@ -1199,9 +1206,9 @@ export default function ChallengeDetailScreen() {
                 accessibilityRole="button"
               >
                 {isPending ? (
-                  <ActivityIndicator color={theme.ctaText} />
+                  <ActivityIndicator color={DS_COLORS.white} />
                 ) : (
-                  <Text style={[s.ctaText, { color: theme.ctaText }]}>{ctaLabel}</Text>
+                  <Text style={s.ctaText}>{ctaLabel}</Text>
                 )}
               </TouchableOpacity>
             </Animated.View>
@@ -1298,130 +1305,130 @@ export default function ChallengeDetailScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: GRIIT_COLORS.background,
+    backgroundColor: DS_COLORS.background,
   },
-  flex: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 140,
-  },
+  flex: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 160 },
 
   loadingContainer: {
     flex: 1,
-    backgroundColor: GRIIT_COLORS.background,
+    backgroundColor: DS_COLORS.background,
   },
   skeletonHeader: {
     height: 260,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: DS_COLORS.borderAlt,
   },
   skeletonBody: {
-    padding: 20,
+    padding: DS_SPACING.cardPadding,
   },
   skeletonChipRow: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 24,
-    marginTop: 16,
+    gap: DS_SPACING.sm,
+    marginBottom: DS_SPACING.xxl,
+    marginTop: DS_SPACING.lg,
   },
   skeletonChip: {
     width: 80,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: "#ECECEC",
+    borderRadius: DS_RADIUS.chip,
+    backgroundColor: DS_COLORS.surfaceMuted,
   },
   skeletonBlock: {
     height: 80,
-    borderRadius: 14,
-    backgroundColor: "#ECECEC",
-    marginBottom: 20,
+    borderRadius: DS_RADIUS.cardAlt,
+    backgroundColor: DS_COLORS.surfaceMuted,
+    marginBottom: DS_SPACING.xl,
   },
   skeletonMission: {
     height: 64,
-    borderRadius: 12,
-    backgroundColor: "#ECECEC",
-    marginBottom: 12,
+    borderRadius: DS_RADIUS.cardAlt,
+    backgroundColor: DS_COLORS.surfaceMuted,
+    marginBottom: DS_SPACING.md,
   },
 
   emptyWrap: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: DS_SPACING.xxxl,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
-    marginBottom: 16,
+    color: DS_COLORS.textSecondary,
+    marginBottom: DS_SPACING.lg,
   },
   emptySubtext: {
-    fontSize: 14,
-    marginBottom: 16,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    marginBottom: DS_SPACING.lg,
     textAlign: "center",
+    color: DS_COLORS.textSecondary,
   },
   emptyBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: Colors.accent,
-    borderRadius: 10,
+    paddingHorizontal: DS_SPACING.xxl,
+    paddingVertical: DS_SPACING.md,
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: DS_RADIUS.button,
   },
   emptyBtnText: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.buttonSmall.fontSize,
     fontWeight: "600" as const,
-    color: "#FFF",
+    color: DS_COLORS.white,
   },
 
   heroHeader: {
-    paddingBottom: 28,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingBottom: DS_SPACING.xxl + DS_SPACING.lg,
+    borderBottomLeftRadius: DS_RADIUS.card,
+    borderBottomRightRadius: DS_RADIUS.card,
   },
   heroSafeArea: {
-    paddingHorizontal: 20,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
   },
-
   topNav: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 8,
-    marginBottom: 20,
+    paddingTop: DS_SPACING.sm,
+    marginBottom: DS_SPACING.xxl,
   },
   backPill: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   topNavTitle: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "600" as const,
-    color: "#FFFFFF",
-    letterSpacing: 0.3,
+    color: DS_COLORS.white,
+    letterSpacing: 0.5,
   },
   morePill: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
-
   heroContent: {
-    paddingTop: 4,
+    paddingTop: DS_SPACING.xs,
+  },
+  heroEyebrow: {
+    fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
+    fontWeight: DS_TYPOGRAPHY.eyebrow.fontWeight,
+    letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,
+    color: "rgba(255,255,255,0.85)",
+    marginBottom: DS_SPACING.sm,
   },
   dailyLabel: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    marginBottom: 10,
+    marginBottom: DS_SPACING.sm,
   },
   dailyLabelText: {
     fontSize: 11,
@@ -1430,85 +1437,80 @@ const s = StyleSheet.create({
     letterSpacing: 1.2,
   },
   heroTitle: {
-    fontSize: 28,
-    fontWeight: "700" as const,
-    color: "#FFFFFF",
-    letterSpacing: -0.5,
-    lineHeight: 34,
-    marginBottom: 6,
-  },
-  heroTitleSerif: {
-    fontStyle: "italic",
-    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
+    fontSize: DS_TYPOGRAPHY.pageTitleLarge.fontSize,
+    fontWeight: DS_TYPOGRAPHY.pageTitleLarge.fontWeight,
+    color: DS_COLORS.white,
+    letterSpacing: DS_TYPOGRAPHY.pageTitleLarge.letterSpacing,
+    lineHeight: DS_TYPOGRAPHY.pageTitleLarge.lineHeight,
+    marginBottom: DS_SPACING.sm,
   },
   heroTagline: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "400" as const,
-    color: "rgba(255,255,255,0.7)",
-    lineHeight: 20,
-    marginBottom: 18,
+    color: "rgba(255,255,255,0.8)",
+    lineHeight: DS_TYPOGRAPHY.secondary.lineHeight,
+    marginBottom: DS_SPACING.lg,
   },
   referrerLabel: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "500" as const,
-    color: "rgba(255,255,255,0.8)",
-    marginBottom: 8,
+    color: "rgba(255,255,255,0.85)",
+    marginBottom: DS_SPACING.sm,
   },
-
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: DS_SPACING.sm,
   },
   visibilityChip: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 5,
-    backgroundColor: "rgba(255,255,255,0.18)",
   },
   infoChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
+    paddingHorizontal: DS_SPACING.md,
+    paddingVertical: DS_SPACING.sm,
+    borderRadius: 999,
     borderWidth: 1,
   },
   infoChipText: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "600" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
     letterSpacing: 0.1,
   },
-
   body: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: GRIIT_RADII.contentOverlap,
-    borderTopRightRadius: GRIIT_RADII.contentOverlap,
-    marginTop: -20,
-    paddingTop: 24,
-    paddingHorizontal: 20,
-    paddingBottom: 120,
+    backgroundColor: DS_COLORS.background,
+    borderTopLeftRadius: DS_RADIUS.card,
+    borderTopRightRadius: DS_RADIUS.card,
+    marginTop: -DS_RADIUS.card * 0.5,
+    paddingTop: DS_SPACING.xxl,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingBottom: 140,
+    borderWidth: 0,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 4,
   },
 
   countdownCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-    borderRadius: GRIIT_RADII.card,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    paddingHorizontal: DS_SPACING.cardPadding,
+    paddingVertical: DS_SPACING.lg,
+    marginBottom: DS_SPACING.lg,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   countdownLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: DS_SPACING.sm,
   },
   liveDot: {
     width: 8,
@@ -1516,9 +1518,9 @@ const s = StyleSheet.create({
     borderRadius: 4,
   },
   countdownLabel: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   countdownValue: {
     fontSize: 22,
@@ -1544,30 +1546,30 @@ const s = StyleSheet.create({
   },
 
   progressSection: {
-    marginBottom: 20,
+    marginBottom: DS_SPACING.xl,
   },
   progressHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: DS_SPACING.sm,
   },
   sectionLabel: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   progressValue: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     fontVariant: ["tabular-nums"] as const,
   },
   progressBarBg: {
-    height: 8,
-    borderRadius: 4,
+    height: DS_MEASURES.progressBarHeight,
+    borderRadius: DS_RADIUS.input / 2,
     overflow: "hidden" as const,
-    marginBottom: 10,
+    marginBottom: DS_SPACING.sm,
   },
   progressBarFill: {
     height: "100%",
@@ -1611,7 +1613,7 @@ const s = StyleSheet.create({
   failCtaText: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     marginBottom: 12,
   },
   failCtaBtn: {
@@ -1626,22 +1628,48 @@ const s = StyleSheet.create({
   },
 
   participantStatsCard: {
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: GRIIT_RADII.card,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    marginBottom: 20,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.lg,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
+  },
+  progressStatsCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.lg,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
+  },
+  progressStatItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  progressStatValue: {
+    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
+    fontWeight: DS_TYPOGRAPHY.statValue.fontWeight,
+    color: DS_COLORS.accent,
+    marginBottom: DS_SPACING.xs,
+  },
+  progressStatLabel: {
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    fontWeight: DS_TYPOGRAPHY.statLabel.fontWeight,
+    color: DS_COLORS.textSecondary,
+  },
+  progressStatDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    backgroundColor: DS_COLORS.border,
+    marginVertical: DS_SPACING.xs,
   },
   socialRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-  },
-  statsRowInner: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 16,
+    gap: DS_SPACING.lg,
   },
   avatarStack: {
     flexDirection: "row",
@@ -1658,72 +1686,74 @@ const s = StyleSheet.create({
     flex: 1,
   },
   socialPrimary: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "600" as const,
-    color: "#333333",
+    color: DS_COLORS.textPrimary,
     letterSpacing: -0.1,
   },
   socialSecondary: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "400" as const,
-    color: "#888888",
-    marginTop: 2,
+    color: DS_COLORS.textSecondary,
+    marginTop: DS_SPACING.xs,
   },
 
   statItem: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
-    borderRadius: GRIIT_RADII.card,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
+    backgroundColor: DS_COLORS.surfaceMuted,
+    borderRadius: DS_RADIUS.cardAlt,
+    paddingVertical: DS_SPACING.lg,
+    paddingHorizontal: DS_SPACING.cardPadding,
     alignItems: "center",
-    ...GRIIT_SHADOWS.card,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
     fontWeight: "800" as const,
     letterSpacing: -0.5,
-    marginBottom: 4,
+    marginBottom: DS_SPACING.xs,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     fontWeight: "500" as const,
-    color: "#333333",
+    color: DS_COLORS.textSecondary,
     textAlign: "center" as const,
   },
 
   missionsSection: {
-    marginBottom: 24,
+    marginBottom: DS_SPACING.xxl,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700" as const,
-    color: "#333333",
-    letterSpacing: -0.2,
-    marginBottom: 12,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
+    fontWeight: DS_TYPOGRAPHY.sectionTitle.fontWeight,
+    color: DS_COLORS.textPrimary,
+    letterSpacing: DS_TYPOGRAPHY.sectionTitle.letterSpacing,
+    marginBottom: DS_SPACING.md,
   },
   missionsCard: {
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: GRIIT_RADII.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
     overflow: "hidden" as const,
-    ...GRIIT_SHADOWS.card,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
-
   missionRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 14,
+    paddingHorizontal: DS_SPACING.cardPadding,
+    paddingVertical: DS_SPACING.lg,
+    gap: DS_SPACING.lg,
+    minHeight: 72,
   },
   missionRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: DS_COLORS.border,
   },
   missionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1761,20 +1791,20 @@ const s = StyleSheet.create({
     color: "#0EA5E9",
   },
   missionTitle: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
     fontWeight: "600" as const,
-    color: "#333333",
+    color: DS_COLORS.textPrimary,
     letterSpacing: -0.1,
   },
   missionTitleDone: {
-    color: "#888888",
+    color: DS_COLORS.textSecondary,
     textDecorationLine: "line-through" as const,
   },
   missionMeta: {
-    fontSize: 12,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "400" as const,
-    color: "#888888",
-    marginTop: 3,
+    color: DS_COLORS.textSecondary,
+    marginTop: DS_SPACING.xs,
   },
   missionMetaActive: {
     color: "#059669",
@@ -1797,7 +1827,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: Colors.successLight,
+    backgroundColor: DS_COLORS.successSoft,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
@@ -1805,80 +1835,77 @@ const s = StyleSheet.create({
   completedBadgeText: {
     fontSize: 12,
     fontWeight: "600" as const,
-    color: Colors.success,
+    color: DS_COLORS.success,
   },
 
   rulesSection: {
-    marginBottom: 24,
+    marginBottom: DS_SPACING.xxl,
   },
   rulesCard: {
-    backgroundColor: "#F8F8F8",
-    borderRadius: 12,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
     overflow: "hidden" as const,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   ruleRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 12,
+    paddingHorizontal: DS_SPACING.cardPadding,
+    paddingVertical: DS_SPACING.lg,
+    gap: DS_SPACING.md,
   },
   ruleRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: DS_COLORS.border,
   },
   ruleBullet: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "#E8F5E9",
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: DS_COLORS.successSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   ruleBulletWarning: {
-    backgroundColor: "#FFEBEE",
+    backgroundColor: DS_COLORS.dangerSoft,
   },
   ruleText: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "500" as const,
-    color: "#333333",
+    color: DS_COLORS.textPrimary,
     flex: 1,
+    lineHeight: DS_TYPOGRAPHY.bodySmall.lineHeight,
   },
   ruleTextWarning: {
-    color: "#F44336",
+    color: DS_COLORS.danger,
     fontWeight: "600" as const,
   },
-
   aboutSection: {
-    marginBottom: 24,
+    marginBottom: DS_SPACING.xxl,
   },
   aboutText: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "400" as const,
-    color: "#555555",
-    lineHeight: 23,
+    color: DS_COLORS.textSecondary,
+    lineHeight: 24,
     letterSpacing: -0.1,
   },
 
   leaveBtn: {
     alignItems: "center",
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingVertical: DS_SPACING.md,
+    marginBottom: DS_SPACING.sm,
   },
   leaveBtnText: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "500" as const,
-    color: "#B91C1C",
-    opacity: 0.7,
+    color: DS_COLORS.danger,
+    opacity: 0.9,
   },
 
   bottomSpacer: {
-    height: 20,
+    height: DS_SPACING.xl,
   },
 
   stickyFooter: {
@@ -1886,66 +1913,57 @@ const s = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 16,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(0,0,0,0.06)",
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingTop: DS_SPACING.lg,
+    backgroundColor: DS_COLORS.surface,
+    borderTopWidth: 1,
+    borderTopColor: DS_COLORS.border,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 8,
   },
   ctaButton: {
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 52,
-    paddingVertical: 16,
-    borderRadius: GRIIT_RADII.buttonPill,
-    ...GRIIT_SHADOWS.button,
+    minHeight: DS_MEASURES.ctaHeight,
+    paddingVertical: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.button,
     width: Platform.OS === "web" ? 400 : undefined,
     alignSelf: "stretch" as const,
-    minWidth: 320,
+    minWidth: 280,
   },
   ctaText: {
-    fontSize: 17,
-    fontWeight: "700" as const,
-    letterSpacing: -0.1,
-    color: "#FFFFFF",
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
+    fontWeight: DS_TYPOGRAPHY.button.fontWeight,
+    color: DS_COLORS.white,
   },
   inviteLink: {
-    marginTop: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
+    marginTop: DS_SPACING.sm,
+    paddingVertical: DS_SPACING.sm,
     minHeight: 44,
     justifyContent: "center",
   },
   inviteLinkText: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "600" as const,
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
   ctaMicro: {
-    fontSize: 12,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "400" as const,
-    color: "#AAAAAA",
-    marginTop: 8,
+    color: DS_COLORS.textMuted,
+    marginTop: DS_SPACING.sm,
   },
   disabledCta: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 17,
-    borderRadius: 14,
-    backgroundColor: "#ECECEC",
+    paddingVertical: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.button,
+    backgroundColor: DS_COLORS.chipFill,
     alignSelf: "stretch" as const,
   },
   disabledCtaText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "600" as const,
-    color: Colors.text.muted,
+    color: DS_COLORS.textMuted,
   },
 
   commitmentOverlay: {
@@ -1959,106 +1977,107 @@ const s = StyleSheet.create({
     paddingHorizontal: 24,
   },
   commitmentCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 24,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.xxl,
     width: "100%",
     maxWidth: 360,
     alignItems: "center",
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   commitmentClose: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: DS_SPACING.lg,
+    right: DS_SPACING.lg,
     zIndex: 1,
-    padding: 4,
+    padding: DS_SPACING.xs,
   },
   commitmentCloseText: {
     fontSize: 20,
-    color: "#8A8A8A",
+    color: DS_COLORS.textMuted,
     fontWeight: "600",
   },
   commitmentShieldWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#FFF0E8",
+    backgroundColor: DS_COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: DS_SPACING.sm,
   },
   commitmentTitle: {
-    fontSize: 18,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
     fontWeight: "700",
-    color: "#1A1A2E",
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
-    marginTop: 20,
-    paddingHorizontal: 8,
+    marginTop: DS_SPACING.xl,
+    paddingHorizontal: DS_SPACING.sm,
   },
   commitmentDetails: {
     width: "100%",
-    marginTop: 20,
+    marginTop: DS_SPACING.xl,
   },
   commitmentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 14,
+    paddingVertical: DS_SPACING.lg,
   },
   commitmentRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#EDEDED",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: DS_COLORS.border,
   },
   commitmentLabel: {
-    fontSize: 14,
-    color: "#8A8A8A",
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textMuted,
   },
   commitmentValue: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "600",
-    color: "#1A1A2E",
+    color: DS_COLORS.textPrimary,
     textAlign: "right",
     flex: 1,
-    marginLeft: 16,
+    marginLeft: DS_SPACING.lg,
   },
   commitmentWarning: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF0E8",
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 18,
+    backgroundColor: DS_COLORS.accentSoft,
+    borderRadius: DS_RADIUS.input / 2,
+    padding: DS_SPACING.lg,
+    marginTop: DS_SPACING.xl,
     width: "100%",
   },
   commitmentWarningText: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "500",
-    color: "#E8733A",
+    color: DS_COLORS.accent,
     flex: 1,
   },
   commitmentConfirmBtn: {
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    borderRadius: GRIIT_RADII.buttonPill,
-    paddingVertical: 16,
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: DS_RADIUS.button,
+    paddingVertical: DS_SPACING.lg,
     alignItems: "center",
     width: "100%",
-    marginTop: 18,
-    ...GRIIT_SHADOWS.button,
+    marginTop: DS_SPACING.xl,
   },
   commitmentConfirmDisabled: {
-    opacity: 0.4,
+    opacity: 0.5,
   },
   commitmentConfirmText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   commitmentCancelBtn: {
-    marginTop: 14,
-    paddingVertical: 8,
+    marginTop: DS_SPACING.lg,
+    paddingVertical: DS_SPACING.sm,
   },
   commitmentCancelText: {
-    fontSize: 14,
-    color: "#8A8A8A",
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textMuted,
   },
 });

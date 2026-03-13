@@ -25,8 +25,7 @@ import * as Haptics from "expo-haptics";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
-import { colors as tokenColors } from "@/src/theme/tokens";
-import { GRIIT_COLORS } from "@/src/theme";
+import { DS_COLORS } from "@/lib/design-system";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
 import { styles } from "@/styles/discover-styles";
 import {
@@ -265,7 +264,7 @@ export default function DiscoverScreen() {
           title: c.title ?? "",
           description: c.description ?? "",
           short_hook: c.short_hook ?? c.description ?? "",
-          theme_color: c.theme_color ?? tokenColors.accentOrange,
+          theme_color: c.theme_color ?? DS_COLORS.accent,
           difficulty: c.difficulty ?? "medium",
           duration_type: c.duration_type ?? "multi_day",
           duration_days: c.duration_days ?? 30,
@@ -356,7 +355,7 @@ export default function DiscoverScreen() {
         description={c.short_hook}
         endsAt={c.ends_at}
         difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-        stripeColor={c.theme_color || tokenColors.orangeStripe}
+        stripeColor={c.theme_color || DS_COLORS.accent}
         tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
         participantsCount={c.participants_count ?? 0}
         onPress={() => handleChallengePress(c.id)}
@@ -371,7 +370,7 @@ export default function DiscoverScreen() {
         title={c.title}
         description={c.short_hook ?? c.description}
         difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-        stripeColor={c.theme_color || tokenColors.orangeStripe}
+        stripeColor={c.theme_color || DS_COLORS.accent}
         tasksPreview={c.tasks.slice(0, 3).map((t) => ({ icon: t.type, label: t.title }))}
         durationLabel={getDurationLabel(c)}
         taskCount={c.tasks.length}
@@ -388,7 +387,7 @@ export default function DiscoverScreen() {
       <ChallengeRowCard
         title={c.title}
         description={c.short_hook ?? c.description}
-        stripeColor={c.theme_color || tokenColors.orangeStripe}
+        stripeColor={c.theme_color || DS_COLORS.accent}
         durationLabel={getDurationLabel(c)}
         taskCount={c.tasks.length}
         participantsCount={c.participants_count ?? 0}
@@ -465,7 +464,7 @@ export default function DiscoverScreen() {
           <RefreshControl
             refreshing={featuredQuery.isRefetching && !featuredQuery.isFetchingNextPage}
             onRefresh={handleRefresh}
-            tintColor={tokenColors.accentOrange}
+            tintColor={DS_COLORS.accent}
           />
         }
       >
@@ -475,7 +474,7 @@ export default function DiscoverScreen() {
           <View style={styles.section}>
             <SectionHeader
               title="Starter Pack"
-              icon={<Shield size={18} color={tokenColors.accentOrange} />}
+              icon={<Shield size={18} color={DS_COLORS.accent} />}
               caption="Join in 2 taps • Easy"
             />
             <View style={styles.compactList}>
@@ -484,7 +483,7 @@ export default function DiscoverScreen() {
                   key={c.id}
                   title={c.title ?? ""}
                   description={(c.short_hook || c.description) ?? ""}
-                  stripeColor={c.theme_color || tokenColors.orangeStripe}
+                  stripeColor={c.theme_color || DS_COLORS.accent}
                   durationLabel={c.duration_type === "24h" ? "24H" : `${c.duration_days ?? 1} day${(c.duration_days ?? 1) === 1 ? "" : "s"}`}
                   taskCount={c.tasks?.length ?? 0}
                   participantsCount={c.participants_count ?? 0}
@@ -504,7 +503,7 @@ export default function DiscoverScreen() {
           <View style={styles.section}>
             <SectionHeader
               title="24-Hour Challenges"
-              icon={<Zap size={18} color={GRIIT_COLORS.warningAmber} />}
+              icon={<Zap size={18} color={DS_COLORS.warning} />}
               caption="New every day"
             />
             <FlatList
@@ -525,7 +524,7 @@ export default function DiscoverScreen() {
           <View style={styles.section}>
             <SectionHeader
               title="Featured"
-              icon={<Flame size={18} color={GRIIT_COLORS.primaryAccent} />}
+              icon={<Flame size={18} color={DS_COLORS.accent} />}
             />
             <FlatList
               data={featuredChallenges}
@@ -544,7 +543,7 @@ export default function DiscoverScreen() {
           <View style={styles.section}>
             <SectionHeader
               title="More Challenges"
-              icon={<Sparkles size={18} color={GRIIT_COLORS.textPrimary} />}
+              icon={<Sparkles size={18} color={DS_COLORS.textPrimary} />}
             />
             <FlatList
               data={otherChallenges}
@@ -570,7 +569,7 @@ export default function DiscoverScreen() {
               accessibilityRole="button"
             >
               {featuredQuery.isFetchingNextPage ? (
-                <ActivityIndicator size="small" color={tokenColors.accentOrange} />
+                <ActivityIndicator size="small" color={DS_COLORS.accent} />
               ) : (
                 <Text style={styles.loadMoreText}>Load more</Text>
               )}
@@ -584,10 +583,10 @@ export default function DiscoverScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { fontSize: 28, fontFamily: Platform.OS === "ios" ? "Georgia" : undefined, color: GRIIT_COLORS.textPrimary }]}>Discover</Text>
-          <Text style={[styles.subtitle, { color: GRIIT_COLORS.textSecondary }]}>Find challenges worth committing to</Text>
+          <Text style={styles.title}>Discover</Text>
+          <Text style={styles.subtitle}>Find challenges worth committing to</Text>
         </View>
 
         <View style={styles.searchRow}>
@@ -614,7 +613,7 @@ export default function DiscoverScreen() {
                   label={cat.label}
                   selected={isActive}
                   onPress={() => handleCategoryPress(cat.key)}
-                  icon={<IconComp size={14} color={isActive ? "#FFFFFF" : GRIIT_COLORS.textPrimary} />}
+                  icon={<IconComp size={14} color={isActive ? DS_COLORS.white : DS_COLORS.textPrimary} />}
                 />
               );
             })}

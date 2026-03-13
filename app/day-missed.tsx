@@ -11,7 +11,7 @@ import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { AlertCircle } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 
 export default function DayMissedScreen() {
@@ -64,7 +64,7 @@ export default function DayMissedScreen() {
 
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.iconContainer}>
-          <AlertCircle size={48} color={Colors.text.secondary} strokeWidth={1.5} />
+          <AlertCircle size={48} color={DS_COLORS.textSecondary} strokeWidth={1.5} />
         </View>
 
         <Text style={styles.header}>Day Missed.</Text>
@@ -106,7 +106,7 @@ export default function DayMissedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   content: {
     flex: 1,
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 28,
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 32,
     fontWeight: "800" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 16,
     letterSpacing: -0.8,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 17,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginBottom: 40,
     lineHeight: 24,
@@ -171,6 +171,6 @@ const styles = StyleSheet.create({
   homeButtonText: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
 });

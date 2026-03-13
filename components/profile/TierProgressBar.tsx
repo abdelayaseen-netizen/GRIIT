@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 export interface TierProgressBarProps {
   currentPoints: number;
@@ -24,7 +24,7 @@ export default function TierProgressBar({
   return (
     <View style={styles.wrap}>
       <View style={styles.pill}>
-        <Flame size={14} color="#fff" />
+        <Flame size={14} color={DS_COLORS.white} />
         <Text style={styles.pillText}>{currentTier}</Text>
       </View>
       <View style={styles.track}>
@@ -41,39 +41,39 @@ export default function TierProgressBar({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginHorizontal: 20,
-    marginBottom: 16,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginBottom: DS_SPACING.lg,
   },
   pill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginBottom: 10,
+    marginBottom: DS_SPACING.sm,
     alignSelf: "flex-start",
-    paddingHorizontal: 12,
+    paddingHorizontal: DS_SPACING.md,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: "#1A1A1A",
+    borderRadius: DS_RADIUS.input,
+    backgroundColor: DS_COLORS.black,
   },
   pillText: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "700",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   track: {
     height: 6,
-    backgroundColor: "#F0EDE8",
+    backgroundColor: DS_COLORS.borderAlt,
     borderRadius: 3,
     overflow: "hidden",
   },
   fill: {
     height: "100%",
-    backgroundColor: "#1A1A1A",
+    backgroundColor: DS_COLORS.black,
     borderRadius: 3,
   },
   ptsText: {
-    fontSize: 13,
-    color: Colors.text.muted,
-    marginTop: 8,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textMuted,
+    marginTop: DS_SPACING.sm,
   },
 });

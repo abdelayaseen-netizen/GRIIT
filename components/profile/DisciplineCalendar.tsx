@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Colors from "@/constants/colors";
-import { designTokens } from "@/lib/design-tokens";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 import { formatMonthShort } from "@/lib/date-format";
 export interface DisciplineCalendarProps {
   securedDateKeys: string[];
@@ -69,7 +68,7 @@ export default function DisciplineCalendar({
           ))}
         </View>
         <View style={styles.cellsWrap}>
-          {cells.map((c, i) => (
+          {cells.map((c, _i) => (
             <View
               key={c.key}
               style={[
@@ -86,7 +85,7 @@ export default function DisciplineCalendar({
           {["22", "44", "88", "E8"].map((alpha, i) => (
             <View
               key={i}
-              style={[styles.legendSquare, { backgroundColor: Colors.success + alpha }]}
+              style={[styles.legendSquare, { backgroundColor: DS_COLORS.success + alpha }]}
             />
           ))}
         </View>
@@ -98,56 +97,55 @@ export default function DisciplineCalendar({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...designTokens.cardShadow,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.lg,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginBottom: DS_SPACING.lg,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: DS_SPACING.md,
   },
   title: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   subtitle: {
-    fontSize: 13,
-    color: Colors.text.muted,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textMuted,
   },
   streakRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: DS_SPACING.md,
   },
   streakLabel: {
-    fontSize: 12,
-    color: Colors.text.tertiary,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    color: DS_COLORS.textSecondary,
   },
   zeroStateHint: {
-    fontSize: 12,
-    color: Colors.text.tertiary,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    color: DS_COLORS.textSecondary,
     fontStyle: "italic",
-    marginBottom: 12,
+    marginBottom: DS_SPACING.md,
   },
   gridWrap: {
-    marginBottom: 10,
+    marginBottom: DS_SPACING.sm,
   },
   monthRow: {
     flexDirection: "row",
     marginBottom: 6,
-    gap: 4,
+    gap: DS_SPACING.xs,
   },
   monthLabel: {
     fontSize: 10,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textSecondary,
     width: 24,
   },
   cellsWrap: {
@@ -159,20 +157,20 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 2,
-    backgroundColor: "#F0EDE8",
+    backgroundColor: DS_COLORS.borderAlt,
   },
   cellFilled: {
-    backgroundColor: "#68D391",
+    backgroundColor: DS_COLORS.success,
   },
   legend: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginTop: 8,
+    gap: DS_SPACING.sm,
+    marginTop: DS_SPACING.sm,
   },
   legendText: {
     fontSize: 10,
-    color: Colors.text.muted,
+    color: DS_COLORS.textMuted,
   },
   legendSquares: {
     flexDirection: "row",

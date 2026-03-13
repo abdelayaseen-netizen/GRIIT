@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { trpcMutate } from "@/lib/trpc";
@@ -11,10 +11,8 @@ import {
 } from "@/lib/onboarding-pending";
 import { sanitizeUsername, sanitizeDisplayName, sanitizeBio } from "@/lib/sanitize";
 import { ROUTES } from "@/lib/routes";
-import { Screen, Input, PrimaryButton } from "@/src/components/ui";
-import { H1, Body, Caption } from "@/src/components/Typography";
-import { colors } from "@/src/theme/colors";
-import { spacing } from "@/src/theme/spacing";
+import { Screen, Input, OnboardingCTA, GRIITWordmark, OnboardingProgress } from "@/src/components/ui";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_RADIUS, DS_MEASURES } from "@/lib/design-system";
 
 export default function CreateProfileScreen() {
   const router = useRouter();
@@ -133,27 +131,22 @@ export default function CreateProfileScreen() {
 
   const header = (
     <View style={styles.topRow}>
-      <Caption style={styles.gritLogo}>GRIIT</Caption>
-      <View style={styles.progressWrap}>
-        <View style={styles.progressLine} />
-        <Caption tone="subtle">1/5</Caption>
-      </View>
+      <GRIITWordmark subtitle="" compact />
+      <OnboardingProgress step={1} total={5} />
     </View>
   );
 
   return (
     <Screen scroll keyboardAvoiding header={header}>
       <View style={styles.header}>
-        <Caption style={styles.stepLabel}>FINISH SETUP</Caption>
-        <H1 style={styles.title}>Let&apos;s finish setting up your profile.</H1>
-        <Body tone="muted" style={styles.subtitle}>
-          This is how others will know you.
-        </Body>
+        <Text style={styles.stepLabel}>CLAIM YOUR IDENTITY</Text>
+        <Text style={styles.title}>Let&apos;s set up your profile.</Text>
+        <Text style={styles.subtitle}>This is how others will know you.</Text>
       </View>
 
       <View style={styles.form}>
         <View style={styles.inputGroup}>
-          <Caption style={styles.label}>Username</Caption>
+          <Text style={styles.label}>Username</Text>
           <Input
             placeholder="your_username"
             value={username}
@@ -161,29 +154,29 @@ export default function CreateProfileScreen() {
             autoCapitalize="none"
             autoCorrect={false}
             editable={!isPending}
+            containerStyle={styles.inputWrap}
           />
-          <Caption tone="subtle" style={styles.hint}>
-            Letters, numbers, and underscores only
-          </Caption>
+          <Text style={styles.hint}>Letters, numbers, and underscores only</Text>
         </View>
 
         <View style={styles.inputGroup}>
-          <Caption style={styles.label}>Display Name</Caption>
+          <Text style={styles.label}>Display Name</Text>
           <Input
             placeholder="Your Name"
             value={displayName}
             onChangeText={setDisplayName}
             autoCapitalize="words"
             editable={!isPending}
+            containerStyle={styles.inputWrap}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Caption style={styles.label}>Bio</Caption>
+          <Text style={styles.label}>Bio</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Tell us about yourself..."
-            placeholderTextColor={colors.textSubtle}
+            placeholderTextColor={DS_COLORS.inputPlaceholder}
             value={bio}
             onChangeText={setBio}
             multiline
@@ -193,14 +186,13 @@ export default function CreateProfileScreen() {
           />
         </View>
 
-        <PrimaryButton
-          title="Continue"
+        <OnboardingCTA
+          label="Continue"
           onPress={handleCreateProfile}
           variant="black"
           disabled={!canContinue || isPending}
           loading={isPending}
           style={styles.continueBtn}
-          testID="create-profile-continue"
         />
       </View>
     </Screen>
@@ -212,49 +204,56 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.xl,
+    marginBottom: DS_SPACING.xxl,
   },
-  gritLogo: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  progressWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  progressLine: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-  },
-  header: { paddingTop: spacing.lg, marginBottom: spacing.xxl - 4 },
+  header: { paddingTop: DS_SPACING.lg, marginBottom: DS_SPACING.xxl },
   stepLabel: {
-    color: colors.accent,
-    marginBottom: spacing.sm,
+    fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
+    fontWeight: DS_TYPOGRAPHY.eyebrow.fontWeight,
+    letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,
+    color: DS_COLORS.accent,
+    marginBottom: DS_SPACING.sm,
   },
-  title: { marginBottom: spacing.sm },
-  subtitle: { marginBottom: 0 },
-  form: { width: "100%", paddingBottom: spacing.xxl },
-  inputGroup: { marginBottom: spacing.xl },
-  label: { marginBottom: spacing.sm },
+  title: {
+    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
+    fontWeight: DS_TYPOGRAPHY.pageTitle.fontWeight,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.sm,
+    letterSpacing: DS_TYPOGRAPHY.pageTitle.letterSpacing,
+  },
+  subtitle: {
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    color: DS_COLORS.textSecondary,
+    marginBottom: DS_SPACING.xxl,
+  },
+  form: { width: "100%", paddingBottom: DS_SPACING.section },
+  inputGroup: { marginBottom: DS_SPACING.xxl },
+  label: {
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontWeight: "600",
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.inputLabelGap,
+  },
+  inputWrap: { minHeight: DS_MEASURES.inputHeight },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.text,
-    minHeight: 54,
+    borderColor: DS_COLORS.border,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: DS_SPACING.lg,
+    paddingVertical: DS_SPACING.md,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    color: DS_COLORS.textPrimary,
+    minHeight: DS_MEASURES.inputHeight,
   },
   textArea: {
-    minHeight: 80,
-    paddingTop: 14,
+    minHeight: 96,
+    paddingTop: DS_SPACING.md,
   },
-  hint: { marginTop: spacing.xs },
-  continueBtn: { marginTop: spacing.xl },
+  hint: {
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textSecondary,
+    marginTop: DS_SPACING.xs,
+  },
+  continueBtn: { marginTop: DS_SPACING.xxl },
 });

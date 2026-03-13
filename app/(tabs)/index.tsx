@@ -32,7 +32,6 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import Colors from "@/constants/colors";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Celebration from "@/components/Celebration";
@@ -52,9 +51,16 @@ import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedC
 import { SuggestedFollows } from "@/components/SuggestedFollows";
 import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
-import { designTokens } from "@/lib/design-tokens";
 import { formatTimeRemaining } from "@/lib/challenge-timer";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS, GRIIT_SPACING, GRIIT_TYPOGRAPHY } from "@/src/theme";
+import {
+  DS_COLORS,
+  DS_SPACING,
+  DS_RADIUS,
+  DS_TYPOGRAPHY,
+  DS_BORDERS,
+  DS_SHADOWS,
+} from "@/lib/design-system";
+import { GRIITWordmark } from "@/src/components/ui";
 
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
@@ -80,7 +86,7 @@ function SyncingBanner({ onDismiss }: { onDismiss?: () => void }) {
   return (
     <View style={[syncingBannerStyles.wrap, { backgroundColor: "#FFF8E1" }]}>
       <RefreshCw size={14} color={colors.accent} />
-      <Text style={[syncingBannerStyles.text, { color: GRIIT_COLORS.textPrimary }]} numberOfLines={1}>
+      <Text style={[syncingBannerStyles.text, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>
         Syncing... we{"'"}ll update when you{"'"}re back online.
       </Text>
       {onDismiss && (
@@ -267,6 +273,30 @@ export default function HomeScreen() {
   const leaderboardEntries = (leaderboardQuery.data as { entries?: { userId: string; username: string; displayName?: string; avatarUrl?: string | null; currentStreak?: number; securedDaysThisWeek?: number }[] })?.entries ?? [];
   const leaderboardError = leaderboardQuery.isError;
   const leaderboardLoading = leaderboardQuery.isLoading;
+
+  const liveFeedQuery = useQuery({
+    queryKey: ["home", "feed", "live"],
+    queryFn: () => trpcQuery(TRPC.feed.list, { limit: 5 }) as Promise<{ items: { id: string; event_type: string; display_name: string; username: string; avatar_url?: string | null; metadata?: Record<string, unknown>; created_at: string }[] }>,
+    enabled: !isGuest,
+    staleTime: 2 * 60 * 1000,
+  });
+  const liveFeedItems: LiveFeedCardData[] = useMemo(() => {
+    const raw = liveFeedQuery.data?.items ?? [];
+    return raw
+      .filter((e) => e.event_type === "secured_day" || e.event_type === "last_stand")
+      .slice(0, 5)
+      .map((e) => {
+        const meta = e.metadata ?? {};
+        const created = e.created_at ? (Date.now() - new Date(e.created_at).getTime()) / 60000 : 0;
+        return {
+          type: "secured_day",
+          username: e.display_name || e.username || "user",
+          day: (meta.day_number as number) ?? 0,
+          streakDays: (meta.streak_count as number) ?? 0,
+          minutesAgo: Math.round(created),
+        } as LiveFeedCardData;
+      });
+  }, [liveFeedQuery.data?.items]);
 
   const homeActiveQuery = useQuery({
     queryKey: ["home", "activeList"],
@@ -486,7 +516,7 @@ export default function HomeScreen() {
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <HomeScreenSkeleton />
         </ScrollView>
@@ -496,7 +526,7 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
             <Text style={styles.heroEmoji}>🔥</Text>
@@ -550,7 +580,7 @@ export default function HomeScreen() {
               >
                 <Text style={[styles.guestChallengeTitle, { color: themeColors.text.primary }]} numberOfLines={1}>{challenge.title ?? "Challenge"}</Text>
                 {challenge.short_hook ? <Text style={[styles.guestChallengeHook, { color: themeColors.text.secondary }]} numberOfLines={1}>{challenge.short_hook}</Text> : null}
-                <ChevronRight size={18} color={themeColors.text.tertiary} style={{ position: "absolute", right: 12, top: 18 }} />
+                <ChevronRight size={18} color={themeColors.text.muted} style={{ position: "absolute", right: 12, top: 18 }} />
               </TouchableOpacity>
             ))}
             <TouchableOpacity style={styles.seeAllButton} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} activeOpacity={0.8}>
@@ -572,7 +602,7 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <Celebration
         visible={showCelebration}
         onComplete={() => { setShowCelebration(false); setCelebrationPayload(null); }}
@@ -584,7 +614,7 @@ export default function HomeScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: GRIIT_COLORS.background }]}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: DS_COLORS.background }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -611,18 +641,15 @@ export default function HomeScreen() {
         )}
 
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.logo, { color: GRIIT_COLORS.textPrimary }]} allowFontScaling={false}>G R I I T</Text>
-            <Text style={[styles.logoSubtitle, { color: GRIIT_COLORS.textSecondary }]}>Build Discipline Daily</Text>
-          </View>
+          <GRIITWordmark compact />
           <View style={styles.headerBadges}>
             <View style={styles.headerBadge} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
-              <TrendingUp size={14} color={GRIIT_COLORS.secondaryGreen} />
-              <Text style={[styles.headerBadgeText, { color: GRIIT_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
+              <TrendingUp size={14} color={DS_COLORS.success} />
+              <Text style={[styles.headerBadgeText, { color: DS_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
             </View>
             <View style={styles.headerBadge} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
-              <Flame size={14} color={GRIIT_COLORS.primaryAccent} />
-              <Text style={[styles.headerBadgeText, { color: GRIIT_COLORS.textPrimary }]}>{currentStreak}</Text>
+              <Flame size={14} color={DS_COLORS.accent} />
+              <Text style={[styles.headerBadgeText, { color: DS_COLORS.textPrimary }]}>{currentStreak}</Text>
             </View>
           </View>
         </View>
@@ -698,8 +725,8 @@ export default function HomeScreen() {
             <ExploreChallengesButton />
             {homeDataError ? (
               <View style={styles.yourPositionCard}>
-                <AlertTriangle size={28} color={themeColors.text.tertiary} />
-                <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>CHALLENGES</Text>
+                <AlertTriangle size={28} color={themeColors.text.muted} />
+                <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>CHALLENGES</Text>
                 <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
                 <TouchableOpacity
                   style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
@@ -748,23 +775,23 @@ export default function HomeScreen() {
 
         {!isGuest && (
           <View style={styles.statsSummaryCard}>
-            <View style={[styles.statsSummaryCol, { borderRightColor: GRIIT_COLORS.borderLight }]}>
-              <Flame size={20} color={GRIIT_COLORS.primaryAccent} />
-              <Text style={[styles.statsSummaryValue, { color: GRIIT_COLORS.textPrimary }]}>{currentStreak}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: GRIIT_COLORS.textSecondary }]}>Streak</Text>
+            <View style={[styles.statsSummaryCol, { borderRightColor: DS_COLORS.border }]}>
+              <Flame size={20} color={DS_COLORS.accent} />
+              <Text style={[styles.statsSummaryValue, { color: DS_COLORS.textPrimary }]}>{currentStreak}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: DS_COLORS.textSecondary }]}>Streak</Text>
               {lastStandsAvailable >= 0 && (
-                <Text style={[styles.statsSummaryLastStand, { color: GRIIT_COLORS.textMuted }]}>Last Stands: {lastStandsAvailable}</Text>
+                <Text style={[styles.statsSummaryLastStand, { color: DS_COLORS.textMuted }]}>Last Stands: {lastStandsAvailable}</Text>
               )}
             </View>
-            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: GRIIT_COLORS.borderLight }]}>
-              <TrendingUp size={20} color={GRIIT_COLORS.secondaryGreen} />
-              <Text style={[styles.statsSummaryValue, { color: GRIIT_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: GRIIT_COLORS.textSecondary }]}>Score</Text>
+            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: DS_COLORS.border }]}>
+              <TrendingUp size={20} color={DS_COLORS.success} />
+              <Text style={[styles.statsSummaryValue, { color: DS_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: DS_COLORS.textSecondary }]}>Score</Text>
             </View>
             <View style={styles.statsSummaryCol}>
-              <Target size={20} color={GRIIT_COLORS.primaryAccent} />
-              <Text style={[styles.statsSummaryValue, { color: GRIIT_COLORS.textPrimary }]}>{tierName ?? "Starter"}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: GRIIT_COLORS.textSecondary }]}>Rank</Text>
+              <Target size={20} color={DS_COLORS.accent} />
+              <Text style={[styles.statsSummaryValue, { color: DS_COLORS.textPrimary }]}>{tierName ?? "Starter"}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: DS_COLORS.textSecondary }]}>Rank</Text>
             </View>
           </View>
         )}
@@ -797,7 +824,7 @@ export default function HomeScreen() {
             <View style={styles.metricsCard}>
               {nextTierName != null && pointsToNextTier > 0 && (
                 <View style={styles.metricsRow}>
-                  <Flame size={18} color={Colors.text.tertiary} />
+                  <Flame size={18} color={DS_COLORS.textMuted} />
                   <Text style={styles.metricsText}>{pointsToNextTier} pts to {nextTierName}</Text>
                 </View>
               )}
@@ -809,7 +836,7 @@ export default function HomeScreen() {
                 if (!show) return null;
                 return (
                   <View style={styles.metricsRow}>
-                    <Users size={18} color={Colors.text.tertiary} />
+                    <Users size={18} color={DS_COLORS.textMuted} />
                     <Text style={styles.metricsText}>
                       {count} {count === 1 ? "person" : "people"} secured today
                     </Text>
@@ -820,7 +847,7 @@ export default function HomeScreen() {
 
             <View style={styles.todaysResetCard}>
               <View style={styles.todaysResetHeader}>
-                <Clock size={18} color={Colors.accent} />
+                <Clock size={18} color={DS_COLORS.accent} />
                 <Text style={styles.todaysResetTitle}>Today{"'"}s Reset</Text>
                 <Text style={styles.todaysResetTime}>
                   {(() => {
@@ -831,9 +858,9 @@ export default function HomeScreen() {
               </View>
               {tasks.length > 0 ? (
                 <View style={styles.todaysResetTaskList}>
-                  {tasks.map((task, i) => (
+                  {tasks.map((task) => (
                     <View key={task.id} style={styles.todaysResetTaskRow}>
-                      <Circle size={18} color={Colors.border} strokeWidth={2} />
+                      <Circle size={18} color={DS_COLORS.border} strokeWidth={2} />
                       <Text style={[styles.todaysResetTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
                     </View>
                   ))}
@@ -849,18 +876,18 @@ export default function HomeScreen() {
 
             <View style={styles.statsSummaryCard}>
               <View style={styles.statsSummaryCol}>
-                <Flame size={20} color={Colors.accent} />
+                <Flame size={20} color={DS_COLORS.accent} />
                 <Text style={styles.statsSummaryValue}>{currentStreak}</Text>
                 <Text style={styles.statsSummaryLabel}>Streak</Text>
                 <Text style={styles.statsSummaryLastStand}>Last Stands: {lastStandsAvailable}</Text>
               </View>
               <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder]}>
-                <TrendingUp size={20} color={Colors.accent} />
+                <TrendingUp size={20} color={DS_COLORS.accent} />
                 <Text style={styles.statsSummaryValue}>{stats?.longestStreak ?? 0}</Text>
                 <Text style={styles.statsSummaryLabel}>Score</Text>
               </View>
               <View style={styles.statsSummaryCol}>
-                <Target size={20} color={Colors.text.tertiary} />
+                <Target size={20} color={DS_COLORS.textMuted} />
                 <Text style={styles.statsSummaryValue}>{tierName}</Text>
                 <Text style={styles.statsSummaryLabel}>Rank</Text>
               </View>
@@ -895,7 +922,7 @@ export default function HomeScreen() {
               )}
               <View style={styles.cardFooter}>
                 <Text style={styles.viewDetailsText}>View Details</Text>
-                <ChevronRight size={16} color={Colors.text.tertiary} />
+                <ChevronRight size={16} color={DS_COLORS.textMuted} />
               </View>
             </TouchableOpacity>
 
@@ -922,7 +949,7 @@ export default function HomeScreen() {
             )}
           </View>
         ) : (
-          <View style={[styles.welcomeBackCard, { backgroundColor: GRIIT_COLORS.primaryAccentLight, borderColor: GRIIT_COLORS.primaryAccent }]}>
+          <View style={[styles.welcomeBackCard, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.accent }]}>
             <RefreshCw size={28} color={themeColors.accent} />
             <Text style={[styles.welcomeBackTitle, { color: themeColors.text.primary }]}>
               {isFirstTimeUser ? "Start your first challenge." : "Ready to restart?"}
@@ -952,7 +979,7 @@ export default function HomeScreen() {
 
         {!hasActiveChallenge && suggestedChallenges.length > 0 && (
           <View style={styles.suggestedChallengesSection}>
-            <Text style={[styles.suggestedChallengesTitle, { color: GRIIT_COLORS.textPrimary }]}>SUGGESTED FOR YOU</Text>
+            <Text style={[styles.suggestedChallengesTitle, { color: DS_COLORS.textPrimary }]}>SUGGESTED FOR YOU</Text>
             {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string }) => (
               <TouchableOpacity
                 key={c.id}
@@ -990,8 +1017,7 @@ export default function HomeScreen() {
         )}
 
         {(() => {
-          const liveFeedItems: LiveFeedCardData[] = [];
-          if (liveFeedItems.length === 0) {
+          if (liveFeedItems.length === 0 && !liveFeedQuery.isLoading) {
             return (
               <>
                 <View style={[styles.liveFeedEmpty, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
@@ -1017,13 +1043,23 @@ export default function HomeScreen() {
               </>
             );
           }
-          return liveFeedItems.map((item, i) => <LiveFeedCard key={i} data={item} />);
+          if (liveFeedItems.length > 0) {
+            return liveFeedItems.map((item, i) => <LiveFeedCard key={item.type + i} data={item} />);
+          }
+          if (liveFeedQuery.isLoading) {
+            return (
+              <View style={[styles.liveFeedEmpty, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                <Text style={[styles.liveFeedEmptySub, { color: themeColors.text.muted }]}>Loading activity…</Text>
+              </View>
+            );
+          }
+          return null;
         })()}
 
         {!isGuest && leaderboardError ? (
           <View style={styles.yourPositionCard}>
-            <AlertTriangle size={28} color={themeColors.text.tertiary} />
-            <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>LEADERBOARD</Text>
+            <AlertTriangle size={28} color={themeColors.text.muted} />
+            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>LEADERBOARD</Text>
             <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
             <TouchableOpacity
               style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
@@ -1066,13 +1102,13 @@ export default function HomeScreen() {
             accessibilityRole="button"
           >
             <Target size={28} color={themeColors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: themeColors.text.tertiary }]}>LEADERBOARD</Text>
+            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>LEADERBOARD</Text>
             <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Be the first this week.</Text>
             <Text style={styles.secureNowButtonText}>View Activity</Text>
           </TouchableOpacity>
         )}
 
-        <Text style={[styles.footerTagline, { color: GRIIT_COLORS.textMuted }]}>Only discipline shows here.</Text>
+        <Text style={styles.footerTagline}>Only discipline shows here.</Text>
       </ScrollView>
 
       {showMilestone != null && (() => {
@@ -1176,17 +1212,17 @@ export default function HomeScreen() {
 
       {showStreakLostModal && (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: GRIIT_COLORS.overlayDark }]} activeOpacity={1} onPress={() => setShowStreakLostModal(false)} />
+          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => setShowStreakLostModal(false)} />
           <View style={styles.freezeModalCenter}>
-            <View style={[styles.streakLostCard, { backgroundColor: GRIIT_COLORS.cardBackground }]}>
+            <View style={[styles.streakLostCard, { backgroundColor: DS_COLORS.surface }]}>
               <TouchableOpacity hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={styles.streakLostClose} onPress={() => setShowStreakLostModal(false)}>
-                <Text style={[styles.streakLostCloseText, { color: GRIIT_COLORS.textSecondary }]}>✕</Text>
+                <Text style={[styles.streakLostCloseText, { color: DS_COLORS.textSecondary }]}>✕</Text>
               </TouchableOpacity>
               <View style={styles.streakLostIconWrap}>
-                <Flame size={28} color={GRIIT_COLORS.textMuted} />
+                <Flame size={28} color={DS_COLORS.textMuted} />
               </View>
-              <Text style={[styles.streakLostTitle, { color: GRIIT_COLORS.textPrimary }]}>Streak lost.</Text>
-              <Text style={[styles.streakLostSub, { color: GRIIT_COLORS.textSecondary }]}>Start again today.</Text>
+              <Text style={[styles.streakLostTitle, { color: DS_COLORS.textPrimary }]}>Streak lost.</Text>
+              <Text style={[styles.streakLostSub, { color: DS_COLORS.textSecondary }]}>Start again today.</Text>
               <TouchableOpacity style={styles.streakLostButton} onPress={() => setShowStreakLostModal(false)} activeOpacity={0.85}>
                 <Text style={styles.streakLostButtonText}>Continue</Text>
               </TouchableOpacity>
@@ -1216,13 +1252,13 @@ const syncingBannerStyles = StyleSheet.create({
     flex: 1,
   },
   dismiss: { padding: 4 },
-  dismissText: { fontSize: 18, color: GRIIT_COLORS.textSecondary, fontWeight: "600" as const },
+  dismissText: { fontSize: 18, color: DS_COLORS.textSecondary, fontWeight: "600" as const },
 });
 
 const progressStyles = StyleSheet.create({
   track: {
     height: 6,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     borderRadius: 3,
     overflow: "hidden",
   },
@@ -1242,11 +1278,11 @@ const taskStyles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   titleCompleted: {
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     textDecorationLine: "line-through",
   },
 });
@@ -1254,236 +1290,226 @@ const taskStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: GRIIT_COLORS.background,
+    backgroundColor: DS_COLORS.background,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: GRIIT_SPACING.screenPadding,
-    paddingBottom: 32,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingBottom: DS_SPACING.section,
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    paddingTop: 12,
-    paddingBottom: GRIIT_SPACING.lg,
+    paddingTop: DS_SPACING.md,
+    paddingBottom: DS_SPACING.lg,
   },
   headerBadges: {
     flexDirection: "row",
     alignItems: "center",
-    gap: GRIIT_SPACING.sm,
+    gap: DS_SPACING.sm,
   },
   headerBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: GRIIT_RADII.card,
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    ...GRIIT_SHADOWS.card,
+    gap: DS_SPACING.xs,
+    paddingHorizontal: DS_SPACING.md,
+    paddingVertical: DS_SPACING.sm,
+    borderRadius: 999,
+    backgroundColor: DS_COLORS.surface,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   headerBadgeText: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
-  },
-  logo: {
-    fontSize: GRIIT_TYPOGRAPHY.logoSize,
-    fontWeight: "700" as const,
-    color: Colors.text.primary,
-    letterSpacing: GRIIT_TYPOGRAPHY.logoLetterSpacing,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
-  },
-  logoSubtitle: {
-    fontSize: GRIIT_TYPOGRAPHY.subtitleSize,
-    fontWeight: "400" as const,
-    color: Colors.text.secondary,
-    marginTop: 0,
+    color: DS_COLORS.textPrimary,
   },
   mainPromptBlock: {
-    marginBottom: 16,
+    marginBottom: DS_SPACING.lg,
   },
   secureTodayTitle: {
-    fontSize: 24,
-    fontWeight: "800" as const,
-    color: Colors.text.primary,
-    marginBottom: 4,
+    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
+    fontWeight: DS_TYPOGRAPHY.pageTitle.fontWeight,
+    letterSpacing: DS_TYPOGRAPHY.pageTitle.letterSpacing,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.xs,
+    lineHeight: DS_TYPOGRAPHY.pageTitle.lineHeight,
   },
   secureTodaySub: {
-    fontSize: 14,
-    color: Colors.text.muted,
-    marginBottom: 12,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textMuted,
+    marginBottom: DS_SPACING.md,
   },
   metricsCard: {
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: GRIIT_RADII.card,
-    padding: GRIIT_SPACING.cardPadding,
-    marginBottom: GRIIT_SPACING.cardGap,
-    gap: 10,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.cardGap,
+    gap: DS_SPACING.md,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   metricsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: DS_SPACING.sm,
   },
   metricsText: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   todaysResetCard: {
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: GRIIT_RADII.card,
-    padding: GRIIT_SPACING.cardPadding,
-    marginBottom: GRIIT_SPACING.cardGap,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.cardGap,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   todaysResetHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
+    gap: DS_SPACING.sm,
+    marginBottom: DS_SPACING.md,
   },
   todaysResetTitle: {
     flex: 1,
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   todaysResetTime: {
-    fontSize: 13,
-    color: Colors.text.muted,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textMuted,
   },
   todaysResetDivider: {
     height: 1,
-    marginBottom: 12,
+    marginBottom: DS_SPACING.md,
   },
   todaysResetTaskList: {
-    gap: 8,
+    gap: DS_SPACING.sm,
   },
   todaysResetTaskRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: DS_SPACING.sm,
   },
   todaysResetTaskText: {
-    fontSize: 15,
-    color: Colors.text.primary,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   todaysResetTaskDone: {
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textSecondary,
     textDecorationLine: "line-through",
   },
   statsSummaryCard: {
     flexDirection: "row",
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: GRIIT_RADII.card,
-    padding: GRIIT_SPACING.cardPadding + 2,
-    marginBottom: GRIIT_SPACING.sectionGap,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding + 2,
+    marginBottom: DS_SPACING.sectionGap,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   statsSummaryCol: {
     flex: 1,
     alignItems: "center",
-    gap: 6,
+    gap: DS_SPACING.sm,
   },
   statsSummaryColBorder: {
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   statsSummaryValue: {
-    fontSize: 28,
+    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   statsSummaryLabel: {
-    fontSize: 11,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     fontWeight: "600" as const,
-    color: Colors.text.muted,
-    letterSpacing: 1,
+    color: DS_COLORS.textMuted,
+    letterSpacing: 0.5,
   },
   statsSummaryLastStand: {
-    fontSize: 11,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   disciplineWeekCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: GRIIT_SPACING.cardPadding,
-    marginBottom: GRIIT_SPACING.sectionGap,
-    borderRadius: GRIIT_RADII.card,
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    ...GRIIT_SHADOWS.card,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.sectionGap,
+    borderRadius: DS_RADIUS.cardAlt,
+    backgroundColor: DS_COLORS.surface,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   disciplineWeekIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginRight: DS_SPACING.md,
   },
-  disciplineWeekBody: {
-    flex: 1,
-  },
+  disciplineWeekBody: { flex: 1 },
   disciplineWeekTitle: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "700",
   },
-  disciplineWeekNum: {
-    fontWeight: "700",
-  },
+  disciplineWeekNum: { fontWeight: "700" },
   disciplineWeekSub: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     marginTop: 2,
   },
   welcomeBackCard: {
-    borderRadius: GRIIT_RADII.card,
-    padding: 24,
-    marginBottom: GRIIT_SPACING.sectionGap,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.xxl,
+    marginBottom: DS_SPACING.sectionGap,
     borderWidth: 1.5,
     borderStyle: "dashed",
     alignItems: "center",
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.accentSoft + "40",
+    borderColor: DS_COLORS.accent,
   },
   welcomeBackTitle: {
-    fontSize: 20,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
-    marginTop: 12,
-    marginBottom: 4,
+    color: DS_COLORS.textPrimary,
+    marginTop: DS_SPACING.md,
+    marginBottom: DS_SPACING.xs,
   },
   welcomeBackSub: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    marginBottom: 16,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textSecondary,
+    marginBottom: DS_SPACING.lg,
     textAlign: "center",
   },
   pickChallengeButton: {
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: GRIIT_RADII.buttonPill,
+    backgroundColor: DS_COLORS.accent,
+    paddingVertical: DS_SPACING.lg,
+    paddingHorizontal: DS_SPACING.xxl,
+    borderRadius: DS_RADIUS.button,
     alignItems: "center",
-    ...GRIIT_SHADOWS.button,
   },
   pickChallengeButtonOutlined: {
     backgroundColor: "transparent",
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderStyle: "solid",
   },
   pickChallengeButtonText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   liveSection: {
     flexDirection: "row",
@@ -1507,11 +1533,11 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     letterSpacing: 1,
     textTransform: "uppercase" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   liveSub: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     flex: 1,
   },
   liveSubItalic: {
@@ -1519,15 +1545,17 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     flex: 1,
     textAlign: "right",
-    color: Colors.text.muted,
+    color: DS_COLORS.textMuted,
   },
   liveFeedEmpty: {
-    padding: 24,
-    marginBottom: 16,
-    borderRadius: designTokens.cardRadius,
-    borderWidth: 1,
+    padding: DS_SPACING.xxl,
+    marginBottom: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: DS_COLORS.surface,
   },
   liveFeedEmptyTitle: {
     fontSize: 16,
@@ -1542,50 +1570,50 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   suggestedChallengesTitle: {
-    fontSize: 12,
+    fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1.5,
-    marginBottom: 12,
+    letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,
+    marginBottom: DS_SPACING.md,
   },
   suggestedChallengeRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 8,
+    padding: DS_SPACING.cardPadding,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: DS_BORDERS.width,
+    marginBottom: DS_SPACING.sm,
   },
   suggestedChallengeTitle: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "600",
     flex: 1,
-    marginRight: 8,
+    marginRight: DS_SPACING.sm,
   },
   yourPositionInFeedCard: {
-    padding: 20,
-    marginBottom: 16,
-    borderRadius: designTokens.cardRadius,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.cardAlt,
     borderWidth: 1.5,
     borderStyle: "dashed",
     alignItems: "center",
   },
   yourPositionSub: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     marginTop: 4,
   },
   feedCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   feedCardChallenge: {
-    borderColor: Colors.accent + "40",
+    borderColor: DS_COLORS.accent + "40",
   },
   feedCardRow: {
     flexDirection: "row",
@@ -1596,13 +1624,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   feedAvatarSmall: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   feedBody: {
     flex: 1,
@@ -1611,7 +1639,7 @@ const styles = StyleSheet.create({
   feedMain: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     lineHeight: 20,
   },
   feedUser: {
@@ -1629,24 +1657,24 @@ const styles = StyleSheet.create({
   feedStreak: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
   feedTime: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   feedDiscipline: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: Colors.success,
+    color: DS_COLORS.success,
   },
   feedRank: {
     fontWeight: "700" as const,
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
   feedSub: {
     fontSize: 13,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginTop: 2,
   },
   feedHighlight: {
@@ -1656,7 +1684,7 @@ const styles = StyleSheet.create({
   feedCta: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.accent,
+    color: DS_COLORS.accent,
     marginTop: 4,
   },
   feedActions: {
@@ -1671,13 +1699,13 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     alignSelf: "flex-start",
   },
   feedPillText: {
     fontSize: 13,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   feedPillRight: {
     flexDirection: "row",
@@ -1697,7 +1725,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.accentLight,
+    backgroundColor: DS_COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1705,7 +1733,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -1718,12 +1746,13 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   yourPositionCard: {
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: GRIIT_RADII.card,
-    padding: GRIIT_SPACING.cardPadding + 2,
-    marginBottom: GRIIT_SPACING.sectionGap,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding + 2,
+    marginBottom: DS_SPACING.sectionGap,
     alignItems: "center",
-    ...GRIIT_SHADOWS.card,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   guestChallengeCard: {
     alignItems: "flex-start",
@@ -1758,11 +1787,11 @@ const styles = StyleSheet.create({
   heroCTA: {
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: GRIIT_RADII.buttonPill,
+    borderRadius: DS_RADIUS.buttonPill,
     alignSelf: "stretch",
     alignItems: "center",
     marginHorizontal: 0,
-    ...GRIIT_SHADOWS.button,
+    ...DS_SHADOWS.button,
   },
   heroCTAText: {
     fontSize: 17,
@@ -1844,39 +1873,38 @@ const styles = StyleSheet.create({
   yourPositionLabel: {
     fontSize: 11,
     fontWeight: "600" as const,
-    color: Colors.text.muted,
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
     marginBottom: 8,
   },
   yourPositionText: {
     fontSize: 16,
     fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 16,
   },
   secureNowButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: GRIIT_RADII.buttonPill,
-    ...GRIIT_SHADOWS.button,
+    gap: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.accent,
+    paddingVertical: DS_SPACING.lg,
+    paddingHorizontal: DS_SPACING.xxl,
+    borderRadius: DS_RADIUS.button,
   },
   secureNowButtonText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   footerTagline: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontStyle: "italic",
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     textAlign: "center",
-    marginTop: 12,
-    marginBottom: 32,
+    marginTop: DS_SPACING.lg,
+    marginBottom: DS_SPACING.section,
   },
   activeSection: {
     gap: 4,
@@ -1884,7 +1912,7 @@ const styles = StyleSheet.create({
   continueLabel: {
     fontSize: 12,
     fontWeight: "600" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     textTransform: "uppercase" as const,
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -1894,7 +1922,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 28,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
@@ -1909,14 +1937,14 @@ const styles = StyleSheet.create({
   dayNumberLarge: {
     fontSize: 56,
     fontWeight: "900" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     letterSpacing: -2,
     lineHeight: 56,
   },
   dayNumberTotal: {
     fontSize: 28,
     fontWeight: "600" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     letterSpacing: -0.5,
     marginLeft: 4,
   },
@@ -1929,7 +1957,7 @@ const styles = StyleSheet.create({
   statusLabel: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     letterSpacing: 0.3,
   },
   modeTagHard: {
@@ -1948,13 +1976,13 @@ const styles = StyleSheet.create({
   },
   challengeTitleRow: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: DS_COLORS.border,
     paddingTop: 16,
   },
   challengeTitleMission: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     letterSpacing: -0.3,
     lineHeight: 24,
   },
@@ -1967,7 +1995,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -1985,12 +2013,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: DS_COLORS.border,
   },
   viewDetailsText: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     letterSpacing: 0.2,
   },
   progressSection: {
@@ -2004,7 +2032,7 @@ const styles = StyleSheet.create({
   progressLabel: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   progressValue: {
     fontSize: 13,
@@ -2014,48 +2042,41 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: DS_COLORS.border,
     gap: 2,
   },
   secureDayButton: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#111",
-    borderRadius: 16,
-    paddingVertical: 22,
+    backgroundColor: DS_COLORS.black,
+    borderRadius: DS_RADIUS.button,
+    paddingVertical: DS_SPACING.xl,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
   },
   secureDayGlow: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.streak.shield,
+    backgroundColor: DS_COLORS.success,
   },
   secureDayText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700" as const,
-    color: "#fff",
-    letterSpacing: 0.3,
+    color: DS_COLORS.white,
   },
   securedBanner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    backgroundColor: Colors.streak.shield + "0F",
-    borderRadius: 14,
-    paddingVertical: 18,
+    gap: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.successSoft,
+    borderRadius: DS_RADIUS.cardAlt,
+    paddingVertical: DS_SPACING.lg,
     borderWidth: 1,
-    borderColor: Colors.streak.shield + "25",
+    borderColor: DS_COLORS.success + "30",
   },
   securedText: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "700" as const,
-    color: Colors.streak.shield,
-    letterSpacing: 0.2,
+    color: DS_COLORS.success,
   },
   emptySection: {
     alignItems: "center",
@@ -2068,7 +2089,7 @@ const styles = StyleSheet.create({
   emptyProgressText: {
     fontSize: 32,
     fontWeight: "800" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     letterSpacing: -0.5,
   },
   guestBar: {
@@ -2079,17 +2100,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginHorizontal: -20,
     marginBottom: 12,
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: DS_COLORS.border,
   },
   guestBarText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   guestBarCta: {
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -2104,41 +2125,41 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   firstSessionBanner: {
-    backgroundColor: (Colors.accentLight ?? "#FFF5F0"),
+    backgroundColor: (DS_COLORS.accentSoft ?? "#FFF5F0"),
     borderRadius: 12,
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: (Colors.accent ?? "#E87D4F") + "40",
+    borderColor: (DS_COLORS.accent ?? "#E87D4F") + "40",
   },
   firstSessionBannerText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
   },
   recoveryBanner: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
-    backgroundColor: (Colors.warningLight ?? Colors.accentLight) || "#FFF5F0",
+    backgroundColor: (DS_COLORS.warningSoft ?? DS_COLORS.accentSoft) || "#FFF5F0",
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: (Colors.warning ?? Colors.accent) + "30",
+    borderColor: (DS_COLORS.warning ?? DS_COLORS.accent) + "30",
   },
   recoveryBannerTextWrap: { flex: 1 },
   recoveryBannerTitle: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
   recoveryBannerSub: {
     fontSize: 13,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     marginBottom: 8,
   },
   freezeCta: {
@@ -2146,7 +2167,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 10,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
   },
   freezeCtaText: {
     fontSize: 14,
@@ -2164,27 +2185,27 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   freezeModalCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 24,
     width: "100%",
     maxWidth: 340,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   freezeModalTitle: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
   freezeModalSub: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     marginBottom: 20,
   },
   freezeModalConfirm: {
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
@@ -2205,7 +2226,7 @@ const styles = StyleSheet.create({
   freezeModalCancelText: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   streakLostCard: {
     borderRadius: 16,
@@ -2261,7 +2282,7 @@ const styles = StyleSheet.create({
   emptyTitleNew: {
     fontSize: 26,
     fontWeight: "800" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 12,
     letterSpacing: -0.8,
     textAlign: "center",
@@ -2269,7 +2290,7 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 16,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginBottom: 40,
     lineHeight: 24,
@@ -2293,7 +2314,7 @@ const styles = StyleSheet.create({
   supportingText: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     textAlign: "center",
   },
 });

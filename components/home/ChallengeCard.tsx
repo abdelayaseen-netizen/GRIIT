@@ -4,7 +4,7 @@ import { ChevronRight, Circle, CheckCircle2, Users, Target } from "lucide-react-
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 export interface TodayTaskItem {
   id: string;
@@ -33,7 +33,7 @@ export default function ChallengeCard({
   todayTasks,
   onOpenChallenge,
   participationType,
-  runStatus,
+  runStatus: _runStatus,
   teamSize,
   sharedGoalTarget,
   sharedGoalUnit,
@@ -61,13 +61,13 @@ export default function ChallengeCard({
         <View style={styles.badgeRow}>
           {isTeam && (
             <View style={styles.typeBadge}>
-              <Users size={12} color={Colors.accent} />
+              <Users size={12} color={DS_COLORS.accent} />
               <Text style={styles.typeBadgeText}>Team{teamSize != null ? ` · ${teamSize} people` : ""}</Text>
             </View>
           )}
           {isSharedGoal && (
             <View style={styles.typeBadge}>
-              <Target size={12} color={Colors.accent} />
+              <Target size={12} color={DS_COLORS.accent} />
               <Text style={styles.typeBadgeText}>
                 Shared Goal
                 {sharedGoalTarget != null && sharedGoalUnit
@@ -83,9 +83,9 @@ export default function ChallengeCard({
           {todayTasks.slice(0, 5).map((task) => (
             <View key={task.id} style={styles.taskRow}>
               {task.completed ? (
-                <CheckCircle2 size={18} color={Colors.streak.shield} fill={Colors.streak.shield} strokeWidth={0} />
+                <CheckCircle2 size={18} color={DS_COLORS.success} fill={DS_COLORS.success} strokeWidth={0} />
               ) : (
-                <Circle size={18} color={Colors.border} strokeWidth={2} />
+                <Circle size={18} color={DS_COLORS.border} strokeWidth={2} />
               )}
               <Text
                 style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}
@@ -107,7 +107,7 @@ export default function ChallengeCard({
         testID={`open-challenge-${challengeId}`}
       >
         <Text style={styles.openButtonText}>Open Challenge</Text>
-        <ChevronRight size={16} color={Colors.text.tertiary} />
+        <ChevronRight size={16} color={DS_COLORS.textMuted} />
       </TouchableOpacity>
     </View>
   );
@@ -115,84 +115,84 @@ export default function ChallengeCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.button,
+    padding: DS_SPACING.lg,
+    marginBottom: DS_SPACING.md,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: DS_SPACING.md,
   },
   challengeName: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.body.fontSize + 1,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   progressBadge: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "600",
-    color: Colors.accent,
-    marginLeft: 8,
+    color: DS_COLORS.accent,
+    marginLeft: DS_SPACING.sm,
   },
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 8,
+    gap: DS_SPACING.sm,
+    marginBottom: DS_SPACING.sm,
   },
   typeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: Colors.accentLight,
+    gap: DS_SPACING.xs,
+    paddingHorizontal: DS_SPACING.sm,
+    paddingVertical: DS_SPACING.xs,
+    borderRadius: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.accentSoft,
   },
   typeBadgeText: {
-    fontSize: 12,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     fontWeight: "600",
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
   taskList: {
-    gap: 8,
-    marginBottom: 12,
+    gap: DS_SPACING.sm,
+    marginBottom: DS_SPACING.md,
   },
   taskRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: DS_SPACING.sm,
   },
   taskTitle: {
-    fontSize: 14,
-    color: Colors.text.primary,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   taskTitleCompleted: {
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     textDecorationLine: "line-through",
   },
   moreTasks: {
-    fontSize: 13,
-    color: Colors.text.tertiary,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textMuted,
     marginTop: 2,
   },
   openButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: DS_SPACING.xs,
     paddingVertical: 10,
   },
   openButtonText: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "600",
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
 });

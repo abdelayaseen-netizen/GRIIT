@@ -14,8 +14,7 @@ import { useRouter } from "expo-router";
 import { ChevronLeft, Sun, Moon, Smartphone, Crown, User, LogOut, FileText } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
-import Colors from "@/constants/colors";
-import { designTokens } from "@/lib/design-tokens";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -94,19 +93,23 @@ function VisibilitySubsection({
 }
 
 const visibilityStyles = StyleSheet.create({
-  wrap: { marginBottom: 16 },
-  label: { fontSize: 15, fontWeight: "700", marginBottom: 8 },
-  pillRow: { flexDirection: "row", gap: 8 },
+  wrap: { marginBottom: DS_SPACING.lg },
+  label: {
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    fontWeight: "700",
+    marginBottom: DS_SPACING.sm,
+  },
+  pillRow: { flexDirection: "row", gap: DS_SPACING.sm },
   pill: {
     flex: 1,
-    height: 36,
-    borderRadius: designTokens.pillBorderRadius,
+    height: 40,
+    borderRadius: DS_RADIUS.button,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
+    borderWidth: DS_BORDERS.width,
   },
-  pillText: { fontSize: 14, fontWeight: "500" },
-  hint: { fontSize: 13, marginTop: 6 },
+  pillText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "500" },
+  hint: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, marginTop: DS_SPACING.sm },
 });
 
 export default function SettingsScreen() {
@@ -559,145 +562,118 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
+  safe: { flex: 1, backgroundColor: DS_COLORS.background },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    backgroundColor: Colors.background,
+    paddingHorizontal: DS_SPACING.sm,
+    paddingVertical: DS_SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: DS_COLORS.border,
   },
-  backBtn: {
-    padding: 4,
-  },
+  backBtn: { padding: DS_SPACING.xs },
   headerTitle: {
-    fontSize: 18,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
-  headerSpacer: {
-    width: 32,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
+  headerSpacer: { width: 36 },
+  scroll: { flex: 1 },
+  scrollContent: { padding: DS_SPACING.screenHorizontal },
+  section: { marginBottom: DS_SPACING.xxl },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 10,
+    gap: DS_SPACING.sm,
+    marginBottom: DS_SPACING.md,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   sectionTitleLarge: {
-    fontSize: 20,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
-    marginBottom: 8,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.sm,
   },
   sectionTitleFriends: {
-    fontSize: 18,
+    fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
-    marginBottom: 10,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.md,
   },
   privacyDesc: {
-    fontSize: 14,
-    marginBottom: 12,
-    lineHeight: 20,
-    color: "#6B7280",
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    marginBottom: DS_SPACING.md,
+    lineHeight: 22,
+    color: DS_COLORS.textSecondary,
   },
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: designTokens.cardRadius,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 16,
-    ...designTokens.cardShadow,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
+    padding: DS_SPACING.cardPadding,
   },
   friendsCard: {},
   friendsTwoCol: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: DS_SPACING.md,
   },
-  friendsRow: {
-    flexDirection: "row",
-    marginBottom: 12,
-  },
-  friendsCol: {
-    flex: 1,
-    alignItems: "center",
-  },
+  friendsRow: { flexDirection: "row", marginBottom: DS_SPACING.md },
+  friendsCol: { flex: 1, alignItems: "center" },
   friendsColDivider: {
     width: 1,
-    height: 36,
-    marginHorizontal: 8,
+    height: 40,
+    marginHorizontal: DS_SPACING.sm,
   },
   friendsNum: {
-    fontSize: 28,
+    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   friendsLabel: {
-    fontSize: 11,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     fontWeight: "600",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     marginTop: 2,
   },
   friendsDesc: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    lineHeight: 20,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: 12,
+    marginVertical: DS_SPACING.md,
+    backgroundColor: DS_COLORS.border,
   },
   toggleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  toggleTextWrap: {
-    flex: 1,
-    marginRight: 12,
-  },
+  toggleTextWrap: { flex: 1, marginRight: DS_SPACING.md },
   toggleTitle: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "500",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   toggleSub: {
-    fontSize: 13,
-    color: Colors.text.tertiary,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textMuted,
     marginTop: 2,
   },
-  consequenceCard: { gap: 16 },
-  consequenceRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
+  consequenceCard: { gap: DS_SPACING.lg },
+  consequenceRow: { flexDirection: "row", alignItems: "flex-start" },
   consequenceRowBordered: {
     flexDirection: "row",
     alignItems: "flex-start",
-    paddingTop: 16,
-    marginTop: 16,
+    paddingTop: DS_SPACING.lg,
+    marginTop: DS_SPACING.lg,
     borderTopWidth: 0,
     borderTopColor: "transparent",
   },
@@ -706,39 +682,32 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     marginTop: 4,
-    marginRight: 12,
+    marginRight: DS_SPACING.md,
   },
-  consequenceTextWrap: {
-    flex: 1,
-  },
+  consequenceTextWrap: { flex: 1 },
   consequenceTitle: {
-    fontSize: 15,
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   reminderPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Colors.border + "40",
+    paddingHorizontal: DS_SPACING.lg,
+    paddingVertical: DS_SPACING.sm,
+    borderRadius: 999,
   },
-  reminderPillActive: {
-    backgroundColor: Colors.accent,
-  },
+  reminderPillActive: {},
   reminderPillText: {
-    fontSize: 14,
-    color: Colors.text.secondary,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textSecondary,
   },
   reminderPillTextActive: {
-    color: "#fff",
+    color: DS_COLORS.white,
     fontWeight: "600",
   },
   consequenceSub: {
-    fontSize: 13,
-    color: Colors.text.tertiary,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textMuted,
     marginTop: 2,
   },
-  bottomSpacer: {
-    height: 32,
-  },
+  bottomSpacer: { height: DS_SPACING.xxxl },
 });

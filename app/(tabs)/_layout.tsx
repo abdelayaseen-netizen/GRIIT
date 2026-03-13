@@ -2,14 +2,10 @@ import { Tabs } from "expo-router";
 import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
-import {
-  spacing,
-  typography,
-  shadows,
-} from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
   const { colors } = useTheme();
@@ -21,11 +17,11 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = colors.card;
-  const tabBorder = colors.border;
-  const tabActive = colors.accent;
-  const tabInactive = colors.text.muted;
-  const centerBtnBg = "#1A1A1A";
+  const tabBg = colors.card ?? DS_COLORS.surface;
+  const tabBorder = colors.border ?? DS_COLORS.border;
+  const tabActive = colors.accent ?? DS_COLORS.accent;
+  const tabInactive = colors.text?.muted ?? DS_COLORS.textMuted;
+  const centerBtnBg = DS_COLORS.centerButtonBg;
 
   return (
     <Tabs
@@ -37,12 +33,12 @@ export default function TabLayout() {
           backgroundColor: tabBg,
           borderTopColor: tabBorder,
           borderTopWidth: 1,
-          paddingTop: spacing.sm,
-          height: 88,
+          paddingTop: 8,
+          height: DS_MEASURES.tabBarHeight,
         },
         tabBarLabelStyle: {
-          fontSize: typography.tabLabel.fontSize,
-          fontWeight: typography.tabLabel.fontWeight,
+          fontSize: DS_TYPOGRAPHY.tabLabel.fontSize,
+          fontWeight: DS_TYPOGRAPHY.tabLabel.fontWeight,
           marginTop: 4,
           marginBottom: 8,
         },
@@ -97,15 +93,14 @@ export default function TabLayout() {
   );
 }
 
-const CENTER_BUTTON_SIZE = 56;
 const styles = StyleSheet.create({
   centerButton: {
-    width: CENTER_BUTTON_SIZE,
-    height: CENTER_BUTTON_SIZE,
-    borderRadius: CENTER_BUTTON_SIZE / 2,
+    width: DS_MEASURES.centerNavButtonSize,
+    height: DS_MEASURES.centerNavButtonSize,
+    borderRadius: DS_MEASURES.centerNavButtonSize / 2,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
-    ...shadows.centerButton,
+    ...DS_SHADOWS.centerButton,
   },
 });

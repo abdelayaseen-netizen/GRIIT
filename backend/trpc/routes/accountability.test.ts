@@ -63,7 +63,7 @@ function createMockSupabase(overrides: {
     eq: () => chain,
     or: () => chain,
     gte: () => chain,
-    limit: (n: number) => {
+    limit: (_n: number) => {
       return {
         maybeSingle: () =>
           Promise.resolve({

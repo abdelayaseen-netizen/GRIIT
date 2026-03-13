@@ -16,7 +16,7 @@ import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/contexts/ThemeContext";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -126,7 +126,7 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: DS_COLORS.background },
   keyboardView: { flex: 1 },
   scrollContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24 },
   header: { alignItems: "center", marginBottom: 32 },
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  buttonText: { fontSize: 15, fontWeight: "700", color: DS_COLORS.white },
   backLink: {
     borderWidth: 1,
     borderRadius: 12,

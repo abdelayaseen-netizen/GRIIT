@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
@@ -176,7 +177,9 @@ function AuthRedirector() {
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
+    <View style={{ flex: 1 }}>
+      <OfflineBanner />
+      <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />
@@ -227,6 +230,22 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen 
+        name="task/manual" 
+        options={{ 
+          headerShown: true,
+          title: "Complete Task",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="task/complete" 
+        options={{ 
+          headerShown: true,
+          title: "Complete Task",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
         name="task/checkin" 
         options={{ 
           headerShown: true,
@@ -260,6 +279,7 @@ function RootLayoutNav() {
       <Stack.Screen name="day1-quick-win" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="+not-found" />
     </Stack>
+    </View>
   );
 }
 

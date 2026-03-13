@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Colors from "@/constants/colors";
-import { GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
 
 export interface DisciplineScoreCardProps {
   disciplineScore: number;
@@ -51,23 +50,23 @@ export default function DisciplineScoreCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: GRIIT_RADII.card,
-    padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.xl,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginBottom: DS_SPACING.md,
+    ...DS_SHADOWS.card,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: DS_SPACING.sm,
   },
   label: {
-    fontSize: 11,
+    fontSize: DS_TYPOGRAPHY.tabLabel.fontSize,
     fontWeight: "600",
-    color: Colors.text.muted,
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
   },
   tierBadge: {
@@ -75,62 +74,62 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: Colors.pill,
+    paddingVertical: DS_SPACING.xs,
+    borderRadius: DS_RADIUS.button,
+    backgroundColor: DS_COLORS.chipFill,
   },
   tierDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
   },
   tierText: {
-    fontSize: 12,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   score: {
     fontSize: 48,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   divider: {
     height: 1,
-    backgroundColor: "#F0EDE8",
-    marginVertical: 16,
+    backgroundColor: DS_COLORS.borderAlt,
+    marginVertical: DS_SPACING.lg,
   },
   footerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: DS_SPACING.md,
   },
   daysValue: {
-    fontSize: 28,
+    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   footerLabels: {},
   daysLabel: {
-    fontSize: 11,
+    fontSize: DS_TYPOGRAPHY.tabLabel.fontSize,
     fontWeight: "600",
-    color: Colors.text.muted,
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
   },
   tierFooter: {
-    fontSize: 13,
-    color: Colors.text.secondary,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   zeroStateHint: {
-    fontSize: 12,
-    color: Colors.text.tertiary,
-    marginTop: 10,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    color: DS_COLORS.textMuted,
+    marginTop: DS_SPACING.sm,
     fontStyle: "italic",
   },
   rankText: {
-    fontSize: 12,
-    color: Colors.text.tertiary,
-    marginTop: 8,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    color: DS_COLORS.textMuted,
+    marginTop: DS_SPACING.sm,
   },
 });

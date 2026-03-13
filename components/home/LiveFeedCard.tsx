@@ -12,8 +12,7 @@ import {
   Users,
 } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
-import { designTokens } from "@/lib/design-tokens";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
 
 const STRIPE_WIDTH = 3 as const;
 
@@ -200,22 +199,24 @@ export default function LiveFeedCard({ data }: LiveFeedCardProps) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: designTokens.cardRadius,
-    marginBottom: designTokens.cardGap,
+    borderRadius: DS_RADIUS.cardAlt,
+    marginBottom: DS_SPACING.cardGap,
     overflow: "hidden",
-    ...designTokens.cardShadow,
+    backgroundColor: DS_COLORS.surface,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
   },
   cardInner: {
     flex: 1,
-    padding: 16,
+    padding: DS_SPACING.lg,
   },
   row1: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
+    gap: DS_SPACING.md,
   },
   avatar: {
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
   },
   iconCircle: {
     width: 40,

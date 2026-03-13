@@ -336,7 +336,6 @@ export const challengesRouter = createTRPCRouter({
       }
 
       const participationType = "solo" as "solo" | "team" | "shared_goal";
-      const runStatus: string | undefined = undefined;
       const teamSize = 1;
       const isTeamWaiting = false;
 
@@ -399,7 +398,16 @@ export const challengesRouter = createTRPCRouter({
 
       if (!rpcError) {
         const activeChallenge = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
-        if (activeChallenge) return activeChallenge;
+        if (activeChallenge) {
+          const { data: ch } = await ctx.supabase.from("challenges").select("name").eq("id", input.challengeId).single();
+          await ctx.supabase.from("activity_events").insert({
+            user_id: ctx.userId,
+            event_type: "joined_challenge",
+            challenge_id: input.challengeId,
+            metadata: { challenge_name: (ch as { name?: string })?.name ?? "Challenge" },
+          });
+          return activeChallenge;
+        }
       }
 
       const code = (rpcError as { code?: string })?.code;

@@ -6,7 +6,7 @@ import { Camera, Check, ImagePlus } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useApp } from "@/contexts/AppContext";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 
 const PICKER_OPTIONS = {
@@ -133,7 +133,7 @@ export default function PhotoTaskScreen() {
           </View>
         ) : (
           <View style={styles.cameraPlaceholder}>
-            <Camera size={64} color={Colors.text.tertiary} />
+            <Camera size={64} color={DS_COLORS.textMuted} />
             <Text style={styles.placeholderText}>No photo taken yet</Text>
           </View>
         )}
@@ -153,7 +153,7 @@ export default function PhotoTaskScreen() {
               onPress={handlePickFromGallery}
               activeOpacity={0.8}
             >
-              <ImagePlus size={24} color={Colors.text.primary} />
+              <ImagePlus size={24} color={DS_COLORS.textPrimary} />
               <Text style={styles.galleryButtonText}>Upload from gallery</Text>
             </TouchableOpacity>
           </View>
@@ -189,7 +189,7 @@ export default function PhotoTaskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   content: {
     flex: 1,
@@ -202,12 +202,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     marginBottom: 16,
   },
   placeholderText: {
     fontSize: 15,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginTop: 12,
   },
   previewContainer: {
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   retakeButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   retakeButtonText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   buttonRow: {
     gap: 12,
@@ -255,16 +255,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     borderRadius: 12,
     padding: 16,
   },
   galleryButtonText: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   submitButton: {
     flexDirection: 'row',

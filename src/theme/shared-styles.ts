@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_TYPOGRAPHY, GRIIT_SHADOWS } from "./griit-design-tokens";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
 
 /**
  * Shared style objects for cards, buttons, section headers, and screen containers.
@@ -7,37 +7,37 @@ import { GRIIT_COLORS, GRIIT_RADII, GRIIT_TYPOGRAPHY, GRIIT_SHADOWS } from "./gr
  */
 export const sharedStyles = StyleSheet.create({
   card: {
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: GRIIT_RADII.card,
-    padding: 18,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.xl,
+    ...DS_SHADOWS.card,
   },
   pillButton: {
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    borderRadius: GRIIT_RADII.buttonPill,
-    paddingVertical: 16,
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: DS_RADIUS.buttonPill,
+    paddingVertical: DS_SPACING.lg,
     alignItems: "center" as const,
-    ...GRIIT_SHADOWS.button,
+    ...DS_SHADOWS.button,
   },
   pillButtonText: {
-    color: GRIIT_COLORS.white,
-    fontSize: 17,
+    color: DS_COLORS.white,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700" as const,
   },
   sectionHeader: {
-    fontSize: GRIIT_TYPOGRAPHY.sectionHeader,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
     fontWeight: "700" as const,
-    color: GRIIT_COLORS.textPrimary,
+    color: DS_COLORS.textPrimary,
   },
   sectionHeaderSmall: {
-    fontSize: GRIIT_TYPOGRAPHY.sectionHeaderSm,
+    fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
     fontWeight: "700" as const,
-    color: GRIIT_COLORS.textPrimary,
+    color: DS_COLORS.textPrimary,
     textTransform: "uppercase" as const,
-    letterSpacing: GRIIT_TYPOGRAPHY.sectionHeaderLetterSpacing,
+    letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,
   },
   screenContainer: {
     flex: 1,
-    backgroundColor: GRIIT_COLORS.background,
+    backgroundColor: DS_COLORS.background,
   },
 });

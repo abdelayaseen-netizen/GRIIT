@@ -4,7 +4,7 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import ChallengeCard, { TodayTaskItem } from "./ChallengeCard";
 import EmptyChallengesCard from "./EmptyChallengesCard";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import type { TodayCheckinForUser } from "@/types";
 
 interface TaskFromApi {
@@ -131,7 +131,7 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Active challenges</Text>
         <View style={styles.loadingWrap}>
-          <ActivityIndicator size="small" color={Colors.accent} />
+          <ActivityIndicator size="small" color={DS_COLORS.accent} />
         </View>
       </View>
     );
@@ -170,16 +170,16 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 20,
+    marginBottom: DS_SPACING.xl,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize - 2,
     fontWeight: "700",
-    color: Colors.text.primary,
-    marginBottom: 12,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.md,
   },
   loadingWrap: {
-    paddingVertical: 24,
+    paddingVertical: DS_SPACING.xxl,
     alignItems: "center",
   },
 });

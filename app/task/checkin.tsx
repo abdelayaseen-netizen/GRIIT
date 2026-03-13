@@ -22,7 +22,7 @@ import {
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { AllowedLocation } from "@/types";
 import { checkinStyles as styles } from "@/styles/checkin-styles";
 import Celebration from "@/components/Celebration";
@@ -392,16 +392,16 @@ export default function CheckinTaskScreen() {
 
   const getLocationStatusColor = () => {
     switch (locationStatus) {
-      case "inside": return Colors.success;
+      case "inside": return DS_COLORS.success;
       case "outside": return "#F59E0B";
-      case "checking": return Colors.text.tertiary;
+      case "checking": return DS_COLORS.textMuted;
       default: return "#DC2626";
     }
   };
 
   const getTimeStatusColor = () => {
     switch (timeStatus) {
-      case "window_open": return Colors.success;
+      case "window_open": return DS_COLORS.success;
       case "too_early": return "#F59E0B";
       default: return "#DC2626";
     }
@@ -412,7 +412,7 @@ export default function CheckinTaskScreen() {
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.verifiedContainer}>
           <View style={styles.verifiedBadge}>
-            <Check size={32} color={Colors.success} />
+            <Check size={32} color={DS_COLORS.success} />
           </View>
           <Text style={styles.verifiedTitle}>Check-in Verified</Text>
           <Text style={styles.verifiedSubtitle}>You showed up at the right place and time.</Text>
@@ -516,7 +516,7 @@ export default function CheckinTaskScreen() {
 
             {locationPolicy?.requireContinuousPresence && (
               <View style={styles.continuousNote}>
-                <Navigation size={14} color={Colors.text.tertiary} />
+                <Navigation size={14} color={DS_COLORS.textMuted} />
                 <Text style={styles.continuousNoteText}>
                   Stay at location during session
                 </Text>

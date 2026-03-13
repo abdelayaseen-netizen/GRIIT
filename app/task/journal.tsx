@@ -33,7 +33,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useApp } from "@/contexts/AppContext";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import type { MoodLevel, BodyState, JournalCategory } from "@/types";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 
@@ -332,7 +332,7 @@ export default function JournalTaskScreen() {
               }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <ChevronLeft size={22} color={Colors.text.primary} />
+              <ChevronLeft size={22} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
             <View style={s.headerCenter}>
               <Text style={s.headerTitle}>Journal Entry</Text>
@@ -386,7 +386,7 @@ export default function JournalTaskScreen() {
                           }}
                           activeOpacity={0.7}
                         >
-                          <Icon size={22} color={isSelected ? opt.color : Colors.text.tertiary} />
+                          <Icon size={22} color={isSelected ? opt.color : DS_COLORS.textMuted} />
                           <Text style={[s.moodLabel, isSelected && { color: opt.color }]}>{opt.label}</Text>
                         </TouchableOpacity>
                       );
@@ -412,7 +412,7 @@ export default function JournalTaskScreen() {
                           }}
                           activeOpacity={0.7}
                         >
-                          <Zap size={16} color={isSelected ? fillColor : Colors.text.tertiary} />
+                          <Zap size={16} color={isSelected ? fillColor : DS_COLORS.textMuted} />
                           <Text style={[s.energyNumber, isSelected && { color: fillColor }]}>{level}</Text>
                         </TouchableOpacity>
                       );
@@ -450,7 +450,7 @@ export default function JournalTaskScreen() {
                 <TextInput
                   style={s.textArea}
                   placeholder="Write honestly. 2-5 sentences is enough."
-                  placeholderTextColor={Colors.text.tertiary}
+                  placeholderTextColor={DS_COLORS.textMuted}
                   value={entryText}
                   onChangeText={handleTextChange}
                   multiline
@@ -490,11 +490,11 @@ export default function JournalTaskScreen() {
                       <Image source={{ uri: photoUri }} style={s.photoProofThumb} />
                       <View style={s.photoProofActions}>
                         <TouchableOpacity style={s.photoProofBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
-                          <Camera size={18} color={Colors.text.primary} />
+                          <Camera size={18} color={DS_COLORS.textPrimary} />
                           <Text style={s.photoProofBtnText}>Retake</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={s.photoProofBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
-                          <ImagePlus size={18} color={Colors.text.primary} />
+                          <ImagePlus size={18} color={DS_COLORS.textPrimary} />
                           <Text style={s.photoProofBtnText}>Change</Text>
                         </TouchableOpacity>
                       </View>
@@ -506,7 +506,7 @@ export default function JournalTaskScreen() {
                         <Text style={s.photoProofPrimaryBtnText}>Take photo</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={s.photoProofSecondaryBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
-                        <ImagePlus size={20} color={Colors.text.secondary} />
+                        <ImagePlus size={20} color={DS_COLORS.textSecondary} />
                         <Text style={s.photoProofSecondaryBtnText}>Upload from gallery</Text>
                       </TouchableOpacity>
                     </View>
@@ -584,7 +584,7 @@ const s = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   headerTag: {
     flexDirection: "row",
@@ -636,7 +636,7 @@ const s = StyleSheet.create({
   promptText: {
     fontSize: 17,
     fontWeight: "500" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     lineHeight: 24,
   },
   typeChips: {
@@ -663,7 +663,7 @@ const s = StyleSheet.create({
   checkinLabel: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 10,
   },
   moodRow: {
@@ -688,7 +688,7 @@ const s = StyleSheet.create({
   moodLabel: {
     fontSize: 11,
     fontWeight: "500" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginTop: 4,
   },
 
@@ -713,7 +713,7 @@ const s = StyleSheet.create({
   energyNumber: {
     fontSize: 14,
     fontWeight: "700" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
     marginTop: 4,
   },
 
@@ -738,7 +738,7 @@ const s = StyleSheet.create({
   bodyChipText: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
 
   entrySection: {
@@ -747,7 +747,7 @@ const s = StyleSheet.create({
   entryLabel: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 10,
   },
   textArea: {
@@ -757,7 +757,7 @@ const s = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     fontSize: 15,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     lineHeight: 22,
     minHeight: 160,
     shadowColor: "#000",
@@ -774,7 +774,7 @@ const s = StyleSheet.create({
   },
   wordCount: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
   wordCountWarn: {
     color: "#DC2626",
@@ -798,7 +798,7 @@ const s = StyleSheet.create({
   },
   charCount: {
     fontSize: 12,
-    color: Colors.text.tertiary,
+    color: DS_COLORS.textMuted,
   },
 
   footerSafe: {
@@ -834,12 +834,12 @@ const s = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   photoProofBtnText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   photoProofEmpty: {
     marginTop: 8,
@@ -867,13 +867,13 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     backgroundColor: "#fff",
   },
   photoProofSecondaryBtnText: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   submitBtn: {
     backgroundColor: "#6366F1",
@@ -929,12 +929,12 @@ const s = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: "700" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
   successSubtitle: {
     fontSize: 15,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center" as const,
   },
   successActions: {
@@ -942,7 +942,7 @@ const s = StyleSheet.create({
     gap: 12,
   },
   successPrimaryBtn: {
-    backgroundColor: Colors.text.primary,
+    backgroundColor: DS_COLORS.textPrimary,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",

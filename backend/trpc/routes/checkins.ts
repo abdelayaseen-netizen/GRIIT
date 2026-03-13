@@ -14,6 +14,23 @@ import {
   isTaskRequired,
 } from "../../lib/challenge-tasks";
 import { isChallengeExpired } from "../../lib/challenge-timer";
+import { checkAndUnlockAchievements, getLabelForKey } from "../../lib/achievements";
+import { haversineDistance } from "../../lib/geo";
+
+/** Task row with optional advanced verification columns (from migration 20250330000000). */
+type TaskRowWithVerification = ChallengeTaskRowRaw & {
+  require_photo?: boolean | null;
+  timer_direction?: string | null;
+  timer_hard_mode?: boolean | null;
+  require_heart_rate?: boolean | null;
+  heart_rate_threshold?: number | null;
+  require_location?: boolean | null;
+  location_name?: string | null;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_radius_meters?: number | null;
+  min_duration_minutes?: number | null;
+};
 
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
@@ -23,6 +40,12 @@ export const checkinsRouter = createTRPCRouter({
       value: z.number().optional(),
       noteText: z.string().max(2000).optional(),
       proofUrl: z.string().max(2000).optional(),
+      photo_url: z.string().max(2000).optional(),
+      heart_rate_avg: z.number().int().min(0).optional(),
+      heart_rate_peak: z.number().int().min(0).optional(),
+      location_latitude: z.number().optional(),
+      location_longitude: z.number().optional(),
+      timer_seconds_on_screen: z.number().int().min(0).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
@@ -42,58 +65,121 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const { data: taskRow } = await ctx.supabase
-        .from('challenge_tasks')
-        .select('id, task_type, config')
-        .eq('id', input.taskId)
+        .from("challenge_tasks")
+        .select("id, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes")
+        .eq("id", input.taskId)
         .single();
 
-      const taskRaw = taskRow as ChallengeTaskRowRaw | null;
-      const { needsProof, minWords, durationMinutes } = getTaskVerification(taskRaw);
-      const taskType = taskRaw?.task_type ?? 'manual';
+      const task = taskRow as TaskRowWithVerification | null;
+      const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
+      const taskType = task?.task_type ?? "manual";
 
-      if (needsProof && !(input.proofUrl && input.proofUrl.trim())) {
+      const requirePhoto = task?.require_photo === true || needsProof;
+      const photoUrl = (input.photo_url ?? input.proofUrl)?.trim() || null;
+      if (requirePhoto && !photoUrl) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'This task requires photo proof. Please take or upload a photo before completing.',
+          code: "BAD_REQUEST",
+          message: "This task requires a photo. Please take a photo to verify completion.",
         });
       }
 
-      const isJournal = taskType === 'journal' || taskType === 'manual';
+      const requireHeartRate = task?.require_heart_rate === true;
+      if (requireHeartRate) {
+        const threshold = task?.heart_rate_threshold ?? 100;
+        const avg = input.heart_rate_avg ?? 0;
+        if (!avg || avg < threshold) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `This task requires an elevated heart rate. Your average was ${avg} BPM but ${threshold} BPM is needed.`,
+          });
+        }
+      }
+
+      const requireLocation = task?.require_location === true;
+      if (requireLocation) {
+        const tLat = task?.location_latitude;
+        const tLon = task?.location_longitude;
+        const radius = task?.location_radius_meters ?? 200;
+        if (tLat == null || tLon == null) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "This task has invalid location configuration." });
+        }
+        if (input.location_latitude == null || input.location_longitude == null) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "This task requires location verification. Please enable location services." });
+        }
+        const distance = haversineDistance(tLat, tLon, input.location_latitude, input.location_longitude);
+        if (distance > radius) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `You need to be within ${radius}m of ${task?.location_name ?? "the required location"}. You are ${Math.round(distance)}m away.`,
+          });
+        }
+      }
+
+      const timerHardMode = task?.timer_hard_mode === true;
+      const minDurationMinutes = task?.min_duration_minutes ?? durationMinutes;
+      if (timerHardMode && minDurationMinutes != null && minDurationMinutes > 0) {
+        const requiredSeconds = minDurationMinutes * 60;
+        const onScreen = input.timer_seconds_on_screen ?? 0;
+        if (onScreen < requiredSeconds) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Hard mode: you must stay on the timer screen for the full ${minDurationMinutes} minutes. You were on screen for ${Math.floor(onScreen / 60)} minutes.`,
+          });
+        }
+      }
+
+      if (minDurationMinutes != null && minDurationMinutes > 0 && input.value != null) {
+        if (input.value < minDurationMinutes) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `This task requires at least ${minDurationMinutes} minutes. You completed ${input.value} minutes.`,
+          });
+        }
+      }
+
+      const isJournal = taskType === "journal" || taskType === "manual";
       if (isJournal && minWords > 0) {
-        const text = (input.noteText ?? '').trim();
+        const text = (input.noteText ?? "").trim();
         const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
         if (wordCount < minWords) {
           throw new TRPCError({
-            code: 'BAD_REQUEST',
+            code: "BAD_REQUEST",
             message: `This task requires at least ${minWords} words. You wrote ${wordCount}.`,
           });
         }
       }
 
-      const isTimer = taskType === 'timer';
-      if (isTimer && durationMinutes > 0) {
+      const isTimer = taskType === "timer";
+      const requiredMinutes = minDurationMinutes ?? durationMinutes;
+      if (isTimer && requiredMinutes > 0) {
         const completedMinutes = input.value ?? 0;
-        if (completedMinutes < durationMinutes) {
+        if (completedMinutes < requiredMinutes) {
           throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `This task requires at least ${durationMinutes} minutes. You logged ${completedMinutes}.`,
+            code: "BAD_REQUEST",
+            message: `This task requires at least ${requiredMinutes} minutes. You logged ${completedMinutes}.`,
           });
         }
       }
 
-      const proofUrl = input.proofUrl?.trim() || null;
+      const proofUrl = photoUrl || input.proofUrl?.trim() || null;
       const { data, error } = await ctx.supabase
-        .from('check_ins')
+        .from("check_ins")
         .upsert({
           user_id: ctx.userId,
           active_challenge_id: input.activeChallengeId,
           task_id: input.taskId,
           date_key: dateKey,
-          status: 'completed',
+          status: "completed",
           value: input.value,
           note_text: input.noteText,
           proof_url: proofUrl,
           completion_image_url: proofUrl,
+          photo_url: photoUrl || undefined,
+          heart_rate_avg: input.heart_rate_avg,
+          heart_rate_peak: input.heart_rate_peak,
+          location_latitude: input.location_latitude,
+          location_longitude: input.location_longitude,
+          timer_seconds_on_screen: input.timer_seconds_on_screen,
         })
         .select()
         .single();
@@ -196,12 +282,13 @@ export const checkinsRouter = createTRPCRouter({
         const row = rpcRows[0] as { new_streak_count: number; last_stand_earned: boolean };
         const { data: acRow } = await ctx.supabase
           .from("active_challenges")
-          .select("challenge_id")
+          .select("challenge_id, current_day")
           .eq("id", input.activeChallengeId)
           .single();
-        const challengeId = (acRow as { challenge_id?: string } | null)?.challenge_id;
+        const challengeId = (acRow as { challenge_id?: string; current_day?: number } | null)?.challenge_id;
+        const currentDayAfter = (acRow as { current_day?: number } | null)?.current_day ?? 0;
         if (challengeId) {
-          const { data: ch } = await ctx.supabase.from("challenges").select("participation_type, run_status").eq("id", challengeId).single();
+          const { data: ch } = await ctx.supabase.from("challenges").select("participation_type, run_status, duration_days").eq("id", challengeId).single();
           if ((ch as { participation_type?: string })?.participation_type === "team" && (ch as { run_status?: string })?.run_status === "active") {
             const today = new Date().toISOString().split("T")[0];
             const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
@@ -209,6 +296,49 @@ export const checkinsRouter = createTRPCRouter({
             await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: today });
           }
         }
+        const { data: profileRow } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();
+        const totalDaysSecured = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
+        const { data: chRow } = await ctx.supabase.from("challenges").select("duration_days, name").eq("id", challengeId ?? "").single();
+        const durationDays = (chRow as { duration_days?: number } | null)?.duration_days ?? 0;
+        const challengeName = (chRow as { name?: string } | null)?.name ?? "Challenge";
+        const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
+
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "secured_day",
+          challenge_id: challengeId ?? null,
+          metadata: { day_number: currentDayAfter, streak_count: row.new_streak_count },
+        });
+        if (row.last_stand_earned) {
+          await ctx.supabase.from("activity_events").insert({
+            user_id: ctx.userId,
+            event_type: "last_stand",
+            metadata: { streak_count: row.new_streak_count },
+          });
+        }
+        const { newUnlockKeys } = await checkAndUnlockAchievements(
+          ctx.supabase,
+          ctx.userId,
+          row.new_streak_count,
+          totalDaysSecured,
+          challengeJustCompleted
+        );
+        for (const key of newUnlockKeys) {
+          await ctx.supabase.from("activity_events").insert({
+            user_id: ctx.userId,
+            event_type: "unlocked_achievement",
+            metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
+          });
+        }
+        if (challengeJustCompleted) {
+          await ctx.supabase.from("activity_events").insert({
+            user_id: ctx.userId,
+            event_type: "completed_challenge",
+            challenge_id: challengeId ?? null,
+            metadata: { challenge_name: challengeName, duration_days: durationDays },
+          });
+        }
+
         return {
           success: true,
           newStreakCount: row.new_streak_count,
@@ -353,6 +483,56 @@ export const checkinsRouter = createTRPCRouter({
           await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
           await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: dateKey });
         }
+      }
+
+      const newCurrentDay = (ac?.current_day ?? 0) + 1;
+      const { data: chMeta } = await ctx.supabase.from("challenges").select("duration_days, name").eq("id", challengeId ?? "").single();
+      const durationDays = (chMeta as { duration_days?: number } | null)?.duration_days ?? 0;
+      const challengeName = (chMeta as { name?: string } | null)?.name ?? "Challenge";
+      const challengeJustCompleted = durationDays > 0 && newCurrentDay >= durationDays;
+
+      await ctx.supabase.from("activity_events").insert({
+        user_id: ctx.userId,
+        event_type: "secured_day",
+        challenge_id: challengeId ?? null,
+        metadata: { day_number: newCurrentDay, streak_count: newStreakCount },
+      });
+      if (lastStandEarned) {
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "last_stand",
+          metadata: { streak_count: newStreakCount },
+        });
+      }
+      const prevStreakCount = (streak as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
+      if (newStreakCount === 0 && prevStreakCount > 0) {
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "lost_streak",
+          metadata: { previous_streak: prevStreakCount },
+        });
+      }
+      const { newUnlockKeys } = await checkAndUnlockAchievements(
+        ctx.supabase,
+        ctx.userId,
+        newStreakCount,
+        totalDays,
+        challengeJustCompleted
+      );
+      for (const key of newUnlockKeys) {
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "unlocked_achievement",
+          metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
+        });
+      }
+      if (challengeJustCompleted) {
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "completed_challenge",
+          challenge_id: challengeId ?? null,
+          metadata: { challenge_name: challengeName, duration_days: durationDays },
+        });
       }
 
       return { success: true, newStreakCount, lastStandEarned };

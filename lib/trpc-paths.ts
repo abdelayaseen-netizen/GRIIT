@@ -87,6 +87,9 @@ export const TRPC = {
   feed: {
     list: 'feed.list',
   },
+  achievements: {
+    getForUser: 'achievements.getForUser',
+  },
   integrations: {
     getStravaAuthUrl: 'integrations.getStravaAuthUrl',
     isStravaEnabled: 'integrations.isStravaEnabled',

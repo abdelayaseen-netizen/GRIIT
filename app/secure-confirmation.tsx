@@ -11,7 +11,7 @@ import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, Check, Share2 } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { shareDaySecured } from "@/lib/share";
 
 const SECURE_DAY_MESSAGES = [
@@ -120,7 +120,7 @@ export default function SecureConfirmationScreen() {
           <View style={styles.statsCard}>
             <View style={styles.statRow}>
               <View style={styles.statItem}>
-                <Check size={16} color={Colors.streak.shield} />
+                <Check size={16} color={DS_COLORS.success} />
                 <Text style={styles.statLabel}>Current Streak</Text>
               </View>
               <Text style={styles.statValue}>{streak} days</Text>
@@ -130,7 +130,7 @@ export default function SecureConfirmationScreen() {
 
             <View style={styles.statRow}>
               <View style={styles.statItem}>
-                <Shield size={16} color={Colors.text.tertiary} />
+                <Shield size={16} color={DS_COLORS.textMuted} />
                 <Text style={styles.statLabel}>Progress</Text>
               </View>
               <Text style={styles.statValue}>
@@ -144,7 +144,7 @@ export default function SecureConfirmationScreen() {
               <Animated.View
                 style={[
                   styles.progressFill,
-                  { width: progressWidth, backgroundColor: isHardMode ? "#E87D4F" : Colors.streak.shield },
+                  { width: progressWidth, backgroundColor: isHardMode ? "#E87D4F" : DS_COLORS.success },
                 ]}
               />
             </View>
@@ -175,7 +175,7 @@ export default function SecureConfirmationScreen() {
             accessibilityLabel="Share your achievement"
             accessibilityRole="button"
           >
-            <Share2 size={18} color={Colors.accent} />
+            <Share2 size={18} color={DS_COLORS.accent} />
             <Text style={styles.shareButtonText}>Share Your Win</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -187,7 +187,7 @@ export default function SecureConfirmationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   content: {
     flex: 1,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: Colors.streak.shield + "15",
+    backgroundColor: DS_COLORS.success + "15",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: Colors.streak.shield,
+    backgroundColor: DS_COLORS.success,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 36,
     fontWeight: "900" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 28,
     letterSpacing: -1,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   statRow: {
     flexDirection: "row",
@@ -251,16 +251,16 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
   },
   statValue: {
     fontSize: 17,
     fontWeight: "800" as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: DS_COLORS.border,
     marginVertical: 16,
   },
   progressContainer: {
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 8,
-    backgroundColor: Colors.pill,
+    backgroundColor: DS_COLORS.chipFill,
     borderRadius: 4,
     overflow: "hidden",
   },
@@ -301,12 +301,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.accent,
-    backgroundColor: Colors.accent + "12",
+    borderColor: DS_COLORS.accent,
+    backgroundColor: DS_COLORS.accent + "12",
   },
   shareButtonText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: Colors.accent,
+    color: DS_COLORS.accent,
   },
 });

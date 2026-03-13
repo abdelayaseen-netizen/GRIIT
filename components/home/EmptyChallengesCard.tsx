@@ -4,8 +4,7 @@ import { Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import Colors from "@/constants/colors";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
 
 export default function EmptyChallengesCard() {
   const router = useRouter();
@@ -17,7 +16,7 @@ export default function EmptyChallengesCard() {
 
   return (
     <View style={styles.card}>
-      <Target size={40} color={Colors.text.muted} />
+      <Target size={40} color={DS_COLORS.textMuted} />
       <Text style={styles.title}>You have no active challenges</Text>
       <Text style={styles.subtitle}>Join a challenge to get started.</Text>
       <TouchableOpacity
@@ -34,38 +33,39 @@ export default function EmptyChallengesCard() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: GRIIT_RADII.card,
-    padding: 24,
-    marginBottom: 16,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.xxl,
+    marginBottom: DS_SPACING.lg,
     alignItems: "center",
-    ...GRIIT_SHADOWS.card,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
   },
   title: {
-    fontSize: 16,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
     fontWeight: "700",
-    color: Colors.text.primary,
-    marginTop: 12,
+    color: DS_COLORS.textPrimary,
+    marginTop: DS_SPACING.md,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    marginTop: 4,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textSecondary,
+    marginTop: DS_SPACING.xs,
     textAlign: "center",
   },
   button: {
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: GRIIT_RADII.buttonPill,
-    marginTop: 16,
+    backgroundColor: DS_COLORS.accent,
+    paddingVertical: DS_SPACING.lg,
+    paddingHorizontal: DS_SPACING.xxxl,
+    borderRadius: DS_RADIUS.buttonPill,
+    marginTop: DS_SPACING.lg,
     alignItems: "center",
-    ...GRIIT_SHADOWS.button,
+    ...DS_SHADOWS.button,
   },
   buttonText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
 });

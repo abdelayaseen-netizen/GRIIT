@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from "react
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import Colors from "@/constants/colors";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 export interface ProfileHeaderProps {
   avatarUrl?: string | null;
@@ -43,7 +43,7 @@ export default function ProfileHeader({
   avatarUrl,
   fullName,
   username,
-  disciplineTitle,
+  disciplineTitle: _disciplineTitle,
   currentTier,
   joinDate,
   onShare,
@@ -73,7 +73,7 @@ export default function ProfileHeader({
         </View>
       ) : null}
       <View style={styles.tierBadge}>
-        <View style={[styles.tierDot, { backgroundColor: Colors.accent }]} />
+        <View style={[styles.tierDot, { backgroundColor: DS_COLORS.accent }]} />
         <Text style={styles.tierBadgeText}>{currentTier}</Text>
       </View>
       {joinDate ? (
@@ -102,16 +102,14 @@ export default function ProfileHeader({
   );
 }
 
-const BORDER_PILL = "#E0DDD8";
-
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    paddingVertical: DS_SPACING.xxl,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
   },
   avatarWrap: {
-    marginBottom: 12,
+    marginBottom: DS_SPACING.md,
   },
   avatar: {
     width: AVATAR_SIZE,
@@ -128,42 +126,42 @@ const styles = StyleSheet.create({
   avatarLetter: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   fullName: {
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
   },
   username: {
-    fontSize: 14,
-    color: Colors.text.muted,
-    marginTop: 4,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textMuted,
+    marginTop: DS_SPACING.xs,
     textAlign: "center",
   },
   bioPill: {
-    marginTop: 8,
-    paddingHorizontal: 16,
+    marginTop: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.lg,
     paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#F0EDE8",
+    borderRadius: DS_RADIUS.input,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.borderAlt,
   },
   bioPillText: {
-    fontSize: 14,
-    color: Colors.text.secondary,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textSecondary,
   },
   tierBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginTop: 10,
-    paddingHorizontal: 12,
+    marginTop: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.md,
     paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: DS_RADIUS.input,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
   },
   tierDot: {
     width: 8,
@@ -171,49 +169,49 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   tierBadgeText: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   joinDate: {
-    fontSize: 13,
-    color: Colors.text.muted,
-    marginTop: 8,
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    color: DS_COLORS.textMuted,
+    marginTop: DS_SPACING.sm,
     textAlign: "center",
   },
   actions: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 16,
+    gap: DS_SPACING.md,
+    marginTop: DS_SPACING.lg,
   },
   editBtn: {
     paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingHorizontal: DS_SPACING.xxl,
     height: 40,
     justifyContent: "center",
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1.5,
-    borderColor: BORDER_PILL,
-    backgroundColor: Colors.card,
+    borderColor: DS_COLORS.borderAlt,
+    backgroundColor: DS_COLORS.surface,
   },
   editBtnText: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   shareBtn: {
     paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingHorizontal: DS_SPACING.xxl,
     height: 40,
     justifyContent: "center",
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1.5,
-    borderColor: BORDER_PILL,
-    backgroundColor: Colors.card,
+    borderColor: DS_COLORS.borderAlt,
+    backgroundColor: DS_COLORS.surface,
   },
   shareBtnText: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "600",
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
 });

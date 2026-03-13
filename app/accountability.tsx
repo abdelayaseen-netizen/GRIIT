@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { ChevronLeft, UserPlus, UserMinus, Check, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import Colors from "@/constants/colors";
+import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { ROUTES } from "@/lib/routes";
 
@@ -123,13 +123,13 @@ export default function AccountabilityScreen() {
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <ChevronLeft size={24} color={Colors.text.primary} />
+            <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Accountability Circle</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={Colors.accent} />
+          <ActivityIndicator size="large" color={DS_COLORS.accent} />
         </View>
       </SafeAreaView>
     );
@@ -142,7 +142,7 @@ export default function AccountabilityScreen() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <ChevronLeft size={24} color={Colors.text.primary} />
+          <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Accountability Circle</Text>
         <View style={styles.headerSpacer} />
@@ -173,9 +173,9 @@ export default function AccountabilityScreen() {
                     style={styles.removeBtn}
                   >
                     {actingId === p.partner_id ? (
-                      <ActivityIndicator size="small" color={Colors.text.secondary} />
+                      <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
                     ) : (
-                      <UserMinus size={20} color={Colors.text.secondary} />
+                      <UserMinus size={20} color={DS_COLORS.textSecondary} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -211,7 +211,7 @@ export default function AccountabilityScreen() {
                       disabled={actingId === inv.id}
                       style={[styles.iconBtn, styles.declineBtn]}
                     >
-                      <X size={20} color={Colors.text.primary} />
+                      <X size={20} color={DS_COLORS.textPrimary} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -259,7 +259,7 @@ export default function AccountabilityScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: DS_COLORS.background },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -267,23 +267,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: DS_COLORS.border,
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: Colors.text.primary },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: DS_COLORS.textPrimary },
   headerSpacer: { width: 32 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   scroll: { flex: 1 },
   scrollContent: { padding: 16 },
   countRow: { marginBottom: 16 },
-  countText: { fontSize: 15, color: Colors.text.secondary, fontWeight: "600" },
+  countText: { fontSize: 15, color: DS_COLORS.textSecondary, fontWeight: "600" },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: Colors.text.secondary, marginBottom: 8, letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.5 },
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     padding: 12,
   },
   row: {
@@ -292,24 +292,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: DS_COLORS.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: "600", color: Colors.text.primary },
-  rowSub: { fontSize: 13, color: Colors.text.secondary, marginTop: 2 },
+  rowTitle: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
   removeBtn: { padding: 8 },
   actions: { flexDirection: "row", gap: 8 },
   iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   acceptBtn: { backgroundColor: "#22c55e" },
-  declineBtn: { backgroundColor: Colors.border },
-  cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: Colors.border },
-  cancelBtnText: { fontSize: 14, fontWeight: "600", color: Colors.text.primary },
+  declineBtn: { backgroundColor: DS_COLORS.border },
+  cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: DS_COLORS.border },
+  cancelBtnText: { fontSize: 14, fontWeight: "600", color: DS_COLORS.textPrimary },
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 8,

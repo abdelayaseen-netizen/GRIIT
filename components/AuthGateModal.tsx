@@ -32,7 +32,7 @@ const BENEFITS = [
   "Earn ranks",
 ];
 
-export function AuthGateModal({ visible, onClose, context }: AuthGateModalProps) {
+export function AuthGateModal({ visible, onClose, context: _context }: AuthGateModalProps) {
   const router = useRouter();
 
   const openSignup = () => {

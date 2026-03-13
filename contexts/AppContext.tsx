@@ -30,7 +30,19 @@ type AppContextValue = {
   todayDateLocal: string;
   computeProgress: { verifiedCount: number; totalRequired: number; progress: number };
   canSecureDay: boolean;
-  completeTask: (params: { activeChallengeId: string; taskId: string; value?: number; noteText?: string; proofUrl?: string }) => Promise<{ firstTaskOfDay?: boolean } | void>;
+  completeTask: (params: {
+    activeChallengeId: string;
+    taskId: string;
+    value?: number;
+    noteText?: string;
+    proofUrl?: string;
+    photo_url?: string;
+    heart_rate_avg?: number;
+    heart_rate_peak?: number;
+    location_latitude?: number;
+    location_longitude?: number;
+    timer_seconds_on_screen?: number;
+  }) => Promise<{ firstTaskOfDay?: boolean } | void>;
   secureDay: () => Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined>;
   isLoading: boolean;
   isError: boolean;
@@ -343,6 +355,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     value?: number;
     noteText?: string;
     proofUrl?: string;
+    photo_url?: string;
+    heart_rate_avg?: number;
+    heart_rate_peak?: number;
+    location_latitude?: number;
+    location_longitude?: number;
+    timer_seconds_on_screen?: number;
   }): Promise<{ firstTaskOfDay?: boolean } | void> => {
     const requiredTasks = (challenge?.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
     const completedCountBefore = todayCheckins.filter((c: TodayCheckinForUser) =>

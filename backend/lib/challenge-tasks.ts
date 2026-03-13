@@ -34,6 +34,21 @@ export interface ChallengeTaskRowRaw {
   created_at?: string | null;
 }
 
+/** Raw row may include advanced verification columns (migration 20250330000000). */
+type TaskRowWithVerification = ChallengeTaskRowRaw & {
+  require_photo?: boolean | null;
+  timer_direction?: string | null;
+  timer_hard_mode?: boolean | null;
+  require_heart_rate?: boolean | null;
+  heart_rate_threshold?: number | null;
+  require_location?: boolean | null;
+  location_name?: string | null;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_radius_meters?: number | null;
+  min_duration_minutes?: number | null;
+};
+
 /** API shape returned to frontend (flat fields) */
 export interface ChallengeTaskApiShape {
   id: string;
@@ -48,6 +63,17 @@ export interface ChallengeTaskApiShape {
   verification_method?: string | null;
   verification_rule_json?: VerificationRuleStrava | null;
   order_index?: number | null;
+  require_photo?: boolean;
+  timer_direction?: string | null;
+  timer_hard_mode?: boolean;
+  require_heart_rate?: boolean;
+  heart_rate_threshold?: number | null;
+  require_location?: boolean;
+  location_name?: string | null;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_radius_meters?: number | null;
+  min_duration_minutes?: number | null;
   [key: string]: unknown;
 }
 
@@ -55,13 +81,14 @@ export interface ChallengeTaskApiShape {
 export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): ChallengeTaskApiShape | null {
   if (!row) return null;
   const config = row.config ?? {};
+  const r = row as TaskRowWithVerification;
   const type = row.task_type ?? "manual";
   return {
     id: row.id,
     title: row.title ?? null,
     type,
     required: config.required ?? true,
-    duration_minutes: config.duration_minutes ?? null,
+    duration_minutes: r.min_duration_minutes ?? config.duration_minutes ?? null,
     min_words: config.min_words ?? null,
     photo_required: config.photo_required ?? false,
     require_photo_proof: config.require_photo_proof ?? false,
@@ -69,6 +96,17 @@ export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Ch
     verification_method: config.verification_method ?? null,
     verification_rule_json: (config.verification_rule_json as VerificationRuleStrava) ?? null,
     order_index: row.order_index ?? null,
+    require_photo: r.require_photo ?? config.require_photo_proof ?? false,
+    timer_direction: r.timer_direction ?? "countdown",
+    timer_hard_mode: r.timer_hard_mode ?? config.strict_timer_mode ?? false,
+    require_heart_rate: r.require_heart_rate ?? false,
+    heart_rate_threshold: r.heart_rate_threshold ?? 100,
+    require_location: r.require_location ?? false,
+    location_name: r.location_name ?? null,
+    location_latitude: r.location_latitude ?? null,
+    location_longitude: r.location_longitude ?? null,
+    location_radius_meters: r.location_radius_meters ?? 200,
+    min_duration_minutes: r.min_duration_minutes ?? null,
   };
 }
 

@@ -27,7 +27,8 @@ import { supabase } from "@/lib/supabase";
 import { trpcQuery } from "@/lib/trpc";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { track } from "@/lib/analytics";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS, DS_BORDERS } from "@/lib/design-system";
+import { GRIITWordmark } from "@/src/components/ui";
 
 const HAS_LAUNCHED_KEY = "griit_has_launched";
 const TOTAL_STEPS = 4;
@@ -211,9 +212,9 @@ export default function WelcomeScreen() {
   const passwordInvalid = password.length > 0 && password.length < 8;
 
   const getInputBorderColor = (field: keyof typeof touched, isValid: boolean) => {
-    if (touched[field] && !isValid) return GRIIT_COLORS.errorRed;
-    if (focusedField === field) return GRIIT_COLORS.primaryAccent;
-    return GRIIT_COLORS.borderLight;
+    if (touched[field] && !isValid) return DS_COLORS.danger;
+    if (focusedField === field) return DS_COLORS.accent;
+    return DS_COLORS.border;
   };
 
   const progressDots = (
@@ -235,8 +236,7 @@ export default function WelcomeScreen() {
           <Text style={s.skipText}>Skip</Text>
         </TouchableOpacity>
         <View style={s.step1Center}>
-          <Text style={s.logo} allowFontScaling={false}>G R I I T</Text>
-          <Text style={s.heroTitle}>Build discipline that lasts.</Text>
+          <GRIITWordmark subtitle="Build discipline that lasts." compact />
           <Text style={s.heroSubtitle}>
             Commit to daily challenges. Prove yourself through action.
           </Text>
@@ -255,7 +255,7 @@ export default function WelcomeScreen() {
     return (
       <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
         <TouchableOpacity style={s.backBtn} onPress={goBack}>
-          <ChevronLeft size={24} color={GRIIT_COLORS.textPrimary} />
+          <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={s.stepTitle}>What do you want to build?</Text>
         <Text style={s.stepSubtitle}>Pick as many as you like</Text>
@@ -275,7 +275,7 @@ export default function WelcomeScreen() {
               >
                 {selected && (
                   <View style={s.checkBadge}>
-                    <Check size={14} color={GRIIT_COLORS.primaryAccent} />
+                    <Check size={14} color={DS_COLORS.accent} />
                   </View>
                 )}
                 <Text style={s.goalEmoji}>{g.emoji}</Text>
@@ -301,7 +301,7 @@ export default function WelcomeScreen() {
     return (
       <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
         <TouchableOpacity style={s.backBtn} onPress={goBack}>
-          <ChevronLeft size={24} color={GRIIT_COLORS.textPrimary} />
+          <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={s.stepTitle}>How disciplined are you right now?</Text>
         <Text style={s.stepSubtitle}>Be honest — there&apos;s no wrong answer</Text>
@@ -347,7 +347,7 @@ export default function WelcomeScreen() {
   return (
     <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
       <TouchableOpacity style={s.backBtn} onPress={goBack}>
-        <ChevronLeft size={24} color={GRIIT_COLORS.textPrimary} />
+        <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
       </TouchableOpacity>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -365,7 +365,7 @@ export default function WelcomeScreen() {
           <TextInput
             style={[s.input, { borderColor: getInputBorderColor("displayName", !displayNameInvalid) }]}
             placeholder="What should we call you?"
-            placeholderTextColor={GRIIT_COLORS.textMuted}
+            placeholderTextColor={DS_COLORS.inputPlaceholder}
             value={displayName}
             onChangeText={setDisplayName}
             onFocus={() => setFocusedField("displayName")}
@@ -380,7 +380,7 @@ export default function WelcomeScreen() {
           <TextInput
             style={[s.input, { borderColor: getInputBorderColor("username", !usernameInvalid && usernameStatus !== "taken") }]}
             placeholder="@username"
-            placeholderTextColor={GRIIT_COLORS.textMuted}
+            placeholderTextColor={DS_COLORS.inputPlaceholder}
             value={username}
             onChangeText={(t) => setUsername(t.replace(/^@+/, ""))}
             onFocus={() => setFocusedField("username")}
@@ -389,7 +389,7 @@ export default function WelcomeScreen() {
           />
           {username.length > 0 && (
             <View style={s.usernameHint}>
-              {usernameStatus === "checking" && <ActivityIndicator size="small" color={GRIIT_COLORS.textSecondary} />}
+              {usernameStatus === "checking" && <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />}
               {usernameStatus === "available" && <Text style={s.availableText}>✓ Available</Text>}
               {usernameStatus === "taken" && <Text style={s.takenText}>✗ Username taken</Text>}
             </View>
@@ -399,7 +399,7 @@ export default function WelcomeScreen() {
           <TextInput
             style={[s.input, { borderColor: getInputBorderColor("email", !emailInvalid) }]}
             placeholder="you@example.com"
-            placeholderTextColor={GRIIT_COLORS.textMuted}
+            placeholderTextColor={DS_COLORS.inputPlaceholder}
             value={email}
             onChangeText={setEmail}
             onFocus={() => setFocusedField("email")}
@@ -415,7 +415,7 @@ export default function WelcomeScreen() {
             <TextInput
               style={s.passwordInput}
               placeholder="At least 8 characters"
-              placeholderTextColor={GRIIT_COLORS.textMuted}
+              placeholderTextColor={DS_COLORS.inputPlaceholder}
               value={password}
               onChangeText={setPassword}
               onFocus={() => setFocusedField("password")}
@@ -425,14 +425,14 @@ export default function WelcomeScreen() {
               editable={!loading}
             />
             <TouchableOpacity onPress={() => setShowPassword((p) => !p)} hitSlop={12}>
-              {showPassword ? <EyeOff size={22} color={GRIIT_COLORS.textSecondary} /> : <Eye size={22} color={GRIIT_COLORS.textSecondary} />}
+              {showPassword ? <EyeOff size={22} color={DS_COLORS.textSecondary} /> : <Eye size={22} color={DS_COLORS.textSecondary} />}
             </TouchableOpacity>
           </View>
           {password.length > 0 && (
             <View style={s.strengthRow}>
-              <View style={[s.strengthBar, strength !== "weak" && s.strengthInactive, { backgroundColor: GRIIT_COLORS.errorRed }]} />
-              <View style={[s.strengthBar, strength === "weak" && s.strengthInactive, { backgroundColor: GRIIT_COLORS.warningAmber }]} />
-              <View style={[s.strengthBar, strength !== "strong" && s.strengthInactive, { backgroundColor: GRIIT_COLORS.secondaryGreen }]} />
+              <View style={[s.strengthBar, strength !== "weak" && s.strengthInactive, { backgroundColor: DS_COLORS.danger }]} />
+              <View style={[s.strengthBar, strength === "weak" && s.strengthInactive, { backgroundColor: DS_COLORS.warning }]} />
+              <View style={[s.strengthBar, strength !== "strong" && s.strengthInactive, { backgroundColor: DS_COLORS.success }]} />
               <Text style={s.strengthLabel}>{strength === "weak" ? "Weak" : strength === "medium" ? "Medium" : "Strong"}</Text>
             </View>
           )}
@@ -443,7 +443,7 @@ export default function WelcomeScreen() {
             disabled={!canSubmit}
             activeOpacity={0.85}
           >
-            {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.primaryBtnText}>Create Account</Text>}
+            {loading ? <ActivityIndicator color={DS_COLORS.white} size="small" /> : <Text style={s.primaryBtnText}>Create Account</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={s.footer} onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)} disabled={loading}>
@@ -460,182 +460,168 @@ export default function WelcomeScreen() {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: GRIIT_COLORS.background,
+    backgroundColor: DS_COLORS.background,
   },
   keyboardView: { flex: 1 },
-  skipBtn: { position: "absolute", top: 16, right: 20, zIndex: 1 },
-  skipText: { fontSize: 14, color: GRIIT_COLORS.textSecondary },
-  backBtn: { position: "absolute", top: 16, left: 16, zIndex: 1 },
+  skipBtn: { position: "absolute", top: DS_SPACING.lg, right: DS_SPACING.xl, zIndex: 1 },
+  skipText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
+  backBtn: { position: "absolute", top: DS_SPACING.lg, left: DS_SPACING.lg, zIndex: 1 },
   progressRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 16,
+    gap: DS_SPACING.sm,
+    paddingVertical: DS_SPACING.lg,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: GRIIT_COLORS.borderLight,
+    backgroundColor: DS_COLORS.border,
   },
-  dotActive: { backgroundColor: GRIIT_COLORS.primaryAccent },
-  progressText: { fontSize: 12, color: GRIIT_COLORS.textMuted },
+  dotActive: { backgroundColor: DS_COLORS.accent },
+  progressText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.textMuted },
   step1Center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: DS_SPACING.xxxl,
   },
-  step1Bottom: { paddingHorizontal: 20, paddingBottom: 24 },
-  logo: {
-    fontSize: 40,
-    fontWeight: "bold",
-    letterSpacing: 8,
-    color: GRIIT_COLORS.textPrimary,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: GRIIT_COLORS.textPrimary,
-    textAlign: "center",
-    marginTop: 24,
-  },
+  step1Bottom: { paddingHorizontal: DS_SPACING.xl, paddingBottom: DS_SPACING.xxl },
   heroSubtitle: {
-    fontSize: 16,
-    color: GRIIT_COLORS.textSecondary,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
-    marginTop: 12,
+    marginTop: DS_SPACING.md,
     maxWidth: 280,
   },
   primaryBtn: {
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    borderRadius: GRIIT_RADII.buttonPill,
-    paddingVertical: 16,
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: DS_RADIUS.buttonPill,
+    paddingVertical: DS_SPACING.lg,
     alignItems: "center",
-    ...GRIIT_SHADOWS.button,
+    ...DS_SHADOWS.button,
   },
   primaryBtnText: {
-    color: GRIIT_COLORS.white,
-    fontSize: 17,
+    color: DS_COLORS.white,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700",
   },
   btnDisabled: { opacity: 0.4 },
   stepTitle: {
-    fontSize: 26,
+    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize - 2,
     fontWeight: "800",
-    color: GRIIT_COLORS.textPrimary,
-    marginTop: 48,
-    marginHorizontal: 20,
+    color: DS_COLORS.textPrimary,
+    marginTop: DS_SPACING.section,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
   },
   stepSubtitle: {
-    fontSize: 14,
-    color: GRIIT_COLORS.textSecondary,
-    marginHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 24,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    color: DS_COLORS.textSecondary,
+    marginHorizontal: DS_SPACING.screenHorizontalAlt,
+    marginTop: DS_SPACING.sm,
+    marginBottom: DS_SPACING.xxl,
   },
   scroll: { flex: 1 },
   goalsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 20,
-    gap: 14,
-    paddingBottom: 24,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
+    gap: DS_SPACING.lg,
+    paddingBottom: DS_SPACING.xxl,
   },
   goalCard: {
     width: "47%",
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.lg,
     alignItems: "center",
-    ...GRIIT_SHADOWS.card,
+    ...DS_SHADOWS.card,
   },
   goalCardSelected: {
-    backgroundColor: GRIIT_COLORS.primaryAccentLight,
-    borderWidth: 2,
-    borderColor: GRIIT_COLORS.primaryAccent,
+    backgroundColor: DS_COLORS.accentSoft,
+    borderWidth: DS_BORDERS.widthStrong,
+    borderColor: DS_COLORS.accent,
   },
   checkBadge: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: DS_SPACING.sm,
+    right: DS_SPACING.sm,
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: GRIIT_COLORS.primaryAccentLight,
+    backgroundColor: DS_COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
   },
-  goalEmoji: { fontSize: 28, marginBottom: 8 },
-  goalLabel: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.textPrimary },
-  disciplineList: { paddingHorizontal: 20, gap: 14, paddingBottom: 24 },
+  goalEmoji: { fontSize: 28, marginBottom: DS_SPACING.sm },
+  goalLabel: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.textPrimary },
+  disciplineList: { paddingHorizontal: DS_SPACING.screenHorizontalAlt, gap: DS_SPACING.lg, paddingBottom: DS_SPACING.xxl },
   disciplineRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: GRIIT_COLORS.cardBackground,
-    borderRadius: 16,
-    padding: 18,
-    ...GRIIT_SHADOWS.card,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.xl,
+    ...DS_SHADOWS.card,
   },
   disciplineRowSelected: {
-    backgroundColor: GRIIT_COLORS.primaryAccentLight,
+    backgroundColor: DS_COLORS.accentSoft,
     borderLeftWidth: 4,
-    borderLeftColor: GRIIT_COLORS.primaryAccent,
+    borderLeftColor: DS_COLORS.accent,
   },
   disciplineIconWrap: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: GRIIT_COLORS.primaryAccentLight,
+    backgroundColor: DS_COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
+    marginRight: DS_SPACING.lg,
   },
   disciplineEmoji: { fontSize: 22 },
   disciplineTextWrap: { flex: 1 },
-  disciplineLabel: { fontSize: 16, fontWeight: "600", color: GRIIT_COLORS.textPrimary },
-  disciplineSubtitle: { fontSize: 13, color: GRIIT_COLORS.textSecondary, marginTop: 2 },
+  disciplineLabel: { fontSize: DS_TYPOGRAPHY.body.fontSize, fontWeight: "600", color: DS_COLORS.textPrimary },
+  disciplineSubtitle: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textSecondary, marginTop: 2 },
   formScroll: {
-    paddingHorizontal: 20,
+    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
     paddingTop: 56,
-    paddingBottom: 40,
+    paddingBottom: DS_SPACING.section,
   },
-  label: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.textPrimary, marginBottom: 8, marginTop: 16 },
+  label: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.textPrimary, marginBottom: DS_SPACING.sm, marginTop: DS_SPACING.lg },
   input: {
-    backgroundColor: GRIIT_COLORS.cardBackground,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
-    borderRadius: GRIIT_RADII.input,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: GRIIT_COLORS.textPrimary,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: DS_SPACING.xl,
+    paddingVertical: DS_SPACING.lg,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    color: DS_COLORS.textPrimary,
   },
-  usernameHint: { flexDirection: "row", alignItems: "center", marginTop: 6, marginBottom: 4 },
-  availableText: { fontSize: 12, color: GRIIT_COLORS.secondaryGreen, fontWeight: "500" },
-  takenText: { fontSize: 12, color: GRIIT_COLORS.errorRed, fontWeight: "500" },
+  usernameHint: { flexDirection: "row", alignItems: "center", marginTop: 6, marginBottom: DS_SPACING.xs },
+  availableText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.success, fontWeight: "500" },
+  takenText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.danger, fontWeight: "500" },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: GRIIT_COLORS.cardBackground,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
-    borderRadius: GRIIT_RADII.input,
-    paddingHorizontal: 18,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: DS_SPACING.xl,
     marginTop: 0,
   },
   passwordInput: {
     flex: 1,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: GRIIT_COLORS.textPrimary,
+    paddingVertical: DS_SPACING.lg,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    color: DS_COLORS.textPrimary,
   },
-  strengthRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8, marginBottom: 8 },
+  strengthRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: DS_SPACING.sm, marginBottom: DS_SPACING.sm },
   strengthBar: { width: 48, height: 4, borderRadius: 2 },
   strengthInactive: { opacity: 0.25 },
-  strengthLabel: { fontSize: 12, color: GRIIT_COLORS.textSecondary, marginLeft: 4 },
-  inlineError: { fontSize: 12, color: GRIIT_COLORS.errorRed, marginTop: 4 },
-  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 20 },
-  footerText: { fontSize: 14, color: GRIIT_COLORS.textSecondary },
-  footerLink: { fontSize: 14, fontWeight: "700", color: GRIIT_COLORS.primaryAccent },
+  strengthLabel: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.textSecondary, marginLeft: DS_SPACING.xs },
+  inlineError: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.danger, marginTop: DS_SPACING.xs },
+  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: DS_SPACING.xl },
+  footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
+  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "700", color: DS_COLORS.accent },
 });

@@ -19,7 +19,15 @@ import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { trpcQuery } from "@/lib/trpc";
-import { GRIIT_COLORS, GRIIT_RADII, GRIIT_SHADOWS } from "@/src/theme";
+import {
+  DS_COLORS,
+  DS_SPACING,
+  DS_RADIUS,
+  DS_TYPOGRAPHY,
+  DS_BORDERS,
+  DS_SHADOWS,
+} from "@/lib/design-system";
+import { GRIITWordmark } from "@/src/components/ui";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
@@ -187,13 +195,13 @@ export default function SignupScreen() {
   const passwordInvalid = password.length > 0 && password.length < 8;
 
   const getInputBorderColor = (field: keyof typeof touched, isValid: boolean) => {
-    if (touched[field] && !isValid) return GRIIT_COLORS.errorRed;
-    if (focusedField === field) return GRIIT_COLORS.primaryAccent;
-    return GRIIT_COLORS.borderLight;
+    if (touched[field] && !isValid) return DS_COLORS.danger;
+    if (focusedField === field) return DS_COLORS.accent;
+    return DS_COLORS.border;
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -204,24 +212,21 @@ export default function SignupScreen() {
           keyboardDismissMode="on-drag"
         >
           <View style={styles.logoArea}>
-            <Text style={styles.logo} allowFontScaling={false}>
-              G R I I T
-            </Text>
-            <Text style={styles.tagline}>Build Discipline Daily</Text>
+            <GRIITWordmark subtitle="Build Discipline Daily" compact />
           </View>
 
           <Text style={styles.formTitle}>Create your account</Text>
 
           <View style={styles.form}>
-            <Text style={[styles.label, { color: GRIIT_COLORS.textPrimary }]}>Display Name</Text>
+            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Display Name</Text>
             <TextInput
               ref={displayNameRef}
               style={[
                 styles.input,
-                { borderColor: getInputBorderColor("displayName", !displayNameInvalid), backgroundColor: GRIIT_COLORS.cardBackground, color: GRIIT_COLORS.textPrimary },
+                { borderColor: getInputBorderColor("displayName", !displayNameInvalid), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary },
               ]}
               placeholder="What should we call you?"
-              placeholderTextColor={GRIIT_COLORS.textSecondary}
+              placeholderTextColor={DS_COLORS.textSecondary}
               value={displayName}
               onChangeText={setDisplayName}
               onFocus={() => setFocusedField("displayName")}
@@ -236,15 +241,15 @@ export default function SignupScreen() {
               <Text style={styles.inlineError}>Name must be at least 2 characters</Text>
             )}
 
-            <Text style={[styles.label, { color: GRIIT_COLORS.textPrimary }]}>Username</Text>
+            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Username</Text>
             <TextInput
               ref={usernameRef}
               style={[
                 styles.input,
-                { borderColor: getInputBorderColor("username", !usernameInvalid && usernameStatus !== "taken"), backgroundColor: GRIIT_COLORS.cardBackground, color: GRIIT_COLORS.textPrimary },
+                { borderColor: getInputBorderColor("username", !usernameInvalid && usernameStatus !== "taken"), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary },
               ]}
               placeholder="@username"
-              placeholderTextColor={GRIIT_COLORS.textSecondary}
+              placeholderTextColor={DS_COLORS.textSecondary}
               value={username}
               onChangeText={handleUsernameChange}
               onFocus={() => setFocusedField("username")}
@@ -258,7 +263,7 @@ export default function SignupScreen() {
             {username.length > 0 && (
               <View style={styles.usernameHint}>
                 {usernameStatus === "checking" && (
-                  <ActivityIndicator size="small" color={GRIIT_COLORS.textSecondary} />
+                  <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
                 )}
                 {usernameStatus === "available" && (
                   <Text style={styles.availableText}>✓ Available</Text>
@@ -275,12 +280,12 @@ export default function SignupScreen() {
               <Text style={styles.inlineError}>Only lowercase letters, numbers, underscores, and periods</Text>
             )}
 
-            <Text style={[styles.label, { color: GRIIT_COLORS.textPrimary }]}>Email</Text>
+            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Email</Text>
             <TextInput
               ref={emailRef}
-              style={[styles.input, { borderColor: getInputBorderColor("email", !emailInvalid), backgroundColor: GRIIT_COLORS.cardBackground, color: GRIIT_COLORS.textPrimary }]}
+              style={[styles.input, { borderColor: getInputBorderColor("email", !emailInvalid), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary }]}
               placeholder="you@example.com"
-              placeholderTextColor={GRIIT_COLORS.textSecondary}
+              placeholderTextColor={DS_COLORS.textSecondary}
               value={email}
               onChangeText={setEmail}
               onFocus={() => setFocusedField("email")}
@@ -296,13 +301,13 @@ export default function SignupScreen() {
               <Text style={styles.inlineError}>Enter a valid email address</Text>
             )}
 
-            <Text style={[styles.label, { color: GRIIT_COLORS.textPrimary }]}>Password</Text>
-            <View style={[styles.passwordRow, { borderColor: getInputBorderColor("password", !passwordInvalid), backgroundColor: GRIIT_COLORS.cardBackground }]}>
+            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Password</Text>
+            <View style={[styles.passwordRow, { borderColor: getInputBorderColor("password", !passwordInvalid), backgroundColor: DS_COLORS.surface }]}>
               <TextInput
                 ref={passwordRef}
-                style={[styles.passwordInput, { color: GRIIT_COLORS.textPrimary }]}
+                style={[styles.passwordInput, { color: DS_COLORS.textPrimary }]}
                 placeholder="At least 8 characters"
-                placeholderTextColor={GRIIT_COLORS.textSecondary}
+                placeholderTextColor={DS_COLORS.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 onFocus={() => setFocusedField("password")}
@@ -318,9 +323,9 @@ export default function SignupScreen() {
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
                 {showPassword ? (
-                  <EyeOff size={22} color={GRIIT_COLORS.textSecondary} />
+                  <EyeOff size={22} color={DS_COLORS.textSecondary} />
                 ) : (
-                  <Eye size={22} color={GRIIT_COLORS.textSecondary} />
+                  <Eye size={22} color={DS_COLORS.textSecondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -348,7 +353,7 @@ export default function SignupScreen() {
                     strength !== "strong" && styles.strengthBarInactive,
                   ]}
                 />
-                <Text style={[styles.strengthLabel, { color: GRIIT_COLORS.textSecondary }]}>
+                <Text style={[styles.strengthLabel, { color: DS_COLORS.textSecondary }]}>
                   {strength === "weak" && "Weak"}
                   {strength === "medium" && "Medium"}
                   {strength === "strong" && "Strong"}
@@ -398,66 +403,54 @@ const styles = StyleSheet.create({
   keyboardView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+    paddingTop: DS_SPACING.xxl,
+    paddingBottom: DS_SPACING.section,
   },
-  logoArea: { alignItems: "center", marginBottom: 32 },
-  logo: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: GRIIT_COLORS.textPrimary,
-    letterSpacing: 8,
-    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
-  },
-  tagline: {
-    fontSize: 14,
-    color: GRIIT_COLORS.textSecondary,
-    marginTop: 4,
-  },
+  logoArea: { alignItems: "center", marginBottom: DS_SPACING.xxxl },
   formTitle: {
-    fontSize: 28,
+    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
     fontWeight: "800",
-    color: GRIIT_COLORS.textPrimary,
-    marginTop: 32,
-    marginBottom: 24,
+    color: DS_COLORS.textPrimary,
+    marginTop: DS_SPACING.xxxl,
+    marginBottom: DS_SPACING.xxl,
   },
   form: { width: "100%" },
   label: {
-    fontSize: 14,
+    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: DS_SPACING.sm,
   },
   input: {
-    borderWidth: 1.5,
-    borderRadius: GRIIT_RADII.input,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: GRIIT_COLORS.textPrimary,
-    marginBottom: 16,
+    borderWidth: DS_BORDERS.width,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: DS_SPACING.xl,
+    paddingVertical: DS_SPACING.lg,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.lg,
   },
-  usernameHint: { flexDirection: "row", alignItems: "center", marginTop: -8, marginBottom: 8 },
-  availableText: { fontSize: 12, color: GRIIT_COLORS.secondaryGreen, fontWeight: "500" },
-  takenText: { fontSize: 12, color: GRIIT_COLORS.errorRed, fontWeight: "500" },
+  usernameHint: { flexDirection: "row", alignItems: "center", marginTop: -DS_SPACING.sm, marginBottom: DS_SPACING.sm },
+  availableText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.success, fontWeight: "500" },
+  takenText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.danger, fontWeight: "500" },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1.5,
-    borderRadius: GRIIT_RADII.input,
-    paddingHorizontal: 18,
-    marginBottom: 8,
+    borderWidth: DS_BORDERS.width,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: DS_SPACING.xl,
+    marginBottom: DS_SPACING.sm,
   },
   passwordInput: {
     flex: 1,
-    paddingVertical: 16,
-    fontSize: 16,
+    paddingVertical: DS_SPACING.lg,
+    fontSize: DS_TYPOGRAPHY.body.fontSize,
   },
   strengthRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginBottom: 16,
+    marginBottom: DS_SPACING.lg,
   },
   strengthBar: {
     width: 48,
@@ -465,43 +458,43 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   strengthBarInactive: { opacity: 0.25 },
-  strengthWeak: { backgroundColor: GRIIT_COLORS.errorRed },
-  strengthMedium: { backgroundColor: GRIIT_COLORS.warningAmber },
-  strengthStrong: { backgroundColor: GRIIT_COLORS.secondaryGreen },
-  strengthLabel: { fontSize: 12, marginLeft: 4 },
+  strengthWeak: { backgroundColor: DS_COLORS.danger },
+  strengthMedium: { backgroundColor: DS_COLORS.warning },
+  strengthStrong: { backgroundColor: DS_COLORS.success },
+  strengthLabel: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, marginLeft: DS_SPACING.xs },
   inlineError: {
-    fontSize: 12,
-    color: GRIIT_COLORS.errorRed,
-    marginTop: 4,
-    marginLeft: 4,
-    marginBottom: 4,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    color: DS_COLORS.danger,
+    marginTop: DS_SPACING.xs,
+    marginLeft: DS_SPACING.xs,
+    marginBottom: DS_SPACING.xs,
   },
   button: {
-    backgroundColor: GRIIT_COLORS.primaryAccent,
-    borderRadius: GRIIT_RADII.buttonPill,
-    paddingVertical: 16,
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: DS_RADIUS.buttonPill,
+    paddingVertical: DS_SPACING.lg,
     alignItems: "center",
-    marginTop: 8,
-    ...GRIIT_SHADOWS.button,
+    marginTop: DS_SPACING.sm,
+    ...DS_SHADOWS.button,
   },
-  buttonDisabled: { opacity: 0.4 },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: {
-    fontSize: 17,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: "700",
-    color: GRIIT_COLORS.white,
+    color: DS_COLORS.white,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 16,
+    marginTop: DS_SPACING.lg,
   },
-  footerText: { fontSize: 14, color: GRIIT_COLORS.textSecondary },
-  footerLink: { fontSize: 14, fontWeight: "600", color: GRIIT_COLORS.primaryAccent },
+  footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
+  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
   termsText: {
-    fontSize: 12,
-    color: GRIIT_COLORS.textSecondary,
+    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
-    marginTop: 24,
+    marginTop: DS_SPACING.xxl,
   },
 });

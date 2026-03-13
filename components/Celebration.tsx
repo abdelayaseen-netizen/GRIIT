@@ -106,7 +106,7 @@ export default function Celebration({ visible, onComplete, titleText, streakCoun
   }, []);
 
   const animateConfetti = useCallback((pieces: ConfettiPiece[]) => {
-    const animations = pieces.map((piece, index) => {
+    const animations = pieces.map((piece, _index) => {
       const startX = SCREEN_WIDTH / 2 + (Math.random() - 0.5) * 100;
       const targetX = startX + (Math.random() - 0.5) * SCREEN_WIDTH * 1.5;
       const targetY = SCREEN_HEIGHT + 50;

@@ -31,7 +31,6 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ThemeColors } from "@/lib/theme-palettes";
 import { supabase } from "@/lib/supabase";
-import Colors from "@/constants/colors";
 import { Skeleton } from "@/components/SkeletonLoader";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -51,9 +50,10 @@ import {
 import type { AchievementItem } from "@/components/profile";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { formatMonthYearLong } from "@/lib/date-format";
+import { ACHIEVEMENT_DEFINITIONS } from "@/lib/achievements";
 import { ROUTES } from "@/lib/routes";
-import { GRIIT_COLORS } from "@/src/theme";
 import type { StatsFromApi } from "@/types";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 
 type StravaActivity = {
@@ -361,20 +361,34 @@ export default function ProfileScreen() {
     return formatMonthYearLong(profile.created_at);
   }, [profile?.created_at]);
 
+  const achievementsQuery = useQuery({
+    queryKey: ["achievements", "getForUser", user?.id],
+    queryFn: () => trpcQuery(TRPC.achievements.getForUser) as Promise<{ achievement_key: string; unlocked_at: string }[]>,
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+  });
+  const unlockedMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (achievementsQuery.data ?? []).forEach((r) => map.set(r.achievement_key, r.unlocked_at));
+    return map;
+  }, [achievementsQuery.data]);
+
   const achievements: AchievementItem[] = useMemo(() => {
-    const list: AchievementItem[] = [
-      { id: "first_streak", title: "First Streak", description: "Secure 1 day in a row", category: "consistency", unlocked: bestStreak > 0, unlockDate: bestStreak > 0 ? new Date().toISOString() : null },
-      { id: "week_consistent", title: "7-Day Consistent", description: "7-day streak", category: "consistency", unlocked: bestStreak >= 7, unlockDate: null },
-      { id: "month_strong", title: "30-Day Strong", description: "30-day streak", category: "consistency", unlocked: bestStreak >= 30, unlockDate: null },
-      { id: "75_legend", title: "75-Day Legend", description: "75-day streak", category: "consistency", unlocked: bestStreak >= 75, unlockDate: null },
-      { id: "challenge_done", title: "Challenge Done", description: "Complete a challenge", category: "challenge", unlocked: completedChallengesCount > 0, unlockDate: null },
-      { id: "multi_challenge", title: "Multi-Challenge", description: "Complete 3 challenges", category: "challenge", unlocked: completedChallengesCount >= 3, unlockDate: null },
+    const fromApi: AchievementItem[] = ACHIEVEMENT_DEFINITIONS.map((def) => ({
+      id: def.key,
+      title: def.title,
+      description: def.description,
+      category: def.category,
+      unlocked: unlockedMap.has(def.key),
+      unlockDate: unlockedMap.get(def.key) ?? null,
+    }));
+    const tierBadges: AchievementItem[] = [
       { id: "starter_tier", title: "Starter", description: "Begin your journey", category: "discipline", unlocked: totalDaysSecured >= 0, unlockDate: null },
       { id: "builder_tier", title: "Builder", description: "7+ days secured", category: "discipline", unlocked: totalDaysSecured >= 7, unlockDate: null },
       { id: "elite_tier", title: "Elite", description: "90+ days secured", category: "discipline", unlocked: totalDaysSecured >= 90, unlockDate: null },
     ];
-    return list;
-  }, [completedChallengesCount, bestStreak, totalDaysSecured]);
+    return [...fromApi, ...tierBadges];
+  }, [unlockedMap, totalDaysSecured]);
 
   if (isGuest) {
     return (
@@ -464,7 +478,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="profile-signout-button"
             >
-              <Text style={[styles.signOutLinkText, { color: GRIIT_COLORS.primaryAccent }]}>Sign Out</Text>
+              <Text style={[styles.signOutLinkText, { color: DS_COLORS.accent }]}>Sign Out</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -549,7 +563,7 @@ export default function ProfileScreen() {
           periodLabel="30 days"
         />
 
-        <AchievementsSection achievements={achievements} loading={dashboardDataLoading} />
+        <AchievementsSection achievements={achievements} loading={dashboardDataLoading || achievementsQuery.isLoading} />
 
         <CompletedChallengesSection challenges={completedChallengesList} loading={dashboardDataLoading} />
 
@@ -644,7 +658,7 @@ export default function ProfileScreen() {
             accessibilityLabel="Sign out of your account"
             accessibilityRole="button"
           >
-            <Text style={[styles.signOutText, { color: GRIIT_COLORS.primaryAccent }]}>↪ Sign Out</Text>
+            <Text style={[styles.signOutText, { color: DS_COLORS.accent }]}>↪ Sign Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -719,11 +733,11 @@ const skeletonStyles = StyleSheet.create({
   },
   statItem: {
     flex: 1,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
   },
   cards: {
     flexDirection: "row",
@@ -736,55 +750,52 @@ const skeletonStyles = StyleSheet.create({
 
 function createProfileStyles(c: ThemeColors) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: c.background,
-    },
+    container: { flex: 1, backgroundColor: c.background },
     scroll: { flex: 1 },
-    scrollContent: { paddingBottom: 40 },
+    scrollContent: { paddingBottom: DS_SPACING.section },
     guestIdentityCard: {
       backgroundColor: c.card,
-      borderRadius: 16,
-      padding: 28,
-      marginHorizontal: 20,
-      marginTop: 24,
+      borderRadius: DS_RADIUS.cardAlt,
+      padding: DS_SPACING.xxl,
+      marginHorizontal: DS_SPACING.screenHorizontal,
+      marginTop: DS_SPACING.xxl,
       alignItems: "center",
-      borderWidth: 1,
+      borderWidth: DS_BORDERS.width,
       borderColor: c.border,
     },
     guestIdentityTitle: {
-      fontSize: 20,
+      fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
       fontWeight: "700" as const,
       color: c.text.primary,
-      marginBottom: 8,
+      marginBottom: DS_SPACING.sm,
       textAlign: "center",
     },
     guestIdentitySub: {
-      fontSize: 14,
+      fontSize: DS_TYPOGRAPHY.secondary.fontSize,
       color: c.text.secondary,
       textAlign: "center",
-      marginBottom: 20,
+      marginBottom: DS_SPACING.xl,
     },
     guestIdentityCta: {
       backgroundColor: c.accent,
-      paddingVertical: 14,
-      paddingHorizontal: 24,
-      borderRadius: 12,
+      paddingVertical: DS_SPACING.lg,
+      paddingHorizontal: DS_SPACING.xxl,
+      borderRadius: DS_RADIUS.button,
     },
-    guestIdentityCtaText: { fontSize: 16, fontWeight: "700" as const, color: "#fff" },
+    guestIdentityCtaText: { fontSize: DS_TYPOGRAPHY.buttonSmall.fontSize, fontWeight: "700" as const, color: DS_COLORS.white },
     errorScrollContent: {
       flexGrow: 1,
       justifyContent: "center",
-      paddingHorizontal: 24,
+      paddingHorizontal: DS_SPACING.xxl,
       paddingBottom: 60,
     },
     errorCard: {
       alignItems: "center",
       backgroundColor: c.card,
-      borderRadius: 20,
-      paddingVertical: 36,
-      paddingHorizontal: 28,
-      borderWidth: 1,
+      borderRadius: DS_RADIUS.cardAlt,
+      paddingVertical: DS_SPACING.xxxl,
+      paddingHorizontal: DS_SPACING.xxl,
+      borderWidth: DS_BORDERS.width,
       borderColor: c.border,
     },
     errorIconWrap: {
@@ -794,146 +805,121 @@ function createProfileStyles(c: ThemeColors) {
       backgroundColor: c.pill,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 18,
+      marginBottom: DS_SPACING.lg,
     },
     errorTitle: {
-      fontSize: 17,
+      fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
       fontWeight: "700" as const,
       color: c.text.primary,
       textAlign: "center" as const,
-      marginBottom: 6,
+      marginBottom: DS_SPACING.sm,
     },
     errorSubtitle: {
-      fontSize: 14,
+      fontSize: DS_TYPOGRAPHY.secondary.fontSize,
       color: c.text.secondary,
       textAlign: "center" as const,
-      marginBottom: 24,
-      lineHeight: 20,
+      marginBottom: DS_SPACING.xxl,
+      lineHeight: 22,
     },
     retryButton: {
       backgroundColor: c.accent,
-      paddingHorizontal: 32,
-      paddingVertical: 12,
-      borderRadius: 12,
-      marginBottom: 16,
+      paddingHorizontal: DS_SPACING.xxxl,
+      paddingVertical: DS_SPACING.md,
+      borderRadius: DS_RADIUS.button,
+      marginBottom: DS_SPACING.lg,
     },
-    retryButtonText: { fontSize: 15, fontWeight: "700" as const, color: "#fff" },
-    signOutLink: { paddingVertical: 8 },
-    signOutLinkText: {
-      fontSize: 13,
-      fontWeight: "500" as const,
-      color: c.text.tertiary,
-      textDecorationLine: "underline" as const,
-    },
-    menuEditLabel: {
-      fontSize: 13,
-      fontWeight: "600" as const,
-      color: c.text.secondary,
-    },
-    integrationsSection: { paddingHorizontal: 16, paddingTop: 20 },
+    retryButtonText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "700" as const, color: DS_COLORS.white },
+    signOutLink: { paddingVertical: DS_SPACING.sm },
+    signOutLinkText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "500" as const, color: c.text.tertiary, textDecorationLine: "underline" as const },
+    menuEditLabel: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: c.text.secondary },
+    integrationsSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.xl },
     integrationsTitle: {
-      fontSize: 13,
+      fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
       fontWeight: "600" as const,
       color: c.text.secondary,
-      marginBottom: 8,
+      marginBottom: DS_SPACING.sm,
       textTransform: "uppercase" as const,
     },
     integrationsCard: {
       backgroundColor: c.card,
-      borderRadius: 14,
-      borderWidth: 1,
+      borderRadius: DS_RADIUS.cardAlt,
+      borderWidth: DS_BORDERS.width,
       borderColor: c.border,
-      padding: 14,
+      padding: DS_SPACING.cardPadding,
     },
-    integrationsRow: {
-      flexDirection: "row" as const,
-      alignItems: "center" as const,
-      gap: 12,
-    },
+    integrationsRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: DS_SPACING.md },
     integrationsIconWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 10,
-      backgroundColor: "rgba(252, 76, 2, 0.12)",
+      width: 44,
+      height: 44,
+      borderRadius: DS_RADIUS.iconButton,
+      backgroundColor: DS_COLORS.accentSoft,
       alignItems: "center" as const,
       justifyContent: "center" as const,
     },
     integrationsTextWrap: { flex: 1 },
-    integrationsName: {
-      fontSize: 15,
-      fontWeight: "600" as const,
-      color: c.text.primary,
-    },
-    integrationsSub: { fontSize: 12, color: c.text.muted, marginTop: 2 },
+    integrationsName: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const, color: c.text.primary },
+    integrationsSub: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.muted, marginTop: 2 },
     integrationsConnectBtn: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
-      gap: 6,
+      gap: DS_SPACING.sm,
       backgroundColor: "#FC4C02",
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-      borderRadius: 10,
+      paddingVertical: DS_SPACING.sm,
+      paddingHorizontal: DS_SPACING.lg,
+      borderRadius: DS_RADIUS.input,
     },
     integrationsConnectBtnDisabled: { opacity: 0.7 },
-    integrationsConnectText: { fontSize: 13, fontWeight: "600" as const, color: "#fff" },
-    integrationsDisconnectBtn: { paddingVertical: 8, paddingHorizontal: 12 },
-    integrationsDisconnectText: { fontSize: 13, fontWeight: "600" as const, color: "#B91C1C" },
+    integrationsConnectText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: DS_COLORS.white },
+    integrationsDisconnectBtn: { paddingVertical: DS_SPACING.sm, paddingHorizontal: DS_SPACING.md },
+    integrationsDisconnectText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: DS_COLORS.danger },
     integrationsActivitiesToggle: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
       justifyContent: "space-between",
-      marginTop: 12,
-      paddingTop: 12,
+      marginTop: DS_SPACING.md,
+      paddingTop: DS_SPACING.md,
       borderTopWidth: 1,
       borderTopColor: c.border,
     },
-    integrationsActivitiesToggleText: { fontSize: 13, color: c.text.secondary },
-    integrationsActivitiesList: { marginTop: 8, gap: 8 },
+    integrationsActivitiesToggleText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.secondary },
+    integrationsActivitiesList: { marginTop: DS_SPACING.sm, gap: DS_SPACING.sm },
     integrationsActivityRow: {
       flexDirection: "row" as const,
       justifyContent: "space-between",
       alignItems: "center",
-      paddingVertical: 6,
-      paddingHorizontal: 10,
+      paddingVertical: DS_SPACING.sm,
+      paddingHorizontal: DS_SPACING.md,
       backgroundColor: c.pill,
-      borderRadius: 8,
+      borderRadius: DS_RADIUS.input,
     },
-    integrationsActivityName: {
-      fontSize: 13,
-      color: c.text.primary,
-      flex: 1,
-    },
-    integrationsActivityMeta: { fontSize: 12, color: c.text.muted, marginLeft: 8 },
-    integrationsActivitiesEmpty: { fontSize: 13, color: c.text.muted, marginTop: 8 },
-    menuSection: { paddingHorizontal: 16, paddingTop: 16 },
+    integrationsActivityName: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.primary, flex: 1 },
+    integrationsActivityMeta: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: c.text.muted, marginLeft: DS_SPACING.sm },
+    integrationsActivitiesEmpty: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.muted, marginTop: DS_SPACING.sm },
+    menuSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.lg },
     menuItem: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
-      gap: 12,
+      gap: DS_SPACING.md,
       backgroundColor: c.card,
-      padding: 14,
-      borderRadius: 14,
-      borderWidth: 1,
+      padding: DS_SPACING.cardPadding,
+      borderRadius: DS_RADIUS.cardAlt,
+      borderWidth: DS_BORDERS.width,
       borderColor: c.border,
     },
     menuIconWrap: {
-      width: 34,
-      height: 34,
-      borderRadius: 10,
+      width: 40,
+      height: 40,
+      borderRadius: DS_RADIUS.iconButton,
       backgroundColor: c.pill,
       alignItems: "center" as const,
       justifyContent: "center" as const,
     },
     menuTextWrap: { flex: 1 },
-    menuText: {
-      fontSize: 15,
-      fontWeight: "600" as const,
-      color: c.text.primary,
-    },
-    menuSubtext: { fontSize: 11, color: c.text.muted, marginTop: 1 },
-    dangerSection: { paddingHorizontal: 16, paddingTop: 24, marginTop: 8, alignItems: "center" as const },
-    signOutButton: { paddingVertical: 10, paddingHorizontal: 20 },
-    signOutText: { fontSize: 16, fontWeight: "600" as const },
-    bottomSpacer: { height: 20 },
+    menuText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const, color: c.text.primary },
+    menuSubtext: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: c.text.muted, marginTop: 2 },
+    dangerSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.xxl, marginTop: DS_SPACING.sm, alignItems: "center" as const },
+    signOutButton: { paddingVertical: DS_SPACING.md, paddingHorizontal: DS_SPACING.xl },
+    signOutText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const },
+    bottomSpacer: { height: DS_SPACING.xl },
   });
 }

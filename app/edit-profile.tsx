@@ -18,7 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
-import Colors from '@/constants/colors';
+import { DS_COLORS } from '@/lib/design-system';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -82,7 +82,7 @@ export default function EditProfileScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn} activeOpacity={0.7}>
-          <X size={22} color={Colors.text.primary} />
+          <X size={22} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>Edit Profile</Text>
         <TouchableOpacity
@@ -121,7 +121,7 @@ export default function EditProfileScreen() {
                 value={displayName}
                 onChangeText={setDisplayName}
                 placeholder="Your display name"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 autoCapitalize="words"
                 editable={!isPending}
               />
@@ -134,7 +134,7 @@ export default function EditProfileScreen() {
                 value={bio}
                 onChangeText={setBio}
                 placeholder="Tell people about yourself..."
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -149,7 +149,7 @@ export default function EditProfileScreen() {
                 value={avatarUrl}
                 onChangeText={setAvatarUrl}
                 placeholder="https://example.com/photo.jpg"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={DS_COLORS.textMuted}
                 autoCapitalize="none"
                 keyboardType="url"
                 editable={!isPending}
@@ -165,7 +165,7 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
   },
   topBar: {
     flexDirection: 'row',
@@ -174,21 +174,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: DS_COLORS.border,
     backgroundColor: '#fff',
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.background,
+    backgroundColor: DS_COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topTitle: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   saveBtn: {
     backgroundColor: '#1A1A1A',
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: Colors.accent,
+    backgroundColor: DS_COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   usernameLabel: {
     fontSize: 15,
-    color: Colors.text.secondary,
+    color: DS_COLORS.textSecondary,
     fontWeight: '500' as const,
   },
   form: {
@@ -238,18 +238,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
   input: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: DS_COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: Colors.text.primary,
+    color: DS_COLORS.textPrimary,
   },
   textArea: {
     minHeight: 100,

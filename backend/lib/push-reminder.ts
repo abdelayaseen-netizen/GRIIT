@@ -63,8 +63,8 @@ export function shouldSendStreakAtRiskReminder(ctx: SecureReminderContext): bool
 
 /** Morning notification templates (variable reinforcement). */
 const MORNING_TEMPLATES: Array<{ title: string; body: (streak: number) => string }> = [
-  { title: "Day {streak} starts now", body: (s) => `Secure your day 💪` },
-  { title: "Your {streak}-day streak is waiting", body: (s) => `Let's go.` },
+  { title: "Day {streak} starts now", body: (_s) => `Secure your day 💪` },
+  { title: "Your {streak}-day streak is waiting", body: (_s) => `Let's go.` },
   { title: "Rise and grind", body: (s) => `Day ${s} won't secure itself.` },
   { title: "You've shown up {streak} days straight", body: (s) => `Make it ${s + 1}.` },
   { title: "The grind doesn't stop", body: (s) => `Secure Day ${s}.` },
@@ -78,11 +78,11 @@ const EVENING_TEMPLATES: Array<{ title: (streak: number) => string; body: (strea
   },
   {
     title: (s) => (s > 0 ? `Don't throw away ${s} days of work` : "Last chance today"),
-    body: (s) => "Secure your day now.",
+    body: (_s) => "Secure your day now.",
   },
   {
     title: (s) => (s > 0 ? `${s} days of discipline on the line` : "Day resets at midnight"),
-    body: (s) => "Finish strong.",
+    body: (_s) => "Finish strong.",
   },
 ];
 
@@ -118,7 +118,7 @@ export interface SendReminderOptions {
  * Uses personalized copy and variable template selection.
  */
 export async function sendSecureReminder(
-  userId: string,
+  _userId: string,
   options: SendReminderOptions
 ): Promise<void> {
   const { type, pushToken, streak } = options;
