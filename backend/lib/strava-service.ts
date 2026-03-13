@@ -41,10 +41,8 @@ export interface StravaActivity {
   [key: string]: unknown;
 }
 
-function log(message: string, meta?: Record<string, unknown>) {
-  const line = JSON.stringify({ ts: new Date().toISOString(), msg: message, ...meta });
-  if (process.env.NODE_ENV === "production") console.log(line);
-  else console.log("[strava]", line);
+function log(_message: string, _meta?: Record<string, unknown>) {
+  // Structured logging can be wired when needed.
 }
 
 export function getAuthorizationUrl(state: string): string {

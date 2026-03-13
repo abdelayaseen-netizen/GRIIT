@@ -9,5 +9,3 @@ serve({
   port,
   hostname: "0.0.0.0",
 });
-
-console.log(`[backend] listening on port ${port} (PORT=${process.env.PORT ?? "unset, using 8080"})`);

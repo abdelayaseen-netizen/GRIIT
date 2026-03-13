@@ -14,10 +14,8 @@ import {
 
 const PROVIDER_STRAVA = "strava";
 
-function log(msg: string, meta?: Record<string, unknown>) {
-  const line = JSON.stringify({ ts: new Date().toISOString(), msg, ...meta });
-  if (process.env.NODE_ENV === "production") console.log(line);
-  else console.log("[strava-verifier]", line);
+function log(_msg: string, _meta?: Record<string, unknown>) {
+  // Structured logging can be wired when needed.
 }
 
 function parseDateKey(dateKey: string): { after: number; before: number } {

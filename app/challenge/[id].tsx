@@ -103,69 +103,69 @@ const DIFFICULTY_THEMES: Record<string, DifficultyTheme> = {
   easy: {
     headerBg: "#1B5E20",
     headerGradientEnd: "#1B5E20",
-    accent: "#2E7D32",
-    accentLight: "#E8F5E9",
+    accent: DS_COLORS.success,
+    accentLight: DS_COLORS.successSoft,
     accentSoft: "rgba(46,125,50,0.12)",
-    ctaBg: "#2E7D32",
-    ctaText: "#FFFFFF",
-    backArrowColor: "#FFFFFF",
+    ctaBg: DS_COLORS.success,
+    ctaText: DS_COLORS.white,
+    backArrowColor: DS_COLORS.white,
     chipBorder: "rgba(255,255,255,0.35)",
     progressBg: "rgba(46,125,50,0.12)",
-    progressFill: "#2E7D32",
-    missionIconBg: "#E8F5E9",
+    progressFill: DS_COLORS.success,
+    missionIconBg: DS_COLORS.successSoft,
     warningBg: "rgba(46,125,50,0.06)",
-    warningText: "#2E7D32",
+    warningText: DS_COLORS.success,
     warningBorder: "rgba(46,125,50,0.15)",
   },
   medium: {
     headerBg: "#1B5E20",
     headerGradientEnd: "#1B5E20",
-    accent: "#2E7D32",
-    accentLight: "#E8F5E9",
+    accent: DS_COLORS.success,
+    accentLight: DS_COLORS.successSoft,
     accentSoft: "rgba(46,125,50,0.12)",
-    ctaBg: "#2E7D32",
-    ctaText: "#FFFFFF",
-    backArrowColor: "#FFFFFF",
+    ctaBg: DS_COLORS.success,
+    ctaText: DS_COLORS.white,
+    backArrowColor: DS_COLORS.white,
     chipBorder: "rgba(255,255,255,0.35)",
     progressBg: "rgba(46,125,50,0.12)",
-    progressFill: "#2E7D32",
-    missionIconBg: "#E8F5E9",
+    progressFill: DS_COLORS.success,
+    missionIconBg: DS_COLORS.successSoft,
     warningBg: "rgba(46,125,50,0.06)",
-    warningText: "#2E7D32",
+    warningText: DS_COLORS.success,
     warningBorder: "rgba(46,125,50,0.15)",
   },
   hard: {
-    headerBg: "#1A1A2E",
-    headerGradientEnd: "#1A1A2E",
-    accent: "#E8733A",
-    accentLight: "#FFF0E8",
+    headerBg: DS_COLORS.black,
+    headerGradientEnd: DS_COLORS.black,
+    accent: DS_COLORS.accent,
+    accentLight: DS_COLORS.accentSoft,
     accentSoft: "rgba(232,115,58,0.14)",
-    ctaBg: "#E8733A",
-    ctaText: "#FFFFFF",
-    backArrowColor: "#E8733A",
+    ctaBg: DS_COLORS.accent,
+    ctaText: DS_COLORS.white,
+    backArrowColor: DS_COLORS.accent,
     chipBorder: "rgba(255,255,255,0.35)",
     progressBg: "rgba(232,115,58,0.15)",
-    progressFill: "#E8733A",
-    missionIconBg: "#FFF0E8",
+    progressFill: DS_COLORS.accent,
+    missionIconBg: DS_COLORS.accentSoft,
     warningBg: "rgba(232,115,58,0.08)",
-    warningText: "#E8733A",
+    warningText: DS_COLORS.accent,
     warningBorder: "rgba(232,115,58,0.20)",
   },
   extreme: {
-    headerBg: "#1A1A2E",
-    headerGradientEnd: "#1A1A2E",
-    accent: "#E8733A",
-    accentLight: "#FFF0E8",
+    headerBg: DS_COLORS.black,
+    headerGradientEnd: DS_COLORS.black,
+    accent: DS_COLORS.accent,
+    accentLight: DS_COLORS.accentSoft,
     accentSoft: "rgba(232,115,58,0.14)",
-    ctaBg: "#E8733A",
-    ctaText: "#FFFFFF",
-    backArrowColor: "#E8733A",
+    ctaBg: DS_COLORS.accent,
+    ctaText: DS_COLORS.white,
+    backArrowColor: DS_COLORS.accent,
     chipBorder: "rgba(255,255,255,0.35)",
     progressBg: "rgba(232,115,58,0.15)",
-    progressFill: "#E8733A",
-    missionIconBg: "#FFF0E8",
+    progressFill: DS_COLORS.accent,
+    missionIconBg: DS_COLORS.accentSoft,
     warningBg: "rgba(232,115,58,0.08)",
-    warningText: "#E8733A",
+    warningText: DS_COLORS.accent,
     warningBorder: "rgba(232,115,58,0.20)",
   },
 };
@@ -1253,7 +1253,7 @@ export default function ChallengeDetailScreen() {
               <Text style={s.commitmentCloseText}>✕</Text>
             </TouchableOpacity>
             <View style={s.commitmentShieldWrap}>
-              <Shield size={28} color="#E8733A" strokeWidth={2} />
+              <Shield size={28} color={DS_COLORS.accent} strokeWidth={2} />
             </View>
             <Text style={s.commitmentTitle}>You are committing to this challenge.</Text>
             <View style={s.commitmentDetails}>
@@ -1273,7 +1273,7 @@ export default function ChallengeDetailScreen() {
               </View>
             </View>
             <View style={s.commitmentWarning}>
-              <AlertTriangle size={14} color="#E8733A" style={{ marginRight: 8 }} />
+              <AlertTriangle size={14} color={DS_COLORS.accent} style={{ marginRight: 8 }} />
               <Text style={s.commitmentWarningText}>One missed day resets progress.</Text>
             </View>
             <TouchableOpacity

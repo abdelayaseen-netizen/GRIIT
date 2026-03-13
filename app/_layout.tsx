@@ -22,10 +22,6 @@ import { useOnboardingStore, getOnboardingRouteForStep } from "@/store/onboardin
 
 const HAS_LAUNCHED_KEY = "griit_has_launched";
 
-if (__DEV__) {
-  console.log("[ENV] Supabase URL:", process.env.EXPO_PUBLIC_SUPABASE_URL ? "set" : "MISSING");
-}
-
 SplashScreen.preventAutoHideAsync();
 
 const PROFILE_CHECK_TIMEOUT_MS = 2500;

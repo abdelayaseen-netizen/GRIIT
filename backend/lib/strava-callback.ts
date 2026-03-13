@@ -10,10 +10,8 @@ import { getSupabaseServer } from "./supabase-server";
 
 const PROVIDER = "strava";
 
-function log(msg: string, meta?: Record<string, unknown>) {
-  const line = JSON.stringify({ ts: new Date().toISOString(), msg, ...meta });
-  if (process.env.NODE_ENV === "production") console.log(line);
-  else console.log("[strava-callback]", line);
+function log(_msg: string, _meta?: Record<string, unknown>) {
+  // Structured logging can be wired when needed.
 }
 
 export interface CallbackResult {

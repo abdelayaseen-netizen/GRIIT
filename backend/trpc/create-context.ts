@@ -55,22 +55,14 @@ const t = initTRPC.context<Context>().create({
   transformer: superjson,
 });
 
-function logStructured(payload: {
+function logStructured(_payload: {
   requestId: string;
   path?: string;
   userId: string | null;
   durationMs: number;
   errorCode?: string;
 }) {
-  const line = JSON.stringify({
-    ts: new Date().toISOString(),
-    ...payload,
-  });
-  if (process.env.NODE_ENV === "production") {
-    console.log(line);
-  } else {
-    console.log("[trpc]", line);
-  }
+  // Structured logging can be wired to a logger (e.g. pino) when needed.
 }
 
 const routeLimitMiddleware = t.middleware(async (opts) => {
