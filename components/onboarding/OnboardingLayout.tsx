@@ -10,12 +10,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
-
-const ONBOARDING_BG = "#0A0A0A";
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
-const BORDER = "#333333";
+import { DS_COLORS } from "@/lib/design-system";
 
 const STEP_FROM_PATH: Record<string, number> = {
   "/onboarding": 1,
@@ -64,7 +59,7 @@ export function OnboardingLayout({
   const isFirst = step <= 1;
 
   return (
-    <View style={[styles.container, { backgroundColor: ONBOARDING_BG }]}>
+    <View style={[styles.container, { backgroundColor: DS_COLORS.onboardingBg }]}>
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           {!isFirst && showBack ? (
@@ -74,7 +69,7 @@ export function OnboardingLayout({
               hitSlop={12}
               activeOpacity={0.7}
             >
-              <ChevronLeft size={28} color={TEXT_PRIMARY} strokeWidth={2} />
+              <ChevronLeft size={28} color={DS_COLORS.white} strokeWidth={2} />
             </TouchableOpacity>
           ) : (
             <View style={styles.backPlaceholder} />
@@ -91,7 +86,7 @@ export function OnboardingLayout({
                     styles.progressFill,
                     {
                       width: `${progress}%`,
-                      backgroundColor: ACCENT,
+                      backgroundColor: DS_COLORS.accent,
                     },
                   ]}
                 />
@@ -164,12 +159,12 @@ const styles = StyleSheet.create({
   stepText: {
     fontSize: 12,
     fontWeight: "600",
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     marginBottom: 4,
   },
   progressTrack: {
     height: 6,
-    backgroundColor: BORDER,
+    backgroundColor: DS_COLORS.borderDark,
     borderRadius: 3,
     overflow: "hidden",
   },
@@ -183,7 +178,7 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
   },
   content: {
     flex: 1,

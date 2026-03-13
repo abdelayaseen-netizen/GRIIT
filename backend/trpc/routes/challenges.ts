@@ -624,9 +624,13 @@ export const challengesRouter = createTRPCRouter({
         timezoneMode: z.enum(["USER_LOCAL", "CHALLENGE_TIMEZONE"]).optional(),
         challengeTimezone: z.string().nullable().optional(),
         verificationMethod: z.string().optional(),
-        verificationRuleJson: z.record(z.unknown()).nullable().optional(),
+        verificationRuleJson: z.record(z.string(), z.unknown()).nullable().optional(),
       })).min(0),
-    }).refine((data) => data.participationType === "shared_goal" || data.tasks.length >= 1, { message: "At least one task is required for non–shared-goal challenges." }))
+    }).superRefine((data, ctx) => {
+      if (data.participationType !== "shared_goal" && data.tasks.length < 1) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one task is required for non–shared-goal challenges." });
+      }
+    }))
     .mutation(async ({ input, ctx }) => {
       const isSharedGoal = input.participationType === "shared_goal";
       if (!isSharedGoal && input.tasks.length === 0) {

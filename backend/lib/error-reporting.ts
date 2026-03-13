@@ -3,6 +3,8 @@
  * Call on tRPC errors for monitoring/alerting.
  */
 
+import { logger } from "./logger";
+
 export interface ErrorReportPayload {
   requestId: string;
   path?: string;
@@ -13,22 +15,15 @@ export interface ErrorReportPayload {
 }
 
 export function reportError(payload: ErrorReportPayload): void {
-  const line = JSON.stringify({
-    level: "error",
-    ...payload,
-  });
-  if (process.env.NODE_ENV === "production") {
-    console.error(line);
-  } else {
-    console.error("[trpc:error]", line);
-  }
+  const body = JSON.stringify({ level: "error", ...payload });
+  logger.error({ ...payload }, "trpc:error");
 
   const url = process.env.ERROR_REPORT_URL?.trim();
   if (url) {
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: line,
+      body,
     }).catch(() => {
       // Fire-and-forget; do not throw
     });

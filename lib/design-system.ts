@@ -36,6 +36,34 @@ export const DS_COLORS = {
   warningSoft: "#FFFBEB",
   danger: "#E53E3E",
   dangerSoft: "#FEF2F2",
+  dangerDark: "#B91C1C",
+  dangerDarkest: "#7F1D1D",
+
+  // Onboarding / dark surfaces
+  onboardingBg: "#0A0A0A",
+  borderDark: "#333333",
+
+  // Task type / semantic accents
+  milestoneGold: "#D4A017",
+  crownGold: "#B8860B",
+  linkBlue: "#0EA5E9",
+  journalPurple: "#8E44AD",
+  runOrange: "#FF6B35",
+  taskIndigo: "#6366F1",
+  taskPhotoPink: "#EC4899",
+  taskAmber: "#F59E0B",
+  taskEmerald: "#10B981",
+  silverRank: "#9CA3AF",
+
+  // Controls
+  switchThumbInactive: "#f4f3f4",
+  toggleTrackOn: "#FDDCB5",
+  skeletonBg: "#E8E6E1",
+  overlayDark: "#111",
+  overlayDarker: "#0f0f0f",
+  grayMuted: "#999",
+  grayMedium: "#6B7280",
+  filterChipActiveBg: "#444",
 
   // UI
   white: "#FFFFFF",

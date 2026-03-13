@@ -4,6 +4,7 @@
  */
 
 import { getStravaConfig, STRAVA_SCOPES } from "./strava-config";
+import { logger } from "./logger";
 
 const STRAVA_BASE = "https://www.strava.com";
 const STRAVA_API = "https://www.strava.com/api/v3";
@@ -41,8 +42,8 @@ export interface StravaActivity {
   [key: string]: unknown;
 }
 
-function log(_message: string, _meta?: Record<string, unknown>) {
-  // Structured logging can be wired when needed.
+function log(message: string, meta?: Record<string, unknown>) {
+  logger.info({ msg: message, ...meta }, "strava");
 }
 
 export function getAuthorizationUrl(state: string): string {

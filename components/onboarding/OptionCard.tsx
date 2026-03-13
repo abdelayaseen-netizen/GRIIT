@@ -1,12 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { Check } from "lucide-react-native";
-
-const CARD_BG = "#141414";
-const BORDER_UNSELECTED = "#333333";
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
+import { DS_COLORS } from "@/lib/design-system";
 
 type OptionCardProps = {
   icon: string;
@@ -36,7 +31,7 @@ export function OptionCard({ icon, label, sub, selected, onPress, badge }: Optio
     ]).start();
   }, [selected, scaleAnim, borderAnim]);
 
-  const borderColor = selected ? ACCENT : BORDER_UNSELECTED;
+  const borderColor = selected ? DS_COLORS.accent : DS_COLORS.borderDark;
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -60,7 +55,7 @@ export function OptionCard({ icon, label, sub, selected, onPress, badge }: Optio
         ) : null}
         {selected ? (
           <View style={styles.checkWrap}>
-            <Check size={20} color="#0A0A0A" strokeWidth={2.5} />
+            <Check size={20} color={DS_COLORS.onboardingBg} strokeWidth={2.5} />
           </View>
         ) : null}
         <Text style={styles.icon}>{icon}</Text>
@@ -73,7 +68,7 @@ export function OptionCard({ icon, label, sub, selected, onPress, badge }: Optio
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: CARD_BG,
+    backgroundColor: DS_COLORS.textPrimaryAlt,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
@@ -83,7 +78,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -91,7 +86,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
   checkWrap: {
     position: "absolute",
@@ -100,7 +95,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -111,13 +106,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     fontWeight: "700",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 24,
     marginBottom: 4,
   },
   sub: {
     fontSize: 14,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 20,
   },
 });

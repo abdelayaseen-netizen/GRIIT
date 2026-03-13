@@ -11,11 +11,12 @@ import {
   type ConnectedAccountRow,
   type StravaActivity,
 } from "./strava-service";
+import { logger } from "./logger";
 
 const PROVIDER_STRAVA = "strava";
 
-function log(_msg: string, _meta?: Record<string, unknown>) {
-  // Structured logging can be wired when needed.
+function log(msg: string, meta?: Record<string, unknown>) {
+  logger.info({ msg, ...meta }, "strava-verifier");
 }
 
 function parseDateKey(dateKey: string): { after: number; before: number } {

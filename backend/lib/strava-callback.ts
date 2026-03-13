@@ -7,11 +7,12 @@
 import { verifyState } from "./strava-oauth-state";
 import { exchangeCodeForToken } from "./strava-service";
 import { getSupabaseServer } from "./supabase-server";
+import { logger } from "./logger";
 
 const PROVIDER = "strava";
 
-function log(_msg: string, _meta?: Record<string, unknown>) {
-  // Structured logging can be wired when needed.
+function log(msg: string, meta?: Record<string, unknown>) {
+  logger.info({ msg, ...meta }, "strava-callback");
 }
 
 export interface CallbackResult {

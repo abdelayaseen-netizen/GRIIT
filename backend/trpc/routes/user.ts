@@ -117,7 +117,8 @@ export const userRouter = createTRPCRouter({
               } else if (msg.includes("NOT_FOUND") || (rpcError as { code?: string }).code === "23503") {
                 // challenge missing or FK constraint; do not crash onboarding
               } else if (process.env.NODE_ENV !== "test") {
-                console.warn("[user.completeOnboarding] join_challenge failed:", msg);
+                const { logger } = await import("../../lib/logger");
+                logger.warn({ msg }, "user.completeOnboarding join_challenge failed");
               }
             }
           } catch {

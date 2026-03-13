@@ -27,9 +27,11 @@ export async function sendExpoPush(
     });
     if (!res.ok) {
       const text = await res.text();
-      console.warn("[push] Expo push failed:", res.status, text);
+      const { logger } = await import("./logger");
+      logger.warn({ status: res.status, text }, "[push] Expo push failed");
     }
   } catch (err) {
-    console.warn("[push] Expo push error:", err);
+    const { logger } = await import("./logger");
+    logger.warn({ err }, "[push] Expo push error");
   }
 }

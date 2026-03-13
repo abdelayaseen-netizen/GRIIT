@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { WifiOff } from "lucide-react-native";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { DS_COLORS } from "@/lib/design-system";
 
 export function OfflineBanner() {
   const isConnected = useNetworkStatus();
@@ -9,7 +10,7 @@ export function OfflineBanner() {
 
   return (
     <View style={styles.banner}>
-      <WifiOff size={14} color="#F5A623" />
+      <WifiOff size={14} color={DS_COLORS.warning} />
       <Text style={styles.text}>You&apos;re offline. Some features may not work.</Text>
     </View>
   );
@@ -17,7 +18,7 @@ export function OfflineBanner() {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: "#FFF8E1",
+    backgroundColor: DS_COLORS.warningSoft,
     paddingVertical: 8,
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -27,6 +28,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 13,
-    color: "#8A8A8A",
+    color: DS_COLORS.textSecondary,
   },
 });

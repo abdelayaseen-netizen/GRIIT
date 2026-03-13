@@ -121,7 +121,8 @@ export const profilesRouter = createTRPCRouter({
 
       if (!apiKey) {
         if (process.env.NODE_ENV !== "test") {
-          console.warn("[profiles.validateSubscription] REVENUECAT_API_KEY not set; skipping validation, returning current DB values.");
+          const { logger } = await import("../../lib/logger");
+          logger.warn("[profiles.validateSubscription] REVENUECAT_API_KEY not set; skipping validation, returning current DB values.");
         }
         return getCurrentFromDb();
       }
@@ -139,7 +140,8 @@ export const profilesRouter = createTRPCRouter({
         if (!res.ok) {
           const text = await res.text();
           if (process.env.NODE_ENV !== "test") {
-            console.warn("[profiles.validateSubscription] RevenueCat API error:", res.status, text?.slice(0, 200));
+            const { logger } = await import("../../lib/logger");
+            logger.warn({ status: res.status, text: text?.slice(0, 200) }, "[profiles.validateSubscription] RevenueCat API error");
           }
           return getCurrentFromDb();
         }
@@ -169,7 +171,8 @@ export const profilesRouter = createTRPCRouter({
 
         if (updateError) {
           if (process.env.NODE_ENV !== "test") {
-            console.warn("[profiles.validateSubscription] Failed to update profile:", updateError.message);
+            const { logger } = await import("../../lib/logger");
+            logger.warn({ message: updateError.message }, "[profiles.validateSubscription] Failed to update profile");
           }
           return getCurrentFromDb();
         }
@@ -178,7 +181,8 @@ export const profilesRouter = createTRPCRouter({
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (process.env.NODE_ENV !== "test") {
-          console.warn("[profiles.validateSubscription] Error:", message);
+          const { logger } = await import("../../lib/logger");
+          logger.warn({ message }, "[profiles.validateSubscription] Error");
         }
         return getCurrentFromDb();
       }

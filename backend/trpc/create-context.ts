@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { supabase as sharedSupabase } from "../lib/supabase";
 import { getClientIp } from "../lib/rate-limit";
 import { reportError } from "../lib/error-reporting";
+import { logger } from "../lib/logger";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
@@ -55,14 +56,14 @@ const t = initTRPC.context<Context>().create({
   transformer: superjson,
 });
 
-function logStructured(_payload: {
+function logStructured(payload: {
   requestId: string;
   path?: string;
   userId: string | null;
   durationMs: number;
   errorCode?: string;
 }) {
-  // Structured logging can be wired to a logger (e.g. pino) when needed.
+  logger.info(payload, "trpc request");
 }
 
 const routeLimitMiddleware = t.middleware(async (opts) => {

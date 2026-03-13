@@ -56,7 +56,8 @@ app.get("/api/cron/send-reminders", async (c) => {
     const result = await runReminderCron(supabase);
     return c.json({ ok: true, ...result });
   } catch (err) {
-    console.error("[cron] send-reminders error:", err);
+    const { logger } = await import("./lib/logger");
+    logger.error({ err }, "[cron] send-reminders error");
     return c.json({ ok: false, error: (err as Error).message }, 500);
   }
 });
@@ -75,7 +76,8 @@ app.get("/api/cron/daily-challenge", async (c) => {
     const result = await createDailyChallengeIfMissing(supabase, new Date());
     return c.json({ ok: true, created: result.created, id: result.id });
   } catch (err) {
-    console.error("[cron] daily-challenge error:", err);
+    const { logger } = await import("./lib/logger");
+    logger.error({ err }, "[cron] daily-challenge error");
     return c.json({ ok: false, error: (err as Error).message }, 500);
   }
 });

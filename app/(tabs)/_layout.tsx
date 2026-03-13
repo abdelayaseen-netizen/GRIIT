@@ -18,8 +18,8 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = "#FFFFFF";
-  const tabBorder = "#E8E5DE";
+  const tabBg = DS_COLORS.white;
+  const tabBorder = DS_COLORS.border;
   const tabActive = colors.accent ?? DS_COLORS.accent;
   const tabInactive = colors.text?.muted ?? DS_COLORS.tabInactive;
   const isCreateScreen = typeof pathname === "string" && pathname.includes("create");
@@ -68,7 +68,7 @@ export default function TabLayout() {
           title: "Create",
           tabBarIcon: () => (
             <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
-              <Plus color="#FFFFFF" size={24} strokeWidth={2.5} />
+              <Plus color={DS_COLORS.white} size={24} strokeWidth={2.5} />
             </View>
           ),
           tabBarLabel: () => null,

@@ -1,12 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { Check } from "lucide-react-native";
-
-const CARD_BG = "#141414";
-const BORDER_UNSELECTED = "#333333";
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
+import { DS_COLORS } from "@/lib/design-system";
 
 type TwoColOptionCardProps = {
   icon: string;
@@ -39,7 +34,7 @@ export function TwoColOptionCard({
         style={[
           styles.card,
           {
-            borderColor: selected ? ACCENT : BORDER_UNSELECTED,
+            borderColor: selected ? DS_COLORS.accent : DS_COLORS.borderDark,
             borderWidth: selected ? 2 : 1,
           },
         ]}
@@ -50,7 +45,7 @@ export function TwoColOptionCard({
       >
         {selected ? (
           <View style={styles.checkWrap}>
-            <Check size={16} color="#0A0A0A" strokeWidth={2.5} />
+            <Check size={16} color={DS_COLORS.onboardingBg} strokeWidth={2.5} />
           </View>
         ) : null}
         <Text style={styles.icon}>{icon}</Text>
@@ -73,7 +68,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   card: {
-    backgroundColor: CARD_BG,
+    backgroundColor: DS_COLORS.textPrimaryAlt,
     borderRadius: 16,
     padding: 16,
     position: "relative",
@@ -86,7 +81,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -97,13 +92,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "700",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 20,
     marginBottom: 2,
   },
   sub: {
     fontSize: 12,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 16,
   },
 });
