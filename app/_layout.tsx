@@ -46,7 +46,9 @@ function AuthRedirector() {
   const [hasProfile, setHasProfile] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
-  const checkProfile = useCallback(async (userId: string) => {
+  const checkProfile = useCallback(async (userId: string, retry = 0) => {
+    const maxRetries = 1;
+    const done = () => setProfileChecked(true);
     try {
       const timeoutPromise = new Promise<null>((resolve) =>
         setTimeout(() => resolve(null), PROFILE_CHECK_TIMEOUT_MS)
@@ -59,7 +61,16 @@ function AuthRedirector() {
         .single()
         .then(({ data }: { data: { user_id?: string; username?: string | null; onboarding_completed?: boolean } | null }) => data);
 
-      const result = await Promise.race([profilePromise, timeoutPromise]);
+      let result = await Promise.race([profilePromise, timeoutPromise]);
+
+      if (result === null && retry < maxRetries) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_id, username, onboarding_completed")
+          .eq("user_id", userId)
+          .single();
+        result = data;
+      }
 
       if (result === null) {
         setHasProfile(false);
@@ -69,11 +80,15 @@ function AuthRedirector() {
         setHasProfile(hasValidProfile);
         setOnboardingCompleted(hasValidProfile && result?.onboarding_completed === true);
       }
+      done();
     } catch {
+      if (retry < maxRetries) {
+        await checkProfile(userId, retry + 1);
+        return;
+      }
       setHasProfile(false);
       setOnboardingCompleted(false);
-    } finally {
-      setProfileChecked(true);
+      done();
     }
   }, []);
 
@@ -106,6 +121,11 @@ function AuthRedirector() {
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
 
     if (!user) {
+      // Unauthenticated: send to login unless already on auth or pre-signup onboarding
+      const inOnboardingQuestions = first === SEGMENTS.ONBOARDING_QUESTIONS;
+      if (!inAuth && !inOnboardingQuestions) {
+        router.replace(ROUTES.AUTH as never);
+      }
       return;
     }
 

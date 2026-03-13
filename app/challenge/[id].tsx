@@ -11,9 +11,11 @@ import {
   Platform,
   Image,
   RefreshControl,
+  Modal,
+  StatusBar,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +63,7 @@ import type {
   CheckinFromApi,
 } from "@/types";
 import Colors from "@/constants/colors";
+import { GRIIT_COLORS, GRIIT_RADII } from "@/src/theme";
 
 const AVATAR_URLS = [
   "https://i.pravatar.cc/80?img=10",
@@ -71,6 +74,7 @@ const AVATAR_URLS = [
   "https://i.pravatar.cc/80?img=25",
 ];
 
+/** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
   headerBg: string;
   headerGradientEnd: string;
@@ -79,6 +83,7 @@ interface DifficultyTheme {
   accentSoft: string;
   ctaBg: string;
   ctaText: string;
+  backArrowColor: string;
   chipBorder: string;
   progressBg: string;
   progressFill: string;
@@ -90,68 +95,72 @@ interface DifficultyTheme {
 
 const DIFFICULTY_THEMES: Record<string, DifficultyTheme> = {
   easy: {
-    headerBg: "#4A7FA5",
-    headerGradientEnd: "#3A6F95",
-    accent: "#4A7FA5",
-    accentLight: "rgba(74,127,165,0.08)",
-    accentSoft: "rgba(74,127,165,0.12)",
-    ctaBg: "#4A7FA5",
+    headerBg: "#1B5E20",
+    headerGradientEnd: "#1B5E20",
+    accent: "#2E7D32",
+    accentLight: "#E8F5E9",
+    accentSoft: "rgba(46,125,50,0.12)",
+    ctaBg: "#2E7D32",
     ctaText: "#FFFFFF",
-    chipBorder: "rgba(74,127,165,0.25)",
-    progressBg: "rgba(74,127,165,0.12)",
-    progressFill: "#4A7FA5",
-    missionIconBg: "rgba(74,127,165,0.10)",
-    warningBg: "rgba(74,127,165,0.06)",
-    warningText: "#3A6F95",
-    warningBorder: "rgba(74,127,165,0.15)",
+    backArrowColor: "#FFFFFF",
+    chipBorder: "rgba(255,255,255,0.35)",
+    progressBg: "rgba(46,125,50,0.12)",
+    progressFill: "#2E7D32",
+    missionIconBg: "#E8F5E9",
+    warningBg: "rgba(46,125,50,0.06)",
+    warningText: "#2E7D32",
+    warningBorder: "rgba(46,125,50,0.15)",
   },
   medium: {
-    headerBg: "#4D8B6A",
-    headerGradientEnd: "#3D7B5A",
-    accent: "#4D8B6A",
-    accentLight: "rgba(77,139,106,0.08)",
-    accentSoft: "rgba(77,139,106,0.12)",
-    ctaBg: "#4D8B6A",
+    headerBg: "#1B5E20",
+    headerGradientEnd: "#1B5E20",
+    accent: "#2E7D32",
+    accentLight: "#E8F5E9",
+    accentSoft: "rgba(46,125,50,0.12)",
+    ctaBg: "#2E7D32",
     ctaText: "#FFFFFF",
-    chipBorder: "rgba(77,139,106,0.25)",
-    progressBg: "rgba(77,139,106,0.12)",
-    progressFill: "#4D8B6A",
-    missionIconBg: "rgba(77,139,106,0.10)",
-    warningBg: "rgba(77,139,106,0.06)",
-    warningText: "#3D7B5A",
-    warningBorder: "rgba(77,139,106,0.15)",
+    backArrowColor: "#FFFFFF",
+    chipBorder: "rgba(255,255,255,0.35)",
+    progressBg: "rgba(46,125,50,0.12)",
+    progressFill: "#2E7D32",
+    missionIconBg: "#E8F5E9",
+    warningBg: "rgba(46,125,50,0.06)",
+    warningText: "#2E7D32",
+    warningBorder: "rgba(46,125,50,0.15)",
   },
   hard: {
-    headerBg: "#C86A3A",
-    headerGradientEnd: "#B85A2A",
-    accent: "#E87D4F",
-    accentLight: "rgba(232,125,79,0.08)",
-    accentSoft: "rgba(232,125,79,0.12)",
-    ctaBg: "#E87D4F",
+    headerBg: "#1A1A2E",
+    headerGradientEnd: "#1A1A2E",
+    accent: "#E8733A",
+    accentLight: "#FFF0E8",
+    accentSoft: "rgba(232,115,58,0.14)",
+    ctaBg: "#E8733A",
     ctaText: "#FFFFFF",
-    chipBorder: "rgba(232,125,79,0.25)",
-    progressBg: "rgba(232,125,79,0.12)",
-    progressFill: "#E87D4F",
-    missionIconBg: "rgba(232,125,79,0.10)",
-    warningBg: "rgba(232,125,79,0.06)",
-    warningText: "#C86A3A",
-    warningBorder: "rgba(232,125,79,0.15)",
+    backArrowColor: "#E8733A",
+    chipBorder: "rgba(255,255,255,0.35)",
+    progressBg: "rgba(232,115,58,0.15)",
+    progressFill: "#E8733A",
+    missionIconBg: "#FFF0E8",
+    warningBg: "rgba(232,115,58,0.08)",
+    warningText: "#E8733A",
+    warningBorder: "rgba(232,115,58,0.20)",
   },
   extreme: {
-    headerBg: "#1C1C1E",
-    headerGradientEnd: "#141414",
-    accent: "#E87D4F",
-    accentLight: "rgba(232,125,79,0.08)",
-    accentSoft: "rgba(232,125,79,0.14)",
-    ctaBg: "#E87D4F",
+    headerBg: "#1A1A2E",
+    headerGradientEnd: "#1A1A2E",
+    accent: "#E8733A",
+    accentLight: "#FFF0E8",
+    accentSoft: "rgba(232,115,58,0.14)",
+    ctaBg: "#E8733A",
     ctaText: "#FFFFFF",
-    chipBorder: "rgba(232,125,79,0.30)",
-    progressBg: "rgba(232,125,79,0.15)",
-    progressFill: "#E87D4F",
-    missionIconBg: "rgba(232,125,79,0.12)",
-    warningBg: "rgba(232,125,79,0.08)",
-    warningText: "#E87D4F",
-    warningBorder: "rgba(232,125,79,0.20)",
+    backArrowColor: "#E8733A",
+    chipBorder: "rgba(255,255,255,0.35)",
+    progressBg: "rgba(232,115,58,0.15)",
+    progressFill: "#E8733A",
+    missionIconBg: "#FFF0E8",
+    warningBg: "rgba(232,115,58,0.08)",
+    warningText: "#E8733A",
+    warningBorder: "rgba(232,115,58,0.20)",
   },
 };
 
@@ -446,6 +455,9 @@ export default function ChallengeDetailScreen() {
   const leavePending = leaveMutation.isPending;
   const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
+  const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+  const [commitmentJoining, setCommitmentJoining] = useState(false);
+  const insets = useSafeAreaInsets();
   const referrerLabel = ref ? "Invited by a friend" : null;
 
   useEffect(() => {
@@ -553,17 +565,31 @@ export default function ChallengeDetailScreen() {
   const handleJoin = useCallback(() => {
     if (!challenge || !id) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push({
-      pathname: ROUTES.COMMITMENT,
-      params: {
-        challengeId: id,
-        isStarter: "0",
-        title: challenge.title,
-        duration: String(challenge.duration_days ?? 0),
-        difficulty: challenge.difficulty ?? "medium",
-      },
-    } as never);
-  }, [challenge, id, router]);
+    setShowCommitmentModal(true);
+  }, [challenge, id]);
+
+  const handleCommitmentConfirm = useCallback(async () => {
+    if (!id || commitmentJoining) return;
+    setCommitmentJoining(true);
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await trpcMutate("challenges.join", { challengeId: id });
+      try {
+        await trpcMutate("referrals.markJoinedChallenge", { challengeId: id });
+      } catch { /* best-effort */ }
+      await refetchAll();
+      setShowCommitmentModal(false);
+      router.replace(ROUTES.TABS as never);
+      Alert.alert("You're in!", "Your challenge is under Active challenges. Secure your day to build your streak.", [
+        { text: "OK" },
+      ]);
+    } catch (err: unknown) {
+      const { title, message } = formatTRPCError(err);
+      Alert.alert(title, message);
+    } finally {
+      setCommitmentJoining(false);
+    }
+  }, [id, commitmentJoining, refetchAll, router]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -786,6 +812,7 @@ export default function ChallengeDetailScreen() {
 
   return (
     <View style={[s.container, { backgroundColor: themeColors.background }]}>
+      <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
         <ScrollView
@@ -815,7 +842,7 @@ export default function ChallengeDetailScreen() {
                   accessibilityLabel="Go back"
                   accessibilityRole="button"
                 >
-                  <ChevronLeft size={18} color="#FFFFFF" />
+                  <ChevronLeft size={24} color={theme.backArrowColor} />
                 </TouchableOpacity>
                 <Text style={s.topNavTitle}>Challenge</Text>
                 <TouchableOpacity
@@ -872,7 +899,7 @@ export default function ChallengeDetailScreen() {
                     <Text style={s.dailyLabelText}>24-HOUR CHALLENGE</Text>
                   </View>
                 )}
-                <Text style={s.heroTitle}>{challenge.title}</Text>
+                <Text style={[s.heroTitle, s.heroTitleSerif]}>{challenge.title}</Text>
                 <Text style={s.heroTagline}>{challenge.short_hook || challenge.description}</Text>
                 {referrerLabel ? (
                   <Text style={s.referrerLabel}>{referrerLabel}</Text>
@@ -1153,7 +1180,7 @@ export default function ChallengeDetailScreen() {
         </ScrollView>
 
         {/* STICKY CTA */}
-        <View style={s.stickyFooter}>
+        <View style={[s.stickyFooter, { paddingBottom: insets.bottom + 14 }]}>
           {isDaily && expired ? (
             <View style={s.disabledCta}>
               <Text style={s.disabledCtaText}>Expired</Text>
@@ -1201,16 +1228,77 @@ export default function ChallengeDetailScreen() {
           </Text>
         </View>
       </Animated.View>
+
+      {/* Commitment Confirmation Modal (GRIIT Step 4) */}
+      <Modal visible={showCommitmentModal} transparent animationType="fade">
+        <TouchableOpacity
+          style={s.commitmentOverlay}
+          activeOpacity={1}
+          onPress={() => !commitmentJoining && setShowCommitmentModal(false)}
+        />
+        <View style={[s.commitmentCenter, { paddingBottom: insets.bottom + 24 }]}>
+          <View style={s.commitmentCard}>
+            <TouchableOpacity
+              style={s.commitmentClose}
+              onPress={() => !commitmentJoining && setShowCommitmentModal(false)}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Text style={s.commitmentCloseText}>✕</Text>
+            </TouchableOpacity>
+            <View style={s.commitmentShieldWrap}>
+              <Shield size={28} color="#E8733A" strokeWidth={2} />
+            </View>
+            <Text style={s.commitmentTitle}>You are committing to this challenge.</Text>
+            <View style={s.commitmentDetails}>
+              <View style={s.commitmentRow}>
+                <Text style={s.commitmentLabel}>Challenge</Text>
+                <Text style={s.commitmentValue} numberOfLines={2}>{challenge?.title ?? ""}</Text>
+              </View>
+              <View style={[s.commitmentRow, s.commitmentRowBorder]}>
+                <Text style={s.commitmentLabel}>Duration</Text>
+                <Text style={s.commitmentValue}>{challenge?.duration_days ?? 0} days</Text>
+              </View>
+              <View style={s.commitmentRow}>
+                <Text style={s.commitmentLabel}>Mode</Text>
+                <Text style={[s.commitmentValue, { color: theme.accent, fontWeight: "600" }]}>
+                  {difficultyLabel}{difficulty === "hard" || difficulty === "extreme" ? " Mode" : ""}
+                </Text>
+              </View>
+            </View>
+            <View style={s.commitmentWarning}>
+              <AlertTriangle size={14} color="#E8733A" style={{ marginRight: 8 }} />
+              <Text style={s.commitmentWarningText}>One missed day resets progress.</Text>
+            </View>
+            <TouchableOpacity
+              style={[s.commitmentConfirmBtn, commitmentJoining && s.commitmentConfirmDisabled]}
+              onPress={handleCommitmentConfirm}
+              disabled={commitmentJoining}
+              activeOpacity={0.85}
+            >
+              {commitmentJoining ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={s.commitmentConfirmText}>Confirm Commitment</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.commitmentCancelBtn}
+              onPress={() => !commitmentJoining && setShowCommitmentModal(false)}
+              disabled={commitmentJoining}
+            >
+              <Text style={s.commitmentCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-const SCREEN_BG = "#FAF8F6";
-
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: SCREEN_BG,
+    backgroundColor: GRIIT_COLORS.background,
   },
   flex: {
     flex: 1,
@@ -1224,7 +1312,7 @@ const s = StyleSheet.create({
 
   loadingContainer: {
     flex: 1,
-    backgroundColor: SCREEN_BG,
+    backgroundColor: GRIIT_COLORS.background,
   },
   skeletonHeader: {
     height: 260,
@@ -1342,18 +1430,22 @@ const s = StyleSheet.create({
     letterSpacing: 1.2,
   },
   heroTitle: {
-    fontSize: 32,
-    fontWeight: "800" as const,
+    fontSize: 28,
+    fontWeight: "700" as const,
     color: "#FFFFFF",
-    letterSpacing: -0.8,
-    lineHeight: 38,
+    letterSpacing: -0.5,
+    lineHeight: 34,
     marginBottom: 6,
   },
+  heroTitleSerif: {
+    fontStyle: "italic",
+    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
+  },
   heroTagline: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "400" as const,
-    color: "rgba(255,255,255,0.65)",
-    lineHeight: 21,
+    color: "rgba(255,255,255,0.7)",
+    lineHeight: 20,
     marginBottom: 18,
   },
   referrerLabel: {
@@ -1388,8 +1480,13 @@ const s = StyleSheet.create({
   },
 
   body: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: GRIIT_RADII.contentOverlap,
+    borderTopRightRadius: GRIIT_RADII.contentOverlap,
+    marginTop: -20,
+    paddingTop: 24,
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingBottom: 120,
   },
 
   countdownCard: {
@@ -1798,18 +1895,23 @@ const s = StyleSheet.create({
     right: 0,
     paddingHorizontal: 20,
     paddingTop: 14,
-    paddingBottom: Platform.OS === "web" ? 28 : 16,
-    backgroundColor: SCREEN_BG,
+    paddingBottom: 16,
+    backgroundColor: "#FFFFFF",
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(0,0,0,0.06)",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 8,
   },
   ctaButton: {
     alignItems: "center",
     justifyContent: "center",
     minHeight: 52,
-    paddingVertical: 17,
-    borderRadius: 12,
+    paddingVertical: 16,
+    borderRadius: 28,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -1854,5 +1956,118 @@ const s = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600" as const,
     color: Colors.text.muted,
+  },
+
+  commitmentOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  commitmentCenter: {
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  commitmentCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    maxWidth: 360,
+    alignItems: "center",
+  },
+  commitmentClose: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    padding: 4,
+  },
+  commitmentCloseText: {
+    fontSize: 20,
+    color: "#8A8A8A",
+    fontWeight: "600",
+  },
+  commitmentShieldWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FFF0E8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  commitmentTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1A1A2E",
+    textAlign: "center",
+    marginTop: 20,
+    paddingHorizontal: 8,
+  },
+  commitmentDetails: {
+    width: "100%",
+    marginTop: 20,
+  },
+  commitmentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  commitmentRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#EDEDED",
+  },
+  commitmentLabel: {
+    fontSize: 14,
+    color: "#8A8A8A",
+  },
+  commitmentValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1A1A2E",
+    textAlign: "right",
+    flex: 1,
+    marginLeft: 16,
+  },
+  commitmentWarning: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF0E8",
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 18,
+    width: "100%",
+  },
+  commitmentWarningText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#E8733A",
+    flex: 1,
+  },
+  commitmentConfirmBtn: {
+    backgroundColor: "#E8733A",
+    borderRadius: 28,
+    paddingVertical: 15,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 18,
+  },
+  commitmentConfirmDisabled: {
+    opacity: 0.7,
+  },
+  commitmentConfirmText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  commitmentCancelBtn: {
+    marginTop: 14,
+    paddingVertical: 8,
+  },
+  commitmentCancelText: {
+    fontSize: 14,
+    color: "#8A8A8A",
   },
 });

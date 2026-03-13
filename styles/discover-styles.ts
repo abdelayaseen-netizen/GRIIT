@@ -4,34 +4,36 @@ import * as t from "@/src/theme/tokens";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: t.colors.background,
+    backgroundColor: "#F9F6F1",
   },
   header: {
-    paddingHorizontal: t.spacing.screenHorizontal,
-    paddingTop: t.spacing.headerTop,
-    paddingBottom: t.spacing.searchBottom,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700" as const,
-    color: t.colors.textPrimary,
+    color: "#1A1A2E",
   },
   subtitle: {
     fontSize: 14,
     fontWeight: "400" as const,
-    color: t.colors.textSecondary,
+    color: "#8A8A8A",
     marginTop: 4,
   },
   searchRow: {
-    paddingHorizontal: t.spacing.screenHorizontal,
-    marginBottom: t.spacing.searchBottom,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 12,
   },
   categoryRow: {
-    marginBottom: t.spacing.categoryBottom,
+    marginTop: 12,
+    marginBottom: 12,
   },
   categoryScroll: {
-    paddingHorizontal: t.spacing.screenHorizontal,
-    gap: t.spacing.chipGap,
+    paddingHorizontal: 16,
+    gap: 8,
   },
   errorBanner: {
     flexDirection: "row",
@@ -128,13 +130,15 @@ export const styles = StyleSheet.create({
     paddingTop: 8,
   },
   section: {
+    marginTop: 24,
     marginBottom: t.spacing.sectionVertical,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: 8,
-    paddingHorizontal: t.spacing.screenHorizontal,
+    paddingHorizontal: 16,
     marginBottom: 12,
   },
   sectionTitle: {

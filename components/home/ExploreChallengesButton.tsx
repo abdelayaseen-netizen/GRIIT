@@ -1,11 +1,10 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
-import { ChevronRight, Sparkles } from "lucide-react-native";
+import { Sparkles } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import Colors from "@/constants/colors";
-import { designTokens } from "@/lib/design-tokens";
 
 export default function ExploreChallengesButton() {
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function ExploreChallengesButton() {
     >
       <Sparkles size={18} color={Colors.accent} />
       <Text style={styles.label}>Explore challenges</Text>
-      <ChevronRight size={18} color={Colors.text.tertiary} />
+      <Text style={styles.chevron}>›</Text>
     </TouchableOpacity>
   );
 }
@@ -35,17 +34,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 16,
-    backgroundColor: Colors.accentLight,
-    borderRadius: designTokens.cardRadius,
-    borderWidth: 1,
-    borderColor: Colors.accent + "30",
+    backgroundColor: "#FFF0E8",
+    borderRadius: 28,
+    width: "100%",
   },
   label: {
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.accent,
+    color: "#E8733A",
+  },
+  chevron: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#E8733A",
   },
 });

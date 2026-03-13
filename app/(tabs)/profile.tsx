@@ -323,10 +323,11 @@ export default function ProfileScreen() {
         style: "destructive",
         onPress: async () => {
           await supabase.auth.signOut();
+          router.replace(ROUTES.AUTH as never);
         },
       },
     ]);
-  }, []);
+  }, [router]);
 
   const currentStreak = stats?.activeStreak || 0;
   const bestStreak = stats?.longestStreak || 0;

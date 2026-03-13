@@ -16,17 +16,19 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { colors, spacing, radius } from "@/src/theme/tokens";
+import { GRIIT_COLORS } from "@/src/theme";
 import { trpcMutate } from "@/lib/trpc";
 import { saveJoinedStarterId, setDay1StartedAt } from "@/lib/starter-join";
 import { filterOnboardingStarters, type OnboardingStarter } from "@/lib/onboarding-starters";
-import { getPendingChallengeId, setPendingChallengeId } from "@/lib/onboarding-pending";
 import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
+import { supabase } from "@/lib/supabase";
 
 const HOW_HEARD_OPTIONS = ["Friend", "Social media", "App Store", "YouTube", "Podcast", "Other"];
 const NOTIFICATION_OPTIONS = ["Daily", "Weekly", "Don't remind me"];
@@ -67,38 +69,22 @@ export default function OnboardingScreen() {
   const [selectedStarter, setSelectedStarter] = useState<OnboardingStarter | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [joinResult, setJoinResult] = useState<{ activeChallengeId: string; taskId: string; challengeId: string } | null>(null);
+  const [displayName, setDisplayName] = useState("");
 
-  const goToDay1QuickWin = useCallback(async () => {
-    const pendingId = await getPendingChallengeId();
-    if (pendingId) {
-      await setPendingChallengeId(null);
-      router.replace(ROUTES.CHALLENGE_ID(pendingId) as never);
-      return;
-    }
-    if (!joinResult || !selectedStarter) {
-      router.replace("/(tabs)" as never);
-      return;
-    }
-    router.replace({
-      pathname: "/day1-quick-win",
-      params: {
-        activeChallengeId: joinResult.activeChallengeId,
-        taskId: joinResult.taskId,
-        challengeId: joinResult.challengeId,
-        title: selectedStarter.title,
-        taskTitle: selectedStarter.taskTitle,
-        taskType: selectedStarter.taskType,
-        starterId: selectedStarter.id,
-        primaryGoal: primaryGoal || undefined,
-        dailyTimeBudget: dailyTimeBudget || undefined,
-      },
-    } as never);
-  }, [joinResult, selectedStarter, primaryGoal, dailyTimeBudget, router]);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      const name = (user?.user_metadata as Record<string, unknown>)?.display_name;
+      if (typeof name === "string" && name.trim()) setDisplayName(name.trim());
+    }).catch(() => {});
+  }, []);
+
+  const goToHome = useCallback(() => {
+    router.replace(ROUTES.TABS as never);
+  }, [router]);
 
   const requestNotificationPermission = useCallback(async () => {
     try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (__DEV__) console.log("[Onboarding] notification permission:", status);
+      await Notifications.requestPermissionsAsync();
     } catch {
       // ignore
     }
@@ -171,23 +157,36 @@ export default function OnboardingScreen() {
   }, [selectedStarter, primaryGoal, dailyTimeBudget, howHeard, notificationPreference, submitting]);
 
   const starters = filterOnboardingStarters(primaryGoal, dailyTimeBudget);
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={s.container} edges={["top", "bottom"]}>
+      {step > 1 && (
+        <TouchableOpacity
+          onPress={() => setStep(step - 1)}
+          style={[s.backButton, { top: insets.top + 12 }]}
+          activeOpacity={0.7}
+        >
+          <ChevronLeft size={24} color={GRIIT_COLORS.textPrimary} />
+        </TouchableOpacity>
+      )}
       <View style={s.progressRow}>
         <View style={s.progressDots}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((i) => (
             <View key={i} style={[s.progressDot, i === step && s.progressDotActive]} />
           ))}
         </View>
+        <Text style={s.progressText}>Step {step} of {TOTAL_STEPS}</Text>
       </View>
 
       {step === 1 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={s.title}>Welcome to GRIIT</Text>
-          <Text style={s.subtitle}>Build discipline, one day at a time.</Text>
+          <Text style={s.title}>
+            Welcome to GRIIT{displayName ? `, ${displayName}` : ""}!
+          </Text>
+          <Text style={s.subtitle}>Let&apos;s personalize your experience. This takes about 60 seconds.</Text>
           <TouchableOpacity style={s.primaryBtn} onPress={handleNextStep1} activeOpacity={0.85}>
-            <Text style={s.primaryBtnText}>Let{"'"}s set you up</Text>
+            <Text style={s.primaryBtnText}>Get Started</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -336,7 +335,7 @@ export default function OnboardingScreen() {
 
       {step === 7 && (
         <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          <OnboardingDoneStep onContinue={goToDay1QuickWin} />
+          <OnboardingDoneStep onContinue={goToHome} />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -348,10 +347,22 @@ const s = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  backButton: {
+    position: "absolute",
+    left: 16,
+    zIndex: 10,
+    padding: 8,
+  },
   progressRow: {
     paddingHorizontal: spacing.screenHorizontal,
     paddingTop: spacing.md,
     alignItems: "center",
+  },
+  progressText: {
+    fontSize: 13,
+    color: GRIIT_COLORS.textMuted,
+    textAlign: "center",
+    marginTop: 6,
   },
   progressDots: {
     flexDirection: "row",

@@ -16,15 +16,17 @@ import {
   Sparkles,
   Dumbbell,
   Brain,
-  Shield,
-  TrendingUp,
+  Target,
+  Flame,
   Zap,
+  Shield,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
 import { colors as tokenColors } from "@/src/theme/tokens";
+import { GRIIT_COLORS } from "@/src/theme";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
 import { styles } from "@/styles/discover-styles";
 import {
@@ -39,6 +41,7 @@ import {
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
 import { useIsGuest } from "@/contexts/AuthGateContext";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline";
 
@@ -85,7 +88,7 @@ const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.Component
   { key: "all", label: "All", icon: Sparkles },
   { key: "fitness", label: "Fitness", icon: Dumbbell },
   { key: "mind", label: "Mind", icon: Brain },
-  { key: "discipline", label: "Discipline", icon: Shield },
+  { key: "discipline", label: "Discipline", icon: Target },
 ];
 
 function isDailyActive(c: StarterChallenge): boolean {
@@ -204,6 +207,7 @@ export default function DiscoverScreen() {
   const isGuest = useIsGuest();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   const starterPackQuery = useQuery({
     queryKey: ["discover", "starterPack"],
@@ -216,13 +220,13 @@ export default function DiscoverScreen() {
   const starterPack = Array.isArray(starterPackQuery.data) ? starterPackQuery.data : [];
 
   const featuredQuery = useInfiniteQuery({
-    queryKey: ["discover", "featured", activeCategory, searchQuery],
+    queryKey: ["discover", "featured", activeCategory, debouncedQuery],
     queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
       const params: Record<string, string | number | undefined> = {
         limit: FEATURED_PAGE_SIZE,
         cursor: pageParam ?? undefined,
         category: activeCategory !== "all" ? activeCategory : undefined,
-        search: searchQuery || undefined,
+        search: debouncedQuery || undefined,
       };
       const data = (await trpcQuery("challenges.getFeatured", params)) as GetFeaturedResponse;
       const isPaginated = data != null && typeof data === "object" && !Array.isArray(data) && "items" in data;
@@ -291,15 +295,15 @@ export default function DiscoverScreen() {
     return allChallenges
       .filter((c) => c.is_daily && isDailyActive(c))
       .filter((c) => matchesCategory(c, activeCategory))
-      .filter((c) => matchesSearch(c, searchQuery));
-  }, [allChallenges, activeCategory, searchQuery]);
+      .filter((c) => matchesSearch(c, debouncedQuery));
+  }, [allChallenges, activeCategory, debouncedQuery]);
 
   const nonDailyChallenges = useMemo(() => {
     return allChallenges
       .filter((c) => !c.is_daily)
       .filter((c) => matchesCategory(c, activeCategory))
-      .filter((c) => matchesSearch(c, searchQuery));
-  }, [allChallenges, activeCategory, searchQuery]);
+      .filter((c) => matchesSearch(c, debouncedQuery));
+  }, [allChallenges, activeCategory, debouncedQuery]);
 
   const FEATURED_SECTION_SIZE = 5;
   const featuredChallenges = useMemo(
@@ -500,7 +504,7 @@ export default function DiscoverScreen() {
           <View style={styles.section}>
             <SectionHeader
               title="24-Hour Challenges"
-              icon={<Zap size={18} color={tokenColors.badgeRedText} />}
+              icon={<Zap size={18} color={GRIIT_COLORS.warningAmber} />}
               caption="New every day"
             />
             <FlatList
@@ -521,7 +525,7 @@ export default function DiscoverScreen() {
           <View style={styles.section}>
             <SectionHeader
               title="Featured"
-              icon={<TrendingUp size={18} color={tokenColors.accentOrange} />}
+              icon={<Flame size={18} color={GRIIT_COLORS.primaryAccent} />}
             />
             <FlatList
               data={featuredChallenges}
@@ -540,7 +544,7 @@ export default function DiscoverScreen() {
           <View style={styles.section}>
             <SectionHeader
               title="More Challenges"
-              icon={<Sparkles size={18} color={tokenColors.textSecondary} />}
+              icon={<Sparkles size={18} color={GRIIT_COLORS.textPrimary} />}
             />
             <FlatList
               data={otherChallenges}
@@ -580,10 +584,10 @@ export default function DiscoverScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>Discover</Text>
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>Find challenges worth committing to</Text>
+          <Text style={[styles.title, { fontSize: 28, fontFamily: Platform.OS === "ios" ? "Georgia" : undefined, color: GRIIT_COLORS.textPrimary }]}>Discover</Text>
+          <Text style={[styles.subtitle, { color: GRIIT_COLORS.textSecondary }]}>Find challenges worth committing to</Text>
         </View>
 
         <View style={styles.searchRow}>
@@ -610,7 +614,7 @@ export default function DiscoverScreen() {
                   label={cat.label}
                   selected={isActive}
                   onPress={() => handleCategoryPress(cat.key)}
-                  icon={<IconComp size={16} color={isActive ? tokenColors.white : tokenColors.chipText} />}
+                  icon={<IconComp size={14} color={isActive ? "#FFFFFF" : GRIIT_COLORS.textPrimary} />}
                 />
               );
             })}

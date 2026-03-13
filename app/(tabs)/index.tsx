@@ -54,6 +54,7 @@ import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/
 import { ROUTES } from "@/lib/routes";
 import { designTokens } from "@/lib/design-tokens";
 import { formatTimeRemaining } from "@/lib/challenge-timer";
+import { GRIIT_COLORS, GRIIT_SPACING, GRIIT_TYPOGRAPHY } from "@/src/theme";
 
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
@@ -242,6 +243,8 @@ export default function HomeScreen() {
   const [showFirstSessionBanner, setShowFirstSessionBanner] = useState(false);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
+  const [showStreakLostModal, setShowStreakLostModal] = useState(false);
+  const streakLostShownRef = useRef(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
@@ -361,6 +364,15 @@ export default function HomeScreen() {
   const daySecured = optimisticDaySecured || (computeProgress.progress === 100 && !canSecureDay);
   const isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
 
+  useEffect(() => {
+    if (isGuest || !initialFetchDone) return;
+    const streakBroken = currentStreak === 0 && (stats?.longestStreak ?? 0) > 0;
+    if (streakBroken && !streakLostShownRef.current) {
+      streakLostShownRef.current = true;
+      setShowStreakLostModal(true);
+    }
+  }, [isGuest, initialFetchDone, currentStreak, stats?.longestStreak]);
+
   const tasks = useMemo((): { id: string; title: string; completed: boolean }[] => {
     if (!challenge?.challenge_tasks) return [];
     return (challenge.challenge_tasks as ChallengeTaskFromApi[]).map((t) => ({
@@ -462,7 +474,7 @@ export default function HomeScreen() {
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <HomeScreenSkeleton />
         </ScrollView>
@@ -472,7 +484,7 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
             <Text style={styles.heroEmoji}>🔥</Text>
@@ -548,7 +560,7 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: GRIIT_COLORS.background }]} edges={["top"]}>
         <Celebration
         visible={showCelebration}
         onComplete={() => { setShowCelebration(false); setCelebrationPayload(null); }}
@@ -560,7 +572,7 @@ export default function HomeScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: themeColors.background }]}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: GRIIT_COLORS.background }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -586,17 +598,17 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View>
-            <Text style={[styles.logo, { color: themeColors.text.primary }]}>GRIT</Text>
-            <Text style={[styles.logoSubtitle, { color: themeColors.text.muted }]}>Build Discipline Daily</Text>
+            <Text style={[styles.logo, { color: GRIIT_COLORS.textPrimary }]} allowFontScaling={false}>G R I I T</Text>
+            <Text style={[styles.logoSubtitle, { color: GRIIT_COLORS.textSecondary }]}>Build Discipline Daily</Text>
           </View>
           <View style={styles.headerBadges}>
-            <View style={[styles.headerBadge, { borderColor: themeColors.border }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
-              <TrendingUp size={14} color={themeColors.text.tertiary} />
-              <Text style={[styles.headerBadgeText, { color: themeColors.text.primary }]}>{stats?.longestStreak ?? 0}</Text>
+            <View style={[styles.headerBadge, { borderColor: GRIIT_COLORS.borderLight }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
+              <TrendingUp size={14} color={GRIIT_COLORS.secondaryGreen} />
+              <Text style={[styles.headerBadgeText, { color: GRIIT_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
             </View>
-            <View style={[styles.headerBadge, { borderColor: themeColors.border }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
-              <Flame size={14} color={themeColors.accent} />
-              <Text style={[styles.headerBadgeText, { color: themeColors.text.primary }]}>{currentStreak}</Text>
+            <View style={[styles.headerBadge, { borderColor: GRIIT_COLORS.borderLight }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
+              <Flame size={14} color={GRIIT_COLORS.primaryAccent} />
+              <Text style={[styles.headerBadgeText, { color: GRIIT_COLORS.textPrimary }]}>{currentStreak}</Text>
             </View>
           </View>
         </View>
@@ -721,24 +733,24 @@ export default function HomeScreen() {
         )}
 
         {!isGuest && (
-          <View style={[styles.statsSummaryCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-            <View style={[styles.statsSummaryCol, { borderRightColor: themeColors.border }]}>
-              <Flame size={20} color={themeColors.accent} />
-              <Text style={[styles.statsSummaryValue, { color: themeColors.text.primary }]}>{currentStreak}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: themeColors.text.secondary }]}>Streak</Text>
+          <View style={[styles.statsSummaryCard, { backgroundColor: GRIIT_COLORS.cardBackground, borderColor: GRIIT_COLORS.borderLight }]}>
+            <View style={[styles.statsSummaryCol, { borderRightColor: GRIIT_COLORS.borderLight }]}>
+              <Flame size={20} color={GRIIT_COLORS.primaryAccent} />
+              <Text style={[styles.statsSummaryValue, { color: GRIIT_COLORS.textPrimary }]}>{currentStreak}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: GRIIT_COLORS.textSecondary }]}>Streak</Text>
               {lastStandsAvailable >= 0 && (
-                <Text style={[styles.statsSummaryLastStand, { color: themeColors.text.tertiary }]}>Last Stands: {lastStandsAvailable}</Text>
+                <Text style={[styles.statsSummaryLastStand, { color: GRIIT_COLORS.textMuted }]}>Last Stands: {lastStandsAvailable}</Text>
               )}
             </View>
-            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: themeColors.border }]}>
-              <TrendingUp size={20} color={themeColors.accent} />
-              <Text style={[styles.statsSummaryValue, { color: themeColors.text.primary }]}>{stats?.longestStreak ?? 0}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: themeColors.text.secondary }]}>Score</Text>
+            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: GRIIT_COLORS.borderLight }]}>
+              <TrendingUp size={20} color={GRIIT_COLORS.secondaryGreen} />
+              <Text style={[styles.statsSummaryValue, { color: GRIIT_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: GRIIT_COLORS.textSecondary }]}>Score</Text>
             </View>
             <View style={styles.statsSummaryCol}>
-              <Target size={20} color={themeColors.text.tertiary} />
-              <Text style={[styles.statsSummaryValue, { color: themeColors.text.primary }]}>{tierName}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: themeColors.text.secondary }]}>Rank</Text>
+              <Target size={20} color={GRIIT_COLORS.primaryAccent} />
+              <Text style={[styles.statsSummaryValue, { color: GRIIT_COLORS.textPrimary }]}>{tierName ?? "Starter"}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: GRIIT_COLORS.textSecondary }]}>Rank</Text>
             </View>
           </View>
         )}
@@ -926,7 +938,7 @@ export default function HomeScreen() {
 
         {!hasActiveChallenge && suggestedChallenges.length > 0 && (
           <View style={styles.suggestedChallengesSection}>
-            <Text style={[styles.suggestedChallengesTitle, { color: themeColors.text.primary }]}>Suggested for you</Text>
+            <Text style={[styles.suggestedChallengesTitle, { color: GRIIT_COLORS.textPrimary }]}>SUGGESTED FOR YOU</Text>
             {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string }) => (
               <TouchableOpacity
                 key={c.id}
@@ -1046,7 +1058,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        <Text style={[styles.footerTagline, { color: themeColors.text.tertiary }]}>Only discipline shows here.</Text>
+        <Text style={[styles.footerTagline, { color: GRIIT_COLORS.textMuted }]}>Only discipline shows here.</Text>
       </ScrollView>
 
       {showMilestone != null && (() => {
@@ -1147,6 +1159,27 @@ export default function HomeScreen() {
           </View>
         </Modal>
       )}
+
+      {showStreakLostModal && (
+        <Modal visible transparent animationType="fade">
+          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: GRIIT_COLORS.overlayDark }]} activeOpacity={1} onPress={() => setShowStreakLostModal(false)} />
+          <View style={styles.freezeModalCenter}>
+            <View style={[styles.streakLostCard, { backgroundColor: GRIIT_COLORS.cardBackground }]}>
+              <TouchableOpacity hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={styles.streakLostClose} onPress={() => setShowStreakLostModal(false)}>
+                <Text style={[styles.streakLostCloseText, { color: GRIIT_COLORS.textSecondary }]}>✕</Text>
+              </TouchableOpacity>
+              <View style={styles.streakLostIconWrap}>
+                <Flame size={28} color={GRIIT_COLORS.textMuted} />
+              </View>
+              <Text style={[styles.streakLostTitle, { color: GRIIT_COLORS.textPrimary }]}>Streak lost.</Text>
+              <Text style={[styles.streakLostSub, { color: GRIIT_COLORS.textSecondary }]}>Start again today.</Text>
+              <TouchableOpacity style={styles.streakLostButton} onPress={() => setShowStreakLostModal(false)} activeOpacity={0.85}>
+                <Text style={styles.streakLostButtonText}>Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
       </SafeAreaView>
     </ErrorBoundary>
   );
@@ -1209,13 +1242,13 @@ const taskStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: GRIIT_COLORS.background,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: GRIIT_SPACING.screenPadding,
     paddingBottom: 32,
   },
   header: {
@@ -1223,38 +1256,40 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "space-between",
     paddingTop: 12,
-    paddingBottom: 16,
+    paddingBottom: GRIIT_SPACING.lg,
   },
   headerBadges: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: GRIIT_SPACING.sm,
   },
   headerBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    height: 36,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
     borderWidth: 1,
+    backgroundColor: GRIIT_COLORS.cardBackground,
   },
   headerBadgeText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: "700" as const,
     color: Colors.text.primary,
   },
   logo: {
-    fontSize: 28,
-    fontWeight: "800" as const,
+    fontSize: GRIIT_TYPOGRAPHY.logoSize,
+    fontWeight: "700" as const,
     color: Colors.text.primary,
-    letterSpacing: 6,
+    letterSpacing: GRIIT_TYPOGRAPHY.logoLetterSpacing,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : undefined,
   },
   logoSubtitle: {
-    fontSize: 13,
+    fontSize: GRIIT_TYPOGRAPHY.subtitleSize,
     fontWeight: "400" as const,
-    color: Colors.text.muted,
-    marginTop: 4,
+    color: Colors.text.secondary,
+    marginTop: 0,
   },
   mainPromptBlock: {
     marginBottom: 16,
@@ -1499,11 +1534,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   suggestedChallengesTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 10,
+    letterSpacing: 1.5,
+    marginBottom: 12,
   },
   suggestedChallengeRow: {
     flexDirection: "row",
@@ -1829,9 +1864,11 @@ const styles = StyleSheet.create({
   },
   footerTagline: {
     fontSize: 13,
+    fontStyle: "italic",
     color: Colors.text.tertiary,
     textAlign: "center",
-    marginBottom: 24,
+    marginTop: 12,
+    marginBottom: 32,
   },
   activeSection: {
     gap: 4,
@@ -2161,6 +2198,57 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500" as const,
     color: Colors.text.secondary,
+  },
+  streakLostCard: {
+    borderRadius: 16,
+    padding: 32,
+    width: "80%",
+    maxWidth: 340,
+    alignItems: "center",
+  },
+  streakLostClose: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    padding: 4,
+  },
+  streakLostCloseText: {
+    fontSize: 20,
+    fontWeight: "600" as const,
+  },
+  streakLostIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#E8E8E8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  streakLostTitle: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  streakLostSub: {
+    fontSize: 15,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  streakLostButton: {
+    backgroundColor: "#1A1A2E",
+    borderRadius: 28,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    width: "100%",
+    alignItems: "center",
+  },
+  streakLostButtonText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#fff",
   },
   emptyTitleNew: {
     fontSize: 26,

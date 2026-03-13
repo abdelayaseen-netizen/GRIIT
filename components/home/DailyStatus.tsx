@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
-import { CheckCircle2, Shield, AlertCircle } from "lucide-react-native";
+import { CheckCircle2, Shield } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { designTokens } from "@/lib/design-tokens";
@@ -50,7 +50,9 @@ export default function DailyStatus({
   return (
     <View style={styles.card}>
       <View style={styles.notSecuredRow}>
-        <AlertCircle size={24} color={Colors.warning} />
+        <View style={styles.amberCircle}>
+          <Text style={styles.amberCircleText}>!</Text>
+        </View>
         <View style={styles.notSecuredTextWrap}>
           <Text style={styles.notSecuredTitle}>Today is not secured</Text>
           <Text style={styles.notSecuredSub}>
@@ -115,11 +117,25 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 12,
   },
+  amberCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F5A623",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  amberCircleText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
   notSecuredTextWrap: {
     flex: 1,
+    marginLeft: 0,
   },
   notSecuredTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: Colors.text.primary,
   },
@@ -136,7 +152,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 28,
     marginTop: 14,
   },
   secureButtonText: {

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
-import { Target, ChevronRight } from "lucide-react-native";
+import { Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
@@ -25,8 +25,7 @@ export default function EmptyChallengesCard() {
         activeOpacity={0.85}
         testID="empty-challenges-discover-button"
       >
-        <Text style={styles.buttonText}>Discover challenges</Text>
-        <ChevronRight size={18} color="#fff" />
+        <Text style={styles.buttonText}>Discover challenges ›</Text>
       </TouchableOpacity>
     </View>
   );
@@ -43,7 +42,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: Colors.text.primary,
     marginTop: 12,
@@ -52,22 +51,18 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: Colors.text.secondary,
-    marginTop: 6,
+    marginTop: 4,
     textAlign: "center",
   },
   button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: Colors.accent,
+    backgroundColor: "#E8733A",
     paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    paddingHorizontal: 32,
+    borderRadius: 28,
     marginTop: 16,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "#fff",
   },

@@ -1,6 +1,6 @@
 /**
  * Light and dark color palettes for ThemeContext.
- * Light theme matches reference: #FAFAF8 background, #E8734A accent, #2D8B4E success, etc.
+ * Light theme: GRIIT Part 3 — #F9F6F1 background, #E8733A accent, #2E7D32 success.
  */
 
 export type ThemeColors = {
@@ -31,38 +31,38 @@ export type ThemeColors = {
 };
 
 export const LIGHT_THEME: ThemeColors = {
-  background: "#FAFAF8",
+  background: "#F9F6F1",
   card: "#FFFFFF",
   text: {
-    primary: "#1A1A1A",
-    secondary: "#6B7280",
-    tertiary: "#6B7280",
-    muted: "#9CA3AF",
+    primary: "#1A1A2E",
+    secondary: "#8A8A8A",
+    tertiary: "#8A8A8A",
+    muted: "#B0B0B0",
   },
-  accent: "#E8734A",
-  accentLight: "#FFF5F0",
-  accentTint: "#FFF5F0",
-  border: "#F0EDE8",
-  success: "#2D8B4E",
-  successLight: "#F0FFF4",
-  warning: "#D4A017",
+  accent: "#E8733A",
+  accentLight: "#FFF0E8",
+  accentTint: "#FFF0E8",
+  border: "#EDEDED",
+  success: "#2E7D32",
+  successLight: "#E8F5E9",
+  warning: "#F5A623",
   warningLight: "#FFFBEB",
-  danger: "#E53E3E",
+  danger: "#D32F2F",
   dangerLight: "#FEF2F2",
   shadow: "rgba(0, 0, 0, 0.04)",
   shadowMedium: "rgba(0, 0, 0, 0.08)",
   pill: "#F3F4F6",
   category: {
-    fitness: "#E8734A",
+    fitness: "#E8733A",
     mind: "#7C6BC4",
-    discipline: "#1A1A1A",
+    discipline: "#1A1A2E",
     faith: "#2563EB",
   },
   streak: {
-    fire: "#E8734A",
-    shield: "#2D8B4E",
-    gold: "#D4A017",
-    platinum: "#6B7280",
+    fire: "#E8733A",
+    shield: "#2E7D32",
+    gold: "#F5A623",
+    platinum: "#8A8A8A",
   },
   milestone: {
     bronze: "#CD7F32",

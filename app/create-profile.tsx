@@ -30,6 +30,19 @@ export default function CreateProfileScreen() {
     getOnboardingAnswers().then(setOnboardingAnswersState).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user?.user_metadata) return;
+      const meta = user.user_metadata as Record<string, unknown>;
+      if (typeof meta.display_name === "string" && meta.display_name.trim() && !displayName) {
+        setDisplayName(meta.display_name.trim());
+      }
+      if (typeof meta.username === "string" && meta.username.trim() && !username) {
+        setUsername(meta.username.trim().replace(/^@+/, ""));
+      }
+    }).catch(() => {});
+  }, []);
+
   const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {
     setIsPending(true);
     try {
@@ -103,8 +116,8 @@ export default function CreateProfileScreen() {
       Alert.alert("Error", "Username must be at least 3 characters");
       return;
     }
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      Alert.alert("Error", "Username can only contain letters, numbers, and underscores");
+    if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
+      Alert.alert("Error", "Username can only contain letters, numbers, underscores, and periods");
       return;
     }
     handleSubmit({
@@ -114,7 +127,7 @@ export default function CreateProfileScreen() {
     });
   };
 
-  const validUsername = username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username);
+  const validUsername = username.length >= 3 && /^[a-zA-Z0-9_.]+$/.test(username);
   const validDisplayName = (displayName.trim() || username.trim()).length >= 2;
   const canContinue = validUsername && validDisplayName;
 
@@ -131,8 +144,8 @@ export default function CreateProfileScreen() {
   return (
     <Screen scroll keyboardAvoiding header={header}>
       <View style={styles.header}>
-        <Caption style={styles.stepLabel}>GETTING STARTED</Caption>
-        <H1 style={styles.title}>Claim your name.</H1>
+        <Caption style={styles.stepLabel}>FINISH SETUP</Caption>
+        <H1 style={styles.title}>Let&apos;s finish setting up your profile.</H1>
         <Body tone="muted" style={styles.subtitle}>
           This is how others will know you.
         </Body>
