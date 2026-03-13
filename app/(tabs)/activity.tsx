@@ -696,7 +696,7 @@ export default function ActivityScreen() {
       const entries = (data?.entries ?? []).map((e: unknown) => mapApiEntryToLeaderboardEntry(e as import("@/types").LeaderboardEntryFromApi));
       return { entries, totalSecuredToday: data?.totalSecuredToday ?? 0 };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000, // 1 min
   });
   const leaderboard = leaderboardQuery.data ?? { entries: [], totalSecuredToday: 0 };
   const leaderboardLoading = leaderboardQuery.isLoading;
@@ -711,7 +711,7 @@ export default function ActivityScreen() {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
     enabled: !!currentUserId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 sec — activity feed
   });
   const communityFeedItems = useMemo(
     () => (communityFeedQuery.data?.pages ?? []).flatMap((p) => p.items),

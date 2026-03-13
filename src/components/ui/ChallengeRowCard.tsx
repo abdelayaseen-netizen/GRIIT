@@ -13,6 +13,7 @@ function ChallengeRowCardInner(props: {
   participantsCount: number;
   statusDotColor?: string;
   onPress: () => void;
+  onPressIn?: () => void;
   participationType?: string;
   teamSize?: number;
   sharedGoalTarget?: number;
@@ -27,6 +28,7 @@ function ChallengeRowCardInner(props: {
     participantsCount,
     statusDotColor,
     onPress,
+    onPressIn,
     participationType,
     teamSize,
     sharedGoalTarget,
@@ -40,6 +42,7 @@ function ChallengeRowCardInner(props: {
   return (
     <TouchableOpacity
       style={[s.card, { backgroundColor: themeColors.card }]}
+      onPressIn={onPressIn}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityLabel={`${title}, ${participantsCount} participants`}

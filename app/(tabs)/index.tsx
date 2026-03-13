@@ -269,7 +269,7 @@ export default function HomeScreen() {
   const leaderboardQuery = useQuery({
     queryKey: ["home", "leaderboard"],
     queryFn: () => trpcQuery("leaderboard.getWeekly", {}) as Promise<{ currentUserRank: number | null; totalSecuredToday: number; entries?: unknown[] }>,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000, // 1 min — leaderboard changes often
     enabled: !isGuest,
   });
   const leaderboardData = leaderboardQuery.data ? { currentUserRank: leaderboardQuery.data.currentUserRank ?? null, totalSecuredToday: leaderboardQuery.data.totalSecuredToday ?? 0 } : null;
@@ -281,7 +281,7 @@ export default function HomeScreen() {
     queryKey: ["home", "feed", "live"],
     queryFn: () => trpcQuery(TRPC.feed.list, { limit: 5 }) as Promise<{ items: { id: string; event_type: string; display_name: string; username: string; avatar_url?: string | null; metadata?: Record<string, unknown>; created_at: string }[] }>,
     enabled: !isGuest,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 sec — activity feed is fast-changing
   });
   const liveFeedItems: LiveFeedCardData[] = useMemo(() => {
     const raw = liveFeedQuery.data?.items ?? [];

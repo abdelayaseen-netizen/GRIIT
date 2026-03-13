@@ -22,6 +22,7 @@ function ChallengeCardFeaturedInner(props: {
   participantsCount: number;
   activeTodayCount: number;
   onPress: () => void;
+  onPressIn?: () => void;
 }) {
   const {
     title,
@@ -34,6 +35,7 @@ function ChallengeCardFeaturedInner(props: {
     participantsCount,
     activeTodayCount,
     onPress,
+    onPressIn,
   } = props;
   const { colors: themeColors } = useTheme();
   const diff = DIFF_STYLES[difficulty] ?? DIFF_STYLES.Medium;
@@ -41,6 +43,7 @@ function ChallengeCardFeaturedInner(props: {
   return (
     <TouchableOpacity
       style={[s.card, { backgroundColor: themeColors.card }]}
+      onPressIn={onPressIn}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityLabel={`${title}, ${participantsCount} participants`}

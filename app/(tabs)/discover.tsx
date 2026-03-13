@@ -22,7 +22,7 @@ import {
   Shield,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
@@ -321,6 +321,7 @@ export default function DiscoverScreen() {
     featuredQuery.refetch();
   }, [starterPackQuery, featuredQuery]);
 
+  const queryClient = useQueryClient();
   const handleChallengePress = useCallback(
     (challengeId: string) => {
       const id = challengeId != null ? String(challengeId) : "";
@@ -331,6 +332,18 @@ export default function DiscoverScreen() {
       router.push(ROUTES.CHALLENGE_ID(id) as never);
     },
     [router]
+  );
+  const handlePrefetchChallenge = useCallback(
+    (challengeId: string) => {
+      const id = challengeId != null ? String(challengeId) : "";
+      if (!id) return;
+      queryClient.prefetchQuery({
+        queryKey: ["challenge", id],
+        queryFn: () => trpcQuery("challenges.getById", { id }),
+        staleTime: 5 * 60 * 1000,
+      });
+    },
+    [queryClient]
   );
 
   const handleCategoryPress = useCallback((key: CategoryKey) => {
@@ -376,10 +389,11 @@ export default function DiscoverScreen() {
         taskCount={c.tasks.length}
         participantsCount={c.participants_count ?? 0}
         activeTodayCount={c.active_today_count ?? 0}
+        onPressIn={() => handlePrefetchChallenge(c.id)}
         onPress={() => handleChallengePress(c.id)}
       />
     ),
-    [handleChallengePress, getDurationLabel]
+    [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
   );
 
   const renderOtherItem = useCallback(
@@ -392,6 +406,7 @@ export default function DiscoverScreen() {
         taskCount={c.tasks.length}
         participantsCount={c.participants_count ?? 0}
         statusDotColor={c.theme_color}
+        onPressIn={() => handlePrefetchChallenge(c.id)}
         onPress={() => handleChallengePress(c.id)}
         participationType={c.participation_type}
         teamSize={c.team_size}
@@ -399,7 +414,7 @@ export default function DiscoverScreen() {
         sharedGoalUnit={c.shared_goal_unit}
       />
     ),
-    [handleChallengePress, getDurationLabel]
+    [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
   );
 
   const renderErrorBanner = () => {
