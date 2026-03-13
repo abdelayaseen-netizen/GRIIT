@@ -519,6 +519,8 @@ export default function SettingsScreen() {
             onPress={async () => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               await supabase.auth.signOut();
+              const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+              await clearOnboardingStorage();
               router.replace(ROUTES.AUTH as never);
             }}
             activeOpacity={0.9}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
@@ -14,6 +14,10 @@ export default function OnboardingIdentityScreen() {
   const router = useRouter();
   const persona = useOnboardingStore((s) => s.persona);
   const setPersona = useOnboardingStore((s) => s.setPersona);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+  useEffect(() => {
+    setCurrentStep(2);
+  }, [setCurrentStep]);
 
   const handleContinue = () => {
     if (!persona) return;

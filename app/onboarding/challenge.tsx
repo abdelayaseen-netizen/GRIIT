@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -47,13 +47,18 @@ export default function OnboardingChallengeScreen() {
   const [saving, setSaving] = useState(false);
 
   const challenges = filterAndSortChallenges(intensity);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+
+  useEffect(() => {
+    setCurrentStep(7);
+  }, [setCurrentStep]);
 
   const handleSelect = (id: string) => {
     if (Haptics?.impactAsync) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedChallenge(id);
-    setConfirmed(false);
+    setConfirmed(true);
   };
 
   const handleLockIn = () => {
@@ -62,7 +67,6 @@ export default function OnboardingChallengeScreen() {
     if (Haptics?.impactAsync) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    setConfirmed(true);
     setSaving(false);
     setTimeout(() => {
       router.push("/onboarding/signup" as never);
@@ -98,7 +102,7 @@ export default function OnboardingChallengeScreen() {
           />
         ))}
 
-        {selectedChallengeId && confirmed ? (
+        {selectedChallengeId ? (
           <View style={styles.savedWrap}>
             <Text style={styles.savedText}>Challenge saved ✓</Text>
           </View>

@@ -12,12 +12,12 @@ const STARTER_CHALLENGE_IDS: Record<string, string> = {
 
 function notificationTimeFromTrainingTime(trainingTime: string | null | undefined): string {
   const map: Record<string, string> = {
-    morning: "08:00",
+    morning: "07:30",
     midday: "12:00",
-    evening: "20:00",
-    whenever: "20:00",
+    evening: "18:00",
+    whenever: "09:00",
   };
-  return (trainingTime && map[trainingTime]) || "20:00";
+  return (trainingTime && map[trainingTime]) || "09:00";
 }
 
 export const userRouter = createTRPCRouter({
@@ -106,15 +106,22 @@ export const userRouter = createTRPCRouter({
           .maybeSingle();
 
         if (!existing) {
-          const { error: rpcError } = await ctx.supabase.rpc("join_challenge", {
-            p_challenge_id: challengeUuid,
-          });
-          if (rpcError && (rpcError as { message?: string }).message?.includes("ALREADY_JOINED")) {
-            // already joined, ignore
-          } else if (rpcError) {
-            if (__DEV__) {
-              console.warn("[user.completeOnboarding] join_challenge failed:", rpcError.message);
+          try {
+            const { error: rpcError } = await ctx.supabase.rpc("join_challenge", {
+              p_challenge_id: challengeUuid,
+            });
+            if (rpcError) {
+              const msg = (rpcError as { message?: string }).message ?? "";
+              if (msg.includes("ALREADY_JOINED")) {
+                // already joined, ignore
+              } else if (msg.includes("NOT_FOUND") || (rpcError as { code?: string }).code === "23503") {
+                // challenge missing or FK constraint; do not crash onboarding
+              } else if (process.env.NODE_ENV !== "test") {
+                console.warn("[user.completeOnboarding] join_challenge failed:", msg);
+              }
             }
+          } catch {
+            // do not crash onboarding if join fails
           }
         }
       }

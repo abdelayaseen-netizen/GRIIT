@@ -18,6 +18,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
+import { useOnboardingStore, getOnboardingRouteForStep } from "@/store/onboardingStore";
 
 const HAS_LAUNCHED_KEY = "griit_has_launched";
 
@@ -50,6 +51,8 @@ function AuthRedirector() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const onboardingCompleteFromStore = useOnboardingStore((s) => s.isComplete);
+  const currentStep = useOnboardingStore((s) => s.currentStep);
   const [hasLaunched, setHasLaunched] = useState<boolean | null>(null);
   const [profileChecked, setProfileChecked] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
@@ -138,19 +141,22 @@ function AuthRedirector() {
 
     if (!user) {
       if (!inOnboarding && !inWelcome && !inAuth) {
-        router.replace(ROUTES.ONBOARDING as never);
+        const stepRoute = getOnboardingRouteForStep(currentStep);
+        router.replace(stepRoute as never);
       }
       return;
     }
-  }, [user, loading, segments, hasLaunched, router]);
+  }, [user, loading, segments, hasLaunched, currentStep, router]);
 
   useEffect(() => {
     if (loading || !profileChecked || !user) return;
 
     const first = typeof segments[0] === "string" ? segments[0] : "";
+    const second = typeof segments[1] === "string" ? segments[1] : "";
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
+    const inFirstTask = inOnboarding && (second as string) === "first-task";
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
 
     if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
@@ -163,10 +169,20 @@ function AuthRedirector() {
       return;
     }
 
+    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding && !inFirstTask) {
+      router.replace("/onboarding/first-task" as never);
+      return;
+    }
+
+    if (user && hasProfile && onboardingCompleteFromStore && inOnboarding) {
+      router.replace(ROUTES.TABS as never);
+      return;
+    }
+
     if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile)) {
       router.replace(ROUTES.TABS as never);
     }
-  }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, router]);
+  }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, onboardingCompleteFromStore, router]);
 
   if (loading || (user && !profileChecked) || (!user && hasLaunched === null)) {
     return <AuthRedirectorLoading />;

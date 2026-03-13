@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
@@ -14,6 +14,10 @@ export default function OnboardingHookScreen() {
   const router = useRouter();
   const motivation = useOnboardingStore((s) => s.motivation);
   const setMotivation = useOnboardingStore((s) => s.setMotivation);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+  useEffect(() => {
+    setCurrentStep(1);
+  }, [setCurrentStep]);
 
   const handleContinue = () => {
     if (!motivation) return;

@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OptionCard } from "@/components/onboarding/OptionCard";
@@ -14,6 +14,24 @@ export default function OnboardingBarrierScreen() {
   const router = useRouter();
   const barrier = useOnboardingStore((s) => s.barrier);
   const setBarrier = useOnboardingStore((s) => s.setBarrier);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+  const empathyOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    setCurrentStep(3);
+  }, [setCurrentStep]);
+
+  useEffect(() => {
+    if (barrier) {
+      Animated.timing(empathyOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      empathyOpacity.setValue(0);
+    }
+  }, [barrier, empathyOpacity]);
 
   const handleContinue = () => {
     if (!barrier) return;
@@ -50,9 +68,9 @@ export default function OnboardingBarrierScreen() {
         ))}
 
         {empathyLine ? (
-          <View style={styles.empathyWrap}>
+          <Animated.View style={[styles.empathyWrap, { opacity: empathyOpacity }]}>
             <Text style={styles.empathy}>{empathyLine}</Text>
-          </View>
+          </Animated.View>
         ) : null}
 
         <TouchableOpacity

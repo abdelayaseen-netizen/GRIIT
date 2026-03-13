@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
@@ -16,6 +16,11 @@ export default function OnboardingSocialScreen() {
   const trainingTime = useOnboardingStore((s) => s.trainingTime);
   const setSocialStyle = useOnboardingStore((s) => s.setSocialStyle);
   const setTrainingTime = useOnboardingStore((s) => s.setTrainingTime);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+
+  useEffect(() => {
+    setCurrentStep(5);
+  }, [setCurrentStep]);
 
   const handleContinue = () => {
     if (!socialStyle) return;

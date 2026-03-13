@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -39,6 +39,11 @@ export default function OnboardingSignupScreen() {
   const barrier = useOnboardingStore((s) => s.barrier);
   const socialStyle = useOnboardingStore((s) => s.socialStyle);
   const trainingTime = useOnboardingStore((s) => s.trainingTime);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+
+  useEffect(() => {
+    setCurrentStep(8);
+  }, [setCurrentStep]);
 
   const personaLabel = PERSONAS.find((p) => p.id === persona);
   const challengeLabel = STARTER_CHALLENGES.find((c) => c.id === selectedChallengeId);

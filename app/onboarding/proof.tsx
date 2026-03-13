@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import { useOnboardingStore } from "@/store/onboardingStore";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 
 const TARGET_NUMBER = 43218;
@@ -33,7 +34,7 @@ function useCountUp(end: number, start: number, durationMs: number, run: boolean
       const elapsed = now - startTime.current;
       const t = Math.min(elapsed / durationMs, 1);
       const eased = 1 - (1 - t) * (1 - t);
-      const current = Math.round(start + (end - start) * eased);
+      const current = t >= 1 ? end : Math.round(start + (end - start) * eased);
       setValue(current);
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
     };
@@ -47,10 +48,18 @@ function useCountUp(end: number, start: number, durationMs: number, run: boolean
 
 export default function OnboardingProofScreen() {
   const router = useRouter();
+  const runOnce = useRef(false);
   const [run, setRun] = useState(false);
   const value = useCountUp(TARGET_NUMBER, START_NUMBER, DURATION_MS, run);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
 
   useEffect(() => {
+    setCurrentStep(6);
+  }, [setCurrentStep]);
+
+  useEffect(() => {
+    if (runOnce.current) return;
+    runOnce.current = true;
     const t = setTimeout(() => setRun(true), 100);
     return () => clearTimeout(t);
   }, []);

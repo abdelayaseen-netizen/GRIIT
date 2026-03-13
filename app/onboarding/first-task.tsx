@@ -96,6 +96,11 @@ export default function OnboardingFirstTaskScreen() {
   const router = useRouter();
   const selectedChallengeId = useOnboardingStore((s) => s.selectedChallengeId);
   const completeOnboarding = useOnboardingStore((s) => s.completeOnboarding);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+
+  useEffect(() => {
+    setCurrentStep(9);
+  }, [setCurrentStep]);
 
   const challenge = STARTER_CHALLENGES.find((c) => c.id === selectedChallengeId);
   const day1Tasks = challenge?.day1Tasks ?? [];

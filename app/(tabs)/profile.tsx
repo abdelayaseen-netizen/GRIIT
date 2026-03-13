@@ -324,6 +324,8 @@ export default function ProfileScreen() {
         style: "destructive",
         onPress: async () => {
           await supabase.auth.signOut();
+          const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+          await clearOnboardingStorage();
           router.replace(ROUTES.AUTH as never);
         },
       },

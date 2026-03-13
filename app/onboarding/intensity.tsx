@@ -15,6 +15,12 @@ export default function OnboardingIntensityScreen() {
   const intensity = useOnboardingStore((s) => s.intensity);
   const setIntensity = useOnboardingStore((s) => s.setIntensity);
 
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
+
+  useEffect(() => {
+    setCurrentStep(4);
+  }, [setCurrentStep]);
+
   useEffect(() => {
     const pushDefault = useOnboardingStore.getState().intensity;
     if (pushDefault === null) {
