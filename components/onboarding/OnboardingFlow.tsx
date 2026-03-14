@@ -12,6 +12,8 @@ import ChallengePreview from './screens/ChallengePreview';
 import SignUpScreen from './screens/SignUpScreen';
 import UsernameScreen from './screens/UsernameScreen';
 import ReadyScreen from './screens/ReadyScreen';
+import NotificationScreen from './screens/NotificationScreen';
+import HealthScreen from './screens/HealthScreen';
 import ProgressDots from './ProgressDots';
 
 export default function OnboardingFlow() {
@@ -20,8 +22,8 @@ export default function OnboardingFlow() {
   const [username, setUsername] = useState('');
   const router = useRouter();
 
-  // Steps: 0=Splash, 1=Goals, 2=Intensity, 3=ChallengePreview, 4=SignUp, 5=Username, 6=Ready
-  const showProgressDots = currentStep >= 1 && currentStep <= 5;
+  // Steps: 0=Splash, 1=Goals, 2=Intensity, 3=ChallengePreview, 4=SignUp, 5=Username, 6=Notification, 7=Health, 8=Ready
+  const showProgressDots = currentStep >= 1 && currentStep <= 7;
   const showBackButton = currentStep >= 1 && currentStep <= 4;
 
   const handleAuthSuccess = useCallback((userId: string) => {
@@ -31,7 +33,7 @@ export default function OnboardingFlow() {
 
   const handleProfileComplete = useCallback((usernameValue: string) => {
     setUsername(usernameValue);
-    nextStep(); // Move from Username (5) → Ready (6)
+    nextStep(); // Move from Username (5) → Notification (6)
   }, [nextStep]);
 
   const handleStartApp = useCallback(async () => {
@@ -59,6 +61,10 @@ export default function OnboardingFlow() {
       case 5:
         return <UsernameScreen authUserId={authUserId} onComplete={handleProfileComplete} />;
       case 6:
+        return <NotificationScreen onContinue={nextStep} />;
+      case 7:
+        return <HealthScreen onContinue={nextStep} />;
+      case 8:
         return <ReadyScreen username={username} onStart={handleStartApp} />;
       default:
         return <ValueSplash onContinue={nextStep} />;
@@ -76,7 +82,7 @@ export default function OnboardingFlow() {
           ) : (
             <View style={styles.backButtonPlaceholder} />
           )}
-          {showProgressDots && <ProgressDots total={5} current={currentStep - 1} />}
+          {showProgressDots && <ProgressDots total={7} current={currentStep - 1} />}
           <View style={styles.backButtonPlaceholder} />
         </View>
       )}

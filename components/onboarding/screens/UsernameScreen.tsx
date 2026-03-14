@@ -37,25 +37,42 @@ export default function UsernameScreen({ authUserId, onComplete }: UsernameScree
     setError('');
 
     try {
-      // Resolve userId: prop first, then session (state may not have flushed yet)
+      const { selectedGoals, intensityLevel } = useOnboardingStore.getState();
+
+      // Try multiple ways to get the user ID
       let userId = authUserId;
+
+      // Method 1: Try getting from current session
       if (!userId) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) userId = user.id;
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            userId = session.user.id;
+          }
+        } catch (e) {
+          console.log('getSession failed:', e);
+        }
       }
+
+      // Method 2: Try getUser
       if (!userId) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) userId = session.user.id;
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.id) {
+            userId = user.id;
+          }
+        } catch (e) {
+          console.log('getUser failed:', e);
+        }
       }
+
       if (!userId) {
-        setError('Auth session expired. Go back and sign up again.');
+        setError('No account found. Go back and sign up again.');
         setLoading(false);
         return;
       }
 
-      // Get the onboarding selections to store with the profile
-      const { selectedGoals, intensityLevel } = useOnboardingStore.getState();
-
+      // Try the upsert
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert(
@@ -72,22 +89,33 @@ export default function UsernameScreen({ authUserId, onComplete }: UsernameScree
         );
 
       if (profileError) {
-        console.error('Profile creation error:', JSON.stringify(profileError));
+        console.error('Profile error details:', JSON.stringify(profileError, null, 2));
 
-        if (profileError.message.includes('unique') || profileError.message.includes('duplicate')) {
-          setError('Username taken. Try another one.');
+        if (profileError.message?.includes('unique') || profileError.message?.includes('duplicate')) {
+          if (profileError.message?.includes('username')) {
+            setError('Username taken. Try another one.');
+            return;
+          }
+        }
+
+        // If RLS is blocking the insert because there's no session
+        if (profileError.message?.includes('row-level security') || profileError.code === '42501') {
+          setError('Permission denied. Make sure you are signed in.');
           return;
         }
-        if (profileError.message.includes('foreign key')) {
-          setError('Auth session expired. Go back and sign up again.');
+
+        if (profileError.message?.includes('foreign key')) {
+          setError('Account not found in database. Go back and sign up again.');
           return;
         }
-        setError('Could not save profile. Please try again.');
+
+        setError('Could not save profile: ' + (profileError.message || 'Unknown error'));
         return;
       }
 
       onComplete(cleanUsername);
     } catch (e: unknown) {
+      console.error('Profile creation exception:', e);
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);

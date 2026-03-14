@@ -28,7 +28,7 @@ interface OnboardingState {
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({
   currentStep: 0,
-  totalSteps: 7,
+  totalSteps: 9,
   hasCompletedOnboarding: false,
   selectedGoals: [],
   intensityLevel: null,

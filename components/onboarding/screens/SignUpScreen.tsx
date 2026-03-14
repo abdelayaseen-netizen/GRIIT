@@ -31,15 +31,19 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
     setError('');
 
     try {
-      // Try to sign up
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // First try to sign up
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
       });
 
       if (signUpError) {
-        // If user already exists, try to sign in instead
-        if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
+        // If user already exists, try signing in
+        if (
+          signUpError.message.includes('already registered') ||
+          signUpError.message.includes('already been registered') ||
+          signUpError.message.includes('User already registered')
+        ) {
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: email.trim(),
             password,
@@ -48,8 +52,8 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
             setError('Account exists but wrong password. Try again.');
             return;
           }
-          if (signInData.user) {
-            onAuthSuccess(signInData.user.id);
+          if (signInData.session?.user) {
+            onAuthSuccess(signInData.session.user.id);
             return;
           }
         }
@@ -57,9 +61,35 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
         return;
       }
 
-      if (data.user) {
-        onAuthSuccess(data.user.id);
+      // signUp succeeded — now we need a valid session
+      // If session exists (email confirmation is OFF), use it directly
+      if (signUpData.session?.user) {
+        onAuthSuccess(signUpData.session.user.id);
+        return;
       }
+
+      // If no session but we have a user (email confirmation might be ON),
+      // try to sign in immediately to create a session
+      if (signUpData.user) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (signInError) {
+          // Email confirmation is ON and blocking sign-in
+          // Use the user ID directly from the signup response
+          onAuthSuccess(signUpData.user.id);
+          return;
+        }
+
+        if (signInData.session?.user) {
+          onAuthSuccess(signInData.session.user.id);
+          return;
+        }
+      }
+
+      setError('Sign up succeeded but could not create session. Try again.');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Try again.');
     } finally {
