@@ -578,12 +578,19 @@ function CommunityActivityFeedSection({
   styles: ActivityStyles;
 }) {
   useTheme();
+  const router = useRouter();
   const getFeedLine = (e: FeedEventItem) => {
     const name = e.display_name || e.username || "Someone";
     const meta = e.metadata || {};
     switch (e.event_type) {
-      case "secured_day":
-        return `${name} secured Day ${(meta.day_number as number) ?? "?"}`;
+      case "secured_day": {
+        const dayNum = (meta.day_number as number) ?? null;
+        const challengeName = (meta.challenge_name as string) ?? null;
+        if (challengeName && dayNum != null) {
+          return `${name} completed Day ${dayNum} of ${challengeName}`;
+        }
+        return `${name} secured Day ${dayNum ?? "?"}`;
+      }
       case "lost_streak":
         return `${name} lost a ${(meta.previous_streak as number) ?? 0}-day streak`;
       case "unlocked_achievement":
@@ -619,7 +626,9 @@ function CommunityActivityFeedSection({
     return (
       <View style={styles.movementFeedSection}>
         <Text style={styles.movementFeedSectionTitle}>ACTIVITY</Text>
-        <Text style={styles.onlyDisciplineShows}>No activity yet. Secure a day to appear here.</Text>
+        <Text style={styles.onlyDisciplineShows}>
+          Your community activity will appear here. Join a challenge to get started!
+        </Text>
       </View>
     );
   }
@@ -633,21 +642,37 @@ function CommunityActivityFeedSection({
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={5}
-        renderItem={({ item: e }) => (
-          <View style={styles.movementFeedItem}>
-            <View style={styles.movementFeedAvatarWrap}>
-              <Image
-                source={{ uri: e.avatar_url || `https://i.pravatar.cc/150?u=${e.user_id}` }}
-                style={styles.movementFeedAvatar}
-                contentFit="cover"
-              />
-            </View>
-            <View style={styles.movementFeedBody}>
-              <Text style={styles.movementFeedDesc}>{getFeedLine(e)}</Text>
-              <Text style={styles.movementFeedTime}>{formatTimeAgoCompact(e.created_at)}</Text>
-            </View>
-          </View>
-        )}
+        renderItem={({ item: e }) => {
+          const desc = getFeedLine(e);
+          const onPress = () => {
+            if (e.challenge_id) {
+              router.push(ROUTES.CHALLENGE_ID(e.challenge_id));
+            } else if (e.username) {
+              router.push(ROUTES.PROFILE_USERNAME(e.username));
+            }
+          };
+          return (
+            <TouchableOpacity
+              style={styles.movementFeedItem}
+              onPress={onPress}
+              activeOpacity={0.7}
+              accessibilityLabel={desc}
+              accessibilityRole="button"
+            >
+              <View style={styles.movementFeedAvatarWrap}>
+                <Image
+                  source={{ uri: e.avatar_url || `https://i.pravatar.cc/150?u=${e.user_id}` }}
+                  style={styles.movementFeedAvatar}
+                  contentFit="cover"
+                />
+              </View>
+              <View style={styles.movementFeedBody}>
+                <Text style={styles.movementFeedDesc}>{desc}</Text>
+                <Text style={styles.movementFeedTime}>{formatTimeAgoCompact(e.created_at)}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
       />
       {hasNextPage && (
         <TouchableOpacity

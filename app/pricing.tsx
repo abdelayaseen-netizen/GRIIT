@@ -23,6 +23,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { ROUTES } from "@/lib/routes";
 import { BASE_COLORS, SHADOWS } from "@/constants/theme";
 import {
   getOfferings,
@@ -32,6 +33,7 @@ import {
   type PurchasesPackage,
 } from "@/lib/subscription";
 import { useApp } from "@/contexts/AppContext";
+import { track } from "@/lib/analytics";
 
 const SOURCE_MESSAGES: Record<string, string> = {
   challenge_limit: "Upgrade to join unlimited challenges",
@@ -73,6 +75,10 @@ export default function PricingScreen() {
 
   const tagline = SOURCE_MESSAGES[source] ?? "Unlock your full potential";
 
+  useEffect(() => {
+    if (!isPremium && source) track({ name: "paywall_shown", source });
+  }, [isPremium, source]);
+
   const loadOfferings = useCallback(async () => {
     setOfferingLoading(true);
     setOfferingError(false);
@@ -106,13 +112,17 @@ export default function PricingScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPurchasing(true);
     setPurchaseError(null);
+    const pkgType = selectedPackage.identifier?.includes("annual") ? "annual" : "monthly";
+    track({ name: "purchase_started", package_type: pkgType });
     try {
       const result = await purchasePackage(selectedPackage);
       if (result.success) {
+        track({ name: "purchase_completed", package_type: pkgType, price: selectedPackage.product?.priceString });
         await refreshPremiumStatus();
         if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.back();
       } else if (result.error && result.error !== "cancelled") {
+        track({ name: "purchase_failed", package_type: pkgType, error: result.error });
         if (result.error.toLowerCase().includes("internet") || result.error.toLowerCase().includes("connection")) {
           setPurchaseError("Please check your connection and try again.");
         } else if (result.error.toLowerCase().includes("pending")) {
@@ -131,9 +141,11 @@ export default function PricingScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setRestoring(true);
     setRestoreMessage(null);
+    track({ name: "restore_attempted" });
     try {
       const { success, isPremium: restored } = await restorePurchases();
       if (success && restored) {
+        track({ name: "restore_succeeded" });
         await refreshPremiumStatus();
         setRestoreMessage("Subscription restored.");
         setTimeout(() => router.back(), 800);
@@ -146,6 +158,7 @@ export default function PricingScreen() {
   };
 
   const handleBack = () => {
+    if (!isPremium && source) track({ name: "paywall_dismissed", source });
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.back();
   };
@@ -282,7 +295,13 @@ export default function PricingScreen() {
           {purchasing ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.ctaText}>{selectedPackage ? "Start Premium" : "Subscribe"}</Text>
+            <Text style={styles.ctaText}>
+              {selectedPackage
+                ? (selectedPackage.product as { introPrice?: unknown })?.introPrice != null
+                  ? "Start your 7-day free trial"
+                  : "Start Premium"
+                : "Subscribe"}
+            </Text>
           )}
         </TouchableOpacity>
 
@@ -306,11 +325,11 @@ export default function PricingScreen() {
           Subscription auto-renews. Cancel anytime in Settings.
         </Text>
         <View style={styles.legalLinks}>
-          <TouchableOpacity onPress={() => {}}>
+          <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
             <Text style={[styles.legalLink, { color: DS_COLORS.accent }]}>Terms</Text>
           </TouchableOpacity>
           <Text style={[styles.legal, { color: DS_COLORS.textSecondary }]}> · </Text>
-          <TouchableOpacity onPress={() => {}}>
+          <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
             <Text style={[styles.legalLink, { color: DS_COLORS.accent }]}>Privacy</Text>
           </TouchableOpacity>
         </View>

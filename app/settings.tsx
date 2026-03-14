@@ -9,6 +9,9 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -124,6 +127,9 @@ export default function SettingsScreen() {
   const [profileVisibility, setProfileVisibility] = useState<"public" | "friends" | "private">("public");
   const [challengeVisibility, setChallengeVisibility] = useState<"public" | "friends" | "private">("public");
   const [activityVisibility, setActivityVisibility] = useState<"public" | "friends" | "private">("public");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
   const { refetchAll, isPremium, refreshPremiumStatus } = useApp();
 
   const loadReminderSettings = useCallback(async () => {
@@ -492,7 +498,82 @@ export default function SettingsScreen() {
           >
             <Text style={[styles.toggleTitle, { color: DS_COLORS.dangerDark }]}>Sign Out</Text>
           </TouchableOpacity>
+          {!isGuest && (
+            <TouchableOpacity
+              style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, marginTop: 10 }]}
+              onPress={() => {
+                Alert.alert(
+                  "Delete Account",
+                  "This will permanently delete your account and all data. This action cannot be undone.",
+                  [{ text: "Cancel", style: "cancel" }, { text: "Continue", onPress: () => setShowDeleteModal(true) }]
+                );
+              }}
+              activeOpacity={0.9}
+              accessibilityLabel="Delete account"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.toggleTitle, { color: DS_COLORS.dangerDark, fontSize: 14 }]}>Delete Account</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Delete account confirmation modal */}
+        <Modal visible={showDeleteModal} transparent animationType="fade">
+          <TouchableOpacity style={styles.deleteModalBackdrop} activeOpacity={1} onPress={() => !deleteAccountLoading && setShowDeleteModal(false)} />
+          <View style={styles.deleteModalCenter}>
+            <View style={[styles.card, styles.deleteModalCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+              <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
+              <TextInput
+                style={[styles.deleteConfirmInput, { color: DS_COLORS.textPrimary, borderColor: DS_COLORS.border }]}
+                value={deleteConfirmValue}
+                onChangeText={setDeleteConfirmValue}
+                placeholder="DELETE"
+                placeholderTextColor={DS_COLORS.textMuted}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                editable={!deleteAccountLoading}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.deleteConfirmBtn,
+                  { backgroundColor: deleteConfirmValue === "DELETE" ? DS_COLORS.dangerDark : DS_COLORS.border },
+                ]}
+                onPress={async () => {
+                  if (deleteConfirmValue !== "DELETE" || deleteAccountLoading) return;
+                  setDeleteAccountLoading(true);
+                  try {
+                    await trpcMutate(TRPC.profiles.deleteAccount);
+                    await supabase.auth.signOut();
+                    const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+                    await clearOnboardingStorage();
+                    setShowDeleteModal(false);
+                    setDeleteConfirmValue("");
+                    router.replace(ROUTES.AUTH_LOGIN as never);
+                  } catch {
+                    Alert.alert("Error", "Failed to delete account. Please try again.");
+                  } finally {
+                    setDeleteAccountLoading(false);
+                  }
+                }}
+                disabled={deleteConfirmValue !== "DELETE" || deleteAccountLoading}
+                activeOpacity={0.85}
+              >
+                {deleteAccountLoading ? (
+                  <ActivityIndicator size="small" color={DS_COLORS.white} />
+                ) : (
+                  <Text style={styles.deleteConfirmBtnText}>Delete my account</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteCancelBtn, { borderColor: DS_COLORS.border }]}
+                onPress={() => { setShowDeleteModal(false); setDeleteConfirmValue(""); }}
+                disabled={deleteAccountLoading}
+              >
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* About */}
         <View style={styles.section}>
@@ -502,8 +583,32 @@ export default function SettingsScreen() {
           </View>
           <View style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
             <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Version {APP_VERSION}</Text>
-            <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted, marginTop: 4 }]}>Terms & Privacy — see app store listing</Text>
+            <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted, marginTop: 4 }]}>Legal</Text>
           </View>
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, marginTop: 10 }]}
+            onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(ROUTES.LEGAL_PRIVACY as never); }}
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Privacy Policy"
+          >
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Privacy Policy</Text>
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: "-90deg" }] }} />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, marginTop: 10 }]}
+            onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(ROUTES.LEGAL_TERMS as never); }}
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Terms of Service"
+          >
+            <View style={styles.toggleRow}>
+              <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Terms of Service</Text>
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: "-90deg" }] }} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Consequences */}
@@ -598,6 +703,39 @@ const styles = StyleSheet.create({
     borderWidth: DS_BORDERS.width,
     borderColor: DS_COLORS.border,
     padding: DS_SPACING.cardPadding,
+  },
+  deleteModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  deleteModalCenter: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: DS_SPACING.screenHorizontal,
+  },
+  deleteModalCard: { width: "100%", maxWidth: 340 },
+  deleteConfirmInput: {
+    borderWidth: 1,
+    borderRadius: DS_RADIUS.button,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  deleteConfirmBtn: {
+    borderRadius: DS_RADIUS.button,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  deleteConfirmBtnText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.white },
+  deleteCancelBtn: {
+    borderWidth: 1,
+    borderRadius: DS_RADIUS.button,
+    paddingVertical: 12,
+    alignItems: "center",
   },
   friendsCard: {},
   friendsTwoCol: {

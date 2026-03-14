@@ -15,6 +15,7 @@ import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
+import { identify, reset as resetAnalytics } from '@/lib/analytics';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 
 type AppContextValue = {
@@ -181,6 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setStats(null);
       setSubscriptionState(null, null);
       clearSubscription();
+      resetAnalytics();
       return;
     }
     fetchProfile();
@@ -207,14 +209,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const lastKey = stats.lastCompletedDateKey ?? null;
     const preferred = (stats as StatsFromApi)?.preferredSecureTime ?? '20:00';
     const lastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
+    const streakCount = (stats as StatsFromApi)?.activeStreak ?? 0;
     if (lastKey === todayKey) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      scheduleNextSecureReminder(preferred, tomorrow, lastStands).catch((err: unknown) => {
+      scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount).catch((err: unknown) => {
         if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
       });
     } else {
-      scheduleNextSecureReminder(preferred, undefined, lastStands).catch((err: unknown) => {
+      scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount).catch((err: unknown) => {
         if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
       });
     }
@@ -336,6 +339,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return unsub;
   }, [user]);
 
+  useEffect(() => {
+    if (!user?.id || !profileFetched) return;
+    const p = profile || fallbackProfile;
+    if (!p) return;
+    const tier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier ?? undefined;
+    identify(user.id, {
+      email: user.email ?? undefined,
+      isPremium,
+      tier: tier ?? undefined,
+    });
+  }, [user?.id, user?.email, profile, fallbackProfile, profileFetched, isPremium, stats]);
+
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
 
   const todayDateLocal = useMemo(() => getTodayDateKey(), []);
@@ -419,7 +434,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
         const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands).catch((err: unknown) => {
+        const streakCount = (stats as StatsFromApi)?.activeStreak ?? 0;
+        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, streakCount).catch((err: unknown) => {
           if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
         });
       }

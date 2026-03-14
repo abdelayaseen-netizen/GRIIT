@@ -5,7 +5,7 @@
 
 const WINDOW_MS = 60_000;
 const DEFAULT_MAX_PER_WINDOW = 100;
-const AUTH_MAX_PER_MIN = 10;
+const AUTH_MAX_PER_MIN = 5;
 const WRITE_MAX_PER_MIN = 30;
 const CLEANUP_INTERVAL_MS = 60_000;
 
@@ -110,7 +110,7 @@ export async function checkRouteRateLimit(
   path: string,
   opts: { ip: string; userId: string | null }
 ): Promise<RouteLimitResult> {
-  const authPaths = ["auth.signIn", "auth.signUp"];
+  const authPaths = ["auth.signIn", "auth.signUp", "profiles.create"];
   const writePaths = ["checkins.secureDay", "checkins.complete", "challenges.join", "nudges.send", "accountability.invite", "respects.give"];
   const limiters = await getRedisLimiters();
 

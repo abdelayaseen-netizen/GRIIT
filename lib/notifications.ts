@@ -51,11 +51,13 @@ export async function cancelSecureReminders(): Promise<void> {
 /**
  * Schedule the next "Time to secure your day" notification at preferred time on or after `afterDate`.
  * Call after secure (with tomorrow) or on app open (with today or tomorrow depending on secured today).
+ * Optional streakCount improves copy (e.g. "Your X-day streak is at risk!").
  */
 export async function scheduleNextSecureReminder(
   preferredTime: string,
   afterDate?: Date,
-  lastStandsRemaining?: number
+  lastStandsRemaining?: number,
+  streakCount?: number
 ): Promise<void> {
   try {
     const { hour, minute } = parsePreferredTime(preferredTime);
@@ -63,12 +65,15 @@ export async function scheduleNextSecureReminder(
     const triggerDate = nextOccurrence(from, hour, minute);
 
     const timeStr = formatTimeForNotification(hour, minute);
+    const streakLine = streakCount != null && streakCount > 0
+      ? ` Your ${streakCount}-day streak is at risk! Complete your tasks to keep it alive.`
+      : " Complete your tasks to secure your day.";
     await Notifications.cancelScheduledNotificationAsync(SECURE_REMINDER_ID);
     await Notifications.scheduleNotificationAsync({
       identifier: SECURE_REMINDER_ID,
       content: {
         title: "Time to secure your day",
-        body: `It's ${timeStr} — time to secure your day.`,
+        body: `It's ${timeStr} — time to secure your day.${streakLine}`,
         sound: true,
       },
       trigger: {
@@ -82,11 +87,14 @@ export async function scheduleNextSecureReminder(
       twoHoursLeft.setHours(twoHoursLeft.getHours() + 2, 0, 0, 0);
       if (twoHoursLeft.getTime() > Date.now()) {
         await Notifications.cancelScheduledNotificationAsync(TWO_HOURS_LEFT_ID);
+        const twoHoursBody = streakCount != null && streakCount > 0
+          ? `Only 2 hours left to secure today. Don't break your ${streakCount}-day streak!`
+          : "Only 2 hours left to secure today. Don't break your streak!";
         await Notifications.scheduleNotificationAsync({
           identifier: TWO_HOURS_LEFT_ID,
           content: {
             title: "2 hours left",
-            body: "2 hours left to protect your streak.",
+            body: twoHoursBody,
             sound: true,
           },
           trigger: {
@@ -104,13 +112,16 @@ export async function scheduleNextSecureReminder(
         await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
         const lsText =
           lastStandsRemaining !== undefined && lastStandsRemaining >= 0
-            ? ` Last Stands remaining: ${lastStandsRemaining}.`
+            ? ` You have ${lastStandsRemaining} Last Stand(s) remaining.`
             : "";
+        const riskBody = streakCount != null && streakCount > 0
+          ? `Only 45 minutes left to secure today. Don't break your ${streakCount}-day streak!${lsText}`
+          : `45 minutes left to protect your streak.${lsText}`;
         await Notifications.scheduleNotificationAsync({
           identifier: STREAK_AT_RISK_ID,
           content: {
             title: "Streak at risk",
-            body: `45 minutes left to protect your streak.${lsText}`,
+            body: riskBody,
             sound: true,
           },
           trigger: { type: "date", date: streakAtRisk } as import("expo-notifications").NotificationTriggerInput,

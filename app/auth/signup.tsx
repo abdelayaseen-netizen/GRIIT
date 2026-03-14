@@ -406,9 +406,17 @@ export default function SignupScreen() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.termsText}>
-              By creating an account, you agree to our Terms and Privacy Policy
-            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", marginTop: 8 }}>
+              <Text style={styles.termsText}>By creating an account you agree to our </Text>
+              <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
+                <Text style={[styles.termsText, styles.termsLink]}>Terms of Service</Text>
+              </TouchableOpacity>
+              <Text style={styles.termsText}> and </Text>
+              <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
+                <Text style={[styles.termsText, styles.termsLink]}>Privacy Policy</Text>
+              </TouchableOpacity>
+              <Text style={styles.termsText}>.</Text>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -515,4 +523,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: DS_SPACING.xxl,
   },
+  termsLink: { color: DS_COLORS.accent, fontWeight: "600" },
 });

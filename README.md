@@ -10,6 +10,12 @@ A standalone **iOS app** (and Android/web) for tracking daily challenges, streak
 
 No Rork or other third‑party app platform required. Run and build everything yourself.
 
+## Prerequisites
+
+- **Node.js** 18+
+- **npm** or **bun**
+- **Expo CLI** (optional; `npx expo` works without global install)
+
 ## Quick start (local)
 
 1. **Clone and install**
@@ -91,12 +97,12 @@ So: **Railway (or another host) = backend only.** **EAS Build = iOS app.** They 
 |----------|----------|--------|-------------|
 | `EXPO_PUBLIC_SUPABASE_URL` | Yes | App + Backend | Supabase project URL |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Yes | App + Backend | Supabase anon key |
-| `EXPO_PUBLIC_API_BASE_URL` | For prod | App | Backend URL (e.g. Railway); omit in dev to use relative `/api/trpc` |
+| `EXPO_PUBLIC_API_URL` / `EXPO_PUBLIC_API_BASE_URL` | For prod | App | Backend URL (no trailing slash) |
 | `PORT` | No | Backend | Server port (default `8080`) |
 | `NODE_ENV` | No | Backend | `production` in prod |
 | `CORS_ORIGIN` | Recommended in prod | Backend | Your app’s origin (e.g. for EAS / App Store app) |
 
-See [SETUP.md](./SETUP.md) for the full list and where to get values.
+See `.env.example` and [SETUP.md](./SETUP.md) for the full list.
 
 ## Project structure
 
@@ -104,19 +110,20 @@ See [SETUP.md](./SETUP.md) for the full list and where to get values.
 ├── app/                 # Expo Router screens & API routes
 │   ├── (tabs)/          # Main tabs (Home, Discover, Activity, Create, Profile)
 │   ├── api/             # In-app API (tRPC, health) when not using standalone backend
-│   ├── auth/            # Login, signup
+│   ├── auth/            # Login, signup, forgot-password
 │   ├── challenge/       # Challenge detail & chat
-│   └── task/            # Task flows (journal, timer, run, etc.)
+│   ├── legal/           # Privacy policy, Terms of Service
+│   └── task/            # Task flows (journal, timer, run, photo, etc.)
 ├── backend/             # Hono + tRPC API
 │   ├── server.ts        # Entry (port 8080)
-│   ├── hono.ts          # Routes, CORS, tRPC mount
-│   ├── trpc/            # Router, context, routes (auth, profiles, challenges, checkins, stories)
-│   ├── lib/             # Supabase client, streak helpers
-│   └── seed.sql         # DB schema & seed data
-├── components/
-├── contexts/            # Auth, App, Api
-├── lib/                 # Supabase client, tRPC client, api helpers
-└── SETUP.md             # Full setup & env checklist
+│   ├── trpc/            # Router, context, routes (auth, profiles, challenges, checkins, leaderboard, feed)
+│   └── lib/             # Supabase client, rate-limit, streak helpers
+├── components/         # Shared UI (home, challenge, profile, onboarding)
+├── contexts/           # Auth, App, Theme, AuthGate
+├── lib/                # Supabase, tRPC client, analytics, share, notifications
+├── constants/          # Theme, copy, milestones
+├── assets/              # Images, legal markdown
+└── SETUP.md            # Full setup & env checklist
 ```
 
 ## Tech stack

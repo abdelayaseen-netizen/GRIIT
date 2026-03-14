@@ -72,3 +72,46 @@ export const LIGHT_THEME: ThemeColors = {
     diamond: DS_COLORS.milestoneDiamond,
   },
 };
+
+/** Dark mode color tokens. Used by ThemeContext when system preference is dark. Foundation only; screens can adopt gradually. */
+export const DARK_THEME: ThemeColors = {
+  background: "#1A1A1A",
+  card: "#2D2D2D",
+  text: {
+    primary: "#F0EDE6",
+    secondary: "#B0ADA8",
+    tertiary: "#888884",
+    muted: "#6B6B68",
+  },
+  accent: DS_COLORS.accent,
+  accentLight: "rgba(224, 123, 74, 0.2)",
+  accentTint: "rgba(224, 123, 74, 0.15)",
+  border: "#3D3D3D",
+  success: DS_COLORS.success,
+  successLight: "rgba(47, 122, 82, 0.25)",
+  warning: DS_COLORS.warning,
+  warningLight: "rgba(232, 162, 48, 0.2)",
+  danger: DS_COLORS.danger,
+  dangerLight: "rgba(200, 60, 50, 0.2)",
+  shadow: "rgba(0, 0, 0, 0.3)",
+  shadowMedium: "rgba(0, 0, 0, 0.5)",
+  pill: "#3D3D3D",
+  category: {
+    fitness: DS_COLORS.accent,
+    mind: DS_COLORS.purpleStripe,
+    discipline: DS_COLORS.challengeHeaderDark,
+    faith: DS_COLORS.blueStripe,
+  },
+  streak: {
+    fire: DS_COLORS.accent,
+    shield: DS_COLORS.success,
+    gold: DS_COLORS.warning,
+    platinum: "#B0ADA8",
+  },
+  milestone: {
+    bronze: DS_COLORS.milestoneBronze,
+    silver: DS_COLORS.milestoneSilver,
+    gold: DS_COLORS.milestoneGold,
+    diamond: DS_COLORS.milestoneDiamond,
+  },
+};

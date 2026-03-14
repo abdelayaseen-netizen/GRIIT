@@ -19,6 +19,7 @@ import {
   Clock,
   Flame,
   Target,
+  Trophy,
   TrendingUp,
   Users,
   Circle,
@@ -61,6 +62,10 @@ import {
   DS_SHADOWS,
 } from "@/lib/design-system";
 import { GRIITWordmark } from "@/src/components/ui";
+import ViewShot from "react-native-view-shot";
+import { ShareCard } from "@/components/ShareCard";
+import { shareProgressImage, shareDaySecured } from "@/lib/share";
+import { Image } from "expo-image";
 
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
@@ -249,6 +254,10 @@ export default function HomeScreen() {
     todayCheckins,
     todayDateLocal,
   } = useApp();
+  const challengeTitle = (challenge as { title?: string })?.title ?? (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
+  const currentDayIndex = (activeChallenge as { current_day_index?: number })?.current_day_index ?? 1;
+  const durationDays = (challenge as { duration_days?: number })?.duration_days ?? (activeChallenge as { challenges?: { duration_days?: number } })?.challenges?.duration_days;
+  const dayLabel = durationDays ? `Day ${currentDayIndex} of ${durationDays}` : undefined;
 
   const [showCelebration, setShowCelebration] = useState(false);
   const [optimisticDaySecured, setOptimisticDaySecured] = useState(false);
@@ -263,9 +272,12 @@ export default function HomeScreen() {
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [showStreakLostModal, setShowStreakLostModal] = useState(false);
   const streakLostShownRef = useRef(false);
+  const appOpenedTrackedRef = useRef(false);
   const [syncingBannerDismissed, setSyncingBannerDismissed] = useState(false);
   const [dismissedUpgradePrompt, setDismissedUpgradePrompt] = useState(false);
+  const [showShareProgressModal, setShowShareProgressModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
+  const shareCardRef = useRef<{ capture?: () => Promise<string> } | null>(null);
   const [secureError, setSecureError] = useState<string>('');
   const [freezeError, setFreezeError] = useState<string>('');
   const secureBtnScale = useRef(new Animated.Value(1)).current;
@@ -420,6 +432,13 @@ export default function HomeScreen() {
       setShowStreakLostModal(true);
     }
   }, [isGuest, initialFetchDone, currentStreak, stats?.longestStreak]);
+
+  useEffect(() => {
+    if (!isGuest && initialFetchDone && !appOpenedTrackedRef.current) {
+      appOpenedTrackedRef.current = true;
+      track({ name: "app_opened", streak_count: currentStreak, isPremium });
+    }
+  }, [isGuest, initialFetchDone, currentStreak, isPremium]);
 
   const tasks = useMemo((): { id: string; title: string; completed: boolean }[] => {
     if (!challenge?.challenge_tasks) return [];
@@ -804,7 +823,46 @@ export default function HomeScreen() {
                 {secureError}
               </Text>
             ) : null}
+            {isDaySecured && (
+              <TouchableOpacity
+                onPress={() => {
+                  track({ name: "share_tapped", share_type: "progress" });
+                  setShowShareProgressModal(true);
+                }}
+                style={styles.shareProgressButton}
+                activeOpacity={0.8}
+                accessibilityLabel="Share your progress"
+                accessibilityRole="button"
+              >
+                <Text style={[styles.shareProgressButtonText, { color: DS_COLORS.accent }]}>Share your progress</Text>
+              </TouchableOpacity>
+            )}
             <ExploreChallengesButton />
+            {!isGuest && leaderboardEntries.length > 0 && (
+              <TouchableOpacity
+                style={[styles.leaderboardPreviewCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
+                onPress={() => router.push(ROUTES.TABS_ACTIVITY as never)}
+                activeOpacity={0.9}
+                accessibilityLabel="See full leaderboard"
+                accessibilityRole="button"
+              >
+                <View style={styles.leaderboardPreviewHeader}>
+                  <Trophy size={18} color={DS_COLORS.accent} />
+                  <Text style={[styles.leaderboardPreviewTitle, { color: DS_COLORS.textPrimary }]}>Top this week</Text>
+                  <ChevronRight size={18} color={DS_COLORS.textMuted} style={{ marginLeft: "auto" }} />
+                </View>
+                <View style={styles.leaderboardPreviewRow}>
+                  {leaderboardEntries.slice(0, 3).map((e, i) => (
+                    <View key={e.userId ?? i} style={styles.leaderboardPreviewItem}>
+                      <Image source={{ uri: e.avatarUrl ?? `https://i.pravatar.cc/150?u=${e.userId}` }} style={styles.leaderboardPreviewAvatar} contentFit="cover" />
+                      <Text style={[styles.leaderboardPreviewName, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{e.displayName ?? e.username ?? "—"}</Text>
+                      <Text style={[styles.leaderboardPreviewScore, { color: DS_COLORS.accent }]}>+{e.securedDaysThisWeek ?? 0}</Text>
+                    </View>
+                  ))}
+                </View>
+                <Text style={[styles.leaderboardPreviewLink, { color: DS_COLORS.accent }]}>See full leaderboard</Text>
+              </TouchableOpacity>
+            )}
             {homeDataError ? (
               <View style={styles.yourPositionCard}>
                 <AlertTriangle size={28} color={DS_COLORS.textMuted} />
@@ -1247,6 +1305,66 @@ export default function HomeScreen() {
         </Modal>
         );
       })()}
+
+      {showShareProgressModal && (
+        <Modal visible transparent animationType="fade">
+          <TouchableOpacity
+            style={[styles.freezeModalBackdrop, { backgroundColor: DS_COLORS.modalBackdrop }]}
+            activeOpacity={1}
+            onPress={() => setShowShareProgressModal(false)}
+            accessibilityLabel="Dismiss"
+            accessibilityRole="button"
+          />
+          <View style={styles.freezeModalCenter}>
+            <View style={[styles.freezeModalCard, { backgroundColor: DS_COLORS.card, padding: 24 }]}>
+              <Text style={[styles.freezeModalTitle, { color: DS_COLORS.textPrimary, marginBottom: 16 }]}>Share your progress</Text>
+              <ViewShot
+                ref={shareCardRef}
+                options={{ format: "png", result: "tmpfile", width: 400, height: 500 }}
+                style={{ alignItems: "center", marginBottom: 16 }}
+              >
+                <ShareCard
+                  streakCount={currentStreak}
+                  challengeName={challengeTitle}
+                  dayLabel={dayLabel}
+                  tier={tierName ?? undefined}
+                />
+              </ViewShot>
+              <TouchableOpacity
+                style={[styles.freezeModalConfirm, { backgroundColor: DS_COLORS.accent }]}
+                onPress={async () => {
+                  try {
+                    const uri = await shareCardRef.current?.capture?.();
+                    const message = `Day secured. ${currentStreak}-day streak on GRIIT. Join me — griit.app`;
+                    if (uri) {
+                      await shareProgressImage(uri, message);
+                    } else {
+                      await shareDaySecured({ streak: currentStreak, challengeName: challengeTitle, dayNumber: currentDayIndex });
+                    }
+                  } catch {
+                    await shareDaySecured({ streak: currentStreak, challengeName: challengeTitle, dayNumber: currentDayIndex });
+                  }
+                  setShowShareProgressModal(false);
+                }}
+                activeOpacity={0.85}
+                accessibilityLabel="Share"
+                accessibilityRole="button"
+              >
+                <Text style={styles.freezeModalConfirmText}>Share</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.freezeModalCancel, { borderColor: DS_COLORS.border, marginTop: 8 }]}
+                onPress={() => setShowShareProgressModal(false)}
+                activeOpacity={0.85}
+                accessibilityLabel="Cancel"
+                accessibilityRole="button"
+              >
+                <Text style={[styles.freezeModalCancelText, { color: DS_COLORS.textPrimary }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {showFreezeModal && (
         <Modal visible transparent animationType="fade">
@@ -2326,6 +2444,34 @@ const styles = StyleSheet.create({
   upgradePromptSub: { fontSize: 13 },
   upgradePromptDismiss: { position: "absolute", top: 8, right: 8, padding: 4 },
   upgradePromptDismissText: { fontSize: 18 },
+  shareProgressButton: {
+    alignSelf: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  shareProgressButtonText: { fontSize: 14, fontWeight: "600" },
+  leaderboardPreviewCard: {
+    marginTop: DS_SPACING.lg,
+    marginHorizontal: DS_SPACING.screenHorizontal,
+    padding: DS_SPACING.cardPadding,
+    borderRadius: DS_RADIUS.card,
+    borderWidth: DS_BORDERS.width,
+  },
+  leaderboardPreviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  leaderboardPreviewTitle: { fontSize: 14, fontWeight: "700" },
+  leaderboardPreviewRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
+  leaderboardPreviewItem: { flex: 1, alignItems: "center", minWidth: 0 },
+  leaderboardPreviewAvatar: { width: 40, height: 40, borderRadius: 20, marginBottom: 4 },
+  leaderboardPreviewName: { fontSize: 12, fontWeight: "600", textAlign: "center" },
+  leaderboardPreviewScore: { fontSize: 12, fontWeight: "700" },
+  leaderboardPreviewLink: { fontSize: 13, fontWeight: "600", marginTop: 10, textAlign: "center" },
   freezeCta: {
     flexDirection: "row",
     alignItems: "center",

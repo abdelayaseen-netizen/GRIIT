@@ -1,4 +1,5 @@
-import { Share, Platform, Alert } from "react-native";
+import { Share, Platform, Alert, Linking } from "react-native";
+import * as Sharing from "expo-sharing";
 import {
   challengeDeepLink,
   inviteDeepLink,
@@ -95,11 +96,59 @@ export async function shareDaySecured(data: {
 
 export async function shareMilestone(data: {
   streak: number;
-  milestoneMessage: string;
+  milestoneMessage?: string;
+  name?: string;
+  days?: number;
 }): Promise<void> {
   const url = DEEP_LINK_BASE_URL;
-  const message = `${data.streak}-day streak on GRIIT. ${data.milestoneMessage}\n\nNo shortcuts. No excuses.\n\n${url}`;
+  const msg = data.milestoneMessage ?? (data.name ? `${data.days ?? data.streak} days — ${data.name}` : `${data.streak}-day streak`);
+  const message = `${data.streak}-day streak on GRIIT. ${msg}\n\nNo shortcuts. No excuses.\n\n${url}`;
   await shareOrCopy(message, "My streak on GRIIT");
+}
+
+/**
+ * Share an image (e.g. captured ShareCard) via system share sheet.
+ * Falls back to sharing message only if image share fails.
+ */
+export async function shareProgressImage(imageUri: string, message: string): Promise<void> {
+  if (Platform.OS === "web") {
+    await shareOrCopy(message, "GRIIT");
+    return;
+  }
+  try {
+    const available = await Sharing.isAvailableAsync();
+    if (available) {
+      await Sharing.shareAsync(imageUri, { mimeType: "image/png", dialogTitle: "Share your progress" });
+    } else {
+      await shareOrCopy(message, "GRIIT");
+    }
+  } catch {
+    await shareOrCopy(message, "GRIIT");
+  }
+}
+
+/**
+ * Open Instagram Stories with the image as background (if Instagram is installed).
+ * Falls back to regular share sheet otherwise.
+ */
+export async function shareToInstagramStory(imageUri: string): Promise<void> {
+  if (Platform.OS === "web") {
+    return;
+  }
+  try {
+    const encoded = encodeURIComponent(imageUri);
+    const url = `instagram-stories://share?backgroundImage=${encoded}`;
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      const available = await Sharing.isAvailableAsync();
+      if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });
+    }
+  } catch {
+    const available = await Sharing.isAvailableAsync();
+    if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });
+  }
 }
 
 export async function shareChallengeComplete(data: {

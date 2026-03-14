@@ -19,6 +19,7 @@ export const TRPC = {
     getCompletedChallenges: 'profiles.getCompletedChallenges',
     getSecuredDateKeys: 'profiles.getSecuredDateKeys',
     search: 'profiles.search',
+    deleteAccount: 'profiles.deleteAccount',
   },
   challenges: {
     list: 'challenges.list',

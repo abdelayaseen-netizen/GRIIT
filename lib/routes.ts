@@ -42,6 +42,8 @@ export const ROUTES = {
   CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
   TEAMS: "/teams",
   PRICING: "/pricing",
+  LEGAL_PRIVACY: "/legal/privacy-policy",
+  LEGAL_TERMS: "/legal/terms",
 } as const;
 
 /** Segment names for auth redirect logic (first segment of path). */
