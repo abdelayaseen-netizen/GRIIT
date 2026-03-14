@@ -343,6 +343,12 @@ export const checkinsRouter = createTRPCRouter({
           success: true,
           newStreakCount: row.new_streak_count,
           lastStandEarned: row.last_stand_earned,
+          challengeCompleted: challengeJustCompleted,
+          ...(challengeJustCompleted && {
+            challengeId: challengeId ?? undefined,
+            challengeName,
+            totalDays: durationDays,
+          }),
         };
       }
 

@@ -331,6 +331,13 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen 
+        name="challenge/complete" 
+        options={{ 
+          headerShown: false,
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
         name="day-missed" 
         options={{ 
           headerShown: false,

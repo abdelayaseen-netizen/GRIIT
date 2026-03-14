@@ -7,17 +7,69 @@ import { BASE_COLORS } from "@/constants/theme";
 export const SHARE_CARD_WIDTH = 400;
 export const SHARE_CARD_HEIGHT = 500;
 
+export type ShareCardType = "progress" | "completion" | "milestone";
+
 export interface ShareCardProps {
+  type?: ShareCardType;
   streakCount: number;
   challengeName?: string;
   dayLabel?: string;
   tier?: string;
+  /** For type 'completion': total days in the challenge. */
+  totalDays?: number;
+  /** For type 'milestone': e.g. "7-Day Streak", "30-Day Legend". */
+  milestoneName?: string;
 }
 
 /**
  * Shareable progress card for social. Render inside a View with ref for capture via react-native-view-shot.
  */
-export function ShareCard({ streakCount, challengeName, dayLabel, tier }: ShareCardProps) {
+export function ShareCard({
+  type = "progress",
+  streakCount,
+  challengeName,
+  dayLabel,
+  tier,
+  totalDays,
+  milestoneName,
+}: ShareCardProps) {
+  if (type === "completion") {
+    return (
+      <View style={[styles.card, { width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT }]}>
+        <Text style={[styles.wordmark, styles.completionBadge]}>CHALLENGE COMPLETE</Text>
+        {challengeName ? <Text style={styles.challengeNameCompletion} numberOfLines={2}>{challengeName}</Text> : null}
+        <View style={styles.streakWrap}>
+          <Text style={styles.streakNumber}>{totalDays ?? streakCount}</Text>
+          <Text style={styles.streakLabel}>days secured</Text>
+        </View>
+        <View style={styles.streakWrap}>
+          <Text style={[styles.streakNumber, { fontSize: 36 }]}>{streakCount}</Text>
+          <Text style={styles.streakLabel}>day streak</Text>
+        </View>
+        {tier ? (
+          <View style={[styles.tierBadge, { backgroundColor: DS_COLORS.accent }]}>
+            <Text style={styles.tierText}>{tier}</Text>
+          </View>
+        ) : null}
+        <Text style={styles.cta}>Join me on GRIIT</Text>
+        <Text style={styles.url}>griit.app</Text>
+      </View>
+    );
+  }
+  if (type === "milestone") {
+    return (
+      <View style={[styles.card, { width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT }]}>
+        <Text style={styles.wordmark}>GRIIT</Text>
+        <Text style={[styles.challengeName, { marginBottom: 16 }]}>{milestoneName ?? `${streakCount}-Day Streak`}</Text>
+        <View style={styles.streakWrap}>
+          <Text style={styles.streakNumber}>{streakCount}</Text>
+          <Text style={styles.streakLabel}>day streak</Text>
+        </View>
+        <Text style={styles.cta}>Join me on GRIIT</Text>
+        <Text style={styles.url}>griit.app</Text>
+      </View>
+    );
+  }
   return (
     <View style={[styles.card, { width: SHARE_CARD_WIDTH, height: SHARE_CARD_HEIGHT }]}>
       <Text style={styles.wordmark}>GRIIT</Text>
@@ -102,5 +154,17 @@ const styles = StyleSheet.create({
   url: {
     fontSize: 13,
     color: DS_COLORS.textMuted,
+  },
+  completionBadge: {
+    fontSize: 16,
+    letterSpacing: 2,
+    color: DS_COLORS.success,
+  },
+  challengeNameCompletion: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: DS_COLORS.textPrimary,
+    textAlign: "center",
+    marginBottom: 16,
   },
 });

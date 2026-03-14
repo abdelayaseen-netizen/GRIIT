@@ -10,6 +10,9 @@ import {
   setupNotificationChannel,
   scheduleNextSecureReminder,
   cancelSecureReminders,
+  scheduleLapsedUserReminders,
+  cancelLapsedUserReminders,
+  scheduleMilestoneApproachingIfNeeded,
 } from '@/lib/notifications';
 import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 import { getTodayDateKey } from '@/lib/date-utils';
@@ -44,7 +47,14 @@ type AppContextValue = {
     location_longitude?: number;
     timer_seconds_on_screen?: number;
   }) => Promise<{ firstTaskOfDay?: boolean } | void>;
-  secureDay: () => Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined>;
+  secureDay: () => Promise<{
+    newStreakCount: number;
+    lastStandEarned?: boolean;
+    challengeCompleted?: boolean;
+    challengeId?: string;
+    challengeName?: string;
+    totalDays?: number;
+  } | undefined>;
   isLoading: boolean;
   isError: boolean;
   initialFetchDone: boolean;
@@ -221,6 +231,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
       });
     }
+    const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
+    scheduleLapsedUserReminders({ streakCount, challengeName }).catch((err: unknown) => {
+      if (__DEV__) console.warn("[AppContext] scheduleLapsedUserReminders failed:", err instanceof Error ? err.message : err);
+    });
     return () => {
       cancelSecureReminders();
     };
@@ -422,10 +436,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
   }, [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats]);
 
-  const secureDay = useCallback(async (): Promise<{ newStreakCount: number; lastStandEarned?: boolean } | undefined> => {
+  const secureDay = useCallback(async (): Promise<{
+    newStreakCount: number;
+    lastStandEarned?: boolean;
+    challengeCompleted?: boolean;
+    challengeId?: string;
+    challengeName?: string;
+    totalDays?: number;
+  } | undefined> => {
     if (!activeChallenge?.id || !canSecureDay) return undefined;
     try {
-      const result = await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id }) as { success: boolean; newStreakCount: number; lastStandEarned?: boolean };
+      const result = await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id }) as {
+        success: boolean;
+        newStreakCount: number;
+        lastStandEarned?: boolean;
+        challengeCompleted?: boolean;
+        challengeId?: string;
+        challengeName?: string;
+        totalDays?: number;
+      };
       void fetchActiveChallenge();
       void fetchStats();
       if (Platform.OS !== 'web') {
@@ -434,9 +463,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
         const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
-        const streakCount = (stats as StatsFromApi)?.activeStreak ?? 0;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, streakCount).catch((err: unknown) => {
+        const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
+        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch((err: unknown) => {
           if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
+        });
+        await cancelLapsedUserReminders();
+        const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
+        await scheduleLapsedUserReminders({ streakCount: newStreakCount, challengeName });
+        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch((err: unknown) => {
+          if (__DEV__) console.warn("[AppContext] scheduleMilestoneApproachingIfNeeded failed:", err instanceof Error ? err.message : err);
         });
       }
       return result;

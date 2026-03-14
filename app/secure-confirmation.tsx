@@ -10,9 +10,12 @@ import {
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Shield, Check, Share2 } from "lucide-react-native";
+import { Shield, Check, Share2, ChevronRight } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
-import { shareDaySecured } from "@/lib/share";
+import { shareDaySecured, shareChallengeComplete } from "@/lib/share";
+import { requestReviewIfAppropriate } from "@/lib/request-review";
+import { ROUTES } from "@/lib/routes";
+import { track } from "@/lib/analytics";
 
 const SECURE_DAY_MESSAGES = [
   "Day {day} Secured.",
@@ -35,12 +38,24 @@ export default function SecureConfirmationScreen() {
   const streak = params.streak as string | undefined;
   const totalDays = params.totalDays as string | undefined;
   const isHardMode = params.isHardMode === "true";
+  const challengeName = (params.challengeName as string) ?? "";
+
+  const dayNum = parseInt(day ?? "0", 10);
+  const totalNum = parseInt(totalDays ?? "0", 10);
+  const streakNum = parseInt(streak ?? "0", 10);
+  const isCompletion = totalNum > 1 && dayNum === totalNum;
 
   const headerMessage = React.useMemo(() => {
+    if (isCompletion && challengeName) {
+      return `You completed ${challengeName}!`;
+    }
+    if (isCompletion) {
+      return "Challenge complete!";
+    }
     const d = day ?? "0";
     const msg = SECURE_DAY_MESSAGES[Math.floor(Math.random() * SECURE_DAY_MESSAGES.length)];
     return msg.replace(/\{day\}/g, d);
-  }, [day]);
+  }, [day, isCompletion, challengeName]);
 
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -68,12 +83,28 @@ export default function SecureConfirmationScreen() {
       ]),
     ]).start();
 
-    const timer = setTimeout(() => {
-      router.back();
-    }, 2500);
+    if (isCompletion) {
+      track({ name: "challenge_completed", challenge_name: challengeName, duration: totalNum });
+    }
 
-    return () => clearTimeout(timer);
-  }, [scaleAnim, fadeAnim, progressAnim, router]);
+    // In-app review: after 7th day secured or challenge completion (throttled to once per 30 days)
+    const reviewDelay = setTimeout(() => {
+      requestReviewIfAppropriate({
+        streak: streakNum,
+        challengeJustCompleted: isCompletion,
+      }).catch(() => {});
+    }, 1500);
+
+    // Auto-back only for regular day secured; completion screen stays until user taps Share or What's next
+    if (!isCompletion) {
+      const timer = setTimeout(() => router.back(), 2500);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(reviewDelay);
+      };
+    }
+    return () => clearTimeout(reviewDelay);
+  }, [scaleAnim, fadeAnim, progressAnim, router, isCompletion, streakNum]);
 
   if (!day || !streak || !totalDays) {
     return (
@@ -91,7 +122,7 @@ export default function SecureConfirmationScreen() {
 
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0%", `${(parseInt(day) / parseInt(totalDays)) * 100}%`],
+    outputRange: ["0%", `${totalNum > 0 ? (dayNum / totalNum) * 100 : 0}%`],
   });
 
   return (
@@ -166,18 +197,43 @@ export default function SecureConfirmationScreen() {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              shareDaySecured({
-                streak: parseInt(streak || "0", 10),
-                dayNumber: parseInt(day || "0", 10),
-              }).catch(() => setShareError(true));
+              if (isCompletion) {
+                shareChallengeComplete({
+                  name: challengeName || "this challenge",
+                  duration: totalNum,
+                  daysCompleted: dayNum,
+                  isHardMode,
+                }).catch(() => setShareError(true));
+              } else {
+                shareDaySecured({
+                  streak: streakNum,
+                  dayNumber: dayNum,
+                }).catch(() => setShareError(true));
+              }
             }}
             activeOpacity={0.85}
             accessibilityLabel="Share your achievement"
             accessibilityRole="button"
           >
             <Share2 size={18} color={DS_COLORS.accent} />
-            <Text style={styles.shareButtonText}>Share Your Win</Text>
+            <Text style={styles.shareButtonText}>{isCompletion ? "Share your achievement" : "Share Your Win"}</Text>
           </TouchableOpacity>
+
+          {isCompletion && (
+            <TouchableOpacity
+              style={[styles.shareButton, styles.whatsNextButton]}
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.replace(ROUTES.TABS_DISCOVER as never);
+              }}
+              activeOpacity={0.85}
+              accessibilityLabel="Find your next challenge"
+              accessibilityRole="button"
+            >
+              <Text style={styles.whatsNextText}>What&apos;s next?</Text>
+              <ChevronRight size={20} color={DS_COLORS.white} />
+            </TouchableOpacity>
+          )}
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -308,5 +364,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600" as const,
     color: DS_COLORS.accent,
+  },
+  whatsNextButton: {
+    marginTop: 12,
+    backgroundColor: DS_COLORS.accent,
+    borderColor: DS_COLORS.accent,
+  },
+  whatsNextText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: DS_COLORS.white,
   },
 });

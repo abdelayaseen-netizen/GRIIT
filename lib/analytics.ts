@@ -46,7 +46,8 @@ export type AnalyticsEvent =
   | { name: "purchase_completed"; package_type: string; price?: string }
   | { name: "purchase_failed"; package_type?: string; error?: string }
   | { name: "restore_attempted" }
-  | { name: "restore_succeeded" };
+  | { name: "restore_succeeded" }
+  | { name: "challenge_completed"; challenge_name?: string; duration?: number };
 
 export type UserProperties = {
   days_since_signup?: number;

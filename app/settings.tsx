@@ -29,6 +29,7 @@ import { PremiumBadge } from "@/components/PremiumBadge";
 import { restorePurchases } from "@/lib/subscription";
 import { useApp } from "@/contexts/AppContext";
 import { ROUTES } from "@/lib/routes";
+import { cancelLapsedUserReminders } from "@/lib/notifications";
 
 const REMINDER_PRESETS = [
   { label: "6:00 AM", value: "06:00" },
@@ -487,6 +488,7 @@ export default function SettingsScreen() {
             style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
             onPress={async () => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              await cancelLapsedUserReminders();
               await supabase.auth.signOut();
               const { clearOnboardingStorage } = await import("@/store/onboardingStore");
               await clearOnboardingStorage();
@@ -543,6 +545,7 @@ export default function SettingsScreen() {
                   setDeleteAccountLoading(true);
                   try {
                     await trpcMutate(TRPC.profiles.deleteAccount);
+                    await cancelLapsedUserReminders();
                     await supabase.auth.signOut();
                     const { clearOnboardingStorage } = await import("@/store/onboardingStore");
                     await clearOnboardingStorage();

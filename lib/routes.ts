@@ -40,6 +40,7 @@ export const ROUTES = {
   COMMITMENT: "/commitment",
   DAY_MISSED: "/day-missed",
   CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
+  CHALLENGE_COMPLETE: "/challenge/complete",
   TEAMS: "/teams",
   PRICING: "/pricing",
   LEGAL_PRIVACY: "/legal/privacy-policy",

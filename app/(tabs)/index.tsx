@@ -42,6 +42,7 @@ import { getYesterdayDateKey } from "@/lib/date-utils";
 import { getHomeRetentionDerived } from "@/lib/home-derived";
 import { getFirstSessionJustFinished, clearFirstSessionJustFinished } from "@/lib/starter-join";
 import { track } from "@/lib/analytics";
+import { maybePromptForReview } from "@/lib/review-prompt";
 import { useQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -524,17 +525,38 @@ export default function HomeScreen() {
       leaderboardQuery.refetch();
       homeActiveQuery.refetch();
       const currentDay = activeChallenge?.current_day || 1;
+      const totalDaysNum = result.totalDays ?? challenge?.duration_days ?? 0;
+      const challengeTitle = result.challengeName ?? (challenge as { title?: string })?.title ?? (activeChallenge as { challenges?: { title?: string } })?.challenges?.title ?? "";
+      const isCompletion = result.challengeCompleted === true;
       setTimeout(() => {
         setOptimisticDaySecured(false);
-        router.push({
-          pathname: ROUTES.SECURE_CONFIRMATION,
-          params: {
-            day: currentDay.toString(),
-            streak: streak.toString(),
-            totalDays: (challenge?.duration_days || 0).toString(),
-            isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
-          },
-        } as never);
+        if (isCompletion) {
+          const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? (stats as StatsFromApi).totalDaysSecured + 1 : totalDaysNum;
+          router.push({
+            pathname: ROUTES.CHALLENGE_COMPLETE,
+            params: {
+              challengeName: String(challengeTitle || "Challenge"),
+              totalDays: String(totalDaysNum),
+              streakCount: streak.toString(),
+              tier: tierName ?? undefined,
+              totalDaysSecured: String(totalDaysSecuredNow),
+            },
+          } as never);
+        }
+        } else {
+          router.push({
+            pathname: ROUTES.SECURE_CONFIRMATION,
+            params: {
+              day: currentDay.toString(),
+              streak: streak.toString(),
+              totalDays: String(totalDaysNum),
+              isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
+              challengeName: String(challengeTitle || ""),
+            },
+          } as never);
+          const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? (stats as StatsFromApi).totalDaysSecured + 1 : 0;
+          maybePromptForReview(totalDaysSecuredNow, "day_secured").catch(() => {});
+        }
       }, 1200);
     } catch {
       setOptimisticDaySecured(false);
@@ -1257,12 +1279,17 @@ export default function HomeScreen() {
         const milestoneConfig = getMilestoneForStreak(showMilestone);
         const title = milestoneConfig?.title ?? `${showMilestone}-Day Streak`;
         const subtitle = milestoneConfig?.subtitle ?? "You are building discipline.";
+        const onDismissMilestone = () => {
+          const total = (stats as StatsFromApi)?.totalDaysSecured ?? 0;
+          maybePromptForReview(total, "milestone").catch(() => {});
+          setShowMilestone(null);
+        };
         return (
         <Modal visible transparent animationType="fade">
           <TouchableOpacity
             style={[styles.freezeModalBackdrop, { backgroundColor: DS_COLORS.modalBackdrop }]}
             activeOpacity={1}
-            onPress={() => setShowMilestone(null)}
+            onPress={onDismissMilestone}
             accessibilityLabel="Dismiss milestone"
             accessibilityRole="button"
           />
@@ -1283,7 +1310,7 @@ export default function HomeScreen() {
                   } catch {
                     // User cancelled or failed
                   }
-                  setShowMilestone(null);
+                  onDismissMilestone();
                 }}
                 activeOpacity={0.85}
                 accessibilityLabel="Share milestone"
@@ -1293,7 +1320,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.freezeModalCancel, { borderColor: DS_COLORS.border }]}
-                onPress={() => setShowMilestone(null)}
+                onPress={onDismissMilestone}
                 activeOpacity={0.85}
                 accessibilityLabel="Dismiss"
                 accessibilityRole="button"

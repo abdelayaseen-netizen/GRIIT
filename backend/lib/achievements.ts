@@ -22,6 +22,16 @@ export async function checkAndUnlockAchievements(
   if (totalDaysSecured >= 1) toUnlock.push(ACHIEVEMENTS.FIRST_SECURE.key);
   if (challengeCompleted) toUnlock.push(ACHIEVEMENTS.FIRST_CHALLENGE.key);
 
+  // Serial Achiever: 5 challenges completed (count completed_challenge events)
+  if (challengeCompleted) {
+    const { count } = await supabase
+      .from("activity_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("event_type", "completed_challenge");
+    if ((count ?? 0) >= 5) toUnlock.push(ACHIEVEMENTS.FIVE_CHALLENGES.key);
+  }
+
   if (toUnlock.length === 0) return { unlockedKeys: [], newUnlockKeys: [] };
 
   const { data: existing } = await supabase

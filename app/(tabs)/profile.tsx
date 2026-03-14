@@ -52,6 +52,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { formatMonthYearLong } from "@/lib/date-format";
 import { ACHIEVEMENT_DEFINITIONS } from "@/lib/achievements";
 import { ROUTES } from "@/lib/routes";
+import { cancelLapsedUserReminders } from "@/lib/notifications";
 import type { StatsFromApi } from "@/types";
 
 function openSubscriptionManagement() {
@@ -338,6 +339,7 @@ export default function ProfileScreen() {
         text: "Sign Out",
         style: "destructive",
         onPress: async () => {
+          await cancelLapsedUserReminders();
           await supabase.auth.signOut();
           const { clearOnboardingStorage } = await import("@/store/onboardingStore");
           await clearOnboardingStorage();
