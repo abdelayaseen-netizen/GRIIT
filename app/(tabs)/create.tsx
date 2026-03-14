@@ -39,6 +39,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import * as Haptics from 'expo-haptics';
 import { ChallengeType, ReplayPolicy, JournalCategory, WordLimitMode, ScheduleType, WindowMode, TimezoneMode, ChallengeVisibility } from "@/types";
 import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { useApi } from "@/contexts/ApiContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -457,7 +458,7 @@ export default function CreateScreen() {
     const payload = buildCreatePayload(draft);
 
     interface CreateChallengeResponse { id?: string; data?: { id?: string }; title?: string; duration_days?: number; tasks?: unknown[]; difficulty?: string }
-    trpcMutate('challenges.create', payload)
+    trpcMutate(TRPC.challenges.create, payload)
       .then(async (challenge: CreateChallengeResponse) => {
         clearWatchdog();
         setSubmitStatus('success');

@@ -461,6 +461,8 @@ export default function RunTaskScreen() {
             <TouchableOpacity
               style={[styles.modeButton, runMode === "outdoor_gps" && styles.modeButtonActive]}
               onPress={() => handleModeChange("outdoor_gps")}
+              accessibilityRole="button"
+              accessibilityLabel="Outdoor GPS mode"
             >
               <MapPin size={18} color={runMode === "outdoor_gps" ? DS_COLORS.white : DS_COLORS.textSecondary} />
               <Text style={[styles.modeButtonText, runMode === "outdoor_gps" && styles.modeButtonTextActive]}>
@@ -561,7 +563,7 @@ export default function RunTaskScreen() {
                     </Text>
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity style={styles.stopButton} onPress={stopGpsTracking}>
+                  <TouchableOpacity style={styles.stopButton} onPress={stopGpsTracking} accessibilityRole="button" accessibilityLabel="Stop run">
                     <Square size={28} color={DS_COLORS.white} fill={DS_COLORS.white} />
                     <Text style={styles.stopButtonText}>Stop</Text>
                   </TouchableOpacity>
@@ -665,7 +667,7 @@ export default function RunTaskScreen() {
                         )}
                       </>
                     ) : (
-                      <TouchableOpacity style={styles.stopButton} onPress={finishTreadmillTimer}>
+                      <TouchableOpacity style={styles.stopButton} onPress={finishTreadmillTimer} accessibilityRole="button" accessibilityLabel="Finish timer">
                         <Square size={28} color={DS_COLORS.white} fill={DS_COLORS.white} />
                         <Text style={styles.stopButtonText}>Finish Timer</Text>
                       </TouchableOpacity>
@@ -811,6 +813,9 @@ export default function RunTaskScreen() {
             onPress={runMode === "outdoor_gps" ? handleVerifyGps : handleVerifyTreadmill}
             activeOpacity={0.7}
             disabled={!(runMode === "outdoor_gps" ? canVerifyGps : canVerifyTreadmill)}
+            accessibilityRole="button"
+            accessibilityLabel="Verify run"
+            accessibilityState={{ disabled: !(runMode === "outdoor_gps" ? canVerifyGps : canVerifyTreadmill) }}
           >
             <Text style={[
               styles.verifyButtonText, 

@@ -127,6 +127,8 @@ export default function PhotoTaskScreen() {
               style={styles.retakeButton}
               onPress={handleTakePhoto}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Retake photo"
             >
               <Text style={styles.retakeButtonText}>Retake Photo</Text>
             </TouchableOpacity>
@@ -144,6 +146,8 @@ export default function PhotoTaskScreen() {
               style={styles.captureButton}
               onPress={handleTakePhoto}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Take proof photo"
             >
               <Camera size={24} color={DS_COLORS.white} />
               <Text style={styles.captureButtonText}>Take Photo</Text>
@@ -152,6 +156,8 @@ export default function PhotoTaskScreen() {
               style={styles.galleryButton}
               onPress={handlePickFromGallery}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Upload from gallery"
             >
               <ImagePlus size={24} color={DS_COLORS.textPrimary} />
               <Text style={styles.galleryButtonText}>Upload from gallery</Text>
@@ -165,6 +171,9 @@ export default function PhotoTaskScreen() {
             onPress={handleSubmit}
             disabled={loading}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Submit photo"
+            accessibilityState={{ disabled: loading }}
           >
             {loading ? (
               <>

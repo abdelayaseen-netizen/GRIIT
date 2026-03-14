@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS } from "@/lib/design-system";
 import {
@@ -89,7 +90,7 @@ export default function PublicProfileScreen() {
             onPress={() => {
               setIsError(false);
               setIsLoading(true);
-              trpcQuery("profiles.getPublicByUsername", { username: decoded })
+              trpcQuery(TRPC.profiles.getPublicByUsername, { username: decoded })
                 .then((data) => setProfile(data as PublicProfile | null))
                 .catch(() => setIsError(true))
                 .finally(() => setIsLoading(false));

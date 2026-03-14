@@ -1,3 +1,4 @@
+import type { AnyRouter } from "@trpc/server";
 import { appRouter } from "@/backend/trpc/app-router";
 import { createContext } from "@/backend/trpc/create-context";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
@@ -31,7 +32,7 @@ async function handler(request: Request) {
     const res = await fetchRequestHandler({
       endpoint: "/api/trpc",
       req: request,
-      router: appRouter as any,
+      router: appRouter as AnyRouter,
       createContext: async () => createContext({ req: request }),
       onError() {
         // Error is thrown to client

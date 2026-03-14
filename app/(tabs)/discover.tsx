@@ -24,6 +24,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
@@ -227,7 +228,7 @@ export default function DiscoverScreen() {
         category: activeCategory !== "all" ? activeCategory : undefined,
         search: debouncedQuery || undefined,
       };
-      const data = (await trpcQuery("challenges.getFeatured", params)) as GetFeaturedResponse;
+      const data = (await trpcQuery(TRPC.challenges.getFeatured, params)) as GetFeaturedResponse;
       const isPaginated = data != null && typeof data === "object" && !Array.isArray(data) && "items" in data;
       const items = isPaginated ? (data.items ?? []) : Array.isArray(data) ? data : [];
       const nextCursor = isPaginated && "nextCursor" in data ? data.nextCursor ?? undefined : undefined;
@@ -339,7 +340,7 @@ export default function DiscoverScreen() {
       if (!id) return;
       queryClient.prefetchQuery({
         queryKey: ["challenge", id],
-        queryFn: () => trpcQuery("challenges.getById", { id }),
+        queryFn: () => trpcQuery(TRPC.challenges.getById, { id }),
         staleTime: 5 * 60 * 1000,
       });
     },

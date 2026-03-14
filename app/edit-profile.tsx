@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -25,6 +24,7 @@ export default function EditProfileScreen() {
   const { user } = useAuth();
   const { profile } = useApp();
   const [isPending, setIsPending] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [bio, setBio] = useState(profile?.bio || '');
@@ -40,9 +40,10 @@ export default function EditProfileScreen() {
 
   const handleUpdate = async (data: { display_name: string; bio: string; avatar_url: string }) => {
     if (!user?.id) {
-      Alert.alert('Error', 'Not authenticated');
+      setFormError('Not authenticated');
       return;
     }
+    setFormError('');
     setIsPending(true);
     try {
       const { error } = await supabase
@@ -58,13 +59,13 @@ export default function EditProfileScreen() {
         .maybeSingle();
 
       if (error) {
-        Alert.alert('Error', error.message);
+        setFormError(error.message);
         return;
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (err: unknown) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Something went wrong');
+      setFormError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setIsPending(false);
     }
@@ -158,6 +159,11 @@ export default function EditProfileScreen() {
                 editable={!isPending}
               />
             </View>
+            {formError ? (
+              <Text style={styles.formError} accessibilityLiveRegion="polite">
+                {formError}
+              </Text>
+            ) : null}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -257,5 +263,11 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 100,
     paddingTop: 14,
+  },
+  formError: {
+    color: '#CC3333',
+    fontSize: 13,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

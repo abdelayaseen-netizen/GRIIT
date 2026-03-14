@@ -692,7 +692,7 @@ export default function ActivityScreen() {
   const leaderboardQuery = useQuery({
     queryKey: ["movement", "leaderboard", feedFilter],
     queryFn: async () => {
-      const data = await trpcQuery("leaderboard.getWeekly") as { entries?: unknown[]; totalSecuredToday?: number };
+      const data = await trpcQuery(TRPC.leaderboard.getWeekly) as { entries?: unknown[]; totalSecuredToday?: number };
       const entries = (data?.entries ?? []).map((e: unknown) => mapApiEntryToLeaderboardEntry(e as import("@/types").LeaderboardEntryFromApi));
       return { entries, totalSecuredToday: data?.totalSecuredToday ?? 0 };
     },
@@ -723,7 +723,7 @@ export default function ActivityScreen() {
     queryFn: async (): Promise<ActivityItem[]> => {
       const [respectsData, nudgesData] = await Promise.all([
         trpcQuery("respects.getForUser") as Promise<{ recent: { id: string; actorId: string; actorDisplayName: string; actorUsername: string; at: string }[] }>,
-        trpcQuery("nudges.getForUser") as Promise<{ items: { id: string; fromUserId: string; fromDisplayName: string; message: string; createdAt: string }[] }>,
+        trpcQuery(TRPC.nudges.getForUser) as Promise<{ items: { id: string; fromUserId: string; fromDisplayName: string; message: string; createdAt: string }[] }>,
       ]);
       const respectItems: ActivityItem[] = (respectsData?.recent ?? []).map((r) => ({
         id: r.id,
@@ -799,7 +799,7 @@ export default function ActivityScreen() {
       requireAuth("nudge", () => {
         if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setGivingNudgeId(toUserId);
-        void trpcMutate("nudges.send", { toUserId })
+        void trpcMutate(TRPC.nudges.send, { toUserId })
           .then(() => {
             track({ name: "nudge_sent", toUserId });
             Alert.alert("Nudged!", "");

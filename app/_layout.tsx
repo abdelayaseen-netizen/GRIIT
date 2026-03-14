@@ -1,8 +1,8 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View, Alert, StatusBar } from "react-native";
+import { ActivityIndicator, View, StatusBar, Text, Pressable } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
@@ -23,6 +23,15 @@ import { useOnboardingStore, getOnboardingRouteForStep } from "@/store/onboardin
 const HAS_LAUNCHED_KEY = "griit_has_launched";
 
 SplashScreen.preventAutoHideAsync();
+
+type SessionExpiredContextValue = { message: string | null; setMessage: (m: string | null) => void };
+const SessionExpiredContext = createContext<SessionExpiredContextValue | null>(null);
+
+function useSessionExpired() {
+  const ctx = useContext(SessionExpiredContext);
+  if (!ctx) return { message: null, setMessage: () => {} };
+  return ctx;
+}
 
 const PROFILE_CHECK_TIMEOUT_MS = 2500;
 const SPLASH_MAX_MS = 1800;
@@ -47,6 +56,7 @@ function AuthRedirector() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const { setMessage: setSessionExpiredMessage } = useSessionExpired();
   const onboardingCompleteFromStore = useOnboardingStore((s) => s.isComplete);
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const [hasLaunched, setHasLaunched] = useState<boolean | null>(null);
@@ -118,11 +128,11 @@ function AuthRedirector() {
 
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {
-      Alert.alert("Session expired", "Please sign in again.");
+      setSessionExpiredMessage("Session expired. Please sign in again.");
       router.replace(ROUTES.AUTH as never);
     });
     return unsubscribe;
-  }, [router]);
+  }, [router, setSessionExpiredMessage]);
 
   useEffect(() => {
     if (loading || hasLaunched === null) return;
@@ -188,8 +198,19 @@ function AuthRedirector() {
 }
 
 function RootLayoutNav() {
+  const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
   return (
     <View style={{ flex: 1 }}>
+      {sessionExpiredMessage ? (
+        <Pressable
+          style={{ backgroundColor: "#CC3333", paddingVertical: 12, paddingHorizontal: 16, alignItems: "center" }}
+          onPress={() => setSessionExpiredMessage(null)}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss session expired message"
+        >
+          <Text style={{ color: "#FFF", fontSize: 14 }}>{sessionExpiredMessage}</Text>
+        </Pressable>
+      ) : null}
       <OfflineBanner />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
@@ -301,6 +322,7 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_800ExtraBold,
   });
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!fontsLoaded) return;
@@ -320,15 +342,17 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
             <AuthProvider>
-              <AuthGateProvider>
-                <ApiProvider>
-                  <AppProvider>
-                    <ThemeAwareStatusBar />
-                    <RootLayoutNav />
-                    <AuthRedirector />
-                  </AppProvider>
-                </ApiProvider>
-              </AuthGateProvider>
+              <SessionExpiredContext.Provider value={{ message: sessionExpiredMessage, setMessage: setSessionExpiredMessage }}>
+                <AuthGateProvider>
+                  <ApiProvider>
+                    <AppProvider>
+                      <ThemeAwareStatusBar />
+                      <RootLayoutNav />
+                      <AuthRedirector />
+                    </AppProvider>
+                  </ApiProvider>
+                </AuthGateProvider>
+              </SessionExpiredContext.Provider>
             </AuthProvider>
           </ThemeProvider>
         </GestureHandlerRootView>

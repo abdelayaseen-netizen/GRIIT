@@ -269,7 +269,7 @@ export default function HomeScreen() {
 
   const leaderboardQuery = useQuery({
     queryKey: ["home", "leaderboard"],
-    queryFn: () => trpcQuery("leaderboard.getWeekly", {}) as Promise<{ currentUserRank: number | null; totalSecuredToday: number; entries?: unknown[] }>,
+    queryFn: () => trpcQuery(TRPC.leaderboard.getWeekly, {}) as Promise<{ currentUserRank: number | null; totalSecuredToday: number; entries?: unknown[] }>,
     staleTime: 60 * 1000, // 1 min — leaderboard changes often
     enabled: !isGuest,
   });
@@ -363,7 +363,7 @@ export default function HomeScreen() {
   const suggestedChallengesQuery = useQuery({
     queryKey: ["home", "suggestedChallenges"],
     queryFn: async () => {
-      const data = (await trpcQuery("challenges.getFeatured", { limit: 3 })) as { items?: { id: string; title?: string; description?: string }[] } | { id: string; title?: string }[];
+      const data = (await trpcQuery(TRPC.challenges.getFeatured, { limit: 3 })) as { items?: { id: string; title?: string; description?: string }[] } | { id: string; title?: string }[];
       const items = Array.isArray(data) ? data : data?.items ?? [];
       return items;
     },
@@ -375,7 +375,7 @@ export default function HomeScreen() {
   const guestFeaturedQuery = useQuery({
     queryKey: ["home", "guestFeatured"],
     queryFn: async () => {
-      const data = (await trpcQuery("challenges.getFeatured", { limit: 6 })) as { items?: { id: string; title?: string; description?: string; short_hook?: string }[] } | { id: string; title?: string; short_hook?: string }[];
+      const data = (await trpcQuery(TRPC.challenges.getFeatured, { limit: 6 })) as { items?: { id: string; title?: string; description?: string; short_hook?: string }[] } | { id: string; title?: string; short_hook?: string }[];
       const items = Array.isArray(data) ? data : data?.items ?? [];
       return items;
     },
@@ -1210,7 +1210,7 @@ export default function HomeScreen() {
                   track({ name: "streak_freeze_used" });
                   setFreezeSubmitting(true);
                   try {
-                    await trpcMutate("streaks.useFreeze", { dateKeyToFreeze: yesterdayKey });
+                    await trpcMutate(TRPC.streaks.useFreeze, { dateKeyToFreeze: yesterdayKey });
                     await refetchAll();
                     setShowFreezeModal(false);
                   } catch (e: unknown) {

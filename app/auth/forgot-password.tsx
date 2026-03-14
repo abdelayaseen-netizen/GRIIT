@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -24,17 +23,19 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState("");
   const isSubmittingRef = useRef(false);
 
   const handleSubmit = async () => {
     if (loading || isSubmittingRef.current) return;
+    setFormError("");
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) {
-      Alert.alert("Error", "Please enter your email address.");
+      setFormError("Please enter your email address.");
       return;
     }
     if (!trimmed.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address.");
+      setFormError("Please enter a valid email address.");
       return;
     }
     isSubmittingRef.current = true;
@@ -44,13 +45,12 @@ export default function ForgotPasswordScreen() {
         redirectTo: undefined,
       });
       if (error) {
-        Alert.alert("Error", error.message);
+        setFormError(error.message);
         return;
       }
       setSent(true);
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Something went wrong.";
-      Alert.alert("Error", message);
+      setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -107,14 +107,23 @@ export default function ForgotPasswordScreen() {
               onPress={handleSubmit}
               disabled={loading}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Send reset link"
             >
               {loading ? <ActivityIndicator color={DS_COLORS.white} /> : <Text style={styles.buttonText}>Send reset link</Text>}
             </TouchableOpacity>
+            {formError ? (
+              <Text style={styles.formError} accessibilityLiveRegion="polite">
+                {formError}
+              </Text>
+            ) : null}
             <TouchableOpacity
               style={[styles.backLink, { borderColor: themeColors.border }]}
               onPress={() => router.back()}
               disabled={loading}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Back to Sign In"
             >
               <Text style={[styles.backLinkText, { color: themeColors.text.primary }]}>Back to Sign In</Text>
             </TouchableOpacity>
@@ -149,6 +158,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonDisabled: { opacity: 0.6 },
+  formError: {
+    color: "#CC3333",
+    fontSize: 13,
+    marginTop: 8,
+    textAlign: "center",
+  },
   buttonText: { fontSize: 15, fontWeight: "700", color: DS_COLORS.white },
   backLink: {
     borderWidth: 1,

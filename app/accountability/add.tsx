@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 import { sharedStyles } from "@/src/theme";
 import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 
 type SearchHit = { user_id: string; username: string; display_name: string };
@@ -41,7 +42,7 @@ export default function AddAccountabilityPartnerScreen() {
     }
     setSearching(true);
     try {
-      const data = await trpcQuery("profiles.search", { query: t }) as SearchHit[];
+      const data = await trpcQuery(TRPC.profiles.search, { query: t }) as SearchHit[];
       setHits(data ?? []);
     } catch {
       setHits([]);
@@ -65,7 +66,7 @@ export default function AddAccountabilityPartnerScreen() {
       if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setInvitingId(partnerId);
       try {
-        await trpcMutate("accountability.invite", { partnerId });
+        await trpcMutate(TRPC.accountability.invite, { partnerId });
         Alert.alert("Invite sent", "They'll see your request in their Accountability Circle.");
         if (params.from === "onboarding" || params.from === "day1") {
           router.replace((params.from === "onboarding" ? ROUTES.ONBOARDING_STEP4 : ROUTES.TABS) as never);

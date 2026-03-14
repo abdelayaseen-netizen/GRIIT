@@ -387,6 +387,8 @@ function MissionRow({
           onPress={onConnectStrava}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Connect Strava"
         >
           <Text style={[s.startActionText, { color: theme.accent }]}>Connect Strava</Text>
           <ChevronRight size={14} color={theme.accent} />
@@ -398,6 +400,9 @@ function MissionRow({
           disabled={stravaVerifyPending}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Verify with Strava"
+          accessibilityState={{ disabled: stravaVerifyPending }}
         >
           {stravaVerifyPending ? (
             <ActivityIndicator size="small" color={theme.accent} />
@@ -981,6 +986,8 @@ export default function ChallengeDetailScreen() {
                           style={[s.failCtaBtn, { backgroundColor: theme.accent }]}
                           onPress={() => router.replace(ROUTES.TABS as never)}
                           activeOpacity={0.85}
+                          accessibilityRole="button"
+                          accessibilityLabel="Back to home"
                         >
                           <Text style={s.failCtaBtnText}>Back to Home</Text>
                         </TouchableOpacity>
@@ -1194,17 +1201,18 @@ export default function ChallengeDetailScreen() {
             </View>
           ) : (
             <Animated.View style={{ transform: [{ scale: ctaScaleAnim }], alignSelf: "stretch" }}>
-              <TouchableOpacity
-                style={[s.ctaButton, { backgroundColor: ctaBgColor }]}
-                onPress={isJoined ? () => router.push(ROUTES.TABS as never) : user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
-                onPressIn={handleCtaPressIn}
-                onPressOut={handleCtaPressOut}
-                disabled={joinDisabled}
-                activeOpacity={0.85}
-                testID="join-challenge-button"
-                accessibilityLabel="Join this challenge"
-                accessibilityRole="button"
-              >
+            <TouchableOpacity
+              style={[s.ctaButton, { backgroundColor: ctaBgColor }]}
+              onPress={isJoined ? () => router.push(ROUTES.TABS as never) : user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
+              onPressIn={handleCtaPressIn}
+              onPressOut={handleCtaPressOut}
+              disabled={joinDisabled}
+              activeOpacity={0.85}
+              testID="join-challenge-button"
+              accessibilityLabel={isJoined ? "Go to challenge" : "Join this challenge"}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: joinDisabled }}
+            >
                 {isPending ? (
                   <ActivityIndicator color={DS_COLORS.white} />
                 ) : (
@@ -1226,6 +1234,8 @@ export default function ChallengeDetailScreen() {
               }}
               activeOpacity={0.7}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="Invite friends to this challenge"
             >
               <Text style={s.inviteLinkText}>Invite friends to this challenge</Text>
             </TouchableOpacity>
@@ -1242,6 +1252,8 @@ export default function ChallengeDetailScreen() {
           style={s.commitmentOverlay}
           activeOpacity={1}
           onPress={() => !commitmentJoining && setShowCommitmentModal(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss modal"
         />
         <View style={[s.commitmentCenter, { paddingBottom: insets.bottom + 24 }]}>
           <View style={s.commitmentCard}>
@@ -1249,6 +1261,8 @@ export default function ChallengeDetailScreen() {
               style={s.commitmentClose}
               onPress={() => !commitmentJoining && setShowCommitmentModal(false)}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
             >
               <Text style={s.commitmentCloseText}>✕</Text>
             </TouchableOpacity>
@@ -1292,6 +1306,9 @@ export default function ChallengeDetailScreen() {
               style={s.commitmentCancelBtn}
               onPress={() => !commitmentJoining && setShowCommitmentModal(false)}
               disabled={commitmentJoining}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+              accessibilityState={{ disabled: commitmentJoining }}
             >
               <Text style={s.commitmentCancelText}>Cancel</Text>
             </TouchableOpacity>
