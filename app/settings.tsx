@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { supabase } from "@/lib/supabase";
@@ -132,7 +133,7 @@ export default function SettingsScreen() {
       return;
     }
     try {
-      const data = await trpcQuery("notifications.getReminderSettings") as { reminder_time: string; enabled: boolean };
+      const data = await trpcQuery(TRPC.notifications.getReminderSettings) as { reminder_time: string; enabled: boolean };
       setReminderTime(data?.reminder_time ?? "09:00");
       setDailyReminder(data?.enabled !== false);
     } catch {
@@ -145,7 +146,7 @@ export default function SettingsScreen() {
   const loadAccountabilityCount = useCallback(async () => {
     if (isGuest) return;
     try {
-      const data = await trpcQuery("accountability.listMine") as { accepted: unknown[] };
+      const data = await trpcQuery(TRPC.accountability.listMine) as { accepted: unknown[] };
       setAccountabilityCount(data?.accepted?.length ?? 0);
     } catch {
       // ignore
@@ -180,7 +181,7 @@ export default function SettingsScreen() {
     setDailyReminder(v);
     if (isGuest) return;
     try {
-      await trpcMutate("notifications.updateReminderSettings", { enabled: v });
+      await trpcMutate(TRPC.notifications.updateReminderSettings, { enabled: v });
       if (v) await registerPushTokenWithBackend();
     } catch {
       // revert on error
@@ -244,7 +245,7 @@ export default function SettingsScreen() {
                 setProfileVisibility(v);
                 if (isGuest) return;
                 try {
-                  await trpcMutate("profiles.update", { profile_visibility: v });
+                  await trpcMutate(TRPC.profiles.update, { profile_visibility: v });
                 } catch {
                   loadProfileVisibility();
                 }
@@ -350,6 +351,9 @@ export default function SettingsScreen() {
                           { backgroundColor: DS_COLORS.border + "40" },
                           reminderTime === p.value && { backgroundColor: DS_COLORS.accent },
                         ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Set reminder time to ${p.label}`}
+                        accessibilityState={{ selected: reminderTime === p.value }}
                       >
                         <Text style={[
                           styles.reminderPillText,
@@ -415,6 +419,8 @@ export default function SettingsScreen() {
               setPremiumModalVisible(true);
             }}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Open GRIIT Premium"
           >
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
@@ -444,6 +450,9 @@ export default function SettingsScreen() {
               }}
               activeOpacity={0.9}
               disabled={restoreLoading}
+              accessibilityRole="button"
+              accessibilityLabel="Restore purchases"
+              accessibilityState={{ disabled: restoreLoading }}
             >
               <View style={styles.toggleRow}>
                 <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Restore Purchases</Text>

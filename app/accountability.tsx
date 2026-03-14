@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 import { sharedStyles } from "@/src/theme";
 import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 
 type ListData = {
@@ -34,7 +35,7 @@ export default function AccountabilityScreen() {
 
   const load = useCallback(async () => {
     try {
-      const result = await trpcQuery("accountability.listMine") as ListData;
+      const result = await trpcQuery(TRPC.accountability.listMine) as ListData;
       setData(result ?? { accepted: [], incomingPending: [], outgoingPending: [] });
     } catch {
       setData({ accepted: [], incomingPending: [], outgoingPending: [] });
@@ -93,7 +94,7 @@ export default function AccountabilityScreen() {
     async (inviteId: string, action: "accept" | "decline") => {
       setActingId(inviteId);
       try {
-        await trpcMutate("accountability.respond", { inviteId, action });
+        await trpcMutate(TRPC.accountability.respond, { inviteId, action });
         await load();
       } catch (e: unknown) {
         Alert.alert("Error", e instanceof Error ? e.message : "Could not update invite.");

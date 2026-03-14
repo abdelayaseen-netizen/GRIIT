@@ -15,6 +15,7 @@ import * as Haptics from "expo-haptics";
 import { Shield, X } from "lucide-react-native";
 import { useApp } from "@/contexts/AppContext";
 import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { inviteToChallenge } from "@/lib/share";
 import { formatTRPCError } from "@/lib/api";
 import { ROUTES } from "@/lib/routes";
@@ -62,12 +63,12 @@ export default function CommitmentScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     try {
-      const result = await trpcMutate("challenges.join", { challengeId }) as { joined?: boolean; runStatus?: string } | undefined;
+      const result = await trpcMutate(TRPC.challenges.join, { challengeId }) as { joined?: boolean; runStatus?: string } | undefined;
       if (Platform.OS !== "web") {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
       try {
-        await trpcMutate("referrals.markJoinedChallenge", { challengeId });
+        await trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId });
       } catch {
         // attribution is best-effort
       }

@@ -9,7 +9,6 @@ import {
   Platform,
   RefreshControl,
   Modal,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -264,6 +263,8 @@ export default function HomeScreen() {
   const streakLostShownRef = useRef(false);
   const [syncingBannerDismissed, setSyncingBannerDismissed] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
+  const [secureError, setSecureError] = useState<string>('');
+  const [freezeError, setFreezeError] = useState<string>('');
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
 
@@ -461,6 +462,7 @@ export default function HomeScreen() {
   const isRefetching = leaderboardQuery.isRefetching || homeActiveQuery.isRefetching;
 
   const handleSecureDay = useCallback(async () => {
+    setSecureError('');
     if (daysSinceLastSecure >= RETENTION_CONFIG.comebackModeMinDays) {
       track({ name: "comeback_day_secured" });
     }
@@ -476,7 +478,7 @@ export default function HomeScreen() {
         setOptimisticDaySecured(false);
         setShowCelebration(false);
         setCelebrationPayload(null);
-        Alert.alert("Error", "Couldn't secure day. Try again.");
+        setSecureError("Couldn't secure day. Try again.");
         return;
       }
       const streak = result.newStreakCount ?? stats?.activeStreak ?? 0;
@@ -514,7 +516,7 @@ export default function HomeScreen() {
       setOptimisticDaySecured(false);
       setShowCelebration(false);
       setCelebrationPayload(null);
-      Alert.alert("Error", "Couldn't secure day. Try again.");
+      setSecureError("Couldn't secure day. Try again.");
     }
   }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, leaderboardQuery, homeActiveQuery]);
 
@@ -744,6 +746,14 @@ export default function HomeScreen() {
               currentStreak={currentStreak}
               disciplinePointsLabel={tierName ? `${tierName} · ${stats?.totalDaysSecured ?? 0} days secured` : undefined}
             />
+            {secureError ? (
+              <Text
+                style={{ color: DS_COLORS.errorText, fontSize: 13, marginTop: 6, textAlign: 'center' }}
+                accessibilityLiveRegion="polite"
+              >
+                {secureError}
+              </Text>
+            ) : null}
             <ExploreChallengesButton />
             {homeDataError ? (
               <View style={styles.yourPositionCard}>
@@ -1203,18 +1213,27 @@ export default function HomeScreen() {
               <Text style={[styles.freezeModalSub, { color: DS_COLORS.textSecondary }]}>
                 This will save your streak. You get 1 free freeze per month.{freezesRemaining !== undefined && freezesRemaining >= 0 ? ` (${freezesRemaining} left this month)` : ""}
               </Text>
+              {freezeError ? (
+                <Text
+                  style={{ color: DS_COLORS.errorText, fontSize: 13, marginTop: 6, textAlign: 'center' }}
+                  accessibilityLiveRegion="polite"
+                >
+                  {freezeError}
+                </Text>
+              ) : null}
               <TouchableOpacity
                 style={[styles.freezeModalConfirm, { backgroundColor: DS_COLORS.accent }, freezeSubmitting && styles.freezeModalConfirmDisabled]}
                 disabled={freezeSubmitting}
                 onPress={async () => {
                   track({ name: "streak_freeze_used" });
+                  setFreezeError('');
                   setFreezeSubmitting(true);
                   try {
                     await trpcMutate(TRPC.streaks.useFreeze, { dateKeyToFreeze: yesterdayKey });
                     await refetchAll();
                     setShowFreezeModal(false);
                   } catch (e: unknown) {
-                    Alert.alert("Error", e instanceof Error ? e.message : "Could not use freeze.");
+                    setFreezeError(e instanceof Error ? e.message : "Could not use freeze.");
                   } finally {
                     setFreezeSubmitting(false);
                   }

@@ -217,7 +217,7 @@ export default function WelcomeScreen() {
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
       Alert.alert("Something went wrong", "Please try again.");
-      if (__DEV__) console.error(err);
+      if (__DEV__) console.error("[AUTH] Signup error:", err);
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -322,7 +322,7 @@ export default function WelcomeScreen() {
   if (step === 3) {
     return (
       <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
-        <TouchableOpacity style={s.backBtn} onPress={goBack}>
+        <TouchableOpacity style={s.backBtn} onPress={goBack} accessibilityRole="button" accessibilityLabel="Go back">
           <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={s.stepTitle}>How disciplined are you right now?</Text>
@@ -360,6 +360,9 @@ export default function WelcomeScreen() {
           onPress={goNext}
           disabled={!disciplineLevel}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Continue to next step"
+          accessibilityState={{ disabled: !disciplineLevel }}
         >
           <Text style={s.primaryBtnText}>Continue</Text>
         </TouchableOpacity>
@@ -453,7 +456,12 @@ export default function WelcomeScreen() {
               editable={!loading}
               accessibilityLabel="Password"
             />
-            <TouchableOpacity onPress={() => setShowPassword((p) => !p)} hitSlop={12}>
+            <TouchableOpacity
+              onPress={() => setShowPassword((p) => !p)}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+            >
               {showPassword ? <EyeOff size={22} color={DS_COLORS.textSecondary} /> : <Eye size={22} color={DS_COLORS.textSecondary} />}
             </TouchableOpacity>
           </View>

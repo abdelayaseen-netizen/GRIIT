@@ -452,7 +452,7 @@ export default function ChallengeDetailScreen() {
   const queryClient = useQueryClient();
   const challengeQuery = useQuery({
     queryKey: ["challenge", id],
-    queryFn: () => trpcQuery("challenges.getById", { id: id! }),
+    queryFn: () => trpcQuery(TRPC.challenges.getById, { id: id! }),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   });
@@ -471,7 +471,7 @@ export default function ChallengeDetailScreen() {
 
   useEffect(() => {
     if (!ref || !currentUserId || !id) return;
-    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch(() => {});
+    trpcMutate(TRPC.referrals.recordOpen, { referrerUserId: ref, challengeId: id }).catch(() => {});
   }, [ref, currentUserId, id]);
 
   const challenge = useMemo(() => {
@@ -580,9 +580,9 @@ export default function ChallengeDetailScreen() {
     setCommitmentJoining(true);
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await trpcMutate("challenges.join", { challengeId: id });
+      await trpcMutate(TRPC.challenges.join, { challengeId: id });
       try {
-        await trpcMutate("referrals.markJoinedChallenge", { challengeId: id });
+        await trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id });
       } catch { /* best-effort */ }
       await refetchAll();
       setShowCommitmentModal(false);

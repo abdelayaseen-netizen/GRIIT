@@ -722,7 +722,7 @@ export default function ActivityScreen() {
     queryKey: ["movement", "activityFeed", currentUserId],
     queryFn: async (): Promise<ActivityItem[]> => {
       const [respectsData, nudgesData] = await Promise.all([
-        trpcQuery("respects.getForUser") as Promise<{ recent: { id: string; actorId: string; actorDisplayName: string; actorUsername: string; at: string }[] }>,
+        trpcQuery(TRPC.respects.getForUser) as Promise<{ recent: { id: string; actorId: string; actorDisplayName: string; actorUsername: string; at: string }[] }>,
         trpcQuery(TRPC.nudges.getForUser) as Promise<{ items: { id: string; fromUserId: string; fromDisplayName: string; message: string; createdAt: string }[] }>,
       ]);
       const respectItems: ActivityItem[] = (respectsData?.recent ?? []).map((r) => ({
@@ -770,7 +770,7 @@ export default function ActivityScreen() {
         setOptimisticRespectDeltas((prev) => ({ ...prev, [recipientId]: (prev[recipientId] ?? 0) + 1 }));
         setGivingRespectId(recipientId);
         try {
-          await trpcMutate("respects.give", { recipientId });
+          await trpcMutate(TRPC.respects.give, { recipientId });
           track({ name: "respect_sent", toUserId: recipientId });
           Alert.alert("Sent!", "");
           await leaderboardQuery.refetch();
