@@ -58,7 +58,7 @@ export default function OnboardingHookScreen() {
           accessibilityRole="button"
           accessibilityState={{ disabled: !motivation }}
         >
-          <Text style={styles.ctaText}>Continue</Text>
+          <Text style={[styles.ctaText, !motivation && styles.ctaTextDisabled]}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </OnboardingLayout>
@@ -71,15 +71,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: DS_COLORS.white,
+    color: DS_COLORS.textPrimary,
     lineHeight: 34,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: "400",
     color: DS_COLORS.textSecondary,
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 28,
   },
   cta: {
@@ -88,14 +89,19 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 20,
     marginTop: 16,
+    marginBottom: 32,
   },
   ctaDisabled: {
-    opacity: 0.5,
+    backgroundColor: DS_COLORS.border,
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.onboardingBg,
+    color: DS_COLORS.textPrimary,
+  },
+  ctaTextDisabled: {
+    color: DS_COLORS.textSecondary,
   },
 });

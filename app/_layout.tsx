@@ -338,11 +338,5 @@ export default function RootLayout() {
 }
 
 function ThemeAwareStatusBar() {
-  const { isDark } = useTheme();
-  return (
-    <StatusBar
-      barStyle={isDark ? "light-content" : "dark-content"}
-      backgroundColor="transparent"
-    />
-  );
+  return <StatusBar barStyle="dark-content" backgroundColor="transparent" />;
 }

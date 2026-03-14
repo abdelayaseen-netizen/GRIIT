@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -47,10 +46,8 @@ export default function LoginScreen() {
 
       if (error) {
         setLoading(false);
-        const msg = mapAuthError(error);
-        setFormError(msg);
+        setFormError(mapAuthError(error));
         console.error("[AUTH] Sign-in error:", error);
-        Alert.alert("Login Failed", msg);
         return;
       }
 
@@ -60,16 +57,12 @@ export default function LoginScreen() {
       }
 
       setLoading(false);
-      const fallbackMsg = "Something went wrong. Please try again.";
-      setFormError(fallbackMsg);
+      setFormError("Something went wrong. Please try again.");
       console.error("[AUTH] No session in response");
-      Alert.alert("Login Failed", fallbackMsg);
     } catch (err: unknown) {
       setLoading(false);
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      setFormError(message);
+      setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       console.error("[AUTH] Error caught:", err);
-      Alert.alert("Login Failed", message);
     }
   };
 

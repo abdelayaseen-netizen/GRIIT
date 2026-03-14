@@ -11,14 +11,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ChevronLeft, Sun, Moon, Smartphone, Crown, User, LogOut, FileText, Eye } from "lucide-react-native";
+import { ChevronLeft, Crown, User, LogOut, FileText, Eye } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
@@ -114,7 +113,6 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { mode: themeMode, setMode: setThemeMode, isDark } = useTheme();
   const [dailyReminder, setDailyReminder] = useState(true);
   const [reminderTime, setReminderTime] = useState("09:00");
   const [reminderLoading, setReminderLoading] = useState(true);
@@ -205,10 +203,6 @@ export default function SettingsScreen() {
     router.back();
   };
 
-  const handleThemeMode = (mode: ThemeMode) => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setThemeMode(mode);
-  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: DS_COLORS.settingsPageBg }]} edges={["top"]}>
@@ -291,54 +285,6 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Appearance */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Sun size={18} color={DS_COLORS.textPrimary} />
-            <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary }]}>Appearance</Text>
-          </View>
-          <View style={styles.card}>
-            <View style={styles.toggleRow}>
-              <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Dark mode</Text>
-              <Switch
-                value={isDark}
-                onValueChange={(v) => {
-                  if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setThemeMode(v ? "dark" : "light");
-                }}
-                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
-                thumbColor={DS_COLORS.white}
-                accessibilityLabel="Toggle dark mode"
-                accessibilityRole="switch"
-              />
-            </View>
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
-              {(["system", "light", "dark"] as const).map((m) => (
-                <TouchableOpacity
-                  key={m}
-                  onPress={() => handleThemeMode(m)}
-                  style={[
-                    styles.reminderPill,
-                    { backgroundColor: DS_COLORS.chipFill, flexDirection: "row", alignItems: "center" },
-                    themeMode === m && { backgroundColor: DS_COLORS.accent },
-                  ]}
-                  activeOpacity={0.8}
-                  accessibilityLabel={`Set theme to ${m === "system" ? "System" : m === "light" ? "Light" : "Dark"}`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: themeMode === m }}
-                >
-                  {m === "system" && <Smartphone size={14} color={themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary} style={{ marginRight: 4 }} />}
-                  {m === "light" && <Sun size={14} color={themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary} style={{ marginRight: 4 }} />}
-                  {m === "dark" && <Moon size={14} color={themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary} style={{ marginRight: 4 }} />}
-                  <Text style={[styles.reminderPillText, themeMode === m && styles.reminderPillTextActive, { color: themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary }]}>
-                    {m === "system" ? "System" : m === "light" ? "Light" : "Dark"}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
 
         {/* Friends */}
         <View style={styles.section}>

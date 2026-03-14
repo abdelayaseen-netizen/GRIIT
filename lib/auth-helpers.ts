@@ -6,7 +6,7 @@ export function mapAuthError(error: { message: string }): string {
   const msg = error.message.toLowerCase();
   // Signup
   if (msg.includes("already registered") || msg.includes("already been registered")) {
-    return "An account with this email already exists. Try logging in instead.";
+    return "An account with this email already exists. Sign in instead.";
   }
   if (msg.includes("invalid email")) {
     return "Please enter a valid email address.";

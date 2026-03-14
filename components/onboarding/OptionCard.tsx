@@ -14,39 +14,27 @@ type OptionCardProps = {
 
 export function OptionCard({ icon, label, sub, selected, onPress, badge }: OptionCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const borderAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: selected ? 1.02 : 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(borderAnim, {
-        toValue: selected ? 1 : 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [selected, scaleAnim, borderAnim]);
-
-  const borderColor = selected ? DS_COLORS.accent : DS_COLORS.borderDark;
+    Animated.timing(scaleAnim, {
+      toValue: selected ? 1.02 : 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [selected, scaleAnim]);
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <TouchableOpacity
         style={[
           styles.card,
-          {
-            borderColor,
-            borderWidth: selected ? 2 : 1,
-          },
+          selected && styles.cardSelected,
         ]}
         onPress={onPress}
         activeOpacity={0.9}
         accessibilityRole="radio"
         accessibilityState={{ checked: selected }}
+        accessibilityLabel={label}
       >
         {badge ? (
           <View style={styles.badge}>
@@ -55,12 +43,12 @@ export function OptionCard({ icon, label, sub, selected, onPress, badge }: Optio
         ) : null}
         {selected ? (
           <View style={styles.checkWrap}>
-            <Check size={20} color={DS_COLORS.onboardingBg} strokeWidth={2.5} />
+            <Check size={12} color={DS_COLORS.white} strokeWidth={2.5} />
           </View>
         ) : null}
         <Text style={styles.icon}>{icon}</Text>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.sub}>{sub}</Text>
+        <Text style={styles.label} numberOfLines={2}>{label}</Text>
+        <Text style={styles.sub} numberOfLines={2}>{sub}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -68,33 +56,42 @@ export function OptionCard({ icon, label, sub, selected, onPress, badge }: Optio
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS.textPrimaryAlt,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+    backgroundColor: DS_COLORS.white,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
     position: "relative",
+    overflow: "visible",
+  },
+  cardSelected: {
+    borderWidth: 2,
+    borderColor: DS_COLORS.accent,
+    backgroundColor: DS_COLORS.cardSelectedBg,
   },
   badge: {
     position: "absolute",
     top: 12,
     right: 12,
     backgroundColor: DS_COLORS.accent,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 999,
+    overflow: "visible",
   },
   badgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: DS_COLORS.onboardingBg,
+    color: DS_COLORS.white,
   },
   checkWrap: {
     position: "absolute",
     top: 16,
     right: 16,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
@@ -104,15 +101,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.white,
-    lineHeight: 24,
+    color: DS_COLORS.textPrimary,
+    lineHeight: 22,
     marginBottom: 4,
   },
   sub: {
-    fontSize: 14,
+    fontSize: 13,
     color: DS_COLORS.textSecondary,
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });

@@ -29,6 +29,7 @@ export const DS_COLORS = {
   accent: "#E07B4A",
   accentDark: "#D96A3E",
   accentSoft: "#FFF5F0",
+  cardSelectedBg: "#FFF8F5",
 
   // Semantic
   success: "#2F7A52",
@@ -43,10 +44,10 @@ export const DS_COLORS = {
   materialRed: "#F44336",
   materialGreen: "#4CAF50",
 
-  // Onboarding / dark surfaces
-  onboardingBg: "#0A0A0A",
-  borderDark: "#333333",
-  darkCard: "#1A1A1A",
+  // Onboarding (light only — aliases for compatibility)
+  onboardingBg: "#F0EDE6",
+  borderDark: "#E8E5DE",
+  darkCard: "#FFFFFF",
   darkTextSecondary: "#A0A0A0",
   darkTextTertiary: "#737373",
   darkTextMuted: "#525252",

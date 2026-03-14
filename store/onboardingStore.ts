@@ -26,6 +26,7 @@ export interface OnboardingState {
   motivation: string | null;
   persona: string | null;
   barrier: string | null;
+  barriers: string[];
   intensity: OnboardingIntensity;
   socialStyle: string | null;
   trainingTime: string | null;
@@ -35,6 +36,8 @@ export interface OnboardingState {
   setMotivation: (v: string) => void;
   setPersona: (v: string) => void;
   setBarrier: (v: string) => void;
+  setBarriers: (v: string[]) => void;
+  toggleBarrier: (id: string) => void;
   setIntensity: (v: OnboardingIntensity) => void;
   setSocialStyle: (v: string) => void;
   setTrainingTime: (v: string) => void;
@@ -48,6 +51,7 @@ const initialState = {
   motivation: null as string | null,
   persona: null as string | null,
   barrier: null as string | null,
+  barriers: [] as string[],
   intensity: null as OnboardingIntensity,
   socialStyle: null as string | null,
   trainingTime: null as string | null,
@@ -63,6 +67,11 @@ export const useOnboardingStore = create<OnboardingState>()(
       setMotivation: (v) => set({ motivation: v }),
       setPersona: (v) => set({ persona: v }),
       setBarrier: (v) => set({ barrier: v }),
+      setBarriers: (v) => set({ barriers: v }),
+      toggleBarrier: (id) => set((s) => {
+        const next = s.barriers.includes(id) ? s.barriers.filter((b) => b !== id) : [...s.barriers, id];
+        return { barriers: next, barrier: next[0] ?? null };
+      }),
       setIntensity: (v) => set({ intensity: v }),
       setSocialStyle: (v) => set({ socialStyle: v }),
       setTrainingTime: (v) => set({ trainingTime: v }),
@@ -78,6 +87,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         motivation: state.motivation,
         persona: state.persona,
         barrier: state.barrier,
+        barriers: state.barriers,
         intensity: state.intensity,
         socialStyle: state.socialStyle,
         trainingTime: state.trainingTime,

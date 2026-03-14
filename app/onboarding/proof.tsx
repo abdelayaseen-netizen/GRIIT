@@ -80,7 +80,11 @@ export default function OnboardingProofScreen() {
           {AVATARS.map((a, i) => (
             <View
               key={i}
-              style={[styles.avatar, { backgroundColor: a.color }]}
+              style={[
+                styles.avatar,
+                { backgroundColor: a.color },
+                i > 0 && styles.avatarOverlap,
+              ]}
             >
               <Text style={styles.avatarText}>{a.initials}</Text>
             </View>
@@ -110,12 +114,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   number: {
     fontSize: 56,
     fontWeight: "800",
-    color: DS_COLORS.white,
+    color: DS_COLORS.textPrimary,
     letterSpacing: -1,
     marginBottom: 12,
   },
@@ -125,25 +129,27 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 24,
     marginBottom: 28,
+    maxWidth: 280,
   },
   avatars: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: -8,
     marginBottom: 20,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: DS_COLORS.onboardingBg,
-    marginLeft: -8,
+    borderColor: DS_COLORS.background,
+  },
+  avatarOverlap: {
+    marginLeft: -10,
   },
   avatarText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "700",
     color: DS_COLORS.white,
   },
@@ -153,7 +159,9 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textSecondary,
     textAlign: "center",
     lineHeight: 22,
+    marginTop: 16,
     marginBottom: 40,
+    maxWidth: 280,
   },
   cta: {
     backgroundColor: DS_COLORS.accent,
@@ -163,10 +171,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
+    marginBottom: 32,
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.onboardingBg,
+    color: DS_COLORS.textPrimary,
   },
 });

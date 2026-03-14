@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Eye, EyeOff } from "lucide-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { PERSONAS, STARTER_CHALLENGES, INTENSITY_OPTIONS } from "@/constants/onboardingData";
@@ -26,6 +26,10 @@ export default function OnboardingSignupScreen() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   const persona = useOnboardingStore((s) => s.persona);
   const selectedChallengeId = useOnboardingStore((s) => s.selectedChallengeId);
@@ -44,33 +48,36 @@ export default function OnboardingSignupScreen() {
   const challengeLabel = STARTER_CHALLENGES.find((c) => c.id === selectedChallengeId);
   const intensityLabel = INTENSITY_OPTIONS.find((i) => i.id === intensity);
 
-  const summaryLine = [personaLabel?.icon, personaLabel?.label, challengeLabel?.label, intensityLabel?.label]
+  const summaryLine = [personaLabel?.label, challengeLabel?.label, intensityLabel?.label]
     .filter(Boolean)
     .join(" · ");
 
   const handleApple = async () => {
+    setFormError(null);
     try {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
       if (error) throw error;
     } catch (e) {
-      Alert.alert("Sign in", mapAuthError(e as { message: string }));
+      setFormError(mapAuthError(e as { message: string }));
     }
   };
 
   const handleGoogle = async () => {
+    setFormError(null);
     try {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
       if (error) throw error;
     } catch (e) {
-      Alert.alert("Sign in", mapAuthError(e as { message: string }));
+      setFormError(mapAuthError(e as { message: string }));
     }
   };
 
   const handleCreateAccount = async () => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim();
+    setFormError(null);
     if (!trimmedEmail || !trimmedName || password.length < 8) {
-      Alert.alert("Missing fields", "Enter email, name, and a password (8+ characters).");
+      setFormError("Enter email, name, and a password (8+ characters).");
       return;
     }
     setLoading(true);
@@ -80,23 +87,20 @@ export default function OnboardingSignupScreen() {
         password,
         options: {
           data: {
+            full_name: trimmedName,
             display_name: trimmedName,
           },
         },
       });
 
       if (signUpError) {
-        Alert.alert("Signup Failed", mapAuthError(signUpError));
+        setFormError(mapAuthError(signUpError));
         setLoading(false);
         return;
       }
 
       if (!data.session) {
-        Alert.alert(
-          "Check Your Email",
-          `We sent a confirmation link to ${trimmedEmail}. Open it to activate your account, then return and log in.`,
-          [{ text: "OK", onPress: () => router.replace("/onboarding/signup" as never) }]
-        );
+        setFormError("Check your email to confirm your account, then sign in.");
         setLoading(false);
         return;
       }
@@ -114,11 +118,14 @@ export default function OnboardingSignupScreen() {
 
       router.replace("/onboarding/first-task" as never);
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Something went wrong. Try again.");
+      setFormError(e instanceof Error ? e.message : "Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  const inputBorder = (key: string) =>
+    focusedField === key ? DS_COLORS.accent : DS_COLORS.border;
 
   return (
     <OnboardingLayout
@@ -145,16 +152,30 @@ export default function OnboardingSignupScreen() {
           </Text>
 
           {summaryLine ? (
-            <View style={styles.summaryCard}>
+            <View style={styles.summaryPill}>
               <Text style={styles.summaryText}>{summaryLine}</Text>
             </View>
           ) : null}
 
-          <TouchableOpacity style={styles.socialBtn} onPress={handleApple} disabled={loading} accessibilityLabel="Sign in with Apple" accessibilityRole="button" accessibilityState={{ disabled: loading }}>
-            <Text style={styles.socialBtnText}>Sign in with Apple</Text>
+          <TouchableOpacity
+            style={styles.socialBtnApple}
+            onPress={handleApple}
+            disabled={loading}
+            accessibilityLabel="Sign in with Apple"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading }}
+          >
+            <Text style={styles.socialBtnAppleText}>Sign in with Apple</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialBtnAlt} onPress={handleGoogle} disabled={loading} accessibilityLabel="Sign in with Google" accessibilityRole="button" accessibilityState={{ disabled: loading }}>
-            <Text style={styles.socialBtnTextAlt}>Sign in with Google</Text>
+          <TouchableOpacity
+            style={styles.socialBtnGoogle}
+            onPress={handleGoogle}
+            disabled={loading}
+            accessibilityLabel="Sign in with Google"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading }}
+          >
+            <Text style={styles.socialBtnGoogleText}>Sign in with Google</Text>
           </TouchableOpacity>
 
           <View style={styles.divider}>
@@ -164,11 +185,13 @@ export default function OnboardingSignupScreen() {
           </View>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, { borderColor: inputBorder("email") }]}
             placeholder="Email"
-            placeholderTextColor={DS_COLORS.textSecondary}
+            placeholderTextColor={DS_COLORS.textMuted}
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(t) => { setEmail(t); setFormError(null); }}
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => setFocusedField(null)}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -176,25 +199,49 @@ export default function OnboardingSignupScreen() {
             accessibilityLabel="Email"
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { borderColor: inputBorder("name") }]}
             placeholder="Name"
-            placeholderTextColor={DS_COLORS.textSecondary}
+            placeholderTextColor={DS_COLORS.textMuted}
             value={name}
-            onChangeText={setName}
+            onChangeText={(t) => { setName(t); setFormError(null); }}
+            onFocus={() => setFocusedField("name")}
+            onBlur={() => setFocusedField(null)}
             autoCapitalize="words"
             editable={!loading}
             accessibilityLabel="Name"
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password (8+ characters)"
-            placeholderTextColor={DS_COLORS.textSecondary}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-            accessibilityLabel="Password"
-          />
+          <View style={[styles.passwordWrap, { borderColor: inputBorder("password") }]}>
+            <TextInput
+              ref={passwordRef}
+              style={styles.passwordInput}
+              placeholder="Password (8+ characters)"
+              placeholderTextColor={DS_COLORS.textMuted}
+              value={password}
+              onChangeText={(t) => { setPassword(t); setFormError(null); }}
+              onFocus={() => setFocusedField("password")}
+              onBlur={() => setFocusedField(null)}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              editable={!loading}
+              accessibilityLabel="Password"
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword((p) => !p)}
+              hitSlop={12}
+              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+              accessibilityRole="button"
+            >
+              {showPassword ? (
+                <EyeOff size={22} color={DS_COLORS.textSecondary} />
+              ) : (
+                <Eye size={22} color={DS_COLORS.textSecondary} />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {formError ? (
+            <Text style={styles.inlineError}>{formError}</Text>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.cta, loading && styles.ctaDisabled]}
@@ -206,7 +253,7 @@ export default function OnboardingSignupScreen() {
             accessibilityState={{ disabled: loading }}
           >
             {loading ? (
-              <ActivityIndicator color={DS_COLORS.onboardingBg} size="small" />
+              <ActivityIndicator color={DS_COLORS.textPrimary} size="small" />
             ) : (
               <Text style={styles.ctaText}>Create account →</Text>
             )}
@@ -224,54 +271,56 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: DS_COLORS.white,
+    color: DS_COLORS.textPrimary,
     lineHeight: 34,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: "400",
     color: DS_COLORS.textSecondary,
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 20,
   },
-  summaryCard: {
-    backgroundColor: DS_COLORS.textPrimaryAlt,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
+  summaryPill: {
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1,
-    borderColor: DS_COLORS.borderDark,
+    borderColor: DS_COLORS.border,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 24,
   },
   summaryText: {
-    fontSize: 14,
+    fontSize: 13,
     color: DS_COLORS.textSecondary,
-    lineHeight: 20,
+    lineHeight: 18,
   },
-  socialBtn: {
+  socialBtnApple: {
     backgroundColor: DS_COLORS.white,
+    borderWidth: 1,
+    borderColor: DS_COLORS.textPrimary,
     height: 52,
-    borderRadius: 26,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
   },
-  socialBtnText: {
+  socialBtnAppleText: {
     fontSize: 16,
-    fontWeight: "700",
-    color: DS_COLORS.onboardingBg,
+    fontWeight: "600",
+    color: DS_COLORS.textPrimary,
   },
-  socialBtnAlt: {
-    backgroundColor: "transparent",
+  socialBtnGoogle: {
+    backgroundColor: DS_COLORS.textPrimary,
     height: 52,
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: DS_COLORS.borderDark,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
   },
-  socialBtnTextAlt: {
+  socialBtnGoogleText: {
     fontSize: 16,
     fontWeight: "600",
     color: DS_COLORS.white,
@@ -284,7 +333,7 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: DS_COLORS.borderDark,
+    backgroundColor: DS_COLORS.border,
   },
   dividerText: {
     fontSize: 13,
@@ -292,14 +341,34 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
   },
   input: {
-    backgroundColor: DS_COLORS.black,
+    backgroundColor: DS_COLORS.backgroundAlt,
     borderWidth: 1,
-    borderColor: DS_COLORS.borderDark,
-    borderRadius: 14,
+    borderRadius: 12,
     height: 52,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: DS_COLORS.white,
+    color: DS_COLORS.textPrimary,
+    marginBottom: 10,
+  },
+  passwordWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: DS_COLORS.backgroundAlt,
+    borderWidth: 1,
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    color: DS_COLORS.textPrimary,
+    paddingVertical: 0,
+  },
+  inlineError: {
+    fontSize: 14,
+    color: DS_COLORS.danger,
     marginBottom: 12,
   },
   cta: {
@@ -308,14 +377,15 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 16,
+    marginTop: 8,
+    marginBottom: 32,
   },
   ctaDisabled: {
-    opacity: 0.7,
+    opacity: 0.8,
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.onboardingBg,
+    color: DS_COLORS.textPrimary,
   },
 });

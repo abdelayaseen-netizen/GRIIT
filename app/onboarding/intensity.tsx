@@ -64,7 +64,7 @@ export default function OnboardingIntensityScreen() {
           disabled={!intensity}
           activeOpacity={0.9}
         >
-          <Text style={styles.ctaText}>This is my level</Text>
+          <Text style={[styles.ctaText, !intensity && styles.ctaTextDisabled]}>This is my level</Text>
         </TouchableOpacity>
       </ScrollView>
     </OnboardingLayout>
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: DS_COLORS.white,
+    color: DS_COLORS.textPrimary,
     lineHeight: 34,
     marginBottom: 28,
     letterSpacing: -0.5,
@@ -88,14 +88,19 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 20,
     marginTop: 16,
+    marginBottom: 32,
   },
   ctaDisabled: {
-    opacity: 0.5,
+    backgroundColor: DS_COLORS.border,
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.onboardingBg,
+    color: DS_COLORS.textPrimary,
+  },
+  ctaTextDisabled: {
+    color: DS_COLORS.textSecondary,
   },
 });

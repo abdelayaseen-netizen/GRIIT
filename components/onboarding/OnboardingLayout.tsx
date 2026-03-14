@@ -59,38 +59,41 @@ export function OnboardingLayout({
   const isFirst = step <= 1;
 
   return (
-    <View style={[styles.container, { backgroundColor: DS_COLORS.onboardingBg }]}>
+    <View style={[styles.container, { backgroundColor: DS_COLORS.background }]}>
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        {showProgressBar && (
+          <View style={[styles.progressBarWrap, { paddingTop: insets.top + 8 }]}>
+            <View style={styles.progressTrack}>
+              <Animated.View
+                style={[
+                  styles.progressFill,
+                  { width: `${progress}%` },
+                ]}
+              />
+            </View>
+          </View>
+        )}
+        <View style={[styles.header, { paddingTop: showProgressBar ? 12 : insets.top + 8 }]}>
           {!isFirst && showBack ? (
             <TouchableOpacity
               onPress={() => router.back()}
               style={styles.backBtn}
               hitSlop={12}
               activeOpacity={0.7}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
             >
-              <ChevronLeft size={28} color={DS_COLORS.white} strokeWidth={2} />
+              <ChevronLeft size={28} color={DS_COLORS.textPrimary} strokeWidth={2} />
             </TouchableOpacity>
           ) : (
             <View style={styles.backPlaceholder} />
           )}
 
           {showProgressBar && (
-            <View style={styles.progressWrap}>
+            <View style={styles.stepWrap}>
               <Text style={styles.stepText}>
                 {step} of {totalSteps}
               </Text>
-              <View style={styles.progressTrack}>
-                <Animated.View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${progress}%`,
-                      backgroundColor: DS_COLORS.accent,
-                    },
-                  ]}
-                />
-              </View>
             </View>
           )}
 
@@ -99,6 +102,8 @@ export function OnboardingLayout({
               onPress={() => router.replace("/onboarding/signup" as never)}
               style={styles.skipBtn}
               activeOpacity={0.7}
+              accessibilityLabel="Skip to sign up"
+              accessibilityRole="button"
             >
               <Text style={styles.skipText}>Skip</Text>
             </TouchableOpacity>
@@ -152,37 +157,41 @@ const styles = StyleSheet.create({
   backPlaceholder: {
     width: 44,
   },
-  progressWrap: {
-    flex: 1,
-    marginHorizontal: 8,
-  },
   stepText: {
     fontSize: 12,
     fontWeight: "600",
     color: DS_COLORS.textSecondary,
-    marginBottom: 4,
-  },
-  progressTrack: {
-    height: 6,
-    backgroundColor: DS_COLORS.borderDark,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 3,
   },
   skipBtn: {
     padding: 8,
   },
   skipText: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "400",
     color: DS_COLORS.textSecondary,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+  },
+  progressBarWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  progressTrack: {
+    height: 4,
+    backgroundColor: DS_COLORS.border,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: DS_COLORS.accent,
+  },
+  stepWrap: {
+    flex: 1,
+    marginHorizontal: 8,
   },
 });
 

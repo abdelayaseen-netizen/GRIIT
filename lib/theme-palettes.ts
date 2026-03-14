@@ -1,5 +1,5 @@
 /**
- * Light and dark color palettes for ThemeContext.
+ * Light theme only. Used by ThemeContext. No dark mode.
  * All colors from design-system so no raw hex remains here.
  */
 import { DS_COLORS } from "@/lib/design-system";
@@ -70,47 +70,5 @@ export const LIGHT_THEME: ThemeColors = {
     silver: DS_COLORS.milestoneSilver,
     gold: DS_COLORS.milestoneGold,
     diamond: DS_COLORS.milestoneDiamond,
-  },
-};
-
-export const DARK_THEME: ThemeColors = {
-  background: DS_COLORS.onboardingBg,
-  card: DS_COLORS.darkCard,
-  text: {
-    primary: DS_COLORS.white,
-    secondary: DS_COLORS.darkTextSecondary,
-    tertiary: DS_COLORS.darkTextTertiary,
-    muted: DS_COLORS.darkTextMuted,
-  },
-  accent: DS_COLORS.accent,
-  accentLight: "rgba(232, 115, 74, 0.15)",
-  accentTint: "rgba(232, 115, 74, 0.08)",
-  border: DS_COLORS.darkBorder,
-  success: DS_COLORS.success,
-  successLight: "rgba(45, 139, 78, 0.15)",
-  warning: DS_COLORS.milestoneGold,
-  warningLight: "rgba(212, 160, 23, 0.15)",
-  danger: DS_COLORS.danger,
-  dangerLight: "rgba(229, 62, 62, 0.15)",
-  shadow: "rgba(0, 0, 0, 0.3)",
-  shadowMedium: "rgba(0, 0, 0, 0.4)",
-  pill: DS_COLORS.darkPill,
-  category: {
-    fitness: DS_COLORS.accent,
-    mind: DS_COLORS.darkCategoryMind,
-    discipline: DS_COLORS.grayLight,
-    faith: DS_COLORS.checkinBlue,
-  },
-  streak: {
-    fire: DS_COLORS.accent,
-    shield: DS_COLORS.success,
-    gold: DS_COLORS.milestoneGold,
-    platinum: DS_COLORS.darkStreakPlatinum,
-  },
-  milestone: {
-    bronze: DS_COLORS.milestoneBronze,
-    silver: DS_COLORS.darkMilestoneSilver,
-    gold: DS_COLORS.darkMilestoneGold,
-    diamond: DS_COLORS.darkMilestoneDiamond,
   },
 };

@@ -72,7 +72,7 @@ export default function OnboardingSocialScreen() {
                   trainingTime === t.id && styles.timeChipTextActive,
                 ]}
               >
-                {t.icon} {t.label}
+                {t.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -84,7 +84,7 @@ export default function OnboardingSocialScreen() {
           disabled={!socialStyle}
           activeOpacity={0.9}
         >
-          <Text style={styles.ctaText}>Continue</Text>
+          <Text style={[styles.ctaText, !socialStyle && styles.ctaTextDisabled]}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </OnboardingLayout>
@@ -97,15 +97,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: DS_COLORS.white,
+    color: DS_COLORS.textPrimary,
     lineHeight: 34,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: "400",
     color: DS_COLORS.textSecondary,
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 24,
   },
   grid: {
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: DS_COLORS.textSecondary,
+    color: DS_COLORS.textPrimary,
     marginBottom: 12,
   },
   timeRow: {
@@ -127,16 +128,18 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   timeChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: DS_COLORS.black,
+    height: 36,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: DS_COLORS.background,
     borderWidth: 1,
-    borderColor: DS_COLORS.borderDark,
+    borderColor: DS_COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
   timeChipActive: {
     borderColor: DS_COLORS.accent,
-    backgroundColor: DS_COLORS.black,
+    backgroundColor: DS_COLORS.accent,
   },
   timeChipText: {
     fontSize: 13,
@@ -144,7 +147,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textSecondary,
   },
   timeChipTextActive: {
-    color: DS_COLORS.accent,
+    color: DS_COLORS.white,
   },
   cta: {
     backgroundColor: DS_COLORS.accent,
@@ -152,14 +155,19 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 20,
     marginTop: 8,
+    marginBottom: 32,
   },
   ctaDisabled: {
-    opacity: 0.5,
+    backgroundColor: DS_COLORS.border,
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.onboardingBg,
+    color: DS_COLORS.textPrimary,
+  },
+  ctaTextDisabled: {
+    color: DS_COLORS.textSecondary,
   },
 });

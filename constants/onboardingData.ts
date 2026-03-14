@@ -27,10 +27,10 @@ export const MOTIVATIONS = [
 ] as const;
 
 export const PERSONAS = [
-  { id: "athlete", icon: "🏃", label: "Athlete", sub: "Physical performance" },
-  { id: "student", icon: "📚", label: "Student", sub: "Mental discipline" },
-  { id: "professional", icon: "💼", label: "Professional", sub: "Career + habits" },
-  { id: "transformer", icon: "🧘", label: "Transformer", sub: "Full lifestyle shift" },
+  { id: "athlete", icon: "🏃", label: "Athlete", sub: "Physical focus" },
+  { id: "student", icon: "📚", label: "Student", sub: "Mental sharpness" },
+  { id: "professional", icon: "💼", label: "Professional", sub: "Career + discipline" },
+  { id: "transformer", icon: "🧘", label: "Transformer", sub: "Full lifestyle change" },
 ] as const;
 
 export const BARRIERS = [
@@ -78,8 +78,8 @@ export const INTENSITY_OPTIONS = [
   {
     id: "push",
     icon: "🔥",
-    label: "Push my limits — but keep it realistic",
-    sub: "2–3 tasks · 30–60 min · Most popular",
+    label: "Push my limits",
+    sub: "2–3 tasks · 30–60 min",
     isDefault: true,
   },
   {
@@ -92,9 +92,9 @@ export const INTENSITY_OPTIONS = [
 ] as const;
 
 export const SOCIAL_OPTIONS = [
-  { id: "solo", icon: "🔒", label: "Quiet grind", sub: "Private, no leaderboard" },
-  { id: "visible", icon: "👀", label: "Visible progress", sub: "Public profile, ranked" },
-  { id: "partner", icon: "🤝", label: "With a partner", sub: "Invite someone" },
+  { id: "solo", icon: "🔒", label: "Quietly", sub: "Private, no leaderboard" },
+  { id: "visible", icon: "👀", label: "Visibly", sub: "Public profile, ranked" },
+  { id: "partner", icon: "🤝", label: "With a crew", sub: "Invite someone" },
   { id: "squad", icon: "🏟️", label: "In a squad", sub: "Join or create group" },
 ] as const;
 
