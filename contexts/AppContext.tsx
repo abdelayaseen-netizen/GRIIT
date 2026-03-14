@@ -14,7 +14,7 @@ import {
 import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { setSubscriptionState } from '@/lib/premium';
-import { initSubscription, clearSubscription } from '@/lib/subscription';
+import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 
 type AppContextValue = {
@@ -62,6 +62,8 @@ type AppContextValue = {
   currentChallenge: { tasks: ChallengeTaskFromApi[] } | null;
   verifyTask: (taskId: string, verificationData: unknown, task: unknown) => { success: boolean; failureReason: string | undefined };
   getTaskStateForTemplate: (taskId: string) => unknown;
+  isPremium: boolean;
+  refreshPremiumStatus: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -93,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeChallengeLoaded, setActiveChallengeLoaded] = useState(false);
   const [stories, setStories] = useState<unknown[]>([]);
   const [todayCheckins, setTodayCheckins] = useState<TodayCheckinForUser[]>([]);
+  const [isPremium, setIsPremium] = useState(false);
 
   const [hardTimeout, setHardTimeout] = useState(false);
 
@@ -108,7 +111,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery(TRPC.profiles.get);
       setProfile(data);
-      setSubscriptionState((data as ProfileFromApi)?.subscription_status ?? undefined, (data as ProfileFromApi)?.subscription_expiry ?? undefined);
+      const subStatus = (data as ProfileFromApi)?.subscription_status;
+      const subExpiry = (data as ProfileFromApi)?.subscription_expiry;
+      setSubscriptionState(subStatus ?? undefined, subExpiry ?? undefined);
+      const premiumFromProfile = subStatus === 'premium' || subStatus === 'trial';
+      setIsPremium(premiumFromProfile);
       setProfileError(false);
       initSubscription(user.id).catch((err: unknown) => {
         if (__DEV__) {
@@ -319,7 +326,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setActiveChallengeLoaded(false);
       setStories([]);
       setTodayCheckins([]);
+      setIsPremium(false);
     }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsub = addSubscriptionChangeListener((premium) => setIsPremium(premium));
+    return unsub;
   }, [user]);
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
@@ -442,6 +456,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (activeChallenge?.id) await fetchTodayCheckins(activeChallenge.id);
   }, [activeChallenge?.id, fetchTodayCheckins]);
 
+  const refreshPremiumStatus = useCallback(async () => {
+    const info = await getCustomerInfo();
+    if (info) {
+      const ent = info.entitlements?.active?.['premium'];
+      const premium = ent != null;
+      setSubscriptionState(premium ? 'premium' : 'free', ent?.expirationDate ?? null);
+      setIsPremium(premium);
+    } else {
+      const ok = await checkPremiumStatus();
+      setIsPremium(ok);
+    }
+  }, []);
+
   const profileMissing = !resolvedProfile && autoCreateAttempted && fallbackAttempted && !profileAutoCreating && !!autoCreateError;
 
   const value: AppContextValue = useMemo(() => ({
@@ -480,6 +507,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     currentChallenge: activeChallenge ? { tasks: (challenge?.challenge_tasks as ChallengeTaskFromApi[]) || [] } : null,
     verifyTask: (_taskId: string, _verificationData: unknown, _task: unknown) => ({ success: true, failureReason: undefined }),
     getTaskStateForTemplate: (_taskId: string) => null,
+    isPremium,
+    refreshPremiumStatus,
   }), [
     resolvedProfile,
     profileLoading,
@@ -501,6 +530,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isError,
     refetchAll,
     refetchTodayCheckins,
+    isPremium,
+    refreshPremiumStatus,
     user,
   ]);
 

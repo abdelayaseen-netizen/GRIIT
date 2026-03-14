@@ -45,6 +45,9 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { canJoinChallenge } from "@/lib/premium";
+import { FREE_LIMITS } from "@/lib/feature-flags";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import TeamStatusHeader from "@/components/challenge/TeamStatusHeader";
@@ -441,6 +444,14 @@ export default function ChallengeDetailScreen() {
   const { user } = useAuth();
   const { showGate } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
+  const { isPremium, requirePremium } = useSubscription();
+  const myActiveListQuery = useQuery({
+    queryKey: ["challenge", "listMyActive", id],
+    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
+    enabled: !!user && !isJoined,
+  });
+  const activeCount = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
+  const joinLimit = canJoinChallenge(activeCount);
   const currentUserId = user?.id ?? undefined;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
@@ -571,12 +582,18 @@ export default function ChallengeDetailScreen() {
 
   const handleJoin = useCallback(() => {
     if (!challenge || !id) return;
+    if (!joinLimit.allowed && !requirePremium("challenge_limit")) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowCommitmentModal(true);
-  }, [challenge, id]);
+  }, [challenge, id, joinLimit.allowed, requirePremium]);
 
   const handleCommitmentConfirm = useCallback(async () => {
     if (!id || commitmentJoining) return;
+    const list = await trpcQuery(TRPC.challenges.listMyActive) as unknown[];
+    const count = Array.isArray(list) ? list.length : 0;
+    if (!canJoinChallenge(count).allowed && !requirePremium("challenge_limit")) {
+      return;
+    }
     setCommitmentJoining(true);
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
@@ -596,7 +613,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setCommitmentJoining(false);
     }
-  }, [id, commitmentJoining, refetchAll, router]);
+  }, [id, commitmentJoining, refetchAll, router, requirePremium]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -1212,6 +1229,11 @@ export default function ChallengeDetailScreen() {
                 )}
               </TouchableOpacity>
             </Animated.View>
+          )}
+          {!isJoined && !joinLimit.allowed && (
+            <Text style={[s.ctaMicro, { marginTop: 8 }]}>
+              {activeCount}/{joinLimit.limit} active challenges — upgrade for unlimited
+            </Text>
           )}
           {isJoined && (
             <TouchableOpacity

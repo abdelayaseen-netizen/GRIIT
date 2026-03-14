@@ -41,7 +41,9 @@ import {
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
 import { useIsGuest } from "@/contexts/AuthGateContext";
+import { useApp } from "@/contexts/AppContext";
 import { useDebounce } from "@/hooks/useDebounce";
+import { FREE_LIMITS } from "@/lib/feature-flags";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline";
 
@@ -597,12 +599,19 @@ export default function DiscoverScreen() {
     );
   };
 
+  const { isPremium } = useApp();
+
   return (
     <ErrorBoundary>
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.title}>Discover</Text>
           <Text style={styles.subtitle}>Find challenges worth committing to</Text>
+          {!isGuest && !isPremium && (
+            <Text style={[styles.subtitle, { fontSize: 12, marginTop: 4, opacity: 0.8 }]}>
+              Free: {FREE_LIMITS.MAX_ACTIVE_CHALLENGES} active challenges
+            </Text>
+          )}
         </View>
 
         <View style={styles.searchRow}>

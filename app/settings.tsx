@@ -8,6 +8,7 @@ import {
   Switch,
   Platform,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -21,7 +22,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { supabase } from "@/lib/supabase";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
-import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
 import { PremiumBadge } from "@/components/PremiumBadge";
 import { restorePurchases } from "@/lib/subscription";
 import { useApp } from "@/contexts/AppContext";
@@ -120,12 +120,11 @@ export default function SettingsScreen() {
   const [lastCall, setLastCall] = useState(false);
   const [friendActivity, setFriendActivity] = useState(false);
   const [accountabilityCount, setAccountabilityCount] = useState(0);
-  const [premiumModalVisible, setPremiumModalVisible] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [profileVisibility, setProfileVisibility] = useState<"public" | "friends" | "private">("public");
   const [challengeVisibility, setChallengeVisibility] = useState<"public" | "friends" | "private">("public");
   const [activityVisibility, setActivityVisibility] = useState<"public" | "friends" | "private">("public");
-  const { refetchAll } = useApp();
+  const { refetchAll, isPremium, refreshPremiumStatus } = useApp();
 
   const loadReminderSettings = useCallback(async () => {
     if (isGuest) {
@@ -416,21 +415,23 @@ export default function SettingsScreen() {
             style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
             onPress={() => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setPremiumModalVisible(true);
+              if (isPremium) {
+                if (Platform.OS === "ios") Linking.openURL("https://apps.apple.com/account/subscriptions");
+                else if (Platform.OS === "android") Linking.openURL("https://play.google.com/store/account/subscriptions");
+              } else {
+                router.push({ pathname: ROUTES.PRICING as never, params: { source: "settings" } } as never);
+              }
             }}
             activeOpacity={0.9}
             accessibilityRole="button"
-            accessibilityLabel="Open GRIIT Premium"
+            accessibilityLabel={isPremium ? "Manage subscription" : "Open GRIIT Premium"}
           >
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>GRIIT Premium</Text>
-                  <View style={{ backgroundColor: DS_COLORS.accent, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
-                    <Text style={{ fontSize: 11, fontWeight: "700", color: DS_COLORS.white }}>Coming Soon</Text>
-                  </View>
-                </View>
-                <Text style={[styles.toggleSub, { color: DS_COLORS.textSecondary }]}>Unlimited challenges, premium badge & more.</Text>
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>{isPremium ? "GRIIT Premium" : "Subscription"}</Text>
+                <Text style={[styles.toggleSub, { color: DS_COLORS.textSecondary }]}>
+                  {isPremium ? "Manage your subscription" : "Unlimited challenges, premium badge & more."}
+                </Text>
               </View>
               <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: "-90deg" }] }} />
             </View>
@@ -443,7 +444,10 @@ export default function SettingsScreen() {
                 setRestoreLoading(true);
                 try {
                   const { success } = await restorePurchases();
-                  if (success) await refetchAll();
+                  if (success) {
+                    await refreshPremiumStatus();
+                    await refetchAll();
+                  }
                 } finally {
                   setRestoreLoading(false);
                 }
@@ -520,11 +524,6 @@ export default function SettingsScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-      <PremiumPaywallModal
-        visible={premiumModalVisible}
-        onClose={() => setPremiumModalVisible(false)}
-        featureTitle="GRIIT Premium"
-      />
     </SafeAreaView>
   );
 }

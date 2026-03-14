@@ -41,6 +41,7 @@ export const ROUTES = {
   DAY_MISSED: "/day-missed",
   CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
   TEAMS: "/teams",
+  PRICING: "/pricing",
 } as const;
 
 /** Segment names for auth redirect logic (first segment of path). */

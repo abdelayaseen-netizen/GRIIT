@@ -252,7 +252,7 @@ export const profilesRouter = createTRPCRouter({
           .maybeSingle(),
         ctx.supabase
           .from('profiles')
-          .select('streak_freeze_used_count, streak_freeze_reset_at, total_days_secured, tier, preferred_secure_time')
+          .select('streak_freeze_used_count, streak_freeze_reset_at, total_days_secured, tier, preferred_secure_time, subscription_status')
           .eq('user_id', ctx.userId)
           .maybeSingle(),
         ctx.supabase
@@ -304,8 +304,14 @@ export const profilesRouter = createTRPCRouter({
       let lastStandsAvailable = Math.min(2, Math.max(0, (streakData.data as StreakRow | null)?.last_stands_available ?? 0));
       let lastStandUsedThisSession = false;
       let streakLostNoLastStand = false;
+      let lastStandRequiresPremium = false;
+      const subscriptionStatus = (profileRow?.data as { subscription_status?: string } | null)?.subscription_status ?? 'free';
+      const isPremiumForLastStand = subscriptionStatus === 'premium' || subscriptionStatus === 'trial';
 
       if (effectiveMissedDays === 1 && lastStandsAvailable > 0) {
+        if (!isPremiumForLastStand) {
+          lastStandRequiresPremium = true;
+        } else {
         const dateToProtect = missedDateKeys.filter(
           (k: string) => !frozenDateKeys.has(k) && !lastStandUsedDateKeys.has(k)
         )[0];
@@ -337,6 +343,7 @@ export const profilesRouter = createTRPCRouter({
             const allT = [...new Set([...tokens, pt].filter(Boolean))].filter((t: string | null | undefined): t is string => typeof t === "string");
             await sendExpoPush(allT, 'Last Stand used', 'Your streak continues.');
           }
+        }
         }
       } else if (effectiveMissedDays >= 1 && lastStandsAvailable === 0) {
         const activeStreakBefore = streakData.data?.active_streak_count ?? 0;
@@ -377,6 +384,7 @@ export const profilesRouter = createTRPCRouter({
         lastStandsAvailable,
         lastStandUsedThisSession,
         streakLostNoLastStand,
+        lastStandRequiresPremium,
       };
     }),
 

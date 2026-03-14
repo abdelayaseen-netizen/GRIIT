@@ -566,6 +566,7 @@ export interface StatsFromApi {
   totalDaysSecured?: number | null;
   preferredSecureTime?: string | null;
   lastStandsAvailable?: number | null;
+  lastStandRequiresPremium?: boolean;
   lastCompletedDateKey?: string | null;
   longestStreak?: number;
   activeStreak?: number;

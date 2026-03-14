@@ -3,12 +3,15 @@ import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
+import { useApp } from "@/contexts/AppContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
+import { PremiumBadge } from "@/components/PremiumBadge";
 import { DS_COLORS, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { isPremium } = useApp();
   const pushRegistrationAttempted = useRef(false);
 
   useEffect(() => {
@@ -65,8 +68,15 @@ export default function TabLayout() {
         options={{
           title: "Create",
           tabBarIcon: () => (
-            <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
-              <Plus color={DS_COLORS.white} size={24} strokeWidth={2.5} />
+            <View style={styles.createTabIconWrap}>
+              <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
+                <Plus color={DS_COLORS.white} size={24} strokeWidth={2.5} />
+              </View>
+              {!isPremium && (
+                <View style={styles.createProBadge}>
+                  <PremiumBadge label="PRO" />
+                </View>
+              )}
             </View>
           ),
           tabBarLabel: () => null,
@@ -94,6 +104,8 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  createTabIconWrap: { position: "relative" },
+  createProBadge: { position: "absolute", top: -4, right: -4 },
   centerButton: {
     width: DS_MEASURES.centerNavButtonSize,
     height: DS_MEASURES.centerNavButtonSize,

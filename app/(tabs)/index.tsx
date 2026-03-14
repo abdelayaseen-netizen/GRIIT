@@ -30,6 +30,8 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { PremiumBadge } from "@/components/PremiumBadge";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Celebration from "@/components/Celebration";
@@ -262,6 +264,7 @@ export default function HomeScreen() {
   const [showStreakLostModal, setShowStreakLostModal] = useState(false);
   const streakLostShownRef = useRef(false);
   const [syncingBannerDismissed, setSyncingBannerDismissed] = useState(false);
+  const [dismissedUpgradePrompt, setDismissedUpgradePrompt] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const [secureError, setSecureError] = useState<string>('');
   const [freezeError, setFreezeError] = useState<string>('');
@@ -400,6 +403,8 @@ export default function HomeScreen() {
     lastStandsAvailable,
     isDaySecured,
   } = retention;
+  const { isPremium, requirePremium } = useSubscription();
+  const lastStandRequiresPremium = (stats as StatsFromApi)?.lastStandRequiresPremium ?? false;
   const tierName = (stats as StatsFromApi)?.tier ?? null;
   const nextTierName = (stats as StatsFromApi)?.nextTierName ?? null;
   const pointsToNextTier = (stats as StatsFromApi)?.pointsToNextTier ?? 0;
@@ -688,19 +693,37 @@ export default function HomeScreen() {
                   : "You missed yesterday. Secure today to stay in the game."}
               </Text>
               {showRecoveryBanner && lastStandsAvailable >= 0 && (
-                <Text style={[styles.recoveryBannerSub, { color: DS_COLORS.textSecondary }]}>
-                  Last Stands remaining: {lastStandsAvailable}
-                </Text>
+                <View style={styles.recoveryBannerLastStandRow}>
+                  <Text style={[styles.recoveryBannerSub, { color: DS_COLORS.textSecondary }]}>
+                    Last Stands remaining: {lastStandsAvailable}
+                  </Text>
+                  {!isPremium && <PremiumBadge label="PRO" />}
+                </View>
               )}
-              {canUseFreeze && (
+              {lastStandRequiresPremium && (
+                <TouchableOpacity
+                  onPress={() => requirePremium("last_stand")}
+                  style={styles.freezeCta}
+                  activeOpacity={0.8}
+                  accessibilityLabel="Upgrade to use Last Stand"
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.freezeCtaText, { color: DS_COLORS.accent }]}>Upgrade to use Last Stand</Text>
+                </TouchableOpacity>
+              )}
+              {canUseFreeze && !lastStandRequiresPremium && (
                 <TouchableOpacity
                   style={[styles.freezeCta, { backgroundColor: DS_COLORS.accent }]}
-                  onPress={() => setShowFreezeModal(true)}
+                  onPress={() => {
+                    if (!isPremium && !requirePremium("streak_freeze")) return;
+                    setShowFreezeModal(true);
+                  }}
                   activeOpacity={0.8}
                   accessibilityLabel="Use streak freeze"
                   accessibilityRole="button"
                 >
                   <Text style={[styles.freezeCtaText, { color: DS_COLORS.white }]}>Use streak freeze</Text>
+                  {!isPremium && <PremiumBadge label="PRO" />}
                 </TouchableOpacity>
               )}
             </View>
@@ -735,6 +758,33 @@ export default function HomeScreen() {
               )}
             </View>
           </View>
+        )}
+
+        {!isGuest && !isPremium && !dismissedUpgradePrompt && (
+          <TouchableOpacity
+            style={[styles.upgradePromptCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
+            onPress={() => requirePremium("settings")}
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Upgrade to Premium"
+          >
+            <View style={styles.upgradePromptRow}>
+              <View style={styles.upgradePromptTextWrap}>
+                <Text style={[styles.upgradePromptTitle, { color: DS_COLORS.textPrimary }]}>Upgrade to Premium</Text>
+                <Text style={[styles.upgradePromptSub, { color: DS_COLORS.textSecondary }]}>Unlimited challenges, streak freezes & more.</Text>
+              </View>
+              <ChevronRight size={20} color={DS_COLORS.textMuted} />
+            </View>
+            <TouchableOpacity
+              hitSlop={12}
+              style={styles.upgradePromptDismiss}
+              onPress={(e) => { e.stopPropagation(); setDismissedUpgradePrompt(true); }}
+              accessibilityLabel="Dismiss"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.upgradePromptDismissText, { color: DS_COLORS.textMuted }]}>×</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
         )}
 
         {!isGuest && (
@@ -2256,7 +2306,30 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textSecondary,
     marginBottom: 8,
   },
+  recoveryBannerLastStandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  upgradePromptCard: {
+    marginHorizontal: DS_SPACING.screenHorizontal,
+    marginTop: DS_SPACING.md,
+    padding: DS_SPACING.md,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: 1,
+    position: "relative",
+  },
+  upgradePromptRow: { flexDirection: "row", alignItems: "center", paddingRight: 28 },
+  upgradePromptTextWrap: { flex: 1 },
+  upgradePromptTitle: { fontSize: 15, fontWeight: "600", marginBottom: 2 },
+  upgradePromptSub: { fontSize: 13 },
+  upgradePromptDismiss: { position: "absolute", top: 8, right: 8, padding: 4 },
+  upgradePromptDismissText: { fontSize: 18 },
   freezeCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     alignSelf: "flex-start",
     paddingVertical: 8,
     paddingHorizontal: 14,

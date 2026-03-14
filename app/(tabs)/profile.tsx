@@ -20,6 +20,8 @@ import {
   Globe,
   Activity,
   Link2,
+  Check,
+  Crown,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -51,6 +53,14 @@ import { formatMonthYearLong } from "@/lib/date-format";
 import { ACHIEVEMENT_DEFINITIONS } from "@/lib/achievements";
 import { ROUTES } from "@/lib/routes";
 import type { StatsFromApi } from "@/types";
+
+function openSubscriptionManagement() {
+  if (Platform.OS === "ios") {
+    Linking.openURL("https://apps.apple.com/account/subscriptions");
+  } else if (Platform.OS === "android") {
+    Linking.openURL("https://play.google.com/store/account/subscriptions");
+  }
+}
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 
@@ -260,6 +270,7 @@ export default function ProfileScreen() {
     stats,
     isError,
     refetchAll,
+    isPremium,
   } = useApp();
   const headerFade = useRef(new Animated.Value(0)).current;
 
@@ -548,6 +559,49 @@ export default function ProfileScreen() {
           friendRank={leaderboardRank}
           zeroStateHint={disciplineScore === 0 ? "Complete today's tasks to start your streak." : undefined}
         />
+
+        <View style={[styles.subscriptionCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+          {isPremium ? (
+            <>
+              <View style={styles.subscriptionRow}>
+                <Crown size={20} color={DS_COLORS.accent} />
+                <Text style={[styles.subscriptionTitle, { color: DS_COLORS.textPrimary }]}>GRIIT Premium</Text>
+                <Check size={18} color={DS_COLORS.success} />
+              </View>
+              {profile.subscription_expiry && (
+                <Text style={[styles.subscriptionSub, { color: DS_COLORS.textSecondary }]}>
+                  Renews {new Date(profile.subscription_expiry).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                </Text>
+              )}
+              <TouchableOpacity
+                onPress={openSubscriptionManagement}
+                style={styles.subscriptionLink}
+                activeOpacity={0.7}
+                accessibilityLabel="Manage subscription"
+                accessibilityRole="button"
+              >
+                <Text style={[styles.subscriptionLinkText, { color: DS_COLORS.accent }]}>Manage subscription</Text>
+                <ChevronRight size={16} color={DS_COLORS.accent} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.subscriptionRow}>
+                <Crown size={20} color={DS_COLORS.textMuted} />
+                <Text style={[styles.subscriptionTitle, { color: DS_COLORS.textPrimary }]}>GRIIT Free</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: ROUTES.PRICING as never, params: { source: "profile" } } as never)}
+                style={[styles.subscriptionCta, { backgroundColor: DS_COLORS.accent }]}
+                activeOpacity={0.85}
+                accessibilityLabel="Upgrade to Premium"
+                accessibilityRole="button"
+              >
+                <Text style={styles.subscriptionCtaText}>Upgrade to Premium →</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
 
         <TierProgressBar
           currentPoints={totalDaysSecured}
@@ -908,6 +962,20 @@ function createProfileStyles() {
     integrationsActivityName: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textPrimary, flex: 1 },
     integrationsActivityMeta: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.textMuted, marginLeft: DS_SPACING.sm },
     integrationsActivitiesEmpty: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textMuted, marginTop: DS_SPACING.sm },
+    subscriptionCard: {
+      marginHorizontal: DS_SPACING.screenHorizontal,
+      marginTop: DS_SPACING.md,
+      padding: DS_SPACING.md,
+      borderRadius: DS_RADIUS.cardAlt,
+      borderWidth: 1,
+    },
+    subscriptionRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+    subscriptionTitle: { fontSize: 17, fontWeight: "700", flex: 1 },
+    subscriptionSub: { fontSize: 13, marginTop: 4 },
+    subscriptionLink: { flexDirection: "row", alignItems: "center", marginTop: 8 },
+    subscriptionLinkText: { fontSize: 14, fontWeight: "600" },
+    subscriptionCta: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: DS_RADIUS.sm, alignItems: "center" },
+    subscriptionCtaText: { fontSize: 15, fontWeight: "600", color: "#FFF" },
     menuSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.lg },
     menuItem: {
       flexDirection: "row" as const,

@@ -1,19 +1,33 @@
 /**
- * Subscription service: RevenueCat integration and backend sync.
- * When RevenueCat is configured, syncs subscription status to the backend profile.
- * Placeholder product IDs: griit_premium_monthly, griit_premium_annual.
- * RevenueCat (react-native-purchases) is not loaded in Expo Go to avoid native module crashes.
+ * RevenueCat subscription: init, purchase, restore, sync to Supabase.
+ * Uses EXPO_PUBLIC_REVENUECAT_IOS_API_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY.
+ * In Expo Go, Purchases is not loaded to avoid native module crashes.
  */
 
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { setSubscriptionState } from "./premium";
-import { trpcMutate } from "./trpc";
+import { supabase } from "./supabase";
 
-/** Lazy load Purchases so we never load it in Expo Go (avoids ReactFabric crash). */
-function getPurchases(): { default: { configure: (opts: unknown) => void; getCustomerInfo: () => Promise<unknown>; addCustomerInfoUpdateListener: (cb: (info: unknown) => void) => () => void; restorePurchases: () => Promise<unknown> } } | null {
+const ENTITLEMENT_ID = "premium";
+
+/** Minimal types for RevenueCat (avoid importing full SDK in Expo Go). */
+export type CustomerInfo = {
+  entitlements: { active: Record<string, { expirationDate?: string }> };
+};
+export type PurchasesPackage = {
+  identifier: string;
+  packageType: string;
+  product: { priceString: string; title?: string };
+};
+export type PurchasesOffering = {
+  identifier: string;
+  availablePackages: PurchasesPackage[];
+};
+
+function getPurchases(): typeof import("react-native-purchases") | null {
   if (Platform.OS === "web") return null;
-  if (Constants.appOwnership === "expo") return null; // Expo Go - native modules not available
+  if (Constants.appOwnership === "expo") return null;
   try {
     return require("react-native-purchases");
   } catch {
@@ -21,8 +35,142 @@ function getPurchases(): { default: { configure: (opts: unknown) => void; getCus
   }
 }
 
-const REVENUECAT_API_KEY_APPLE = process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY ?? "";
-const REVENUECAT_API_KEY_GOOGLE = process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY ?? "";
+/**
+ * Initialize RevenueCat. Call once after auth. Pass Supabase user ID as appUserID.
+ */
+export async function initializeRevenueCat(userId: string): Promise<void> {
+  const apiKey =
+    Platform.OS === "ios"
+      ? (process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY ?? "").trim() ||
+        (process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY ?? "").trim()
+      : (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY ?? "").trim() ||
+        (process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY ?? "").trim();
+
+  if (!apiKey) {
+    if (__DEV__) {
+      console.warn("[RevenueCat] No API key for platform:", Platform.OS);
+    }
+    return;
+  }
+
+  const Purchases = getPurchases();
+  if (!Purchases?.default) return;
+
+  try {
+    const RC = Purchases.default;
+    if (__DEV__ && Purchases.LOG_LEVEL) {
+      RC.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+    }
+    await RC.configure({ apiKey, appUserID: userId });
+
+    const info = await RC.getCustomerInfo();
+    const premium = info?.entitlements?.active?.[ENTITLEMENT_ID] != null;
+    setSubscriptionState(premium ? "premium" : "free", info?.entitlements?.active?.[ENTITLEMENT_ID]?.expirationDate ?? null);
+    notifySubscriptionChange(premium);
+    await syncSubscriptionToSupabase(userId, info);
+
+    RC.addCustomerInfoUpdateListener(async (updatedInfo: CustomerInfo) => {
+      const ent = updatedInfo?.entitlements?.active?.[ENTITLEMENT_ID];
+      const isPremium = ent != null;
+      setSubscriptionState(isPremium ? "premium" : "free", ent?.expirationDate ?? null);
+      notifySubscriptionChange(isPremium);
+      await syncSubscriptionToSupabase(userId, updatedInfo);
+    });
+  } catch (err) {
+    if (__DEV__) {
+      console.warn("[RevenueCat] configure failed:", err instanceof Error ? err.message : err);
+    }
+  }
+}
+
+/** Sync RevenueCat status to Supabase profile (user_id). */
+export async function syncSubscriptionToSupabase(userId: string, customerInfo: CustomerInfo | null): Promise<void> {
+  if (!customerInfo) return;
+  const entitlement = customerInfo.entitlements?.active?.[ENTITLEMENT_ID];
+  const status = entitlement ? "premium" : "free";
+  const expiry = entitlement?.expirationDate ?? null;
+  try {
+    await supabase
+      .from("profiles")
+      .update({
+        subscription_status: status,
+        subscription_expiry: expiry,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+  } catch (err) {
+    if (__DEV__) {
+      console.warn("[RevenueCat] sync to Supabase failed:", err instanceof Error ? err.message : err);
+    }
+  }
+}
+
+/** Check if user has active premium entitlement. */
+export async function checkPremiumStatus(): Promise<boolean> {
+  const Purchases = getPurchases();
+  if (!Purchases?.default) return false;
+  try {
+    const customerInfo = await Purchases.default.getCustomerInfo();
+    return customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
+  } catch {
+    return false;
+  }
+}
+
+/** Get current offerings (pricing packages). */
+export async function getOfferings(): Promise<PurchasesOffering | null> {
+  const Purchases = getPurchases();
+  if (!Purchases?.default) return null;
+  try {
+    const offerings = await Purchases.default.getOfferings();
+    return offerings?.current ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Purchase a package. Returns success and optional customerInfo or error. */
+export async function purchasePackage(
+  pkg: PurchasesPackage
+): Promise<{ success: boolean; customerInfo?: CustomerInfo; error?: string }> {
+  const Purchases = getPurchases();
+  if (!Purchases?.default) return { success: false, error: "Purchases not available" };
+  try {
+    const { customerInfo } = await Purchases.default.purchasePackage(pkg);
+    const isPremium = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
+    return { success: isPremium, customerInfo: customerInfo ?? undefined };
+  } catch (err: unknown) {
+    const e = err as { userCancelled?: boolean; message?: string };
+    if (e?.userCancelled) return { success: false, error: "cancelled" };
+    if (__DEV__) console.warn("[RevenueCat] purchase error:", e);
+    return { success: false, error: e?.message ?? "Purchase failed" };
+  }
+}
+
+/** Restore purchases. */
+export async function restorePurchases(): Promise<{ success: boolean; isPremium: boolean }> {
+  const Purchases = getPurchases();
+  if (!Purchases?.default) return { success: false, isPremium: false };
+  try {
+    const customerInfo = await Purchases.default.restorePurchases();
+    const isPremium = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
+    return { success: true, isPremium };
+  } catch (err) {
+    if (__DEV__) console.warn("[RevenueCat] restore error:", err);
+    return { success: false, isPremium: false };
+  }
+}
+
+/** Get full customer info. */
+export async function getCustomerInfo(): Promise<CustomerInfo | null> {
+  const Purchases = getPurchases();
+  if (!Purchases?.default) return null;
+  try {
+    return await Purchases.default.getCustomerInfo();
+  } catch {
+    return null;
+  }
+}
 
 export const SUBSCRIPTION_PRODUCT_IDS = {
   monthly: "griit_premium_monthly",
@@ -31,87 +179,29 @@ export const SUBSCRIPTION_PRODUCT_IDS = {
 
 export type SubscriptionStatus = "free" | "premium" | "trial";
 
-let purchaserInfoListener: (() => void) | null = null;
+type SubscriptionChangeCallback = (isPremium: boolean) => void;
+const subscriptionChangeCallbacks = new Set<SubscriptionChangeCallback>();
 
-/** Calls server-side validation (RevenueCat API + DB write). Updates local state from response. */
-async function validateAndSyncSubscription(): Promise<void> {
-  try {
-    const result = await trpcMutate("profiles.validateSubscription") as {
-      subscription_status: SubscriptionStatus;
-      subscription_expiry: string | null;
-    };
-    setSubscriptionState(result.subscription_status, result.subscription_expiry);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (__DEV__) {
-      console.warn("[subscription] validateSubscription failed:", message);
-    }
-    // Non-blocking; user can retry or status will sync on next launch
-  }
+/** Register a callback when RevenueCat customer info updates (e.g. after purchase). */
+export function addSubscriptionChangeListener(cb: SubscriptionChangeCallback): () => void {
+  subscriptionChangeCallbacks.add(cb);
+  return () => subscriptionChangeCallbacks.delete(cb);
 }
 
-/**
- * Initialize RevenueCat and set up listener to sync subscription to backend.
- * Call once when user is authenticated. No-op if API keys are not set.
- */
+function notifySubscriptionChange(isPremium: boolean): void {
+  subscriptionChangeCallbacks.forEach((cb) => cb(isPremium));
+}
+
+/** Legacy alias for AppContext. */
 export async function initSubscription(userId: string): Promise<void> {
-  if (Platform.OS === "web") return;
-  const appleKey = REVENUECAT_API_KEY_APPLE.trim();
-  const googleKey = REVENUECAT_API_KEY_GOOGLE.trim();
-  if (!appleKey && !googleKey) return;
-
-  const purchasesModule = getPurchases();
-  if (!purchasesModule?.default) return;
-
-  try {
-    const Purchases = purchasesModule.default;
-    Purchases.configure({
-      apiKey: Platform.OS === "ios" ? appleKey : googleKey,
-      appUserID: userId,
-    });
-
-    await validateAndSyncSubscription();
-
-    purchaserInfoListener = Purchases.addCustomerInfoUpdateListener(async () => {
-      await validateAndSyncSubscription();
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (__DEV__) {
-      console.warn("[subscription] initSubscription error:", message);
-    }
-    // RevenueCat not linked or config error — keep free tier
-  }
+  purchaserInfoListener = null;
+  await initializeRevenueCat(userId);
 }
 
-/**
- * Stop listening and clear state. Call on sign out.
- */
 export function clearSubscription(): void {
   setSubscriptionState(null, null);
   if (purchaserInfoListener) {
     purchaserInfoListener();
     purchaserInfoListener = null;
-  }
-}
-
-/**
- * Restore purchases (e.g. after reinstall). Syncs result to backend.
- */
-export async function restorePurchases(): Promise<{ success: boolean }> {
-  if (Platform.OS === "web") return { success: false };
-  const purchasesModule = getPurchases();
-  if (!purchasesModule?.default) return { success: false };
-  try {
-    const Purchases = purchasesModule.default;
-    await Purchases.restorePurchases();
-    await validateAndSyncSubscription();
-    return { success: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (__DEV__) {
-      console.warn("[subscription] restorePurchases error:", message);
-    }
-    return { success: false };
   }
 }

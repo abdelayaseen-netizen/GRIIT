@@ -47,6 +47,7 @@ import { formatTimeHHMM } from "@/lib/time-enforcement";
 
 import { formatTRPCError, formatError } from "@/lib/api";
 import { ROUTES } from "@/lib/routes";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   getDurationFromDraft,
   validateDraftTasks,
@@ -255,8 +256,14 @@ export default function CreateScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { showGate } = useAuthGate();
+  const { isPremium, requirePremium } = useSubscription();
   useTheme();
+  useEffect(() => {
+    if (isGuest) return;
+    if (!isPremium) requirePremium("create_challenge");
+  }, [isGuest, isPremium, requirePremium]);
   const [step, setStep] = useState(1);
+  if (!isGuest && !isPremium) return null;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [challengeType, setChallengeType] = useState<ChallengeType>("standard");

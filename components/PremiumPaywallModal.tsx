@@ -9,30 +9,42 @@ import {
 } from "react-native";
 import { Crown, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
+import { ROUTES } from "@/lib/routes";
 
 interface PremiumPaywallModalProps {
   visible: boolean;
   onClose: () => void;
   /** Short title for the feature (e.g. "Unlimited challenges") */
   featureTitle?: string;
+  /** Source param for pricing screen (e.g. "create_challenge", "settings") */
+  source?: string;
 }
 
 /**
- * Soft paywall modal: explains the feature and offers upgrade.
- * Purchase flow not implemented — shows "Coming Soon" / link to upgrade when ready.
+ * Soft paywall modal: redirects to full pricing screen on Upgrade.
+ * Kept for callers that still open a modal; primary flow is navigation to /pricing.
  */
 export function PremiumPaywallModal({
   visible,
   onClose,
   featureTitle = "This feature",
+  source = "settings",
 }: PremiumPaywallModalProps) {
   const { colors } = useTheme();
+  const router = useRouter();
 
   const handleClose = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose();
+  };
+
+  const handleUpgrade = () => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onClose();
+    router.push({ pathname: ROUTES.PRICING as never, params: { source } } as never);
   };
 
   return (
@@ -62,21 +74,14 @@ export function PremiumPaywallModal({
             {featureTitle} is Premium
           </Text>
           <Text style={[styles.body, { color: colors.text.secondary }]}>
-            Upgrade to unlock this and more. Coming soon.
+            Upgrade to unlock this and more.
           </Text>
-          <View style={styles.whySection}>
-            <Text style={[styles.whyTitle, { color: colors.text.primary }]}>Why Premium?</Text>
-            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Unlimited challenges</Text>
-            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Advanced analytics</Text>
-            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Exclusive events</Text>
-            <Text style={[styles.whyItem, { color: colors.text.secondary }]}>• Unlimited streak freezes</Text>
-          </View>
           <TouchableOpacity
             style={[styles.cta, { backgroundColor: colors.accent }]}
-            onPress={handleClose}
+            onPress={handleUpgrade}
             activeOpacity={0.85}
           >
-            <Text style={styles.ctaText}>Got it</Text>
+            <Text style={styles.ctaText}>Upgrade</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
