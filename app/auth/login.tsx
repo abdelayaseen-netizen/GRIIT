@@ -20,11 +20,11 @@ const PADDING_H = 20;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const passwordRef = useRef<TextInput>(null);
@@ -36,7 +36,7 @@ export default function LoginScreen() {
     [focusedField]
   );
 
-  const handleSignIn = useCallback(async () => {
+  const handleSignIn = useCallback(async (): Promise<void> => {
     if (loading) return;
     setLoading(true);
     setFormError("");
@@ -56,12 +56,10 @@ export default function LoginScreen() {
 
       if (error) {
         setFormError(error.message);
-        setLoading(false);
         return;
       }
       if (!data.session) {
         setFormError("Sign in failed. Please try again.");
-        setLoading(false);
         return;
       }
 
@@ -71,8 +69,6 @@ export default function LoginScreen() {
         .eq("user_id", data.user.id)
         .single();
 
-      setLoading(false);
-
       if (profileError || !profile?.username) {
         router.replace("/create-profile" as never);
       } else {
@@ -80,6 +76,7 @@ export default function LoginScreen() {
       }
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
       setLoading(false);
     }
   }, [loading, email, password, router]);

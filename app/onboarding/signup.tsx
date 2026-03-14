@@ -37,14 +37,14 @@ function validateUsername(normalized: string): boolean {
 
 export default function OnboardingSignupScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [usernameError, setUsernameError] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>("");
+  const [usernameError, setUsernameError] = useState<string>("");
   const [fieldError, setFieldError] = useState<"email" | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
@@ -99,7 +99,7 @@ export default function OnboardingSignupScreen() {
     }
   }, [username, normalizedUsername]);
 
-  const handleSignUp = useCallback(async () => {
+  const handleSignUp = useCallback(async (): Promise<void> => {
     if (loading) return;
     setLoading(true);
     setFormError("");
@@ -205,7 +205,7 @@ export default function OnboardingSignupScreen() {
     router,
   ]);
 
-  const handleApple = useCallback(async () => {
+  const handleApple = useCallback(async (): Promise<void> => {
     setFormError("");
     try {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
@@ -215,7 +215,7 @@ export default function OnboardingSignupScreen() {
     }
   }, []);
 
-  const handleGoogle = useCallback(async () => {
+  const handleGoogle = useCallback(async (): Promise<void> => {
     setFormError("");
     try {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });

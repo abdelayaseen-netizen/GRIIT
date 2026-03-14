@@ -30,13 +30,13 @@ function validateUsername(normalized: string): boolean {
 export default function CreateProfileScreen() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [bio, setBio] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [usernameError, setUsernameError] = useState("");
+  const [username, setUsername] = useState<string>("");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>("");
+  const [usernameError, setUsernameError] = useState<string>("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const displayNameRef = useRef<TextInput>(null);
@@ -56,11 +56,12 @@ export default function CreateProfileScreen() {
   );
 
   useEffect(() => {
-    const checkProfile = async () => {
+    let cancelled = false;
+    const checkProfile = async (): Promise<void> => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.replace("/auth/login" as never);
+        if (cancelled || !user) {
+          if (!user) router.replace("/auth/login" as never);
           return;
         }
         const { data: profile } = await supabase
@@ -69,6 +70,7 @@ export default function CreateProfileScreen() {
           .eq("user_id", user.id)
           .single();
 
+        if (cancelled) return;
         if (profile?.username && profile?.display_name) {
           router.replace("/(tabs)" as never);
           return;
@@ -78,13 +80,16 @@ export default function CreateProfileScreen() {
         if (profile?.username) setUsername(profile.username);
         if (profile?.display_name) setDisplayName(profile.display_name);
       } catch (e) {
-        console.warn("[AUTH] create-profile checkProfile:", e);
-        router.replace("/auth/login" as never);
+        if (!cancelled) {
+          console.warn("[AUTH] create-profile checkProfile:", e);
+          router.replace("/auth/login" as never);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     checkProfile();
+    return () => { cancelled = true; };
   }, [router]);
 
   const handleUsernameBlur = useCallback(() => {
@@ -99,7 +104,7 @@ export default function CreateProfileScreen() {
     }
   }, [username, normalizedUsername]);
 
-  const handleContinue = useCallback(async () => {
+  const handleContinue = useCallback(async (): Promise<void> => {
     if (loading || saving || !userId) return;
     setSaving(true);
     setFormError("");
