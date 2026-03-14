@@ -559,7 +559,6 @@ export default function HomeScreen() {
               totalDaysSecured: String(totalDaysSecuredNow),
             },
           } as never);
-        }
         } else {
           router.push({
             pathname: ROUTES.SECURE_CONFIRMATION,

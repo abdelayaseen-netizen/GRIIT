@@ -11,6 +11,9 @@ import { supabase } from "./supabase";
 
 const ENTITLEMENT_ID = "premium";
 
+/** Remove function for RevenueCat customer info listener; null when RC not available (web/Expo Go). */
+let purchaserInfoListener: (() => void) | null = null;
+
 /** Minimal types for RevenueCat (avoid importing full SDK in Expo Go). */
 export type CustomerInfo = {
   entitlements: { active: Record<string, { expirationDate?: string }> };
@@ -200,8 +203,12 @@ export async function initSubscription(userId: string): Promise<void> {
 
 export function clearSubscription(): void {
   setSubscriptionState(null, null);
-  if (purchaserInfoListener) {
-    purchaserInfoListener();
-    purchaserInfoListener = null;
+  try {
+    if (typeof purchaserInfoListener !== "undefined" && purchaserInfoListener) {
+      purchaserInfoListener();
+      purchaserInfoListener = null;
+    }
+  } catch {
+    // purchaserInfoListener not set or RevenueCat not available (web/Expo Go)
   }
 }

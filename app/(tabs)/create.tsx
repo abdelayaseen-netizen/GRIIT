@@ -256,14 +256,9 @@ export default function CreateScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { showGate } = useAuthGate();
-  const { isPremium, requirePremium } = useSubscription();
+  const { isPremium } = useSubscription();
   useTheme();
-  useEffect(() => {
-    if (isGuest) return;
-    if (!isPremium) requirePremium("create_challenge");
-  }, [isGuest, isPremium, requirePremium]);
   const [step, setStep] = useState(1);
-  if (!isGuest && !isPremium) return null;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [challengeType, setChallengeType] = useState<ChallengeType>("standard");
@@ -1273,17 +1268,8 @@ export default function CreateScreen() {
             </View>
           ) : (
             <View style={recoveryStyles.footerColumn}>
-              {apiStatus === 'down' && submitStatus !== 'submitting' && (
-                <View style={recoveryStyles.serverStatusRow}>
-                  <WifiOff size={14} color={DS_COLORS.dangerMid} />
-                  <Text style={recoveryStyles.serverStatusText}>Server unreachable</Text>
-                  <TouchableOpacity onPress={() => retryApi()} style={recoveryStyles.retryLink} accessibilityLabel="Retry" accessibilityRole="button">
-                    <Text style={recoveryStyles.retryLinkText}>Retry</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
               <PrimaryButtonCreate
-                label={submitStatus === "submitting" ? "Creating..." : apiStatus === "down" ? "Create Challenge" : apiStatus === "checking" ? "Checking server..." : "Create Challenge"}
+                label={submitStatus === "submitting" ? "Creating..." : "Create Challenge"}
                 onPress={handleCreate}
                 variant="green"
                 fullWidth

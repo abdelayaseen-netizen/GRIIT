@@ -488,8 +488,10 @@ export default function ChallengeDetailScreen() {
   const challenge = useMemo(() => {
     if (remoteChallenge) {
       const d = remoteChallenge as Record<string, unknown>;
+      const tasksRaw = (d.tasks ?? d.challenge_tasks) as unknown[] | undefined;
       return {
         ...d,
+        tasks: Array.isArray(tasksRaw) ? tasksRaw : [],
         is_daily: (d.is_daily as boolean | undefined) ?? d.duration_type === "24h",
         ends_at: (d.ends_at as string | null) ?? null,
         category: (d.category as string) ?? "default",

@@ -74,11 +74,6 @@ export default function TabLayout() {
               <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
                 <Plus color="#FFFFFF" size={24} strokeWidth={2.5} />
               </View>
-              {!isPremium && (
-                <View style={styles.createProBadge}>
-                  <PremiumBadge label="PRO" />
-                </View>
-              )}
             </View>
           ),
           tabBarLabel: () => null,

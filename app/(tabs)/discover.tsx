@@ -17,9 +17,8 @@ import {
   Dumbbell,
   Brain,
   Target,
-  Flame,
   Zap,
-  Shield,
+  TrendingUp,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,9 +40,7 @@ import {
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { useApp } from "@/contexts/AppContext";
 import { useDebounce } from "@/hooks/useDebounce";
-import { FREE_LIMITS } from "@/lib/feature-flags";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline";
 
@@ -211,16 +208,6 @@ export default function DiscoverScreen() {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
   const debouncedQuery = useDebounce(searchQuery, 300);
 
-  const starterPackQuery = useQuery({
-    queryKey: ["discover", "starterPack"],
-    queryFn: async () => {
-      const data = (await trpcQuery(TRPC.challenges.getStarterPack)) as unknown[];
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-  const starterPack = Array.isArray(starterPackQuery.data) ? starterPackQuery.data : [];
-
   const featuredQuery = useInfiniteQuery({
     queryKey: ["discover", "featured", activeCategory, debouncedQuery],
     queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
@@ -320,9 +307,8 @@ export default function DiscoverScreen() {
   const totalVisible = dailyChallenges.length + featuredChallenges.length + otherChallenges.length;
 
   const handleRefresh = useCallback(() => {
-    starterPackQuery.refetch();
     featuredQuery.refetch();
-  }, [starterPackQuery, featuredQuery]);
+  }, [featuredQuery]);
 
   const queryClient = useQueryClient();
   const handleChallengePress = useCallback(
@@ -488,40 +474,11 @@ export default function DiscoverScreen() {
       >
         {renderErrorBanner()}
 
-        {starterPack.length > 0 && (
-          <View style={styles.section}>
-            <SectionHeader
-              title="Starter Pack"
-              icon={<Shield size={18} color={DS_COLORS.accent} />}
-              caption="Join in 2 taps • Easy"
-            />
-            <View style={styles.compactList}>
-              {(starterPack as FeaturedChallengeRaw[]).map((c) => (
-                <ChallengeRowCard
-                  key={c.id}
-                  title={c.title ?? ""}
-                  description={(c.short_hook || c.description) ?? ""}
-                  stripeColor={c.theme_color || DS_COLORS.accent}
-                  durationLabel={c.duration_type === "24h" ? "24H" : `${c.duration_days ?? 1} day${(c.duration_days ?? 1) === 1 ? "" : "s"}`}
-                  taskCount={c.tasks?.length ?? 0}
-                  participantsCount={c.participants_count ?? 0}
-                  statusDotColor={c.theme_color}
-                  onPress={() => handleChallengePress(c.id)}
-                  participationType={c.participation_type}
-                  teamSize={c.team_size}
-                  sharedGoalTarget={c.shared_goal_target}
-                  sharedGoalUnit={c.shared_goal_unit}
-                />
-              ))}
-            </View>
-          </View>
-        )}
-
         {dailyChallenges.length > 0 && (
           <View style={styles.section}>
             <SectionHeader
-              title="24-Hour Challenges"
-              icon={<Zap size={18} color={DS_COLORS.warning} />}
+              title="⚡ 24-Hour Challenges"
+              icon={<Zap size={18} color={DS_COLORS.accent} />}
               caption="New every day"
             />
             <FlatList
@@ -541,8 +498,8 @@ export default function DiscoverScreen() {
         {featuredChallenges.length > 0 && (
           <View style={styles.section}>
             <SectionHeader
-              title="Featured"
-              icon={<Flame size={18} color={DS_COLORS.accent} />}
+              title="📈 Featured"
+              icon={<TrendingUp size={18} color={DS_COLORS.accent} />}
             />
             <FlatList
               data={featuredChallenges}
@@ -560,7 +517,7 @@ export default function DiscoverScreen() {
         {otherChallenges.length > 0 && (
           <View style={styles.section}>
             <SectionHeader
-              title="More Challenges"
+              title="✨ More Challenges"
               icon={<Sparkles size={18} color={DS_COLORS.textPrimary} />}
             />
             <FlatList
@@ -599,19 +556,12 @@ export default function DiscoverScreen() {
     );
   };
 
-  const { isPremium } = useApp();
-
   return (
     <ErrorBoundary>
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.title}>Discover</Text>
           <Text style={styles.subtitle}>Find challenges worth committing to</Text>
-          {!isGuest && !isPremium && (
-            <Text style={[styles.subtitle, { fontSize: 12, marginTop: 4, opacity: 0.8 }]}>
-              Free: {FREE_LIMITS.MAX_ACTIVE_CHALLENGES} active challenges
-            </Text>
-          )}
         </View>
 
         <View style={styles.searchRow}>

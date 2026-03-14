@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Calendar, BookOpen, Users, ChevronRight } from "lucide-react-native";
+import { Calendar, BookOpen, Users, ChevronRight, Flame } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
@@ -53,8 +53,9 @@ function ChallengeCardFeaturedInner(props: {
       <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.topRow}>
-          <View style={[s.featuredBadge, { backgroundColor: DS_COLORS.featuredLabelBg }]}>
-            <Text style={[s.featuredBadgeText, { color: DS_COLORS.featuredLabelText }]}>FEATURED</Text>
+          <View style={[s.featuredBadge, { backgroundColor: DS_COLORS.accentSoft ?? DS_COLORS.featuredLabelBg }]}>
+            <Flame size={12} color={DS_COLORS.accent} />
+            <Text style={[s.featuredBadgeText, { color: DS_COLORS.accent }]}>FEATURED</Text>
           </View>
           <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
             <Text style={[s.diffText, { color: diff.text }]}>{difficulty.toUpperCase()}</Text>
