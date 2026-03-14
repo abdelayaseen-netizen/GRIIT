@@ -477,6 +477,7 @@ export default function ChallengeDetailScreen() {
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
   const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
+  const [commitmentUnderstood, setCommitmentUnderstood] = useState(false);
   const insets = useSafeAreaInsets();
   const referrerLabel = ref ? "Invited by a friend" : null;
 
@@ -586,6 +587,7 @@ export default function ChallengeDetailScreen() {
     if (!challenge || !id) return;
     if (!joinLimit.allowed && !requirePremium("challenge_limit")) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setCommitmentUnderstood(false);
     setShowCommitmentModal(true);
   }, [challenge, id, joinLimit.allowed, requirePremium]);
 
@@ -826,7 +828,7 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const headerGradientColors = isDaily ? [DS_COLORS.challenge24hHeaderBg, DS_COLORS.challenge24hHeaderBg] as const : [DS_COLORS.accent, DS_COLORS.accentDark] as const;
+  const headerGradientColors = isDaily ? [DS_COLORS.challenge24hHeaderBg, DS_COLORS.challenge24hHeaderBg] as const : ["#C06030", "#D2734A"] as const;
   const ctaBgColor = isDaily && !expired ? DS_COLORS.success : DS_COLORS.accent;
   const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
@@ -1301,13 +1303,29 @@ export default function ChallengeDetailScreen() {
               </View>
             </View>
             <View style={s.commitmentWarning}>
-              <AlertTriangle size={14} color={DS_COLORS.accent} style={{ marginRight: 8 }} />
-              <Text style={s.commitmentWarningText}>One missed day resets progress.</Text>
+              <AlertTriangle size={14} color="#DC2626" style={{ marginRight: 8 }} />
+              <Text style={s.commitmentWarningText}>One missed day resets progress to Day 1.</Text>
             </View>
             <TouchableOpacity
-              style={[s.commitmentConfirmBtn, commitmentJoining && s.commitmentConfirmDisabled]}
+              style={s.commitmentCheckRow}
+              onPress={() => !commitmentJoining && setCommitmentUnderstood((v) => !v)}
+              activeOpacity={0.8}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: commitmentUnderstood }}
+              accessibilityLabel="I understand the rules and reset conditions"
+            >
+              <View style={[s.commitmentCheckbox, commitmentUnderstood && s.commitmentCheckboxChecked]}>
+                {commitmentUnderstood ? <Check size={14} color={DS_COLORS.white} /> : null}
+              </View>
+              <Text style={s.commitmentCheckLabel}>I understand the rules and reset conditions.</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                s.commitmentConfirmBtn,
+                (commitmentJoining || !commitmentUnderstood) && s.commitmentConfirmDisabled,
+              ]}
               onPress={handleCommitmentConfirm}
-              disabled={commitmentJoining}
+              disabled={commitmentJoining || !commitmentUnderstood}
               activeOpacity={0.85}
             >
               {commitmentJoining ? (
@@ -1409,6 +1427,7 @@ const s = StyleSheet.create({
   },
 
   heroHeader: {
+    minHeight: 280,
     paddingBottom: DS_SPACING.xxl + DS_SPACING.lg,
     borderBottomLeftRadius: DS_RADIUS.card,
     borderBottomRightRadius: DS_RADIUS.card,
@@ -1491,7 +1510,7 @@ const s = StyleSheet.create({
     marginBottom: DS_SPACING.sm,
   },
   heroTagline: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "400" as const,
     color: "rgba(255,255,255,0.8)",
     lineHeight: 22,
@@ -1684,8 +1703,8 @@ const s = StyleSheet.create({
   progressStatsCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
+    backgroundColor: DS_COLORS.white,
+    borderRadius: 16,
     padding: DS_SPACING.cardPadding,
     marginBottom: DS_SPACING.lg,
     borderWidth: DS_BORDERS.width,
@@ -1696,8 +1715,8 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   progressStatValue: {
-    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
-    fontWeight: DS_TYPOGRAPHY.statValue.fontWeight,
+    fontSize: 24,
+    fontWeight: "800" as const,
     color: DS_COLORS.accent,
     marginBottom: DS_SPACING.xs,
   },
@@ -1778,8 +1797,8 @@ const s = StyleSheet.create({
     marginBottom: DS_SPACING.md,
   },
   missionsCard: {
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
+    backgroundColor: DS_COLORS.white,
+    borderRadius: 16,
     overflow: "hidden" as const,
     borderWidth: DS_BORDERS.width,
     borderColor: DS_COLORS.border,
@@ -1797,9 +1816,9 @@ const s = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   missionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1969,16 +1988,17 @@ const s = StyleSheet.create({
   ctaButton: {
     alignItems: "center",
     justifyContent: "center",
-    minHeight: DS_MEASURES.ctaHeight,
+    minHeight: 50,
     paddingVertical: DS_SPACING.lg,
-    borderRadius: DS_RADIUS.button,
+    borderRadius: 12,
+    backgroundColor: "#D2734A",
     width: Platform.OS === "web" ? 400 : undefined,
     alignSelf: "stretch" as const,
     minWidth: 280,
   },
   ctaText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: DS_TYPOGRAPHY.button.fontWeight,
+    fontWeight: "700" as const,
     color: DS_COLORS.white,
   },
   inviteLink: {
@@ -1993,10 +2013,11 @@ const s = StyleSheet.create({
     color: DS_COLORS.accent,
   },
   ctaMicro: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontSize: 12,
     fontWeight: "400" as const,
-    color: DS_COLORS.textMuted,
+    color: "#7A7A6D",
     marginTop: DS_SPACING.sm,
+    textAlign: "center",
   },
   disabledCta: {
     alignItems: "center",
@@ -2023,14 +2044,13 @@ const s = StyleSheet.create({
     paddingHorizontal: 24,
   },
   commitmentCard: {
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.card,
-    padding: DS_SPACING.xxl,
+    backgroundColor: "#FAF8F5",
+    borderRadius: 24,
+    padding: 24,
     width: "100%",
     maxWidth: 360,
     alignItems: "center",
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    borderWidth: 0,
   },
   commitmentClose: {
     position: "absolute",
@@ -2045,16 +2065,16 @@ const s = StyleSheet.create({
     fontWeight: "600",
   },
   commitmentShieldWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: DS_COLORS.accentSoft,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
     marginTop: DS_SPACING.sm,
   },
   commitmentTitle: {
-    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
+    fontSize: 20,
     fontWeight: "700",
     color: DS_COLORS.textPrimary,
     textAlign: "center",
@@ -2064,6 +2084,11 @@ const s = StyleSheet.create({
   commitmentDetails: {
     width: "100%",
     marginTop: DS_SPACING.xl,
+    backgroundColor: "#FAF8F5",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
   },
   commitmentRow: {
     flexDirection: "row",
@@ -2090,28 +2115,55 @@ const s = StyleSheet.create({
   commitmentWarning: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DS_COLORS.accentSoft,
-    borderRadius: DS_RADIUS.input / 2,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 12,
     padding: DS_SPACING.lg,
     marginTop: DS_SPACING.xl,
     width: "100%",
   },
   commitmentWarningText: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontSize: 14,
     fontWeight: "500",
-    color: DS_COLORS.accent,
+    color: "#DC2626",
+    flex: 1,
+  },
+  commitmentCheckRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginTop: DS_SPACING.lg,
+    gap: 12,
+  },
+  commitmentCheckbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: DS_COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  commitmentCheckboxChecked: {
+    backgroundColor: "#2D3A2E",
+    borderColor: "#2D3A2E",
+  },
+  commitmentCheckLabel: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   commitmentConfirmBtn: {
-    backgroundColor: DS_COLORS.accent,
-    borderRadius: DS_RADIUS.button,
-    paddingVertical: DS_SPACING.lg,
+    backgroundColor: "#D2734A",
+    borderRadius: 12,
+    paddingVertical: 16,
+    minHeight: 50,
     alignItems: "center",
     width: "100%",
     marginTop: DS_SPACING.xl,
   },
   commitmentConfirmDisabled: {
-    opacity: 0.5,
+    backgroundColor: "rgba(210,115,74,0.5)",
   },
   commitmentConfirmText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,

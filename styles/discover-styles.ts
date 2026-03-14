@@ -155,7 +155,7 @@ export const styles = StyleSheet.create({
   },
   featuredList: {
     paddingHorizontal: 20,
-    gap: 12,
+    gap: 16,
   },
   featuredCard: {
     flexDirection: "row",
@@ -286,7 +286,7 @@ export const styles = StyleSheet.create({
   },
   compactList: {
     paddingHorizontal: 20,
-    gap: 0,
+    gap: 12,
   },
   compactCard: {
     flexDirection: "row",

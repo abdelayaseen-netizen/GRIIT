@@ -9,6 +9,7 @@ import {
   FlatList,
   Platform,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -199,6 +200,9 @@ function SkeletonList({ cardColor }: { cardColor?: string }) {
 }
 
 const FEATURED_PAGE_SIZE = 20;
+const screenWidth = Dimensions.get("window").width;
+const DAILY_CARD_WIDTH = screenWidth * 0.8;
+const DAILY_CARD_GAP = 12;
 
 export default function DiscoverScreen() {
   const router = useRouter();
@@ -351,17 +355,21 @@ export default function DiscoverScreen() {
   }, []);
 
   const renderDailyItem = useCallback(
-    ({ item: c }: { item: StarterChallenge }) => (
-      <ChallengeCard24h
-        title={c.title}
-        description={c.short_hook}
-        endsAt={c.ends_at}
-        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-        stripeColor={c.theme_color || DS_COLORS.accent}
-        tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
-        participantsCount={c.participants_count ?? 0}
-        onPress={() => handleChallengePress(c.id)}
-      />
+    ({ item: c, index }: { item: StarterChallenge; index: number }) => (
+      <View style={{ marginRight: DAILY_CARD_GAP }}>
+        <ChallengeCard24h
+          title={c.title}
+          description={c.short_hook}
+          endsAt={c.ends_at}
+          difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
+          stripeColor={c.theme_color || DS_COLORS.accent}
+          tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
+          participantsCount={c.participants_count ?? 0}
+          onPress={() => handleChallengePress(c.id)}
+          cardWidth={DAILY_CARD_WIDTH}
+          index={index}
+        />
+      </View>
     ),
     [handleChallengePress]
   );
@@ -386,7 +394,7 @@ export default function DiscoverScreen() {
   );
 
   const renderOtherItem = useCallback(
-    ({ item: c }: { item: DiscoverChallenge }) => (
+    ({ item: c, index }: { item: DiscoverChallenge; index: number }) => (
       <ChallengeRowCard
         title={c.title}
         description={c.short_hook ?? c.description}
@@ -401,6 +409,8 @@ export default function DiscoverScreen() {
         teamSize={c.team_size}
         sharedGoalTarget={c.shared_goal_target}
         sharedGoalUnit={c.shared_goal_unit}
+        index={index}
+        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
       />
     ),
     [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
@@ -489,8 +499,11 @@ export default function DiscoverScreen() {
               maxToRenderPerBatch={5}
               windowSize={5}
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.dailyScrollContent}
+              contentContainerStyle={[styles.dailyScrollContent, { paddingLeft: 16 }]}
               renderItem={renderDailyItem}
+              snapToInterval={DAILY_CARD_WIDTH + DAILY_CARD_GAP}
+              snapToAlignment="start"
+              decelerationRate="fast"
             />
           </View>
         )}

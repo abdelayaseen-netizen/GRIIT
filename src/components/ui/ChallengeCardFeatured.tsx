@@ -1,16 +1,32 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Calendar, BookOpen, Users, ChevronRight, Flame } from "lucide-react-native";
-import * as t from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
 
+const ACCENT_ORANGE = "#D2734A";
+const MUTED_TEXT = "#7A7A6D";
+const ACTIVE_TODAY_GREEN = "#16A34A";
+const TASK_PILL_BG = "#F3F4F6";
+
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
-  Easy: { bg: DS_COLORS.featuredLabelBg, text: DS_COLORS.featuredLabelText },
-  Medium: { bg: DS_COLORS.difficultyMediumBg, text: DS_COLORS.difficultyMediumText },
-  Hard: { bg: DS_COLORS.difficultyHardBg, text: DS_COLORS.difficultyHardText },
-  Extreme: { bg: DS_COLORS.difficultyExtremeBg, text: DS_COLORS.difficultyExtremeText },
+  Easy: { bg: "#DCFCE7", text: "#16A34A" },
+  Medium: { bg: "#FEF9C3", text: "#CA8A04" },
+  Hard: { bg: "#FEE2E2", text: "#DC2626" },
+  Extreme: { bg: "#FEE2E2", text: "#991B1B" },
 };
+
+function getTaskEmoji(icon: string): string {
+  const map: Record<string, string> = {
+    timer: "⏱",
+    photo: "📸",
+    journal: "📝",
+    run: "🏃",
+    checkin: "📍",
+    manual: "✓",
+  };
+  return map[icon] ?? "•";
+}
 
 function ChallengeCardFeaturedInner(props: {
   title: string;
@@ -29,7 +45,6 @@ function ChallengeCardFeaturedInner(props: {
     title,
     description,
     difficulty,
-    stripeColor,
     tasksPreview,
     durationLabel,
     taskCount,
@@ -50,56 +65,44 @@ function ChallengeCardFeaturedInner(props: {
       accessibilityLabel={`${title}, ${participantsCount} participants`}
       accessibilityRole="button"
     >
-      <View style={[s.stripe, { backgroundColor: stripeColor }]} />
+      <View style={s.stripe} />
       <View style={s.content}>
         <View style={s.topRow}>
-          <View style={[s.featuredBadge, { backgroundColor: DS_COLORS.accentSoft ?? DS_COLORS.featuredLabelBg }]}>
-            <Flame size={12} color={DS_COLORS.accent} />
-            <Text style={[s.featuredBadgeText, { color: DS_COLORS.accent }]}>FEATURED</Text>
+          <View style={s.featuredBadge}>
+            <Flame size={12} color={ACCENT_ORANGE} />
+            <Text style={s.featuredBadgeText}>FEATURED</Text>
           </View>
           <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
             <Text style={[s.diffText, { color: diff.text }]}>{difficulty.toUpperCase()}</Text>
           </View>
         </View>
         <Text style={s.title} numberOfLines={1}>{title}</Text>
-        <Text style={s.desc} numberOfLines={2}>{description}</Text>
+        <Text style={s.desc} numberOfLines={1}>{description}</Text>
         <View style={s.chipsRow}>
           {tasksPreview.slice(0, 3).map((task, i) => (
             <View key={i} style={s.taskChip}>
-              <Text style={s.taskChipText} numberOfLines={1}>{task.label}</Text>
+              <Text style={s.taskChipText} numberOfLines={1}>{getTaskEmoji(task.icon)} {task.label}</Text>
             </View>
           ))}
         </View>
         <View style={s.metaRow}>
           <View style={s.metaLeft}>
-            <View style={s.metaItem}>
-              <Calendar size={t.iconSizes.cardMeta} color={t.colors.textSecondary} />
-              <Text style={s.metaText}>{durationLabel}</Text>
-            </View>
-            <View style={s.metaDot} />
-            <View style={s.metaItem}>
-              <BookOpen size={t.iconSizes.cardMeta} color={t.colors.textSecondary} />
-              <Text style={s.metaText}>{taskCount} tasks</Text>
-            </View>
-            {participantsCount > 0 && (
-              <>
-                <View style={s.metaDot} />
-                <View style={s.metaItem}>
-                  <Users size={t.iconSizes.cardMeta} color={t.colors.textSecondary} />
-                  <Text style={s.metaText}>{formatCount(participantsCount)}</Text>
-                </View>
-              </>
-            )}
+            <Calendar size={12} color={MUTED_TEXT} />
+            <Text style={s.metaText}>{durationLabel}</Text>
+            <Text style={s.metaDot}>·</Text>
+            <BookOpen size={12} color={MUTED_TEXT} />
+            <Text style={s.metaText}>{taskCount} tasks</Text>
+            <Text style={s.metaDot}>·</Text>
+            <Users size={12} color={MUTED_TEXT} />
+            <Text style={s.metaText}>{formatCount(participantsCount)}</Text>
             {activeTodayCount > 0 && (
               <>
-                <View style={s.metaDot} />
+                <Text style={s.metaDot}>·</Text>
                 <Text style={s.activeToday}>{formatCount(activeTodayCount)} active today</Text>
               </>
             )}
           </View>
-          <View style={s.arrowWrap}>
-            <ChevronRight size={t.iconSizes.arrowButton + 2} color={t.colors.textSecondary} />
-          </View>
+          <Text style={s.chevron}>&gt;</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -116,15 +119,16 @@ const s = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    shadowColor: DS_COLORS.shadowBlack,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
   stripe: {
     width: 4,
     alignSelf: "stretch",
+    backgroundColor: ACCENT_ORANGE,
   },
   content: {
     flex: 1,
@@ -143,12 +147,14 @@ const s = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 999,
+    backgroundColor: "#FFF7ED",
   },
   featuredBadgeText: {
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
+    color: ACCENT_ORANGE,
   },
   diffPill: {
     paddingHorizontal: 10,
@@ -162,12 +168,12 @@ const s = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: DS_COLORS.textPrimary,
+    color: "#2D3A2E",
     marginBottom: 6,
   },
   desc: {
     fontSize: 14,
-    color: DS_COLORS.inputPlaceholder,
+    color: MUTED_TEXT,
     lineHeight: 20,
     marginBottom: 10,
   },
@@ -180,16 +186,15 @@ const s = StyleSheet.create({
   taskChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: DS_COLORS.background,
+    backgroundColor: TASK_PILL_BG,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 999,
   },
   taskChipText: {
     fontSize: 13,
     fontWeight: "500",
-    color: DS_COLORS.inputPlaceholder,
+    color: MUTED_TEXT,
     maxWidth: 120,
   },
   metaRow: {
@@ -197,43 +202,34 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 4,
   },
   metaLeft: {
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 4,
     flex: 1,
     minWidth: 0,
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
   },
   metaText: {
     fontSize: 12,
     fontWeight: "400",
-    color: DS_COLORS.textMuted,
+    color: MUTED_TEXT,
   },
   metaDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: DS_COLORS.textMuted,
+    fontSize: 12,
+    color: MUTED_TEXT,
+    marginHorizontal: 2,
   },
   activeToday: {
     fontSize: 13,
-    fontWeight: "600",
-    color: DS_COLORS.activeTodayText,
+    fontWeight: "700",
+    color: ACTIVE_TODAY_GREEN,
   },
-  arrowWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: DS_COLORS.background,
-    alignItems: "center",
-    justifyContent: "center",
+  chevron: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: MUTED_TEXT,
   },
 });

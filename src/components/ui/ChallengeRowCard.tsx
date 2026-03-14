@@ -1,9 +1,17 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ChevronRight, Users, Target } from "lucide-react-native";
-import * as t from "@/src/theme/tokens";
+import { ChevronRight, Calendar, BookOpen, Users } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
+
+const COMPACT_LEFT_BORDER_COLORS = ["#8B5CF6", "#3B82F6", "#14B8A6", "#F97316", "#EC4899"];
+const MUTED_TEXT = "#7A7A6D";
+const DIFF_DOT_COLORS: Record<string, string> = {
+  Easy: "#16A34A",
+  Medium: "#CA8A04",
+  Hard: "#DC2626",
+  Extreme: "#991B1B",
+};
 
 function ChallengeRowCardInner(props: {
   title: string;
@@ -19,62 +27,49 @@ function ChallengeRowCardInner(props: {
   teamSize?: number;
   sharedGoalTarget?: number;
   sharedGoalUnit?: string;
+  index?: number;
+  difficulty?: string;
 }) {
   const {
     title,
     description,
-    stripeColor,
     durationLabel,
     taskCount,
     participantsCount,
-    statusDotColor,
     onPress,
     onPressIn,
-    participationType,
-    teamSize,
-    sharedGoalTarget,
-    sharedGoalUnit,
+    index = 0,
+    difficulty = "medium",
   } = props;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
-  const isTeam = participationType === "team";
-  const isSharedGoal = participationType === "shared_goal";
-  const badgeLabel = isTeam && teamSize != null ? `Team · ${teamSize} people` : isSharedGoal && sharedGoalTarget != null && sharedGoalUnit ? `Shared Goal · ${sharedGoalTarget} ${sharedGoalUnit}` : null;
+  const leftBorderColor = COMPACT_LEFT_BORDER_COLORS[index % 5];
+  const dotColor = DIFF_DOT_COLORS[difficulty] ?? DIFF_DOT_COLORS.Medium;
   const { colors: themeColors } = useTheme();
   return (
     <TouchableOpacity
-      style={[s.card, { backgroundColor: themeColors.card }]}
+      style={[s.card, { backgroundColor: themeColors.card, borderLeftColor: leftBorderColor }]}
       onPressIn={onPressIn}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityLabel={`${title}, ${participantsCount} participants`}
       accessibilityRole="button"
     >
-      <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.header}>
           <Text style={s.title} numberOfLines={1}>{title}</Text>
-          {statusDotColor != null && (
-            <View style={[s.statusDot, { backgroundColor: statusDotColor }]} />
-          )}
+          <View style={[s.difficultyDot, { backgroundColor: dotColor }]} />
         </View>
-        {badgeLabel && (
-          <View style={s.badgeRow}>
-            {isTeam ? <Users size={11} color={t.colors.textSecondary} /> : <Target size={11} color={t.colors.textSecondary} />}
-            <Text style={s.badgeText}>{badgeLabel}</Text>
-          </View>
-        )}
         <Text style={s.desc} numberOfLines={1}>{description}</Text>
         <View style={s.meta}>
-          <Text style={s.metaLeft}>
-            {durationLabel} • {taskCount} tasks
-          </Text>
-          {participantsCount > 0 && (
-            <Text style={s.metaRight}>{formatCount(participantsCount)} joined</Text>
-          )}
+          <View style={s.metaLeft}>
+            <Calendar size={12} color={MUTED_TEXT} />
+            <Text style={s.metaLeftText}>{durationLabel} · {taskCount} tasks</Text>
+          </View>
+          <Text style={s.metaRight}>{formatCount(participantsCount)} joined</Text>
         </View>
       </View>
       <View style={s.arrowWrap}>
-        <ChevronRight size={t.iconSizes.arrowButton + 2} color={t.colors.textSecondary} />
+        <ChevronRight size={16} color={MUTED_TEXT} />
       </View>
     </TouchableOpacity>
   );
@@ -87,84 +82,69 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: "hidden",
+    borderLeftWidth: 4,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    shadowColor: DS_COLORS.shadowBlack,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
-  stripe: {
-    width: 4,
-    alignSelf: "stretch",
-  },
   content: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     minWidth: 0,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     marginBottom: 4,
   },
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.textPrimary,
+    color: "#2D3A2E",
     flex: 1,
   },
-  statusDot: {
+  difficultyDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-  },
-  badgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 4,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: t.colors.textSecondary,
+    marginLeft: 8,
   },
   desc: {
-    fontSize: 14,
-    color: DS_COLORS.inputPlaceholder,
-    lineHeight: 20,
+    fontSize: 13,
+    color: MUTED_TEXT,
+    lineHeight: 18,
     marginBottom: 8,
   },
   meta: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 4,
   },
   metaLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  metaLeftText: {
     fontSize: 12,
     fontWeight: "400",
-    color: DS_COLORS.textMuted,
+    color: MUTED_TEXT,
   },
   metaRight: {
     fontSize: 12,
     fontWeight: "400",
-    color: DS_COLORS.textMuted,
+    color: MUTED_TEXT,
   },
   arrowWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: DS_COLORS.background,
+    paddingRight: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 8,
   },
 });
