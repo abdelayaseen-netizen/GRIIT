@@ -20,11 +20,11 @@ import { DS_COLORS } from "@/lib/design-system";
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const { colors: themeColors } = useTheme();
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [formError, setFormError] = useState("");
-  const isSubmittingRef = useRef(false);
+  const [email, setEmail] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [sent, setSent] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>("");
+  const isSubmittingRef = useRef<boolean>(false);
 
   const handleSubmit = async () => {
     if (loading || isSubmittingRef.current) return;
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   formError: {
-    color: "#CC3333",
+    color: DS_COLORS.errorText,
     fontSize: 13,
     marginTop: 8,
     textAlign: "center",

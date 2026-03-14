@@ -42,8 +42,8 @@ export default function PublicProfileScreen() {
   const { user } = useAuth();
   const { colors } = useTheme();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isError, setIsError] = useState<boolean>(false);
 
   const decoded = username ? decodeURIComponent(username) : "";
 
@@ -55,7 +55,7 @@ export default function PublicProfileScreen() {
     let cancelled = false;
     setIsLoading(true);
     setIsError(false);
-    trpcQuery("profiles.getPublicByUsername", { username: decoded })
+    trpcQuery(TRPC.profiles.getPublicByUsername, { username: decoded })
       .then((data) => {
         if (!cancelled) setProfile(data as PublicProfile | null);
       })

@@ -212,7 +212,7 @@ export default function DiscoverScreen() {
   const starterPackQuery = useQuery({
     queryKey: ["discover", "starterPack"],
     queryFn: async () => {
-      const data = (await trpcQuery("challenges.getStarterPack")) as unknown[];
+      const data = (await trpcQuery(TRPC.challenges.getStarterPack)) as unknown[];
       return data;
     },
     staleTime: 5 * 60 * 1000,

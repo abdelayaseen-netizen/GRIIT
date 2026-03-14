@@ -57,21 +57,21 @@ export default function RunTaskScreen() {
   const minTimerSeconds = 600;
   
   const [runMode, setRunMode] = useState<RunMode>("outdoor_gps");
-  const [isTracking, setIsTracking] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [distanceMiles, setDistanceMiles] = useState(0);
+  const [isTracking, setIsTracking] = useState<boolean>(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [distanceMiles, setDistanceMiles] = useState<number>(0);
   const [gpsPoints, setGpsPoints] = useState<GpsPoint[]>([]);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   
   const [treadmillStep, setTreadmillStep] = useState<TreadmillStep>("timer");
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerRunning, setTimerRunning] = useState<boolean>(false);
+  const [timerSeconds, setTimerSeconds] = useState<number>(0);
   const [timerStartedAt, setTimerStartedAt] = useState<string | null>(null);
-  const [backgroundViolation, setBackgroundViolation] = useState(false);
+  const [backgroundViolation, setBackgroundViolation] = useState<boolean>(false);
   const [proofUri, setProofUri] = useState<string | null>(null);
-  const [distanceInput, setDistanceInput] = useState("");
-  const [durationInput, setDurationInput] = useState("");
+  const [distanceInput, setDistanceInput] = useState<string>("");
+  const [durationInput, setDurationInput] = useState<string>("");
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);

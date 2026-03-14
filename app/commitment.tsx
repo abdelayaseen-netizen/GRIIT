@@ -29,7 +29,7 @@ export default function CommitmentScreen() {
     difficulty?: string;
   }>();
   const { refetchAll } = useApp();
-  const [joining, setJoining] = useState(false);
+  const [joining, setJoining] = useState<boolean>(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -83,9 +83,7 @@ export default function CommitmentScreen() {
           {
             text: "Share",
             onPress: () => {
-              inviteToChallenge({ name: title, id: challengeId }).catch((err) => {
-                if (__DEV__) console.warn("[commitment] inviteToChallenge failed:", err instanceof Error ? err.message : err);
-              });
+              inviteToChallenge({ name: title, id: challengeId }).catch(() => {});
               router.replace(ROUTES.TABS as never);
             },
           },

@@ -27,9 +27,9 @@ const DEBOUNCE_MS = 400;
 export default function AddAccountabilityPartnerScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ from?: string }>();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState<string>("");
   const [hits, setHits] = useState<SearchHit[]>([]);
-  const [searching, setSearching] = useState(false);
+  const [searching, setSearching] = useState<boolean>(false);
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 

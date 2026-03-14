@@ -23,15 +23,15 @@ export default function TimerTaskScreen() {
   const { taskId, requirePhotoProof: requirePhotoProofParam } = useLocalSearchParams<{ taskId: string; requirePhotoProof?: string }>();
   const { activeChallenge, completeTask, computeProgress } = useApp();
   const requirePhotoProof = requirePhotoProofParam === "true";
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [seconds, setSeconds] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [uploading, setUploading] = useState<boolean>(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [, setIntervalId] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [strictResetMessage, setStrictResetMessage] = useState<string | null>(null);
-  const resetInProgressRef = useRef(false);
+  const resetInProgressRef = useRef<boolean>(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const ac = activeChallenge as ActiveChallengeWithTasks | null | undefined;

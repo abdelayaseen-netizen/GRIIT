@@ -465,15 +465,13 @@ export default function ChallengeDetailScreen() {
   const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
-  const [commitmentJoining, setCommitmentJoining] = useState(false);
+  const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
   const referrerLabel = ref ? "Invited by a friend" : null;
 
   useEffect(() => {
     if (!ref || !currentUserId || !id) return;
-    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch((err) => {
-      if (__DEV__) console.warn("[challenge] referrals.recordOpen failed:", err instanceof Error ? err.message : err);
-    });
+    trpcMutate("referrals.recordOpen", { referrerUserId: ref, challengeId: id }).catch(() => {});
   }, [ref, currentUserId, id]);
 
   const challenge = useMemo(() => {
@@ -881,9 +879,7 @@ export default function ChallengeDetailScreen() {
                               },
                               currentUserId
                             )
-                          ).catch((err) => {
-                            if (__DEV__) console.warn("[challenge] share failed:", err instanceof Error ? err.message : err);
-                          });
+                          ).catch(() => {});
                         },
                       },
                       {
@@ -891,9 +887,7 @@ export default function ChallengeDetailScreen() {
                         onPress: () => {
                           import("@/lib/share").then(({ inviteToChallenge }) =>
                             inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                          ).catch((err) => {
-                            if (__DEV__) console.warn("[challenge] invite failed:", err instanceof Error ? err.message : err);
-                          });
+                          ).catch(() => {});
                         },
                       },
                     ], { cancelable: true });
@@ -969,9 +963,7 @@ export default function ChallengeDetailScreen() {
                       onInvite={() => {
                         import("@/lib/share").then(({ inviteToChallenge }) =>
                           inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                        ).catch((err) => {
-                          if (__DEV__) console.warn("[challenge] inviteToChallenge failed:", err instanceof Error ? err.message : err);
-                        });
+                        ).catch(() => {});
                       }}
                     />
                     <TeamMemberList
@@ -1228,9 +1220,7 @@ export default function ChallengeDetailScreen() {
                 track({ name: "invite_shared", challengeId: id ?? undefined, source: "challenge_detail" });
                 import("@/lib/share").then(({ inviteToChallenge }) =>
                   inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                ).catch((err) => {
-                  if (__DEV__) console.warn("[challenge] invite failed:", err instanceof Error ? err.message : err);
-                });
+                ).catch(() => {});
               }}
               activeOpacity={0.7}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}

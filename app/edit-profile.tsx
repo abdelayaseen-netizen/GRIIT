@@ -23,12 +23,12 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { profile } = useApp();
-  const [isPending, setIsPending] = useState(false);
-  const [formError, setFormError] = useState('');
+  const [isPending, setIsPending] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>('');
 
-  const [displayName, setDisplayName] = useState(profile?.display_name || '');
-  const [bio, setBio] = useState(profile?.bio || '');
-  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
+  const [displayName, setDisplayName] = useState<string>(profile?.display_name || '');
+  const [bio, setBio] = useState<string>(profile?.bio || '');
+  const [avatarUrl, setAvatarUrl] = useState<string>(profile?.avatar_url || '');
 
   useEffect(() => {
     if (profile) {
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   formError: {
-    color: '#CC3333',
+    color: DS_COLORS.errorText,
     fontSize: 13,
     marginTop: 8,
     textAlign: 'center',

@@ -15,6 +15,7 @@ import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { DS_COLORS } from "@/lib/design-system";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
@@ -60,8 +61,8 @@ function AuthRedirector() {
   const onboardingCompleteFromStore = useOnboardingStore((s) => s.isComplete);
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const [hasLaunched, setHasLaunched] = useState<boolean | null>(null);
-  const [profileChecked, setProfileChecked] = useState(false);
-  const [hasProfile, setHasProfile] = useState(false);
+  const [profileChecked, setProfileChecked] = useState<boolean>(false);
+  const [hasProfile, setHasProfile] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -203,12 +204,12 @@ function RootLayoutNav() {
     <View style={{ flex: 1 }}>
       {sessionExpiredMessage ? (
         <Pressable
-          style={{ backgroundColor: "#CC3333", paddingVertical: 12, paddingHorizontal: 16, alignItems: "center" }}
+          style={{ backgroundColor: DS_COLORS.errorText, paddingVertical: 12, paddingHorizontal: 16, alignItems: "center" }}
           onPress={() => setSessionExpiredMessage(null)}
           accessibilityRole="button"
           accessibilityLabel="Dismiss session expired message"
         >
-          <Text style={{ color: "#FFF", fontSize: 14 }}>{sessionExpiredMessage}</Text>
+          <Text style={{ color: DS_COLORS.white, fontSize: 14 }}>{sessionExpiredMessage}</Text>
         </Pressable>
       ) : null}
       <OfflineBanner />
