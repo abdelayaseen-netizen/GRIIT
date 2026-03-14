@@ -15,6 +15,7 @@ export const authRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase.auth.signUp({
         email: input.email.trim().toLowerCase(),
         password: input.password,
+        options: { emailRedirectTo: undefined },
       });
 
       if (error) {

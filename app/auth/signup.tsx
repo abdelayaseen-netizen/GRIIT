@@ -130,28 +130,45 @@ export default function SignupScreen() {
         password,
         options: {
           data: {
+            full_name: displayName.trim(),
             display_name: displayName.trim(),
             username: normalizedUsername,
           },
+          emailRedirectTo: undefined,
         },
       });
 
       if (signUpError) {
         const msg = mapAuthError(signUpError);
         Alert.alert("Signup Failed", msg);
+        setLoading(false);
+        isSubmittingRef.current = false;
         return;
       }
 
-      if (!data.session) {
-        Alert.alert(
-          "Check Your Email",
-          `We sent a confirmation link to ${trimmedEmail}. Tap it to activate your account, then come back and log in.`,
-          [{ text: "OK", onPress: () => router.replace(ROUTES.AUTH_LOGIN as never) }]
-        );
+      let session = data.session;
+      if (!session && data.user) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        });
+        if (signInError) {
+          setLoading(false);
+          isSubmittingRef.current = false;
+          Alert.alert("Signup Failed", mapAuthError(signInError));
+          return;
+        }
+        session = signInData.session;
+      }
+
+      if (!session) {
+        setLoading(false);
+        isSubmittingRef.current = false;
+        Alert.alert("Something went wrong", "Please try again or check your email.");
         return;
       }
 
-      const userId = data.user?.id;
+      const userId = data.user?.id ?? session.user?.id;
       if (!userId) {
         setLoading(false);
         isSubmittingRef.current = false;

@@ -90,6 +90,7 @@ export default function OnboardingSignupScreen() {
             full_name: trimmedName,
             display_name: trimmedName,
           },
+          emailRedirectTo: undefined,
         },
       });
 
@@ -99,8 +100,22 @@ export default function OnboardingSignupScreen() {
         return;
       }
 
-      if (!data.session) {
-        setFormError("Check your email to confirm your account, then sign in.");
+      let session = data.session;
+      if (!session && data.user) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        });
+        if (signInError) {
+          setFormError(mapAuthError(signInError));
+          setLoading(false);
+          return;
+        }
+        session = signInData.session;
+      }
+
+      if (!session) {
+        setFormError("Unable to sign in. Try again or check your email.");
         setLoading(false);
         return;
       }
