@@ -36,20 +36,12 @@ export default function HealthScreen({ onContinue }: HealthScreenProps) {
         // AppleHealthKit.initHealthKit(permissions, (error) => {
         //   if (error) console.log('HealthKit error:', error);
         // });
-        console.log('Apple Health: will connect when native module is installed');
+        // Apple Health: connect when react-native-health is installed
       } else {
-        // When you add react-native-health-connect:
-        // import { initialize, requestPermission } from 'react-native-health-connect';
-        // await initialize();
-        // await requestPermission([
-        //   { accessType: 'read', recordType: 'Steps' },
-        //   { accessType: 'read', recordType: 'Distance' },
-        //   { accessType: 'read', recordType: 'ExerciseSession' },
-        // ]);
-        console.log('Health Connect: will connect when native module is installed');
+        // Health Connect: connect when react-native-health-connect is installed
       }
-    } catch (e) {
-      console.log('Health permission error:', e);
+    } catch {
+      // ignore
     }
     setRequesting(false);
     onContinue();

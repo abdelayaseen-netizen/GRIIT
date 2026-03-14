@@ -22,13 +22,11 @@ export default function NotificationScreen({ onContinue }: NotificationScreenPro
       }
 
       if (finalStatus === 'granted') {
-        // Get the push token for later use
-        const token = await Notifications.getExpoPushTokenAsync();
-        console.log('Push token:', token.data);
-        // TODO: Save this token to your backend/profiles table
+        await Notifications.getExpoPushTokenAsync();
+        // TODO: Save token.data to backend/profiles table
       }
-    } catch (e) {
-      console.log('Notification permission error:', e);
+    } catch {
+      // ignore
     }
     setRequesting(false);
     onContinue();

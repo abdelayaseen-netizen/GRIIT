@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
 import { useOnboardingStore } from '@/store/onboarding-store';
+import { getApiBaseUrl } from '@/lib/api';
 
 interface Challenge {
   id: string;
@@ -73,17 +74,21 @@ export default function ChallengePreview({ onContinue }: ChallengePreviewProps) 
 
   const loadChallenges = async () => {
     try {
-      const response = await fetch('https://grit-backend-production.up.railway.app/api/challenges');
-      if (response.ok) {
-        const data = await response.json();
-        if (data?.challenges?.length > 0) {
-          setChallenges(data.challenges.slice(0, 4));
-          setLoading(false);
-          return;
+      const baseUrl = getApiBaseUrl();
+      const url = baseUrl ? `${baseUrl}/api/challenges` : '';
+      if (url) {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.challenges?.length > 0) {
+            setChallenges(data.challenges.slice(0, 4));
+            setLoading(false);
+            return;
+          }
         }
       }
-    } catch (error) {
-      console.log('API unavailable, using curated challenges');
+    } catch {
+      // Fall through to FALLBACK_CHALLENGES
     }
 
     const filtered = FALLBACK_CHALLENGES.filter((c) => {

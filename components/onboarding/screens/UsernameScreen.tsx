@@ -42,10 +42,9 @@ export default function UsernameScreen({ onComplete }: UsernameScreenProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
         userId = session.user.id;
-        console.log("DEBUG: Got userId from session:", userId);
       }
-    } catch (e) {
-      console.log("DEBUG: getSession failed", e);
+    } catch {
+      // ignore
     }
 
     if (!userId) {
@@ -53,10 +52,9 @@ export default function UsernameScreen({ onComplete }: UsernameScreenProps) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           userId = user.id;
-          console.log("DEBUG: Got userId from getUser:", userId);
         }
-      } catch (e) {
-        console.log("DEBUG: getUser failed", e);
+      } catch {
+        // ignore
       }
     }
 
@@ -86,8 +84,6 @@ export default function UsernameScreen({ onComplete }: UsernameScreenProps) {
         );
 
       if (profileError) {
-        console.error('Profile error details:', JSON.stringify(profileError, null, 2));
-
         if (profileError.message?.includes('unique') || profileError.message?.includes('duplicate')) {
           if (profileError.message?.includes('username')) {
             setError('Username taken. Try another one.');
@@ -112,7 +108,6 @@ export default function UsernameScreen({ onComplete }: UsernameScreenProps) {
 
       onComplete(cleanUsername);
     } catch (e: unknown) {
-      console.error('Profile creation exception:', e);
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);

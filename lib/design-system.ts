@@ -1,33 +1,31 @@
 /**
  * GRIIT Design System — Rork visual spec.
- * Single source of truth: colors, typography, spacing, radius, borders, shadows.
+ * Base palette from constants/theme.ts; extended tokens here.
  */
+import { BASE_COLORS } from "@/constants/theme";
 
-// ─── COLORS (Rork exact) ───────────────────────────────────────────────────
+// ─── COLORS (base from theme, rest extended) ─────────────────────────────────
 export const DS_COLORS = {
-  // Base
-  background: "#F0EDE6",
+  // Base (from constants/theme.ts)
+  background: BASE_COLORS.background,
+  surface: BASE_COLORS.surface,
+  card: BASE_COLORS.card,
+  textPrimary: BASE_COLORS.textPrimary,
+  textSecondary: BASE_COLORS.textSecondary,
+  accent: BASE_COLORS.accent,
+  border: BASE_COLORS.border,
+  success: BASE_COLORS.success,
+  tabInactive: BASE_COLORS.tabInactive,
+
   backgroundAlt: "#F8F6F2",
-  surface: "#FFFFFF",
-  card: "#FFFFFF",
   surfaceWarm: "#FCFCFA",
   surfaceMuted: "#F2F0EB",
-
-  // Text
-  textPrimary: "#1A1A1A",
   textPrimaryAlt: "#141414",
-  textSecondary: "#888884",
   textSecondaryAlt: "#888884",
   textMuted: "#AAAAAA",
-
-  // Borders
-  border: "#E8E5DE",
   borderAlt: "#E8E5DE",
-  borderFocus: "#E07B4A",
+  borderFocus: BASE_COLORS.accent,
   filterPillInactiveBorder: "#E0DDD6",
-
-  // Accent
-  accent: "#E07B4A",
   accentDark: "#D96A3E",
   accentSoft: "#FFF5F0",
   accentLight: "#FFF8F5",

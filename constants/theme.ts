@@ -1,20 +1,33 @@
 /**
- * UI redesign theme — cream/orange/green design system.
- * Aligns with Home screen and tab bar. Use for consistent screens.
- * See also: lib/design-system.ts (DS_COLORS, DS_SPACING, etc.)
+ * Single source of truth for base palette. lib/design-system.ts imports these.
+ * Cream/orange/green design system — matches Home and tab bar.
  */
+export const BASE_COLORS = {
+  background: "#F0EDE6",
+  surface: "#FFFFFF",
+  card: "#FFFFFF",
+  textPrimary: "#1A1A1A",
+  textSecondary: "#888884",
+  accent: "#E07B4A",
+  border: "#E8E5DE",
+  success: "#2F7A52",
+  tabInactive: "#888884",
+  tabActive: "#E07B4A",
+} as const;
+
+/** @deprecated Use BASE_COLORS or DS_COLORS. Kept for any direct theme.ts imports. */
 export const COLORS = {
-  background: "#F5F1EB",
-  cardBackground: "#FFFFFF",
-  text: "#2D3A2E",
-  textSecondary: "#7A7A6D",
-  accent: "#D2734A",
+  background: BASE_COLORS.background,
+  cardBackground: BASE_COLORS.surface,
+  text: BASE_COLORS.textPrimary,
+  textSecondary: BASE_COLORS.textSecondary,
+  accent: BASE_COLORS.accent,
   accentLight: "#FFF0E8",
-  border: "#E8E4DD",
-  success: "#2D7A4F",
+  border: BASE_COLORS.border,
+  success: BASE_COLORS.success,
   warning: "#E8A230",
-  tabInactive: "#9E9E91",
-  tabActive: "#D2734A",
+  tabInactive: BASE_COLORS.tabInactive,
+  tabActive: BASE_COLORS.tabActive,
 } as const;
 
 export const SPACING = {
