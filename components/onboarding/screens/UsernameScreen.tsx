@@ -37,17 +37,30 @@ export default function UsernameScreen({ authUserId, onComplete }: UsernameScree
     setError('');
 
     try {
+      // Resolve userId: prop first, then session (state may not have flushed yet)
+      let userId = authUserId;
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) userId = user.id;
+      }
+      if (!userId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) userId = session.user.id;
+      }
+      if (!userId) {
+        setError('Auth session expired. Go back and sign up again.');
+        setLoading(false);
+        return;
+      }
+
       // Get the onboarding selections to store with the profile
       const { selectedGoals, intensityLevel } = useOnboardingStore.getState();
 
-      // CRITICAL: Use authUserId from the sign up step
-      // This is what fixes the profiles_id_fkey error.
-      // The id MUST match an existing row in auth.users
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert(
           {
-            user_id: authUserId,
+            user_id: userId,
             username: cleanUsername,
             display_name: displayName.trim(),
             goals: selectedGoals,
