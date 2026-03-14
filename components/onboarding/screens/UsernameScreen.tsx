@@ -8,11 +8,10 @@ import { supabase } from '@/lib/supabase';
 import { useOnboardingStore } from '@/store/onboarding-store';
 
 interface UsernameScreenProps {
-  authUserId: string;
   onComplete: (username: string) => void;
 }
 
-export default function UsernameScreen({ authUserId, onComplete }: UsernameScreenProps) {
+export default function UsernameScreen({ onComplete }: UsernameScreenProps) {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,41 +35,39 @@ export default function UsernameScreen({ authUserId, onComplete }: UsernameScree
     setLoading(true);
     setError('');
 
+    let userId: string | null = null;
+
+    // Get userId directly from Supabase - most reliable method
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        userId = session.user.id;
+        console.log("DEBUG: Got userId from session:", userId);
+      }
+    } catch (e) {
+      console.log("DEBUG: getSession failed", e);
+    }
+
+    if (!userId) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          userId = user.id;
+          console.log("DEBUG: Got userId from getUser:", userId);
+        }
+      } catch (e) {
+        console.log("DEBUG: getUser failed", e);
+      }
+    }
+
+    if (!userId) {
+      setError('No active session. Go back and sign up again.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { selectedGoals, intensityLevel } = useOnboardingStore.getState();
-
-      // Try multiple ways to get the user ID
-      let userId = authUserId;
-
-      // Method 1: Try getting from current session
-      if (!userId) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user?.id) {
-            userId = session.user.id;
-          }
-        } catch (e) {
-          console.log('getSession failed:', e);
-        }
-      }
-
-      // Method 2: Try getUser
-      if (!userId) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.id) {
-            userId = user.id;
-          }
-        } catch (e) {
-          console.log('getUser failed:', e);
-        }
-      }
-
-      if (!userId) {
-        setError('No account found. Go back and sign up again.');
-        setLoading(false);
-        return;
-      }
 
       // Try the upsert
       const { error: profileError } = await supabase

@@ -163,18 +163,20 @@ function AuthRedirector() {
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
+    const inTabs = first === "(tabs)";
 
     if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
       router.replace(ROUTES.CREATE_PROFILE as never);
       return;
     }
 
-    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin) {
+    // Only redirect TO tabs when not already in tabs — otherwise we'd reset to Home and break tab navigation
+    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin && !inTabs) {
       router.replace(ROUTES.TABS as never);
       return;
     }
 
-    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding) {
+    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding && !inTabs) {
       router.replace(ROUTES.TABS as never);
       return;
     }
@@ -184,7 +186,7 @@ function AuthRedirector() {
       return;
     }
 
-    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile)) {
+    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile) && !inTabs) {
       router.replace(ROUTES.TABS as never);
     }
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, onboardingCompleteFromStore, router]);

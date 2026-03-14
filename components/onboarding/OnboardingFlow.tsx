@@ -27,6 +27,7 @@ export default function OnboardingFlow() {
   const showBackButton = currentStep >= 1 && currentStep <= 4;
 
   const handleAuthSuccess = useCallback((userId: string) => {
+    console.log("DEBUG AUTH SUCCESS userId:", userId);
     setAuthUserId(userId);
     nextStep(); // Move from SignUp (4) → Username (5)
   }, [nextStep]);
@@ -59,7 +60,7 @@ export default function OnboardingFlow() {
       case 4:
         return <SignUpScreen onAuthSuccess={handleAuthSuccess} />;
       case 5:
-        return <UsernameScreen authUserId={authUserId} onComplete={handleProfileComplete} />;
+        return <UsernameScreen onComplete={handleProfileComplete} />;
       case 6:
         return <NotificationScreen onContinue={nextStep} />;
       case 7:
