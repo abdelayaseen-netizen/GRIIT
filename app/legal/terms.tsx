@@ -11,7 +11,7 @@ const CONTENT = [
   { heading: "Intellectual Property", body: "GRIIT and its content (including design, text, and branding) are owned by us. You retain ownership of content you create; you grant us a license to use it to operate the service." },
   { heading: "Limitation of Liability", body: "GRIIT is provided as is. We do not guarantee uninterrupted or error-free service. To the extent permitted by law, we are not liable for indirect, incidental, or consequential damages." },
   { heading: "Termination", body: "We may suspend or terminate your account for violation of these terms. You may delete your account at any time from Settings." },
-  { heading: "Contact", body: "[EMAIL]" },
+  { heading: "Contact", body: "griit.health@gmail.com" },
 ];
 
 export default function TermsScreen() {

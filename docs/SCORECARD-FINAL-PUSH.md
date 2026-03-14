@@ -242,7 +242,7 @@ GRIIT is a React Native (Expo) + expo-router discipline/challenge app. "Duolingo
 
 **What works:** Identifiers and assets; legal screens and links; permission rationale; listing draft; EAS config.
 
-**What's missing:** Replace [EMAIL] in legal content; actual store screenshots and submission; TestFlight/beta run; OTA (expo-updates) if desired.
+**What's missing:** Replace griit.health@gmail.com in legal content; actual store screenshots and submission; TestFlight/beta run; OTA (expo-updates) if desired.
 
 **What's broken:** Nothing critical.
 
@@ -303,7 +303,7 @@ GRIIT is a React Native (Expo) + expo-router discipline/challenge app. "Duolingo
 | Item | Where | Instructions |
 |------|-------|-------------|
 | PostHog account | posthog.com | Sign up, create project, copy API key to .env as EXPO_PUBLIC_POSTHOG_API_KEY |
-| Privacy policy email | legal docs | Replace [EMAIL] in assets/legal/*.md and app/legal/*.tsx with real contact email |
+| Privacy policy email | legal docs | Replace griit.health@gmail.com in assets/legal/*.md and app/legal/*.tsx with real contact email |
 | App Store screenshots | Simulator / device | Take screenshots for store listing; use docs/APP-STORE-LISTING.md for copy |
 | RevenueCat free trial | RevenueCat dashboard | Add intro offer (e.g. 7-day trial) to products; app already shows "Start your 7-day free trial" when present |
 | EAS Build test | Terminal | Run `eas build --profile preview` (or production) and verify artifact |

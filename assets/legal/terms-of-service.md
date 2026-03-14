@@ -32,4 +32,4 @@ By using GRIIT you agree to these Terms of Service. If you do not agree, do not 
 - You may delete your account at any time from Settings
 
 ## Contact
-[EMAIL]
+griit.health@gmail.com

@@ -7,10 +7,10 @@ const CONTENT = [
   { heading: "Information We Collect", body: "Account information (email, username, display name); challenge activity and progress data; device information for push notifications; usage analytics (anonymized)." },
   { heading: "How We Use Your Information", body: "To provide and improve the GRIIT service; to track your challenge progress and streaks; to send push notifications you've opted into; to display leaderboards and social features." },
   { heading: "Data Storage", body: "Your data is stored securely on Supabase (cloud infrastructure). We use industry-standard encryption for data in transit." },
-  { heading: "Your Rights", body: "You can request deletion of your account and data. You can opt out of push notifications at any time. You can contact us at [EMAIL] for any privacy concerns." },
+  { heading: "Your Rights", body: "You can request deletion of your account and data. You can opt out of push notifications at any time. You can contact us at griit.health@gmail.com for any privacy concerns." },
   { heading: "Third-Party Services", body: "Supabase (database and authentication), RevenueCat (subscription management), PostHog (anonymized analytics), Expo (app infrastructure)." },
   { heading: "Changes to This Policy", body: "We may update this policy from time to time. We will notify you of significant changes." },
-  { heading: "Contact", body: "[EMAIL]" },
+  { heading: "Contact", body: "griit.health@gmail.com" },
 ];
 
 export default function PrivacyPolicyScreen() {

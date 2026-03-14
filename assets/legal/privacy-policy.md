@@ -20,7 +20,7 @@ Last updated: March 2025
 ## Your Rights
 - You can request deletion of your account and data
 - You can opt out of push notifications at any time
-- You can contact us at [EMAIL] for any privacy concerns
+- You can contact us at griit.health@gmail.com for any privacy concerns
 
 ## Third-Party Services
 - Supabase (database and authentication)
@@ -32,4 +32,4 @@ Last updated: March 2025
 We may update this policy from time to time. We will notify you of significant changes.
 
 ## Contact
-[EMAIL]
+griit.health@gmail.com
