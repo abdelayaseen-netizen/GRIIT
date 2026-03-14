@@ -109,7 +109,7 @@ export default function SuccessScreen() {
         >
           <View style={[styles.badgeOuter, isHardMode && styles.badgeOuterHard]}>
             <View style={[styles.badgeInner, isHardMode && styles.badgeInnerHard]}>
-              <Award size={48} color="#fff" />
+              <Award size={48} color={DS_COLORS.white} />
             </View>
           </View>
         </Animated.View>
@@ -119,7 +119,7 @@ export default function SuccessScreen() {
 
           {!isCreateSuccess && isHardMode && (
             <View style={styles.hardModeTag}>
-              <Shield size={14} color="#E87D4F" />
+              <Shield size={14} color={DS_COLORS.accent} />
               <Text style={styles.hardModeTagText}>Hard Mode</Text>
             </View>
           )}
@@ -172,6 +172,8 @@ export default function SuccessScreen() {
             style={[styles.primaryButton, isHardMode && styles.primaryButtonHard]}
             onPress={handleContinue}
             activeOpacity={0.85}
+            accessibilityLabel="Continue"
+            accessibilityRole="button"
           >
             <Text style={styles.primaryButtonText}>Continue</Text>
           </TouchableOpacity>
@@ -180,6 +182,8 @@ export default function SuccessScreen() {
             style={styles.secondaryButton}
             onPress={handleShare}
             activeOpacity={0.7}
+            accessibilityLabel={isCreateSuccess ? "Share challenge" : "Share completion"}
+            accessibilityRole="button"
           >
             <Share2 size={18} color={DS_COLORS.textSecondary} />
             <Text style={styles.secondaryButtonText}>{isCreateSuccess ? "Share challenge" : "Share Completion"}</Text>
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   badgeInnerHard: {
-    backgroundColor: "#E87D4F",
+    backgroundColor: DS_COLORS.accent,
   },
   textContainer: {
     width: "100%",
@@ -254,7 +258,7 @@ const styles = StyleSheet.create({
   hardModeTagText: {
     fontSize: 13,
     fontWeight: "700" as const,
-    color: "#E87D4F",
+    color: DS_COLORS.accent,
     letterSpacing: 0.3,
   },
   challengeTitle: {
@@ -266,7 +270,7 @@ const styles = StyleSheet.create({
   },
   statsCard: {
     width: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 18,
     padding: 22,
     marginBottom: 20,
@@ -317,24 +321,24 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   primaryButton: {
-    backgroundColor: "#111",
+    backgroundColor: DS_COLORS.overlayDark,
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   primaryButtonHard: {
-    backgroundColor: "#E87D4F",
+    backgroundColor: DS_COLORS.accent,
   },
   primaryButtonText: {
     fontSize: 17,
     fontWeight: "800" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
     letterSpacing: 0.3,
   },
   secondaryButton: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",

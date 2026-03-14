@@ -18,6 +18,7 @@ import { trpcMutate } from "@/lib/trpc";
 import { inviteToChallenge } from "@/lib/share";
 import { formatTRPCError } from "@/lib/api";
 import { ROUTES } from "@/lib/routes";
+import { DS_COLORS } from "@/lib/design-system";
 
 export default function CommitmentScreen() {
   const router = useRouter();
@@ -114,6 +115,8 @@ export default function CommitmentScreen() {
         style={styles.backdrop} 
         activeOpacity={1} 
         onPress={handleCancel}
+        accessibilityLabel="Dismiss"
+        accessibilityRole="button"
       />
 
       <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
@@ -133,11 +136,11 @@ export default function CommitmentScreen() {
             accessibilityLabel="Close"
             accessibilityRole="button"
           >
-            <X size={22} color="#666666" />
+            <X size={22} color={DS_COLORS.grayDark} />
           </TouchableOpacity>
 
           <View style={styles.iconContainer}>
-            <Shield size={28} color="#ED7E4C" strokeWidth={2} />
+            <Shield size={28} color={DS_COLORS.accent} strokeWidth={2} />
           </View>
 
           <Text style={styles.header}>You are committing to this challenge.</Text>
@@ -180,7 +183,7 @@ export default function CommitmentScreen() {
             accessibilityRole="button"
           >
             {joining ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={DS_COLORS.white} />
             ) : (
               <Text style={styles.confirmButtonText}>Confirm Commitment</Text>
             )}
@@ -216,7 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   content: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.white,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingHorizontal: 24,
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#EEEEEE",
+    backgroundColor: DS_COLORS.surfaceGray,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -241,14 +244,14 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: "#333333",
+    color: DS_COLORS.borderDark,
     textAlign: "center",
     marginBottom: 28,
     lineHeight: 26,
     paddingHorizontal: 8,
   },
   detailsCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 14,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -262,27 +265,27 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 16,
     fontWeight: "400" as const,
-    color: "#666666",
+    color: DS_COLORS.grayDark,
   },
   detailValue: {
     fontSize: 16,
     fontWeight: "500" as const,
-    color: "#333333",
+    color: DS_COLORS.borderDark,
     textAlign: "right",
     flex: 1,
     marginLeft: 16,
   },
   hardModeText: {
-    color: "#ED7E4C",
+    color: DS_COLORS.accent,
     fontWeight: "600" as const,
   },
   divider: {
     height: 1,
-    backgroundColor: "#DDDDDD",
+    backgroundColor: DS_COLORS.surfaceGrayDark,
     marginVertical: 16,
   },
   warningCard: {
-    backgroundColor: "#FDF0EA",
+    backgroundColor: DS_COLORS.accentSoft,
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 18,
@@ -291,12 +294,12 @@ const styles = StyleSheet.create({
   warningText: {
     fontSize: 15,
     fontWeight: "500" as const,
-    color: "#ED7E4C",
+    color: DS_COLORS.accent,
     textAlign: "center",
     lineHeight: 22,
   },
   confirmButton: {
-    backgroundColor: "#ED7E4C",
+    backgroundColor: DS_COLORS.accent,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: "center",
@@ -308,7 +311,7 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   cancelButton: {
     paddingVertical: 14,
@@ -317,14 +320,14 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: "500" as const,
-    color: "#666666",
+    color: DS_COLORS.grayDark,
   },
   bottomHandle: {
     alignSelf: "center",
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#CCCCCC",
+    backgroundColor: DS_COLORS.grayMid,
     marginTop: 16,
   },
 });

@@ -23,6 +23,7 @@ import * as Haptics from "expo-haptics";
 import { colors, spacing, radius } from "@/src/theme/tokens";
 import { setOnboardingAnswers, setPendingChallengeId, type OnboardingAnswers } from "@/lib/onboarding-pending";
 import { ROUTES } from "@/lib/routes";
+import { DS_COLORS } from "@/lib/design-system";
 
 const MAIN_GOAL_OPTIONS = [
   "Build discipline",
@@ -234,6 +235,6 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 });

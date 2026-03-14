@@ -333,7 +333,7 @@ export default function ChallengeChatScreen() {
           ) : (
             <>
               <View style={styles.composerActions}>
-                <TouchableOpacity style={styles.actionButton} onPress={handleQuickCheckIn}>
+                <TouchableOpacity style={styles.actionButton} onPress={handleQuickCheckIn} accessibilityLabel="Quick check-in" accessibilityRole="button">
                   <Check size={20} color={DS_COLORS.success} />
                 </TouchableOpacity>
               </View>
@@ -346,6 +346,7 @@ export default function ChallengeChatScreen() {
                 placeholderTextColor={DS_COLORS.textMuted}
                 multiline
                 maxLength={500}
+                accessibilityLabel="Chat message"
               />
 
               <TouchableOpacity
@@ -355,6 +356,9 @@ export default function ChallengeChatScreen() {
                 ]}
                 onPress={handleSend}
                 disabled={!composerText.trim()}
+                accessibilityLabel="Send message"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !composerText.trim() }}
               >
                 <Send
                   size={20}
@@ -550,7 +554,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 6,
     gap: 2,
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,

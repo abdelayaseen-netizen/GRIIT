@@ -13,10 +13,7 @@ import { OptionCard } from "@/components/onboarding/OptionCard";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STARTER_CHALLENGES } from "@/constants/onboardingData";
 import type { OnboardingIntensity } from "@/store/onboardingStore";
-
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
+import { DS_COLORS } from "@/lib/design-system";
 
 function filterAndSortChallenges(intensity: OnboardingIntensity) {
   const list = [...STARTER_CHALLENGES];
@@ -116,6 +113,9 @@ export default function OnboardingChallengeScreen() {
           onPress={handleLockIn}
           disabled={!selectedChallengeId || saving}
           activeOpacity={0.9}
+          accessibilityLabel={confirmed ? "Locked in" : "Lock it in"}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !selectedChallengeId || saving }}
         >
           <Text style={styles.ctaText}>
             {confirmed ? "Locked in →" : "Lock it in →"}
@@ -132,14 +132,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 34,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 24,
     marginBottom: 28,
   },
@@ -150,10 +150,10 @@ const styles = StyleSheet.create({
   savedText: {
     fontSize: 15,
     fontWeight: "700",
-    color: ACCENT,
+    color: DS_COLORS.accent,
   },
   cta: {
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 28,
     alignItems: "center",
@@ -166,6 +166,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
 });

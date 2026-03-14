@@ -67,7 +67,7 @@ export default function DayMissedScreen() {
           <AlertCircle size={48} color={DS_COLORS.textSecondary} strokeWidth={1.5} />
         </View>
 
-        <Text style={styles.header}>Day Missed.</Text>
+        <Text style={styles.header} accessibilityRole="header">Day Missed.</Text>
 
         <Text style={styles.message}>{getMessage()}</Text>
 
@@ -76,6 +76,8 @@ export default function DayMissedScreen() {
             style={styles.restartButton}
             onPress={handleRestart}
             activeOpacity={0.85}
+            accessibilityLabel="Restart challenge"
+            accessibilityRole="button"
           >
             <Text style={styles.restartButtonText}>Restart Challenge</Text>
           </TouchableOpacity>
@@ -86,6 +88,8 @@ export default function DayMissedScreen() {
             style={styles.continueButton}
             onPress={() => router.back()}
             activeOpacity={0.85}
+            accessibilityLabel="Continue"
+            accessibilityRole="button"
           >
             <Text style={styles.continueButtonText}>Continue</Text>
           </TouchableOpacity>
@@ -95,6 +99,8 @@ export default function DayMissedScreen() {
           style={styles.homeButton}
           onPress={() => router.push(ROUTES.TABS as never)}
           activeOpacity={0.7}
+          accessibilityLabel="Back to Home"
+          accessibilityRole="button"
         >
           <Text style={styles.homeButtonText}>Back to Home</Text>
         </TouchableOpacity>
@@ -141,7 +147,7 @@ const styles = StyleSheet.create({
   },
   restartButton: {
     width: "100%",
-    backgroundColor: "#111",
+    backgroundColor: DS_COLORS.overlayDark,
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: "center",
@@ -150,11 +156,11 @@ const styles = StyleSheet.create({
   restartButtonText: {
     fontSize: 17,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   continueButton: {
     width: "100%",
-    backgroundColor: "#111",
+    backgroundColor: DS_COLORS.overlayDark,
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: "center",
@@ -163,7 +169,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 17,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   homeButton: {
     paddingVertical: 14,

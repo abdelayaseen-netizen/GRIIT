@@ -15,15 +15,12 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { STARTER_CHALLENGES } from "@/constants/onboardingData";
 import { ROUTES } from "@/lib/routes";
 import { Check } from "lucide-react-native";
-
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
+import { DS_COLORS } from "@/lib/design-system";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const PARTICLE_COUNT = 35;
-const COLORS = [ACCENT, "#2F7A52", "#0EA5E9", "#8B5CF6", "#F59E0B"];
+const COLORS = [DS_COLORS.accent, DS_COLORS.success, DS_COLORS.linkBlue, DS_COLORS.taskIndigo, DS_COLORS.taskAmber];
 
 function ConfettiParticles() {
   const particles = useRef(
@@ -159,18 +156,18 @@ export default function OnboardingFirstTaskScreen() {
         {day1Tasks.map((t, i) => (
           <View key={i} style={styles.taskRow}>
             <View style={styles.checkbox}>
-              <Check size={14} color="#0A0A0A" strokeWidth={2.5} />
+              <Check size={14} color={DS_COLORS.onboardingBg} strokeWidth={2.5} />
             </View>
             <Text style={styles.taskTitle}>{t.title}</Text>
             <Text style={styles.taskTime}>{t.time}</Text>
           </View>
         ))}
 
-        <TouchableOpacity style={styles.cta} onPress={handleStartDay1} activeOpacity={0.9}>
+        <TouchableOpacity style={styles.cta} onPress={handleStartDay1} activeOpacity={0.9} accessibilityLabel="Start Day 1" accessibilityRole="button">
           <Text style={styles.ctaText}>Start Day 1 →</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondary} onPress={handleStartTomorrow} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.secondary} onPress={handleStartTomorrow} activeOpacity={0.8} accessibilityLabel="Start tomorrow instead" accessibilityRole="button">
           <Text style={styles.secondaryText}>I&apos;ll start tomorrow</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -188,18 +185,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "800",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 38,
     marginBottom: 24,
     letterSpacing: -0.5,
   },
   challengeCard: {
-    backgroundColor: "#141414",
+    backgroundColor: DS_COLORS.textPrimaryAlt,
     borderRadius: 20,
     padding: 20,
     marginBottom: 28,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: DS_COLORS.borderDark,
   },
   challengeIcon: {
     fontSize: 36,
@@ -208,18 +205,18 @@ const styles = StyleSheet.create({
   challengeLabel: {
     fontSize: 20,
     fontWeight: "700",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     marginBottom: 4,
   },
   challengeSub: {
     fontSize: 14,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 20,
   },
   tasksHeading: {
     fontSize: 14,
     fontWeight: "600",
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     marginBottom: 12,
   },
   taskRow: {
@@ -231,7 +228,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -240,14 +237,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: "600",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
   },
   taskTime: {
     fontSize: 13,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
   },
   cta: {
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 28,
     alignItems: "center",
@@ -257,7 +254,7 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
   secondary: {
     alignItems: "center",
@@ -267,6 +264,6 @@ const styles = StyleSheet.create({
   secondaryText: {
     fontSize: 15,
     fontWeight: "600",
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
   },
 });

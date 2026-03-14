@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   openChallengeBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   viewProfileBtn: {
     alignSelf: "flex-start",

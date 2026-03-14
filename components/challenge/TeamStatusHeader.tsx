@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native
 import { Users, Trophy, AlertTriangle, Play, Share2 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DS_COLORS } from "@/lib/design-system";
 
 export type RunStatus = "waiting" | "active" | "completed" | "failed";
 
@@ -59,7 +60,7 @@ export default function TeamStatusHeader({
               onPress={handleStart}
               activeOpacity={0.85}
             >
-              <Play size={16} color="#fff" />
+              <Play size={16} color={DS_COLORS.white} />
               <Text style={styles.primaryBtnText}>Start Challenge</Text>
             </TouchableOpacity>
           )}
@@ -104,10 +105,10 @@ export default function TeamStatusHeader({
 
   if (runStatus === "failed") {
     return (
-      <View style={[styles.card, styles.failed, { backgroundColor: "#FEF2F2", borderColor: "#B91C1C" }]}>
+      <View style={[styles.card, styles.failed, { backgroundColor: DS_COLORS.dangerSoft, borderColor: DS_COLORS.dangerDark }]}>
         <View style={styles.row}>
-          <AlertTriangle size={20} color="#B91C1C" />
-          <Text style={[styles.title, { color: "#B91C1C" }]}>Challenge Failed</Text>
+          <AlertTriangle size={20} color={DS_COLORS.dangerDark} />
+          <Text style={[styles.title, { color: DS_COLORS.dangerDark }]}>Challenge Failed</Text>
         </View>
         {failedReason && <Text style={styles.failedReason}>{failedReason}</Text>}
         {failedMemberName && <Text style={styles.failedMember}>{failedMemberName} didn&apos;t complete their tasks.</Text>}
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   secondaryBtn: {
     flexDirection: "row",
@@ -170,12 +171,12 @@ const styles = StyleSheet.create({
   failed: {},
   failedReason: {
     fontSize: 13,
-    color: "#B91C1C",
-    marginTop: 8,
+color: DS_COLORS.dangerDark,
+  marginTop: 8,
   },
   failedMember: {
     fontSize: 13,
-    color: "#7F1D1D",
+    color: DS_COLORS.dangerDarkest,
     marginTop: 4,
   },
 });

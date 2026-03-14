@@ -30,7 +30,7 @@ export const checkinStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#1F1F1F",
+    backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -39,7 +39,7 @@ export const checkinStyles = StyleSheet.create({
   requirementText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
     flex: 1,
   },
   statusCards: {
@@ -89,7 +89,7 @@ export const checkinStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#FEE2E2",
+    backgroundColor: DS_COLORS.dangerLightBg,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -98,7 +98,7 @@ export const checkinStyles = StyleSheet.create({
   violationText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#DC2626",
+    color: DS_COLORS.dangerMid,
     flex: 1,
   },
   sessionContainer: {
@@ -132,7 +132,7 @@ export const checkinStyles = StyleSheet.create({
   lockWarning: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: "#F59E0B",
+    color: DS_COLORS.taskAmber,
   },
   timerDisplay: {
     alignItems: "center",
@@ -157,7 +157,7 @@ export const checkinStyles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
     borderRadius: 4,
     overflow: "hidden",
   },
@@ -195,12 +195,12 @@ export const checkinStyles = StyleSheet.create({
     borderRadius: 30,
   },
   startButtonDisabled: {
-    backgroundColor: "#9CA3AF",
+    backgroundColor: DS_COLORS.silverRank,
   },
   startButtonText: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   startHint: {
     fontSize: 14,
@@ -264,18 +264,18 @@ export const checkinStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.background,
   },
   verifyButton: {
-    backgroundColor: "#1F1F1F",
+    backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 18,
     borderRadius: 14,
     alignItems: "center",
   },
   verifyButtonDisabled: {
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
   },
   verifyButtonText: {
     fontSize: 15,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
     letterSpacing: 0.5,
   },
   verifyButtonTextDisabled: {

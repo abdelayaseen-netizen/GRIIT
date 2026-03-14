@@ -2,13 +2,14 @@
  * Global design system: colors, typography, card styling, spacing.
  * Use for pixel-accurate card radius, shadows, spacing across all screens.
  */
+import { DS_COLORS } from "@/lib/design-system";
 
 export const designTokens = {
   /** Card border radius on all cards */
   cardRadius: 16,
   /** Subtle card shadow — no heavy/bubbly look */
   cardShadow: {
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -16,11 +17,11 @@ export const designTokens = {
   },
   /** Card border: 1px warm gray */
   cardBorderWidth: 1,
-  cardBorderColor: "#F0EDE8",
+  cardBorderColor: DS_COLORS.border,
   /** Header pill badges (score, streak): height and radius */
   pillHeight: 36,
   pillBorderRadius: 20,
-  pillBorderColor: "#E0DDD8",
+  pillBorderColor: DS_COLORS.chipStroke,
   /** Screen horizontal padding */
   screenPaddingH: 20,
   /** Between sections */

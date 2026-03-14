@@ -31,7 +31,6 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Celebration from "@/components/Celebration";
@@ -82,15 +81,20 @@ const MOTIVATION_QUOTES: { text: string; author: string }[] = [
 ];
 
 function SyncingBanner({ onDismiss }: { onDismiss?: () => void }) {
-  const { colors } = useTheme();
   return (
-    <View style={[syncingBannerStyles.wrap, { backgroundColor: "#FFF8E1" }]}>
-      <RefreshCw size={14} color={colors.accent} />
+    <View style={[syncingBannerStyles.wrap, { backgroundColor: DS_COLORS.warningSoft }]}>
+      <RefreshCw size={14} color={DS_COLORS.accent} />
       <Text style={[syncingBannerStyles.text, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>
         Syncing... we{"'"}ll update when you{"'"}re back online.
       </Text>
       {onDismiss && (
-        <TouchableOpacity onPress={onDismiss} hitSlop={12} style={syncingBannerStyles.dismiss}>
+        <TouchableOpacity
+          onPress={onDismiss}
+          hitSlop={12}
+          style={syncingBannerStyles.dismiss}
+          accessibilityLabel="Dismiss syncing banner"
+          accessibilityRole="button"
+        >
           <Text style={syncingBannerStyles.dismissText}>×</Text>
         </TouchableOpacity>
       )}
@@ -100,8 +104,7 @@ function SyncingBanner({ onDismiss }: { onDismiss?: () => void }) {
 
 function AnimatedProgressBar({ progress, color, trackBg }: { progress: number; color: string; trackBg?: string }) {
   const widthAnim = useRef(new Animated.Value(0)).current;
-  const { colors } = useTheme();
-  const bg = trackBg ?? colors.pill;
+  const bg = trackBg ?? DS_COLORS.chipFill;
 
   useEffect(() => {
     Animated.timing(widthAnim, {
@@ -132,7 +135,6 @@ function TaskRow({
   completed: boolean;
   index: number;
 }) {
-  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const checkAnim = useRef(new Animated.Value(completed ? 1 : 0)).current;
   const rowScale = useRef(new Animated.Value(1)).current;
@@ -194,23 +196,23 @@ function TaskRow({
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: colors.streak.shield, opacity: pulseOpacity, borderRadius: 10 },
+          { backgroundColor: DS_COLORS.success, opacity: pulseOpacity, borderRadius: 10 },
         ]}
         pointerEvents="none"
       />
       <Animated.View style={{ transform: [{ scale: checkScale }] }}>
         <CheckCircle2
           size={20}
-          color={completed ? colors.streak.shield : colors.border}
-          fill={completed ? colors.streak.shield : "transparent"}
+          color={completed ? DS_COLORS.success : DS_COLORS.border}
+          fill={completed ? DS_COLORS.success : "transparent"}
           strokeWidth={completed ? 0 : 1.5}
         />
       </Animated.View>
       <Text
         style={[
           taskStyles.title,
-          { color: colors.text.primary },
-          completed && { color: colors.text.tertiary },
+          { color: DS_COLORS.textPrimary },
+          completed && { color: DS_COLORS.textMuted },
         ]}
         numberOfLines={1}
       >
@@ -232,7 +234,6 @@ export default function HomeScreen() {
     () => MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)],
     []
   );
-  const { colors: themeColors } = useTheme();
   const {
     activeChallenge,
     challenge,
@@ -424,10 +425,10 @@ export default function HomeScreen() {
   }, [challenge?.challenge_tasks, todayCheckins]);
 
   const progressColor = daySecured
-    ? themeColors.streak.shield
+    ? DS_COLORS.success
     : computeProgress.progress >= 50
-    ? themeColors.accent
-    : themeColors.text.muted;
+    ? DS_COLORS.accent
+    : DS_COLORS.textMuted;
 
   useEffect(() => {
     if (showComebackMode) {
@@ -532,66 +533,80 @@ export default function HomeScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
-            <Text style={styles.heroEmoji}>🔥</Text>
-            <Text style={[styles.heroTitle, { color: themeColors.text.primary }]}>Your discipline journey{'\n'}starts here.</Text>
-            <Text style={[styles.heroSubtitle, { color: themeColors.text.secondary }]}>
+            <Text style={styles.heroEmoji} accessibilityRole="header">🔥</Text>
+            <Text style={[styles.heroTitle, { color: DS_COLORS.textPrimary }]}>Your discipline journey{'\n'}starts here.</Text>
+            <Text style={[styles.heroSubtitle, { color: DS_COLORS.textSecondary }]}>
               Join thousands building better habits.{'\n'}
               One day at a time. No excuses.
             </Text>
-            <TouchableOpacity style={[styles.heroCTA, { backgroundColor: themeColors.accent ?? "#E8734A" }]} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} activeOpacity={0.85}>
+            <TouchableOpacity
+              style={[styles.heroCTA, { backgroundColor: DS_COLORS.accent }]}
+              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              activeOpacity={0.85}
+              accessibilityLabel="Explore challenges"
+              accessibilityRole="button"
+            >
               <Text style={styles.heroCTAText}>Explore challenges</Text>
             </TouchableOpacity>
           </View>
-          <View style={[styles.motivationCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-            <Text style={[styles.motivationQuote, { color: themeColors.text.secondary }]}>
+          <View style={[styles.motivationCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+            <Text style={[styles.motivationQuote, { color: DS_COLORS.textSecondary }]}>
               {`"${guestQuote.text}"`}
             </Text>
-            <Text style={[styles.motivationAuthor, { color: themeColors.text.muted }]}>{guestQuote.author}</Text>
+            <Text style={[styles.motivationAuthor, { color: DS_COLORS.textMuted }]}>{guestQuote.author}</Text>
           </View>
           <View style={styles.howItWorks}>
-            <Text style={[styles.guestSectionTitle, { color: themeColors.text.primary }]}>How GRIIT works</Text>
+            <Text style={[styles.guestSectionTitle, { color: DS_COLORS.textPrimary }]}>How GRIIT works</Text>
             <View style={styles.stepRow}>
               <Text style={styles.stepEmoji}>🎯</Text>
               <View style={styles.stepContent}>
-                <Text style={[styles.stepTitle, { color: themeColors.text.primary }]}>Pick a challenge</Text>
-                <Text style={[styles.stepDesc, { color: themeColors.text.secondary }]}>Choose from 7-day sprints to 75-day transformations</Text>
+                <Text style={[styles.stepTitle, { color: DS_COLORS.textPrimary }]}>Pick a challenge</Text>
+                <Text style={[styles.stepDesc, { color: DS_COLORS.textSecondary }]}>Choose from 7-day sprints to 75-day transformations</Text>
               </View>
             </View>
             <View style={styles.stepRow}>
               <Text style={styles.stepEmoji}>✅</Text>
               <View style={styles.stepContent}>
-                <Text style={[styles.stepTitle, { color: themeColors.text.primary }]}>Complete daily tasks</Text>
-                <Text style={[styles.stepDesc, { color: themeColors.text.secondary }]}>Workouts, journaling, cold showers — you decide</Text>
+                <Text style={[styles.stepTitle, { color: DS_COLORS.textPrimary }]}>Complete daily tasks</Text>
+                <Text style={[styles.stepDesc, { color: DS_COLORS.textSecondary }]}>Workouts, journaling, cold showers — you decide</Text>
               </View>
             </View>
             <View style={styles.stepRow}>
               <Text style={styles.stepEmoji}>🔒</Text>
               <View style={styles.stepContent}>
-                <Text style={[styles.stepTitle, { color: themeColors.text.primary }]}>Secure your day</Text>
-                <Text style={[styles.stepDesc, { color: themeColors.text.secondary }]}>Lock in your progress. Build your streak. Earn your rank.</Text>
+                <Text style={[styles.stepTitle, { color: DS_COLORS.textPrimary }]}>Secure your day</Text>
+                <Text style={[styles.stepDesc, { color: DS_COLORS.textSecondary }]}>Lock in your progress. Build your streak. Earn your rank.</Text>
               </View>
             </View>
           </View>
           <View style={styles.guestFeaturedSection}>
-            <Text style={[styles.guestSectionTitle, { color: themeColors.text.primary }]}>Popular challenges</Text>
+            <Text style={[styles.guestSectionTitle, { color: DS_COLORS.textPrimary }]}>Popular challenges</Text>
             {(guestFeatured as { id: string; title?: string; short_hook?: string }[]).map((challenge) => (
               <TouchableOpacity
                 key={challenge.id}
                 style={[styles.guestChallengeCard, styles.yourPositionCard]}
                 onPress={() => router.push(ROUTES.CHALLENGE_ID(challenge.id) as never)}
                 activeOpacity={0.8}
+                accessibilityLabel={`Open challenge: ${challenge.title ?? "Challenge"}`}
+                accessibilityRole="button"
               >
-                <Text style={[styles.guestChallengeTitle, { color: themeColors.text.primary }]} numberOfLines={1}>{challenge.title ?? "Challenge"}</Text>
-                {challenge.short_hook ? <Text style={[styles.guestChallengeHook, { color: themeColors.text.secondary }]} numberOfLines={1}>{challenge.short_hook}</Text> : null}
-                <ChevronRight size={18} color={themeColors.text.muted} style={{ position: "absolute", right: 12, top: 18 }} />
+                <Text style={[styles.guestChallengeTitle, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{challenge.title ?? "Challenge"}</Text>
+                {challenge.short_hook ? <Text style={[styles.guestChallengeHook, { color: DS_COLORS.textSecondary }]} numberOfLines={1}>{challenge.short_hook}</Text> : null}
+                <ChevronRight size={18} color={DS_COLORS.textMuted} style={{ position: "absolute", right: 12, top: 18 }} />
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.seeAllButton} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} activeOpacity={0.8}>
-              <Text style={[styles.seeAllText, { color: themeColors.accent }]}>See all challenges →</Text>
+            <TouchableOpacity
+              style={styles.seeAllButton}
+              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              activeOpacity={0.8}
+              accessibilityLabel="See all challenges"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.seeAllText, { color: DS_COLORS.accent }]}>See all challenges →</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.socialProof}>
-            <Text style={[styles.socialProofText, { color: themeColors.text.secondary }]}>🔥 Join the movement. Every day counts.</Text>
+            <Text style={[styles.socialProofText, { color: DS_COLORS.textSecondary }]}>🔥 Join the movement. Every day counts.</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -623,7 +638,7 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={onRefresh}
-            tintColor={themeColors.accent}
+            tintColor={DS_COLORS.accent}
           />
         }
       >
@@ -633,11 +648,13 @@ export default function HomeScreen() {
 
         {showFirstSessionBanner && (
           <TouchableOpacity
-            style={[styles.firstSessionBanner, { backgroundColor: themeColors.accentLight, borderColor: themeColors.accent + "40" }]}
+            style={[styles.firstSessionBanner, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.border }]}
             onPress={() => setShowFirstSessionBanner(false)}
             activeOpacity={0.9}
+            accessibilityLabel="Dismiss welcome banner"
+            accessibilityRole="button"
           >
-            <Text style={[styles.firstSessionBannerText, { color: themeColors.text.primary }]}>
+            <Text style={[styles.firstSessionBannerText, { color: DS_COLORS.textPrimary }]}>
               Welcome to GRIIT. Your first win is in the books. 🔥
             </Text>
           </TouchableOpacity>
@@ -647,21 +664,21 @@ export default function HomeScreen() {
           <GRIITWordmark compact />
           <View style={styles.headerBadges}>
             <View style={styles.headerBadge} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
-              <TrendingUp size={14} color="#FFFFFF" />
+              <TrendingUp size={14} color={DS_COLORS.white} />
               <Text style={styles.headerBadgeText}>{stats?.longestStreak ?? 0}</Text>
             </View>
             <View style={styles.headerBadge} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
-              <Flame size={14} color="#FFFFFF" />
+              <Flame size={14} color={DS_COLORS.white} />
               <Text style={styles.headerBadgeText}>{currentStreak}</Text>
             </View>
           </View>
         </View>
 
         {showRecoveryBanner && (
-          <View style={[styles.recoveryBanner, { backgroundColor: themeColors.warningLight, borderColor: themeColors.warning + "40" }]}>
-            <AlertTriangle size={18} color={themeColors.warning ?? themeColors.accent} />
+          <View style={[styles.recoveryBanner, { backgroundColor: DS_COLORS.warningSoft, borderColor: DS_COLORS.border }]}>
+            <AlertTriangle size={18} color={DS_COLORS.warning} />
             <View style={styles.recoveryBannerTextWrap}>
-              <Text style={[styles.recoveryBannerTitle, { color: themeColors.text.primary }]}>
+              <Text style={[styles.recoveryBannerTitle, { color: DS_COLORS.textPrimary }]}>
                 {showRestartMode
                   ? "Welcome back. Start fresh today."
                   : showComebackMode
@@ -669,17 +686,19 @@ export default function HomeScreen() {
                   : "You missed yesterday. Secure today to stay in the game."}
               </Text>
               {showRecoveryBanner && lastStandsAvailable >= 0 && (
-                <Text style={[styles.recoveryBannerSub, { color: themeColors.text.secondary }]}>
+                <Text style={[styles.recoveryBannerSub, { color: DS_COLORS.textSecondary }]}>
                   Last Stands remaining: {lastStandsAvailable}
                 </Text>
               )}
               {canUseFreeze && (
                 <TouchableOpacity
-                  style={[styles.freezeCta, { backgroundColor: themeColors.accent }]}
+                  style={[styles.freezeCta, { backgroundColor: DS_COLORS.accent }]}
                   onPress={() => setShowFreezeModal(true)}
                   activeOpacity={0.8}
+                  accessibilityLabel="Use streak freeze"
+                  accessibilityRole="button"
                 >
-                  <Text style={[styles.freezeCtaText, { color: "#FFF" }]}>Use streak freeze</Text>
+                  <Text style={[styles.freezeCtaText, { color: DS_COLORS.white }]}>Use streak freeze</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -688,8 +707,8 @@ export default function HomeScreen() {
 
         {!isGuest && hasActiveChallenge && !isDaySecured && (
           <View style={styles.mainPromptBlock}>
-            <Text style={[styles.secureTodayTitle, { color: themeColors.text.primary }]}>Secure today to protect your streak.</Text>
-            <Text style={[styles.secureTodaySub, { color: themeColors.text.muted }]}>
+            <Text style={[styles.secureTodayTitle, { color: DS_COLORS.textPrimary }]} accessibilityRole="header">Secure today to protect your streak.</Text>
+            <Text style={[styles.secureTodaySub, { color: DS_COLORS.textMuted }]}>
               {(() => {
                 const ac = activeChallenge as { ends_at?: string } | undefined;
                 if (ac?.ends_at) return `${formatTimeRemaining(ac.ends_at)} remaining.`;
@@ -700,14 +719,14 @@ export default function HomeScreen() {
             <View style={styles.metricsCard}>
               {nextTierName != null && pointsToNextTier > 0 && (
                 <View style={styles.metricsRow}>
-                  <Flame size={18} color={themeColors.text.secondary} />
-                  <Text style={[styles.metricsText, { color: themeColors.text.secondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
+                  <Flame size={18} color={DS_COLORS.textSecondary} />
+                  <Text style={[styles.metricsText, { color: DS_COLORS.textSecondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
                 </View>
               )}
               {leaderboardData != null && (
                 <View style={styles.metricsRow}>
-                  <Users size={18} color={themeColors.text.secondary} />
-                  <Text style={[styles.metricsText, { color: themeColors.text.secondary }]}>
+                  <Users size={18} color={DS_COLORS.textSecondary} />
+                  <Text style={[styles.metricsText, { color: DS_COLORS.textSecondary }]}>
                     {leaderboardData.totalSecuredToday} friends secured today
                   </Text>
                 </View>
@@ -728,17 +747,17 @@ export default function HomeScreen() {
             <ExploreChallengesButton />
             {homeDataError ? (
               <View style={styles.yourPositionCard}>
-                <AlertTriangle size={28} color={themeColors.text.muted} />
-                <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>CHALLENGES</Text>
-                <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
+                <AlertTriangle size={28} color={DS_COLORS.textMuted} />
+                <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>CHALLENGES</Text>
+                <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
                 <TouchableOpacity
-                  style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
+                  style={[styles.secureNowButton, { backgroundColor: DS_COLORS.accent }]}
                   onPress={() => homeActiveQuery.refetch()}
                   activeOpacity={0.85}
-                  accessibilityLabel="Retry loading"
+                  accessibilityLabel="Retry loading challenges"
                   accessibilityRole="button"
                 >
-                  <RefreshCw size={18} color="#fff" />
+                  <RefreshCw size={18} color={DS_COLORS.white} />
                   <Text style={styles.secureNowButtonText}>Retry</Text>
                 </TouchableOpacity>
               </View>
@@ -751,9 +770,9 @@ export default function HomeScreen() {
             {hasActiveChallenge && tasks.length > 0 && (
               <View style={styles.todaysResetCard}>
                 <View style={styles.todaysResetHeader}>
-                  <Clock size={18} color={themeColors.text.primary} />
-                  <Text style={[styles.todaysResetTitle, { color: themeColors.text.primary }]}>Today&apos;s Reset</Text>
-                  <Text style={[styles.todaysResetTime, { color: themeColors.text.muted }]}>
+                  <Clock size={18} color={DS_COLORS.textPrimary} />
+                  <Text style={[styles.todaysResetTitle, { color: DS_COLORS.textPrimary }]}>Today&apos;s Reset</Text>
+                  <Text style={[styles.todaysResetTime, { color: DS_COLORS.textMuted }]}>
                     {(() => {
                       const ac = activeChallenge as { ends_at?: string } | undefined;
                       if (ac?.ends_at) return formatTimeRemaining(ac.ends_at) + " left";
@@ -762,12 +781,12 @@ export default function HomeScreen() {
                     })()}
                   </Text>
                 </View>
-                <View style={[styles.todaysResetDivider, { backgroundColor: themeColors.border }]} />
+                <View style={[styles.todaysResetDivider, { backgroundColor: DS_COLORS.border }]} />
                 <View style={styles.todaysResetTaskList}>
                   {tasks.map((task) => (
                     <View key={task.id} style={styles.todaysResetTaskRow}>
-                      <Circle size={18} color={themeColors.border} strokeWidth={2} />
-                      <Text style={[styles.todaysResetTaskText, { color: themeColors.text.primary }, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
+                      <Circle size={18} color={DS_COLORS.border} strokeWidth={2} />
+                      <Text style={[styles.todaysResetTaskText, { color: DS_COLORS.textPrimary }, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
                     </View>
                   ))}
                 </View>
@@ -801,14 +820,14 @@ export default function HomeScreen() {
 
         {!isGuest && (
           <View style={styles.disciplineWeekCard}>
-            <View style={[styles.disciplineWeekIconWrap, { backgroundColor: themeColors.successLight }]}>
-              <TrendingUp size={20} color={themeColors.success} />
+            <View style={[styles.disciplineWeekIconWrap, { backgroundColor: DS_COLORS.successSoft }]}>
+              <TrendingUp size={20} color={DS_COLORS.success} />
             </View>
             <View style={styles.disciplineWeekBody}>
-              <Text style={[styles.disciplineWeekTitle, { color: themeColors.text.primary }]}>
-                <Text style={[styles.disciplineWeekNum, { color: themeColors.success }]}>+{stats?.longestStreak ?? 0}</Text> Discipline this week
+              <Text style={[styles.disciplineWeekTitle, { color: DS_COLORS.textPrimary }]}>
+                <Text style={[styles.disciplineWeekNum, { color: DS_COLORS.success }]}>+{stats?.longestStreak ?? 0}</Text> Discipline this week
               </Text>
-              <Text style={[styles.disciplineWeekSub, { color: themeColors.success }]}>+100% from last week</Text>
+              <Text style={[styles.disciplineWeekSub, { color: DS_COLORS.success }]}>+100% from last week</Text>
             </View>
           </View>
         )}
@@ -945,35 +964,35 @@ export default function HomeScreen() {
             )}
 
             {daySecured && (
-              <View style={[styles.securedBanner, { backgroundColor: themeColors.successLight }]}>
-                <CheckCircle2 size={16} color={themeColors.streak.shield} fill={themeColors.streak.shield} strokeWidth={0} />
-                <Text style={[styles.securedText, { color: themeColors.text.primary }]}>Day {(activeChallenge as { current_day?: number })?.current_day ?? 1} Secured</Text>
+              <View style={[styles.securedBanner, { backgroundColor: DS_COLORS.successSoft }]}>
+                <CheckCircle2 size={16} color={DS_COLORS.success} fill={DS_COLORS.success} strokeWidth={0} />
+                <Text style={[styles.securedText, { color: DS_COLORS.textPrimary }]}>Day {(activeChallenge as { current_day?: number })?.current_day ?? 1} Secured</Text>
               </View>
             )}
           </View>
         ) : (
           <View style={[styles.welcomeBackCard, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.accent }]}>
-            <RefreshCw size={28} color={themeColors.accent} />
-            <Text style={[styles.welcomeBackTitle, { color: themeColors.text.primary }]}>
+            <RefreshCw size={28} color={DS_COLORS.accent} />
+            <Text style={[styles.welcomeBackTitle, { color: DS_COLORS.textPrimary }]}>
               {isFirstTimeUser ? "Start your first challenge." : "Ready to restart?"}
             </Text>
-            <Text style={[styles.welcomeBackSub, { color: themeColors.text.secondary }]}>
+            <Text style={[styles.welcomeBackSub, { color: DS_COLORS.textSecondary }]}>
               {isFirstTimeUser
                 ? "Pick a challenge, commit, and secure your first day."
                 : "Your progress is saved. Pick up where you left off."}
             </Text>
             <TouchableOpacity
-              style={[styles.pickChallengeButton, isFirstTimeUser ? { backgroundColor: themeColors.accent } : styles.pickChallengeButtonOutlined, isFirstTimeUser ? undefined : { borderColor: themeColors.border }]}
+              style={[styles.pickChallengeButton, isFirstTimeUser ? { backgroundColor: DS_COLORS.accent } : styles.pickChallengeButtonOutlined, isFirstTimeUser ? undefined : { borderColor: DS_COLORS.border }]}
               onPress={() => {
                 if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never));
               }}
               activeOpacity={0.85}
               testID="discover-cta"
-              accessibilityLabel="Pick a challenge"
+              accessibilityLabel={isFirstTimeUser ? "Find a challenge" : "Pick a challenge"}
               accessibilityRole="button"
             >
-              <Text style={[styles.pickChallengeButtonText, isFirstTimeUser ? undefined : { color: themeColors.text.primary }]}>
+              <Text style={[styles.pickChallengeButtonText, isFirstTimeUser ? undefined : { color: DS_COLORS.textPrimary }]}>
                 {isFirstTimeUser ? "Find a challenge" : "Pick a Challenge"}
               </Text>
             </TouchableOpacity>
@@ -986,35 +1005,37 @@ export default function HomeScreen() {
             {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string }) => (
               <TouchableOpacity
                 key={c.id}
-                style={[styles.suggestedChallengeRow, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                style={[styles.suggestedChallengeRow, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
                 onPress={() => {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   requireAuth("join", () => router.push(ROUTES.CHALLENGE_ID(c.id) as never));
                 }}
                 activeOpacity={0.85}
+                accessibilityLabel={`Open challenge: ${c.title ?? "Challenge"}`}
+                accessibilityRole="button"
               >
-                <Text style={[styles.suggestedChallengeTitle, { color: themeColors.text.primary }]} numberOfLines={1}>{c.title ?? "Challenge"}</Text>
-                <ChevronRight size={18} color={themeColors.text.muted} />
+                <Text style={[styles.suggestedChallengeTitle, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{c.title ?? "Challenge"}</Text>
+                <ChevronRight size={18} color={DS_COLORS.textMuted} />
               </TouchableOpacity>
             ))}
           </View>
         )}
 
         <View style={styles.liveSectionHeader}>
-          <View style={[styles.liveDot, { backgroundColor: themeColors.danger }]} />
-          <Text style={[styles.liveTitle, { color: themeColors.text.primary }]}>LIVE</Text>
-          <Text style={[styles.liveSubItalic, { color: themeColors.text.muted }]}>People are moving</Text>
+          <View style={[styles.liveDot, { backgroundColor: DS_COLORS.danger }]} />
+          <Text style={[styles.liveTitle, { color: DS_COLORS.textPrimary }]}>LIVE</Text>
+          <Text style={[styles.liveSubItalic, { color: DS_COLORS.textMuted }]}>People are moving</Text>
         </View>
 
         {!isGuest && leaderboardData?.currentUserRank != null && (
-          <View style={[styles.yourPositionInFeedCard, { backgroundColor: themeColors.accentLight, borderColor: themeColors.accent }]}>
-            <Target size={28} color={themeColors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>YOUR POSITION</Text>
-            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>
+          <View style={[styles.yourPositionInFeedCard, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.accent }]}>
+            <Target size={28} color={DS_COLORS.accent} />
+            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>YOUR POSITION</Text>
+            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>
               You are ranked <Text style={styles.feedBold}>#{leaderboardData.currentUserRank}</Text> among friends this week.
             </Text>
-            <Text style={[styles.yourPositionSub, { color: themeColors.text.secondary }]}>
-              You&apos;re <Text style={[styles.feedBold, { color: themeColors.accent }]}>{Math.max(0, (stats?.longestStreak ?? 0) - currentStreak)} days</Text> away from your best streak.
+            <Text style={[styles.yourPositionSub, { color: DS_COLORS.textSecondary }]}>
+              You&apos;re <Text style={[styles.feedBold, { color: DS_COLORS.accent }]}>{Math.max(0, (stats?.longestStreak ?? 0) - currentStreak)} days</Text> away from your best streak.
             </Text>
           </View>
         )}
@@ -1023,10 +1044,10 @@ export default function HomeScreen() {
           if (liveFeedItems.length === 0 && !liveFeedQuery.isLoading) {
             return (
               <>
-                <View style={[styles.liveFeedEmpty, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-                  <Users size={32} color={themeColors.text.muted} style={{ marginBottom: 8 }} />
-                  <Text style={[styles.liveFeedEmptyTitle, { color: themeColors.text.primary }]}>No activity yet</Text>
-                  <Text style={[styles.liveFeedEmptySub, { color: themeColors.text.muted }]}>Join a challenge to see the community in action.</Text>
+                <View style={[styles.liveFeedEmpty, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+                  <Users size={32} color={DS_COLORS.textMuted} style={{ marginBottom: 8 }} />
+                  <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>No activity yet</Text>
+                  <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Join a challenge to see the community in action.</Text>
                 </View>
                 {!isGuest && leaderboardEntries.length > 0 && (
                   <SuggestedFollows
@@ -1051,8 +1072,8 @@ export default function HomeScreen() {
           }
           if (liveFeedQuery.isLoading) {
             return (
-              <View style={[styles.liveFeedEmpty, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-                <Text style={[styles.liveFeedEmptySub, { color: themeColors.text.muted }]}>Loading activity…</Text>
+              <View style={[styles.liveFeedEmpty, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+                <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Loading activity…</Text>
               </View>
             );
           }
@@ -1061,38 +1082,38 @@ export default function HomeScreen() {
 
         {!isGuest && leaderboardError ? (
           <View style={styles.yourPositionCard}>
-            <AlertTriangle size={28} color={themeColors.text.muted} />
-            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>LEADERBOARD</Text>
-            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
+            <AlertTriangle size={28} color={DS_COLORS.textMuted} />
+            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
+            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
             <TouchableOpacity
-              style={[styles.secureNowButton, { backgroundColor: themeColors.accent }]}
+              style={[styles.secureNowButton, { backgroundColor: DS_COLORS.accent }]}
               onPress={() => leaderboardQuery.refetch()}
               activeOpacity={0.85}
-              accessibilityLabel="Retry loading"
+              accessibilityLabel="Retry loading leaderboard"
               accessibilityRole="button"
             >
-              <RefreshCw size={18} color="#fff" />
+              <RefreshCw size={18} color={DS_COLORS.white} />
               <Text style={styles.secureNowButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>
         ) : !isGuest && leaderboardLoading && leaderboardData == null ? (
           <View style={styles.yourPositionCard}>
-            <ActivityIndicator size="small" color={themeColors.accent} style={{ marginVertical: 8 }} />
-            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Loading leaderboard…</Text>
+            <ActivityIndicator size="small" color={DS_COLORS.accent} style={{ marginVertical: 8 }} />
+            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Loading leaderboard…</Text>
           </View>
         ) : leaderboardData?.currentUserRank != null ? (
           <View style={styles.yourPositionCard}>
-            <Target size={28} color={themeColors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>YOUR STATUS</Text>
-            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>You&apos;re ranked #{leaderboardData.currentUserRank} among friends this week.</Text>
+            <Target size={28} color={DS_COLORS.accent} />
+            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>YOUR STATUS</Text>
+            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>You&apos;re ranked #{leaderboardData.currentUserRank} among friends this week.</Text>
             <TouchableOpacity
-              style={[styles.secureNowButton, { backgroundColor: themeColors.success }]}
+              style={[styles.secureNowButton, { backgroundColor: DS_COLORS.success }]}
               onPress={() => requireAuth("secure", () => router.push(ROUTES.TABS_DISCOVER as never))}
               activeOpacity={0.85}
               accessibilityLabel="Secure your day"
               accessibilityRole="button"
             >
-              <Shield size={18} color="#fff" />
+              <Shield size={18} color={DS_COLORS.white} />
               <Text style={styles.secureNowButtonText}>Secure Now</Text>
             </TouchableOpacity>
           </View>
@@ -1104,9 +1125,9 @@ export default function HomeScreen() {
             accessibilityLabel="View activity"
             accessibilityRole="button"
           >
-            <Target size={28} color={themeColors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: themeColors.text.muted }]}>LEADERBOARD</Text>
-            <Text style={[styles.yourPositionText, { color: themeColors.text.primary }]}>Be the first this week.</Text>
+            <Target size={28} color={DS_COLORS.accent} />
+            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
+            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Be the first this week.</Text>
             <Text style={styles.secureNowButtonText}>View Activity</Text>
           </TouchableOpacity>
         )}
@@ -1120,13 +1141,19 @@ export default function HomeScreen() {
         const subtitle = milestoneConfig?.subtitle ?? "You are building discipline.";
         return (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => setShowMilestone(null)} />
+          <TouchableOpacity
+            style={[styles.freezeModalBackdrop, { backgroundColor: DS_COLORS.modalBackdrop }]}
+            activeOpacity={1}
+            onPress={() => setShowMilestone(null)}
+            accessibilityLabel="Dismiss milestone"
+            accessibilityRole="button"
+          />
           <View style={styles.freezeModalCenter}>
-            <View style={[styles.freezeModalCard, { backgroundColor: themeColors.card }]}>
-              <Text style={[styles.freezeModalTitle, { color: themeColors.text.primary }]}>{title}</Text>
-              <Text style={[styles.freezeModalSub, { color: themeColors.text.secondary }]}>{subtitle}</Text>
+            <View style={[styles.freezeModalCard, { backgroundColor: DS_COLORS.card }]}>
+              <Text style={[styles.freezeModalTitle, { color: DS_COLORS.textPrimary }]}>{title}</Text>
+              <Text style={[styles.freezeModalSub, { color: DS_COLORS.textSecondary }]}>{subtitle}</Text>
               <TouchableOpacity
-                style={[styles.freezeModalConfirm, { marginBottom: 8, backgroundColor: themeColors.accent }]}
+                style={[styles.freezeModalConfirm, { marginBottom: 8, backgroundColor: DS_COLORS.accent }]}
                 onPress={async () => {
                   track({ name: "invite_shared", source: "milestone_modal" });
                   try {
@@ -1141,15 +1168,19 @@ export default function HomeScreen() {
                   setShowMilestone(null);
                 }}
                 activeOpacity={0.85}
+                accessibilityLabel="Share milestone"
+                accessibilityRole="button"
               >
                 <Text style={styles.freezeModalConfirmText}>Share</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.freezeModalCancel, { borderColor: themeColors.border }]}
+                style={[styles.freezeModalCancel, { borderColor: DS_COLORS.border }]}
                 onPress={() => setShowMilestone(null)}
                 activeOpacity={0.85}
+                accessibilityLabel="Dismiss"
+                accessibilityRole="button"
               >
-                <Text style={[styles.freezeModalCancelText, { color: themeColors.text.primary }]}>Got it</Text>
+                <Text style={[styles.freezeModalCancelText, { color: DS_COLORS.textPrimary }]}>Got it</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1159,15 +1190,21 @@ export default function HomeScreen() {
 
       {showFreezeModal && (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => !freezeSubmitting && setShowFreezeModal(false)} />
+          <TouchableOpacity
+            style={[styles.freezeModalBackdrop, { backgroundColor: DS_COLORS.modalBackdrop }]}
+            activeOpacity={1}
+            onPress={() => !freezeSubmitting && setShowFreezeModal(false)}
+            accessibilityLabel="Dismiss"
+            accessibilityRole="button"
+          />
           <View style={styles.freezeModalCenter}>
-            <View style={[styles.freezeModalCard, { backgroundColor: themeColors.card }]}>
-              <Text style={[styles.freezeModalTitle, { color: themeColors.text.primary }]}>Use your streak freeze?</Text>
-              <Text style={[styles.freezeModalSub, { color: themeColors.text.secondary }]}>
+            <View style={[styles.freezeModalCard, { backgroundColor: DS_COLORS.card }]}>
+              <Text style={[styles.freezeModalTitle, { color: DS_COLORS.textPrimary }]}>Use your streak freeze?</Text>
+              <Text style={[styles.freezeModalSub, { color: DS_COLORS.textSecondary }]}>
                 This will save your streak. You get 1 free freeze per month.{freezesRemaining !== undefined && freezesRemaining >= 0 ? ` (${freezesRemaining} left this month)` : ""}
               </Text>
               <TouchableOpacity
-                style={[styles.freezeModalConfirm, { backgroundColor: themeColors.accent }, freezeSubmitting && styles.freezeModalConfirmDisabled]}
+                style={[styles.freezeModalConfirm, { backgroundColor: DS_COLORS.accent }, freezeSubmitting && styles.freezeModalConfirmDisabled]}
                 disabled={freezeSubmitting}
                 onPress={async () => {
                   track({ name: "streak_freeze_used" });
@@ -1183,11 +1220,22 @@ export default function HomeScreen() {
                   }
                 }}
                 activeOpacity={0.85}
+                accessibilityLabel="Use streak freeze"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: freezeSubmitting }}
               >
                 <Text style={styles.freezeModalConfirmText}>{freezeSubmitting ? "..." : "Use freeze"}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.freezeModalCancel, { borderColor: themeColors.border }]} onPress={() => setShowFreezeModal(false)} disabled={freezeSubmitting} activeOpacity={0.8}>
-                <Text style={[styles.freezeModalCancelText, { color: themeColors.text.primary }]}>Cancel</Text>
+              <TouchableOpacity
+                style={[styles.freezeModalCancel, { borderColor: DS_COLORS.border }]}
+                onPress={() => setShowFreezeModal(false)}
+                disabled={freezeSubmitting}
+                activeOpacity={0.8}
+                accessibilityLabel="Cancel"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: freezeSubmitting }}
+              >
+                <Text style={[styles.freezeModalCancelText, { color: DS_COLORS.textPrimary }]}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1196,15 +1244,23 @@ export default function HomeScreen() {
 
       {showLastStandUsedModal && (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => setShowLastStandUsedModal(false)} />
+          <TouchableOpacity
+            style={[styles.freezeModalBackdrop, { backgroundColor: DS_COLORS.modalBackdrop }]}
+            activeOpacity={1}
+            onPress={() => setShowLastStandUsedModal(false)}
+            accessibilityLabel="Dismiss"
+            accessibilityRole="button"
+          />
           <View style={styles.freezeModalCenter}>
-            <View style={[styles.freezeModalCard, { backgroundColor: themeColors.card }]}>
-              <Text style={[styles.freezeModalTitle, { color: themeColors.text.primary }]}>Last Stand used.</Text>
-              <Text style={[styles.freezeModalSub, { color: themeColors.text.secondary }]}>Streak preserved.</Text>
+            <View style={[styles.freezeModalCard, { backgroundColor: DS_COLORS.card }]}>
+              <Text style={[styles.freezeModalTitle, { color: DS_COLORS.textPrimary }]}>Last Stand used.</Text>
+              <Text style={[styles.freezeModalSub, { color: DS_COLORS.textSecondary }]}>Streak preserved.</Text>
               <TouchableOpacity
-                style={[styles.freezeModalConfirm, { backgroundColor: themeColors.accent }]}
+                style={[styles.freezeModalConfirm, { backgroundColor: DS_COLORS.accent }]}
                 onPress={() => setShowLastStandUsedModal(false)}
                 activeOpacity={0.85}
+                accessibilityLabel="Dismiss"
+                accessibilityRole="button"
               >
                 <Text style={styles.freezeModalConfirmText}>Got it</Text>
               </TouchableOpacity>
@@ -1215,10 +1271,22 @@ export default function HomeScreen() {
 
       {showStreakLostModal && (
         <Modal visible transparent animationType="fade">
-          <TouchableOpacity style={[styles.freezeModalBackdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]} activeOpacity={1} onPress={() => setShowStreakLostModal(false)} />
+          <TouchableOpacity
+            style={[styles.freezeModalBackdrop, { backgroundColor: DS_COLORS.modalBackdrop }]}
+            activeOpacity={1}
+            onPress={() => setShowStreakLostModal(false)}
+            accessibilityLabel="Dismiss"
+            accessibilityRole="button"
+          />
           <View style={styles.freezeModalCenter}>
             <View style={[styles.streakLostCard, { backgroundColor: DS_COLORS.surface }]}>
-              <TouchableOpacity hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={styles.streakLostClose} onPress={() => setShowStreakLostModal(false)}>
+              <TouchableOpacity
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                style={styles.streakLostClose}
+                onPress={() => setShowStreakLostModal(false)}
+                accessibilityLabel="Close"
+                accessibilityRole="button"
+              >
                 <Text style={[styles.streakLostCloseText, { color: DS_COLORS.textSecondary }]}>✕</Text>
               </TouchableOpacity>
               <View style={styles.streakLostIconWrap}>
@@ -1226,7 +1294,13 @@ export default function HomeScreen() {
               </View>
               <Text style={[styles.streakLostTitle, { color: DS_COLORS.textPrimary }]}>Streak lost.</Text>
               <Text style={[styles.streakLostSub, { color: DS_COLORS.textSecondary }]}>Start again today.</Text>
-              <TouchableOpacity style={styles.streakLostButton} onPress={() => setShowStreakLostModal(false)} activeOpacity={0.85}>
+              <TouchableOpacity
+                style={styles.streakLostButton}
+                onPress={() => setShowStreakLostModal(false)}
+                activeOpacity={0.85}
+                accessibilityLabel="Continue"
+                accessibilityRole="button"
+              >
                 <Text style={styles.streakLostButtonText}>Continue</Text>
               </TouchableOpacity>
             </View>
@@ -1321,12 +1395,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "#1A1A1A",
+    backgroundColor: DS_COLORS.black,
   },
   headerBadgeText: {
     fontSize: 13,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   mainPromptBlock: {
     marginBottom: 16,
@@ -1334,24 +1408,24 @@ const styles = StyleSheet.create({
   secureTodayTitle: {
     fontSize: 22,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
     marginBottom: 4,
     lineHeight: 28,
   },
   secureTodaySub: {
     fontSize: 14,
     fontWeight: "400" as const,
-    color: "#888884",
+    color: DS_COLORS.textSecondary,
     marginBottom: 16,
   },
   metricsCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E8E5DE",
+    borderColor: DS_COLORS.border,
   },
   metricsRow: {
     flexDirection: "row",
@@ -1450,9 +1524,9 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: DS_SPACING.sectionGap,
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1,
-    borderColor: "#E8E5DE",
+    borderColor: DS_COLORS.border,
   },
   disciplineWeekIconWrap: {
     width: 44,
@@ -1467,11 +1541,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-  disciplineWeekNum: { fontWeight: "700", color: "#2F7A52" },
+  disciplineWeekNum: { fontWeight: "700", color: DS_COLORS.success },
   disciplineWeekSub: {
     fontSize: 14,
     fontWeight: "400",
-    color: "#2F7A52",
+    color: DS_COLORS.success,
     marginTop: 2,
   },
   welcomeBackCard: {
@@ -1530,19 +1604,19 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#E53E3E",
+    backgroundColor: DS_COLORS.danger,
   },
   liveTitle: {
     fontSize: 12,
     fontWeight: "700" as const,
     letterSpacing: 1,
     textTransform: "uppercase" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
   },
   liveSub: {
     fontSize: 13,
     fontWeight: "400" as const,
-    color: "#888884",
+    color: DS_COLORS.textSecondary,
     flex: 1,
   },
   liveSubItalic: {
@@ -1684,7 +1758,7 @@ const styles = StyleSheet.create({
   },
   feedHighlight: {
     fontWeight: "700" as const,
-    color: "#D4A017",
+    color: DS_COLORS.milestoneGold,
   },
   feedCta: {
     fontSize: 14,
@@ -1722,7 +1796,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#FDF8E7",
+    backgroundColor: DS_COLORS.surfaceWarm,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1748,7 +1822,7 @@ const styles = StyleSheet.create({
   feedOpenChallengeText: {
     fontSize: 15,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   yourPositionCard: {
     backgroundColor: DS_COLORS.surface,
@@ -1801,7 +1875,7 @@ const styles = StyleSheet.create({
   heroCTAText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   motivationCard: {
     borderRadius: 16,
@@ -1923,12 +1997,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   missionControlCard: {
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 20,
     padding: 28,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    shadowColor: "#000",
+    ...DS_SHADOWS.button,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -1968,15 +2042,15 @@ const styles = StyleSheet.create({
   modeTagHard: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: "rgba(232,125,79,0.08)",
+    backgroundColor: DS_COLORS.accentSoft,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(232,125,79,0.2)",
+    borderColor: DS_COLORS.border,
   },
   modeTagText: {
     fontSize: 11,
     fontWeight: "700" as const,
-    color: "#E87D4F",
+    color: DS_COLORS.accent,
     letterSpacing: 0.5,
   },
   challengeTitleRow: {
@@ -1996,19 +2070,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   challengeCard: {
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    ...DS_SHADOWS.card,
   },
   challengeCardHard: {
-    borderColor: "rgba(232,125,79,0.25)",
+    borderColor: DS_COLORS.accent,
   },
   cardFooter: {
     flexDirection: "row",
@@ -2127,15 +2197,15 @@ const styles = StyleSheet.create({
   guestBarCtaText: {
     fontSize: 14,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   firstSessionBanner: {
-    backgroundColor: (DS_COLORS.accentSoft ?? "#FFF5F0"),
+    backgroundColor: DS_COLORS.accentSoft,
     borderRadius: 12,
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: (DS_COLORS.accent ?? "#E87D4F") + "40",
+    borderColor: DS_COLORS.border,
   },
   firstSessionBannerText: {
     fontSize: 15,
@@ -2147,12 +2217,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
-    backgroundColor: (DS_COLORS.warningSoft ?? DS_COLORS.accentSoft) || "#FFF5F0",
+    backgroundColor: DS_COLORS.warningSoft,
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: (DS_COLORS.warning ?? DS_COLORS.accent) + "30",
+    borderColor: DS_COLORS.border,
   },
   recoveryBannerTextWrap: { flex: 1 },
   recoveryBannerTitle: {
@@ -2177,11 +2247,11 @@ const styles = StyleSheet.create({
   freezeCtaText: {
     fontSize: 14,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   freezeModalBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: DS_COLORS.modalBackdrop,
   },
   freezeModalCenter: {
     flex: 1,
@@ -2222,7 +2292,7 @@ const styles = StyleSheet.create({
   freezeModalConfirmText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   freezeModalCancel: {
     alignItems: "center",
@@ -2239,7 +2309,7 @@ const styles = StyleSheet.create({
     width: "80%",
     maxWidth: 340,
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.surface,
   },
   streakLostClose: {
     position: "absolute",
@@ -2249,20 +2319,20 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
   streakLostCloseText: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: "#888884",
+    color: DS_COLORS.textSecondary,
   },
   streakLostIconWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -2270,19 +2340,19 @@ const styles = StyleSheet.create({
   streakLostTitle: {
     fontSize: 22,
     fontWeight: "800" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
     marginBottom: 6,
     textAlign: "center",
   },
   streakLostSub: {
     fontSize: 15,
     fontWeight: "400" as const,
-    color: "#888884",
+    color: DS_COLORS.textSecondary,
     marginBottom: 20,
     textAlign: "center",
   },
   streakLostButton: {
-    backgroundColor: "#1A1A1A",
+    backgroundColor: DS_COLORS.black,
     borderRadius: 14,
     height: 52,
     width: "100%",
@@ -2292,7 +2362,7 @@ const styles = StyleSheet.create({
   streakLostButtonText: {
     fontSize: 16,
     fontWeight: "600" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   emptyTitleNew: {
     fontSize: 26,
@@ -2313,7 +2383,7 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     alignItems: "center",
-    backgroundColor: "#111",
+    backgroundColor: DS_COLORS.overlayDark,
     paddingHorizontal: 40,
     paddingVertical: 18,
     borderRadius: 14,
@@ -2323,7 +2393,7 @@ const styles = StyleSheet.create({
   ctaButtonText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
     letterSpacing: 0.2,
   },
   supportingText: {

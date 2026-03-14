@@ -81,7 +81,7 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn} activeOpacity={0.7} accessibilityLabel="Close and go back" accessibilityRole="button">
           <X size={22} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>Edit Profile</Text>
@@ -90,9 +90,12 @@ export default function EditProfileScreen() {
           disabled={isPending}
           style={[styles.saveBtn, isPending && { opacity: 0.5 }]}
           activeOpacity={0.7}
+          accessibilityLabel="Save profile"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: isPending }}
         >
           {isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={DS_COLORS.white} />
           ) : (
             <Text style={styles.saveBtnText}>Save</Text>
           )}
@@ -175,7 +178,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: DS_COLORS.border,
-    backgroundColor: '#fff',
+    backgroundColor: DS_COLORS.white,
   },
   closeBtn: {
     width: 36,
@@ -191,7 +194,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textPrimary,
   },
   saveBtn: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: DS_COLORS.black,
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveBtnText: {
-    color: '#fff',
+    color: DS_COLORS.white,
     fontSize: 14,
     fontWeight: '600' as const,
   },
@@ -224,7 +227,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 36,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: DS_COLORS.white,
   },
   usernameLabel: {
     fontSize: 15,
@@ -242,7 +245,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     borderRadius: 12,

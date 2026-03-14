@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, Users, Target } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DS_COLORS } from "@/lib/design-system";
 
 function ChallengeRowCardInner(props: {
   title: string;
@@ -85,12 +86,12 @@ const s = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E8E5DE",
-    shadowColor: "#000",
+    borderColor: DS_COLORS.border,
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -115,7 +116,7 @@ const s = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   statusDot: {
@@ -136,7 +137,7 @@ const s = StyleSheet.create({
   },
   desc: {
     fontSize: 14,
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
     lineHeight: 20,
     marginBottom: 8,
   },
@@ -150,18 +151,18 @@ const s = StyleSheet.create({
   metaLeft: {
     fontSize: 12,
     fontWeight: "400",
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
   },
   metaRight: {
     fontSize: 12,
     fontWeight: "400",
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
   },
   arrowWrap: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,

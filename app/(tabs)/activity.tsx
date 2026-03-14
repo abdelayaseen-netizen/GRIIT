@@ -121,8 +121,8 @@ function createActivityStyles(c: ThemeColors) {
     topThisWeekAvatarWrap: { position: "relative" as const, marginBottom: 6 },
     topThisWeekAvatar: { width: 52, height: 52, borderRadius: 26 },
     topThisWeekRankBadge: { position: "absolute" as const, top: -4, right: -4, width: 20, height: 20, borderRadius: 10, backgroundColor: c.text.tertiary, alignItems: "center", justifyContent: "center" },
-    topThisWeekRankBadgeGold: { backgroundColor: "#D4A853" },
-    topThisWeekRankText: { fontSize: 11, fontWeight: "800" as const, color: "#fff" },
+    topThisWeekRankBadgeGold: { backgroundColor: DS_COLORS.rankGoldBg },
+    topThisWeekRankText: { fontSize: 11, fontWeight: "800" as const, color: DS_COLORS.white },
     topThisWeekName: { fontSize: 12, fontWeight: "600" as const, color: c.text.primary, marginBottom: 2 },
     topThisWeekScoreRow: { flexDirection: "row", alignItems: "center", gap: 4 },
     topThisWeekScore: { fontSize: 13, fontWeight: "600" as const, color: c.text.primary },
@@ -271,7 +271,7 @@ function DailyStatsCard({ securedToday, styles }: { securedToday: number; styles
 
 function getBadgeStyles(c: ThemeColors): Record<string, { bg: string; text: string }> {
   return {
-    Elite: { bg: "rgba(212,160,23,0.2)", text: "#B8860B" },
+    Elite: { bg: "rgba(212,160,23,0.2)", text: DS_COLORS.crownGold },
     Relentless: { bg: "rgba(232,125,79,0.2)", text: c.accent },
     Builder: { bg: "rgba(46,125,74,0.15)", text: c.streak.shield },
     Initiate: { bg: "rgba(107,114,128,0.2)", text: c.text.tertiary },
@@ -311,13 +311,13 @@ function LeaderboardSection({ entries, styles }: { entries: LeaderboardEntry[]; 
   const badgeStyles = getBadgeStyles(colors);
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
-  const rankCircleColor = (rank: number) => (rank === 1 ? "#D4A017" : rank === 2 ? "#9CA3AF" : colors.accent);
+  const rankCircleColor = (rank: number) => (rank === 1 ? DS_COLORS.milestoneGold : rank === 2 ? DS_COLORS.silverRank : colors.accent);
 
   return (
     <View style={styles.leaderboardSection}>
       <View style={styles.weeklyLeaderboardHeader}>
         <View style={styles.sectionHeaderRow}>
-          <Trophy size={16} color="#D4A017" />
+          <Trophy size={16} color={DS_COLORS.milestoneGold} />
           <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
         </View>
         <Text style={styles.resetsSunday}>Resets Sunday</Text>
@@ -333,7 +333,7 @@ function LeaderboardSection({ entries, styles }: { entries: LeaderboardEntry[]; 
             <Text style={styles.topThreeScore}>+{entry.score}</Text>
             {entry.badge && (
               <View style={[styles.topThreeBadge, { backgroundColor: badgeStyles[entry.badge]?.bg || colors.pill }]}>
-                {entry.rank === 1 && <Crown size={10} color="#B8860B" />}
+                {entry.rank === 1 && <Crown size={10} color={DS_COLORS.crownGold} />}
                 <Text style={[styles.topThreeBadgeText, { color: badgeStyles[entry.badge]?.text || colors.text.secondary }]}>{entry.badge}</Text>
               </View>
             )}
@@ -866,7 +866,7 @@ export default function ActivityScreen() {
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <Globe size={14} color={feedFilter === "global" ? "#fff" : colors.text.secondary} />
+          <Globe size={14} color={feedFilter === "global" ? DS_COLORS.white : colors.text.secondary} />
           <Text style={[styles.filterPillText, feedFilter === "global" && styles.filterPillTextActive]}>Global</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -876,7 +876,7 @@ export default function ActivityScreen() {
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <Users size={14} color={feedFilter === "friends" ? "#fff" : colors.text.secondary} />
+          <Users size={14} color={feedFilter === "friends" ? DS_COLORS.white : colors.text.secondary} />
           <Text style={[styles.filterPillText, feedFilter === "friends" && styles.filterPillTextActive]}>Friends</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -938,7 +938,7 @@ export default function ActivityScreen() {
           <View style={styles.leaderboardSection}>
             <View style={styles.weeklyLeaderboardHeader}>
               <View style={styles.sectionHeaderRow}>
-                <Trophy size={16} color="#D4A017" />
+                <Trophy size={16} color={DS_COLORS.milestoneGold} />
                 <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>
@@ -949,7 +949,7 @@ export default function ActivityScreen() {
           <View style={styles.leaderboardSection}>
             <View style={styles.weeklyLeaderboardHeader}>
               <View style={styles.sectionHeaderRow}>
-                <Trophy size={16} color="#D4A017" />
+                <Trophy size={16} color={DS_COLORS.milestoneGold} />
                 <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>
@@ -960,7 +960,7 @@ export default function ActivityScreen() {
           <View style={styles.leaderboardSection}>
             <View style={styles.weeklyLeaderboardHeader}>
               <View style={styles.sectionHeaderRow}>
-                <Trophy size={16} color="#D4A017" />
+                <Trophy size={16} color={DS_COLORS.milestoneGold} />
                 <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>

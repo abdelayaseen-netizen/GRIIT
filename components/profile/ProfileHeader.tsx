@@ -21,14 +21,14 @@ export interface ProfileHeaderProps {
 const AVATAR_SIZE = 80;
 
 const AVATAR_COLORS = [
-  "#E8733A",
-  "#2E7D32",
-  "#5C6BC0",
-  "#EF5350",
-  "#26A69A",
-  "#FFA726",
-  "#8D6E63",
-  "#66BB6A",
+  DS_COLORS.avatarColor1,
+  DS_COLORS.avatarColor2,
+  DS_COLORS.avatarColor3,
+  DS_COLORS.avatarColor4,
+  DS_COLORS.avatarColor5,
+  DS_COLORS.avatarColor6,
+  DS_COLORS.avatarColor7,
+  DS_COLORS.avatarColor8,
 ];
 
 function getAvatarColor(name: string): string {

@@ -373,7 +373,7 @@ export default function SignupScreen() {
               testID="signup-button"
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={DS_COLORS.white} size="small" />
               ) : (
                 <Text style={styles.buttonText}>Create Account</Text>
               )}

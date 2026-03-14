@@ -15,12 +15,12 @@ export const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "800" as const,
     letterSpacing: -0.5,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
   },
   subtitle: {
     fontSize: 15,
     fontWeight: "400" as const,
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
     marginTop: 4,
   },
   searchRow: {
@@ -145,7 +145,7 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
   },
   sectionCaption: {
     fontSize: 12,
@@ -163,7 +163,7 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E8E5DE",
+    borderColor: DS_COLORS.border,
     ...DS_SHADOWS.card,
   },
   featuredAccent: {
@@ -207,12 +207,12 @@ export const styles = StyleSheet.create({
   featuredTitle: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
     marginBottom: 6,
   },
   featuredHook: {
     fontSize: 14,
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
     lineHeight: 20,
     marginBottom: 10,
   },
@@ -226,7 +226,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
@@ -237,7 +237,7 @@ export const styles = StyleSheet.create({
   taskChipText: {
     fontSize: 13,
     fontWeight: "500" as const,
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
     maxWidth: 120,
   },
   featuredBottomRow: {
@@ -263,18 +263,18 @@ export const styles = StyleSheet.create({
   statText: {
     fontSize: 12,
     fontWeight: "400" as const,
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
   },
   statDot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: "#AAAAAA",
+    backgroundColor: DS_COLORS.textMuted,
   },
   activeTodayText: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: "#2F7A52",
+    color: DS_COLORS.success,
   },
   featuredArrowWrap: {
     width: 28,
@@ -295,7 +295,7 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E8E5DE",
+    borderColor: DS_COLORS.border,
     ...DS_SHADOWS.card,
   },
   compactColorBar: {
@@ -317,7 +317,7 @@ export const styles = StyleSheet.create({
   compactTitle: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   difficultyDot: {
@@ -327,7 +327,7 @@ export const styles = StyleSheet.create({
   },
   compactDesc: {
     fontSize: 14,
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
     lineHeight: 18,
     marginBottom: 8,
   },
@@ -341,12 +341,12 @@ export const styles = StyleSheet.create({
   compactMetaText: {
     fontSize: 12,
     fontWeight: "400" as const,
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
   },
   compactParticipants: {
     fontSize: 12,
     fontWeight: "400" as const,
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
   },
   compactArrowWrap: {
     width: 28,
@@ -496,7 +496,7 @@ export const styles = StyleSheet.create({
 
   skeletonFeaturedCard: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
@@ -504,7 +504,7 @@ export const styles = StyleSheet.create({
   },
   skeletonAccent: {
     width: 4,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
   },
   skeletonFeaturedContent: {
     flex: 1,
@@ -564,7 +564,7 @@ export const styles = StyleSheet.create({
   skeletonCompactCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
@@ -573,7 +573,7 @@ export const styles = StyleSheet.create({
   skeletonCompactBar: {
     width: 4,
     alignSelf: "stretch",
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
   },
   skeletonCompactContent: {
     flex: 1,

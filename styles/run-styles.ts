@@ -54,13 +54,13 @@ export const styles = StyleSheet.create({
     color: DS_COLORS.textSecondary,
   },
   modeButtonTextActive: {
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   requirementCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#1F1F1F",
+    backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
@@ -69,14 +69,14 @@ export const styles = StyleSheet.create({
   requirementText: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
     flex: 1,
   },
   warningBanner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: DS_COLORS.amberLightBg,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 10,
@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
   warningText: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: "#92400E",
+    color: DS_COLORS.amberDarkText,
     flex: 1,
   },
   statsContainer: {
@@ -145,7 +145,7 @@ export const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 8,
@@ -159,7 +159,7 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.success,
   },
   progressFillError: {
-    backgroundColor: "#DC2626",
+    backgroundColor: DS_COLORS.dangerMid,
   },
   progressText: {
     fontSize: 14,
@@ -184,18 +184,18 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.success,
   },
   startButtonError: {
-    backgroundColor: "#9CA3AF",
+    backgroundColor: DS_COLORS.silverRank,
   },
   startButtonText: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   stopButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#DC2626",
+    backgroundColor: DS_COLORS.dangerMid,
     paddingVertical: 20,
     paddingHorizontal: 40,
     borderRadius: 30,
@@ -203,7 +203,7 @@ export const styles = StyleSheet.create({
   stopButtonText: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   resetButton: {
     marginTop: 16,
@@ -228,7 +228,7 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.success,
   },
   trackingDotTimer: {
-    backgroundColor: "#F59E0B",
+    backgroundColor: DS_COLORS.taskAmber,
   },
   trackingText: {
     fontSize: 14,
@@ -236,7 +236,7 @@ export const styles = StyleSheet.create({
     color: DS_COLORS.success,
   },
   trackingTextTimer: {
-    color: "#F59E0B",
+    color: DS_COLORS.taskAmber,
   },
   treadmillContainer: {
     flex: 1,
@@ -251,7 +251,7 @@ export const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
   },
   stepDotActive: {
     backgroundColor: DS_COLORS.accent,
@@ -262,7 +262,7 @@ export const styles = StyleSheet.create({
   stepLine: {
     width: 40,
     height: 2,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
   },
   stepLineComplete: {
     backgroundColor: DS_COLORS.success,
@@ -289,7 +289,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#FEE2E2",
+    backgroundColor: DS_COLORS.dangerLightBg,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
@@ -299,10 +299,10 @@ export const styles = StyleSheet.create({
   violationText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#DC2626",
+    color: DS_COLORS.dangerMid,
   },
   lockNotice: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: DS_COLORS.amberLightBg,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 10,
@@ -311,7 +311,7 @@ export const styles = StyleSheet.create({
   lockNoticeText: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: "#92400E",
+    color: DS_COLORS.amberDarkText,
     textAlign: "center",
   },
   proofSection: {
@@ -343,7 +343,7 @@ export const styles = StyleSheet.create({
   captureButtonText: {
     fontSize: 18,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   proofPreview: {
     width: "100%",
@@ -384,7 +384,7 @@ export const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   distanceSection: {
     alignItems: "center",
@@ -431,12 +431,12 @@ export const styles = StyleSheet.create({
     borderColor: DS_COLORS.border,
   },
   inputError: {
-    borderColor: "#DC2626",
+    borderColor: DS_COLORS.dangerMid,
   },
   inputErrorText: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: "#DC2626",
+    color: DS_COLORS.dangerMid,
     marginTop: 6,
   },
   summaryCard: {
@@ -481,18 +481,18 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.background,
   },
   verifyButton: {
-    backgroundColor: "#1F1F1F",
+    backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 18,
     borderRadius: 14,
     alignItems: "center",
   },
   verifyButtonDisabled: {
-    backgroundColor: "#E5E5E5",
+    backgroundColor: DS_COLORS.grayLight,
   },
   verifyButtonText: {
     fontSize: 15,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
     letterSpacing: 0.5,
   },
   verifyButtonTextDisabled: {

@@ -205,7 +205,7 @@ export default function ChallengeChatInfoScreen() {
                 value={settings.muteRoom}
                 onValueChange={handleToggleMute}
                 trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
-                thumbColor="#FFF"
+                thumbColor={DS_COLORS.white}
               />
             </View>
             <View style={styles.settingDivider} />
@@ -223,7 +223,7 @@ export default function ChallengeChatInfoScreen() {
                 value={settings.mentionsOnly}
                 onValueChange={handleToggleMentions}
                 trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
-                thumbColor="#FFF"
+                thumbColor={DS_COLORS.white}
                 disabled={settings.muteRoom}
               />
             </View>
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   challengeIconText: {
     fontSize: 28,
     fontWeight: "700" as const,
-    color: "#FFF",
+    color: DS_COLORS.white,
   },
   challengeTitle: {
     fontSize: 20,

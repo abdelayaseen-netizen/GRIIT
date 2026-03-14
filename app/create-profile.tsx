@@ -141,7 +141,7 @@ export default function CreateProfileScreen() {
     <Screen scroll keyboardAvoiding header={header}>
       <View style={styles.header}>
         <Text style={styles.stepLabel}>CLAIM YOUR IDENTITY</Text>
-        <Text style={styles.title}>Let&apos;s set up your profile.</Text>
+        <Text style={styles.title} accessibilityRole="header">Let&apos;s set up your profile.</Text>
         <Text style={styles.subtitle}>This is how others will know you.</Text>
       </View>
 
@@ -184,6 +184,7 @@ export default function CreateProfileScreen() {
             numberOfLines={3}
             textAlignVertical="top"
             editable={!isPending}
+            accessibilityLabel="Bio"
           />
         </View>
 

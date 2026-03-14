@@ -436,7 +436,7 @@ export default function RunTaskScreen() {
           </View>
           <Text style={styles.verifiedTitle}>Run Verified</Text>
           <Text style={styles.verifiedSubtitle}>Your run has been verified.</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Back to Tasks" accessibilityRole="button">
             <Text style={styles.backButtonText}>Back to Tasks</Text>
           </TouchableOpacity>
         </View>
@@ -470,6 +470,8 @@ export default function RunTaskScreen() {
             <TouchableOpacity
               style={[styles.modeButton, runMode === "treadmill_proof" && styles.modeButtonActive]}
               onPress={() => handleModeChange("treadmill_proof")}
+              accessibilityLabel="Treadmill mode"
+              accessibilityRole="button"
             >
               <Clock size={18} color={runMode === "treadmill_proof" ? DS_COLORS.white : DS_COLORS.textSecondary} />
               <Text style={[styles.modeButtonText, runMode === "treadmill_proof" && styles.modeButtonTextActive]}>
@@ -498,7 +500,7 @@ export default function RunTaskScreen() {
 
           {runMode === "treadmill_proof" && (
             <View style={styles.warningBanner}>
-              <AlertTriangle size={16} color="#F59E0B" />
+              <AlertTriangle size={16} color={DS_COLORS.taskAmber} />
               <Text style={styles.warningText}>
                 Treadmill runs require proof. No proof = not verified.
               </Text>
@@ -549,6 +551,9 @@ export default function RunTaskScreen() {
                     style={[styles.startButton, isGpsComplete && styles.startButtonComplete]}
                     onPress={startGpsTracking}
                     disabled={isGpsComplete}
+                    accessibilityLabel={isGpsComplete ? "Run complete" : "Start run"}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: isGpsComplete }}
                   >
                     <Play size={32} color={DS_COLORS.white} fill={DS_COLORS.white} />
                     <Text style={styles.startButtonText}>
@@ -598,7 +603,7 @@ export default function RunTaskScreen() {
 
                   {backgroundViolation && (
                     <View style={styles.violationBanner}>
-                      <AlertTriangle size={18} color="#DC2626" />
+                      <AlertTriangle size={18} color={DS_COLORS.dangerMid} />
                       <Text style={styles.violationText}>
                         Timer failed - you left the app
                       </Text>
@@ -635,6 +640,9 @@ export default function RunTaskScreen() {
                           ]}
                           onPress={isTreadmillTimerComplete ? finishTreadmillTimer : startTreadmillTimer}
                           disabled={backgroundViolation}
+                          accessibilityLabel={isTreadmillTimerComplete ? "Continue" : timerSeconds > 0 ? "Resume timer" : "Start timer"}
+                          accessibilityRole="button"
+                          accessibilityState={{ disabled: backgroundViolation }}
                         >
                           {isTreadmillTimerComplete ? (
                             <>
@@ -651,7 +659,7 @@ export default function RunTaskScreen() {
                           )}
                         </TouchableOpacity>
                         {backgroundViolation && (
-                          <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
+                          <TouchableOpacity style={styles.resetButton} onPress={resetAll} accessibilityLabel="Reset and try again" accessibilityRole="button">
                             <Text style={styles.resetButtonText}>Reset & Try Again</Text>
                           </TouchableOpacity>
                         )}
@@ -686,13 +694,15 @@ export default function RunTaskScreen() {
                       <TouchableOpacity 
                         style={styles.retakeButton}
                         onPress={captureProof}
+                        accessibilityLabel="Retake proof photo"
+                        accessibilityRole="button"
                       >
                         <Camera size={18} color={DS_COLORS.textPrimary} />
                         <Text style={styles.retakeButtonText}>Retake</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <TouchableOpacity style={styles.captureButton} onPress={captureProof}>
+                    <TouchableOpacity style={styles.captureButton} onPress={captureProof} accessibilityLabel="Open camera to capture proof" accessibilityRole="button">
                       <Camera size={32} color={DS_COLORS.white} />
                       <Text style={styles.captureButtonText}>Open Camera</Text>
                     </TouchableOpacity>
@@ -702,6 +712,8 @@ export default function RunTaskScreen() {
                     <TouchableOpacity 
                       style={styles.continueButton}
                       onPress={() => setTreadmillStep("distance")}
+                      accessibilityLabel="Continue to distance"
+                      accessibilityRole="button"
                     >
                       <Text style={styles.continueButtonText}>Continue</Text>
                       <ChevronRight size={20} color={DS_COLORS.white} />
@@ -776,7 +788,7 @@ export default function RunTaskScreen() {
                         {isTreadmillDistanceValid ? (
                           <Check size={14} color={DS_COLORS.success} />
                         ) : (
-                          <AlertTriangle size={14} color="#F59E0B" />
+                          <AlertTriangle size={14} color={DS_COLORS.taskAmber} />
                         )}
                         <Text style={styles.summaryValueText}>
                           {distanceInput || "Not entered"} mi

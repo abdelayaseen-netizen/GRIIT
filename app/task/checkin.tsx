@@ -393,17 +393,17 @@ export default function CheckinTaskScreen() {
   const getLocationStatusColor = () => {
     switch (locationStatus) {
       case "inside": return DS_COLORS.success;
-      case "outside": return "#F59E0B";
+      case "outside": return DS_COLORS.taskAmber;
       case "checking": return DS_COLORS.textMuted;
-      default: return "#DC2626";
+      default: return DS_COLORS.dangerMid;
     }
   };
 
   const getTimeStatusColor = () => {
     switch (timeStatus) {
       case "window_open": return DS_COLORS.success;
-      case "too_early": return "#F59E0B";
-      default: return "#DC2626";
+      case "too_early": return DS_COLORS.taskAmber;
+      default: return DS_COLORS.dangerMid;
     }
   };
 
@@ -416,7 +416,7 @@ export default function CheckinTaskScreen() {
           </View>
           <Text style={styles.verifiedTitle}>Check-in Verified</Text>
           <Text style={styles.verifiedSubtitle}>You showed up at the right place and time.</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Back to Tasks" accessibilityRole="button">
             <Text style={styles.backButtonText}>Back to Tasks</Text>
           </TouchableOpacity>
         </View>
@@ -432,7 +432,7 @@ export default function CheckinTaskScreen() {
         <Text style={styles.subtitle}>Location + time verified</Text>
 
         <View style={styles.requirementBanner}>
-          <Shield size={18} color="#FFFFFF" />
+          <Shield size={18} color={DS_COLORS.white} />
           <Text style={styles.requirementText}>
             Must start at {getTimeWindowDisplay()} at your location
           </Text>
@@ -474,7 +474,7 @@ export default function CheckinTaskScreen() {
 
         {backgroundViolation && (
           <View style={styles.violationBanner}>
-            <AlertTriangle size={18} color="#DC2626" />
+            <AlertTriangle size={18} color={DS_COLORS.dangerMid} />
             <Text style={styles.violationText}>
               Check-in failed - session interrupted
             </Text>
@@ -532,7 +532,7 @@ export default function CheckinTaskScreen() {
               onPress={startSession}
               disabled={!canStartCheckin}
             >
-              <Play size={28} color="#FFFFFF" fill="#FFFFFF" />
+              <Play size={28} color={DS_COLORS.white} fill={DS_COLORS.white} />
               <Text style={styles.startButtonText}>START CHECK-IN</Text>
             </TouchableOpacity>
 

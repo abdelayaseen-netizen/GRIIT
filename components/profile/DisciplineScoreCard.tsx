@@ -50,13 +50,13 @@ export default function DisciplineScoreCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E8E5DE",
+    borderColor: DS_COLORS.border,
     ...DS_SHADOWS.card,
   },
   header: {
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
   },
   tierDot: {
     width: 6,
@@ -95,11 +95,11 @@ const styles = StyleSheet.create({
   score: {
     fontSize: 48,
     fontWeight: "800",
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
   },
   divider: {
     height: 1,
-    backgroundColor: "#E8E5DE",
+    backgroundColor: DS_COLORS.border,
     marginVertical: 16,
   },
   footerRow: {
@@ -116,14 +116,14 @@ const styles = StyleSheet.create({
   daysLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   tierFooter: {
     fontSize: 14,
     fontWeight: "400",
-    color: "#888884",
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   zeroStateHint: {

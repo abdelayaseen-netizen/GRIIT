@@ -5,10 +5,7 @@ import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OptionCard } from "@/components/onboarding/OptionCard";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { BARRIERS, BARRIER_EMPATHY } from "@/constants/onboardingData";
-
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
+import { DS_COLORS } from "@/lib/design-system";
 
 export default function OnboardingBarrierScreen() {
   const router = useRouter();
@@ -78,6 +75,9 @@ export default function OnboardingBarrierScreen() {
           onPress={handleContinue}
           disabled={!barrier}
           activeOpacity={0.9}
+          accessibilityLabel="Continue to next step"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !barrier }}
         >
           <Text style={styles.ctaText}>That&apos;s my truth — let&apos;s go</Text>
         </TouchableOpacity>
@@ -92,14 +92,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 34,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 24,
     marginBottom: 28,
   },
@@ -110,11 +110,11 @@ const styles = StyleSheet.create({
   empathy: {
     fontSize: 15,
     fontStyle: "italic",
-    color: ACCENT,
+    color: DS_COLORS.accent,
     lineHeight: 22,
   },
   cta: {
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 28,
     alignItems: "center",
@@ -127,6 +127,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
 });

@@ -232,7 +232,7 @@ export default function WelcomeScreen() {
   if (step === 1) {
     return (
       <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
-        <TouchableOpacity style={s.skipBtn} onPress={handleSkip}>
+        <TouchableOpacity style={s.skipBtn} onPress={handleSkip} accessibilityLabel="Skip" accessibilityRole="button">
           <Text style={s.skipText}>Skip</Text>
         </TouchableOpacity>
         <View style={s.step1Center}>
@@ -242,7 +242,7 @@ export default function WelcomeScreen() {
           </Text>
         </View>
         <View style={s.step1Bottom}>
-          <TouchableOpacity style={s.primaryBtn} onPress={goNext} activeOpacity={0.85}>
+          <TouchableOpacity style={s.primaryBtn} onPress={goNext} activeOpacity={0.85} accessibilityLabel="Let's go" accessibilityRole="button">
             <Text style={s.primaryBtnText}>Let&apos;s go</Text>
           </TouchableOpacity>
         </View>
@@ -254,7 +254,7 @@ export default function WelcomeScreen() {
   if (step === 2) {
     return (
       <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
-        <TouchableOpacity style={s.backBtn} onPress={goBack}>
+        <TouchableOpacity style={s.backBtn} onPress={goBack} accessibilityLabel="Go back" accessibilityRole="button">
           <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={s.stepTitle}>What do you want to build?</Text>
@@ -289,6 +289,9 @@ export default function WelcomeScreen() {
           onPress={goNext}
           disabled={selectedGoals.length === 0}
           activeOpacity={0.85}
+          accessibilityLabel="Continue"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: selectedGoals.length === 0 }}
         >
           <Text style={s.primaryBtnText}>Continue</Text>
         </TouchableOpacity>
@@ -318,6 +321,9 @@ export default function WelcomeScreen() {
                 style={[s.disciplineRow, selected && s.disciplineRowSelected]}
                 onPress={() => selectDiscipline(d.id)}
                 activeOpacity={0.8}
+                accessibilityLabel={d.label}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
               >
                 <View style={s.disciplineIconWrap}>
                   <Text style={s.disciplineEmoji}>{d.emoji}</Text>
@@ -346,7 +352,7 @@ export default function WelcomeScreen() {
   // Step 4 — Signup
   return (
     <SafeAreaView style={s.screen} edges={["top", "bottom"]}>
-      <TouchableOpacity style={s.backBtn} onPress={goBack}>
+      <TouchableOpacity style={s.backBtn} onPress={goBack} accessibilityLabel="Go back" accessibilityRole="button">
         <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
       </TouchableOpacity>
       <KeyboardAvoidingView
@@ -371,6 +377,7 @@ export default function WelcomeScreen() {
             onFocus={() => setFocusedField("displayName")}
             onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, displayName: true })); }}
             editable={!loading}
+            accessibilityLabel="Display name"
           />
           {touched.displayName && displayNameInvalid && (
             <Text style={s.inlineError}>Name must be at least 2 characters</Text>
@@ -386,6 +393,7 @@ export default function WelcomeScreen() {
             onFocus={() => setFocusedField("username")}
             onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, username: true })); }}
             editable={!loading}
+            accessibilityLabel="Username"
           />
           {username.length > 0 && (
             <View style={s.usernameHint}>
@@ -407,6 +415,7 @@ export default function WelcomeScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             editable={!loading}
+            accessibilityLabel="Email"
           />
           {touched.email && emailInvalid && <Text style={s.inlineError}>Enter a valid email</Text>}
 
@@ -423,6 +432,7 @@ export default function WelcomeScreen() {
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               editable={!loading}
+              accessibilityLabel="Password"
             />
             <TouchableOpacity onPress={() => setShowPassword((p) => !p)} hitSlop={12}>
               {showPassword ? <EyeOff size={22} color={DS_COLORS.textSecondary} /> : <Eye size={22} color={DS_COLORS.textSecondary} />}
@@ -442,11 +452,14 @@ export default function WelcomeScreen() {
             onPress={handleSignup}
             disabled={!canSubmit}
             activeOpacity={0.85}
+            accessibilityLabel="Create account"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !canSubmit }}
           >
             {loading ? <ActivityIndicator color={DS_COLORS.white} size="small" /> : <Text style={s.primaryBtnText}>Create Account</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity style={s.footer} onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)} disabled={loading}>
+          <TouchableOpacity style={s.footer} onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)} disabled={loading} accessibilityLabel="Already have an account? Log in" accessibilityRole="button" accessibilityState={{ disabled: loading }}>
             <Text style={s.footerText}>Already have an account? </Text>
             <Text style={s.footerLink}>Log in</Text>
           </TouchableOpacity>

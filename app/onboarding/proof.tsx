@@ -3,21 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import { DS_COLORS } from "@/lib/design-system";
 
 const TARGET_NUMBER = 43218;
 const START_NUMBER = 40000;
 const DURATION_MS = 1500;
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
 
 const AVATARS = [
-  { initials: "JK", color: "#E07B4A" },
-  { initials: "SM", color: "#2F7A52" },
-  { initials: "AL", color: "#0EA5E9" },
-  { initials: "MR", color: "#8B5CF6" },
-  { initials: "TC", color: "#F59E0B" },
-  { initials: "DW", color: "#EC4899" },
+  { initials: "JK", color: DS_COLORS.accent },
+  { initials: "SM", color: DS_COLORS.success },
+  { initials: "AL", color: DS_COLORS.linkBlue },
+  { initials: "MR", color: DS_COLORS.taskIndigo },
+  { initials: "TC", color: DS_COLORS.taskAmber },
+  { initials: "DW", color: DS_COLORS.taskPhotoPink },
 ];
 
 function useCountUp(end: number, start: number, durationMs: number, run: boolean) {
@@ -97,6 +95,8 @@ export default function OnboardingProofScreen() {
           style={styles.cta}
           onPress={() => router.push("/onboarding/challenge" as never)}
           activeOpacity={0.9}
+          accessibilityLabel="Continue to pick challenge"
+          accessibilityRole="button"
         >
           <Text style={styles.ctaText}>I&apos;m ready — let&apos;s pick my challenge</Text>
         </TouchableOpacity>
@@ -115,13 +115,13 @@ const styles = StyleSheet.create({
   number: {
     fontSize: 56,
     fontWeight: "800",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     letterSpacing: -1,
     marginBottom: 12,
   },
   label: {
     fontSize: 16,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     lineHeight: 24,
     marginBottom: 28,
@@ -139,24 +139,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#0A0A0A",
+    borderColor: DS_COLORS.onboardingBg,
     marginLeft: -8,
   },
   avatarText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   quote: {
     fontSize: 15,
     fontStyle: "italic",
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 40,
   },
   cta: {
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 28,
     paddingHorizontal: 32,
@@ -167,6 +167,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
 });

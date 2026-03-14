@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { Check, Clock, XCircle } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DS_COLORS } from "@/lib/design-system";
 
 export interface TeamMemberForList {
   id: string;
@@ -48,7 +49,7 @@ function MemberRow({ member, isCurrentUser, runStatus }: { member: TeamMemberFor
   } else if (runStatus === "failed") {
     if (!member.secured_today && member.tasks_total != null && member.tasks_total > 0) {
       statusLabel = "Missed";
-      StatusIcon = <XCircle size={14} color="#B91C1C" />;
+      StatusIcon = <XCircle size={14} color={DS_COLORS.dangerDark} />;
     }
   }
 

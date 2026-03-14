@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, Animated, StyleSheet, ViewStyle } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 interface SkeletonProps {
   width?: number | string;
@@ -29,7 +30,7 @@ export function Skeleton({ width = "100%", height = 16, borderRadius = 8, style 
           width: width as number,
           height,
           borderRadius,
-          backgroundColor: "#E8E6E1",
+          backgroundColor: DS_COLORS.skeletonBg,
           opacity,
         },
         style,
@@ -80,12 +81,12 @@ const skeletonStyles = StyleSheet.create({
     paddingTop: 8,
   },
   streakCard: {
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     padding: 24,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E8E6E1",
+    borderColor: DS_COLORS.skeletonBg,
     marginBottom: 16,
   },
   calendarRow: {
@@ -95,10 +96,10 @@ const skeletonStyles = StyleSheet.create({
     marginBottom: 16,
   },
   challengeCard: {
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#E8E6E1",
+    borderColor: DS_COLORS.skeletonBg,
   },
 });

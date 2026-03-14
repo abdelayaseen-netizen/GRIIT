@@ -145,7 +145,7 @@ export default function PhotoTaskScreen() {
               onPress={handleTakePhoto}
               activeOpacity={0.8}
             >
-              <Camera size={24} color="#fff" />
+              <Camera size={24} color={DS_COLORS.white} />
               <Text style={styles.captureButtonText}>Take Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -168,14 +168,14 @@ export default function PhotoTaskScreen() {
           >
             {loading ? (
               <>
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={DS_COLORS.white} size="small" />
                 <Text style={styles.submitButtonText}>
                   {uploading ? "Uploading…" : "Submitting…"}
                 </Text>
               </>
             ) : (
               <>
-                <Check size={20} color="#fff" />
+                <Check size={20} color={DS_COLORS.white} />
                 <Text style={styles.submitButtonText}>Submit Photo</Text>
               </>
             )}
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
@@ -218,10 +218,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 240,
     borderRadius: 16,
-    backgroundColor: "#000",
+    backgroundColor: DS_COLORS.black,
   },
   retakeButton: {
-    backgroundColor: '#fff',
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     borderRadius: 12,
@@ -242,14 +242,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#10B981",
+    backgroundColor: DS_COLORS.taskEmerald,
     borderRadius: 12,
     padding: 16,
   },
   captureButtonText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   galleryButton: {
     flexDirection: "row",
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: DS_COLORS.black,
     borderRadius: 12,
     padding: 16,
   },
@@ -282,6 +282,6 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: DS_COLORS.white,
   },
 });

@@ -107,7 +107,7 @@ export default function AddAccountabilityPartnerScreen() {
             style={styles.inviteBtn}
           >
             {isInviting ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={DS_COLORS.white} />
             ) : (
               <Text style={styles.inviteBtnText}>Invite</Text>
             )}
@@ -126,7 +126,7 @@ export default function AddAccountabilityPartnerScreen() {
         keyboardVerticalOffset={0}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Add Partner</Text>
@@ -142,6 +142,7 @@ export default function AddAccountabilityPartnerScreen() {
             onChangeText={onQueryChange}
             autoCapitalize="none"
             autoCorrect={false}
+            accessibilityLabel="Search by username"
           />
           {searching && (
             <View style={styles.searchingWrap}>
@@ -218,5 +219,5 @@ const styles = StyleSheet.create({
     minWidth: 80,
     alignItems: "center",
   },
-  inviteBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  inviteBtnText: { fontSize: 15, fontWeight: "700", color: DS_COLORS.white },
 });

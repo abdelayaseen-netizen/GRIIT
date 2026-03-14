@@ -23,7 +23,7 @@ export default function LifetimeStatsCard({
   const safe = (n: number) => Math.max(0, Number(n) || 0);
   const items = [
     { icon: Flame, color: DS_COLORS.accent, value: safe(currentStreak), label: "STREAK" },
-    { icon: Trophy, color: "#D4A017", value: safe(longestStreak), label: "BEST" },
+    { icon: Trophy, color: DS_COLORS.milestoneGold, value: safe(longestStreak), label: "BEST" },
     { icon: Target, color: DS_COLORS.success, value: safe(daysSecured), label: "SECURED" },
     { icon: Award, color: DS_COLORS.accent, value: safe(challengesCompleted), label: "DONE" },
   ];
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8F6F2",
+    backgroundColor: DS_COLORS.backgroundAlt,
     borderRadius: 12,
     paddingVertical: 16,
   },
@@ -72,12 +72,12 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
   },
   label: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase",
     marginTop: 2,

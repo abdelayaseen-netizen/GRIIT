@@ -1,32 +1,34 @@
 /**
  * Single source of truth for app colors. Match Rork reference.
- * Only theme files may contain hex codes; screens use these tokens.
+ * Re-exports from design-system so no raw hex remains here.
  */
+import { DS_COLORS } from "@/lib/design-system";
+
 export const colors = {
-  bg: "#F7F4EF",
-  surface: "#FFFFFF",
-  surfaceMuted: "#F3F1EC",
-  text: "#0B0B0F",
-  textMuted: "#6B6B73",
-  textSubtle: "#9A9AA3",
-  border: "#E7E3DC",
-  borderStrong: "#0B0B0F",
+  bg: DS_COLORS.background,
+  surface: DS_COLORS.surface,
+  surfaceMuted: DS_COLORS.surfaceMuted,
+  text: DS_COLORS.textPrimary,
+  textMuted: DS_COLORS.textSecondary,
+  textSubtle: DS_COLORS.textMuted,
+  border: DS_COLORS.border,
+  borderStrong: DS_COLORS.textPrimary,
   shadow: "rgba(0,0,0,0.10)",
 
-  accent: "#E97B4E",
-  accentSoft: "#F7D2C3",
-  success: "#27B35B",
-  successSoft: "#DDF6E8",
-  danger: "#D94343",
-  dangerSoft: "#FADADA",
+  accent: DS_COLORS.accent,
+  accentSoft: DS_COLORS.accentSoft,
+  success: DS_COLORS.success,
+  successSoft: DS_COLORS.successSoft,
+  danger: DS_COLORS.danger,
+  dangerSoft: DS_COLORS.dangerSoft,
 
-  blackBtn: "#0B0B0F",
-  white: "#FFFFFF",
+  blackBtn: DS_COLORS.black,
+  white: DS_COLORS.white,
 
   // Legacy compatibility (map to new names where used)
-  background: "#F7F4EF",
-  card: "#FFFFFF",
-  accentLight: "#F7D2C3",
+  background: DS_COLORS.background,
+  card: DS_COLORS.surface,
+  accentLight: DS_COLORS.accentSoft,
 } as const;
 
 export type Colors = typeof colors;

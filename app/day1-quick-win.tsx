@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CheckCircle2 } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { colors, spacing, radius } from "@/src/theme/tokens";
+import { DS_COLORS } from "@/lib/design-system";
 import { track } from "@/lib/analytics";
 import { useApp } from "@/contexts/AppContext";
 import { getDay1TtfvSeconds, setFirstSessionJustFinished } from "@/lib/starter-join";
@@ -149,7 +150,7 @@ export default function Day1QuickWinScreen() {
             <Text style={[s.missionBody, { color: textSecondary }]}>
               Discipline isn&apos;t built in a day. It&apos;s built one task at a time. Let&apos;s start right now.
             </Text>
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: accentOrange }]} onPress={handleImReady} activeOpacity={0.85}>
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: accentOrange }]} onPress={handleImReady} activeOpacity={0.85} accessibilityLabel="I'm ready to start" accessibilityRole="button">
               <Text style={s.primaryBtnText}>I&apos;m Ready</Text>
             </TouchableOpacity>
           </View>
@@ -174,6 +175,9 @@ export default function Day1QuickWinScreen() {
                     onPress={handleMarkComplete}
                     disabled={completing}
                     activeOpacity={0.85}
+                    accessibilityLabel="Mark task complete"
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: completing }}
                   >
                     <Text style={s.markCompleteBtnText}>Mark complete</Text>
                   </TouchableOpacity>
@@ -222,6 +226,8 @@ export default function Day1QuickWinScreen() {
                 style={[s.primaryBtn, s.primaryBtnWide, { backgroundColor: accentOrange }]}
                 onPress={handleLetsKeepGoing}
                 activeOpacity={0.85}
+                accessibilityLabel="Let's keep going"
+                accessibilityRole="button"
               >
                 <Text style={s.primaryBtnText}>Let&apos;s Keep Going</Text>
               </TouchableOpacity>
@@ -237,10 +243,10 @@ export default function Day1QuickWinScreen() {
             <Text style={[s.celebrationSub, { color: textSecondary }]}>
               Add an accountability partner and stay on track together.
             </Text>
-            <TouchableOpacity style={[s.goHomeBtn, { backgroundColor: accentOrange }]} onPress={handleAccountabilityAdd} activeOpacity={0.85}>
+            <TouchableOpacity style={[s.goHomeBtn, { backgroundColor: accentOrange }]} onPress={handleAccountabilityAdd} activeOpacity={0.85} accessibilityLabel="Add accountability partner" accessibilityRole="button">
               <Text style={s.goHomeBtnText}>Add accountability partner</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={s.secondaryBtn} onPress={handleAccountabilityNotNow} activeOpacity={0.85}>
+            <TouchableOpacity style={s.secondaryBtn} onPress={handleAccountabilityNotNow} activeOpacity={0.85} accessibilityLabel="Not now" accessibilityRole="button">
               <Text style={[s.secondaryBtnText, { color: textSecondary }]}>Not now</Text>
             </TouchableOpacity>
           </View>
@@ -329,7 +335,7 @@ const s = StyleSheet.create({
   markCompleteBtnText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   primaryBtn: {
     paddingVertical: 18,
@@ -346,7 +352,7 @@ const s = StyleSheet.create({
   primaryBtnText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   celebrationCtaWrap: {
     position: "absolute",
@@ -405,7 +411,7 @@ const s = StyleSheet.create({
   goHomeBtnText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   secondaryBtn: {
     marginTop: 12,

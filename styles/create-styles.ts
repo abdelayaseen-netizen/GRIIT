@@ -117,7 +117,7 @@ export const styles = StyleSheet.create({
     fontWeight: "600" as const,
   },
   durationChipTextActive: {
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   durationInput: {
     flex: 1,
@@ -221,7 +221,7 @@ export const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -432,7 +432,7 @@ export const styles = StyleSheet.create({
   },
   addTaskButtonText: {
     ...Typography.cardTitle,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   trackingModeRow: {
     flexDirection: "row",
@@ -604,10 +604,10 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
   reviewBadgeDaily: {
-    backgroundColor: "#FF6B3515",
+    backgroundColor: DS_COLORS.accent + "15",
   },
   reviewBadgeTextDaily: {
-    color: "#FF6B35",
+    color: DS_COLORS.runOrange,
   },
   reviewLiveDate: {
     ...Typography.meta,
@@ -785,7 +785,7 @@ export const styles = StyleSheet.create({
   },
   nextButtonText: {
     ...Typography.cardTitle,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   createButton: {
     backgroundColor: DS_COLORS.success,
@@ -798,13 +798,13 @@ export const styles = StyleSheet.create({
   },
   createButtonText: {
     ...Typography.cardTitle,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   locationChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#0EA5E915",
+    backgroundColor: DS_COLORS.linkBlue + "15",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
@@ -812,7 +812,7 @@ export const styles = StyleSheet.create({
   },
   locationChipText: {
     ...Typography.body,
-    color: "#0EA5E9",
+    color: DS_COLORS.linkBlue,
     flex: 1,
     fontSize: 14,
   },
@@ -833,7 +833,7 @@ export const styles = StyleSheet.create({
     color: DS_COLORS.textPrimary,
   },
   locationAddBtn: {
-    backgroundColor: "#0EA5E9",
+    backgroundColor: DS_COLORS.linkBlue,
     paddingHorizontal: 16,
     borderRadius: 10,
     alignItems: "center",
@@ -841,7 +841,7 @@ export const styles = StyleSheet.create({
   },
   locationAddBtnText: {
     ...Typography.cardTitle,
-    color: "#fff",
+    color: DS_COLORS.white,
     fontSize: 14,
   },
   addLocationBtn: {
@@ -852,7 +852,7 @@ export const styles = StyleSheet.create({
   },
   addLocationBtnText: {
     ...Typography.body,
-    color: "#0EA5E9",
+    color: DS_COLORS.linkBlue,
     fontSize: 14,
   },
   timeRow: {

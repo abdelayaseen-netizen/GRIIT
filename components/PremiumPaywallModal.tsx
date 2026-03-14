@@ -10,6 +10,7 @@ import {
 import { Crown, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DS_COLORS } from "@/lib/design-system";
 
 interface PremiumPaywallModalProps {
   visible: boolean;
@@ -148,6 +149,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 });

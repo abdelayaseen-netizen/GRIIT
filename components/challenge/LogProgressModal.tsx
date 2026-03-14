@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DS_COLORS } from "@/lib/design-system";
 
 interface LogProgressModalProps {
   visible: boolean;
@@ -99,7 +100,7 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
                   disabled={!isValid || submitting}
                 >
                   {submitting ? (
-                    <ActivityIndicator size="small" color="#fff" />
+                    <ActivityIndicator size="small" color={DS_COLORS.white} />
                   ) : (
                     <Text style={styles.logBtnText}>Log</Text>
                   )}
@@ -149,8 +150,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: "#B91C1C",
-    marginTop: 8,
+color: DS_COLORS.dangerDark,
+  marginTop: 8,
   },
   actions: {
     flexDirection: "row",
@@ -177,6 +178,6 @@ const styles = StyleSheet.create({
   logBtnText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 });

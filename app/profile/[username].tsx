@@ -6,6 +6,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcQuery } from "@/lib/trpc";
 import { ROUTES } from "@/lib/routes";
+import { DS_COLORS } from "@/lib/design-system";
 import {
   ProfileHeader,
   DisciplineScoreCard,
@@ -220,5 +221,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
-  retryButtonText: { fontSize: 16, fontWeight: "600", color: "#fff" },
+  retryButtonText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.white },
 });

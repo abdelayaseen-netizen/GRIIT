@@ -28,8 +28,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import type { ThemeColors } from "@/lib/theme-palettes";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/SkeletonLoader";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
@@ -69,7 +67,6 @@ type StravaActivity = {
 type ProfileStyles = ReturnType<typeof createProfileStyles>;
 
 function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
-  const { colors } = useTheme();
   const [stravaEnabled, setStravaEnabled] = useState<boolean | null>(null);
   const [stravaConnection, setStravaConnection] = useState<{
     id: string;
@@ -173,7 +170,7 @@ function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
       <View style={styles.integrationsCard}>
         <View style={styles.integrationsRow}>
           <View style={styles.integrationsIconWrap}>
-            <Activity size={22} color="#FC4C02" />
+            <Activity size={22} color={DS_COLORS.activityOrange} />
           </View>
           <View style={styles.integrationsTextWrap}>
             <Text style={styles.integrationsName}>Strava</Text>
@@ -187,6 +184,9 @@ function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
               onPress={handleDisconnectStrava}
               disabled={disconnecting}
               activeOpacity={0.7}
+              accessibilityLabel="Disconnect Strava"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: disconnecting }}
             >
               <Text style={styles.integrationsDisconnectText}>{disconnecting ? "…" : "Disconnect"}</Text>
             </TouchableOpacity>
@@ -196,8 +196,11 @@ function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
               onPress={handleConnectStrava}
               disabled={loadingAuth}
               activeOpacity={0.7}
+              accessibilityLabel="Connect Strava"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loadingAuth }}
             >
-              <Link2 size={16} color="#fff" />
+              <Link2 size={16} color={DS_COLORS.white} />
               <Text style={styles.integrationsConnectText}>{loadingAuth ? "Opening…" : "Connect Strava"}</Text>
             </TouchableOpacity>
           )}
@@ -211,11 +214,13 @@ function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
                 if (!activitiesExpanded && recentActivities.length === 0) fetchRecentActivities();
               }}
               activeOpacity={0.7}
+              accessibilityLabel={activitiesExpanded ? "Hide recent activities" : "View recent activities"}
+              accessibilityRole="button"
             >
               <Text style={styles.integrationsActivitiesToggleText}>
                 {activitiesExpanded ? "Hide recent activities" : "View recent activities"}
               </Text>
-              <ChevronRight size={16} color={colors.text.muted} style={{ transform: [{ rotate: activitiesExpanded ? "90deg" : "0deg" }] }} />
+              <ChevronRight size={16} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: activitiesExpanded ? "90deg" : "0deg" }] }} />
             </TouchableOpacity>
             {activitiesExpanded && (
               <View style={styles.integrationsActivitiesList}>
@@ -246,7 +251,6 @@ export default function ProfileScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { user } = useAuth();
-  const { colors } = useTheme();
   const queryClient = useQueryClient();
   const {
     profile,
@@ -259,7 +263,7 @@ export default function ProfileScreen() {
   } = useApp();
   const headerFade = useRef(new Animated.Value(0)).current;
 
-  const styles = useMemo(() => createProfileStyles(colors), [colors]);
+  const styles = useMemo(() => createProfileStyles(), []);
 
   const completedQuery = useQuery({
     queryKey: ["profile", user?.id, "completedChallenges"],
@@ -397,22 +401,26 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.container} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <View style={styles.guestIdentityCard}>
-            <Lock size={32} color={colors.text.tertiary} style={{ marginBottom: 12 }} />
-            <Text style={styles.guestIdentityTitle}>Sign in to view your profile</Text>
+            <Lock size={32} color={DS_COLORS.textMuted} style={{ marginBottom: 12 }} />
+            <Text style={styles.guestIdentityTitle} accessibilityRole="header">Sign in to view your profile</Text>
             <Text style={styles.guestIdentitySub}>Sign in to see your stats, streaks, and achievements.</Text>
             <TouchableOpacity
               style={styles.guestIdentityCta}
               onPress={() => router.push(ROUTES.AUTH_LOGIN as never)}
               activeOpacity={0.85}
+              accessibilityLabel="Sign in"
+              accessibilityRole="button"
             >
               <Text style={styles.guestIdentityCtaText}>Sign in</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.guestIdentityCta, { backgroundColor: "transparent", borderWidth: 1, borderColor: colors.border, marginTop: 12 }]}
+              style={[styles.guestIdentityCta, { backgroundColor: "transparent", borderWidth: 1, borderColor: DS_COLORS.border, marginTop: 12 }]}
               onPress={() => router.push(ROUTES.AUTH_SIGNUP as never)}
               activeOpacity={0.85}
+              accessibilityLabel="Sign up"
+              accessibilityRole="button"
             >
-              <Text style={[styles.guestIdentityCtaText, { color: colors.text.primary }]}>Sign up</Text>
+              <Text style={[styles.guestIdentityCtaText, { color: DS_COLORS.textPrimary }]}>Sign up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -422,7 +430,7 @@ export default function ProfileScreen() {
 
   if (stillLoading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <ProfileSkeleton />
         </ScrollView>
@@ -444,13 +452,13 @@ export default function ProfileScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={onRefresh}
-              tintColor={colors.accent}
+              tintColor={DS_COLORS.accent}
             />
           }
         >
           <View style={styles.errorCard}>
             <View style={styles.errorIconWrap}>
-              <Shield size={28} color={colors.text.muted} strokeWidth={1.5} />
+              <Shield size={28} color={DS_COLORS.textMuted} strokeWidth={1.5} />
             </View>
             <Text style={styles.errorTitle}>
               {autoCreateError ? "Profile Setup Issue" : "Connection Issue"}
@@ -466,6 +474,8 @@ export default function ProfileScreen() {
               }}
               activeOpacity={0.7}
               testID="profile-retry-button"
+              accessibilityLabel="Retry loading profile"
+              accessibilityRole="button"
             >
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
@@ -479,6 +489,8 @@ export default function ProfileScreen() {
               }}
               activeOpacity={0.7}
               testID="profile-signout-button"
+              accessibilityLabel="Sign out"
+              accessibilityRole="button"
             >
               <Text style={[styles.signOutLinkText, { color: DS_COLORS.accent }]}>Sign Out</Text>
             </TouchableOpacity>
@@ -490,7 +502,7 @@ export default function ProfileScreen() {
 
   if (!profile) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <ProfileSkeleton />
         </ScrollView>
@@ -513,7 +525,7 @@ export default function ProfileScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={onRefresh}
-              tintColor={colors.accent}
+              tintColor={DS_COLORS.accent}
             />
           }
         >
@@ -572,7 +584,7 @@ export default function ProfileScreen() {
         {dashboardDataError && (
           <View style={[styles.errorCard, { marginHorizontal: 20, marginTop: 16 }]}>
             <Text style={[styles.errorSubtitle, { marginBottom: 12 }]}>Couldn&apos;t load some sections.</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => queryClient.invalidateQueries({ queryKey: ["profile"] })} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.retryButton} onPress={() => queryClient.invalidateQueries({ queryKey: ["profile"] })} activeOpacity={0.7} accessibilityLabel="Retry" accessibilityRole="button">
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>
@@ -615,7 +627,7 @@ export default function ProfileScreen() {
             accessibilityRole="button"
           >
             <View style={styles.menuIconWrap}>
-              <Globe size={18} color={colors.text.secondary} />
+              <Globe size={18} color={DS_COLORS.textSecondary} />
             </View>
             <View style={styles.menuTextWrap}>
               <Text style={styles.menuText}>Profile: Public</Text>
@@ -637,13 +649,13 @@ export default function ProfileScreen() {
             accessibilityRole="button"
           >
             <View style={styles.menuIconWrap}>
-              <Settings size={18} color={colors.text.secondary} />
+              <Settings size={18} color={DS_COLORS.textSecondary} />
             </View>
             <View style={styles.menuTextWrap}>
               <Text style={styles.menuText}>Settings</Text>
               <Text style={styles.menuSubtext}>Privacy, notifications, consequences</Text>
             </View>
-            <ChevronRight size={18} color={colors.text.muted} />
+            <ChevronRight size={18} color={DS_COLORS.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -672,7 +684,6 @@ export default function ProfileScreen() {
 }
 
 function ProfileSkeleton() {
-  const { colors } = useTheme();
   return (
     <View>
       <View style={skeletonStyles.header}>
@@ -690,7 +701,7 @@ function ProfileSkeleton() {
       </View>
       <View style={skeletonStyles.statsRow}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <View key={i} style={[skeletonStyles.statItem, { backgroundColor: colors.card }]}>
+          <View key={i} style={[skeletonStyles.statItem, { backgroundColor: DS_COLORS.card }]}>
             <Skeleton width={32} height={32} borderRadius={16} />
             <Skeleton width={32} height={22} borderRadius={4} style={{ marginTop: 8 }} />
             <Skeleton width={40} height={10} borderRadius={4} style={{ marginTop: 4 }} />
@@ -750,36 +761,36 @@ const skeletonStyles = StyleSheet.create({
   },
 });
 
-function createProfileStyles(c: ThemeColors) {
+function createProfileStyles() {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.background },
+    container: { flex: 1, backgroundColor: DS_COLORS.background },
     scroll: { flex: 1 },
     scrollContent: { paddingBottom: DS_SPACING.section },
     guestIdentityCard: {
-      backgroundColor: c.card,
+      backgroundColor: DS_COLORS.card,
       borderRadius: DS_RADIUS.cardAlt,
       padding: DS_SPACING.xxl,
       marginHorizontal: DS_SPACING.screenHorizontal,
       marginTop: DS_SPACING.xxl,
       alignItems: "center",
       borderWidth: DS_BORDERS.width,
-      borderColor: c.border,
+      borderColor: DS_COLORS.border,
     },
     guestIdentityTitle: {
       fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
       fontWeight: "700" as const,
-      color: c.text.primary,
+      color: DS_COLORS.textPrimary,
       marginBottom: DS_SPACING.sm,
       textAlign: "center",
     },
     guestIdentitySub: {
       fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-      color: c.text.secondary,
+      color: DS_COLORS.textSecondary,
       textAlign: "center",
       marginBottom: DS_SPACING.xl,
     },
     guestIdentityCta: {
-      backgroundColor: c.accent,
+      backgroundColor: DS_COLORS.accent,
       paddingVertical: DS_SPACING.lg,
       paddingHorizontal: DS_SPACING.xxl,
       borderRadius: DS_RADIUS.button,
@@ -793,18 +804,18 @@ function createProfileStyles(c: ThemeColors) {
     },
     errorCard: {
       alignItems: "center",
-      backgroundColor: c.card,
+      backgroundColor: DS_COLORS.card,
       borderRadius: DS_RADIUS.cardAlt,
       paddingVertical: DS_SPACING.xxxl,
       paddingHorizontal: DS_SPACING.xxl,
       borderWidth: DS_BORDERS.width,
-      borderColor: c.border,
+      borderColor: DS_COLORS.border,
     },
     errorIconWrap: {
       width: 60,
       height: 60,
       borderRadius: 30,
-      backgroundColor: c.pill,
+      backgroundColor: DS_COLORS.chipFill,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: DS_SPACING.lg,
@@ -812,19 +823,19 @@ function createProfileStyles(c: ThemeColors) {
     errorTitle: {
       fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
       fontWeight: "700" as const,
-      color: c.text.primary,
-      textAlign: "center" as const,
+      color: DS_COLORS.textPrimary,
+      textAlign: "center",
       marginBottom: DS_SPACING.sm,
     },
     errorSubtitle: {
       fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-      color: c.text.secondary,
-      textAlign: "center" as const,
+      color: DS_COLORS.textSecondary,
+      textAlign: "center",
       marginBottom: DS_SPACING.xxl,
       lineHeight: 22,
     },
     retryButton: {
-      backgroundColor: c.accent,
+      backgroundColor: DS_COLORS.accent,
       paddingHorizontal: DS_SPACING.xxxl,
       paddingVertical: DS_SPACING.md,
       borderRadius: DS_RADIUS.button,
@@ -832,21 +843,21 @@ function createProfileStyles(c: ThemeColors) {
     },
     retryButtonText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "700" as const, color: DS_COLORS.white },
     signOutLink: { paddingVertical: DS_SPACING.sm },
-    signOutLinkText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "500" as const, color: c.text.tertiary, textDecorationLine: "underline" as const },
-    menuEditLabel: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: c.text.secondary },
+    signOutLinkText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "500" as const, color: DS_COLORS.textMuted, textDecorationLine: "underline" as const },
+    menuEditLabel: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: DS_COLORS.textSecondary },
     integrationsSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.xl },
     integrationsTitle: {
       fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
       fontWeight: "600" as const,
-      color: c.text.secondary,
+      color: DS_COLORS.textSecondary,
       marginBottom: DS_SPACING.sm,
       textTransform: "uppercase" as const,
     },
     integrationsCard: {
-      backgroundColor: c.card,
+      backgroundColor: DS_COLORS.card,
       borderRadius: DS_RADIUS.cardAlt,
       borderWidth: DS_BORDERS.width,
-      borderColor: c.border,
+      borderColor: DS_COLORS.border,
       padding: DS_SPACING.cardPadding,
     },
     integrationsRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: DS_SPACING.md },
@@ -859,13 +870,13 @@ function createProfileStyles(c: ThemeColors) {
       justifyContent: "center" as const,
     },
     integrationsTextWrap: { flex: 1 },
-    integrationsName: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const, color: c.text.primary },
-    integrationsSub: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.muted, marginTop: 2 },
+    integrationsName: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const, color: DS_COLORS.textPrimary },
+    integrationsSub: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textMuted, marginTop: 2 },
     integrationsConnectBtn: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
       gap: DS_SPACING.sm,
-      backgroundColor: "#FC4C02",
+      backgroundColor: DS_COLORS.activityOrange,
       paddingVertical: DS_SPACING.sm,
       paddingHorizontal: DS_SPACING.lg,
       borderRadius: DS_RADIUS.input,
@@ -881,9 +892,9 @@ function createProfileStyles(c: ThemeColors) {
       marginTop: DS_SPACING.md,
       paddingTop: DS_SPACING.md,
       borderTopWidth: 1,
-      borderTopColor: c.border,
+      borderTopColor: DS_COLORS.border,
     },
-    integrationsActivitiesToggleText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.secondary },
+    integrationsActivitiesToggleText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textSecondary },
     integrationsActivitiesList: { marginTop: DS_SPACING.sm, gap: DS_SPACING.sm },
     integrationsActivityRow: {
       flexDirection: "row" as const,
@@ -891,34 +902,34 @@ function createProfileStyles(c: ThemeColors) {
       alignItems: "center",
       paddingVertical: DS_SPACING.sm,
       paddingHorizontal: DS_SPACING.md,
-      backgroundColor: c.pill,
+      backgroundColor: DS_COLORS.chipFill,
       borderRadius: DS_RADIUS.input,
     },
-    integrationsActivityName: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.primary, flex: 1 },
-    integrationsActivityMeta: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: c.text.muted, marginLeft: DS_SPACING.sm },
-    integrationsActivitiesEmpty: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: c.text.muted, marginTop: DS_SPACING.sm },
+    integrationsActivityName: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textPrimary, flex: 1 },
+    integrationsActivityMeta: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.textMuted, marginLeft: DS_SPACING.sm },
+    integrationsActivitiesEmpty: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textMuted, marginTop: DS_SPACING.sm },
     menuSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.lg },
     menuItem: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
       gap: DS_SPACING.md,
-      backgroundColor: c.card,
+      backgroundColor: DS_COLORS.card,
       padding: DS_SPACING.cardPadding,
       borderRadius: DS_RADIUS.cardAlt,
       borderWidth: DS_BORDERS.width,
-      borderColor: c.border,
+      borderColor: DS_COLORS.border,
     },
     menuIconWrap: {
       width: 40,
       height: 40,
       borderRadius: DS_RADIUS.iconButton,
-      backgroundColor: c.pill,
+      backgroundColor: DS_COLORS.chipFill,
       alignItems: "center" as const,
       justifyContent: "center" as const,
     },
     menuTextWrap: { flex: 1 },
-    menuText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const, color: c.text.primary },
-    menuSubtext: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: c.text.muted, marginTop: 2 },
+    menuText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const, color: DS_COLORS.textPrimary },
+    menuSubtext: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.textMuted, marginTop: 2 },
     dangerSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.xxl, marginTop: DS_SPACING.sm, alignItems: "center" as const },
     signOutButton: { paddingVertical: DS_SPACING.md, paddingHorizontal: DS_SPACING.xl },
     signOutText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600" as const },

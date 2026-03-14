@@ -1,56 +1,59 @@
 /**
  * Design tokens: colors, typography, spacing. Matches lib/design-tokens + constants/colors.
+ * Colors re-export from design-system for single source of truth.
  */
+
+import { DS_COLORS } from "@/lib/design-system";
 
 // ─── COLORS (Rork) ──────────────────────────────────────────────────────────
 export const colors = {
-  background: "#F0EDE6",
-  surface: "#FFFFFF",
-  textPrimary: "#1A1A1A",
-  textSecondary: "#888884",
-  borderSubtle: "#E8E5DE",
+  background: DS_COLORS.background,
+  surface: DS_COLORS.surface,
+  textPrimary: DS_COLORS.textPrimary,
+  textSecondary: DS_COLORS.textSecondary,
+  borderSubtle: DS_COLORS.border,
   shadowColor: "rgba(0,0,0,0.04)",
-  accentOrange: "#E07B4A",
-  accentOrangeDark: "#D96A3E",
-  chipFill: "#F0EDE6",
-  chipStroke: "#E0DDD6",
-  chipText: "#444",
-  successGreenText: "#2F7A52",
-  badgeRedText: "#AA1111",
-  badgeRedBg: "#FFE5E5",
-  badgeOrangeText: "#C85A20",
-  badgeOrangeBg: "#FFF0E8",
-  badgeGreenText: "#2F7A52",
-  badgeGreenBg: "#EAF5F0",
-  badgeYellowGreenText: "#7C9B2E",
-  badgeYellowGreenBg: "#ECFCCB",
-  purpleStripe: "#7C6BC4",
-  blueStripe: "#2563EB",
-  greenStripe: "#2F7A52",
-  orangeStripe: "#E07B4A",
-  redStripe: "#E53E3E",
-  searchIcon: "#888884",
-  searchPlaceholder: "#888884",
-  tabInactive: "#888884",
-  centerButtonBg: "#1C1C1E",
-  white: "#FFFFFF",
-  black: "#1A1A1A",
+  accentOrange: DS_COLORS.accent,
+  accentOrangeDark: DS_COLORS.accentDark,
+  chipFill: DS_COLORS.chipFill,
+  chipStroke: DS_COLORS.chipStroke,
+  chipText: DS_COLORS.filterChipActiveBg,
+  successGreenText: DS_COLORS.success,
+  badgeRedText: DS_COLORS.difficultyExtremeText,
+  badgeRedBg: DS_COLORS.difficultyExtremeBg,
+  badgeOrangeText: DS_COLORS.difficultyMediumText,
+  badgeOrangeBg: DS_COLORS.difficultyMediumBg,
+  badgeGreenText: DS_COLORS.success,
+  badgeGreenBg: DS_COLORS.featuredLabelBg,
+  badgeYellowGreenText: DS_COLORS.badgeYellowGreenText,
+  badgeYellowGreenBg: DS_COLORS.badgeYellowGreenBg,
+  purpleStripe: DS_COLORS.purpleStripe,
+  blueStripe: DS_COLORS.blueStripe,
+  greenStripe: DS_COLORS.success,
+  orangeStripe: DS_COLORS.accent,
+  redStripe: DS_COLORS.danger,
+  searchIcon: DS_COLORS.inputPlaceholder,
+  searchPlaceholder: DS_COLORS.inputPlaceholder,
+  tabInactive: DS_COLORS.tabInactive,
+  centerButtonBg: DS_COLORS.centerButtonBg,
+  white: DS_COLORS.white,
+  black: DS_COLORS.black,
 
-  bgMain: "#F0EDE6",
-  cardBg: "#FFFFFF",
-  borderLight: "#E8E5DE",
-  textSecondaryCreate: "#888884",
-  accentOrangeCreate: "#E07B4A",
-  accentOrangeSoft: "#FFF5F0",
-  accentGreen: "#2F7A52",
-  accentGreenSoft: "#EAF5F0",
-  accentBlue: "#3B82F6",
-  accentPurple: "#6366F1",
-  accentYellow: "#D4A017",
-  accentRed: "#E53E3E",
-  accentRedSoft: "#FEF2F2",
-  accentPink: "#EC4899",
-  accentGray: "#888884",
+  bgMain: DS_COLORS.background,
+  cardBg: DS_COLORS.surface,
+  borderLight: DS_COLORS.border,
+  textSecondaryCreate: DS_COLORS.textSecondary,
+  accentOrangeCreate: DS_COLORS.accent,
+  accentOrangeSoft: DS_COLORS.accentSoft,
+  accentGreen: DS_COLORS.success,
+  accentGreenSoft: DS_COLORS.successSoft,
+  accentBlue: DS_COLORS.checkinBlue,
+  accentPurple: DS_COLORS.taskIndigo,
+  accentYellow: DS_COLORS.milestoneGold,
+  accentRed: DS_COLORS.danger,
+  accentRedSoft: DS_COLORS.dangerSoft,
+  accentPink: DS_COLORS.taskPhotoPink,
+  accentGray: DS_COLORS.textSecondary,
 } as const;
 
 // ─── TYPOGRAPHY (Rork) ──────────────────────────────────────────────────────
@@ -129,21 +132,21 @@ export const radius = {
 // ─── SHADOWS (Rork: opacity 0.04, radius 8, elevation 2) ────────────────────
 export const shadows = {
   card: {
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
   subtle: {
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
   centerButton: {
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -151,11 +154,11 @@ export const shadows = {
   },
 } as const;
 
-// ─── BORDERS (Rork: #E8E5DE) ───────────────────────────────────────────────
+// ─── BORDERS (Rork) ───────────────────────────────────────────────────────
 export const borders = {
-  card: { borderWidth: 1, borderColor: "#E8E5DE" },
-  chip: { borderWidth: 1, borderColor: "#E0DDD6" },
-  search: { borderWidth: 1, borderColor: "#E8E5DE" },
+  card: { borderWidth: 1, borderColor: DS_COLORS.border },
+  chip: { borderWidth: 1, borderColor: DS_COLORS.chipStroke },
+  search: { borderWidth: 1, borderColor: DS_COLORS.border },
 } as const;
 
 // ─── ICON SIZES ────────────────────────────────────────────────────────────

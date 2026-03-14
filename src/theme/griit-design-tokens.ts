@@ -26,10 +26,10 @@ export const GRIIT_COLORS = {
   chipOutlineBorder: DS_COLORS.border,
   overlayDark: "rgba(0,0,0,0.4)",
   overlayModal: "rgba(0,0,0,0.5)",
-  challengeHeaderDark: "#1A1A2E",
-  challengeHeaderGreen: "#1B5E20",
+  challengeHeaderDark: DS_COLORS.challengeHeaderDark,
+  challengeHeaderGreen: DS_COLORS.difficultyEasyHeader,
   alertRedBg: DS_COLORS.dangerSoft,
-  alertRedBorder: "#F8D7DA",
+  alertRedBorder: DS_COLORS.alertRedBorder,
 } as const;
 
 export const GRIIT_SPACING = {

@@ -1,12 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 const STEPPER_CIRCLE = 28;
 const CONNECTOR_HEIGHT = 4;
-const GREEN = "#2F7A52";
-const ORANGE = "#E07B4A";
-const GRAY = "#D0CEC8";
 
 interface ChallengeStepperProps {
   currentStep: number;
@@ -36,7 +34,7 @@ export function ChallengeStepper({
               ]}
             >
               {isCompleted ? (
-                <Check size={16} color="#fff" strokeWidth={2.5} />
+                <Check size={16} color={DS_COLORS.white} strokeWidth={2.5} />
               ) : (
                 <Text
                   style={[
@@ -79,24 +77,24 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   circleCompleted: {
-    backgroundColor: GREEN,
+    backgroundColor: DS_COLORS.success,
   },
   circleActive: {
-    backgroundColor: ORANGE,
+    backgroundColor: DS_COLORS.accent,
   },
   circleInactive: {
-    backgroundColor: GRAY,
+    backgroundColor: DS_COLORS.stepperGray,
   },
   circleText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
   },
   circleTextActive: {
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   circleTextInactive: {
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
   },
   connector: {
     width: 32,
@@ -104,9 +102,9 @@ const s = StyleSheet.create({
     marginHorizontal: 4,
   },
   connectorCompleted: {
-    backgroundColor: GREEN,
+    backgroundColor: DS_COLORS.success,
   },
   connectorIncomplete: {
-    backgroundColor: GRAY,
+    backgroundColor: DS_COLORS.stepperGray,
   },
 });

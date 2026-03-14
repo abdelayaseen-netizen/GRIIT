@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 function logError(error: Error, componentStack: string | null | undefined) {
   if (__DEV__) {
@@ -31,7 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <View style={styles.container}>
           <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.message}>{"We've"} been notified. Try again or restart the app.</Text>
-          <TouchableOpacity style={styles.button} onPress={this.retry} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.button} onPress={this.retry} activeOpacity={0.8} accessibilityLabel="Try again" accessibilityRole="button">
             <Text style={styles.buttonText}>Try again</Text>
           </TouchableOpacity>
         </View>
@@ -47,22 +48,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    backgroundColor: "#0f0f0f",
+    backgroundColor: DS_COLORS.overlayDarker,
   },
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#fff",
+    color: DS_COLORS.white,
     marginBottom: 8,
   },
   message: {
     fontSize: 15,
-    color: "#999",
+    color: DS_COLORS.grayMuted,
     textAlign: "center",
     marginBottom: 24,
   },
   button: {
-    backgroundColor: "#6366f1",
+    backgroundColor: DS_COLORS.taskIndigo,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -70,6 +71,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 });

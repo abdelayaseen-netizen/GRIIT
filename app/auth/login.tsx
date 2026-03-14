@@ -107,6 +107,7 @@ export default function LoginScreen() {
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()}
               editable={!loading}
+              accessibilityLabel="Email"
             />
 
             <Text style={styles.label}>Password</Text>
@@ -125,10 +126,13 @@ export default function LoginScreen() {
                 returnKeyType="go"
                 onSubmitEditing={() => canSubmit && handleLogin()}
                 editable={!loading}
+                accessibilityLabel="Password"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword((p) => !p)}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                accessibilityRole="button"
               >
                 {showPassword ? (
                   <EyeOff size={22} color={DS_COLORS.textSecondary} />
@@ -141,6 +145,9 @@ export default function LoginScreen() {
               style={styles.forgotLink}
               onPress={() => router.push(ROUTES.AUTH_FORGOT_PASSWORD as never)}
               disabled={loading}
+              accessibilityLabel="Forgot password?"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading }}
             >
               <Text style={styles.forgotLinkText}>Forgot password?</Text>
             </TouchableOpacity>
@@ -153,6 +160,9 @@ export default function LoginScreen() {
               onPress={handleLogin}
               disabled={!canSubmit || loading}
               activeOpacity={0.8}
+              accessibilityLabel="Log in"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canSubmit || loading }}
             >
               {loading ? (
                 <ActivityIndicator color={DS_COLORS.white} size="small" />
@@ -166,6 +176,9 @@ export default function LoginScreen() {
               <TouchableOpacity
                 onPress={() => router.push(ROUTES.AUTH_SIGNUP as never)}
                 disabled={loading}
+                accessibilityLabel="Sign up"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loading }}
               >
                 <Text style={styles.footerLink}>Sign Up</Text>
               </TouchableOpacity>

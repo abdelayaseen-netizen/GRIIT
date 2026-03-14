@@ -49,20 +49,20 @@ const JOURNAL_CATEGORY_LABELS: Record<JournalCategory, string> = {
 };
 
 const MOOD_OPTIONS: { value: MoodLevel; label: string; icon: React.ElementType; color: string }[] = [
-  { value: "very_bad", label: "Awful", icon: Angry, color: "#EF4444" },
-  { value: "bad", label: "Low", icon: Frown, color: "#F97316" },
-  { value: "neutral", label: "Okay", icon: Meh, color: "#EAB308" },
-  { value: "good", label: "Good", icon: Smile, color: "#22C55E" },
-  { value: "very_good", label: "Great", icon: Laugh, color: "#10B981" },
+  { value: "very_bad", label: "Awful", icon: Angry, color: DS_COLORS.danger },
+  { value: "bad", label: "Low", icon: Frown, color: DS_COLORS.taskAmber },
+  { value: "neutral", label: "Okay", icon: Meh, color: DS_COLORS.moodYellow },
+  { value: "good", label: "Good", icon: Smile, color: DS_COLORS.acceptGreen },
+  { value: "very_good", label: "Great", icon: Laugh, color: DS_COLORS.taskEmerald },
 ];
 
 const ENERGY_LEVELS = [1, 2, 3, 4, 5];
 
 const BODY_STATE_OPTIONS: { value: BodyState; label: string; color: string }[] = [
-  { value: "fresh", label: "Fresh", color: "#22C55E" },
-  { value: "ok", label: "OK", color: "#EAB308" },
-  { value: "sore", label: "Sore", color: "#F97316" },
-  { value: "exhausted", label: "Exhausted", color: "#EF4444" },
+  { value: "fresh", label: "Fresh", color: DS_COLORS.acceptGreen },
+  { value: "ok", label: "OK", color: DS_COLORS.moodYellow },
+  { value: "sore", label: "Sore", color: DS_COLORS.taskAmber },
+  { value: "exhausted", label: "Exhausted", color: DS_COLORS.danger },
 ];
 
 const MIN_ENTRY_LENGTH = 20;
@@ -290,7 +290,7 @@ export default function JournalTaskScreen() {
         <View style={s.successContainer}>
           <Animated.View style={[s.successContent, { transform: [{ scale: successScale }] }]}>
             <View style={s.successIconWrap}>
-              <Check size={32} color="#fff" />
+              <Check size={32} color={DS_COLORS.white} />
             </View>
             <Text style={s.successTitle}>Journal saved</Text>
             <Text style={s.successSubtitle}>Your thoughts are recorded for today.</Text>
@@ -337,7 +337,7 @@ export default function JournalTaskScreen() {
             <View style={s.headerCenter}>
               <Text style={s.headerTitle}>Journal Entry</Text>
               <View style={s.headerTag}>
-                <BookOpen size={10} color="#6366F1" />
+                <BookOpen size={10} color={DS_COLORS.taskIndigo} />
                 <Text style={s.headerTagText}>Journal</Text>
               </View>
             </View>
@@ -401,7 +401,7 @@ export default function JournalTaskScreen() {
                   <View style={s.energyRow}>
                     {ENERGY_LEVELS.map((level) => {
                       const isSelected = energy === level;
-                      const fillColor = level <= 2 ? "#EF4444" : level === 3 ? "#EAB308" : "#22C55E";
+                      const fillColor = level <= 2 ? DS_COLORS.danger : level === 3 ? DS_COLORS.moodYellow : DS_COLORS.acceptGreen;
                       return (
                         <TouchableOpacity
                           key={level}
@@ -489,11 +489,11 @@ export default function JournalTaskScreen() {
                     <View style={s.photoProofPreview}>
                       <Image source={{ uri: photoUri }} style={s.photoProofThumb} />
                       <View style={s.photoProofActions}>
-                        <TouchableOpacity style={s.photoProofBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
+                        <TouchableOpacity style={s.photoProofBtn} onPress={handleTakePhoto} activeOpacity={0.8} accessibilityLabel="Retake photo" accessibilityRole="button">
                           <Camera size={18} color={DS_COLORS.textPrimary} />
                           <Text style={s.photoProofBtnText}>Retake</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={s.photoProofBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
+                        <TouchableOpacity style={s.photoProofBtn} onPress={handlePickFromGallery} activeOpacity={0.8} accessibilityLabel="Change photo from gallery" accessibilityRole="button">
                           <ImagePlus size={18} color={DS_COLORS.textPrimary} />
                           <Text style={s.photoProofBtnText}>Change</Text>
                         </TouchableOpacity>
@@ -502,7 +502,7 @@ export default function JournalTaskScreen() {
                   ) : (
                     <View style={s.photoProofEmpty}>
                       <TouchableOpacity style={s.photoProofPrimaryBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
-                        <Camera size={22} color="#fff" />
+                        <Camera size={22} color={DS_COLORS.white} />
                         <Text style={s.photoProofPrimaryBtnText}>Take photo</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={s.photoProofSecondaryBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
@@ -523,15 +523,18 @@ export default function JournalTaskScreen() {
                   disabled={loading || !isValid()}
                   activeOpacity={0.8}
                   testID="journal-submit-button"
+                  accessibilityLabel="Save journal entry"
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: loading || !isValid() }}
                 >
                   {loading ? (
                     <View style={s.submitBtnInner}>
-                      <ActivityIndicator color="#fff" size="small" />
+                      <ActivityIndicator color={DS_COLORS.white} size="small" />
                       <Text style={s.submitBtnText}>{uploading ? "Uploading…" : "Saving…"}</Text>
                     </View>
                   ) : (
                     <View style={s.submitBtnInner}>
-                      <Heart size={18} color="#fff" />
+                      <Heart size={18} color={DS_COLORS.white} />
                       <Text style={s.submitBtnText}>Complete Journal</Text>
                     </View>
                   )}
@@ -548,7 +551,7 @@ export default function JournalTaskScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FAF8F6",
+    backgroundColor: DS_COLORS.journalCardBg,
   },
   flex: {
     flex: 1,
@@ -561,16 +564,16 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(0,0,0,0.06)",
-    backgroundColor: "#FAF8F6",
+    backgroundColor: DS_COLORS.journalCardBg,
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 3,
@@ -590,7 +593,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#6366F112",
+    backgroundColor: DS_COLORS.taskIndigoBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -598,7 +601,7 @@ const s = StyleSheet.create({
   headerTagText: {
     fontSize: 10,
     fontWeight: "600" as const,
-    color: "#6366F1",
+    color: DS_COLORS.taskIndigo,
   },
   headerRight: {
     width: 36,
@@ -613,22 +616,22 @@ const s = StyleSheet.create({
   },
 
   promptCard: {
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
     borderLeftWidth: 4,
-    borderLeftColor: "#6366F1",
+    borderLeftColor: DS_COLORS.taskIndigo,
   },
   promptLabel: {
     fontSize: 11,
     fontWeight: "700" as const,
-    color: "#6366F1",
+    color: DS_COLORS.taskIndigo,
     textTransform: "uppercase" as const,
     letterSpacing: 0.8,
     marginBottom: 10,
@@ -646,7 +649,7 @@ const s = StyleSheet.create({
     marginTop: 14,
   },
   typeChip: {
-    backgroundColor: "#6366F10D",
+    backgroundColor: DS_COLORS.taskIndigoAlpha,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
@@ -654,7 +657,7 @@ const s = StyleSheet.create({
   typeChipText: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: "#6366F1",
+    color: DS_COLORS.taskIndigo,
   },
 
   checkinSection: {
@@ -676,10 +679,10 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 4,
     borderRadius: 12,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1.5,
     borderColor: "transparent",
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -701,10 +704,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1.5,
     borderColor: "transparent",
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -726,10 +729,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1.5,
     borderColor: "transparent",
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -751,16 +754,16 @@ const s = StyleSheet.create({
     marginBottom: 10,
   },
   textArea: {
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1,
-    borderColor: "#E8E6EF",
+    borderColor: DS_COLORS.border,
     borderRadius: 14,
     padding: 16,
     fontSize: 15,
     color: DS_COLORS.textPrimary,
     lineHeight: 22,
     minHeight: 160,
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -777,10 +780,10 @@ const s = StyleSheet.create({
     color: DS_COLORS.textMuted,
   },
   wordCountWarn: {
-    color: "#DC2626",
+    color: DS_COLORS.dangerMid,
   },
   wordCountNear: {
-    color: "#F59E0B",
+    color: DS_COLORS.taskAmber,
   },
   wordLimitRow: {
     flexDirection: "row",
@@ -790,8 +793,8 @@ const s = StyleSheet.create({
   limitReached: {
     fontSize: 11,
     fontWeight: "600" as const,
-    color: "#F59E0B",
-    backgroundColor: "#F59E0B14",
+    color: DS_COLORS.taskAmber,
+    backgroundColor: DS_COLORS.taskAmberAlpha,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
@@ -802,7 +805,7 @@ const s = StyleSheet.create({
   },
 
   footerSafe: {
-    backgroundColor: "#FAF8F6",
+    backgroundColor: DS_COLORS.journalCardBg,
   },
   footer: {
     paddingHorizontal: 20,
@@ -819,7 +822,7 @@ const s = StyleSheet.create({
     width: "100%",
     aspectRatio: 4 / 3,
     borderRadius: 12,
-    backgroundColor: "#eee",
+    backgroundColor: DS_COLORS.photoThumbBg,
   },
   photoProofActions: {
     flexDirection: "row",
@@ -831,7 +834,7 @@ const s = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
@@ -850,14 +853,14 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#6366F1",
+    backgroundColor: DS_COLORS.taskIndigo,
     borderRadius: 12,
     paddingVertical: 14,
   },
   photoProofPrimaryBtnText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   photoProofSecondaryBtn: {
     flexDirection: "row",
@@ -868,7 +871,7 @@ const s = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
   },
   photoProofSecondaryBtnText: {
     fontSize: 14,
@@ -876,12 +879,12 @@ const s = StyleSheet.create({
     color: DS_COLORS.textSecondary,
   },
   submitBtn: {
-    backgroundColor: "#6366F1",
+    backgroundColor: DS_COLORS.taskIndigo,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#6366F1",
+    shadowColor: DS_COLORS.taskIndigo,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -899,7 +902,7 @@ const s = StyleSheet.create({
   submitBtnText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 
   successContainer: {
@@ -916,11 +919,11 @@ const s = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#22C55E",
+    backgroundColor: DS_COLORS.acceptGreen,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
-    shadowColor: "#22C55E",
+    shadowColor: DS_COLORS.acceptGreen,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -950,6 +953,6 @@ const s = StyleSheet.create({
   successPrimaryBtnText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 });

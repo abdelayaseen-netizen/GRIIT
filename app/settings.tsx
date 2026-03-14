@@ -37,10 +37,10 @@ const REMINDER_PRESETS = [
 
 
 const CONSEQUENCES = [
-  { bulletColor: "#D4A017", title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
-  { bulletColor: "#E8734A", title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
-  { bulletColor: "#E53E3E", title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
-  { bulletColor: "#B91C1C", title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
+  { bulletColor: DS_COLORS.milestoneGold, title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
+  { bulletColor: DS_COLORS.accent, title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
+  { bulletColor: DS_COLORS.danger, title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
+  { bulletColor: DS_COLORS.dangerDark, title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
 ] as const;
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
@@ -51,12 +51,10 @@ function VisibilitySubsection({
   label,
   value,
   onChange,
-  themeColors,
 }: {
   label: string;
   value: VisibilityValue;
   onChange: (v: VisibilityValue) => void;
-  themeColors: import("@/lib/theme-palettes").ThemeColors;
 }) {
   const options: { key: VisibilityValue; label: string }[] = [
     { key: "public", label: "Public" },
@@ -65,15 +63,15 @@ function VisibilitySubsection({
   ];
   return (
     <View style={visibilityStyles.wrap}>
-      <Text style={[visibilityStyles.label, { color: themeColors.text.primary }]}>{label}</Text>
+      <Text style={[visibilityStyles.label, { color: DS_COLORS.textPrimary }]}>{label}</Text>
       <View style={visibilityStyles.pillRow}>
         {options.map((opt) => (
           <TouchableOpacity
             key={opt.key}
             style={[
               visibilityStyles.pill,
-              value === opt.key && { backgroundColor: themeColors.text.primary },
-              value !== opt.key && { backgroundColor: themeColors.card, borderColor: themeColors.border },
+              value === opt.key && { backgroundColor: DS_COLORS.textPrimary },
+              value !== opt.key && { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border },
             ]}
             onPress={() => onChange(opt.key)}
             activeOpacity={0.8}
@@ -81,11 +79,11 @@ function VisibilitySubsection({
             accessibilityRole="button"
             accessibilityState={{ selected: value === opt.key }}
           >
-            <Text style={[visibilityStyles.pillText, { color: value === opt.key ? "#fff" : themeColors.text.primary }]}>{opt.label}</Text>
+            <Text style={[visibilityStyles.pillText, { color: value === opt.key ? DS_COLORS.white : DS_COLORS.textPrimary }]}>{opt.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
-      <Text style={[visibilityStyles.hint, { color: themeColors.text.muted }]}>
+      <Text style={[visibilityStyles.hint, { color: DS_COLORS.textMuted }]}>
         {value === "public" ? "Anyone can see" : value === "friends" ? "Only friends" : "Only you"}
       </Text>
     </View>
@@ -116,7 +114,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { colors: themeColors, mode: themeMode, setMode: setThemeMode, isDark } = useTheme();
+  const { mode: themeMode, setMode: setThemeMode, isDark } = useTheme();
   const [dailyReminder, setDailyReminder] = useState(true);
   const [reminderTime, setReminderTime] = useState("09:00");
   const [reminderLoading, setReminderLoading] = useState(true);
@@ -213,18 +211,20 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: "#EAF0F0" }]} edges={["top"]}>
-      <View style={[styles.header, { backgroundColor: "#EAF0F0", borderBottomColor: "#E8E5DE" }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: DS_COLORS.settingsPageBg }]} edges={["top"]}>
+      <View style={[styles.header, { backgroundColor: DS_COLORS.settingsPageBg, borderBottomColor: DS_COLORS.border }]}>
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backBtn}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
           <View style={styles.backBtnCircle}>
-            <ChevronLeft size={22} color="#1A1A1A" />
+            <ChevronLeft size={22} color={DS_COLORS.textPrimary} />
           </View>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: "#1A1A1A" }]}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: DS_COLORS.textPrimary }]}>Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -236,13 +236,13 @@ export default function SettingsScreen() {
         {/* Privacy & Visibility */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Eye size={18} color="#1A1A1A" />
-            <Text style={[styles.sectionTitleLarge, { color: "#1A1A1A" }]}>Privacy & Visibility</Text>
+            <Eye size={18} color={DS_COLORS.textPrimary} />
+            <Text style={[styles.sectionTitleLarge, { color: DS_COLORS.textPrimary }]}>Privacy & Visibility</Text>
           </View>
-          <Text style={[styles.privacyDesc, { color: "#888884" }]}>
+          <Text style={[styles.privacyDesc, { color: DS_COLORS.textSecondary }]}>
             Control who sees your profile, challenges, and activity. Like TikTok privacy settings.
           </Text>
-          <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={styles.card}>
             <VisibilitySubsection
               label="Profile Visibility"
               value={profileVisibility}
@@ -255,21 +255,18 @@ export default function SettingsScreen() {
                   loadProfileVisibility();
                 }
               }}
-              themeColors={themeColors}
             />
-            <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+            <View style={styles.cardDivider} />
             <VisibilitySubsection
               label="Challenge Visibility"
               value={challengeVisibility}
               onChange={setChallengeVisibility}
-              themeColors={themeColors}
             />
-            <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+            <View style={styles.cardDivider} />
             <VisibilitySubsection
               label="Activity Visibility"
               value={activityVisibility}
               onChange={setActivityVisibility}
-              themeColors={themeColors}
             />
           </View>
         </View>
@@ -278,17 +275,19 @@ export default function SettingsScreen() {
         {!isGuest && user && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <User size={18} color={themeColors.text.primary} />
-              <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Profile</Text>
+              <User size={18} color={DS_COLORS.textPrimary} />
+              <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary }]}>Profile</Text>
             </View>
             <TouchableOpacity
-              style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+              style={styles.card}
               onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
               activeOpacity={0.9}
+              accessibilityLabel="Edit profile"
+              accessibilityRole="button"
             >
-              <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>{user.email ?? "Signed in"}</Text>
-              <Text style={[styles.toggleSub, { color: themeColors.text.tertiary }]}>Tap to edit profile</Text>
-              <ChevronLeft size={20} color={themeColors.text.tertiary} style={{ position: "absolute", right: 16, top: 18, transform: [{ rotate: "-90deg" }] }} />
+              <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>{user.email ?? "Signed in"}</Text>
+              <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>Tap to edit profile</Text>
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ position: "absolute", right: 16, top: 18, transform: [{ rotate: "-90deg" }] }} />
             </TouchableOpacity>
           </View>
         )}
@@ -296,20 +295,20 @@ export default function SettingsScreen() {
         {/* Appearance */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Sun size={18} color={themeColors.text.primary} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Appearance</Text>
+            <Sun size={18} color={DS_COLORS.textPrimary} />
+            <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary }]}>Appearance</Text>
           </View>
-          <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <View style={styles.card}>
             <View style={styles.toggleRow}>
-              <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Dark mode</Text>
+              <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Dark mode</Text>
               <Switch
                 value={isDark}
                 onValueChange={(v) => {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setThemeMode(v ? "dark" : "light");
                 }}
-                trackColor={{ false: themeColors.border, true: themeColors.accent }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+                thumbColor={DS_COLORS.white}
                 accessibilityLabel="Toggle dark mode"
                 accessibilityRole="switch"
               />
@@ -321,15 +320,18 @@ export default function SettingsScreen() {
                   onPress={() => handleThemeMode(m)}
                   style={[
                     styles.reminderPill,
-                    { backgroundColor: themeColors.border + "40", flexDirection: "row", alignItems: "center" },
-                    themeMode === m && { backgroundColor: themeColors.accent },
+                    { backgroundColor: DS_COLORS.chipFill, flexDirection: "row", alignItems: "center" },
+                    themeMode === m && { backgroundColor: DS_COLORS.accent },
                   ]}
                   activeOpacity={0.8}
+                  accessibilityLabel={`Set theme to ${m === "system" ? "System" : m === "light" ? "Light" : "Dark"}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: themeMode === m }}
                 >
-                  {m === "system" && <Smartphone size={14} color={themeMode === m ? "#fff" : themeColors.text.secondary} style={{ marginRight: 4 }} />}
-                  {m === "light" && <Sun size={14} color={themeMode === m ? "#fff" : themeColors.text.secondary} style={{ marginRight: 4 }} />}
-                  {m === "dark" && <Moon size={14} color={themeMode === m ? "#fff" : themeColors.text.secondary} style={{ marginRight: 4 }} />}
-                  <Text style={[styles.reminderPillText, themeMode === m && styles.reminderPillTextActive, { color: themeMode === m ? "#fff" : themeColors.text.secondary }]}>
+                  {m === "system" && <Smartphone size={14} color={themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary} style={{ marginRight: 4 }} />}
+                  {m === "light" && <Sun size={14} color={themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary} style={{ marginRight: 4 }} />}
+                  {m === "dark" && <Moon size={14} color={themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary} style={{ marginRight: 4 }} />}
+                  <Text style={[styles.reminderPillText, themeMode === m && styles.reminderPillTextActive, { color: themeMode === m ? DS_COLORS.white : DS_COLORS.textSecondary }]}>
                     {m === "system" ? "System" : m === "light" ? "Light" : "Dark"}
                   </Text>
                 </TouchableOpacity>
@@ -340,24 +342,26 @@ export default function SettingsScreen() {
 
         {/* Friends */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitleFriends, { color: themeColors.text.primary }]}>👥 Friends</Text>
+          <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>👥 Friends</Text>
           <TouchableOpacity
-            style={[styles.card, styles.friendsCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            style={[styles.card, styles.friendsCard]}
             onPress={() => router.push(ROUTES.ACCOUNTABILITY as never)}
             activeOpacity={0.9}
+            accessibilityLabel="Open friends and accountability"
+            accessibilityRole="button"
           >
             <View style={styles.friendsTwoCol}>
               <View style={styles.friendsCol}>
-                <Text style={[styles.friendsNum, { color: themeColors.text.primary }]}>{accountabilityCount}</Text>
-                <Text style={[styles.friendsLabel, { color: themeColors.text.muted }]}>FRIENDS</Text>
+                <Text style={[styles.friendsNum, { color: DS_COLORS.textPrimary }]}>{accountabilityCount}</Text>
+                <Text style={[styles.friendsLabel, { color: DS_COLORS.textMuted }]}>FRIENDS</Text>
               </View>
-              <View style={[styles.friendsColDivider, { backgroundColor: themeColors.border }]} />
+              <View style={[styles.friendsColDivider, { backgroundColor: DS_COLORS.border }]} />
               <View style={styles.friendsCol}>
-                <Text style={[styles.friendsNum, { color: themeColors.text.primary }]}>0</Text>
-                <Text style={[styles.friendsLabel, { color: themeColors.text.muted }]}>PENDING</Text>
+                <Text style={[styles.friendsNum, { color: DS_COLORS.textPrimary }]}>0</Text>
+                <Text style={[styles.friendsLabel, { color: DS_COLORS.textMuted }]}>PENDING</Text>
               </View>
             </View>
-            <Text style={[styles.friendsDesc, { color: themeColors.text.muted }]}>
+            <Text style={[styles.friendsDesc, { color: DS_COLORS.textMuted }]}>
               Friends can see your FRIENDS-only content. Find friends on the Movement tab.
             </Text>
           </TouchableOpacity>
@@ -365,21 +369,21 @@ export default function SettingsScreen() {
 
         {/* Notifications */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitleFriends, { color: themeColors.text.primary }]}>🔔 Notifications</Text>
-          <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>🔔 Notifications</Text>
+          <View style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
-                <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Daily Reminder</Text>
-                <Text style={[styles.toggleSub, { color: themeColors.text.muted }]}>Remind if not started by evening</Text>
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Daily Reminder</Text>
+                <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>Remind if not started by evening</Text>
               </View>
               {reminderLoading ? (
-                <ActivityIndicator size="small" color={themeColors.accent} />
+                <ActivityIndicator size="small" color={DS_COLORS.accent} />
               ) : (
                 <Switch
                   value={dailyReminder}
                   onValueChange={handleReminderToggle}
-                  trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
-                  thumbColor={dailyReminder ? themeColors.accent : "#f4f3f4"}
+                  trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
+                  thumbColor={dailyReminder ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}
                   accessibilityLabel="Toggle daily reminder"
                   accessibilityRole="switch"
                 />
@@ -387,9 +391,9 @@ export default function SettingsScreen() {
             </View>
             {!reminderLoading && dailyReminder && (
               <>
-                <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+                <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
                 <View style={styles.toggleTextWrap}>
-                  <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Reminder time</Text>
+                  <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Reminder time</Text>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                     {REMINDER_PRESETS.map((p) => (
                       <TouchableOpacity
@@ -397,13 +401,13 @@ export default function SettingsScreen() {
                         onPress={() => handleReminderTime(p.value)}
                         style={[
                           styles.reminderPill,
-                          { backgroundColor: themeColors.border + "40" },
-                          reminderTime === p.value && { backgroundColor: themeColors.accent },
+                          { backgroundColor: DS_COLORS.border + "40" },
+                          reminderTime === p.value && { backgroundColor: DS_COLORS.accent },
                         ]}
                       >
                         <Text style={[
                           styles.reminderPillText,
-                          { color: themeColors.text.secondary },
+                          { color: DS_COLORS.textSecondary },
                           reminderTime === p.value && styles.reminderPillTextActive,
                         ]}>{p.label}</Text>
                       </TouchableOpacity>
@@ -412,11 +416,11 @@ export default function SettingsScreen() {
                 </View>
               </>
             )}
-            <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+            <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
-                <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Last Call</Text>
-                <Text style={[styles.toggleSub, { color: themeColors.text.muted }]}>60 minutes before day resets</Text>
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Last Call</Text>
+                <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>60 minutes before day resets</Text>
               </View>
               <Switch
                 value={lastCall}
@@ -424,17 +428,17 @@ export default function SettingsScreen() {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setLastCall(v);
                 }}
-                trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
-                thumbColor={lastCall ? themeColors.accent : "#f4f3f4"}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
+                thumbColor={lastCall ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}
                 accessibilityLabel="Toggle last call reminder"
                 accessibilityRole="switch"
               />
             </View>
-            <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+            <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
-                <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Friend Activity</Text>
-                <Text style={[styles.toggleSub, { color: themeColors.text.muted }]}>When friends respect or secure</Text>
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Friend Activity</Text>
+                <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>When friends respect or secure</Text>
               </View>
               <Switch
                 value={friendActivity}
@@ -442,8 +446,8 @@ export default function SettingsScreen() {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setFriendActivity(v);
                 }}
-                trackColor={{ false: themeColors.border, true: "#FDDCB5" }}
-                thumbColor={friendActivity ? themeColors.accent : "#f4f3f4"}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
+                thumbColor={friendActivity ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}
                 accessibilityLabel="Toggle friend activity notifications"
                 accessibilityRole="switch"
               />
@@ -454,12 +458,12 @@ export default function SettingsScreen() {
         {/* Premium */}
         <View style={styles.section}>
           <View style={[styles.sectionHeader, { flexWrap: "wrap" }]}>
-            <Crown size={18} color={themeColors.accent} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Premium</Text>
+            <Crown size={18} color={DS_COLORS.accent} />
+            <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary }]}>Premium</Text>
             <PremiumBadge size={14} />
           </View>
           <TouchableOpacity
-            style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
             onPress={() => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setPremiumModalVisible(true);
@@ -469,19 +473,19 @@ export default function SettingsScreen() {
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>GRIIT Premium</Text>
-                  <View style={{ backgroundColor: themeColors.accent, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
-                    <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>Coming Soon</Text>
+                  <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>GRIIT Premium</Text>
+                  <View style={{ backgroundColor: DS_COLORS.accent, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: DS_COLORS.white }}>Coming Soon</Text>
                   </View>
                 </View>
-                <Text style={[styles.toggleSub, { color: themeColors.text.secondary }]}>Unlimited challenges, premium badge & more.</Text>
+                <Text style={[styles.toggleSub, { color: DS_COLORS.textSecondary }]}>Unlimited challenges, premium badge & more.</Text>
               </View>
-              <ChevronLeft size={20} color={themeColors.text.tertiary} style={{ transform: [{ rotate: "-90deg" }] }} />
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: "-90deg" }] }} />
             </View>
           </TouchableOpacity>
           {!isGuest && Platform.OS !== "web" && (
             <TouchableOpacity
-              style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border, marginTop: 10 }]}
+              style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, marginTop: 10 }]}
               onPress={async () => {
                 if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setRestoreLoading(true);
@@ -496,12 +500,12 @@ export default function SettingsScreen() {
               disabled={restoreLoading}
             >
               <View style={styles.toggleRow}>
-                <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Restore Purchases</Text>
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Restore Purchases</Text>
                 {restoreLoading ? (
-                  <ActivityIndicator size="small" color={themeColors.accent} />
+                  <ActivityIndicator size="small" color={DS_COLORS.accent} />
                 ) : null}
               </View>
-              <Text style={[styles.toggleSub, { color: themeColors.text.tertiary, marginTop: 4 }]}>
+              <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted, marginTop: 4 }]}>
                 Restore premium if you already purchased on another device.
               </Text>
             </TouchableOpacity>
@@ -511,11 +515,11 @@ export default function SettingsScreen() {
         {/* Account */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <LogOut size={18} color={themeColors.text.primary} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>Account</Text>
+            <LogOut size={18} color={DS_COLORS.textPrimary} />
+            <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary }]}>Account</Text>
           </View>
           <TouchableOpacity
-            style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
             onPress={async () => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               await supabase.auth.signOut();
@@ -524,33 +528,35 @@ export default function SettingsScreen() {
               router.replace(ROUTES.AUTH as never);
             }}
             activeOpacity={0.9}
+            accessibilityLabel="Sign out"
+            accessibilityRole="button"
           >
-            <Text style={[styles.toggleTitle, { color: "#B91C1C" }]}>Sign Out</Text>
+            <Text style={[styles.toggleTitle, { color: DS_COLORS.dangerDark }]}>Sign Out</Text>
           </TouchableOpacity>
         </View>
 
         {/* About */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <FileText size={18} color={themeColors.text.primary} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text.primary }]}>About</Text>
+            <FileText size={18} color={DS_COLORS.textPrimary} />
+            <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary }]}>About</Text>
           </View>
-          <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-            <Text style={[styles.toggleTitle, { color: themeColors.text.primary }]}>Version {APP_VERSION}</Text>
-            <Text style={[styles.toggleSub, { color: themeColors.text.tertiary, marginTop: 4 }]}>Terms & Privacy — see app store listing</Text>
+          <View style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+            <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Version {APP_VERSION}</Text>
+            <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted, marginTop: 4 }]}>Terms & Privacy — see app store listing</Text>
           </View>
         </View>
 
         {/* Consequences */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitleFriends, { color: themeColors.text.primary }]}>🛡 Consequences</Text>
-          <View style={[styles.card, styles.consequenceCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+          <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>🛡 Consequences</Text>
+          <View style={[styles.card, styles.consequenceCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
             {CONSEQUENCES.map((item, i) => (
               <View key={i} style={styles.consequenceRow}>
                 <View style={[styles.bullet, { backgroundColor: item.bulletColor }]} />
                 <View style={styles.consequenceTextWrap}>
-                  <Text style={[styles.consequenceTitle, { color: themeColors.text.primary }]}>{item.title}</Text>
-                  <Text style={[styles.consequenceSub, { color: themeColors.text.muted }]}>{item.sub}</Text>
+                  <Text style={[styles.consequenceTitle, { color: DS_COLORS.textPrimary }]}>{item.title}</Text>
+                  <Text style={[styles.consequenceSub, { color: DS_COLORS.textMuted }]}>{item.sub}</Text>
                 </View>
               </View>
             ))}
@@ -569,7 +575,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#EAF0F0" },
+  safe: { flex: 1, backgroundColor: DS_COLORS.settingsPageBg },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -577,21 +583,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E8E5DE",
+    borderBottomColor: DS_COLORS.border,
   },
   backBtn: { padding: 4 },
   backBtnCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#EDF0F0",
+    backgroundColor: DS_COLORS.settingsBackCircle,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
   },
   headerSpacer: { width: 40 },
   scroll: { flex: 1 },

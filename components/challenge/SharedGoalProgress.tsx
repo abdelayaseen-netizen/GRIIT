@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import LogProgressModal from "./LogProgressModal";
 import { formatShortDate } from "@/lib/date-format";
+import { DS_COLORS } from "@/lib/design-system";
 
 export interface SharedGoalLogEntry {
   id: string;
@@ -110,14 +111,14 @@ export default function SharedGoalProgress({
               styles.progressBarFill,
               {
                 width: `${percent}%`,
-                backgroundColor: isFailed ? "#B91C1C" : isComplete ? colors.success : colors.accent,
+                backgroundColor: isFailed ? DS_COLORS.dangerDark : isComplete ? colors.success : colors.accent,
               },
             ]}
           />
         </View>
         <Text style={[styles.percent, { color: colors.text.secondary }]}>{Math.round(percent)}% complete</Text>
         {remaining > 0 && !isFailed && <Text style={[styles.remaining, { color: colors.text.tertiary }]}>{remaining} {unit} to go</Text>}
-        {deadlineLabel && <Text style={[styles.deadline, { color: isFailed ? "#B91C1C" : colors.text.secondary }]}>{deadlineLabel}</Text>}
+        {deadlineLabel && <Text style={[styles.deadline, { color: isFailed ? DS_COLORS.dangerDark : colors.text.secondary }]}>{deadlineLabel}</Text>}
       </View>
 
       {runStatus === "active" && (
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
   logCtaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#fff",
+    color: DS_COLORS.white,
   },
   sectionTitle: {
     fontSize: 15,

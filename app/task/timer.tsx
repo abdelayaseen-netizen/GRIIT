@@ -221,6 +221,8 @@ export default function TimerTaskScreen() {
           style={[styles.controlButton, isRunning && styles.pauseButton]}
           onPress={handleStartPause}
           activeOpacity={0.8}
+          accessibilityLabel={isRunning ? "Pause timer" : "Start timer"}
+          accessibilityRole="button"
         >
           {isRunning ? (
             <>
@@ -247,11 +249,11 @@ export default function TimerTaskScreen() {
               <View style={styles.photoRow}>
                 <Image source={{ uri: photoUri }} style={styles.photoThumb} />
                 <View style={styles.photoActions}>
-                  <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
+                  <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto} activeOpacity={0.8} accessibilityLabel="Take photo" accessibilityRole="button">
                     <Camera size={18} color={DS_COLORS.textPrimary} />
                     <Text style={styles.photoBtnText}>Retake</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.photoBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
+                  <TouchableOpacity style={styles.photoBtn} onPress={handlePickFromGallery} activeOpacity={0.8} accessibilityLabel="Change photo from gallery" accessibilityRole="button">
                     <ImagePlus size={18} color={DS_COLORS.textPrimary} />
                     <Text style={styles.photoBtnText}>Change</Text>
                   </TouchableOpacity>
@@ -259,11 +261,11 @@ export default function TimerTaskScreen() {
               </View>
             ) : (
               <View style={styles.photoEmpty}>
-                <TouchableOpacity style={styles.photoPrimaryBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
+                <TouchableOpacity style={styles.photoPrimaryBtn} onPress={handleTakePhoto} activeOpacity={0.8} accessibilityLabel="Take photo" accessibilityRole="button">
                   <Camera size={20} color={DS_COLORS.white} />
                   <Text style={styles.photoPrimaryBtnText}>Take photo</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.photoSecondaryBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
+                <TouchableOpacity style={styles.photoSecondaryBtn} onPress={handlePickFromGallery} activeOpacity={0.8} accessibilityLabel="Pick from gallery" accessibilityRole="button">
                   <ImagePlus size={18} color={DS_COLORS.textSecondary} />
                   <Text style={styles.photoSecondaryBtnText}>Upload from gallery</Text>
                 </TouchableOpacity>
@@ -280,6 +282,9 @@ export default function TimerTaskScreen() {
             onPress={handleSubmit}
             disabled={loading || (requirePhotoProof && !photoUri)}
             activeOpacity={0.8}
+            accessibilityLabel="Submit timer"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading || (requirePhotoProof && !photoUri) }}
           >
             {loading ? (
               <>
@@ -329,37 +334,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#10B981',
+    backgroundColor: DS_COLORS.taskEmerald,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
   },
   pauseButton: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: DS_COLORS.taskAmber,
   },
   controlButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: DS_COLORS.white,
   },
   photoSection: { marginBottom: 20 },
   photoLabel: { fontSize: 13, fontWeight: "600", color: DS_COLORS.textSecondary, marginBottom: 10 },
   photoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  photoThumb: { width: 80, height: 60, borderRadius: 8, backgroundColor: "#eee" },
+  photoThumb: { width: 80, height: 60, borderRadius: 8, backgroundColor: DS_COLORS.photoThumbBg },
   photoActions: { flexDirection: "row", gap: 10 },
-  photoBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#fff", borderRadius: 10, borderWidth: 1, borderColor: DS_COLORS.border },
+  photoBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: DS_COLORS.white, borderRadius: 10, borderWidth: 1, borderColor: DS_COLORS.border },
   photoBtnText: { fontSize: 13, fontWeight: "600", color: DS_COLORS.textPrimary },
   photoEmpty: { gap: 10 },
-  photoPrimaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#6366F1", borderRadius: 12, paddingVertical: 12 },
-  photoPrimaryBtnText: { fontSize: 14, fontWeight: "600", color: "#fff" },
-  photoSecondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: DS_COLORS.border, backgroundColor: "#fff" },
+  photoPrimaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: DS_COLORS.taskIndigo, borderRadius: 12, paddingVertical: 12 },
+  photoPrimaryBtnText: { fontSize: 14, fontWeight: "600", color: DS_COLORS.white },
+  photoSecondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: DS_COLORS.border, backgroundColor: DS_COLORS.white },
   photoSecondaryBtnText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.textSecondary },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: DS_COLORS.black,
     borderRadius: 12,
     padding: 16,
   },
@@ -369,7 +374,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: DS_COLORS.white,
   },
   strictBanner: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
@@ -379,7 +384,7 @@ const styles = StyleSheet.create({
   },
   strictBannerText: {
     fontSize: 14,
-    color: '#DC2626',
+    color: DS_COLORS.dangerMid,
     textAlign: 'center',
   },
 });

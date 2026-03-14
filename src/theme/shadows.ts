@@ -1,16 +1,18 @@
 /**
  * Soft shadows only. Rork: no harsh shadows.
  */
+import { DS_COLORS } from "@/lib/design-system";
+
 export const shadows = {
   card: {
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
     elevation: 4,
   },
   button: {
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOpacity: 0.1,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },

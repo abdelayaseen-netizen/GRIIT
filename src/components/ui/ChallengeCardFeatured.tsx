@@ -3,12 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Calendar, BookOpen, Users, ChevronRight } from "lucide-react-native";
 import * as t from "@/src/theme/tokens";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DS_COLORS } from "@/lib/design-system";
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
-  Easy: { bg: "#EAF5F0", text: "#2F7A52" },
-  Medium: { bg: "#FFF0E8", text: "#C85A20" },
-  Hard: { bg: "#FFEAEA", text: "#C83030" },
-  Extreme: { bg: "#FFE5E5", text: "#AA1111" },
+  Easy: { bg: DS_COLORS.featuredLabelBg, text: DS_COLORS.featuredLabelText },
+  Medium: { bg: DS_COLORS.difficultyMediumBg, text: DS_COLORS.difficultyMediumText },
+  Hard: { bg: DS_COLORS.difficultyHardBg, text: DS_COLORS.difficultyHardText },
+  Extreme: { bg: DS_COLORS.difficultyExtremeBg, text: DS_COLORS.difficultyExtremeText },
 };
 
 function ChallengeCardFeaturedInner(props: {
@@ -52,8 +53,8 @@ function ChallengeCardFeaturedInner(props: {
       <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.topRow}>
-          <View style={[s.featuredBadge, { backgroundColor: "#EAF5F0" }]}>
-            <Text style={[s.featuredBadgeText, { color: "#2F7A52" }]}>FEATURED</Text>
+          <View style={[s.featuredBadge, { backgroundColor: DS_COLORS.featuredLabelBg }]}>
+            <Text style={[s.featuredBadgeText, { color: DS_COLORS.featuredLabelText }]}>FEATURED</Text>
           </View>
           <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
             <Text style={[s.diffText, { color: diff.text }]}>{difficulty.toUpperCase()}</Text>
@@ -109,12 +110,12 @@ export const ChallengeCardFeatured = React.memo(ChallengeCardFeaturedInner);
 const s = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E8E5DE",
-    shadowColor: "#000",
+    borderColor: DS_COLORS.border,
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -160,12 +161,12 @@ const s = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
     marginBottom: 6,
   },
   desc: {
     fontSize: 14,
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
     lineHeight: 20,
     marginBottom: 10,
   },
@@ -179,7 +180,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
@@ -187,7 +188,7 @@ const s = StyleSheet.create({
   taskChipText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#888884",
+    color: DS_COLORS.inputPlaceholder,
     maxWidth: 120,
   },
   metaRow: {
@@ -213,24 +214,24 @@ const s = StyleSheet.create({
   metaText: {
     fontSize: 12,
     fontWeight: "400",
-    color: "#AAAAAA",
+    color: DS_COLORS.textMuted,
   },
   metaDot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: "#AAAAAA",
+    backgroundColor: DS_COLORS.textMuted,
   },
   activeToday: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#2F7A52",
+    color: DS_COLORS.activeTodayText,
   },
   arrowWrap: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },

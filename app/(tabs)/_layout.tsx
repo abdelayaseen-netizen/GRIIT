@@ -2,14 +2,12 @@ import { Tabs, usePathname } from "expo-router";
 import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
-import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { DS_COLORS, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
   const pathname = usePathname();
-  const { colors } = useTheme();
   const { user } = useAuth();
   const pushRegistrationAttempted = useRef(false);
 
@@ -18,10 +16,10 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = DS_COLORS.white;
+  const tabBg = DS_COLORS.card;
   const tabBorder = DS_COLORS.border;
-  const tabActive = colors.accent ?? DS_COLORS.accent;
-  const tabInactive = colors.text?.muted ?? DS_COLORS.tabInactive;
+  const tabActive = DS_COLORS.accent;
+  const tabInactive = DS_COLORS.tabInactive;
   const isCreateScreen = typeof pathname === "string" && pathname.includes("create");
   const centerBtnBg = isCreateScreen ? DS_COLORS.accent : DS_COLORS.centerButtonBg;
 

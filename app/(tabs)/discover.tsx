@@ -450,7 +450,7 @@ export default function DiscoverScreen() {
             </View>
             <Text style={styles.emptyTitle}>Challenges coming soon</Text>
             <Text style={styles.emptySubtext}>We&apos;re building something great. Check back soon.</Text>
-            <TouchableOpacity style={styles.emptyRefreshButton} onPress={handleRefresh} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.emptyRefreshButton} onPress={handleRefresh} activeOpacity={0.7} accessibilityLabel="Refresh" accessibilityRole="button">
               <Text style={styles.emptyRefreshText}>↻ Refresh</Text>
             </TouchableOpacity>
           </View>

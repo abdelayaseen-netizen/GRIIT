@@ -109,7 +109,7 @@ export default function SecureConfirmationScreen() {
         >
           <View style={styles.iconOuter}>
             <View style={[styles.iconInner, isHardMode && styles.iconInnerHard]}>
-              <Shield size={40} color="#fff" fill="#fff" />
+              <Shield size={40} color={DS_COLORS.white} fill={DS_COLORS.white} />
             </View>
           </View>
         </Animated.View>
@@ -144,7 +144,7 @@ export default function SecureConfirmationScreen() {
               <Animated.View
                 style={[
                   styles.progressFill,
-                  { width: progressWidth, backgroundColor: isHardMode ? "#E87D4F" : DS_COLORS.success },
+                  { width: progressWidth, backgroundColor: isHardMode ? DS_COLORS.accent : DS_COLORS.success },
                 ]}
               />
             </View>
@@ -157,7 +157,7 @@ export default function SecureConfirmationScreen() {
           )}
 
           {shareError && (
-            <Text style={[styles.statLabel, { color: "#B91C1C", marginBottom: 8 }]}>Share failed. Tap to retry.</Text>
+            <Text style={[styles.statLabel, { color: DS_COLORS.dangerDark, marginBottom: 8 }]}>Share failed. Tap to retry.</Text>
           )}
           <TouchableOpacity
             style={styles.shareButton}
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconInnerHard: {
-    backgroundColor: "#E87D4F",
+    backgroundColor: DS_COLORS.accent,
   },
   textContainer: {
     width: "100%",
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   statsCard: {
     width: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   hardModeText: {
     fontSize: 13,
     fontWeight: "700" as const,
-    color: "#E87D4F",
+    color: DS_COLORS.accent,
     letterSpacing: 0.5,
   },
   shareButton: {

@@ -6,9 +6,7 @@ import { OptionCard } from "@/components/onboarding/OptionCard";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { INTENSITY_OPTIONS } from "@/constants/onboardingData";
 import type { OnboardingIntensity } from "@/store/onboardingStore";
-
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
+import { DS_COLORS } from "@/lib/design-system";
 
 export default function OnboardingIntensityScreen() {
   const router = useRouter();
@@ -79,13 +77,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 34,
     marginBottom: 28,
     letterSpacing: -0.5,
   },
   cta: {
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 28,
     alignItems: "center",
@@ -98,6 +96,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
 });

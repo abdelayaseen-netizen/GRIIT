@@ -7,19 +7,20 @@ import {
   Platform,
   AccessibilityInfo,
 } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const CONFETTI_COUNT = 120;
 const CONFETTI_DURATION = 1200;
 const CONFETTI_COLORS = [
-  "#FF6B35",
-  "#4ECB71",
-  "#FFD700",
-  "#FF69B4",
-  "#00CED1",
-  "#9B59B6",
-  "#3498DB",
+  DS_COLORS.runOrange,
+  DS_COLORS.acceptGreen,
+  DS_COLORS.milestoneGold,
+  DS_COLORS.taskPhotoPink,
+  DS_COLORS.confettiCyan,
+  DS_COLORS.confettiPurple,
+  DS_COLORS.linkBlue,
 ];
 
 interface ConfettiPiece {
@@ -263,19 +264,19 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 28,
     fontWeight: "900",
-    color: "#111",
+    color: DS_COLORS.overlayDark,
     textAlign: "center",
     marginBottom: 12,
   },
   streakText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#333",
+    color: DS_COLORS.borderDark,
     marginBottom: 4,
   },
   tierText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#555",
+    color: DS_COLORS.grayDarker,
   },
 });

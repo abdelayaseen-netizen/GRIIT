@@ -23,6 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react-native";
+import { DS_COLORS } from "@/lib/design-system";
 import {
   CreateFlowHeader,
   CreateFlowInput,
@@ -130,13 +131,12 @@ const JOURNAL_PROMPTS = [
 ];
 
 const TASK_TYPE_STYLES: Record<TaskType, { color: string; selectedBg: string }> = {
-  // Task type tint — not in theme
-  journal: { color: "#A855F7", selectedBg: "#F3E8FF" },
-  timer: { color: "#E8734A", selectedBg: "#FFF5F0" },
-  photo: { color: "#EC4899", selectedBg: "#FFF0F5" },
-  run: { color: "#2D8B4E", selectedBg: "#F0FFF4" },
-  simple: { color: "#6B7280", selectedBg: "#F3F4F6" },
-  checkin: { color: "#3B82F6", selectedBg: "#EFF6FF" },
+  journal: { color: DS_COLORS.journalPurpleVivid, selectedBg: DS_COLORS.journalPurpleLight },
+  timer: { color: DS_COLORS.accent, selectedBg: DS_COLORS.accentSoft },
+  photo: { color: DS_COLORS.taskPhotoPink, selectedBg: DS_COLORS.photoPinkBg },
+  run: { color: DS_COLORS.taskEmerald, selectedBg: DS_COLORS.runGreenBg },
+  simple: { color: DS_COLORS.grayMedium, selectedBg: DS_COLORS.chipGrayBg },
+  checkin: { color: DS_COLORS.checkinBlue, selectedBg: DS_COLORS.checkinBlueBg },
 };
 
 const TASK_TYPES: {
@@ -1285,7 +1285,7 @@ const s = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#9CA3AF",
+    color: DS_COLORS.silverRank,
     letterSpacing: 1,
     textTransform: "uppercase",
     marginBottom: 8,
@@ -1293,7 +1293,7 @@ const s = StyleSheet.create({
   inputLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#9CA3AF",
+    color: DS_COLORS.silverRank,
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -1309,7 +1309,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: "#F2F2F1",
+    backgroundColor: DS_COLORS.surfaceAlt,
     borderWidth: 1.5,
     borderColor: "transparent",
   },

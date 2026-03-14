@@ -1,5 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 export function FilterChip({
   label,
@@ -34,20 +35,20 @@ const s = StyleSheet.create({
     height: 36,
     paddingHorizontal: 16,
     borderRadius: 999,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.white,
     borderWidth: 1,
-    borderColor: "#E0DDD6",
+    borderColor: DS_COLORS.filterPillInactiveBorder,
   },
   chipActive: {
-    backgroundColor: "#1A1A1A",
-    borderColor: "#1A1A1A",
+    backgroundColor: DS_COLORS.black,
+    borderColor: DS_COLORS.black,
   },
   text: {
     fontSize: 15,
     fontWeight: "400" as const,
-    color: "#444",
+    color: DS_COLORS.filterChipActiveBg,
   },
   textActive: {
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
 });

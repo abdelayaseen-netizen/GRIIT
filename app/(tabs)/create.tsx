@@ -207,10 +207,10 @@ const CHALLENGE_PACKS: {
 
 const PACK_CARD_BORDER: Record<string, string> = {
   athlete: DS_COLORS.border,
-  faith: "#93C5FD",
+  faith: DS_COLORS.packBorderFaith,
   entrepreneur: DS_COLORS.border,
-  hyrox: "#FDBA74",
-  morning: "#FDBA74",
+  hyrox: DS_COLORS.packBorderOrange,
+  morning: DS_COLORS.packBorderOrange,
 };
 
 const PARTICIPATION_OPTIONS: { id: ParticipationTypeUI; label: string; description: string; Icon: typeof User }[] = [
@@ -242,12 +242,12 @@ const VISIBILITY_OPTIONS: { value: ChallengeVisibility; label: string; descripti
 ];
 
 const TASK_TYPE_CONFIG: Record<TaskType, { icon: React.ComponentType<{ size?: number; color?: string }>; label: string; color: string }> = {
-  journal: { icon: BookOpen, label: "Journal", color: "#6366F1" },
-  timer: { icon: Timer, label: "Timer", color: "#F59E0B" },
-  run: { icon: Footprints, label: "Run / Workout", color: "#10B981" },
-  simple: { icon: CheckCircle, label: "Basic", color: "#6B7280" },
-  checkin: { icon: MapPin, label: "Location Check-in", color: "#0EA5E9" },
-  photo: { icon: Camera, label: "Photo", color: "#EC4899" },
+  journal: { icon: BookOpen, label: "Journal", color: DS_COLORS.taskIndigo },
+  timer: { icon: Timer, label: "Timer", color: DS_COLORS.taskAmber },
+  run: { icon: Footprints, label: "Run / Workout", color: DS_COLORS.taskEmerald },
+  simple: { icon: CheckCircle, label: "Basic", color: DS_COLORS.grayMedium },
+  checkin: { icon: MapPin, label: "Location Check-in", color: DS_COLORS.linkBlue },
+  photo: { icon: Camera, label: "Photo", color: DS_COLORS.taskPhotoPink },
 };
 
 export default function CreateScreen() {
@@ -720,7 +720,7 @@ export default function CreateScreen() {
                 accessibilityRole="button"
               >
                 <View style={[styles.participationIconWrap, participationType === opt.id && styles.participationIconWrapActive]}>
-                  <Icon size={22} color={participationType === opt.id ? "#fff" : DS_COLORS.textMuted} />
+                  <Icon size={22} color={participationType === opt.id ? DS_COLORS.white : DS_COLORS.textMuted} />
                 </View>
                 <Text style={[styles.participationLabel, participationType === opt.id && styles.participationLabelActive]}>{opt.label}</Text>
                 <Text style={styles.participationDesc} numberOfLines={2}>{opt.description}</Text>
@@ -906,7 +906,7 @@ export default function CreateScreen() {
                 onPress={() => setRequireSameRules(!requireSameRules)}
               >
                 <View style={[styles.replayToggleBox, requireSameRules && styles.replayToggleBoxActive]}>
-                  {requireSameRules && <Check size={14} color="#fff" />}
+                  {requireSameRules && <Check size={14} color={DS_COLORS.white} />}
                 </View>
                 <View style={styles.replayToggleContent}>
                   <Text style={styles.replayToggleLabel}>Require same verification rules</Text>
@@ -918,7 +918,7 @@ export default function CreateScreen() {
                 onPress={() => setShowReplayLabel(!showReplayLabel)}
               >
                 <View style={[styles.replayToggleBox, showReplayLabel && styles.replayToggleBoxActive]}>
-                  {showReplayLabel && <Check size={14} color="#fff" />}
+                  {showReplayLabel && <Check size={14} color={DS_COLORS.white} />}
                 </View>
                 <View style={styles.replayToggleContent}>
                   <Text style={styles.replayToggleLabel}>Show Replay label</Text>
@@ -1021,7 +1021,7 @@ export default function CreateScreen() {
       {tasks.length === 0 ? (
         <View style={step2Styles.emptyState}>
           <View style={step2Styles.emptyIcon}>
-            <Plus size={28} color="#888884" />
+            <Plus size={28} color={DS_COLORS.inputPlaceholder} />
           </View>
           <Text style={step2Styles.emptyTitle}>No tasks yet</Text>
           <Text style={step2Styles.emptyDesc}>Add your first daily task to get started</Text>
@@ -1053,13 +1053,13 @@ export default function CreateScreen() {
                   <Text style={step2Styles.taskMeta} numberOfLines={2}>{getVerificationSummary(task)}</Text>
                   {task.timeEnforcementEnabled && task.anchorTimeLocal && (
                     <View style={step2Styles.timeBadge}>
-                      <Clock size={11} color="#0EA5E9" />
+                      <Clock size={11} color={DS_COLORS.linkBlue} />
                       <Text style={step2Styles.timeBadgeText}>{formatTimeHHMM(task.anchorTimeLocal)}</Text>
                     </View>
                   )}
                   {task.wordLimitEnabled && task.wordLimitWords && (
                     <View style={step2Styles.timeBadge}>
-                      <Text style={[step2Styles.timeBadgeText, { color: '#6366F1' }]}>{task.wordLimitWords}w limit</Text>
+                      <Text style={[step2Styles.timeBadgeText, { color: DS_COLORS.taskIndigo }]}>{task.wordLimitWords}w limit</Text>
                     </View>
                   )}
                 </View>
@@ -1086,7 +1086,7 @@ export default function CreateScreen() {
         accessibilityLabel="Add a new task"
         accessibilityRole="button"
       >
-        <Plus size={18} color="#fff" />
+        <Plus size={18} color={DS_COLORS.white} />
         <Text style={step2Styles.addBtnText}>{tasks.length === 0 ? "Add your first daily task" : "+ Add Task"}</Text>
       </TouchableOpacity>
     </Animated.View>
@@ -1169,7 +1169,7 @@ export default function CreateScreen() {
                 testID={`visibility-${opt.value}`}
               >
                 <View style={[visStyles.iconWrap, isSelected && visStyles.iconWrapSelected]}>
-                  <IconComp size={18} color={isSelected ? "#fff" : DS_COLORS.textMuted} />
+                  <IconComp size={18} color={isSelected ? DS_COLORS.white : DS_COLORS.textMuted} />
                 </View>
                 <View style={visStyles.cardContent}>
                   <Text style={[visStyles.cardTitle, isSelected && visStyles.cardTitleSelected]}>{opt.label}</Text>
@@ -1177,7 +1177,7 @@ export default function CreateScreen() {
                 </View>
                 {isSelected && (
                   <View style={visStyles.checkCircle}>
-                    <Check size={14} color="#fff" />
+                    <Check size={14} color={DS_COLORS.white} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -1229,15 +1229,15 @@ export default function CreateScreen() {
           <View style={recoveryStyles.overlay}>
             <View style={recoveryStyles.modal}>
               <View style={recoveryStyles.iconWrap}>
-                <AlertTriangle size={28} color="#E67E55" />
+                <AlertTriangle size={28} color={DS_COLORS.accent} />
               </View>
               <Text style={recoveryStyles.title}>Server not responding</Text>
               <Text style={recoveryStyles.message}>{recoveryMessage}</Text>
-              <TouchableOpacity style={recoveryStyles.retryBtn} onPress={handleRetryFromModal}>
-                <RefreshCw size={16} color="#fff" />
+              <TouchableOpacity style={recoveryStyles.retryBtn} onPress={handleRetryFromModal} accessibilityLabel="Retry" accessibilityRole="button">
+                <RefreshCw size={16} color={DS_COLORS.white} />
                 <Text style={recoveryStyles.retryBtnText}>Retry</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={recoveryStyles.secondaryBtn} onPress={handleDismissRecovery}>
+              <TouchableOpacity style={recoveryStyles.secondaryBtn} onPress={handleDismissRecovery} accessibilityLabel="Back to Review" accessibilityRole="button">
                 <Text style={recoveryStyles.secondaryBtnText}>Back to Review</Text>
               </TouchableOpacity>
             </View>
@@ -1267,9 +1267,9 @@ export default function CreateScreen() {
             <View style={recoveryStyles.footerColumn}>
               {apiStatus === 'down' && submitStatus !== 'submitting' && (
                 <View style={recoveryStyles.serverStatusRow}>
-                  <WifiOff size={14} color="#DC2626" />
+                  <WifiOff size={14} color={DS_COLORS.dangerMid} />
                   <Text style={recoveryStyles.serverStatusText}>Server unreachable</Text>
-                  <TouchableOpacity onPress={() => retryApi()} style={recoveryStyles.retryLink}>
+                  <TouchableOpacity onPress={() => retryApi()} style={recoveryStyles.retryLink} accessibilityLabel="Retry" accessibilityRole="button">
                     <Text style={recoveryStyles.retryLinkText}>Retry</Text>
                   </TouchableOpacity>
                 </View>
@@ -1321,7 +1321,7 @@ const visStyles = RNStyleSheet.create({
   card: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1.5,
@@ -1380,7 +1380,7 @@ const visStyles = RNStyleSheet.create({
   confirmText: {
     fontSize: 13,
     fontWeight: "500" as const,
-    color: "#C86A3A",
+    color: DS_COLORS.createErrorText,
     textAlign: "center" as const,
   },
 });
@@ -1394,7 +1394,7 @@ const recoveryStyles = RNStyleSheet.create({
     padding: 24,
   },
   modal: {
-    backgroundColor: '#fff',
+    backgroundColor: DS_COLORS.white,
     borderRadius: 20,
     padding: 28,
     width: '100%',
@@ -1405,7 +1405,7 @@ const recoveryStyles = RNStyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FEF3EE',
+    backgroundColor: DS_COLORS.createErrorBg,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -1413,13 +1413,13 @@ const recoveryStyles = RNStyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1A1A1A',
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   message: {
     fontSize: 14,
-    color: '#6B7280',
+    color: DS_COLORS.grayMedium,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
@@ -1429,7 +1429,7 @@ const recoveryStyles = RNStyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#E67E55',
+    backgroundColor: DS_COLORS.accent,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -1439,7 +1439,7 @@ const recoveryStyles = RNStyleSheet.create({
   retryBtnText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: DS_COLORS.white,
   },
   secondaryBtn: {
     paddingVertical: 10,
@@ -1448,7 +1448,7 @@ const recoveryStyles = RNStyleSheet.create({
   secondaryBtnText: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: '#6B7280',
+    color: DS_COLORS.grayMedium,
   },
   footerColumn: {
     flex: 1,
@@ -1463,7 +1463,7 @@ const recoveryStyles = RNStyleSheet.create({
   },
   serverStatusText: {
     fontSize: 12,
-    color: '#DC2626',
+    color: DS_COLORS.dangerMid,
     fontWeight: '500' as const,
   },
   retryLink: {
@@ -1472,7 +1472,7 @@ const recoveryStyles = RNStyleSheet.create({
   retryLinkText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#E67E55',
+    color: DS_COLORS.accent,
   },
   submittingRow: {
     flexDirection: 'row',
@@ -1485,13 +1485,13 @@ const step2Styles = RNStyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#1A1A1A',
+    color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 14,
     fontWeight: '400' as const,
-    color: '#888884',
+    color: DS_COLORS.inputPlaceholder,
     marginBottom: 16,
   },
   taskList: {
@@ -1501,11 +1501,11 @@ const step2Styles = RNStyleSheet.create({
   taskCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: DS_COLORS.white,
     padding: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E8E5DE',
+    borderColor: DS_COLORS.border,
     gap: 12,
   },
   taskIcon: {
@@ -1527,11 +1527,11 @@ const step2Styles = RNStyleSheet.create({
   taskTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1A1A1A',
+    color: DS_COLORS.textPrimary,
     flexShrink: 1,
   },
   typePill: {
-    backgroundColor: '#6366F115',
+    backgroundColor: DS_COLORS.taskIndigoBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -1539,11 +1539,11 @@ const step2Styles = RNStyleSheet.create({
   typePillText: {
     fontSize: 10,
     fontWeight: '600' as const,
-    color: '#6366F1',
+    color: DS_COLORS.taskIndigo,
   },
   taskMeta: {
     fontSize: 13,
-    color: '#888884',
+    color: DS_COLORS.inputPlaceholder,
     lineHeight: 18,
     marginBottom: 2,
   },
@@ -1556,7 +1556,7 @@ const step2Styles = RNStyleSheet.create({
   timeBadgeText: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#0EA5E9',
+    color: DS_COLORS.linkBlue,
   },
   taskActions: {
     alignItems: 'center',
@@ -1575,7 +1575,7 @@ const step2Styles = RNStyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#E07B4A',
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 14,
     marginTop: 8,
@@ -1583,7 +1583,7 @@ const step2Styles = RNStyleSheet.create({
   addBtnText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
+    color: DS_COLORS.white,
   },
   emptyState: {
     alignItems: 'center',
@@ -1594,7 +1594,7 @@ const step2Styles = RNStyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#E8E5DE',
+    backgroundColor: DS_COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -1602,12 +1602,12 @@ const step2Styles = RNStyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#1A1A1A',
+    color: DS_COLORS.textPrimary,
   },
   emptyDesc: {
     fontSize: 14,
     fontWeight: '400' as const,
-    color: '#888884',
+    color: DS_COLORS.inputPlaceholder,
     textAlign: 'center',
   },
   packsSection: {
@@ -1616,7 +1616,7 @@ const step2Styles = RNStyleSheet.create({
   packsTitle: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#AAAAAA',
+    color: DS_COLORS.textMuted,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -1624,7 +1624,7 @@ const step2Styles = RNStyleSheet.create({
   packsSubtitle: {
     fontSize: 14,
     fontWeight: '400' as const,
-    color: '#888884',
+    color: DS_COLORS.inputPlaceholder,
     marginBottom: 16,
   },
   packsGrid: {
@@ -1635,7 +1635,7 @@ const step2Styles = RNStyleSheet.create({
   packCard: {
     width: '47%',
     minWidth: 140,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     borderWidth: 1,
     padding: 16,
@@ -1653,13 +1653,13 @@ const step2Styles = RNStyleSheet.create({
   packDesc: {
     fontSize: 13,
     fontWeight: '400' as const,
-    color: '#888884',
+    color: DS_COLORS.inputPlaceholder,
     lineHeight: 18,
     marginBottom: 8,
   },
   packTaskCount: {
     fontSize: 12,
     fontWeight: '400' as const,
-    color: '#AAAAAA',
+    color: DS_COLORS.textMuted,
   },
 });

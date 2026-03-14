@@ -18,12 +18,7 @@ import { PERSONAS, STARTER_CHALLENGES, INTENSITY_OPTIONS } from "@/constants/onb
 import { supabase } from "@/lib/supabase";
 import { trpcMutate } from "@/lib/trpc";
 import { mapAuthError } from "@/lib/auth-helpers";
-
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
-const INPUT_BG = "#1A1A1A";
-const BORDER = "#333333";
+import { DS_COLORS } from "@/lib/design-system";
 
 export default function OnboardingSignupScreen() {
   const router = useRouter();
@@ -155,10 +150,10 @@ export default function OnboardingSignupScreen() {
             </View>
           ) : null}
 
-          <TouchableOpacity style={styles.socialBtn} onPress={handleApple} disabled={loading}>
+          <TouchableOpacity style={styles.socialBtn} onPress={handleApple} disabled={loading} accessibilityLabel="Sign in with Apple" accessibilityRole="button" accessibilityState={{ disabled: loading }}>
             <Text style={styles.socialBtnText}>Sign in with Apple</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialBtnAlt} onPress={handleGoogle} disabled={loading}>
+          <TouchableOpacity style={styles.socialBtnAlt} onPress={handleGoogle} disabled={loading} accessibilityLabel="Sign in with Google" accessibilityRole="button" accessibilityState={{ disabled: loading }}>
             <Text style={styles.socialBtnTextAlt}>Sign in with Google</Text>
           </TouchableOpacity>
 
@@ -171,31 +166,34 @@ export default function OnboardingSignupScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor={TEXT_MUTED}
+            placeholderTextColor={DS_COLORS.textSecondary}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             editable={!loading}
+            accessibilityLabel="Email"
           />
           <TextInput
             style={styles.input}
             placeholder="Name"
-            placeholderTextColor={TEXT_MUTED}
+            placeholderTextColor={DS_COLORS.textSecondary}
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
             editable={!loading}
+            accessibilityLabel="Name"
           />
           <TextInput
             style={styles.input}
             placeholder="Password (8+ characters)"
-            placeholderTextColor={TEXT_MUTED}
+            placeholderTextColor={DS_COLORS.textSecondary}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             editable={!loading}
+            accessibilityLabel="Password"
           />
 
           <TouchableOpacity
@@ -203,9 +201,12 @@ export default function OnboardingSignupScreen() {
             onPress={handleCreateAccount}
             disabled={loading}
             activeOpacity={0.9}
+            accessibilityLabel="Create account"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading }}
           >
             {loading ? (
-              <ActivityIndicator color="#0A0A0A" size="small" />
+              <ActivityIndicator color={DS_COLORS.onboardingBg} size="small" />
             ) : (
               <Text style={styles.ctaText}>Create account →</Text>
             )}
@@ -223,32 +224,32 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 34,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 24,
     marginBottom: 20,
   },
   summaryCard: {
-    backgroundColor: "#141414",
+    backgroundColor: DS_COLORS.textPrimaryAlt,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: DS_COLORS.borderDark,
   },
   summaryText: {
     fontSize: 14,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 20,
   },
   socialBtn: {
-    backgroundColor: TEXT_PRIMARY,
+    backgroundColor: DS_COLORS.white,
     height: 52,
     borderRadius: 26,
     alignItems: "center",
@@ -258,14 +259,14 @@ const styles = StyleSheet.create({
   socialBtnText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
   socialBtnAlt: {
     backgroundColor: "transparent",
     height: 52,
     borderRadius: 26,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: DS_COLORS.borderDark,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
   socialBtnTextAlt: {
     fontSize: 16,
     fontWeight: "600",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
   },
   divider: {
     flexDirection: "row",
@@ -283,26 +284,26 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: BORDER,
+    backgroundColor: DS_COLORS.borderDark,
   },
   dividerText: {
     fontSize: 13,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     marginHorizontal: 12,
   },
   input: {
-    backgroundColor: INPUT_BG,
+    backgroundColor: DS_COLORS.black,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: DS_COLORS.borderDark,
     borderRadius: 14,
     height: 52,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     marginBottom: 12,
   },
   cta: {
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 28,
     alignItems: "center",
@@ -315,6 +316,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
 });

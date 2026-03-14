@@ -108,7 +108,7 @@ export default function ForgotPasswordScreen() {
               disabled={loading}
               activeOpacity={0.8}
             >
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send reset link</Text>}
+              {loading ? <ActivityIndicator color={DS_COLORS.white} /> : <Text style={styles.buttonText}>Send reset link</Text>}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.backLink, { borderColor: themeColors.border }]}

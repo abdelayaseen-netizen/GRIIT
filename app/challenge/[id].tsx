@@ -101,8 +101,8 @@ interface DifficultyTheme {
 
 const DIFFICULTY_THEMES: Record<string, DifficultyTheme> = {
   easy: {
-    headerBg: "#1B5E20",
-    headerGradientEnd: "#1B5E20",
+    headerBg: DS_COLORS.difficultyEasyHeader,
+    headerGradientEnd: DS_COLORS.difficultyEasyHeader,
     accent: DS_COLORS.success,
     accentLight: DS_COLORS.successSoft,
     accentSoft: "rgba(46,125,50,0.12)",
@@ -118,8 +118,8 @@ const DIFFICULTY_THEMES: Record<string, DifficultyTheme> = {
     warningBorder: "rgba(46,125,50,0.15)",
   },
   medium: {
-    headerBg: "#1B5E20",
-    headerGradientEnd: "#1B5E20",
+    headerBg: DS_COLORS.difficultyEasyHeader,
+    headerGradientEnd: DS_COLORS.difficultyEasyHeader,
     accent: DS_COLORS.success,
     accentLight: DS_COLORS.successSoft,
     accentSoft: "rgba(46,125,50,0.12)",
@@ -317,11 +317,11 @@ function MissionRow({
   const iconBg = isCompleted
     ? DS_COLORS.successSoft
     : isJournal
-    ? "#F5ECFF"
+    ? DS_COLORS.purpleTintLight
     : task.type === "run"
-    ? "#FFEFEB"
+    ? DS_COLORS.purpleTintWarm
     : theme.missionIconBg;
-  const iconColor = isCompleted ? DS_COLORS.success : isJournal ? "#8E44AD" : task.type === "run" ? "#FF6B35" : theme.accent;
+  const iconColor = isCompleted ? DS_COLORS.success : isJournal ? DS_COLORS.journalPurple : task.type === "run" ? DS_COLORS.runOrange : theme.accent;
   return (
     <View style={[s.missionRow, !isLast && s.missionRowBorder]}>
       <View style={[s.missionIcon, { backgroundColor: iconBg }]}>
@@ -341,7 +341,7 @@ function MissionRow({
           )}
           {hasTimeEnforcement && (
             <View style={s.timePill}>
-              <Clock size={9} color="#0EA5E9" />
+              <Clock size={9} color={DS_COLORS.linkBlue} />
               <Text style={s.timePillText}>{formatTimeHHMM(task.anchorTimeLocal!)}</Text>
             </View>
           )}
@@ -417,8 +417,8 @@ function MissionRow({
           accessibilityLabel={`Start ${task.title ?? "task"}`}
           accessibilityRole="button"
         >
-          <Text style={[s.startActionText, { color: isJournal ? "#6B8BFF" : theme.accent }]}>Start</Text>
-          <ChevronRight size={14} color={isJournal ? "#6B8BFF" : theme.accent} />
+          <Text style={[s.startActionText, { color: isJournal ? DS_COLORS.journalStartBlue : theme.accent }]}>Start</Text>
+          <ChevronRight size={14} color={isJournal ? DS_COLORS.journalStartBlue : theme.accent} />
         </TouchableOpacity>
       )}
     </View>
@@ -729,7 +729,7 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Not found</Text>
-          <TouchableOpacity onPress={() => router.back()} style={s.emptyBtn}>
+          <TouchableOpacity onPress={() => router.back()} style={s.emptyBtn} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -763,10 +763,10 @@ export default function ChallengeDetailScreen() {
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Couldn&apos;t load challenge</Text>
           <Text style={[s.emptySubtext, { color: themeColors.text.secondary }]}>Check your connection and try again.</Text>
-          <TouchableOpacity onPress={() => challengeQuery.refetch()} style={s.emptyBtn}>
+          <TouchableOpacity onPress={() => challengeQuery.refetch()} style={s.emptyBtn} accessibilityLabel="Retry loading challenge" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Retry</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 8 }]}>
+          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 8 }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -780,10 +780,10 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Challenge not found</Text>
-          <TouchableOpacity onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} style={s.emptyBtn}>
+          <TouchableOpacity onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} style={s.emptyBtn} accessibilityLabel="Browse challenges" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Browse challenges</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 12 }]}>
+          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 12 }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -804,16 +804,16 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const headerGradientColors = isDaily ? ["#3E7A55", "#3E7A55"] as const : [DS_COLORS.accent, DS_COLORS.accentDark] as const;
-  const ctaBgColor = isDaily && !expired ? "#2F7A52" : DS_COLORS.accent;
-  const countdownTheme = isDaily ? { ...theme, accent: "#2F7A52" } : theme;
+  const headerGradientColors = isDaily ? [DS_COLORS.challenge24hHeaderBg, DS_COLORS.challenge24hHeaderBg] as const : [DS_COLORS.accent, DS_COLORS.accentDark] as const;
+  const ctaBgColor = isDaily && !expired ? DS_COLORS.success : DS_COLORS.accent;
+  const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
   const visibilityLabel = challengeVisibility === "friends" ? "Friends" : challengeVisibility === "private" ? "Only me" : null;
   const visibilityIcon = challengeVisibility === "friends"
-    ? <Users size={11} color="#fff" />
+    ? <Users size={11} color={DS_COLORS.white} />
     : challengeVisibility === "private"
-    ? <Lock size={11} color="#fff" />
+    ? <Lock size={11} color={DS_COLORS.white} />
     : null;
 
   const durationDays = challenge?.duration_days ?? 0;
@@ -822,7 +822,7 @@ export default function ChallengeDetailScreen() {
     : 0;
 
   return (
-    <View style={[s.container, { backgroundColor: isDaily ? "#F0EDE6" : themeColors.background }]}>
+    <View style={[s.container, { backgroundColor: isDaily ? DS_COLORS.background : themeColors.background }]}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
@@ -1016,7 +1016,7 @@ export default function ChallengeDetailScreen() {
             )}
             {isDaily && expired && (
               <View style={s.expiredBanner}>
-                <AlertTriangle size={14} color="#B91C1C" />
+                <AlertTriangle size={14} color={DS_COLORS.dangerDark} />
                 <Text style={s.expiredText}>This challenge has expired</Text>
               </View>
             )}
@@ -1039,7 +1039,7 @@ export default function ChallengeDetailScreen() {
                 </View>
                 {failCondition && (
                   <View style={[s.failAlert, { backgroundColor: "rgba(185,28,28,0.06)", borderColor: "rgba(185,28,28,0.15)" }]}>
-                    <Shield size={13} color="#B91C1C" />
+                    <Shield size={13} color={DS_COLORS.dangerDark} />
                     <Text style={s.failAlertText}>{failCondition}</Text>
                   </View>
                 )}
@@ -1144,9 +1144,9 @@ export default function ChallengeDetailScreen() {
                       <View key={i} style={[s.ruleRow, i < rules.length - 1 && s.ruleRowBorder]}>
                         <View style={[s.ruleBullet, isWarning && s.ruleBulletWarning]}>
                           {isWarning ? (
-                            <AlertTriangle size={12} color="#F44336" />
+                            <AlertTriangle size={12} color={DS_COLORS.materialRed} />
                           ) : (
-                            <Check size={12} color="#4CAF50" />
+                            <Check size={12} color={DS_COLORS.materialGreen} />
                           )}
                         </View>
                         <Text style={[s.ruleText, isWarning && s.ruleTextWarning]}>{rule}</Text>
@@ -1283,7 +1283,7 @@ export default function ChallengeDetailScreen() {
               activeOpacity={0.85}
             >
               {commitmentJoining ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={DS_COLORS.white} />
               ) : (
                 <Text style={s.commitmentConfirmText}>Confirm Commitment</Text>
               )}
@@ -1383,7 +1383,7 @@ const s = StyleSheet.create({
     borderBottomRightRadius: DS_RADIUS.card,
   },
   heroHeader24h: {
-    backgroundColor: "#3E7A55",
+    backgroundColor: DS_COLORS.challenge24hHeaderBg,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
@@ -1495,7 +1495,7 @@ const s = StyleSheet.create({
     letterSpacing: 0.1,
   },
   body: {
-    backgroundColor: "#F0EDE6",
+    backgroundColor: DS_COLORS.background,
     borderTopLeftRadius: DS_RADIUS.card,
     borderTopRightRadius: DS_RADIUS.card,
     marginTop: -DS_RADIUS.card * 0.5,
@@ -1503,7 +1503,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 140,
     borderWidth: 0,
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
@@ -1514,13 +1514,13 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.white,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: DS_SPACING.lg,
     borderWidth: 1,
-    borderColor: "#E8E5DE",
+    borderColor: DS_COLORS.border,
   },
   countdownLeft: {
     flexDirection: "row",
@@ -1548,7 +1548,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: DS_COLORS.dangerSoft,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -1557,7 +1557,7 @@ const s = StyleSheet.create({
   expiredText: {
     fontSize: 14,
     fontWeight: "500" as const,
-    color: "#B91C1C",
+    color: DS_COLORS.dangerDark,
   },
 
   progressSection: {
@@ -1617,7 +1617,7 @@ const s = StyleSheet.create({
   failAlertText: {
     fontSize: 13,
     fontWeight: "600" as const,
-    color: "#B91C1C",
+    color: DS_COLORS.dangerDark,
   },
   failCtaWrap: {
     borderRadius: 14,
@@ -1639,7 +1639,7 @@ const s = StyleSheet.create({
   failCtaBtnText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: "#fff",
+    color: DS_COLORS.white,
   },
 
   participantStatsCard: {
@@ -1695,7 +1695,7 @@ const s = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: DS_COLORS.white,
   },
   socialTextWrap: {
     flex: 1,
@@ -1781,7 +1781,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   journalPill: {
-    backgroundColor: "#D1C4E9",
+    backgroundColor: DS_COLORS.avatarPurple,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -1789,7 +1789,7 @@ const s = StyleSheet.create({
   journalPillText: {
     fontSize: 10,
     fontWeight: "600" as const,
-    color: "#7E57C2",
+    color: DS_COLORS.avatarPurpleText,
   },
   timePill: {
     flexDirection: "row" as const,
@@ -1803,7 +1803,7 @@ const s = StyleSheet.create({
   timePillText: {
     fontSize: 10,
     fontWeight: "600" as const,
-    color: "#0EA5E9",
+    color: DS_COLORS.linkBlue,
   },
   missionTitle: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
@@ -1822,11 +1822,11 @@ const s = StyleSheet.create({
     marginTop: DS_SPACING.xs,
   },
   missionMetaActive: {
-    color: "#059669",
+    color: DS_COLORS.emeraldDark,
     fontWeight: "500" as const,
   },
   missionMetaMissed: {
-    color: "#DC2626",
+    color: DS_COLORS.dangerMid,
     fontWeight: "500" as const,
   },
   startAction: {

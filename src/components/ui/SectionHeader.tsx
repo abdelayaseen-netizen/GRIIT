@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors } from "@/src/theme/tokens";
+import { DS_COLORS } from "@/lib/design-system";
 
 interface SectionHeaderProps {
   title: string;
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.textPrimary,
     flex: 1,
   },
   caption: {

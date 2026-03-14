@@ -123,7 +123,7 @@ export default function AccountabilityScreen() {
     return (
       <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
             <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Accountability Circle</Text>
@@ -142,7 +142,7 @@ export default function AccountabilityScreen() {
   return (
     <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
           <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Accountability Circle</Text>
@@ -172,6 +172,9 @@ export default function AccountabilityScreen() {
                     onPress={() => handleRemove(p.partner_id)}
                     disabled={actingId === p.partner_id}
                     style={styles.removeBtn}
+                    accessibilityLabel={`Remove ${p.partner_display_name || p.partner_username || "partner"}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: actingId === p.partner_id }}
                   >
                     {actingId === p.partner_id ? (
                       <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
@@ -202,15 +205,18 @@ export default function AccountabilityScreen() {
                       style={[styles.iconBtn, styles.acceptBtn]}
                     >
                       {actingId === inv.id ? (
-                        <ActivityIndicator size="small" color="#fff" />
+                        <ActivityIndicator size="small" color={DS_COLORS.white} />
                       ) : (
-                        <Check size={20} color="#fff" />
+                        <Check size={20} color={DS_COLORS.white} />
                       )}
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleRespond(inv.id, "decline")}
                       disabled={actingId === inv.id}
                       style={[styles.iconBtn, styles.declineBtn]}
+                      accessibilityLabel={`Decline invite from ${inv.display_name || inv.username}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: actingId === inv.id }}
                     >
                       <X size={20} color={DS_COLORS.textPrimary} />
                     </TouchableOpacity>
@@ -235,6 +241,9 @@ export default function AccountabilityScreen() {
                     onPress={() => handleCancelOutgoing(inv.partner_id)}
                     disabled={actingId === inv.partner_id}
                     style={styles.cancelBtn}
+                    accessibilityLabel={`Cancel invite to ${inv.display_name || inv.username}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: actingId === inv.partner_id }}
                   >
                     <Text style={styles.cancelBtnText}>Cancel</Text>
                   </TouchableOpacity>
@@ -248,8 +257,10 @@ export default function AccountabilityScreen() {
           style={styles.addBtn}
           onPress={() => router.push(ROUTES.ACCOUNTABILITY_ADD as never)}
           activeOpacity={0.85}
+          accessibilityLabel="Add partner"
+          accessibilityRole="button"
         >
-          <UserPlus size={22} color="#fff" />
+          <UserPlus size={22} color={DS_COLORS.white} />
           <Text style={styles.addBtnText}>Add Partner</Text>
         </TouchableOpacity>
 
@@ -300,7 +311,7 @@ const styles = StyleSheet.create({
   removeBtn: { padding: 8 },
   actions: { flexDirection: "row", gap: 8 },
   iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  acceptBtn: { backgroundColor: "#22c55e" },
+  acceptBtn: { backgroundColor: DS_COLORS.acceptGreen },
   declineBtn: { backgroundColor: DS_COLORS.border },
   cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: DS_COLORS.border },
   cancelBtnText: { fontSize: 14, fontWeight: "600", color: DS_COLORS.textPrimary },
@@ -314,6 +325,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 8,
   },
-  addBtnText: { fontSize: 17, fontWeight: "700", color: "#fff" },
+  addBtnText: { fontSize: 17, fontWeight: "700", color: DS_COLORS.white },
   bottomSpacer: { height: 32 },
 });

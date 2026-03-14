@@ -5,10 +5,7 @@ import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { TwoColOptionCard } from "@/components/onboarding/TwoColOptionCard";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { PERSONAS } from "@/constants/onboardingData";
-
-const ACCENT = "#E07B4A";
-const TEXT_PRIMARY = "#FFFFFF";
-const TEXT_MUTED = "#888884";
+import { DS_COLORS } from "@/lib/design-system";
 
 export default function OnboardingIdentityScreen() {
   const router = useRouter();
@@ -58,6 +55,9 @@ export default function OnboardingIdentityScreen() {
           onPress={handleContinue}
           disabled={!persona}
           activeOpacity={0.9}
+          accessibilityLabel="Continue"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !persona }}
         >
           <Text style={styles.ctaText}>Continue</Text>
         </TouchableOpacity>
@@ -72,14 +72,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: TEXT_PRIMARY,
+    color: DS_COLORS.white,
     lineHeight: 34,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: TEXT_MUTED,
+    color: DS_COLORS.textSecondary,
     lineHeight: 24,
     marginBottom: 24,
   },
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   cta: {
-    backgroundColor: ACCENT,
+    backgroundColor: DS_COLORS.accent,
     height: 56,
     borderRadius: 28,
     alignItems: "center",
@@ -103,6 +103,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0A0A0A",
+    color: DS_COLORS.onboardingBg,
   },
 });
