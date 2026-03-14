@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
+import { track } from '@/lib/analytics';
 
 interface ValueSplashProps {
   onContinue: () => void;
@@ -74,7 +75,7 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
       </View>
 
       <Animated.View style={[styles.ctaContainer, { opacity: fadeButton }]}>
-        <Pressable style={styles.primaryButton} onPress={onContinue}>
+        <Pressable style={styles.primaryButton} onPress={() => { track({ name: 'onboarding_started' }); onContinue(); }}>
           <Text style={styles.primaryButtonText}>I'm ready</Text>
         </Pressable>
         <Text style={styles.footerText}>

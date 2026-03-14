@@ -26,9 +26,10 @@ interface OnboardingState {
   reset: () => void;
 }
 
+/** Compressed flow: 0=Splash, 1=Goals, 2=SignUp+Username, 3=AutoSuggestChallenge */
 export const useOnboardingStore = create<OnboardingState>((set) => ({
   currentStep: 0,
-  totalSteps: 9,
+  totalSteps: 4,
   hasCompletedOnboarding: false,
   selectedGoals: [],
   intensityLevel: null,

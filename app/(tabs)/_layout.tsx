@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { PremiumBadge } from "@/components/PremiumBadge";
 import { DS_COLORS, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
@@ -12,6 +13,7 @@ export default function TabLayout() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { isPremium } = useApp();
+  const { colors, colorScheme } = useTheme();
   const pushRegistrationAttempted = useRef(false);
 
   useEffect(() => {
@@ -19,12 +21,12 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = DS_COLORS.card;
-  const tabBorder = DS_COLORS.border;
-  const tabActive = DS_COLORS.accent;
-  const tabInactive = DS_COLORS.tabInactive;
+  const tabBg = colors.card;
+  const tabBorder = colors.border;
+  const tabActive = colors.accent;
+  const tabInactive = colors.text.tertiary;
   const isCreateScreen = typeof pathname === "string" && pathname.includes("create");
-  const centerBtnBg = isCreateScreen ? DS_COLORS.accent : DS_COLORS.centerButtonBg;
+  const centerBtnBg = isCreateScreen ? colors.accent : (colorScheme === "dark" ? colors.pill : DS_COLORS.centerButtonBg);
 
   return (
     <Tabs
@@ -70,7 +72,7 @@ export default function TabLayout() {
           tabBarIcon: () => (
             <View style={styles.createTabIconWrap}>
               <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
-                <Plus color={DS_COLORS.white} size={24} strokeWidth={2.5} />
+                <Plus color="#FFFFFF" size={24} strokeWidth={2.5} />
               </View>
               {!isPremium && (
                 <View style={styles.createProBadge}>

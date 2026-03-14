@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Modal,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -43,6 +44,10 @@ import { getHomeRetentionDerived } from "@/lib/home-derived";
 import { getFirstSessionJustFinished, clearFirstSessionJustFinished } from "@/lib/starter-join";
 import { track } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
+import { requestNotificationPermissions } from "@/lib/notifications";
+import { registerPushTokenWithBackend } from "@/lib/register-push-token";
+import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -53,6 +58,7 @@ import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedC
 import { SuggestedFollows } from "@/components/SuggestedFollows";
 import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
+import { useTheme } from "@/contexts/ThemeContext";
 import { formatTimeRemaining } from "@/lib/challenge-timer";
 import {
   DS_COLORS,
@@ -88,10 +94,11 @@ const MOTIVATION_QUOTES: { text: string; author: string }[] = [
 ];
 
 function SyncingBanner({ onDismiss }: { onDismiss?: () => void }) {
+  const { colors: themeColors } = useTheme();
   return (
-    <View style={[syncingBannerStyles.wrap, { backgroundColor: DS_COLORS.warningSoft }]}>
-      <RefreshCw size={14} color={DS_COLORS.accent} />
-      <Text style={[syncingBannerStyles.text, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>
+    <View style={[syncingBannerStyles.wrap, { backgroundColor: themeColors.warningLight }]}>
+      <RefreshCw size={14} color={themeColors.accent} />
+      <Text style={[syncingBannerStyles.text, { color: themeColors.text.primary }]} numberOfLines={1}>
         Syncing... we{"'"}ll update when you{"'"}re back online.
       </Text>
       {onDismiss && (
@@ -255,6 +262,7 @@ export default function HomeScreen() {
     todayCheckins,
     todayDateLocal,
   } = useApp();
+  const { colors } = useTheme();
   const challengeTitle = (challenge as { title?: string })?.title ?? (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
   const currentDayIndex = (activeChallenge as { current_day_index?: number })?.current_day_index ?? 1;
   const durationDays = (challenge as { duration_days?: number })?.duration_days ?? (activeChallenge as { challenges?: { duration_days?: number } })?.challenges?.duration_days;
@@ -283,6 +291,15 @@ export default function HomeScreen() {
   const [freezeError, setFreezeError] = useState<string>('');
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
+
+  const weeklyProgressQuery = useQuery({
+    queryKey: ["home", "weeklyProgress"],
+    queryFn: () => trpcQuery(TRPC.profiles.getWeeklyProgress) as Promise<{ goal: number; completed: number; remaining: number }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest,
+  });
+  const weeklyProgress = weeklyProgressQuery.data ?? { goal: 5, completed: 0, remaining: 5 };
+  const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
 
   const leaderboardQuery = useQuery({
     queryKey: ["home", "leaderboard"],
@@ -556,6 +573,32 @@ export default function HomeScreen() {
           } as never);
           const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? (stats as StatsFromApi).totalDaysSecured + 1 : 0;
           maybePromptForReview(totalDaysSecuredNow, "day_secured").catch(() => {});
+          if (Platform.OS !== "web" && totalDaysSecuredNow === 1) {
+            const key = "griit_notification_prompt_post_first_shown";
+            Notifications.getPermissionsAsync().then(({ status }) => {
+              if (status !== "undetermined") return;
+              AsyncStorage.getItem(key).then((shown) => {
+                if (shown === "true") return;
+                AsyncStorage.setItem(key, "true");
+                track({ name: "notification_permission_deferred_to_post_first_day" });
+                Alert.alert(
+                  "Want reminders to keep your streak alive?",
+                  "We'll notify you when it's time to secure your day.",
+                  [
+                    { text: "Not now", style: "cancel" },
+                    {
+                      text: "Enable",
+                      onPress: () => {
+                        requestNotificationPermissions().then((ok) => {
+                          if (ok) registerPushTokenWithBackend().catch(() => {});
+                        });
+                      },
+                    },
+                  ]
+                );
+              });
+            });
+          }
         }
       }, 1200);
     } catch {
@@ -568,7 +611,7 @@ export default function HomeScreen() {
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <HomeScreenSkeleton />
         </ScrollView>
@@ -578,17 +621,17 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
             <Text style={styles.heroEmoji} accessibilityRole="header">🔥</Text>
-            <Text style={[styles.heroTitle, { color: DS_COLORS.textPrimary }]}>Your discipline journey{'\n'}starts here.</Text>
-            <Text style={[styles.heroSubtitle, { color: DS_COLORS.textSecondary }]}>
+            <Text style={[styles.heroTitle, { color: colors.text.primary }]}>Your discipline journey{'\n'}starts here.</Text>
+            <Text style={[styles.heroSubtitle, { color: colors.text.secondary }]}>
               Join thousands building better habits.{'\n'}
               One day at a time. No excuses.
             </Text>
             <TouchableOpacity
-              style={[styles.heroCTA, { backgroundColor: DS_COLORS.accent }]}
+              style={[styles.heroCTA, { backgroundColor: colors.accent }]}
               onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
               activeOpacity={0.85}
               accessibilityLabel="Explore challenges"
@@ -597,38 +640,38 @@ export default function HomeScreen() {
               <Text style={styles.heroCTAText}>Explore challenges</Text>
             </TouchableOpacity>
           </View>
-          <View style={[styles.motivationCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-            <Text style={[styles.motivationQuote, { color: DS_COLORS.textSecondary }]}>
+          <View style={[styles.motivationCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.motivationQuote, { color: colors.text.secondary }]}>
               {`"${guestQuote.text}"`}
             </Text>
-            <Text style={[styles.motivationAuthor, { color: DS_COLORS.textMuted }]}>{guestQuote.author}</Text>
+            <Text style={[styles.motivationAuthor, { color: colors.text.muted }]}>{guestQuote.author}</Text>
           </View>
           <View style={styles.howItWorks}>
-            <Text style={[styles.guestSectionTitle, { color: DS_COLORS.textPrimary }]}>How GRIIT works</Text>
+            <Text style={[styles.guestSectionTitle, { color: colors.text.primary }]}>How GRIIT works</Text>
             <View style={styles.stepRow}>
               <Text style={styles.stepEmoji}>🎯</Text>
               <View style={styles.stepContent}>
-                <Text style={[styles.stepTitle, { color: DS_COLORS.textPrimary }]}>Pick a challenge</Text>
-                <Text style={[styles.stepDesc, { color: DS_COLORS.textSecondary }]}>Choose from 7-day sprints to 75-day transformations</Text>
+                <Text style={[styles.stepTitle, { color: colors.text.primary }]}>Pick a challenge</Text>
+                <Text style={[styles.stepDesc, { color: colors.text.secondary }]}>Choose from 7-day sprints to 75-day transformations</Text>
               </View>
             </View>
             <View style={styles.stepRow}>
               <Text style={styles.stepEmoji}>✅</Text>
               <View style={styles.stepContent}>
-                <Text style={[styles.stepTitle, { color: DS_COLORS.textPrimary }]}>Complete daily tasks</Text>
-                <Text style={[styles.stepDesc, { color: DS_COLORS.textSecondary }]}>Workouts, journaling, cold showers — you decide</Text>
+                <Text style={[styles.stepTitle, { color: colors.text.primary }]}>Complete daily tasks</Text>
+                <Text style={[styles.stepDesc, { color: colors.text.secondary }]}>Workouts, journaling, cold showers — you decide</Text>
               </View>
             </View>
             <View style={styles.stepRow}>
               <Text style={styles.stepEmoji}>🔒</Text>
               <View style={styles.stepContent}>
-                <Text style={[styles.stepTitle, { color: DS_COLORS.textPrimary }]}>Secure your day</Text>
-                <Text style={[styles.stepDesc, { color: DS_COLORS.textSecondary }]}>Lock in your progress. Build your streak. Earn your rank.</Text>
+                <Text style={[styles.stepTitle, { color: colors.text.primary }]}>Secure your day</Text>
+                <Text style={[styles.stepDesc, { color: colors.text.secondary }]}>Lock in your progress. Build your streak. Earn your rank.</Text>
               </View>
             </View>
           </View>
           <View style={styles.guestFeaturedSection}>
-            <Text style={[styles.guestSectionTitle, { color: DS_COLORS.textPrimary }]}>Popular challenges</Text>
+            <Text style={[styles.guestSectionTitle, { color: colors.text.primary }]}>Popular challenges</Text>
             {(guestFeatured as { id: string; title?: string; short_hook?: string }[]).map((challenge) => (
               <TouchableOpacity
                 key={challenge.id}
@@ -638,9 +681,9 @@ export default function HomeScreen() {
                 accessibilityLabel={`Open challenge: ${challenge.title ?? "Challenge"}`}
                 accessibilityRole="button"
               >
-                <Text style={[styles.guestChallengeTitle, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{challenge.title ?? "Challenge"}</Text>
-                {challenge.short_hook ? <Text style={[styles.guestChallengeHook, { color: DS_COLORS.textSecondary }]} numberOfLines={1}>{challenge.short_hook}</Text> : null}
-                <ChevronRight size={18} color={DS_COLORS.textMuted} style={{ position: "absolute", right: 12, top: 18 }} />
+                <Text style={[styles.guestChallengeTitle, { color: colors.text.primary }]} numberOfLines={1}>{challenge.title ?? "Challenge"}</Text>
+                {challenge.short_hook ? <Text style={[styles.guestChallengeHook, { color: colors.text.secondary }]} numberOfLines={1}>{challenge.short_hook}</Text> : null}
+                <ChevronRight size={18} color={colors.text.muted} style={{ position: "absolute", right: 12, top: 18 }} />
               </TouchableOpacity>
             ))}
             <TouchableOpacity
@@ -650,11 +693,11 @@ export default function HomeScreen() {
               accessibilityLabel="See all challenges"
               accessibilityRole="button"
             >
-              <Text style={[styles.seeAllText, { color: DS_COLORS.accent }]}>See all challenges →</Text>
+              <Text style={[styles.seeAllText, { color: colors.accent }]}>See all challenges →</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.socialProof}>
-            <Text style={[styles.socialProofText, { color: DS_COLORS.textSecondary }]}>🔥 Join the movement. Every day counts.</Text>
+            <Text style={[styles.socialProofText, { color: colors.text.secondary }]}>🔥 Join the movement. Every day counts.</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -668,7 +711,7 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
         <Celebration
         visible={showCelebration}
         onComplete={() => { setShowCelebration(false); setCelebrationPayload(null); }}
@@ -680,13 +723,13 @@ export default function HomeScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: DS_COLORS.background }]}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={onRefresh}
-            tintColor={DS_COLORS.accent}
+            tintColor={colors.accent}
           />
         }
       >
@@ -696,13 +739,13 @@ export default function HomeScreen() {
 
         {showFirstSessionBanner && (
           <TouchableOpacity
-            style={[styles.firstSessionBanner, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.border }]}
+            style={[styles.firstSessionBanner, { backgroundColor: colors.accentLight, borderColor: colors.border }]}
             onPress={() => setShowFirstSessionBanner(false)}
             activeOpacity={0.9}
             accessibilityLabel="Dismiss welcome banner"
             accessibilityRole="button"
           >
-            <Text style={[styles.firstSessionBannerText, { color: DS_COLORS.textPrimary }]}>
+            <Text style={[styles.firstSessionBannerText, { color: colors.text.primary }]}>
               Welcome to GRIIT. Your first win is in the books. 🔥
             </Text>
           </TouchableOpacity>
@@ -723,10 +766,10 @@ export default function HomeScreen() {
         </View>
 
         {showRecoveryBanner && (
-          <View style={[styles.recoveryBanner, { backgroundColor: DS_COLORS.warningSoft, borderColor: DS_COLORS.border }]}>
-            <AlertTriangle size={18} color={DS_COLORS.warning} />
+          <View style={[styles.recoveryBanner, { backgroundColor: colors.warningLight, borderColor: colors.border }]}>
+            <AlertTriangle size={18} color={colors.warning} />
             <View style={styles.recoveryBannerTextWrap}>
-              <Text style={[styles.recoveryBannerTitle, { color: DS_COLORS.textPrimary }]}>
+              <Text style={[styles.recoveryBannerTitle, { color: colors.text.primary }]}>
                 {showRestartMode
                   ? "Welcome back. Start fresh today."
                   : showComebackMode
@@ -735,7 +778,7 @@ export default function HomeScreen() {
               </Text>
               {showRecoveryBanner && lastStandsAvailable >= 0 && (
                 <View style={styles.recoveryBannerLastStandRow}>
-                  <Text style={[styles.recoveryBannerSub, { color: DS_COLORS.textSecondary }]}>
+                  <Text style={[styles.recoveryBannerSub, { color: colors.text.secondary }]}>
                     Last Stands remaining: {lastStandsAvailable}
                   </Text>
                   {!isPremium && <PremiumBadge label="PRO" />}
@@ -749,12 +792,12 @@ export default function HomeScreen() {
                   accessibilityLabel="Upgrade to use Last Stand"
                   accessibilityRole="button"
                 >
-                  <Text style={[styles.freezeCtaText, { color: DS_COLORS.accent }]}>Upgrade to use Last Stand</Text>
+                  <Text style={[styles.freezeCtaText, { color: colors.accent }]}>Upgrade to use Last Stand</Text>
                 </TouchableOpacity>
               )}
               {canUseFreeze && !lastStandRequiresPremium && (
                 <TouchableOpacity
-                  style={[styles.freezeCta, { backgroundColor: DS_COLORS.accent }]}
+                  style={[styles.freezeCta, { backgroundColor: colors.accent }]}
                   onPress={() => {
                     if (!isPremium && !requirePremium("streak_freeze")) return;
                     setShowFreezeModal(true);
@@ -773,8 +816,8 @@ export default function HomeScreen() {
 
         {!isGuest && hasActiveChallenge && !isDaySecured && (
           <View style={styles.mainPromptBlock}>
-            <Text style={[styles.secureTodayTitle, { color: DS_COLORS.textPrimary }]} accessibilityRole="header">Secure today to protect your streak.</Text>
-            <Text style={[styles.secureTodaySub, { color: DS_COLORS.textMuted }]}>
+            <Text style={[styles.secureTodayTitle, { color: colors.text.primary }]} accessibilityRole="header">Secure today to protect your streak.</Text>
+            <Text style={[styles.secureTodaySub, { color: colors.text.muted }]}>
               {(() => {
                 const ac = activeChallenge as { ends_at?: string } | undefined;
                 if (ac?.ends_at) return `${formatTimeRemaining(ac.ends_at)} remaining.`;
@@ -785,14 +828,14 @@ export default function HomeScreen() {
             <View style={styles.metricsCard}>
               {nextTierName != null && pointsToNextTier > 0 && (
                 <View style={styles.metricsRow}>
-                  <Flame size={18} color={DS_COLORS.textSecondary} />
-                  <Text style={[styles.metricsText, { color: DS_COLORS.textSecondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
+                  <Flame size={18} color={colors.text.secondary} />
+                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
                 </View>
               )}
               {leaderboardData != null && (
                 <View style={styles.metricsRow}>
-                  <Users size={18} color={DS_COLORS.textSecondary} />
-                  <Text style={[styles.metricsText, { color: DS_COLORS.textSecondary }]}>
+                  <Users size={18} color={colors.text.secondary} />
+                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>
                     {leaderboardData.totalSecuredToday} friends secured today
                   </Text>
                 </View>
@@ -803,7 +846,7 @@ export default function HomeScreen() {
 
         {!isGuest && !isPremium && !dismissedUpgradePrompt && (
           <TouchableOpacity
-            style={[styles.upgradePromptCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
+            style={[styles.upgradePromptCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => requirePremium("settings")}
             activeOpacity={0.9}
             accessibilityRole="button"
@@ -811,10 +854,10 @@ export default function HomeScreen() {
           >
             <View style={styles.upgradePromptRow}>
               <View style={styles.upgradePromptTextWrap}>
-                <Text style={[styles.upgradePromptTitle, { color: DS_COLORS.textPrimary }]}>Upgrade to Premium</Text>
-                <Text style={[styles.upgradePromptSub, { color: DS_COLORS.textSecondary }]}>Unlimited challenges, streak freezes & more.</Text>
+                <Text style={[styles.upgradePromptTitle, { color: colors.text.primary }]}>Upgrade to Premium</Text>
+                <Text style={[styles.upgradePromptSub, { color: colors.text.secondary }]}>Unlimited challenges, streak freezes & more.</Text>
               </View>
-              <ChevronRight size={20} color={DS_COLORS.textMuted} />
+              <ChevronRight size={20} color={colors.text.muted} />
             </View>
             <TouchableOpacity
               hitSlop={12}
@@ -823,7 +866,7 @@ export default function HomeScreen() {
               accessibilityLabel="Dismiss"
               accessibilityRole="button"
             >
-              <Text style={[styles.upgradePromptDismissText, { color: DS_COLORS.textMuted }]}>×</Text>
+              <Text style={[styles.upgradePromptDismissText, { color: colors.text.muted }]}>×</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         )}
@@ -856,42 +899,42 @@ export default function HomeScreen() {
                 accessibilityLabel="Share your progress"
                 accessibilityRole="button"
               >
-                <Text style={[styles.shareProgressButtonText, { color: DS_COLORS.accent }]}>Share your progress</Text>
+                <Text style={[styles.shareProgressButtonText, { color: colors.accent }]}>Share your progress</Text>
               </TouchableOpacity>
             )}
             <ExploreChallengesButton />
             {!isGuest && leaderboardEntries.length > 0 && (
               <TouchableOpacity
-                style={[styles.leaderboardPreviewCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
+                style={[styles.leaderboardPreviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={() => router.push(ROUTES.TABS_ACTIVITY as never)}
                 activeOpacity={0.9}
                 accessibilityLabel="See full leaderboard"
                 accessibilityRole="button"
               >
                 <View style={styles.leaderboardPreviewHeader}>
-                  <Trophy size={18} color={DS_COLORS.accent} />
-                  <Text style={[styles.leaderboardPreviewTitle, { color: DS_COLORS.textPrimary }]}>Top this week</Text>
-                  <ChevronRight size={18} color={DS_COLORS.textMuted} style={{ marginLeft: "auto" }} />
+                  <Trophy size={18} color={colors.accent} />
+                  <Text style={[styles.leaderboardPreviewTitle, { color: colors.text.primary }]}>Top this week</Text>
+                  <ChevronRight size={18} color={colors.text.muted} style={{ marginLeft: "auto" }} />
                 </View>
                 <View style={styles.leaderboardPreviewRow}>
                   {leaderboardEntries.slice(0, 3).map((e, i) => (
                     <View key={e.userId ?? i} style={styles.leaderboardPreviewItem}>
                       <Image source={{ uri: e.avatarUrl ?? `https://i.pravatar.cc/150?u=${e.userId}` }} style={styles.leaderboardPreviewAvatar} contentFit="cover" />
-                      <Text style={[styles.leaderboardPreviewName, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{e.displayName ?? e.username ?? "—"}</Text>
-                      <Text style={[styles.leaderboardPreviewScore, { color: DS_COLORS.accent }]}>+{e.securedDaysThisWeek ?? 0}</Text>
+                      <Text style={[styles.leaderboardPreviewName, { color: colors.text.primary }]} numberOfLines={1}>{e.displayName ?? e.username ?? "—"}</Text>
+                      <Text style={[styles.leaderboardPreviewScore, { color: colors.accent }]}>+{e.securedDaysThisWeek ?? 0}</Text>
                     </View>
                   ))}
                 </View>
-                <Text style={[styles.leaderboardPreviewLink, { color: DS_COLORS.accent }]}>See full leaderboard</Text>
+                <Text style={[styles.leaderboardPreviewLink, { color: colors.accent }]}>See full leaderboard</Text>
               </TouchableOpacity>
             )}
             {homeDataError ? (
               <View style={styles.yourPositionCard}>
-                <AlertTriangle size={28} color={DS_COLORS.textMuted} />
-                <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>CHALLENGES</Text>
-                <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
+                <AlertTriangle size={28} color={colors.text.muted} />
+                <Text style={[styles.yourPositionLabel, { color: colors.text.muted }]}>CHALLENGES</Text>
+                <Text style={[styles.yourPositionText, { color: colors.text.primary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
                 <TouchableOpacity
-                  style={[styles.secureNowButton, { backgroundColor: DS_COLORS.accent }]}
+                  style={[styles.secureNowButton, { backgroundColor: colors.accent }]}
                   onPress={() => homeActiveQuery.refetch()}
                   activeOpacity={0.85}
                   accessibilityLabel="Retry loading challenges"
@@ -910,9 +953,9 @@ export default function HomeScreen() {
             {hasActiveChallenge && tasks.length > 0 && (
               <View style={styles.todaysResetCard}>
                 <View style={styles.todaysResetHeader}>
-                  <Clock size={18} color={DS_COLORS.textPrimary} />
-                  <Text style={[styles.todaysResetTitle, { color: DS_COLORS.textPrimary }]}>Today&apos;s Reset</Text>
-                  <Text style={[styles.todaysResetTime, { color: DS_COLORS.textMuted }]}>
+                  <Clock size={18} color={colors.text.primary} />
+                  <Text style={[styles.todaysResetTitle, { color: colors.text.primary }]}>Today&apos;s Reset</Text>
+                  <Text style={[styles.todaysResetTime, { color: colors.text.muted }]}>
                     {(() => {
                       const ac = activeChallenge as { ends_at?: string } | undefined;
                       if (ac?.ends_at) return formatTimeRemaining(ac.ends_at) + " left";
@@ -921,12 +964,12 @@ export default function HomeScreen() {
                     })()}
                   </Text>
                 </View>
-                <View style={[styles.todaysResetDivider, { backgroundColor: DS_COLORS.border }]} />
+                <View style={[styles.todaysResetDivider, { backgroundColor: colors.border }]} />
                 <View style={styles.todaysResetTaskList}>
                   {tasks.map((task) => (
                     <View key={task.id} style={styles.todaysResetTaskRow}>
-                      <Circle size={18} color={DS_COLORS.border} strokeWidth={2} />
-                      <Text style={[styles.todaysResetTaskText, { color: DS_COLORS.textPrimary }, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
+                      <Circle size={18} color={colors.border} strokeWidth={2} />
+                      <Text style={[styles.todaysResetTaskText, { color: colors.text.primary }, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
                     </View>
                   ))}
                 </View>
@@ -937,37 +980,51 @@ export default function HomeScreen() {
 
         {!isGuest && (
           <View style={styles.statsSummaryCard}>
-            <View style={[styles.statsSummaryCol, { borderRightColor: DS_COLORS.border }]}>
-              <Flame size={20} color={DS_COLORS.accent} />
-              <Text style={[styles.statsSummaryValue, { color: DS_COLORS.textPrimary }]}>{currentStreak}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: DS_COLORS.textSecondary }]}>Streak</Text>
+            <View style={[styles.statsSummaryCol, { borderRightColor: colors.border }]}>
+              <Flame size={20} color={colors.accent} />
+              <Text style={[styles.statsSummaryValue, { color: colors.text.primary }]}>{currentStreak}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: colors.text.secondary }]}>Streak</Text>
               {lastStandsAvailable >= 0 && (
-                <Text style={[styles.statsSummaryLastStand, { color: DS_COLORS.textMuted }]}>Last Stands: {lastStandsAvailable}</Text>
+                <Text style={[styles.statsSummaryLastStand, { color: colors.text.muted }]}>Last Stands: {lastStandsAvailable}</Text>
               )}
             </View>
-            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: DS_COLORS.border }]}>
-              <TrendingUp size={20} color={DS_COLORS.success} />
-              <Text style={[styles.statsSummaryValue, { color: DS_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: DS_COLORS.textSecondary }]}>Score</Text>
+            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: colors.border }]}>
+              <TrendingUp size={20} color={colors.success} />
+              <Text style={[styles.statsSummaryValue, { color: colors.text.primary }]}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: colors.text.secondary }]}>Score</Text>
             </View>
             <View style={styles.statsSummaryCol}>
-              <Target size={20} color={DS_COLORS.accent} />
-              <Text style={[styles.statsSummaryValue, { color: DS_COLORS.textPrimary }]}>{tierName ?? "Starter"}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: DS_COLORS.textSecondary }]}>Rank</Text>
+              <Target size={20} color={colors.accent} />
+              <Text style={[styles.statsSummaryValue, { color: colors.text.primary }]}>{tierName ?? "Starter"}</Text>
+              <Text style={[styles.statsSummaryLabel, { color: colors.text.secondary }]}>Rank</Text>
             </View>
           </View>
         )}
 
         {!isGuest && (
+          <TouchableOpacity
+            style={[styles.weeklyGoalRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => setShowWeeklyGoalModal(true)}
+            activeOpacity={0.8}
+            accessibilityLabel="Weekly goal"
+            accessibilityRole="button"
+          >
+            <Text style={[styles.weeklyGoalLabel, { color: colors.text.secondary }]}>Weekly goal</Text>
+            <Text style={[styles.weeklyGoalValue, { color: colors.text.primary }]}>{weeklyProgress.completed}/{weeklyProgress.goal} days this week</Text>
+            <ChevronRight size={18} color={colors.text.muted} />
+          </TouchableOpacity>
+        )}
+
+        {!isGuest && (
           <View style={styles.disciplineWeekCard}>
             <View style={[styles.disciplineWeekIconWrap, { backgroundColor: DS_COLORS.successSoft }]}>
-              <TrendingUp size={20} color={DS_COLORS.success} />
+              <TrendingUp size={20} color={colors.success} />
             </View>
             <View style={styles.disciplineWeekBody}>
-              <Text style={[styles.disciplineWeekTitle, { color: DS_COLORS.textPrimary }]}>
-                <Text style={[styles.disciplineWeekNum, { color: DS_COLORS.success }]}>+{stats?.longestStreak ?? 0}</Text> Discipline this week
+              <Text style={[styles.disciplineWeekTitle, { color: colors.text.primary }]}>
+                <Text style={[styles.disciplineWeekNum, { color: colors.success }]}>+{stats?.longestStreak ?? 0}</Text> Discipline this week
               </Text>
-              <Text style={[styles.disciplineWeekSub, { color: DS_COLORS.success }]}>+100% from last week</Text>
+              <Text style={[styles.disciplineWeekSub, { color: colors.success }]}>+100% from last week</Text>
             </View>
           </View>
         )}
@@ -986,7 +1043,7 @@ export default function HomeScreen() {
             <View style={styles.metricsCard}>
               {nextTierName != null && pointsToNextTier > 0 && (
                 <View style={styles.metricsRow}>
-                  <Flame size={18} color={DS_COLORS.textMuted} />
+                  <Flame size={18} color={colors.text.muted} />
                   <Text style={styles.metricsText}>{pointsToNextTier} pts to {nextTierName}</Text>
                 </View>
               )}
@@ -998,7 +1055,7 @@ export default function HomeScreen() {
                 if (!show) return null;
                 return (
                   <View style={styles.metricsRow}>
-                    <Users size={18} color={DS_COLORS.textMuted} />
+                    <Users size={18} color={colors.text.muted} />
                     <Text style={styles.metricsText}>
                       {count} {count === 1 ? "person" : "people"} secured today
                     </Text>
@@ -1009,7 +1066,7 @@ export default function HomeScreen() {
 
             <View style={styles.todaysResetCard}>
               <View style={styles.todaysResetHeader}>
-                <Clock size={18} color={DS_COLORS.accent} />
+                <Clock size={18} color={colors.accent} />
                 <Text style={styles.todaysResetTitle}>Today{"'"}s Reset</Text>
                 <Text style={styles.todaysResetTime}>
                   {(() => {
@@ -1022,7 +1079,7 @@ export default function HomeScreen() {
                 <View style={styles.todaysResetTaskList}>
                   {tasks.map((task) => (
                     <View key={task.id} style={styles.todaysResetTaskRow}>
-                      <Circle size={18} color={DS_COLORS.border} strokeWidth={2} />
+                      <Circle size={18} color={colors.border} strokeWidth={2} />
                       <Text style={[styles.todaysResetTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
                     </View>
                   ))}
@@ -1038,18 +1095,18 @@ export default function HomeScreen() {
 
             <View style={styles.statsSummaryCard}>
               <View style={styles.statsSummaryCol}>
-                <Flame size={20} color={DS_COLORS.accent} />
+                <Flame size={20} color={colors.accent} />
                 <Text style={styles.statsSummaryValue}>{currentStreak}</Text>
                 <Text style={styles.statsSummaryLabel}>Streak</Text>
                 <Text style={styles.statsSummaryLastStand}>Last Stands: {lastStandsAvailable}</Text>
               </View>
               <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder]}>
-                <TrendingUp size={20} color={DS_COLORS.accent} />
+                <TrendingUp size={20} color={colors.accent} />
                 <Text style={styles.statsSummaryValue}>{stats?.longestStreak ?? 0}</Text>
                 <Text style={styles.statsSummaryLabel}>Score</Text>
               </View>
               <View style={styles.statsSummaryCol}>
-                <Target size={20} color={DS_COLORS.textMuted} />
+                <Target size={20} color={colors.text.muted} />
                 <Text style={styles.statsSummaryValue}>{tierName}</Text>
                 <Text style={styles.statsSummaryLabel}>Rank</Text>
               </View>
@@ -1084,7 +1141,7 @@ export default function HomeScreen() {
               )}
               <View style={styles.cardFooter}>
                 <Text style={styles.viewDetailsText}>View Details</Text>
-                <ChevronRight size={16} color={DS_COLORS.textMuted} />
+                <ChevronRight size={16} color={colors.text.muted} />
               </View>
             </TouchableOpacity>
 
@@ -1104,16 +1161,16 @@ export default function HomeScreen() {
             )}
 
             {daySecured && (
-              <View style={[styles.securedBanner, { backgroundColor: DS_COLORS.successSoft }]}>
-                <CheckCircle2 size={16} color={DS_COLORS.success} fill={DS_COLORS.success} strokeWidth={0} />
-                <Text style={[styles.securedText, { color: DS_COLORS.textPrimary }]}>Day {(activeChallenge as { current_day?: number })?.current_day ?? 1} Secured</Text>
+              <View style={[styles.securedBanner, { backgroundColor: colors.successLight }]}>
+                <CheckCircle2 size={16} color={colors.success} fill={colors.success} strokeWidth={0} />
+                <Text style={[styles.securedText, { color: colors.text.primary }]}>Day {(activeChallenge as { current_day?: number })?.current_day ?? 1} Secured</Text>
               </View>
             )}
           </View>
         ) : (
-          <View style={[styles.welcomeBackCard, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.accent }]}>
-            <RefreshCw size={28} color={DS_COLORS.accent} />
-            <Text style={[styles.welcomeBackTitle, { color: DS_COLORS.textPrimary }]}>
+          <View style={[styles.welcomeBackCard, { backgroundColor: colors.accentLight, borderColor: colors.accent }]}>
+            <RefreshCw size={28} color={colors.accent} />
+            <Text style={[styles.welcomeBackTitle, { color: colors.text.primary }]}>
               {isFirstTimeUser ? "Start your first challenge." : "Ready to restart?"}
             </Text>
             <Text style={[styles.welcomeBackSub, { color: DS_COLORS.textSecondary }]}>
@@ -1155,7 +1212,7 @@ export default function HomeScreen() {
                 accessibilityRole="button"
               >
                 <Text style={[styles.suggestedChallengeTitle, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{c.title ?? "Challenge"}</Text>
-                <ChevronRight size={18} color={DS_COLORS.textMuted} />
+                <ChevronRight size={18} color={colors.text.muted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -1169,7 +1226,7 @@ export default function HomeScreen() {
 
         {!isGuest && leaderboardData?.currentUserRank != null && (
           <View style={[styles.yourPositionInFeedCard, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.accent }]}>
-            <Target size={28} color={DS_COLORS.accent} />
+            <Target size={28} color={colors.accent} />
             <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>YOUR POSITION</Text>
             <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>
               You are ranked <Text style={styles.feedBold}>#{leaderboardData.currentUserRank}</Text> among friends this week.
@@ -1185,7 +1242,7 @@ export default function HomeScreen() {
             return (
               <>
                 <View style={[styles.liveFeedEmpty, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-                  <Users size={32} color={DS_COLORS.textMuted} style={{ marginBottom: 8 }} />
+                  <Users size={32} color={colors.text.muted} style={{ marginBottom: 8 }} />
                   <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>No activity yet</Text>
                   <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Join a challenge to see the community in action.</Text>
                 </View>
@@ -1222,7 +1279,7 @@ export default function HomeScreen() {
 
         {!isGuest && leaderboardError ? (
           <View style={styles.yourPositionCard}>
-            <AlertTriangle size={28} color={DS_COLORS.textMuted} />
+            <AlertTriangle size={28} color={colors.text.muted} />
             <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
             <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Couldn&apos;t load leaderboard. Check your connection and try again.</Text>
             <TouchableOpacity
@@ -1238,12 +1295,12 @@ export default function HomeScreen() {
           </View>
         ) : !isGuest && leaderboardLoading && leaderboardData == null ? (
           <View style={styles.yourPositionCard}>
-            <ActivityIndicator size="small" color={DS_COLORS.accent} style={{ marginVertical: 8 }} />
+            <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 8 }} />
             <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Loading leaderboard…</Text>
           </View>
         ) : leaderboardData?.currentUserRank != null ? (
           <View style={styles.yourPositionCard}>
-            <Target size={28} color={DS_COLORS.accent} />
+            <Target size={28} color={colors.accent} />
             <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>YOUR STATUS</Text>
             <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>You&apos;re ranked #{leaderboardData.currentUserRank} among friends this week.</Text>
             <TouchableOpacity
@@ -1265,7 +1322,7 @@ export default function HomeScreen() {
             accessibilityLabel="View activity"
             accessibilityRole="button"
           >
-            <Target size={28} color={DS_COLORS.accent} />
+            <Target size={28} color={colors.accent} />
             <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
             <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Be the first this week.</Text>
             <Text style={styles.secureNowButtonText}>View Activity</Text>
@@ -1332,6 +1389,54 @@ export default function HomeScreen() {
         </Modal>
         );
       })()}
+
+      {showWeeklyGoalModal && (
+        <Modal visible transparent animationType="fade">
+          <TouchableOpacity
+            style={[styles.freezeModalBackdrop, { backgroundColor: DS_COLORS.modalBackdrop }]}
+            activeOpacity={1}
+            onPress={() => setShowWeeklyGoalModal(false)}
+          />
+          <View style={styles.freezeModalCenter}>
+            <View style={[styles.freezeModalCard, { backgroundColor: colors.card }]}>
+              <Text style={[styles.freezeModalTitle, { color: colors.text.primary }]}>Weekly goal</Text>
+              <Text style={[styles.freezeModalSub, { color: colors.text.secondary }]}>How many days do you want to secure per week?</Text>
+              {([3, 5, 7] as const).map((g) => (
+                <TouchableOpacity
+                  key={g}
+                  style={[
+                    styles.weeklyGoalOption,
+                    { borderColor: colors.border },
+                    weeklyProgress.goal === g && { borderColor: colors.accent, backgroundColor: colors.accentLight },
+                  ]}
+                  onPress={async () => {
+                    const oldGoal = weeklyProgress.goal;
+                    if (oldGoal === g) { setShowWeeklyGoalModal(false); return; }
+                    try {
+                      await trpcMutate(TRPC.profiles.setWeeklyGoal, { goal: g });
+                      track({ name: "weekly_goal_changed", old_goal: oldGoal, new_goal: g });
+                      weeklyProgressQuery.refetch();
+                      setShowWeeklyGoalModal(false);
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                >
+                  <Text style={[styles.weeklyGoalOptionText, { color: colors.text.primary }]}>
+                    {g === 3 ? "Casual (3 days)" : g === 5 ? "Regular (5 days)" : "Committed (7 days)"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[styles.freezeModalCancel, { borderColor: colors.border, marginTop: 12 }]}
+                onPress={() => setShowWeeklyGoalModal(false)}
+              >
+                <Text style={[styles.freezeModalCancelText, { color: colors.text.primary }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {showShareProgressModal && (
         <Modal visible transparent animationType="fade">
@@ -1504,7 +1609,7 @@ export default function HomeScreen() {
                 <Text style={[styles.streakLostCloseText, { color: DS_COLORS.textSecondary }]}>✕</Text>
               </TouchableOpacity>
               <View style={styles.streakLostIconWrap}>
-                <Flame size={28} color={DS_COLORS.textMuted} />
+                <Flame size={28} color={colors.text.muted} />
               </View>
               <Text style={[styles.streakLostTitle, { color: DS_COLORS.textPrimary }]}>Streak lost.</Text>
               <Text style={[styles.streakLostSub, { color: DS_COLORS.textSecondary }]}>Start again today.</Text>
@@ -1725,6 +1830,35 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
     color: DS_COLORS.textMuted,
     letterSpacing: 0.5,
+  },
+  weeklyGoalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.md,
+    marginBottom: DS_SPACING.sm,
+    borderRadius: DS_RADIUS.card,
+    borderWidth: 1,
+  },
+  weeklyGoalLabel: {
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontWeight: "600" as const,
+  },
+  weeklyGoalValue: {
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    fontWeight: "600" as const,
+  },
+  weeklyGoalOption: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  weeklyGoalOptionText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
   },
   statsSummaryLastStand: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,

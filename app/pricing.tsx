@@ -24,6 +24,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
+import { useTheme } from "@/contexts/ThemeContext";
 import { BASE_COLORS, SHADOWS } from "@/constants/theme";
 import {
   getOfferings,
@@ -62,6 +63,7 @@ export default function PricingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ source?: string }>();
   const source = params.source ?? "";
+  const { colors } = useTheme();
   const { isPremium, refreshPremiumStatus } = useApp();
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
@@ -165,14 +167,14 @@ export default function PricingScreen() {
 
   if (isPremium) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: BASE_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} hitSlop={12} accessibilityLabel="Close">
-            <X size={24} color={DS_COLORS.textPrimary} />
+            <X size={24} color={colors.text.primary} />
           </TouchableOpacity>
         </View>
         <View style={styles.centered}>
-          <Crown size={48} color={DS_COLORS.accent} />
+          <Crown size={48} color={colors.accent} />
           <Text style={styles.title}>You're already on Premium</Text>
           <Text style={styles.subtitle}>Enjoy unlimited access.</Text>
         </View>
@@ -192,12 +194,12 @@ export default function PricingScreen() {
     monthlyPrice > 0 && annualPrice > 0 ? Math.round((1 - annualPrice / 12 / monthlyPrice) * 100) : 0;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: BASE_COLORS.background }]} edges={["top"]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} hitSlop={12} accessibilityLabel="Close">
-          <X size={24} color={DS_COLORS.textPrimary} />
+          <X size={24} color={colors.text.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>GRIIT Premium</Text>
+        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>GRIIT Premium</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -206,13 +208,13 @@ export default function PricingScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.tagline, { color: DS_COLORS.textSecondary }]}>{tagline}</Text>
+        <Text style={[styles.tagline, { color: colors.text.secondary }]}>{tagline}</Text>
 
         <View style={styles.featureList}>
           {FEATURES.map(({ icon: Icon, label }) => (
-            <View key={label} style={[styles.featureRow, { borderLeftColor: DS_COLORS.accent }]}>
-              <Icon size={20} color={DS_COLORS.accent} />
-              <Text style={[styles.featureLabel, { color: DS_COLORS.textPrimary }]}>{label}</Text>
+            <View key={label} style={[styles.featureRow, { borderLeftColor: colors.accent }]}>
+              <Icon size={20} color={colors.accent} />
+              <Text style={[styles.featureLabel, { color: colors.text.primary }]}>{label}</Text>
             </View>
           ))}
         </View>
@@ -224,10 +226,10 @@ export default function PricingScreen() {
           </View>
         ) : offeringError ? (
           <View style={styles.retryWrap}>
-            <Text style={[styles.retryText, { color: DS_COLORS.textSecondary }]}>Couldn't load plans.</Text>
+            <Text style={[styles.retryText, { color: colors.text.secondary }]}>Couldn't load plans.</Text>
             <TouchableOpacity
               onPress={loadOfferings}
-              style={[styles.retryBtn, { backgroundColor: DS_COLORS.accent }]}
+              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
               activeOpacity={0.8}
             >
               <RefreshCw size={18} color="#FFF" />
@@ -245,11 +247,11 @@ export default function PricingScreen() {
                   selectedPackage?.identifier === monthlyPkg.identifier && styles.packageCardSelected,
                 ]}
               >
-                <Text style={[styles.packageLabel, { color: DS_COLORS.textPrimary }]}>Monthly</Text>
-                <Text style={[styles.packagePrice, { color: DS_COLORS.textPrimary }]}>
+                <Text style={[styles.packageLabel, { color: colors.text.primary }]}>Monthly</Text>
+                <Text style={[styles.packagePrice, { color: colors.text.primary }]}>
                   {monthlyPkg.product?.priceString ?? "—"}
                 </Text>
-                <Text style={[styles.packagePerMonth, { color: DS_COLORS.textSecondary }]}>per month</Text>
+                <Text style={[styles.packagePerMonth, { color: colors.text.secondary }]}>per month</Text>
               </TouchableOpacity>
             )}
             {annualPkg && (
@@ -262,15 +264,15 @@ export default function PricingScreen() {
                 ]}
               >
                 {savePercent > 0 && (
-                  <View style={[styles.saveBadge, { backgroundColor: DS_COLORS.success }]}>
+                  <View style={[styles.saveBadge, { backgroundColor: colors.success }]}>
                     <Text style={styles.saveBadgeText}>Save {savePercent}%</Text>
                   </View>
                 )}
-                <Text style={[styles.packageLabel, { color: DS_COLORS.textPrimary }]}>Annual</Text>
-                <Text style={[styles.packagePrice, { color: DS_COLORS.textPrimary }]}>
+                <Text style={[styles.packageLabel, { color: colors.text.primary }]}>Annual</Text>
+                <Text style={[styles.packagePrice, { color: colors.text.primary }]}>
                   {annualPkg.product?.priceString ?? "—"}
                 </Text>
-                <Text style={[styles.packagePerMonth, { color: DS_COLORS.textSecondary }]}>
+                <Text style={[styles.packagePerMonth, { color: colors.text.secondary }]}>
                   {annualPrice > 0 ? `$${(annualPrice / 12).toFixed(2)}/mo` : "per year"}
                 </Text>
               </TouchableOpacity>
@@ -279,7 +281,7 @@ export default function PricingScreen() {
         ) : null}
 
         {purchaseError ? (
-          <Text style={[styles.errorText, { color: DS_COLORS.danger }]}>{purchaseError}</Text>
+          <Text style={[styles.errorText, { color: colors.danger }]}>{purchaseError}</Text>
         ) : null}
 
         <TouchableOpacity
@@ -288,8 +290,8 @@ export default function PricingScreen() {
           activeOpacity={0.8}
           style={[
             styles.cta,
-            { backgroundColor: DS_COLORS.accent },
-            (!selectedPackage || purchasing) && { backgroundColor: DS_COLORS.buttonDisabledBg, opacity: 0.9 },
+            { backgroundColor: colors.accent },
+            (!selectedPackage || purchasing) && { backgroundColor: colors.border, opacity: 0.9 },
           ]}
         >
           {purchasing ? (
@@ -312,25 +314,25 @@ export default function PricingScreen() {
           activeOpacity={0.7}
         >
           {restoring ? (
-            <ActivityIndicator size="small" color={DS_COLORS.accent} />
+            <ActivityIndicator size="small" color={colors.accent} />
           ) : (
-            <Text style={[styles.restoreText, { color: DS_COLORS.accent }]}>Restore purchases</Text>
+            <Text style={[styles.restoreText, { color: colors.accent }]}>Restore purchases</Text>
           )}
         </TouchableOpacity>
         {restoreMessage ? (
-          <Text style={[styles.restoreMessage, { color: DS_COLORS.textSecondary }]}>{restoreMessage}</Text>
+          <Text style={[styles.restoreMessage, { color: colors.text.secondary }]}>{restoreMessage}</Text>
         ) : null}
 
-        <Text style={[styles.legal, { color: DS_COLORS.textSecondary }]}>
+        <Text style={[styles.legal, { color: colors.text.secondary }]}>
           Subscription auto-renews. Cancel anytime in Settings.
         </Text>
         <View style={styles.legalLinks}>
           <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
-            <Text style={[styles.legalLink, { color: DS_COLORS.accent }]}>Terms</Text>
+            <Text style={[styles.legalLink, { color: colors.accent }]}>Terms</Text>
           </TouchableOpacity>
-          <Text style={[styles.legal, { color: DS_COLORS.textSecondary }]}> · </Text>
+          <Text style={[styles.legal, { color: colors.text.secondary }]}> · </Text>
           <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
-            <Text style={[styles.legalLink, { color: DS_COLORS.accent }]}>Privacy</Text>
+            <Text style={[styles.legalLink, { color: colors.accent }]}>Privacy</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

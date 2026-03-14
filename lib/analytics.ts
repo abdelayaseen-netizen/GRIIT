@@ -6,7 +6,8 @@ export type AnalyticsEvent =
   | { name: "guest_view_screen"; screen: string }
   | { name: "gate_modal_shown"; context: "join" | "secure" | "respect" | "nudge" | "create" | "team" | "other" }
   | { name: "signup_started" }
-  | { name: "signup_completed" }
+  | { name: "signup_completed"; method?: "email" | "apple" | "google" }
+  | { name: "login_completed"; method?: "email" | "apple" | "google" }
   | { name: "onboarding_started" }
   | { name: "onboarding_step_completed"; step: number; total: number; step_name?: string }
   | { name: "onboarding_completed" }
@@ -29,6 +30,12 @@ export type AnalyticsEvent =
   | { name: "push_permission_denied" }
   | { name: "notification_permission_granted" }
   | { name: "notification_permission_denied" }
+  | { name: "notification_permission_deferred_to_post_first_day" }
+  | { name: "onboarding_goals_selected"; goals: string[] }
+  | { name: "onboarding_signup_completed" }
+  | { name: "onboarding_challenge_auto_suggested"; challenge_id: string; challenge_name: string }
+  | { name: "onboarding_challenge_joined"; challenge_id: string }
+  | { name: "onboarding_challenge_skipped" }
   | { name: "streak_freeze_used" }
   | { name: "streak_saved_last_stand" }
   | { name: "streak_lost_no_last_stand" }
@@ -47,7 +54,9 @@ export type AnalyticsEvent =
   | { name: "purchase_failed"; package_type?: string; error?: string }
   | { name: "restore_attempted" }
   | { name: "restore_succeeded" }
-  | { name: "challenge_completed"; challenge_name?: string; duration?: number };
+  | { name: "challenge_completed"; challenge_name?: string; duration?: number }
+  | { name: "weekly_goal_changed"; old_goal: number; new_goal: number }
+  | { name: "weekly_summary_shown"; goal: number; completed: number; met_goal: boolean };
 
 export type UserProperties = {
   days_since_signup?: number;

@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../create-context";
 import { requireNoError } from "../errors";
 import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/progression";
-import { getTodayDateKey, daysBetweenKeys } from "../../lib/date-utils";
+import { getTodayDateKey, daysBetweenKeys, getWeekStartDateKey, getWeekEndDateKey } from "../../lib/date-utils";
 import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
 
 /** Subscription fields are written only by profiles.validateSubscription (server-side RevenueCat validation). */
@@ -12,7 +12,7 @@ const PROFILE_UPDATE_KEYS = [
   "onboarding_completed", "onboarding_completed_at", "onboarding_answers",
   "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
-  "profile_visibility",
+  "profile_visibility", "weekly_goal",
 ] as const;
 
 type SubscriptionStatus = "free" | "premium" | "trial";
@@ -203,6 +203,7 @@ export const profilesRouter = createTRPCRouter({
       preferred_secure_time: z.string().max(16).optional(),
       onboarding_answers: z.record(z.string(), z.unknown()).optional(),
       profile_visibility: z.enum(["public", "friends", "private"]).optional(),
+      weekly_goal: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const updatePayload: Record<string, unknown> = {};
@@ -456,6 +457,73 @@ export const profilesRouter = createTRPCRouter({
         username: r.username ?? "",
         display_name: r.display_name ?? r.username ?? "",
       }));
+    }),
+
+  setWeeklyGoal: protectedProcedure
+    .input(z.object({ goal: z.union([z.literal(3), z.literal(5), z.literal(7)]) }))
+    .mutation(async ({ input, ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from("profiles")
+        .update({ weekly_goal: input.goal })
+        .eq("user_id", ctx.userId)
+        .select("weekly_goal")
+        .single();
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to set weekly goal." });
+      }
+      return { goal: (data as { weekly_goal?: number })?.weekly_goal ?? 5 };
+    }),
+
+  getWeeklyProgress: protectedProcedure
+    .query(async ({ ctx }) => {
+      const todayKey = getTodayDateKey();
+      const weekStart = getWeekStartDateKey();
+      const weekEnd = getWeekEndDateKey();
+      const { data: profile } = await ctx.supabase
+        .from("profiles")
+        .select("weekly_goal")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const goal = (profile as { weekly_goal?: number } | null)?.weekly_goal ?? 5;
+      const { data: secures } = await ctx.supabase
+        .from("day_secures")
+        .select("date_key")
+        .eq("user_id", ctx.userId)
+        .gte("date_key", weekStart)
+        .lte("date_key", todayKey);
+      const completed = (secures ?? []).length;
+      const remaining = Math.max(0, goal - completed);
+      return { goal, completed, remaining };
+    }),
+
+  getWeeklyTrend: protectedProcedure
+    .query(async ({ ctx }) => {
+      const today = new Date();
+      const result: { weekStart: string; daysSecured: number; goal: number }[] = [];
+      const { data: profile } = await ctx.supabase
+        .from("profiles")
+        .select("weekly_goal")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const goal = (profile as { weekly_goal?: number } | null)?.weekly_goal ?? 5;
+      for (let w = 0; w < 8; w++) {
+        const d = new Date(today);
+        d.setUTCDate(d.getUTCDate() - w * 7);
+        const weekStart = getWeekStartDateKey(d);
+        const weekEnd = getWeekEndDateKey(d);
+        const { data: secures } = await ctx.supabase
+          .from("day_secures")
+          .select("date_key")
+          .eq("user_id", ctx.userId)
+          .gte("date_key", weekStart)
+          .lte("date_key", weekEnd);
+        result.push({
+          weekStart,
+          daysSecured: (secures ?? []).length,
+          goal,
+        });
+      }
+      return result.reverse();
     }),
 
   /** Delete account: clears profile data and returns; client must sign out. Full auth user deletion requires Supabase Admin API (auth.admin.deleteUser) in production. */

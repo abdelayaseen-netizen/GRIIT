@@ -53,6 +53,7 @@ import { formatMonthYearLong } from "@/lib/date-format";
 import { ACHIEVEMENT_DEFINITIONS } from "@/lib/achievements";
 import { ROUTES } from "@/lib/routes";
 import { cancelLapsedUserReminders } from "@/lib/notifications";
+import { useTheme } from "@/contexts/ThemeContext";
 import type { StatsFromApi } from "@/types";
 
 function openSubscriptionManagement() {
@@ -263,6 +264,7 @@ export default function ProfileScreen() {
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { colors } = useTheme();
   const {
     profile,
     profileLoading,
@@ -562,16 +564,16 @@ export default function ProfileScreen() {
           zeroStateHint={disciplineScore === 0 ? "Complete today's tasks to start your streak." : undefined}
         />
 
-        <View style={[styles.subscriptionCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+        <View style={[styles.subscriptionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {isPremium ? (
             <>
               <View style={styles.subscriptionRow}>
-                <Crown size={20} color={DS_COLORS.accent} />
-                <Text style={[styles.subscriptionTitle, { color: DS_COLORS.textPrimary }]}>GRIIT Premium</Text>
-                <Check size={18} color={DS_COLORS.success} />
+                <Crown size={20} color={colors.accent} />
+                <Text style={[styles.subscriptionTitle, { color: colors.text.primary }]}>GRIIT Premium</Text>
+                <Check size={18} color={colors.success} />
               </View>
               {profile.subscription_expiry && (
-                <Text style={[styles.subscriptionSub, { color: DS_COLORS.textSecondary }]}>
+                <Text style={[styles.subscriptionSub, { color: colors.text.secondary }]}>
                   Renews {new Date(profile.subscription_expiry).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                 </Text>
               )}
@@ -582,19 +584,19 @@ export default function ProfileScreen() {
                 accessibilityLabel="Manage subscription"
                 accessibilityRole="button"
               >
-                <Text style={[styles.subscriptionLinkText, { color: DS_COLORS.accent }]}>Manage subscription</Text>
-                <ChevronRight size={16} color={DS_COLORS.accent} />
+                <Text style={[styles.subscriptionLinkText, { color: colors.accent }]}>Manage subscription</Text>
+                <ChevronRight size={16} color={colors.accent} />
               </TouchableOpacity>
             </>
           ) : (
             <>
               <View style={styles.subscriptionRow}>
-                <Crown size={20} color={DS_COLORS.textMuted} />
-                <Text style={[styles.subscriptionTitle, { color: DS_COLORS.textPrimary }]}>GRIIT Free</Text>
+                <Crown size={20} color={colors.text.muted} />
+                <Text style={[styles.subscriptionTitle, { color: colors.text.primary }]}>GRIIT Free</Text>
               </View>
               <TouchableOpacity
                 onPress={() => router.push({ pathname: ROUTES.PRICING as never, params: { source: "profile" } } as never)}
-                style={[styles.subscriptionCta, { backgroundColor: DS_COLORS.accent }]}
+                style={[styles.subscriptionCta, { backgroundColor: colors.accent }]}
                 activeOpacity={0.85}
                 accessibilityLabel="Upgrade to Premium"
                 accessibilityRole="button"

@@ -1,21 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Pressable, TextInput,
   ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
 import { supabase } from '@/lib/supabase';
+import { track } from '@/lib/analytics';
 
 interface SignUpScreenProps {
-  onAuthSuccess: (userId: string) => void;
+  onAuthSuccess: (userId: string, username: string) => void;
 }
 
 export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
+    }
+  }, []);
+
+  const sanitizeUsername = (text: string) => text.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+
+  const createProfileAndContinue = async (userId: string) => {
+    const cleanUsername = sanitizeUsername(username);
+    if (cleanUsername.length < 3) {
+      setError('Username must be at least 3 characters');
+      return;
+    }
+    if (!displayName.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    const { selectedGoals, intensityLevel } = await import('@/store/onboarding-store').then((m) => m.useOnboardingStore.getState());
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert(
+        {
+          user_id: userId,
+          username: cleanUsername,
+          display_name: displayName.trim(),
+          goals: selectedGoals,
+          intensity_level: intensityLevel,
+          onboarding_completed: false,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' }
+      );
+    if (profileError) {
+      if (profileError.message?.includes('unique') || profileError.message?.includes('username')) {
+        setError('Username taken. Try another one.');
+        return;
+      }
+      setError(profileError.message || 'Could not save profile.');
+      return;
+    }
+    track({ name: 'onboarding_signup_completed' });
+    track({ name: 'signup_completed', method: 'email' });
+    onAuthSuccess(userId, cleanUsername);
+  };
 
   const handleEmailSignUp = async () => {
     if (!email.trim() || !password.trim()) {
@@ -31,14 +82,12 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
     setError('');
 
     try {
-      // First try to sign up
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
       });
 
       if (signUpError) {
-        // If user already exists, try signing in
         if (
           signUpError.message.includes('already registered') ||
           signUpError.message.includes('already been registered') ||
@@ -53,7 +102,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
             return;
           }
           if (signInData.session?.user) {
-            onAuthSuccess(signInData.session.user.id);
+            await createProfileAndContinue(signInData.session.user.id);
             return;
           }
         }
@@ -61,30 +110,22 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
         return;
       }
 
-      // signUp succeeded — now we need a valid session
-      // If session exists (email confirmation is OFF), use it directly
       if (signUpData.session?.user) {
-        onAuthSuccess(signUpData.session.user.id);
+        await createProfileAndContinue(signUpData.session.user.id);
         return;
       }
 
-      // If no session but we have a user (email confirmation might be ON),
-      // try to sign in immediately to create a session
       if (signUpData.user) {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
-
         if (signInError) {
-          // Email confirmation is ON and blocking sign-in
-          // Use the user ID directly from the signup response
-          onAuthSuccess(signUpData.user.id);
+          await createProfileAndContinue(signUpData.user.id);
           return;
         }
-
         if (signInData.session?.user) {
-          onAuthSuccess(signInData.session.user.id);
+          await createProfileAndContinue(signInData.session.user.id);
           return;
         }
       }
@@ -105,13 +146,87 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
     setError('Google sign in coming soon. Use email for now.');
   };
 
-  const handleAppleSignUp = async () => {
-    // Apple Sign In requires:
-    // 1. expo-apple-authentication
-    // 2. Apple OAuth configured in Supabase dashboard
-    // For MVP, show a friendly message and use email
-    setError('Apple sign in coming soon. Use email for now.');
-  };
+  const handleAppleSignUp = useCallback(async () => {
+    if (Platform.OS !== 'ios' || !appleAuthAvailable) {
+      setError('Apple Sign-In is available on iOS. Use email for now.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!credential.identityToken) {
+        setError('Apple Sign-In did not return a token.');
+        return;
+      }
+      const { data, error: idError } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+      if (idError) {
+        setError(idError.message);
+        return;
+      }
+      const user = data?.user;
+      if (!user?.id) {
+        setError('Sign in failed. Please try again.');
+        return;
+      }
+      const displayNameFromApple = credential.fullName
+        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ').trim()
+        : 'User';
+      const fallbackUsername = 'user_' + user.id.slice(0, 8);
+      const { selectedGoals, intensityLevel } = await import('@/store/onboarding-store').then((m) => m.useOnboardingStore.getState());
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            user_id: user.id,
+            username: fallbackUsername,
+            display_name: displayNameFromApple || 'User',
+            goals: selectedGoals,
+            intensity_level: intensityLevel,
+            onboarding_completed: false,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
+      if (profileError) {
+        if (profileError.message?.includes('unique') || profileError.message?.includes('username')) {
+          const altUsername = 'user_' + user.id.slice(0, 12);
+          const { error: retryErr } = await supabase.from('profiles').upsert(
+            { user_id: user.id, username: altUsername, display_name: displayNameFromApple || 'User', goals: selectedGoals, intensity_level: intensityLevel, onboarding_completed: false, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id' }
+          );
+          if (retryErr) {
+            setError(retryErr.message || 'Could not save profile.');
+            return;
+          }
+          track({ name: 'onboarding_signup_completed' });
+          track({ name: 'signup_completed', method: 'apple' });
+          onAuthSuccess(user.id, altUsername);
+          return;
+        }
+        setError(profileError.message || 'Could not save profile.');
+        return;
+      }
+      track({ name: 'onboarding_signup_completed' });
+      track({ name: 'signup_completed', method: 'apple' });
+      onAuthSuccess(user.id, fallbackUsername);
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'ERR_REQUEST_CANCELED') {
+        return;
+      }
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  }, [appleAuthAvailable, onAuthSuccess]);
 
   return (
     <KeyboardAvoidingView
@@ -127,10 +242,12 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
       <View style={styles.authContainer}>
         {!showEmailForm ? (
           <>
-            <Pressable style={styles.socialButton} onPress={handleAppleSignUp} disabled={loading}>
-              <Text style={styles.socialIcon}>🍎</Text>
-              <Text style={styles.socialButtonText}>Continue with Apple</Text>
-            </Pressable>
+            {Platform.OS === 'ios' && appleAuthAvailable && (
+              <Pressable style={styles.socialButton} onPress={handleAppleSignUp} disabled={loading}>
+                <Text style={styles.socialIcon}>🍎</Text>
+                <Text style={styles.socialButtonText}>Continue with Apple</Text>
+              </Pressable>
+            )}
 
             <Pressable style={styles.socialButton} onPress={handleGoogleSignUp} disabled={loading}>
               <Text style={styles.socialIcon}>G</Text>
@@ -166,6 +283,22 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
               value={password}
               onChangeText={(t) => { setPassword(t); setError(''); }}
               secureTextEntry
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Username (3+ characters)"
+              placeholderTextColor={C.textTertiary}
+              value={username}
+              onChangeText={(t) => { setUsername(sanitizeUsername(t)); setError(''); }}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Display name"
+              placeholderTextColor={C.textTertiary}
+              value={displayName}
+              onChangeText={(t) => { setDisplayName(t); setError(''); }}
             />
             <Pressable style={styles.primaryButton} onPress={handleEmailSignUp} disabled={loading}>
               {loading ? (

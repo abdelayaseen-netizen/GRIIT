@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S, GOAL_OPTIONS } from '@/constants/onboarding-theme';
 import { useOnboardingStore } from '@/store/onboarding-store';
+import { track } from '@/lib/analytics';
 
 interface GoalSelectionProps {
   onContinue: () => void;
@@ -47,7 +48,7 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
       <View style={styles.ctaContainer}>
         <Pressable
           style={[styles.primaryButton, selectedGoals.length === 0 && styles.primaryButtonDisabled]}
-          onPress={onContinue}
+          onPress={() => { track({ name: 'onboarding_goals_selected', goals: selectedGoals }); onContinue(); }}
           disabled={selectedGoals.length === 0}
         >
           <Text style={[styles.primaryButtonText, selectedGoals.length === 0 && styles.primaryButtonTextDisabled]}>

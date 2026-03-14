@@ -7,13 +7,8 @@ import { useOnboardingStore } from '@/store/onboarding-store';
 
 import ValueSplash from './screens/ValueSplash';
 import GoalSelection from './screens/GoalSelection';
-import IntensitySelection from './screens/IntensitySelection';
-import ChallengePreview from './screens/ChallengePreview';
 import SignUpScreen from './screens/SignUpScreen';
-import UsernameScreen from './screens/UsernameScreen';
-import ReadyScreen from './screens/ReadyScreen';
-import NotificationScreen from './screens/NotificationScreen';
-import HealthScreen from './screens/HealthScreen';
+import AutoSuggestChallengeScreen from './screens/AutoSuggestChallengeScreen';
 import ProgressDots from './ProgressDots';
 
 export default function OnboardingFlow() {
@@ -22,29 +17,30 @@ export default function OnboardingFlow() {
   const [username, setUsername] = useState('');
   const router = useRouter();
 
-  // Steps: 0=Splash, 1=Goals, 2=Intensity, 3=ChallengePreview, 4=SignUp, 5=Username, 6=Notification, 7=Health, 8=Ready
-  const showProgressDots = currentStep >= 1 && currentStep <= 7;
-  const showBackButton = currentStep >= 1 && currentStep <= 4;
+  // Compressed: 0=Splash, 1=Goals, 2=SignUp+Username, 3=AutoSuggestChallenge
+  const showProgressDots = currentStep >= 1 && currentStep <= 3;
+  const showBackButton = currentStep >= 1 && currentStep <= 3;
 
-  const handleAuthSuccess = useCallback((userId: string) => {
+  const handleSignUpComplete = useCallback((userId: string, usernameValue: string) => {
     setAuthUserId(userId);
-    nextStep(); // Move from SignUp (4) → Username (5)
-  }, [nextStep]);
-
-  const handleProfileComplete = useCallback((usernameValue: string) => {
     setUsername(usernameValue);
-    nextStep(); // Move from Username (5) → Notification (6)
+    nextStep(); // Move from SignUp (2) → AutoSuggestChallenge (3)
   }, [nextStep]);
 
-  const handleStartApp = useCallback(async () => {
+  const finishOnboardingAndGoTo = useCallback((path: string) => async () => {
+    const { track } = await import('@/lib/analytics');
+    track({ name: 'onboarding_completed' });
     completeOnboarding();
     try {
       await AsyncStorage.setItem('onboarding_completed', 'true');
     } catch (e) {
       console.error('Failed to save onboarding state:', e);
     }
-    router.replace('/(tabs)');
+    router.replace(path as never);
   }, [completeOnboarding, router]);
+
+  const handleStartApp = finishOnboardingAndGoTo('/(tabs)');
+  const handleBrowseMore = finishOnboardingAndGoTo('/(tabs)/discover');
 
   const renderScreen = () => {
     switch (currentStep) {
@@ -53,19 +49,9 @@ export default function OnboardingFlow() {
       case 1:
         return <GoalSelection onContinue={nextStep} />;
       case 2:
-        return <IntensitySelection onContinue={nextStep} />;
+        return <SignUpScreen onAuthSuccess={handleSignUpComplete} />;
       case 3:
-        return <ChallengePreview onContinue={nextStep} />;
-      case 4:
-        return <SignUpScreen onAuthSuccess={handleAuthSuccess} />;
-      case 5:
-        return <UsernameScreen onComplete={handleProfileComplete} />;
-      case 6:
-        return <NotificationScreen onContinue={nextStep} />;
-      case 7:
-        return <HealthScreen onContinue={nextStep} />;
-      case 8:
-        return <ReadyScreen username={username} onStart={handleStartApp} />;
+        return <AutoSuggestChallengeScreen onJoinComplete={handleStartApp} onBrowseMore={handleStartApp} />;
       default:
         return <ValueSplash onContinue={nextStep} />;
     }
@@ -82,7 +68,7 @@ export default function OnboardingFlow() {
           ) : (
             <View style={styles.backButtonPlaceholder} />
           )}
-          {showProgressDots && <ProgressDots total={7} current={currentStep - 1} />}
+          {showProgressDots && <ProgressDots total={4} current={currentStep} />}
           <View style={styles.backButtonPlaceholder} />
         </View>
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff, ChevronLeft } from "lucide-react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/analytics";
 import { DS_COLORS } from "@/lib/design-system";
 
 const PADDING_H = 20;
@@ -26,8 +28,15 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (Platform.OS === "ios") {
+      AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
+    }
+  }, []);
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
 
@@ -62,6 +71,7 @@ export default function LoginScreen() {
         setFormError("Sign in failed. Please try again.");
         return;
       }
+      track({ name: "login_completed", method: "email" });
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -87,13 +97,51 @@ export default function LoginScreen() {
 
   const handleApple = useCallback(async () => {
     setFormError("");
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
-      if (error) setFormError(error.message);
-    } catch (e) {
+      if (Platform.OS === "ios" && appleAuthAvailable) {
+        const credential = await AppleAuthentication.signInAsync({
+          requestedScopes: [
+            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+            AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          ],
+        });
+        if (!credential.identityToken) {
+          setFormError("Apple Sign-In did not return a token.");
+          return;
+        }
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "apple",
+          token: credential.identityToken,
+        });
+        if (error) {
+          setFormError(error.message);
+          return;
+        }
+        if (!data.session) {
+          setFormError("Sign in failed. Please try again.");
+          return;
+        }
+        track({ name: "login_completed", method: "apple" });
+        const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", data.user.id).single();
+        if (!profile?.username) {
+          router.replace("/create-profile" as never);
+        } else {
+          router.replace("/(tabs)" as never);
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
+        if (error) setFormError(error.message);
+      }
+    } catch (e: unknown) {
+      if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
+        return;
+      }
       setFormError(e instanceof Error ? e.message : "Sign in failed.");
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [appleAuthAvailable, router]);
 
   const handleGoogle = useCallback(async () => {
     setFormError("");
@@ -224,15 +272,17 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <TouchableOpacity
-            style={styles.btnApple}
-            onPress={handleApple}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Sign in with Apple"
-          >
-            <Text style={styles.btnAppleText}>Sign in with Apple</Text>
-          </TouchableOpacity>
+          {Platform.OS === "ios" && appleAuthAvailable && (
+            <TouchableOpacity
+              style={styles.btnApple}
+              onPress={handleApple}
+              disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel="Sign in with Apple"
+            >
+              <Text style={styles.btnAppleText}>Sign in with Apple</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.btnGoogle}
