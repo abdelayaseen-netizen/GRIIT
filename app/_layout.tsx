@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments, Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -19,7 +19,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
-import { useOnboardingStore, getOnboardingRouteForStep } from "@/store/onboardingStore";
+import { useOnboardingStore } from "@/store/onboardingStore";
 
 const HAS_LAUNCHED_KEY = "griit_has_launched";
 
@@ -148,12 +148,11 @@ function AuthRedirector() {
 
     if (!user) {
       if (!inOnboarding && !inWelcome && !inAuth) {
-        const stepRoute = getOnboardingRouteForStep(currentStep);
-        router.replace(stepRoute as never);
+        router.replace(ROUTES.ONBOARDING as never);
       }
       return;
     }
-  }, [user, loading, segments, hasLaunched, currentStep, router]);
+  }, [user, loading, segments, hasLaunched, router]);
 
   useEffect(() => {
     if (loading || !profileChecked || !user) return;
@@ -163,7 +162,6 @@ function AuthRedirector() {
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inFirstTask = inOnboarding && (second as string) === "first-task";
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
 
     if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
@@ -176,8 +174,8 @@ function AuthRedirector() {
       return;
     }
 
-    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding && !inFirstTask) {
-      router.replace("/onboarding/first-task" as never);
+    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding) {
+      router.replace(ROUTES.TABS as never);
       return;
     }
 
@@ -200,6 +198,35 @@ function AuthRedirector() {
 
 function RootLayoutNav() {
   const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
+  const segments = useSegments();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const completed = await AsyncStorage.getItem("onboarding_completed");
+        setNeedsOnboarding(completed !== "true");
+      } catch {
+        setNeedsOnboarding(true);
+      }
+      setCheckingOnboarding(false);
+    };
+    check();
+  }, []);
+
+  const inOnboarding = (typeof segments[0] === "string" ? segments[0] : "") === "onboarding";
+  if (checkingOnboarding) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: DS_COLORS?.background ?? "#0A0A0A" }}>
+        <ActivityIndicator size="large" color={DS_COLORS?.accent ?? "#E8593C"} />
+      </View>
+    );
+  }
+  if (needsOnboarding && !inOnboarding) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <View style={{ flex: 1 }}>
       {sessionExpiredMessage ? (

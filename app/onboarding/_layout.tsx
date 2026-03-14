@@ -10,14 +10,6 @@ export default function OnboardingLayout() {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="identity" />
-      <Stack.Screen name="barrier" />
-      <Stack.Screen name="intensity" />
-      <Stack.Screen name="social" />
-      <Stack.Screen name="proof" />
-      <Stack.Screen name="challenge" />
-      <Stack.Screen name="signup" />
-      <Stack.Screen name="first-task" />
     </Stack>
   );
 }
