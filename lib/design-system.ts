@@ -23,13 +23,21 @@ export const DS_COLORS = {
   // Borders
   border: "#E8E5DE",
   borderAlt: "#E8E5DE",
+  borderFocus: "#E07B4A",
   filterPillInactiveBorder: "#E0DDD6",
 
   // Accent
   accent: "#E07B4A",
   accentDark: "#D96A3E",
   accentSoft: "#FFF5F0",
+  accentLight: "#FFF8F5",
   cardSelectedBg: "#FFF8F5",
+
+  // Auth / form
+  errorText: "#CC3333",
+  buttonDisabledBg: "#E8E5DE",
+  buttonDisabledText: "#888884",
+  green: "#2F7A52",
 
   // Semantic
   success: "#2F7A52",

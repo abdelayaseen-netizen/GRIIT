@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,12 +12,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Eye, EyeOff } from "lucide-react-native";
-import { ROUTES } from "@/lib/routes";
+import { Eye, EyeOff, ChevronLeft } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
-import { mapAuthError } from "@/lib/auth-helpers";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system";
-import { GRIITWordmark } from "@/src/components/ui";
+import { DS_COLORS } from "@/lib/design-system";
+
+const PADDING_H = 20;
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,161 +24,241 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-  const emailRef = useRef<TextInput>(null);
+
   const passwordRef = useRef<TextInput>(null);
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
-  const inputBorder = (key: string) =>
-    focusedField === key ? DS_COLORS.accent : DS_COLORS.border;
 
-  const handleLogin = async () => {
-    if (!canSubmit) return;
-    setFormError(null);
+  const inputBorder = useCallback(
+    (field: string) => (focusedField === field ? DS_COLORS.borderFocus : DS_COLORS.border),
+    [focusedField]
+  );
+
+  const handleSignIn = useCallback(async () => {
+    if (loading) return;
     setLoading(true);
-    const trimmedEmail = email.trim().toLowerCase();
-    console.log("[AUTH] signInWithPassword before — email:", trimmedEmail ? `${trimmedEmail.slice(0, 3)}***` : "(empty)");
+    setFormError("");
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      setFormError("Please enter your email and password.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
+        email: normalizedEmail,
         password,
       });
-      console.log("[AUTH] signInWithPassword after — error:", error?.message ?? null, "hasSession:", !!data?.session);
 
       if (error) {
-        setLoading(false);
-        setFormError(error.message || mapAuthError(error));
-        console.error("[AUTH] Sign-in error (exact):", error.message, error);
-        return;
-      }
-
-      if (data.session) {
+        setFormError(error.message);
         setLoading(false);
         return;
       }
+      if (!data.session) {
+        setFormError("Sign in failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id, username, display_name")
+        .eq("user_id", data.user.id)
+        .single();
 
       setLoading(false);
-      setFormError("Something went wrong. Please try again.");
-      console.error("[AUTH] No session in response");
-    } catch (err: unknown) {
+
+      if (profileError || !profile?.username) {
+        router.replace("/create-profile" as never);
+      } else {
+        router.replace("/(tabs)" as never);
+      }
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Something went wrong.");
       setLoading(false);
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      setFormError(message);
-      console.error("[AUTH] Error caught:", err);
     }
-  };
+  }, [loading, email, password, router]);
+
+  const handleForgotPassword = useCallback(() => {
+    router.push("/auth/forgot-password" as never);
+  }, [router]);
+
+  const handleApple = useCallback(async () => {
+    setFormError("");
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
+      if (error) setFormError(error.message);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Sign in failed.");
+    }
+  }, []);
+
+  const handleGoogle = useCallback(async () => {
+    setFormError("");
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
+      if (error) setFormError(error.message);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Sign in failed.");
+    }
+  }, []);
+
+  const handleSignUpLink = useCallback(() => {
+    router.push("/auth/signup" as never);
+  }, [router]);
+
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
+      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.logoArea}>
-            <GRIITWordmark subtitle="Build Discipline Daily" compact />
-          </View>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <ChevronLeft size={24} color={DS_COLORS.textPrimary} strokeWidth={2} />
+          </TouchableOpacity>
 
-          <Text style={styles.formTitle}>Welcome back</Text>
+          <Text style={styles.title}>Welcome back.</Text>
+          <Text style={styles.subtitle}>Sign in to continue building your streak.</Text>
 
-          <View style={styles.form}>
-            <Text style={styles.label}>Email</Text>
+          <View style={styles.gap32} />
+
+          <TextInput
+            style={[styles.input, { borderColor: inputBorder("email") }]}
+            placeholder="Email"
+            placeholderTextColor={DS_COLORS.textMuted}
+            value={email}
+            onChangeText={(t) => { setEmail(t); setFormError(""); }}
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => setFocusedField(null)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            editable={!loading}
+            accessibilityLabel="Email"
+          />
+
+          <View style={[styles.passwordWrap, { borderColor: inputBorder("password") }]}>
             <TextInput
-              ref={emailRef}
-              style={[styles.input, { borderColor: inputBorder("email"), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary }]}
-              placeholder="you@example.com"
-              placeholderTextColor={DS_COLORS.inputPlaceholder}
-              value={email}
-              onChangeText={setEmail}
-              onFocus={() => setFocusedField("email")}
+              ref={passwordRef}
+              style={styles.passwordInput}
+              placeholder="Password"
+              placeholderTextColor={DS_COLORS.textMuted}
+              value={password}
+              onChangeText={(t) => { setPassword(t); setFormError(""); }}
+              onFocus={() => setFocusedField("password")}
               onBlur={() => setFocusedField(null)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
+              secureTextEntry={!showPassword}
+              returnKeyType="go"
+              onSubmitEditing={() => canSubmit && handleSignIn()}
               editable={!loading}
-              accessibilityLabel="Email"
+              accessibilityLabel="Password"
             />
-
-            <Text style={styles.label}>Password</Text>
-            <View style={[styles.passwordRow, { borderColor: inputBorder("password"), backgroundColor: DS_COLORS.surface }]}>
-              <TextInput
-                ref={passwordRef}
-                style={[styles.passwordInput, { color: DS_COLORS.textPrimary }]}
-                placeholder="••••••••"
-                placeholderTextColor={DS_COLORS.inputPlaceholder}
-                value={password}
-                onChangeText={setPassword}
-                onFocus={() => setFocusedField("password")}
-                onBlur={() => setFocusedField(null)}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                returnKeyType="go"
-                onSubmitEditing={() => canSubmit && handleLogin()}
-                editable={!loading}
-                accessibilityLabel="Password"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword((p) => !p)}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
-                accessibilityRole="button"
-              >
-                {showPassword ? (
-                  <EyeOff size={22} color={DS_COLORS.textSecondary} />
-                ) : (
-                  <Eye size={22} color={DS_COLORS.textSecondary} />
-                )}
-              </TouchableOpacity>
-            </View>
             <TouchableOpacity
-              style={styles.forgotLink}
-              onPress={() => router.push(ROUTES.AUTH_FORGOT_PASSWORD as never)}
-              disabled={loading}
-              accessibilityLabel="Forgot password?"
+              onPress={() => setShowPassword((p) => !p)}
+              hitSlop={12}
               accessibilityRole="button"
-              accessibilityState={{ disabled: loading }}
+              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
             >
-              <Text style={styles.forgotLinkText}>Forgot password?</Text>
-            </TouchableOpacity>
-
-            {formError ? (
-              <Text style={[styles.inlineError, { color: DS_COLORS.danger }]}>{formError}</Text>
-            ) : null}
-            <TouchableOpacity
-              style={[styles.button, (!canSubmit || loading) && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={!canSubmit || loading}
-              activeOpacity={0.8}
-              accessibilityLabel="Log in"
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !canSubmit || loading }}
-            >
-              {loading ? (
-                <ActivityIndicator color={DS_COLORS.white} size="small" />
+              {showPassword ? (
+                <EyeOff size={22} color={DS_COLORS.textSecondary} />
               ) : (
-                <Text style={styles.buttonText}>Log In</Text>
+                <Eye size={22} color={DS_COLORS.textSecondary} />
               )}
             </TouchableOpacity>
+          </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Don&apos;t have an account? </Text>
-              <TouchableOpacity
-                onPress={() => router.push(ROUTES.AUTH_SIGNUP as never)}
-                disabled={loading}
-                accessibilityLabel="Sign up"
-                accessibilityRole="button"
-                accessibilityState={{ disabled: loading }}
-              >
-                <Text style={styles.footerLink}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
+          <TouchableOpacity
+            onPress={handleForgotPassword}
+            style={styles.forgotLink}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Forgot password?"
+          >
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </TouchableOpacity>
+
+          <View style={styles.gap16} />
+
+          <TouchableOpacity
+            style={[styles.cta, (!canSubmit || loading) && styles.ctaDisabled]}
+            onPress={handleSignIn}
+            disabled={!canSubmit || loading}
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in"
+            accessibilityState={{ disabled: !canSubmit || loading }}
+          >
+            {loading ? (
+              <ActivityIndicator color={DS_COLORS.textPrimary} size="small" />
+            ) : (
+              <Text style={[styles.ctaText, (!canSubmit || loading) && styles.ctaTextDisabled]}>Sign in</Text>
+            )}
+          </TouchableOpacity>
+
+          {formError ? (
+            <Text style={styles.inlineError} accessibilityLiveRegion="polite">
+              {formError}
+            </Text>
+          ) : null}
+
+          <View style={styles.gap16} />
+
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.btnApple}
+            onPress={handleApple}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in with Apple"
+          >
+            <Text style={styles.btnAppleText}>Sign in with Apple</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btnGoogle}
+            onPress={handleGoogle}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in with Google"
+          >
+            <Text style={styles.btnGoogleText}>Sign in with Google</Text>
+          </TouchableOpacity>
+
+          <View style={styles.gap24} />
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
+            <TouchableOpacity
+              onPress={handleSignUpLink}
+              disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel="Sign up"
+            >
+              <Text style={styles.footerLink}>Sign up</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -189,78 +268,117 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  keyboardView: { flex: 1 },
+  keyboard: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: DS_SPACING.screenHorizontal,
-    paddingTop: DS_SPACING.xxl,
-    paddingBottom: DS_SPACING.section,
+    paddingHorizontal: PADDING_H,
+    paddingTop: 16,
+    paddingBottom: 32,
   },
-  logoArea: { alignItems: "center", marginBottom: DS_SPACING.xxxl },
-  formTitle: {
-    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
+  backBtn: {
+    alignSelf: "flex-start",
+    padding: 8,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
     fontWeight: "800",
     color: DS_COLORS.textPrimary,
-    marginTop: DS_SPACING.xxxl,
-    marginBottom: DS_SPACING.xxl,
+    marginTop: 32,
+    marginBottom: 8,
   },
-  form: { width: "100%" },
-  label: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600",
-    color: DS_COLORS.textPrimary,
-    marginBottom: DS_SPACING.sm,
+  subtitle: {
+    fontSize: 15,
+    fontWeight: "400",
+    color: DS_COLORS.textSecondary,
+    marginBottom: 0,
   },
+  gap32: { height: 32 },
+  gap16: { height: 16 },
+  gap24: { height: 24 },
   input: {
-    borderWidth: DS_BORDERS.width,
-    borderRadius: DS_RADIUS.input,
-    paddingHorizontal: DS_SPACING.xl,
-    paddingVertical: DS_SPACING.lg,
-    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    backgroundColor: DS_COLORS.card,
+    borderWidth: 1,
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: 16,
+    fontSize: 15,
     color: DS_COLORS.textPrimary,
-    marginBottom: DS_SPACING.lg,
+    marginBottom: 12,
   },
-  passwordRow: {
+  passwordWrap: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: DS_BORDERS.width,
-    borderRadius: DS_RADIUS.input,
-    paddingHorizontal: DS_SPACING.xl,
-    marginBottom: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.card,
+    borderWidth: 1,
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
   passwordInput: {
     flex: 1,
-    paddingVertical: DS_SPACING.lg,
-    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    fontSize: 15,
+    color: DS_COLORS.textPrimary,
+    paddingVertical: 0,
   },
-  forgotLink: { alignSelf: "flex-end", marginBottom: DS_SPACING.lg },
-  forgotLinkText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
-  inlineError: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    color: DS_COLORS.danger,
-    marginBottom: DS_SPACING.sm,
-  },
-  button: {
+  forgotLink: { alignSelf: "flex-end", marginBottom: 8 },
+  forgotText: { fontSize: 13, color: DS_COLORS.accent, fontWeight: "500" },
+  cta: {
+    height: 56,
+    borderRadius: 28,
     backgroundColor: DS_COLORS.accent,
-    borderRadius: DS_RADIUS.buttonPill,
-    paddingVertical: DS_SPACING.lg,
     alignItems: "center",
-    marginTop: DS_SPACING.sm,
-    ...DS_SHADOWS.button,
+    justifyContent: "center",
   },
-  buttonDisabled: { opacity: 0.5 },
-  buttonText: {
-    fontSize: DS_TYPOGRAPHY.button.fontSize,
+  ctaDisabled: {
+    backgroundColor: DS_COLORS.buttonDisabledBg,
+  },
+  ctaText: {
+    fontSize: 16,
     fontWeight: "700",
-    color: DS_COLORS.white,
+    color: DS_COLORS.textPrimary,
   },
+  ctaTextDisabled: {
+    color: DS_COLORS.buttonDisabledText,
+  },
+  inlineError: {
+    fontSize: 13,
+    color: DS_COLORS.errorText,
+    textAlign: "center",
+    marginTop: 12,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: DS_COLORS.border },
+  dividerText: { fontSize: 13, color: DS_COLORS.textSecondary, marginHorizontal: 12 },
+  btnApple: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.card,
+    borderWidth: 1,
+    borderColor: DS_COLORS.textPrimary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  btnAppleText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  btnGoogle: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.textPrimary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnGoogleText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.white },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: DS_SPACING.lg,
   },
-  footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
-  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
+  footerText: { fontSize: 15, color: DS_COLORS.textSecondary },
+  footerLink: { fontSize: 15, fontWeight: "600", color: DS_COLORS.accent },
 });

@@ -1,261 +1,309 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, Alert } from "react-native";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { trpcMutate } from "@/lib/trpc";
-import {
-  getPendingChallengeId,
-  getOnboardingAnswers,
-  clearOnboardingAnswers,
-  type OnboardingAnswers,
-} from "@/lib/onboarding-pending";
-import { sanitizeUsername, sanitizeDisplayName, sanitizeBio } from "@/lib/sanitize";
-import { ROUTES } from "@/lib/routes";
-import { Screen, Input, OnboardingCTA, GRIITWordmark, OnboardingProgress } from "@/src/components/ui";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_RADIUS, DS_MEASURES } from "@/lib/design-system";
+import { DS_COLORS } from "@/lib/design-system";
+
+const PADDING_H = 20;
+
+function normalizeUsername(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+function validateUsername(normalized: string): boolean {
+  return normalized.length >= 3 && normalized.length <= 20;
+}
 
 export default function CreateProfileScreen() {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
-  const [isPending, setIsPending] = useState(false);
-  const [pendingChallengeId, setPendingChallengeId] = useState<string | null>(null);
-  const [onboardingAnswers, setOnboardingAnswersState] = useState<OnboardingAnswers | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  useEffect(() => {
-    getPendingChallengeId().then(setPendingChallengeId).catch(() => {});
-    getOnboardingAnswers().then(setOnboardingAnswersState).catch(() => {});
-  }, []);
+  const displayNameRef = useRef<TextInput>(null);
+  const bioRef = useRef<TextInput>(null);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user?.user_metadata) return;
-      const meta = user.user_metadata as Record<string, unknown>;
-      if (typeof meta.display_name === "string" && meta.display_name.trim() && !displayName) {
-        setDisplayName(meta.display_name.trim());
-      }
-      if (typeof meta.username === "string" && meta.username.trim() && !username) {
-        setUsername(meta.username.trim().replace(/^@+/, ""));
-      }
-    }).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- only run on mount to prefill from auth
-  }, []);
+  const normalizedUsername = normalizeUsername(username);
+  const usernameValid = validateUsername(normalizedUsername);
+  const displayNameValid = displayName.trim().length > 0;
+  const canContinue = usernameValid && displayNameValid && !saving;
 
-  const handleSubmit = async (data: { username: string; display_name: string; bio: string }) => {
-    setIsPending(true);
-    try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        Alert.alert(
-          "Session Expired",
-          "Your session has expired. Please log in again.",
-          [{ text: "OK", onPress: () => router.replace(ROUTES.AUTH_LOGIN as never) }]
-        );
-        return;
-      }
-      const userId = sessionData.session.user.id;
-      // If user came via onboarding-questions (pre-signup), persist those answers and mark onboarding_answers set
-      const hasOnboardingPending = onboardingAnswers != null && Object.keys(onboardingAnswers).length > 0;
-      const { error } = await supabase
-        .from("profiles")
-        .upsert(
-          {
-            user_id: userId,
-            username: data.username,
-            display_name: data.display_name,
-            bio: data.bio,
-            updated_at: new Date().toISOString(),
-            onboarding_completed: hasOnboardingPending,
-          },
-          { onConflict: "user_id" }
-        )
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        const code = (error as { code?: string }).code;
-        if (code === "23505") {
-          Alert.alert("Error", "Username is already taken. Please choose another.");
-          return;
-        }
-        Alert.alert("Error", error.message || "Failed to create profile");
-        return;
-      }
-
-      if (hasOnboardingPending && onboardingAnswers) {
-        await trpcMutate("profiles.update", {
-          onboarding_completed: true,
-          onboarding_answers: onboardingAnswers as Record<string, unknown>,
-        });
-      }
-
-      if (pendingChallengeId) {
-        try {
-          await trpcMutate("challenges.join", { challengeId: pendingChallengeId });
-        } catch {
-          // Non-blocking; user can join from Discover again
-        }
-      }
-      await clearOnboardingAnswers();
-      router.replace(ROUTES.ONBOARDING as never);
-    } catch (err: unknown) {
-      Alert.alert("Error", (err as Error).message || "Something went wrong");
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  const handleCreateProfile = async () => {
-    if (!username.trim()) {
-      Alert.alert("Error", "Username is required");
-      return;
-    }
-    if (username.length < 3) {
-      Alert.alert("Error", "Username must be at least 3 characters");
-      return;
-    }
-    if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
-      Alert.alert("Error", "Username can only contain letters, numbers, underscores, and periods");
-      return;
-    }
-    handleSubmit({
-      username: sanitizeUsername(username.trim().toLowerCase()),
-      display_name: sanitizeDisplayName(displayName.trim() || username.trim()),
-      bio: sanitizeBio(bio.trim()),
-    });
-  };
-
-  const validUsername = username.length >= 3 && /^[a-zA-Z0-9_.]+$/.test(username);
-  const validDisplayName = (displayName.trim() || username.trim()).length >= 2;
-  const canContinue = validUsername && validDisplayName;
-
-  const header = (
-    <View style={styles.topRow}>
-      <GRIITWordmark subtitle="" compact />
-      <OnboardingProgress step={1} total={5} />
-    </View>
+  const inputBorder = useCallback(
+    (field: string) => {
+      if (field === "username" && usernameError) return DS_COLORS.errorText;
+      return focusedField === field ? DS_COLORS.borderFocus : DS_COLORS.border;
+    },
+    [focusedField, usernameError]
   );
 
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.replace("/auth/login" as never);
+          return;
+        }
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_id, username, display_name")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profile?.username && profile?.display_name) {
+          router.replace("/(tabs)" as never);
+          return;
+        }
+
+        setUserId(user.id);
+        if (profile?.username) setUsername(profile.username);
+        if (profile?.display_name) setDisplayName(profile.display_name);
+      } catch (e) {
+        console.warn("[AUTH] create-profile checkProfile:", e);
+        router.replace("/auth/login" as never);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkProfile();
+  }, [router]);
+
+  const handleUsernameBlur = useCallback(() => {
+    if (username.trim().length === 0) {
+      setUsernameError("");
+      return;
+    }
+    if (!validateUsername(normalizedUsername)) {
+      setUsernameError("Username must be 3-20 characters, lowercase, no spaces");
+    } else {
+      setUsernameError("");
+    }
+  }, [username, normalizedUsername]);
+
+  const handleContinue = useCallback(async () => {
+    if (loading || saving || !userId) return;
+    setSaving(true);
+    setFormError("");
+
+    try {
+      const { error } = await supabase.from("profiles").upsert(
+        {
+          user_id: userId,
+          username: normalizedUsername,
+          display_name: displayName.trim(),
+          bio: bio.trim() || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+      if (error) {
+        setFormError(error.message);
+        setSaving(false);
+        return;
+      }
+
+      router.replace("/(tabs)" as never);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setSaving(false);
+    }
+  }, [loading, saving, userId, normalizedUsername, displayName, bio, router]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color={DS_COLORS.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <Screen scroll keyboardAvoiding header={header}>
-      <View style={styles.header}>
-        <Text style={styles.stepLabel}>CLAIM YOUR IDENTITY</Text>
-        <Text style={styles.title} accessibilityRole="header">Let&apos;s set up your profile.</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.sectionLabel}>CLAIM YOUR IDENTITY</Text>
+        <Text style={styles.title}>Let&apos;s set up your profile.</Text>
         <Text style={styles.subtitle}>This is how others will know you.</Text>
-      </View>
 
-      <View style={styles.form}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Username</Text>
-          <Input
-            placeholder="your_username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!isPending}
-            containerStyle={styles.inputWrap}
-          />
-          <Text style={styles.hint}>Letters, numbers, and underscores only</Text>
-        </View>
+        <View style={styles.gap24} />
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Display Name</Text>
-          <Input
-            placeholder="Your Name"
-            value={displayName}
-            onChangeText={setDisplayName}
-            autoCapitalize="words"
-            editable={!isPending}
-            containerStyle={styles.inputWrap}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Bio</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Tell us about yourself..."
-            placeholderTextColor={DS_COLORS.inputPlaceholder}
-            value={bio}
-            onChangeText={setBio}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-            editable={!isPending}
-            accessibilityLabel="Bio"
-          />
-        </View>
-
-        <OnboardingCTA
-          label="Continue"
-          onPress={handleCreateProfile}
-          variant="black"
-          disabled={!canContinue || isPending}
-          loading={isPending}
-          style={styles.continueBtn}
+        <TextInput
+          style={[styles.input, { borderColor: inputBorder("username") }]}
+          placeholder="your_username"
+          placeholderTextColor={DS_COLORS.textMuted}
+          value={username}
+          onChangeText={(t) => { setUsername(t); setFormError(""); setUsernameError(""); }}
+          onFocus={() => setFocusedField("username")}
+          onBlur={handleUsernameBlur}
+          autoCapitalize="none"
+          returnKeyType="next"
+          onSubmitEditing={() => displayNameRef.current?.focus()}
+          editable={!saving}
+          accessibilityLabel="Username"
         />
-      </View>
-    </Screen>
+        <Text style={styles.hint}>Letters, numbers, and underscores only</Text>
+        {usernameError ? (
+          <Text style={styles.inlineError} accessibilityLiveRegion="polite">
+            {usernameError}
+          </Text>
+        ) : null}
+
+        <TextInput
+          ref={displayNameRef}
+          style={[styles.input, { borderColor: inputBorder("displayName") }]}
+          placeholder="Your Name"
+          placeholderTextColor={DS_COLORS.textMuted}
+          value={displayName}
+          onChangeText={(t) => { setDisplayName(t); setFormError(""); }}
+          onFocus={() => setFocusedField("displayName")}
+          onBlur={() => setFocusedField(null)}
+          autoCapitalize="words"
+          returnKeyType="next"
+          onSubmitEditing={() => bioRef.current?.focus()}
+          editable={!saving}
+          accessibilityLabel="Display Name"
+        />
+
+        <TextInput
+          ref={bioRef}
+          style={[styles.input, styles.bioInput]}
+          placeholder="Tell us about yourself..."
+          placeholderTextColor={DS_COLORS.textMuted}
+          value={bio}
+          onChangeText={setBio}
+          onFocus={() => setFocusedField("bio")}
+          onBlur={() => setFocusedField(null)}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+          editable={!saving}
+          accessibilityLabel="Bio"
+        />
+
+        <View style={styles.gap20} />
+
+        {formError ? (
+          <Text style={styles.inlineError} accessibilityLiveRegion="polite">
+            {formError}
+          </Text>
+        ) : null}
+
+        <TouchableOpacity
+          style={[styles.cta, !canContinue && styles.ctaDisabled]}
+          onPress={handleContinue}
+          disabled={!canContinue}
+          activeOpacity={0.9}
+          accessibilityRole="button"
+          accessibilityLabel="Continue"
+          accessibilityState={{ disabled: !canContinue }}
+        >
+          {saving ? (
+            <ActivityIndicator color={DS_COLORS.textPrimary} size="small" />
+          ) : (
+            <Text style={[styles.ctaText, !canContinue && styles.ctaTextDisabled]}>Continue</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: DS_SPACING.xxl,
-  },
-  header: { paddingTop: DS_SPACING.lg, marginBottom: DS_SPACING.xxl },
-  stepLabel: {
-    fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
-    fontWeight: DS_TYPOGRAPHY.eyebrow.fontWeight,
-    letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,
+  container: { flex: 1 },
+  loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: PADDING_H, paddingTop: 16, paddingBottom: 48 },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.2,
     color: DS_COLORS.accent,
-    marginBottom: DS_SPACING.sm,
+    textTransform: "uppercase",
+    marginBottom: 8,
   },
   title: {
-    fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
-    fontWeight: DS_TYPOGRAPHY.pageTitle.fontWeight,
+    fontSize: 28,
+    fontWeight: "800",
     color: DS_COLORS.textPrimary,
-    marginBottom: DS_SPACING.sm,
-    letterSpacing: DS_TYPOGRAPHY.pageTitle.letterSpacing,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    fontSize: 15,
+    fontWeight: "400",
     color: DS_COLORS.textSecondary,
-    marginBottom: DS_SPACING.xxl,
+    marginBottom: 0,
   },
-  form: { width: "100%", paddingBottom: DS_SPACING.section },
-  inputGroup: { marginBottom: DS_SPACING.xxl },
-  label: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600",
-    color: DS_COLORS.textPrimary,
-    marginBottom: DS_SPACING.inputLabelGap,
-  },
-  inputWrap: { minHeight: DS_MEASURES.inputHeight },
+  gap24: { height: 24 },
+  gap20: { height: 20 },
   input: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_COLORS.card,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
-    borderRadius: DS_RADIUS.input,
-    paddingHorizontal: DS_SPACING.lg,
-    paddingVertical: DS_SPACING.md,
-    fontSize: DS_TYPOGRAPHY.body.fontSize,
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: 16,
+    fontSize: 15,
     color: DS_COLORS.textPrimary,
-    minHeight: DS_MEASURES.inputHeight,
+    marginBottom: 12,
   },
-  textArea: {
-    minHeight: 96,
-    paddingTop: DS_SPACING.md,
+  bioInput: {
+    height: 100,
+    paddingTop: 12,
+    marginBottom: 12,
   },
   hint: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    color: DS_COLORS.textSecondary,
-    marginTop: DS_SPACING.xs,
+    fontSize: 12,
+    color: DS_COLORS.textMuted,
+    marginTop: -4,
+    marginBottom: 8,
   },
-  continueBtn: { marginTop: DS_SPACING.xxl },
+  inlineError: {
+    fontSize: 13,
+    color: DS_COLORS.errorText,
+    marginBottom: 12,
+  },
+  cta: {
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: DS_COLORS.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaDisabled: {
+    backgroundColor: DS_COLORS.buttonDisabledBg,
+  },
+  ctaText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: DS_COLORS.textPrimary,
+  },
+  ctaTextDisabled: {
+    color: DS_COLORS.buttonDisabledText,
+  },
 });
