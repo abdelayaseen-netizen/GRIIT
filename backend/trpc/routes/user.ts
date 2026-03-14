@@ -36,18 +36,15 @@ export const userRouter = createTRPCRouter({
         trainingTime: z.string().optional(),
         selectedChallengeId: z.string().optional(),
         displayName: z.string().optional(),
+        username: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
       const displayName = (input.displayName ?? "").trim() || "User";
-      const username =
-        displayName
-          .toLowerCase()
-          .replace(/\s+/g, "_")
-          .replace(/[^a-z0-9_]/g, "")
-          .slice(0, 24) || "user";
-      const uniqueUsername = username.length >= 3 ? `${username}_${userId.slice(0, 6)}` : `user_${userId.slice(0, 8)}`;
+      const rawUsername = (input.username ?? "").trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "").slice(0, 20);
+      const baseUsername = rawUsername.length >= 3 ? rawUsername : displayName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "").slice(0, 24) || "user";
+      const uniqueUsername = baseUsername.length >= 3 ? `${baseUsername}_${userId.slice(0, 6)}` : `user_${userId.slice(0, 8)}`;
 
       const { error: profileError } = await ctx.supabase.from("profiles").upsert(
         {

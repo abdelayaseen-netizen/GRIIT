@@ -31,6 +31,7 @@ export interface OnboardingState {
   socialStyle: string | null;
   trainingTime: string | null;
   selectedChallengeId: string | null;
+  username: string | null;
   isComplete: boolean;
   currentStep: number;
   setMotivation: (v: string) => void;
@@ -42,6 +43,7 @@ export interface OnboardingState {
   setSocialStyle: (v: string) => void;
   setTrainingTime: (v: string) => void;
   setSelectedChallenge: (v: string | null) => void;
+  setUsername: (v: string | null) => void;
   completeOnboarding: () => void;
   setCurrentStep: (step: number) => void;
   reset: () => void;
@@ -56,6 +58,7 @@ const initialState = {
   socialStyle: null as string | null,
   trainingTime: null as string | null,
   selectedChallengeId: null as string | null,
+  username: null as string | null,
   isComplete: false,
   currentStep: 1,
 };
@@ -76,6 +79,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       setSocialStyle: (v) => set({ socialStyle: v }),
       setTrainingTime: (v) => set({ trainingTime: v }),
       setSelectedChallenge: (v) => set({ selectedChallengeId: v }),
+      setUsername: (v) => set({ username: v }),
       completeOnboarding: () => set({ isComplete: true }),
       setCurrentStep: (step) => set({ currentStep: step }),
       reset: () => set(initialState),
@@ -92,6 +96,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         socialStyle: state.socialStyle,
         trainingTime: state.trainingTime,
         selectedChallengeId: state.selectedChallengeId,
+        username: state.username,
         isComplete: state.isComplete,
         currentStep: state.currentStep,
       }),

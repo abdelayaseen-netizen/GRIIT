@@ -17,6 +17,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { PERSONAS, STARTER_CHALLENGES, INTENSITY_OPTIONS } from "@/constants/onboardingData";
 import { supabase } from "@/lib/supabase";
 import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { DS_COLORS } from "@/lib/design-system";
 
@@ -24,6 +25,7 @@ export default function OnboardingSignupScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +34,7 @@ export default function OnboardingSignupScreen() {
   const passwordRef = useRef<TextInput>(null);
 
   const persona = useOnboardingStore((s) => s.persona);
+  const setOnboardingUsername = useOnboardingStore((s) => s.setUsername);
   const selectedChallengeId = useOnboardingStore((s) => s.selectedChallengeId);
   const intensity = useOnboardingStore((s) => s.intensity);
   const motivation = useOnboardingStore((s) => s.motivation);
@@ -72,6 +75,10 @@ export default function OnboardingSignupScreen() {
     }
   };
 
+  const normalizedUsername = username.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  const usernameValid = normalizedUsername.length >= 3 && normalizedUsername.length <= 20;
+  const usernameInvalid = username.trim().length > 0 && !usernameValid;
+
   const handleCreateAccount = async () => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim();
@@ -80,6 +87,11 @@ export default function OnboardingSignupScreen() {
       setFormError("Enter email, name, and a password (8+ characters).");
       return;
     }
+    if (!usernameValid) {
+      setFormError("Username must be 3-20 characters, lowercase, no spaces.");
+      return;
+    }
+    setOnboardingUsername(normalizedUsername);
     setLoading(true);
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -120,7 +132,7 @@ export default function OnboardingSignupScreen() {
         return;
       }
 
-      await trpcMutate("user.completeOnboarding", {
+      await trpcMutate(TRPC.user.completeOnboarding, {
         motivation: motivation ?? undefined,
         persona: persona ?? undefined,
         barrier: barrier ?? undefined,
@@ -129,6 +141,7 @@ export default function OnboardingSignupScreen() {
         trainingTime: trainingTime ?? undefined,
         selectedChallengeId: selectedChallengeId ?? undefined,
         displayName: trimmedName,
+        username: normalizedUsername || undefined,
       });
 
       router.replace("/onboarding/first-task" as never);
@@ -225,6 +238,22 @@ export default function OnboardingSignupScreen() {
             editable={!loading}
             accessibilityLabel="Name"
           />
+          <TextInput
+            style={[styles.input, { borderColor: usernameInvalid ? DS_COLORS.danger : inputBorder("username") }]}
+            placeholder="Username (e.g. yaseen_griit)"
+            placeholderTextColor={DS_COLORS.textMuted}
+            value={username}
+            onChangeText={(t) => { setUsername(t); setFormError(null); }}
+            onFocus={() => setFocusedField("username")}
+            onBlur={() => setFocusedField(null)}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+            accessibilityLabel="Username"
+          />
+          {usernameInvalid ? (
+            <Text style={styles.inlineError}>Username must be 3-20 characters, lowercase, no spaces</Text>
+          ) : null}
           <View style={[styles.passwordWrap, { borderColor: inputBorder("password") }]}>
             <TextInput
               ref={passwordRef}

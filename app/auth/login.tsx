@@ -38,16 +38,19 @@ export default function LoginScreen() {
     if (!canSubmit) return;
     setFormError(null);
     setLoading(true);
+    const trimmedEmail = email.trim().toLowerCase();
+    console.log("[AUTH] signInWithPassword before — email:", trimmedEmail ? `${trimmedEmail.slice(0, 3)}***` : "(empty)");
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail,
         password,
       });
+      console.log("[AUTH] signInWithPassword after — error:", error?.message ?? null, "hasSession:", !!data?.session);
 
       if (error) {
         setLoading(false);
-        setFormError(mapAuthError(error));
-        console.error("[AUTH] Sign-in error:", error);
+        setFormError(error.message || mapAuthError(error));
+        console.error("[AUTH] Sign-in error (exact):", error.message, error);
         return;
       }
 
@@ -61,7 +64,8 @@ export default function LoginScreen() {
       console.error("[AUTH] No session in response");
     } catch (err: unknown) {
       setLoading(false);
-      setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setFormError(message);
       console.error("[AUTH] Error caught:", err);
     }
   };

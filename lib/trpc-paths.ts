@@ -77,6 +77,9 @@ export const TRPC = {
     respond: 'accountability.respond',
     remove: 'accountability.remove',
   },
+  user: {
+    completeOnboarding: 'user.completeOnboarding',
+  },
   meta: {
     version: 'meta.version',
   },
