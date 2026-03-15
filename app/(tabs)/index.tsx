@@ -283,7 +283,6 @@ export default function HomeScreen() {
   const streakLostShownRef = useRef(false);
   const appOpenedTrackedRef = useRef(false);
   const [syncingBannerDismissed, setSyncingBannerDismissed] = useState(false);
-  const [dismissedUpgradePrompt, setDismissedUpgradePrompt] = useState(false);
   const [showShareProgressModal, setShowShareProgressModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const shareCardRef = useRef<InstanceType<typeof ViewShot> | null>(null);
@@ -870,33 +869,6 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {!isGuest && !isPremium && !dismissedUpgradePrompt && (
-          <TouchableOpacity
-            style={[styles.upgradePromptCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => requirePremium("settings")}
-            activeOpacity={0.9}
-            accessibilityRole="button"
-            accessibilityLabel="Upgrade to Premium"
-          >
-            <View style={styles.upgradePromptRow}>
-              <View style={styles.upgradePromptTextWrap}>
-                <Text style={[styles.upgradePromptTitle, { color: colors.text.primary }]}>Upgrade to Premium</Text>
-                <Text style={[styles.upgradePromptSub, { color: colors.text.secondary }]}>Unlimited challenges, streak freezes & more.</Text>
-              </View>
-              <ChevronRight size={20} color={colors.text.muted} />
-            </View>
-            <TouchableOpacity
-              hitSlop={12}
-              style={styles.upgradePromptDismiss}
-              onPress={(e) => { e.stopPropagation(); setDismissedUpgradePrompt(true); }}
-              accessibilityLabel="Dismiss"
-              accessibilityRole="button"
-            >
-              <Text style={[styles.upgradePromptDismissText, { color: colors.text.muted }]}>×</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-
         {!isGuest && (
           <>
             <DailyStatus
@@ -1025,20 +997,6 @@ export default function HomeScreen() {
               <Text style={[styles.statsSummaryLabel, { color: colors.text.secondary }]}>Rank</Text>
             </View>
           </View>
-        )}
-
-        {!isGuest && (
-          <TouchableOpacity
-            style={[styles.weeklyGoalRow, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => setShowWeeklyGoalModal(true)}
-            activeOpacity={0.8}
-            accessibilityLabel="Weekly goal"
-            accessibilityRole="button"
-          >
-            <Text style={[styles.weeklyGoalLabel, { color: colors.text.secondary }]}>Weekly goal</Text>
-            <Text style={[styles.weeklyGoalValue, { color: colors.text.primary }]}>{weeklyProgress.completed}/{weeklyProgress.goal} days this week</Text>
-            <ChevronRight size={18} color={colors.text.muted} />
-          </TouchableOpacity>
         )}
 
         {!isGuest && (

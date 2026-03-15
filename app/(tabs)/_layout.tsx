@@ -18,8 +18,8 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = colors.card;
-  const tabBorder = colors.border;
+  const tabBg = colors.background;
+  const tabBorder = DS_COLORS.border;
   const tabActive = colors.accent;
   const tabInactive = colors.text.tertiary;
   const isCreateScreen = typeof pathname === "string" && pathname.includes("create");

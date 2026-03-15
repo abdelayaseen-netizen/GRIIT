@@ -2,9 +2,22 @@
  * GRIIT Design System — Rork visual spec.
  * Base palette from constants/theme.ts; extended tokens here.
  */
-import { BASE_COLORS, COMMITMENT_BUTTON_BG, EXPLORE_BUTTON_BG } from "@/constants/theme";
+import {
+  BASE_COLORS,
+  COMMITMENT_BUTTON_BG,
+  EXPLORE_BUTTON_BG,
+  SURFACE_SUBTLE,
+  ACCENT_LIGHT,
+  SUCCESS_LIGHT,
+  WARNING_COLOR,
+  WARNING_LIGHT,
+  DANGER_COLOR,
+  DANGER_LIGHT,
+  NAVY_DARK,
+  GOLD,
+} from "@/constants/theme";
 
-// ─── COLORS (GRIIT Design DNA — base from theme, rest extended) ───────────────
+// ─── COLORS (GRIIT UI Overhaul — warm cream, orange accent) ─────────────────
 export const DS_COLORS = {
   // Base (from constants/theme.ts)
   background: BASE_COLORS.background,
@@ -12,32 +25,43 @@ export const DS_COLORS = {
   card: BASE_COLORS.card,
   textPrimary: BASE_COLORS.textPrimary,
   textSecondary: BASE_COLORS.textSecondary,
+  textMuted: BASE_COLORS.textMuted,
   accent: BASE_COLORS.accent,
   border: BASE_COLORS.border,
   success: BASE_COLORS.success,
   tabInactive: BASE_COLORS.tabInactive,
 
-  backgroundAlt: "#FAF8F5",
-  surfaceWarm: "#FAF8F5",
+  // Overhaul tokens
+  surfaceSubtle: SURFACE_SUBTLE,
+  accentLight: ACCENT_LIGHT,
+  accentBorder: BASE_COLORS.accent,
+  successLight: SUCCESS_LIGHT,
+  warning: WARNING_COLOR,
+  warningLight: WARNING_LIGHT,
+  danger: DANGER_COLOR,
+  dangerLight: DANGER_LIGHT,
+  navyDark: NAVY_DARK,
+  gold: GOLD,
+
+  backgroundAlt: BASE_COLORS.background,
+  surfaceWarm: BASE_COLORS.background,
   surfaceMuted: "#F2F0EB",
-  textPrimaryAlt: "#2D3A2E",
-  textSecondaryAlt: "#7A7A6D",
-  textMuted: "#B0ACA3",
-  textTertiary: "#B0ACA3",
-  borderAlt: "#E8E4DD",
+  textPrimaryAlt: BASE_COLORS.textPrimary,
+  textSecondaryAlt: BASE_COLORS.textSecondary,
+  textTertiary: BASE_COLORS.textMuted,
+  borderAlt: BASE_COLORS.border,
   borderFocus: BASE_COLORS.accent,
   filterPillInactiveBorder: "#E0DDD6",
   accentDark: "#C2663E",
-  accentSoft: "#FFF7ED",
-  accentLight: "#FFF7ED",
-  cardSelectedBg: "#FFF7ED",
+  accentSoft: ACCENT_LIGHT,
+  cardSelectedBg: ACCENT_LIGHT,
 
-  // Commitment / CTA (Design DNA)
+  // Commitment / CTA
   commitmentButtonBg: COMMITMENT_BUTTON_BG,
   exploreButtonBg: EXPLORE_BUTTON_BG,
   buttonDisabledBg: "#C4C0B8",
   buttonDisabledText: "#FFFFFF",
-  selectedBorder: "#2D3A2E",
+  selectedBorder: BASE_COLORS.textPrimary,
 
   // Auth / form
   errorText: "#DC4A3C",
@@ -46,10 +70,8 @@ export const DS_COLORS = {
 
   // Semantic
   successSoft: "#EAF5F0",
-  warning: "#F5A623",
-  warningSoft: "#FFFBEB",
-  danger: "#E53E3E",
-  dangerSoft: "#FEF2F2",
+  warningSoft: WARNING_LIGHT,
+  dangerSoft: DANGER_LIGHT,
   dangerDark: "#B91C1C",
   dangerMid: "#DC2626",
   dangerDarkest: "#7F1D1D",
