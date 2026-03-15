@@ -9,7 +9,6 @@ import {
   Alert,
   Animated,
   Platform,
-  Image,
   RefreshControl,
   Modal,
   StatusBar,

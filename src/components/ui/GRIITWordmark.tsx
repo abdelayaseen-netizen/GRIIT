@@ -19,7 +19,7 @@ export function GRIITWordmark({
   color = DS_COLORS.textPrimary,
   subtitleColor = DS_COLORS.textSecondary,
   compact = false,
-  spaced = false,
+  spaced: _spaced = false,
 }: GRIITWordmarkProps) {
   return (
     <View style={compact ? styles.compactWrap : styles.wrap}>

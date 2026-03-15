@@ -16,7 +16,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import {
   ChevronRight,
-  CheckCircle2,
   Clock,
   Flame,
   Target,
@@ -34,7 +33,6 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useSubscription } from "@/hooks/useSubscription";
-import { PremiumBadge } from "@/components/PremiumBadge";
 import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Celebration from "@/components/Celebration";
@@ -52,9 +50,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import ActiveChallenges, { type ChallengeWithProgress } from "@/components/home/ActiveChallenges";
+import { type ChallengeWithProgress } from "@/components/home/ActiveChallenges";
 import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedCard";
-import { SuggestedFollows } from "@/components/SuggestedFollows";
 import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -73,7 +70,6 @@ import { GRIITWordmark, InitialCircle } from "@/src/components/ui";
 import ViewShot from "react-native-view-shot";
 import { ShareCard } from "@/components/ShareCard";
 import { shareProgressImage, shareDaySecured } from "@/lib/share";
-import { Image } from "expo-image";
 
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
@@ -117,132 +113,12 @@ function SyncingBanner({ onDismiss }: { onDismiss?: () => void }) {
   );
 }
 
-function AnimatedProgressBar({ progress, color, trackBg }: { progress: number; color: string; trackBg?: string }) {
-  const widthAnim = useRef(new Animated.Value(0)).current;
-  const bg = trackBg ?? DS_COLORS.chipFill;
-
-  useEffect(() => {
-    Animated.timing(widthAnim, {
-      toValue: progress,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
-  }, [progress, widthAnim]);
-
-  const barWidth = widthAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-  });
-
-  return (
-    <View style={[progressStyles.track, { backgroundColor: bg }]}>
-      <Animated.View style={[progressStyles.fill, { width: barWidth, backgroundColor: color }]} />
-    </View>
-  );
-}
-
-function TaskRow({
-  title,
-  completed,
-  index,
-}: {
-  title: string;
-  completed: boolean;
-  index: number;
-}) {
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const checkAnim = useRef(new Animated.Value(completed ? 1 : 0)).current;
-  const rowScale = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0)).current;
-  const prevCompletedRef = useRef(completed);
-
-  useEffect(() => {
-    Animated.timing(scaleAnim, {
-      toValue: 1,
-      duration: 300,
-      delay: index * 80,
-      useNativeDriver: true,
-    }).start();
-  }, [index, scaleAnim]);
-
-  useEffect(() => {
-    Animated.spring(checkAnim, {
-      toValue: completed ? 1 : 0,
-      useNativeDriver: true,
-      tension: 200,
-      friction: 12,
-    }).start();
-  }, [completed, checkAnim]);
-
-  useEffect(() => {
-    if (completed && !prevCompletedRef.current) {
-      prevCompletedRef.current = true;
-      Animated.sequence([
-        Animated.timing(rowScale, { toValue: 1.05, duration: 100, useNativeDriver: true }),
-        Animated.spring(rowScale, { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }),
-      ]).start();
-      Animated.sequence([
-        Animated.timing(pulseOpacity, { toValue: 0.15, duration: 200, useNativeDriver: true }),
-        Animated.timing(pulseOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      ]).start();
-    }
-    if (!completed) prevCompletedRef.current = false;
-  }, [completed, rowScale, pulseOpacity]);
-
-  const checkScale = checkAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.5, 1],
-  });
-
-  return (
-    <Animated.View
-      style={[
-        taskStyles.row,
-        { overflow: "hidden" as const, borderRadius: 10 },
-        {
-          opacity: scaleAnim,
-          transform: [
-            { translateY: scaleAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) },
-            { scale: rowScale },
-          ],
-        },
-      ]}
-    >
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: DS_COLORS.success, opacity: pulseOpacity, borderRadius: 10 },
-        ]}
-        pointerEvents="none"
-      />
-      <Animated.View style={{ transform: [{ scale: checkScale }] }}>
-        <CheckCircle2
-          size={20}
-          color={completed ? DS_COLORS.success : DS_COLORS.border}
-          fill={completed ? DS_COLORS.success : "transparent"}
-          strokeWidth={completed ? 0 : 1.5}
-        />
-      </Animated.View>
-      <Text
-        style={[
-          taskStyles.title,
-          { color: DS_COLORS.textPrimary },
-          completed && { color: DS_COLORS.textMuted },
-        ]}
-        numberOfLines={1}
-      >
-        {title}
-      </Text>
-    </Animated.View>
-  );
-}
-
 export default function HomeScreen() {
   const router = useRouter();
-  const handleUserPress = useCallback((u: { username: string }) => {
+  const _handleUserPress = useCallback((u: { username: string }) => {
     router.push(ROUTES.PROFILE_USERNAME(u.username) as never);
   }, [router]);
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const { requireAuth } = useAuthGate();
   const isGuest = useIsGuest();
   const guestQuote = useMemo(
@@ -277,7 +153,7 @@ export default function HomeScreen() {
     nextTierName?: string;
   } | null>(null);
   const [showMilestone, setShowMilestone] = useState<number | null>(null);
-  const [showFirstSessionBanner, setShowFirstSessionBanner] = useState(false);
+  const [_showFirstSessionBanner, setShowFirstSessionBanner] = useState(false);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showLastStandUsedModal, setShowLastStandUsedModal] = useState(false);
   const [showStreakLostModal, setShowStreakLostModal] = useState(false);
@@ -287,7 +163,7 @@ export default function HomeScreen() {
   const [showShareProgressModal, setShowShareProgressModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
   const shareCardRef = useRef<InstanceType<typeof ViewShot> | null>(null);
-  const [secureError, setSecureError] = useState<string>('');
+  const [_secureError, setSecureError] = useState<string>('');
   const [freezeError, setFreezeError] = useState<string>('');
   const secureBtnScale = useRef(new Animated.Value(1)).current;
   const secureBtnGlow = useRef(new Animated.Value(0)).current;
@@ -308,7 +184,7 @@ export default function HomeScreen() {
     enabled: !isGuest,
   });
   const leaderboardData = leaderboardQuery.data ? { currentUserRank: leaderboardQuery.data.currentUserRank ?? null, totalSecuredToday: leaderboardQuery.data.totalSecuredToday ?? 0 } : null;
-  const leaderboardEntries = (leaderboardQuery.data as { entries?: { userId: string; username: string; displayName?: string; avatarUrl?: string | null; currentStreak?: number; securedDaysThisWeek?: number }[] })?.entries ?? [];
+  const _leaderboardEntries = (leaderboardQuery.data as { entries?: { userId: string; username: string; displayName?: string; avatarUrl?: string | null; currentStreak?: number; securedDaysThisWeek?: number }[] })?.entries ?? [];
   const leaderboardError = leaderboardQuery.isError;
   const leaderboardLoading = leaderboardQuery.isLoading;
 
@@ -376,9 +252,9 @@ export default function HomeScreen() {
     staleTime: 5 * 60 * 1000,
     enabled: !isGuest,
   });
-  const homeChallengesWithProgress = homeActiveQuery.data?.challengesWithProgress ?? null;
-  const homeTotalRemaining = homeActiveQuery.data?.totalRemaining ?? 0;
-  const homeDataError = homeActiveQuery.isError;
+  const _homeChallengesWithProgress = homeActiveQuery.data?.challengesWithProgress ?? null;
+  const _homeTotalRemaining = homeActiveQuery.data?.totalRemaining ?? 0;
+  const _homeDataError = homeActiveQuery.isError;
 
   useFocusEffect(
     useCallback(() => {
@@ -425,22 +301,22 @@ export default function HomeScreen() {
   const {
     currentStreak,
     daysSinceLastSecure,
-    showRecoveryBanner,
+    showRecoveryBanner: _showRecoveryBanner,
     showComebackMode,
-    showRestartMode,
-    canUseFreeze,
+    showRestartMode: _showRestartMode,
+    canUseFreeze: _canUseFreeze,
     freezesRemaining,
-    lastStandsAvailable,
+    lastStandsAvailable: _lastStandsAvailable,
     isDaySecured,
   } = retention;
-  const { isPremium, requirePremium } = useSubscription();
-  const lastStandRequiresPremium = (stats as StatsFromApi)?.lastStandRequiresPremium ?? false;
+  const { isPremium, requirePremium: _requirePremium } = useSubscription();
+  const _lastStandRequiresPremium = (stats as StatsFromApi)?.lastStandRequiresPremium ?? false;
   const tierName = (stats as StatsFromApi)?.tier ?? null;
   const nextTierName = (stats as StatsFromApi)?.nextTierName ?? null;
   const pointsToNextTier = (stats as StatsFromApi)?.pointsToNextTier ?? 0;
   const yesterdayKey = getYesterdayDateKey();
   const daySecured = optimisticDaySecured || (computeProgress.progress === 100 && !canSecureDay);
-  const isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
+  const _isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
 
   useEffect(() => {
     if (isGuest || !initialFetchDone) return;
@@ -467,7 +343,7 @@ export default function HomeScreen() {
     }));
   }, [challenge?.challenge_tasks, todayCheckins]);
 
-  const progressColor = daySecured
+  const _progressColor = daySecured
     ? DS_COLORS.success
     : computeProgress.progress >= 50
     ? DS_COLORS.accent
@@ -503,7 +379,7 @@ export default function HomeScreen() {
 
   const isRefetching = leaderboardQuery.isRefetching || homeActiveQuery.isRefetching;
 
-  const handleSecureDay = useCallback(async () => {
+  const _handleSecureDay = useCallback(async () => {
     setSecureError('');
     if (daysSinceLastSecure >= RETENTION_CONFIG.comebackModeMinDays) {
       track({ name: "comeback_day_secured" });
@@ -708,10 +584,11 @@ export default function HomeScreen() {
     );
   }
 
-  const glowOpacity = secureBtnGlow.interpolate({
+  const _glowOpacity = secureBtnGlow.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 0.15],
   });
+  void _handleUserPress; void _user; void _leaderboardEntries; void _homeChallengesWithProgress; void _homeTotalRemaining; void _homeDataError; void _lastStandRequiresPremium; void _isFirstTimeUser; void _progressColor; void _handleSecureDay; void _glowOpacity;
 
   return (
     <ErrorBoundary>
@@ -974,7 +851,7 @@ export default function HomeScreen() {
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{r.user}</Text> moved to Rank &apos;<Text style={{ color: DS_COLORS.success, fontWeight: "700" }}>{r.newRank}</Text>&apos;</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.success }]}>📈 +{r.discipline} Discipline this week</Text>
-                      <TouchableOpacity onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}><Text style={[styles.liveFeedPillText, { color: DS_COLORS.accent }]}>View Profile ></Text></TouchableOpacity>
+                      <TouchableOpacity onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}><Text style={[styles.liveFeedPillText, { color: DS_COLORS.accent }]}>View Profile {'>'}</Text></TouchableOpacity>
                     </View>
                   </View>
                 );
@@ -1358,38 +1235,6 @@ const syncingBannerStyles = StyleSheet.create({
   },
   dismiss: { padding: 4 },
   dismissText: { fontSize: 18, color: DS_COLORS.textSecondary, fontWeight: "600" as const },
-});
-
-const progressStyles = StyleSheet.create({
-  track: {
-    height: 6,
-    backgroundColor: DS_COLORS.chipFill,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  fill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-});
-
-const taskStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 6,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textPrimary,
-    flex: 1,
-  },
-  titleCompleted: {
-    color: DS_COLORS.textMuted,
-    textDecorationLine: "line-through",
-  },
 });
 
 const styles = StyleSheet.create({

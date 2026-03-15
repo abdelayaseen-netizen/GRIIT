@@ -525,15 +525,20 @@ export const profilesRouter = createTRPCRouter({
       return result.reverse();
     }),
 
-  /** Delete account: clears profile data and returns; client must sign out. Full auth user deletion requires Supabase Admin API (auth.admin.deleteUser) in production. */
+  /** Delete account: clears profile data; when SUPABASE_SERVICE_ROLE_KEY is set, also deletes auth user. Client must sign out after. */
   deleteAccount: protectedProcedure
     .mutation(async ({ ctx }) => {
-      const { error } = await ctx.supabase
+      const { error: profileError } = await ctx.supabase
         .from("profiles")
         .delete()
         .eq("user_id", ctx.userId);
-      if (error) {
+      if (profileError) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete account data." });
+      }
+      const { hasSupabaseAdmin, getSupabaseAdmin } = await import("../../lib/supabase-admin");
+      if (hasSupabaseAdmin()) {
+        const admin = getSupabaseAdmin();
+        await admin.auth.admin.deleteUser(ctx.userId);
       }
       return { ok: true };
     }),

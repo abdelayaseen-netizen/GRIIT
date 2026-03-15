@@ -19,7 +19,6 @@ import {
   Brain,
   Target,
   Zap,
-  TrendingUp,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
@@ -511,6 +510,11 @@ export default function DiscoverScreen() {
               initialNumToRender={5}
               maxToRenderPerBatch={5}
               windowSize={5}
+              getItemLayout={(_data, index) => ({
+                length: DAILY_CARD_WIDTH + DAILY_CARD_GAP,
+                offset: (DAILY_CARD_WIDTH + DAILY_CARD_GAP) * index,
+                index,
+              })}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={[styles.dailyScrollContent, { paddingLeft: 16 }]}
               renderItem={renderDailyItem}

@@ -3,8 +3,8 @@ import { appRouter } from "../app-router";
 
 vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
 
-const USER_A = "11111111-1111-1111-1111-111111111111";
-const USER_B = "22222222-2222-2222-2222-222222222222";
+const USER_A = "11111111-1111-4111-8111-111111111111";
+const USER_B = "22222222-2222-4222-8222-222222222222";
 
 function createMockSupabase(overrides: {
   acceptedCount?: number;

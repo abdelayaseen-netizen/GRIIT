@@ -1,12 +1,14 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { DS_COLORS } from "@/lib/design-system";
+import { reportClientError } from "@/lib/client-error-reporting";
 
 function logError(error: Error, componentStack: string | null | undefined) {
   if (__DEV__) {
     console.error("[ErrorBoundary]", error.message, componentStack ?? null);
+  } else {
+    reportClientError(error, componentStack ?? undefined);
   }
-  // In production, consider sending to your error reporting service (e.g. Sentry).
 }
 
 type Props = { children: ReactNode; fallback?: ReactNode };

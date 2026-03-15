@@ -16,6 +16,8 @@ export interface ProfileHeaderProps {
   bio?: string;
   /** Only show Edit button on own profile. Default true. */
   showEditButton?: boolean;
+  /** Use dark avatar placeholder when no photo. Default true. */
+  useBlackAvatar?: boolean;
 }
 
 const AVATAR_SIZE = 100;

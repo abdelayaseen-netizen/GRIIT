@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['**/*.test.ts', '**/*.spec.ts'],
-    exclude: ['node_modules', '.expo', '**/app/**'],
+    exclude: ['node_modules', '**/node_modules/**', '.expo', '**/app/**'],
     env: {
       EXPO_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
       EXPO_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key-for-vitest',

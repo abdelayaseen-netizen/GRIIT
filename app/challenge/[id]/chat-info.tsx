@@ -24,6 +24,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
+import { InitialCircle } from "@/src/components/ui";
 
 const MOCK_MEMBER_INITIALS = ["S", "M", "J", "A", "K", "D"];
 

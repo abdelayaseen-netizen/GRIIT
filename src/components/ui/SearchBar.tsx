@@ -2,7 +2,6 @@ import React from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Search, X } from "lucide-react-native";
 import { colors, iconSizes } from "@/src/theme/tokens";
-import { DS_COLORS } from "@/lib/design-system";
 
 export function SearchBar(props: {
   value: string;

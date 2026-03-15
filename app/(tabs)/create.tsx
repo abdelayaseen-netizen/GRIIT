@@ -214,12 +214,6 @@ const PACK_CARD_BORDER: Record<string, string> = {
   morning: "#F5D5C0",
 };
 
-const PARTICIPATION_OPTIONS: { id: ParticipationTypeUI; label: string; description: string; Icon: typeof User }[] = [
-  { id: "solo", label: "Solo", description: "Just you. Complete every task, every day.", Icon: User },
-  { id: "team", label: "Team", description: "2–10 people. Everyone must complete daily tasks. If one fails, everyone fails.", Icon: Users },
-  { id: "shared_goal", label: "Shared Goal", description: "2–10 people. Work together toward one big target. Log progress anytime.", Icon: Target },
-];
-
 const DEADLINE_OPTIONS: { id: DeadlineTypeUI; label: string; description: string }[] = [
   { id: "none", label: "No deadline", description: "Finish whenever" },
   { id: "soft", label: "Soft deadline", description: "Target date (no penalty for missing)" },

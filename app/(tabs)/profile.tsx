@@ -51,7 +51,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import type { StatsFromApi } from "@/types";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
-function openSubscriptionManagement() {
+function _openSubscriptionManagement() {
   if (Platform.OS === "ios") {
     Linking.openURL("https://apps.apple.com/account/subscriptions");
   } else if (Platform.OS === "android") {
@@ -258,7 +258,7 @@ export default function ProfileScreen() {
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { colors } = useTheme();
+  const { colors: _colors } = useTheme();
   const {
     profile,
     profileLoading,
@@ -267,7 +267,7 @@ export default function ProfileScreen() {
     stats,
     isError,
     refetchAll,
-    isPremium,
+    isPremium: _isPremium,
   } = useApp();
   const headerFade = useRef(new Animated.Value(0)).current;
 
@@ -298,12 +298,12 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
-  const completedChallengesList = Array.isArray(completedQuery.data) ? completedQuery.data : [];
+  const _completedChallengesList = Array.isArray(completedQuery.data) ? completedQuery.data : [];
   const securedDateKeys = Array.isArray(securedDatesQuery.data) ? securedDatesQuery.data : [];
   const leaderboardRank = leaderboardProfileQuery.data?.currentUserRank ?? null;
-  const accountabilityCount = Array.isArray(accountabilityQuery.data?.accepted) ? accountabilityQuery.data.accepted.length : 0;
+  const _accountabilityCount = Array.isArray(accountabilityQuery.data?.accepted) ? accountabilityQuery.data.accepted.length : 0;
   const dashboardDataLoading = completedQuery.isLoading || securedDatesQuery.isLoading || leaderboardProfileQuery.isLoading || accountabilityQuery.isLoading;
-  const dashboardDataError = completedQuery.isError || securedDatesQuery.isError || leaderboardProfileQuery.isError || accountabilityQuery.isError;
+  const _dashboardDataError = completedQuery.isError || securedDatesQuery.isError || leaderboardProfileQuery.isError || accountabilityQuery.isError;
 
   const stillLoading = (profileLoading && !profile) || (!profile && !isError);
 
@@ -347,10 +347,11 @@ export default function ProfileScreen() {
 
   const currentStreak = stats?.activeStreak || 0;
   const bestStreak = stats?.longestStreak || 0;
-  const activeChallenges = stats?.activeChallenges || 0;
+  const _activeChallenges = stats?.activeChallenges || 0;
   const completedChallengesCount = stats?.completedChallenges || 0;
   const totalDaysSecured = (stats as StatsFromApi)?.totalDaysSecured ?? 0;
   const tierName = (stats as StatsFromApi)?.tier ?? "Starter";
+  void _openSubscriptionManagement; void _completedChallengesList; void _accountabilityCount; void _dashboardDataError; void _activeChallenges;
 
   const handleShare = useCallback(async () => {
     if (Platform.OS !== "web") {

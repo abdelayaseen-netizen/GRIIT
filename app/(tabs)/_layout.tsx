@@ -8,9 +8,9 @@ import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { DS_COLORS, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
-  const pathname = usePathname();
+  void usePathname();
   const { user } = useAuth();
-  const { colors, colorScheme } = useTheme();
+  const { colors: _colors, colorScheme: _colorScheme } = useTheme();
   const pushRegistrationAttempted = useRef(false);
 
   useEffect(() => {
@@ -18,11 +18,9 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = DS_COLORS.background;
   const tabBorder = DS_COLORS.border;
   const tabActive = DS_COLORS.accent;
   const tabInactive = DS_COLORS.textMuted;
-  const isCreateScreen = typeof pathname === "string" && pathname.includes("create");
   const centerBtnBg = DS_COLORS.commitmentButtonBg;
 
   return (
