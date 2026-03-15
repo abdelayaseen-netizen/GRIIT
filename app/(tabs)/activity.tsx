@@ -27,7 +27,6 @@ import {
   ThumbsUp,
   HandMetal,
 } from "lucide-react-native";
-import { Image } from "expo-image";
 import { InitialCircle } from "@/src/components/ui";
 import * as Haptics from "expo-haptics";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
@@ -521,8 +520,6 @@ function RecentActivitySection({ items, error, styles }: { items: ActivityItem[]
     }
   };
 
-  const getUserAvatar = (userId: string) => `https://i.pravatar.cc/150?u=${userId}`;
-
   if (items.length === 0) {
     return (
       <View style={styles.recentSection}>
@@ -557,11 +554,7 @@ function RecentActivitySection({ items, error, styles }: { items: ActivityItem[]
             <View style={styles.recentIconWrap}>
               {getActivityIcon(activity.type)}
             </View>
-            <Image
-              source={{ uri: getUserAvatar(activity.actorId) }}
-              style={styles.recentAvatar}
-              contentFit="cover"
-            />
+            <InitialCircle username={activity.actorDisplayName || activity.actorId || "U"} size={40} />
             <Text style={styles.recentText} numberOfLines={2}>
               <Text style={styles.recentName}>{activity.actorDisplayName}</Text>
               {" "}{getActivityText(activity)}

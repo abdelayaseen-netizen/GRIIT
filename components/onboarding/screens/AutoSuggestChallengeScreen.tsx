@@ -138,7 +138,14 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
         </Pressable>
       )}
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorBlock}>
+          <Text style={styles.errorText}>{error}</Text>
+          <Pressable style={styles.skipButton} onPress={handleBrowseMore}>
+            <Text style={styles.skipButtonText}>Continue anyway</Text>
+          </Pressable>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -166,4 +173,7 @@ const styles = StyleSheet.create({
   browseLink: { paddingVertical: 12, alignItems: 'center' },
   browseLinkText: { fontSize: T.bodySize, fontWeight: '600', color: C.accent },
   errorText: { fontSize: T.captionSize, color: C.accent, textAlign: 'center', marginTop: 12 },
+  errorBlock: { marginTop: 16, alignItems: 'center', gap: 12 },
+  skipButton: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: S.buttonRadius, borderWidth: 1, borderColor: C.border },
+  skipButtonText: { fontSize: T.bodySize, fontWeight: '600', color: C.textSecondary },
 });

@@ -52,8 +52,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import DailyStatus from "@/components/home/DailyStatus";
-import ExploreChallengesButton from "@/components/home/ExploreChallengesButton";
 import ActiveChallenges, { type ChallengeWithProgress } from "@/components/home/ActiveChallenges";
 import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedCard";
 import { SuggestedFollows } from "@/components/SuggestedFollows";
@@ -743,20 +741,6 @@ export default function HomeScreen() {
           <SyncingBanner onDismiss={() => setSyncingBannerDismissed(true)} />
         )}
 
-        {showFirstSessionBanner && (
-          <TouchableOpacity
-            style={[styles.firstSessionBanner, { backgroundColor: colors.accentLight, borderColor: colors.border }]}
-            onPress={() => setShowFirstSessionBanner(false)}
-            activeOpacity={0.9}
-            accessibilityLabel="Dismiss welcome banner"
-            accessibilityRole="button"
-          >
-            <Text style={[styles.firstSessionBannerText, { color: colors.text.primary }]}>
-              Welcome to GRIIT. Your first win is in the books. 🔥
-            </Text>
-          </TouchableOpacity>
-        )}
-
         <View style={styles.header}>
           <GRIITWordmark spaced={!isGuest} subtitle={isGuest ? undefined : "Build Discipline Daily"} compact={!!isGuest} />
           {!isGuest && (
@@ -772,55 +756,6 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-
-        {showRecoveryBanner && (
-          <View style={[styles.recoveryBanner, { backgroundColor: colors.warningLight, borderColor: colors.border }]}>
-            <AlertTriangle size={18} color={colors.warning} />
-            <View style={styles.recoveryBannerTextWrap}>
-              <Text style={[styles.recoveryBannerTitle, { color: colors.text.primary }]}>
-                {showRestartMode
-                  ? "Welcome back. Start fresh today."
-                  : showComebackMode
-                  ? "Secure 3 days in a row to restore momentum."
-                  : "You missed yesterday. Secure today to stay in the game."}
-              </Text>
-              {showRecoveryBanner && lastStandsAvailable >= 0 && (
-                <View style={styles.recoveryBannerLastStandRow}>
-                  <Text style={[styles.recoveryBannerSub, { color: colors.text.secondary }]}>
-                    Last Stands remaining: {lastStandsAvailable}
-                  </Text>
-                  {!isPremium && <PremiumBadge label="PRO" />}
-                </View>
-              )}
-              {lastStandRequiresPremium && (
-                <TouchableOpacity
-                  onPress={() => requirePremium("last_stand")}
-                  style={styles.freezeCta}
-                  activeOpacity={0.8}
-                  accessibilityLabel="Upgrade to use Last Stand"
-                  accessibilityRole="button"
-                >
-                  <Text style={[styles.freezeCtaText, { color: colors.accent }]}>Upgrade to use Last Stand</Text>
-                </TouchableOpacity>
-              )}
-              {canUseFreeze && !lastStandRequiresPremium && (
-                <TouchableOpacity
-                  style={[styles.freezeCta, { backgroundColor: colors.accent }]}
-                  onPress={() => {
-                    if (!isPremium && !requirePremium("streak_freeze")) return;
-                    setShowFreezeModal(true);
-                  }}
-                  activeOpacity={0.8}
-                  accessibilityLabel="Use streak freeze"
-                  accessibilityRole="button"
-                >
-                  <Text style={[styles.freezeCtaText, { color: DS_COLORS.white }]}>Use streak freeze</Text>
-                  {!isPremium && <PremiumBadge label="PRO" />}
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
 
         {!isGuest && !hasActiveChallenge && (
           <View style={[styles.welcomeCard, { backgroundColor: DS_COLORS.accentLight, borderColor: DS_COLORS.accent, borderWidth: 2, borderStyle: "dashed" }]}>
@@ -937,65 +872,6 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {hasActiveChallenge ? (
-            <>
-            <TouchableOpacity
-              style={[styles.challengeCard, ((challenge as Record<string, unknown>)?.difficulty === "hard" || (challenge as Record<string, unknown>)?.difficulty === "extreme") && styles.challengeCardHard]}
-              onPress={() => {
-                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                if (activeChallenge) router.push(ROUTES.CHALLENGE_ID(activeChallenge.challenge_id) as never);
-              }}
-              activeOpacity={0.85}
-              testID="home-challenge-card"
-              accessibilityLabel="Open challenge"
-              accessibilityRole="button"
-            >
-              <View style={styles.progressSection}>
-                <View style={styles.progressHeader}>
-                  <Text style={styles.progressLabel}>Today</Text>
-                  <Text style={[styles.progressValue, { color: progressColor }]}>
-                    {computeProgress.verifiedCount}/{computeProgress.totalRequired}
-                  </Text>
-                </View>
-                <AnimatedProgressBar progress={computeProgress.progress} color={progressColor} />
-              </View>
-              {tasks.length > 0 && (
-                <View style={styles.taskList}>
-                  {tasks.map((task, i) => (
-                    <TaskRow key={task.id} title={task.title} completed={task.completed} index={i} />
-                  ))}
-                </View>
-              )}
-              <View style={styles.cardFooter}>
-                <Text style={styles.viewDetailsText}>View Details</Text>
-                <ChevronRight size={16} color={colors.text.muted} />
-              </View>
-            </TouchableOpacity>
-
-            {canSecureDay && !optimisticDaySecured && (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => requireAuth("secure", handleSecureDay)}
-                testID="secure-day-button"
-                accessibilityLabel="Secure your day"
-                accessibilityRole="button"
-              >
-                <Animated.View style={[styles.secureDayButton, { transform: [{ scale: secureBtnScale }] }]}>
-                  <Animated.View style={[styles.secureDayGlow, { opacity: glowOpacity }]} />
-                  <Text style={styles.secureDayText}>Secure Day</Text>
-                </Animated.View>
-              </TouchableOpacity>
-            )}
-
-            {daySecured && (
-              <View style={[styles.securedBanner, { backgroundColor: colors.successLight }]}>
-                <CheckCircle2 size={16} color={colors.success} fill={colors.success} strokeWidth={0} />
-                <Text style={[styles.securedText, { color: colors.text.primary }]}>Day {(activeChallenge as { current_day?: number })?.current_day ?? 1} Secured</Text>
-              </View>
-            )}
-            </>
-        ) : null}
-
         {!hasActiveChallenge && (suggestedChallenges.length > 0 || MOCK_SUGGESTED.length > 0) && (
           <View style={styles.suggestedChallengesSection}>
             <Text style={[styles.suggestedChallengesTitle, { color: DS_COLORS.textMuted, letterSpacing: 1, fontSize: 12, fontWeight: "600" }]}>SUGGESTED FOR YOU</Text>
@@ -1023,19 +899,6 @@ export default function HomeScreen() {
           <Text style={[styles.liveTitle, { color: DS_COLORS.textPrimary }]}>LIVE</Text>
           <Text style={[styles.liveSubItalic, { color: DS_COLORS.textMuted }]}>People are moving</Text>
         </View>
-
-        {!isGuest && leaderboardData?.currentUserRank != null && (
-          <View style={[styles.yourPositionInFeedCard, { backgroundColor: DS_COLORS.accentSoft, borderColor: DS_COLORS.accent }]}>
-            <Target size={28} color={colors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>YOUR POSITION</Text>
-            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>
-              You are ranked <Text style={styles.feedBold}>#{leaderboardData.currentUserRank}</Text> among friends this week.
-            </Text>
-            <Text style={[styles.yourPositionSub, { color: DS_COLORS.textSecondary }]}>
-              You&apos;re <Text style={[styles.feedBold, { color: DS_COLORS.accent }]}>{Math.max(0, (stats?.longestStreak ?? 0) - currentStreak)} days</Text> away from your best streak.
-            </Text>
-          </View>
-        )}
 
         {(() => {
           const feedItems = liveFeedItems.length > 0 ? liveFeedItems : (MOCK_FEED as unknown as LiveFeedCardData[]);
@@ -1097,7 +960,7 @@ export default function HomeScreen() {
                           else router.push(ROUTES.TABS_DISCOVER as never);
                         }}
                       >
-                        <Text style={styles.liveFeedCtaButtonText}>{challengeId ? "View Challenge &gt;" : "Open Challenge &gt;"}</Text>
+                        <Text style={styles.liveFeedCtaButtonText}>{challengeId ? "View Challenge >" : "Open Challenge >"}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1111,7 +974,7 @@ export default function HomeScreen() {
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{r.user}</Text> moved to Rank &apos;<Text style={{ color: DS_COLORS.success, fontWeight: "700" }}>{r.newRank}</Text>&apos;</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.success }]}>📈 +{r.discipline} Discipline this week</Text>
-                      <TouchableOpacity onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}><Text style={[styles.liveFeedPillText, { color: DS_COLORS.accent }]}>View Profile &gt;</Text></TouchableOpacity>
+                      <TouchableOpacity onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}><Text style={[styles.liveFeedPillText, { color: DS_COLORS.accent }]}>View Profile ></Text></TouchableOpacity>
                     </View>
                   </View>
                 );
@@ -1173,20 +1036,7 @@ export default function HomeScreen() {
               <Text style={styles.secureNowButtonText}>Secure Now</Text>
             </TouchableOpacity>
           </View>
-        ) : !isGuest && (
-          <TouchableOpacity
-            style={styles.yourPositionCard}
-            onPress={() => router.push(ROUTES.TABS_ACTIVITY as never)}
-            activeOpacity={0.85}
-            accessibilityLabel="View activity"
-            accessibilityRole="button"
-          >
-            <Target size={28} color={colors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
-            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Be the first this week.</Text>
-            <Text style={styles.secureNowButtonText}>View Activity</Text>
-          </TouchableOpacity>
-        )}
+        ) : null}
 
         <Text style={styles.footerTagline}>Only discipline shows here.</Text>
       </ScrollView>

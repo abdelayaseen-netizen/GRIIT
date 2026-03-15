@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Image,
   Platform,
   Alert,
 } from "react-native";
@@ -26,14 +25,7 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
 
-const MEMBER_AVATARS = [
-  "https://i.pravatar.cc/150?img=2",
-  "https://i.pravatar.cc/150?img=3",
-  "https://i.pravatar.cc/150?img=4",
-  "https://i.pravatar.cc/150?img=5",
-  "https://i.pravatar.cc/150?img=8",
-  "https://i.pravatar.cc/150?img=12",
-];
+const MOCK_MEMBER_INITIALS = ["S", "M", "J", "A", "K", "D"];
 
 export default function ChallengeChatInfoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -161,15 +153,10 @@ export default function ChallengeChatInfoScreen() {
           </View>
           <TouchableOpacity style={styles.membersCard}>
             <View style={styles.avatarStack}>
-              {MEMBER_AVATARS.slice(0, 5).map((avatar, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: avatar }}
-                  style={[
-                    styles.stackAvatar,
-                    { marginLeft: index > 0 ? -10 : 0, zIndex: 5 - index },
-                  ]}
-                />
+              {MOCK_MEMBER_INITIALS.slice(0, 5).map((initial, index) => (
+                <View key={index} style={[styles.stackAvatar, { marginLeft: index > 0 ? -10 : 0, zIndex: 5 - index }]}>
+                  <InitialCircle username={initial} size={36} />
+                </View>
               ))}
               <View style={[styles.stackAvatar, styles.moreAvatar, { marginLeft: -10 }]}>
                 <Text style={styles.moreAvatarText}>+{Math.max(0, (challenge.participantsCount ?? challenge.participants_count ?? 0) - 5)}</Text>

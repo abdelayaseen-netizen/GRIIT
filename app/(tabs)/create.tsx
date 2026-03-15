@@ -1259,7 +1259,7 @@ export default function CreateScreen() {
           {step > 1 && (
             <TouchableOpacity style={styles.backButton} onPress={handleBack} accessibilityLabel="Go to previous step" accessibilityRole="button">
               <ChevronLeft size={20} color={DS_COLORS.textSecondary} />
-              <Text style={styles.backButtonText}>&lt; Back</Text>
+              <Text style={styles.backButtonText}>{"<"} Back</Text>
             </TouchableOpacity>
           )}
           <View style={styles.footerSpacer} />

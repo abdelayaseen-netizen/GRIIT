@@ -72,15 +72,9 @@ import {
   DS_BORDERS,
   DS_MEASURES,
 } from "@/lib/design-system";
+import { InitialCircle } from "@/src/components/ui";
 
-const AVATAR_URLS = [
-  "https://i.pravatar.cc/80?img=10",
-  "https://i.pravatar.cc/80?img=12",
-  "https://i.pravatar.cc/80?img=15",
-  "https://i.pravatar.cc/80?img=18",
-  "https://i.pravatar.cc/80?img=22",
-  "https://i.pravatar.cc/80?img=25",
-];
+const MOCK_PARTICIPANTS = ["A", "K", "M", "J", "S"];
 
 /** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
@@ -255,15 +249,10 @@ function InfoChip({ label, theme: _theme, dark }: { label: string; theme: Diffic
 function SocialAvatars() {
   return (
     <View style={s.avatarStack}>
-      {AVATAR_URLS.slice(0, 5).map((url, i) => (
-        <Image
-          key={i}
-          source={{ uri: url }}
-          style={[
-            s.stackAvatar,
-            { marginLeft: i === 0 ? 0 : -10, zIndex: 5 - i },
-          ]}
-        />
+      {MOCK_PARTICIPANTS.map((initial, i) => (
+        <View key={i} style={[s.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }]}>
+          <InitialCircle username={initial} size={32} />
+        </View>
       ))}
     </View>
   );

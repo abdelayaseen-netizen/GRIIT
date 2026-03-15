@@ -31,8 +31,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: tabActive,
         tabBarInactiveTintColor: tabInactive,
         headerShown: false,
+        sceneStyle: { backgroundColor: "#FAF8F5" },
         tabBarStyle: {
-          backgroundColor: tabBg,
+          backgroundColor: "#FAF8F5",
           borderTopColor: tabBorder,
           borderTopWidth: 1,
           paddingTop: 8,
