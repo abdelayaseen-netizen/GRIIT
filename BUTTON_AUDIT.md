@@ -222,14 +222,12 @@
 
 ## PHASE 4: DEAD SCREEN CHECK (ORPHAN SCREENS)
 
-Screens in `app/` that are **not reachable** from any button or navigation in the scanned code:
+**Update:** The following four orphan screens were **removed** in a follow-up cleanup (no inbound navigation):
 
-| Screen File | Expected Purpose | How to Reach |
-|-------------|------------------|--------------|
-| `app/commitment.tsx` | Standalone commitment before joining challenge | **No inbound navigation found.** Challenge detail uses an in-screen commitment modal instead of pushing to this route. Consider deep link or removing if unused. |
-| `app/onboarding-questions.tsx` | Onboarding questions step | **No direct router.push/replace to this route in scanned code.** May be reached via deep link or legacy flow. |
-| `app/day1-quick-win.tsx` | Day 1 quick win flow | **No direct navigation to this route in scanned code.** Likely reached via deep link or backend-driven flow (e.g. starters API). |
-| `app/day-missed.tsx` | Day missed reminder | **No direct navigation to this route in scanned code.** Likely reached via push notification or backend redirect. |
+- ~~`app/commitment.tsx`~~ — deleted (challenge detail uses in-screen commitment modal only)
+- ~~`app/onboarding-questions.tsx`~~ — deleted
+- ~~`app/day1-quick-win.tsx`~~ — deleted
+- ~~`app/day-missed.tsx`~~ — deleted
 
 **Reachable only by system/redirect:**
 
@@ -253,12 +251,12 @@ See **Phase 2 & 3** table above (full list with validation).
 
 ### Table 3: Orphan Screens (Unreachable)
 
-| Screen File | Expected Purpose | How to Reach |
-|-------------|------------------|--------------|
-| `app/commitment.tsx` | Standalone commitment screen | No button/link found; challenge uses in-screen modal. Add link or deep link if still required. |
-| `app/onboarding-questions.tsx` | Onboarding questions | No direct nav in code; possible deep link or legacy. |
-| `app/day1-quick-win.tsx` | Day 1 quick win | No direct nav; likely deep link or backend. |
-| `app/day-missed.tsx` | Day missed | No direct nav; likely push/backend. |
+| Status | Screen File | Note |
+|--------|-------------|------|
+| Removed | ~~app/commitment.tsx~~ | Deleted in cleanup; challenge uses in-screen modal only. |
+| Removed | ~~app/onboarding-questions.tsx~~ | Deleted in cleanup. |
+| Removed | ~~app/day1-quick-win.tsx~~ | Deleted in cleanup. |
+| Removed | ~~app/day-missed.tsx~~ | Deleted in cleanup. |
 
 ### Table 4: Navigation Summary by Screen
 
@@ -291,6 +289,5 @@ See **Phase 2 & 3** table above (full list with validation).
 
 ## RECOMMENDATIONS
 
-1. **Commitment screen:** Either add a navigation path to `app/commitment.tsx` (e.g. from challenge detail as an alternative to the modal) or remove the route if the modal fully replaces it.
-2. **Onboarding path:** Fixed. `router.replace("/onboarding/signup")` was replaced with `router.replace("/auth/signup")` in OnboardingLayout and store/onboardingStore step-8 route.
-3. **Orphan screens (day-missed, day1-quick-win, onboarding-questions):** Confirm intended entry (deep links, push, backend). If none, consider removing or adding explicit entry points.
+1. **Onboarding path:** Fixed. `router.replace("/onboarding/signup")` was replaced with `router.replace("/auth/signup")` in OnboardingLayout and store/onboardingStore step-8 route.
+2. **Orphan screens:** Resolved. The four unreachable screens (commitment, onboarding-questions, day1-quick-win, day-missed) were removed in a follow-up cleanup.

@@ -161,7 +161,6 @@ function AuthRedirector() {
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
     const inTabs = first === "(tabs)";
     const inChallenge = first === "challenge";
 
@@ -171,7 +170,7 @@ function AuthRedirector() {
     }
 
     // Only redirect TO tabs when not already in tabs — don't redirect when viewing challenge detail (or we'd dump user to Home)
-    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin && !inTabs && !inChallenge) {
+    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inTabs && !inChallenge) {
       router.replace(ROUTES.TABS as never);
       return;
     }
@@ -319,13 +318,6 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen 
-        name="commitment" 
-        options={{ 
-          headerShown: false,
-          presentation: "modal"
-        }} 
-      />
-      <Stack.Screen 
         name="secure-confirmation" 
         options={{ 
           headerShown: false,
@@ -339,16 +331,7 @@ function RootLayoutNav() {
           presentation: "modal"
         }} 
       />
-      <Stack.Screen 
-        name="day-missed" 
-        options={{ 
-          headerShown: false,
-          presentation: "modal"
-        }} 
-      />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding-questions" options={{ headerShown: false }} />
-      <Stack.Screen name="day1-quick-win" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="+not-found" />
     </Stack>
     </View>

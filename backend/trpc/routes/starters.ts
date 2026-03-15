@@ -35,7 +35,7 @@ export const startersRouter = createTRPCRouter({
   /**
    * Join a starter challenge (same as challenges.join but by starterId).
    * Requires challenges to be seeded with source_starter_id.
-   * Returns activeChallengeId and first taskId for day1-quick-win.
+   * Returns activeChallengeId and first taskId. (Previously used by day1-quick-win screen — screen removed as orphan.)
    */
   join: protectedProcedure
     .input(z.object({ starterId: z.string() }))
