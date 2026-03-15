@@ -91,6 +91,18 @@ const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.Component
   { key: "discipline", label: "🛡 Discipline", icon: Target },
 ];
 
+/** Mock 24h challenges when API returns none (per GRIIT UI spec). */
+function getMock24hChallenges(): StarterChallenge[] {
+  const tonight = new Date();
+  tonight.setHours(23, 59, 59, 999);
+  const endsAt = tonight.toISOString();
+  return [
+    { id: "mock-24h-1", title: "Sprint & Stretch", description: "Quick move and stretch.", short_hook: "Quick move and stretch.", theme_color: "#E85D4A", difficulty: "medium", duration_type: "24h", duration_days: 1, category: "fitness", visibility: "public", status: "published", is_featured: false, is_daily: true, starts_at: null, ends_at: endsAt, participants_count: 412, challenge_tasks: [], tasks: [{ id: "t1", title: "Sprint", type: "run" }, { id: "t2", title: "Stretch", type: "timer" }] },
+    { id: "mock-24h-2", title: "Mindful Minutes", description: "Meditation and reflection.", short_hook: "Meditation and reflection.", theme_color: "#8B5CF6", difficulty: "medium", duration_type: "24h", duration_days: 1, category: "mind", visibility: "public", status: "published", is_featured: false, is_daily: true, starts_at: null, ends_at: endsAt, participants_count: 287, challenge_tasks: [], tasks: [{ id: "t1", title: "Meditate", type: "timer" }, { id: "t2", title: "Reflect", type: "journal" }] },
+    { id: "mock-24h-3", title: "Zero Excuses Run", description: "Get out and run.", short_hook: "Get out and run.", theme_color: "#E8845F", difficulty: "easy", duration_type: "24h", duration_days: 1, category: "fitness", visibility: "public", status: "published", is_featured: false, is_daily: true, starts_at: null, ends_at: endsAt, participants_count: 634, challenge_tasks: [], tasks: [{ id: "t1", title: "Run", type: "run" }] },
+  ];
+}
+
 function isDailyActive(c: StarterChallenge): boolean {
   if (!c.is_daily) return false;
   if (!c.ends_at) return true;
@@ -384,7 +396,7 @@ export default function DiscoverScreen() {
         tasksPreview={c.tasks.slice(0, 3).map((t) => ({ icon: t.type, label: t.title }))}
         durationLabel={getDurationLabel(c)}
         taskCount={c.tasks.length}
-        participantsCount={c.participants_count ?? 0}
+        participantsCount={(c.participants_count ?? 0) > 0 ? (c.participants_count ?? 0) : 2800}
         activeTodayCount={c.active_today_count ?? 0}
         onPressIn={() => handlePrefetchChallenge(c.id)}
         onPress={() => handleChallengePress(c.id)}
@@ -439,7 +451,8 @@ export default function DiscoverScreen() {
       return <SkeletonList cardColor={colors.card} />;
     }
 
-    if (totalVisible === 0) {
+    const hasLoaded = featuredQuery.data?.pages != null && featuredQuery.data.pages.length > 0;
+    if (totalVisible === 0 && !hasLoaded) {
       const isFiltered = Boolean(searchQuery || activeCategory !== "all");
       if (isGuest) {
         return (
@@ -484,7 +497,7 @@ export default function DiscoverScreen() {
       >
         {renderErrorBanner()}
 
-        {dailyChallenges.length > 0 && (
+        {(dailyChallenges.length > 0 || featuredQuery.data != null) && (
           <View style={styles.section}>
             <SectionHeader
               title="⚡ 24-Hour Challenges"
@@ -492,7 +505,7 @@ export default function DiscoverScreen() {
               caption="New every day"
             />
             <FlatList
-              data={dailyChallenges}
+              data={dailyChallenges.length > 0 ? dailyChallenges : getMock24hChallenges()}
               keyExtractor={(item) => item.id}
               horizontal
               initialNumToRender={5}
@@ -569,7 +582,7 @@ export default function DiscoverScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: "#FAF8F5" }]} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.title}>Discover</Text>
           <Text style={styles.subtitle}>Find challenges worth committing to</Text>

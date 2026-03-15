@@ -27,16 +27,16 @@ export function GRIITWordmark({
         style={[
           styles.wordmark,
           {
-            color,
-            fontSize: DS_TYPOGRAPHY.wordmark.fontSize,
-            fontWeight: DS_TYPOGRAPHY.wordmark.fontWeight,
-            letterSpacing: DS_TYPOGRAPHY.wordmark.letterSpacing,
-            lineHeight: DS_TYPOGRAPHY.wordmark.lineHeight,
+            color: color === DS_COLORS.textPrimary ? DS_COLORS.navyDark : color,
+            fontSize: 24,
+            fontWeight: "800",
+            letterSpacing: 3,
+            lineHeight: 28,
           },
         ]}
         allowFontScaling={false}
       >
-        {spaced ? "G R I T" : "GRIIT"}
+        GRIT
       </Text>
       {subtitle ? (
         <Text

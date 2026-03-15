@@ -71,7 +71,7 @@ import {
   DS_BORDERS,
   DS_SHADOWS,
 } from "@/lib/design-system";
-import { GRIITWordmark } from "@/src/components/ui";
+import { GRIITWordmark, InitialCircle } from "@/src/components/ui";
 import ViewShot from "react-native-view-shot";
 import { ShareCard } from "@/components/ShareCard";
 import { shareProgressImage, shareDaySecured } from "@/lib/share";
@@ -768,53 +768,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {!isGuest && (
-          <View style={[styles.statsRowCard, { backgroundColor: SURFACE_SUBTLE }]}>
-            <View style={styles.statsRowCol}>
-              <Flame size={20} color={DS_COLORS.accent} />
-              <Text style={styles.statsRowNum}>{currentStreak}</Text>
-              <Text style={styles.statsRowLabel}>STREAK</Text>
-            </View>
-            <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
-            <View style={styles.statsRowCol}>
-              <TrendingUp size={20} color={DS_COLORS.textPrimary} />
-              <Text style={styles.statsRowNum}>{stats?.longestStreak ?? 0}</Text>
-              <Text style={styles.statsRowLabel}>SCORE</Text>
-            </View>
-            <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
-            <View style={styles.statsRowCol}>
-              <View style={[styles.statsRowDot, { backgroundColor: DS_COLORS.accent }]} />
-              <Text style={styles.statsRowNum}>{tierName ?? "—"}</Text>
-              <Text style={styles.statsRowLabel}>RANK</Text>
-            </View>
-          </View>
-        )}
-
-        {!isGuest && (nextTierName != null || tierName) && (
-          <View style={styles.tierProgressSection}>
-            <Text style={[styles.tierProgressTitle, { color: colors.text.primary }]}>
-              {pointsToNextTier > 0 && nextTierName ? `${pointsToNextTier} pts to ${nextTierName}.` : tierName ? `${tierName}.` : "Keep building."}
-            </Text>
-            <Text style={[styles.tierProgressSub, { color: colors.text.muted }]}>Keep pushing.</Text>
-            <View style={[styles.tierProgressCard, { backgroundColor: colors.card, borderColor: colors.border }, DS_SHADOWS.card]}>
-              {pointsToNextTier > 0 && nextTierName && (
-                <View style={styles.metricsRow}>
-                  <Flame size={18} color={colors.text.secondary} />
-                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
-                </View>
-              )}
-              {leaderboardData != null && (
-                <View style={styles.metricsRow}>
-                  <Users size={18} color={colors.text.secondary} />
-                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>
-                    {leaderboardData.totalSecuredToday} friends secured today
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
         {showRecoveryBanner && (
           <View style={[styles.recoveryBanner, { backgroundColor: colors.warningLight, borderColor: colors.border }]}>
             <AlertTriangle size={18} color={colors.warning} />
@@ -917,86 +870,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {!isGuest && (
-          <>
-            <DailyStatus
-              state={isDaySecured ? "SECURED" : "NOT_SECURED"}
-              remainingTasksCount={homeTotalRemaining}
-              onSecureToday={canSecureDay ? () => requireAuth("secure", handleSecureDay) : undefined}
-              currentStreak={currentStreak}
-              disciplinePointsLabel={tierName ? `${tierName} · ${stats?.totalDaysSecured ?? 0} days secured` : undefined}
-            />
-            {secureError ? (
-              <Text
-                style={{ color: DS_COLORS.errorText, fontSize: 13, marginTop: 6, textAlign: 'center' }}
-                accessibilityLiveRegion="polite"
-              >
-                {secureError}
-              </Text>
-            ) : null}
-            {isDaySecured && (
-              <TouchableOpacity
-                onPress={() => {
-                  track({ name: "share_tapped", share_type: "progress" });
-                  setShowShareProgressModal(true);
-                }}
-                style={styles.shareProgressButton}
-                activeOpacity={0.8}
-                accessibilityLabel="Share your progress"
-                accessibilityRole="button"
-              >
-                <Text style={[styles.shareProgressButtonText, { color: colors.accent }]}>Share your progress</Text>
-              </TouchableOpacity>
-            )}
-            <ExploreChallengesButton />
-            {!isGuest && leaderboardEntries.length > 0 && (
-              <TouchableOpacity
-                style={[styles.leaderboardPreviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={() => router.push(ROUTES.TABS_ACTIVITY as never)}
-                activeOpacity={0.9}
-                accessibilityLabel="See full leaderboard"
-                accessibilityRole="button"
-              >
-                <View style={styles.leaderboardPreviewHeader}>
-                  <Trophy size={18} color={colors.accent} />
-                  <Text style={[styles.leaderboardPreviewTitle, { color: colors.text.primary }]}>Top this week</Text>
-                  <ChevronRight size={18} color={colors.text.muted} style={{ marginLeft: "auto" }} />
-                </View>
-                <View style={styles.leaderboardPreviewRow}>
-                  {leaderboardEntries.slice(0, 3).map((e, i) => (
-                    <View key={e.userId ?? i} style={styles.leaderboardPreviewItem}>
-                      <Image source={{ uri: e.avatarUrl ?? `https://i.pravatar.cc/150?u=${e.userId}` }} style={styles.leaderboardPreviewAvatar} contentFit="cover" />
-                      <Text style={[styles.leaderboardPreviewName, { color: colors.text.primary }]} numberOfLines={1}>{e.displayName ?? e.username ?? "—"}</Text>
-                      <Text style={[styles.leaderboardPreviewScore, { color: colors.accent }]}>+{e.securedDaysThisWeek ?? 0}</Text>
-                    </View>
-                  ))}
-                </View>
-                <Text style={[styles.leaderboardPreviewLink, { color: colors.accent }]}>See full leaderboard</Text>
-              </TouchableOpacity>
-            )}
-            {homeDataError ? (
-              <View style={styles.yourPositionCard}>
-                <AlertTriangle size={28} color={colors.text.muted} />
-                <Text style={[styles.yourPositionLabel, { color: colors.text.muted }]}>CHALLENGES</Text>
-                <Text style={[styles.yourPositionText, { color: colors.text.primary }]}>Couldn&apos;t load your challenges. Check your connection and try again.</Text>
-                <TouchableOpacity
-                  style={[styles.secureNowButton, { backgroundColor: colors.accent }]}
-                  onPress={() => homeActiveQuery.refetch()}
-                  activeOpacity={0.85}
-                  accessibilityLabel="Retry loading challenges"
-                  accessibilityRole="button"
-                >
-                  <RefreshCw size={18} color={DS_COLORS.white} />
-                  <Text style={styles.secureNowButtonText}>Retry</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <ActiveChallenges
-                challengesWithProgress={homeChallengesWithProgress}
-                refreshKey={homeActiveQuery.dataUpdatedAt ?? 0}
-              />
-            )}
-            {hasActiveChallenge && tasks.length > 0 && (
+        {!isGuest && hasActiveChallenge && tasks.length > 0 && (
               <View style={styles.todaysResetCard}>
                 <View style={styles.todaysResetHeader}>
                   <Clock size={18} color={colors.text.primary} />
@@ -1021,28 +895,25 @@ export default function HomeScreen() {
                 </View>
               </View>
             )}
-          </>
-        )}
 
         {!isGuest && (
-          <View style={styles.statsSummaryCard}>
-            <View style={[styles.statsSummaryCol, { borderRightColor: colors.border }]}>
-              <Flame size={20} color={colors.accent} />
-              <Text style={[styles.statsSummaryValue, { color: colors.text.primary }]}>{currentStreak}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: colors.text.secondary }]}>Streak</Text>
-              {lastStandsAvailable >= 0 && (
-                <Text style={[styles.statsSummaryLastStand, { color: colors.text.muted }]}>Last Stands: {lastStandsAvailable}</Text>
-              )}
+          <View style={[styles.statsRowCard, { backgroundColor: SURFACE_SUBTLE }]}>
+            <View style={styles.statsRowCol}>
+              <Flame size={20} color={DS_COLORS.accent} />
+              <Text style={styles.statsRowNum}>{currentStreak}</Text>
+              <Text style={styles.statsRowLabel}>STREAK</Text>
             </View>
-            <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder, { borderRightColor: colors.border }]}>
-              <TrendingUp size={20} color={colors.success} />
-              <Text style={[styles.statsSummaryValue, { color: colors.text.primary }]}>{stats?.longestStreak ?? 0}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: colors.text.secondary }]}>Score</Text>
+            <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
+            <View style={styles.statsRowCol}>
+              <TrendingUp size={20} color={DS_COLORS.textPrimary} />
+              <Text style={styles.statsRowNum}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={styles.statsRowLabel}>SCORE</Text>
             </View>
-            <View style={styles.statsSummaryCol}>
-              <Target size={20} color={colors.accent} />
-              <Text style={[styles.statsSummaryValue, { color: colors.text.primary }]}>{tierName ?? "Starter"}</Text>
-              <Text style={[styles.statsSummaryLabel, { color: colors.text.secondary }]}>Rank</Text>
+            <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
+            <View style={styles.statsRowCol}>
+              <View style={[styles.statsRowDot, { backgroundColor: DS_COLORS.accent }]} />
+              <Text style={styles.statsRowNum}>{tierName ?? "—"}</Text>
+              <Text style={styles.statsRowLabel}>RANK</Text>
             </View>
           </View>
         )}
@@ -1063,54 +934,6 @@ export default function HomeScreen() {
 
         {hasActiveChallenge ? (
             <>
-            <View style={[styles.todaysResetCard, { backgroundColor: SURFACE_SUBTLE }]}>
-              <View style={styles.todaysResetHeader}>
-                <Clock size={18} color={colors.accent} />
-                <Text style={styles.todaysResetTitle}>Today{"'"}s Reset</Text>
-                <Text style={styles.todaysResetTime}>
-                  {(() => {
-                    const { hours, minutes } = getTimeUntilMidnight();
-                    return `${hours}h ${minutes}m left`;
-                  })()}
-                </Text>
-              </View>
-              {tasks.length > 0 ? (
-                <View style={styles.todaysResetTaskList}>
-                  {tasks.map((task) => (
-                    <View key={task.id} style={styles.todaysResetTaskRow}>
-                      <Circle size={18} color={colors.border} strokeWidth={2} />
-                      <Text style={[styles.todaysResetTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.todaysResetTaskList}>
-                  <View style={styles.todaysResetTaskRow}>
-                    <Text style={styles.todaysResetTaskText}>No tasks yet — open your challenge to see today’s list.</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.statsSummaryCard}>
-              <View style={styles.statsSummaryCol}>
-                <Flame size={20} color={colors.accent} />
-                <Text style={styles.statsSummaryValue}>{currentStreak}</Text>
-                <Text style={styles.statsSummaryLabel}>Streak</Text>
-                <Text style={styles.statsSummaryLastStand}>Last Stands: {lastStandsAvailable}</Text>
-              </View>
-              <View style={[styles.statsSummaryCol, styles.statsSummaryColBorder]}>
-                <TrendingUp size={20} color={colors.accent} />
-                <Text style={styles.statsSummaryValue}>{stats?.longestStreak ?? 0}</Text>
-                <Text style={styles.statsSummaryLabel}>Score</Text>
-              </View>
-              <View style={styles.statsSummaryCol}>
-                <Target size={20} color={colors.text.muted} />
-                <Text style={styles.statsSummaryValue}>{tierName}</Text>
-                <Text style={styles.statsSummaryLabel}>Rank</Text>
-              </View>
-            </View>
-
             <TouchableOpacity
               style={[styles.challengeCard, ((challenge as Record<string, unknown>)?.difficulty === "hard" || (challenge as Record<string, unknown>)?.difficulty === "extreme") && styles.challengeCardHard]}
               onPress={() => {
@@ -1218,7 +1041,7 @@ export default function HomeScreen() {
                 const s = item as Extract<MockFeedItem, { type: "secured" }>;
                 return (
                   <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border }]}>
-                    <Image source={{ uri: `https://i.pravatar.cc/150?u=${s.user}` }} style={styles.liveFeedAvatar} />
+                    <InitialCircle username={s.user} size={44} />
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{s.user}</Text> secured Day {s.day} of {s.challenge}</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent }]}>🔥 Streak: {s.streak} days</Text>
@@ -1235,7 +1058,7 @@ export default function HomeScreen() {
                 const m = item as Extract<MockFeedItem, { type: "milestone" }>;
                 return (
                   <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderLeftWidth: 3, borderLeftColor: DS_COLORS.gold }]}>
-                    <View style={[styles.liveFeedIconCircle, { backgroundColor: DS_COLORS.accentLight }]}><Trophy size={20} color={DS_COLORS.gold} /></View>
+                    <View style={[styles.liveFeedIconCircle, { backgroundColor: "#FFF8E1" }]}><Trophy size={20} color={DS_COLORS.gold} /></View>
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}>Hit <Text style={[styles.liveFeedBold, { color: DS_COLORS.accent }]}>{m.days} days</Text> straight</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>Top {m.topPercent}% this week</Text>
@@ -1246,6 +1069,7 @@ export default function HomeScreen() {
               }
               if ("type" in item && item.type === "challenge_cta") {
                 const c = item as Extract<MockFeedItem, { type: "challenge_cta" }>;
+                const challengeId = "challengeId" in c ? (c as { challengeId?: string }).challengeId : undefined;
                 return (
                   <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border }]}>
                     <View style={[styles.liveFeedIconCircle, { backgroundColor: DS_COLORS.accentLight }]}><Zap size={20} color={DS_COLORS.accent} /></View>
@@ -1253,8 +1077,14 @@ export default function HomeScreen() {
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{c.percent}%</Text> of participants secured today</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>in {c.challenge}</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent, fontWeight: "600" }]}>Are you in?</Text>
-                      <TouchableOpacity style={[styles.liveFeedCtaButton, { backgroundColor: DS_COLORS.accent }]} onPress={() => router.push(ROUTES.CHALLENGE_ID(c.challengeId) as never)}>
-                        <Text style={styles.liveFeedCtaButtonText}>Open Challenge &gt;</Text>
+                      <TouchableOpacity
+                        style={[styles.liveFeedCtaButton, { backgroundColor: DS_COLORS.accent }]}
+                        onPress={() => {
+                          if (challengeId) router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
+                          else router.push(ROUTES.TABS_DISCOVER as never);
+                        }}
+                      >
+                        <Text style={styles.liveFeedCtaButtonText}>{challengeId ? "View Challenge &gt;" : "Open Challenge &gt;"}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1264,9 +1094,9 @@ export default function HomeScreen() {
                 const r = item as Extract<MockFeedItem, { type: "rank_up" }>;
                 return (
                   <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderLeftWidth: 3, borderLeftColor: DS_COLORS.accent }]}>
-                    <Image source={{ uri: `https://i.pravatar.cc/150?u=${r.user}` }} style={styles.liveFeedAvatar} />
+                    <InitialCircle username={r.user} size={44} />
                     <View style={styles.liveFeedBody}>
-                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{r.user}</Text> moved to Rank &apos;{r.newRank}&apos;</Text>
+                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{r.user}</Text> moved to Rank &apos;<Text style={{ color: DS_COLORS.success, fontWeight: "700" }}>{r.newRank}</Text>&apos;</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.success }]}>📈 +{r.discipline} Discipline this week</Text>
                       <TouchableOpacity onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}><Text style={[styles.liveFeedPillText, { color: DS_COLORS.accent }]}>View Profile &gt;</Text></TouchableOpacity>
                     </View>
@@ -2100,6 +1930,14 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
   },
+  initialCircle: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  initialCircleText: {
+    color: DS_COLORS.white,
+    fontWeight: "700",
+  },
   liveFeedBody: {
     flex: 1,
   },
@@ -2129,6 +1967,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderWidth: 0,
   },
   liveFeedPillText: {
     fontSize: 14,

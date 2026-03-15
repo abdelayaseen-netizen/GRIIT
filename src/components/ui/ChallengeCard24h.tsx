@@ -62,7 +62,7 @@ function ChallengeCard24hInner(p: {
   const diff = DIFF_STYLES[p.difficulty] ?? DIFF_STYLES.Medium;
   const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
   const { colors: themeColors } = useTheme();
-  const topBarColor = TOP_BAR_COLORS[(p.index ?? 0) % 4];
+  const topBarColor = p.stripeColor || TOP_BAR_COLORS[(p.index ?? 0) % 4];
   const cardWidth = p.cardWidth ?? 280;
   return (
     <TouchableOpacity
@@ -120,7 +120,7 @@ const s = StyleSheet.create({
     elevation: 2,
   },
   topBar: {
-    height: 5,
+    height: 3,
     width: "100%",
   },
   body: {

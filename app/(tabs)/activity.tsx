@@ -28,6 +28,7 @@ import {
   HandMetal,
 } from "lucide-react-native";
 import { Image } from "expo-image";
+import { InitialCircle } from "@/src/components/ui";
 import * as Haptics from "expo-haptics";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
@@ -319,7 +320,7 @@ function TopThisWeekRow({ entries, styles }: { entries: LeaderboardEntry[]; styl
       {top4.map((entry) => (
         <View key={entry.id} style={styles.topThisWeekItem}>
           <View style={styles.topThisWeekAvatarWrap}>
-            <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.topThisWeekAvatar} contentFit="cover" />
+            <InitialCircle username={entry.displayName || entry.username || entry.userId} size={36} />
             <View style={[styles.topThisWeekRankBadge, entry.rank === 1 && styles.topThisWeekRankBadgeGold]}>
               <Text style={styles.topThisWeekRankText}>{entry.rank}</Text>
             </View>
@@ -357,7 +358,7 @@ function LeaderboardSection({ entries, styles }: { entries: LeaderboardEntry[]; 
             <View style={[styles.topThreeRankCircle, { backgroundColor: rankCircleColor(entry.rank) + "22" }]}>
               <Text style={[styles.topThreeRankText, { color: rankCircleColor(entry.rank) }]}>{entry.rank}</Text>
             </View>
-            <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.topThreeAvatar} contentFit="cover" />
+            <InitialCircle username={entry.displayName || entry.username || entry.userId} size={48} />
             <Text style={styles.topThreeName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
             <Text style={styles.topThreeScore}>+{entry.score}</Text>
             {entry.badge && (
@@ -379,7 +380,7 @@ function LeaderboardSection({ entries, styles }: { entries: LeaderboardEntry[]; 
         renderItem={({ item: entry }) => (
           <View style={styles.leaderboardRow}>
             <Text style={styles.leaderboardRankNum}>#{entry.rank}</Text>
-            <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.leaderboardAvatar} contentFit="cover" />
+            <InitialCircle username={entry.displayName || entry.username || entry.userId} size={40} />
             <View style={styles.leaderboardInfo}>
               <View style={styles.leaderboardNameRow}>
                 <Text style={styles.leaderboardName} numberOfLines={1}>{entry.displayName || entry.username}</Text>
@@ -437,7 +438,7 @@ function MovementFeedSection({
               return (
                 <View style={styles.movementFeedItem}>
                   <View style={styles.movementFeedAvatarWrap}>
-                    <Image source={{ uri: entry.avatar || `https://i.pravatar.cc/150?u=${entry.userId}` }} style={styles.movementFeedAvatar} contentFit="cover" />
+                    <InitialCircle username={entry.displayName || entry.username || entry.userId} size={44} />
                   </View>
                   <View style={styles.movementFeedBody}>
                     <View style={styles.movementFeedNameRow}>
@@ -713,11 +714,7 @@ function CommunityActivityFeedSection({
               accessibilityRole="button"
             >
               <View style={styles.movementFeedAvatarWrap}>
-                <Image
-                  source={{ uri: e.avatar_url || `https://i.pravatar.cc/150?u=${e.user_id}` }}
-                  style={styles.movementFeedAvatar}
-                  contentFit="cover"
-                />
+                <InitialCircle username={e.display_name || e.username || e.user_id || "?"} size={44} />
               </View>
               <View style={styles.movementFeedBody}>
                 <Text style={styles.movementFeedDesc}>{desc}</Text>

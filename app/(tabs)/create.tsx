@@ -704,7 +704,60 @@ export default function CreateScreen() {
         />
       </View>
 
-      {/* Who's in this challenge section removed per GRIIT UI spec — flow is solo only */}
+      <View style={styles.fieldGroup}>
+        <Text style={[styles.label, { fontSize: 12, fontWeight: "600", color: "#9B9B9B", letterSpacing: 1 }]}>WHO&apos;S IN THIS CHALLENGE?</Text>
+        <View style={styles.whosInRow}>
+          <TouchableOpacity
+            style={[
+              styles.whosInCard,
+              participationType === "solo" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: "#FFF0EA" },
+            ]}
+            onPress={() => setParticipationType("solo")}
+            activeOpacity={0.85}
+            accessibilityLabel="Solo"
+            accessibilityRole="button"
+          >
+            <View style={[styles.whosInIconWrap, { backgroundColor: DS_COLORS.accent + "22" }]}>
+              <User size={20} color={DS_COLORS.accent} />
+            </View>
+            <Text style={[styles.whosInTitle, participationType === "solo" && { color: DS_COLORS.accent }]}>Solo</Text>
+            <Text style={styles.whosInDesc}>Just you. Complete every task, every day.</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.whosInCard,
+              participationType === "team" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: "#FFF0EA" },
+            ]}
+            onPress={() => setParticipationType("team")}
+            activeOpacity={0.85}
+            accessibilityLabel="Team"
+            accessibilityRole="button"
+          >
+            <View style={[styles.whosInIconWrap, { backgroundColor: DS_COLORS.accent + "22" }]}>
+              <Users size={20} color={DS_COLORS.accent} />
+            </View>
+            <Text style={[styles.whosInTitle, participationType === "team" && { color: DS_COLORS.accent }]}>Team</Text>
+            <Text style={styles.whosInDesc}>2-10 people. Everyone must complete every task.</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.whosInCard,
+              participationType === "shared_goal" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: "#FFF0EA" },
+            ]}
+            onPress={() => setParticipationType("shared_goal")}
+            activeOpacity={0.85}
+            accessibilityLabel="Shared Goal"
+            accessibilityRole="button"
+          >
+            <View style={[styles.whosInIconWrap, { backgroundColor: DS_COLORS.accent + "22" }]}>
+              <Target size={20} color={DS_COLORS.accent} />
+            </View>
+            <Text style={[styles.whosInTitle, participationType === "shared_goal" && { color: DS_COLORS.accent }]}>Shared Goal</Text>
+            <Text style={styles.whosInDesc}>2-10 people. Work together toward one goal.</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {false && isSharedGoal && (
         <>
           <View style={styles.fieldGroup}>

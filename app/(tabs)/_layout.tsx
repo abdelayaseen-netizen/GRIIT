@@ -23,7 +23,7 @@ export default function TabLayout() {
   const tabActive = DS_COLORS.accent;
   const tabInactive = DS_COLORS.textMuted;
   const isCreateScreen = typeof pathname === "string" && pathname.includes("create");
-  const centerBtnBg = isCreateScreen ? colors.accent : DS_COLORS.commitmentButtonBg;
+  const centerBtnBg = DS_COLORS.commitmentButtonBg;
 
   return (
     <Tabs

@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     color: DS_COLORS.textMuted,
-    letterSpacing: 1,
+    letterSpacing: 2,
     textTransform: "uppercase",
   },
   tierBadge: {
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textPrimary,
   },
   score: {
-    fontSize: 48,
+    fontSize: 36,
     fontWeight: "800",
     color: DS_COLORS.textPrimary,
   },

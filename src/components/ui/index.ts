@@ -21,6 +21,7 @@ export { CreateFlowCheckbox } from "./CreateFlowCheckbox";
 export { EnforcementBlock } from "./EnforcementBlock";
 export { DailyTaskRow } from "./DailyTaskRow";
 export { GRIITWordmark } from "./GRIITWordmark";
+export { InitialCircle } from "./InitialCircle";
 export { OnboardingProgress } from "./OnboardingProgress";
 export { OnboardingCTA } from "./OnboardingCTA";
 export { SelectionCard } from "./SelectionCard";

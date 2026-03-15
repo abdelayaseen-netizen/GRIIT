@@ -47,6 +47,8 @@ export const notificationsRouter = createTRPCRouter({
         reminder_time: z.string().max(16).optional(),
         timezone: z.string().max(64).optional(),
         enabled: z.boolean().optional(),
+        last_call_enabled: z.boolean().optional(),
+        friend_activity_enabled: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -54,6 +56,8 @@ export const notificationsRouter = createTRPCRouter({
       if (input.reminder_time !== undefined) update.reminder_time = input.reminder_time;
       if (input.timezone !== undefined) update.reminder_timezone = input.timezone;
       if (input.enabled !== undefined) update.reminder_enabled = input.enabled;
+      if (input.last_call_enabled !== undefined) update.last_call_enabled = input.last_call_enabled;
+      if (input.friend_activity_enabled !== undefined) update.friend_activity_enabled = input.friend_activity_enabled;
       if (Object.keys(update).length === 0) return { success: true };
 
       const { error } = await ctx.supabase
@@ -68,7 +72,7 @@ export const notificationsRouter = createTRPCRouter({
   getReminderSettings: protectedProcedure.query(async ({ ctx }) => {
     const { data, error } = await ctx.supabase
       .from("profiles")
-      .select("reminder_time, preferred_secure_time, reminder_enabled, reminder_timezone")
+      .select("reminder_time, preferred_secure_time, reminder_enabled, reminder_timezone, last_call_enabled, friend_activity_enabled")
       .eq("user_id", ctx.userId)
       .single();
 
@@ -80,11 +84,15 @@ export const notificationsRouter = createTRPCRouter({
       preferred_secure_time?: string | null;
       reminder_enabled?: boolean | null;
       reminder_timezone?: string | null;
+      last_call_enabled?: boolean | null;
+      friend_activity_enabled?: boolean | null;
     } | null;
     return {
       reminder_time: row?.reminder_time ?? row?.preferred_secure_time ?? "09:00",
       enabled: row?.reminder_enabled !== false,
       timezone: row?.reminder_timezone ?? "UTC",
+      last_call_enabled: row?.last_call_enabled !== false,
+      friend_activity_enabled: row?.friend_activity_enabled !== false,
     };
   }),
 });

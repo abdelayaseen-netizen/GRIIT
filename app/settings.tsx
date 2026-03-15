@@ -139,9 +139,16 @@ export default function SettingsScreen() {
       return;
     }
     try {
-      const data = await trpcQuery(TRPC.notifications.getReminderSettings) as { reminder_time: string; enabled: boolean };
+      const data = await trpcQuery(TRPC.notifications.getReminderSettings) as {
+        reminder_time?: string;
+        enabled?: boolean;
+        last_call_enabled?: boolean;
+        friend_activity_enabled?: boolean;
+      };
       setReminderTime(data?.reminder_time ?? "09:00");
       setDailyReminder(data?.enabled !== false);
+      setLastCall(data?.last_call_enabled !== false);
+      setFriendActivity(data?.friend_activity_enabled !== false);
     } catch {
       // ignore
     } finally {
@@ -379,9 +386,16 @@ export default function SettingsScreen() {
               </View>
               <Switch
                 value={lastCall}
-                onValueChange={(v) => {
+                onValueChange={async (v) => {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  const prev = lastCall;
                   setLastCall(v);
+                  if (isGuest) return;
+                  try {
+                    await trpcMutate(TRPC.notifications.updateReminderSettings, { last_call_enabled: v });
+                  } catch {
+                    setLastCall(prev);
+                  }
                 }}
                 trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
                 thumbColor={lastCall ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}
@@ -397,9 +411,16 @@ export default function SettingsScreen() {
               </View>
               <Switch
                 value={friendActivity}
-                onValueChange={(v) => {
+                onValueChange={async (v) => {
                   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  const prev = friendActivity;
                   setFriendActivity(v);
+                  if (isGuest) return;
+                  try {
+                    await trpcMutate(TRPC.notifications.updateReminderSettings, { friend_activity_enabled: v });
+                  } catch {
+                    setFriendActivity(prev);
+                  }
                 }}
                 trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
                 thumbColor={friendActivity ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}

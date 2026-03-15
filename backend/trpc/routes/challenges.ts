@@ -427,10 +427,20 @@ export const challengesRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
     }),
 
-  /** Leave a challenge: remove active_challenge (and cascade check_ins) or remove from challenge_members if team waiting. */
+  /** Leave a challenge: remove active_challenge (and cascade check_ins) or remove from challenge_members if team waiting. Creator cannot leave. */
   leave: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
+      const { data: challenge } = await ctx.supabase
+        .from("challenges")
+        .select("creator_id")
+        .eq("id", input.challengeId)
+        .maybeSingle();
+      const creatorId = (challenge as { creator_id?: string } | null)?.creator_id;
+      if (creatorId && creatorId === ctx.userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You cannot leave a challenge you created." });
+      }
+
       const { data: ac } = await ctx.supabase
         .from("active_challenges")
         .select("id")

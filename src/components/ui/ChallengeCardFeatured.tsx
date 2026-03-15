@@ -92,12 +92,8 @@ function ChallengeCardFeaturedInner(props: {
             <Text style={s.metaDot}>·</Text>
             <Users size={12} color={DS_COLORS.textMuted} />
             <Text style={s.metaText}>{formatCount(participantsCount)}</Text>
-            {activeTodayCount > 0 && (
-              <>
-                <Text style={s.metaDot}>·</Text>
-                <Text style={[s.activeToday, { color: DS_COLORS.success, fontWeight: "600" }]}>{formatCount(activeTodayCount)} active today</Text>
-              </>
-            )}
+            <Text style={s.metaDot}>·</Text>
+            <Text style={[s.activeToday, { color: DS_COLORS.success, fontWeight: "600" }]}>{formatCount(activeTodayCount)} active today</Text>
           </View>
           <Text style={[s.chevron, { color: DS_COLORS.textMuted }]}>&gt;</Text>
         </View>
