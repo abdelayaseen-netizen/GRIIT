@@ -150,7 +150,7 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
-    color: ACCENT_ORANGE,
+    color: DS_COLORS.accent,
   },
   diffPill: {
     paddingHorizontal: 10,
@@ -190,7 +190,7 @@ const s = StyleSheet.create({
   taskChipText: {
     fontSize: 13,
     fontWeight: "500",
-    color: MUTED_TEXT,
+    color: DS_COLORS.textMuted,
     maxWidth: 120,
   },
   metaRow: {
