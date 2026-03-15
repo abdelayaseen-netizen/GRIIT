@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, Stack } from "expo-router";
 import { ChevronLeft, Users } from "lucide-react-native";
@@ -37,18 +37,27 @@ export default function TeamsScreen() {
           <Text style={[styles.sub, { color: DS_COLORS.textSecondary }]}>
             Teams of 5–10 have 3x higher retention. Create or join a squad to hold each other accountable.
           </Text>
+          {/* TODO: Replace with real team creation flow when backend supports teams */}
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: DS_COLORS.commitmentButtonBg }]}
-            onPress={() => {}}
+            style={[styles.primaryBtn, { backgroundColor: DS_COLORS.commitmentButtonBg, opacity: 0.5 }]}
+            onPress={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              Alert.alert("Coming Soon", "Team creation will be available in a future update. Stay tuned!");
+            }}
             activeOpacity={0.85}
             accessibilityLabel="Create a team"
             accessibilityRole="button"
           >
             <Text style={styles.primaryBtnText}>+ Create a Team</Text>
           </TouchableOpacity>
+          <Text style={styles.comingSoonLabel}>Coming Soon</Text>
+          {/* TODO: Replace with real join-by-code flow when backend supports teams */}
           <TouchableOpacity
-            style={[styles.secondaryBtn, { borderColor: DS_COLORS.border, backgroundColor: DS_COLORS.surface }]}
-            onPress={() => {}}
+            style={[styles.secondaryBtn, { borderColor: DS_COLORS.border, backgroundColor: DS_COLORS.surface, opacity: 0.5 }]}
+            onPress={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              Alert.alert("Coming Soon", "Joining teams with a code will be available in a future update.");
+            }}
             activeOpacity={0.85}
             accessibilityLabel="Join with code"
             accessibilityRole="button"
@@ -56,6 +65,7 @@ export default function TeamsScreen() {
             <Text style={[styles.secondaryBtnIcon, { color: DS_COLORS.textSecondary }]}>👥</Text>
             <Text style={[styles.secondaryBtnText, { color: DS_COLORS.textPrimary }]}>Join with Code</Text>
           </TouchableOpacity>
+          <Text style={styles.comingSoonLabel}>Coming Soon</Text>
         </View>
       </SafeAreaView>
     </>
@@ -101,6 +111,12 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     lineHeight: 22,
     marginBottom: DS_SPACING.xxl,
+  },
+  comingSoonLabel: {
+    fontSize: 12,
+    fontStyle: "italic",
+    color: DS_COLORS.textMuted,
+    marginBottom: DS_SPACING.md,
   },
   primaryBtn: {
     width: "100%",

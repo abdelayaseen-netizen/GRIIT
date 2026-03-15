@@ -4,15 +4,22 @@
  */
 
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
 import {
   Flame,
   Trophy,
   Zap,
   Users,
 } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
+
+// TODO: Wire to API when respect/chase endpoints exist
+function respectChasePlaceholder() {
+  if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!");
+}
 
 const STRIPE_WIDTH = 3 as const;
 
@@ -80,8 +87,8 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
           </View>
           <View style={styles.pillRow}>
             <TouchableOpacity
-              style={[styles.pillBtn, { borderColor: colors.border }]}
-              onPress={data.onRespect}
+              style={[styles.pillBtn, { borderColor: colors.border }, !data.onRespect && { opacity: 0.6 }]}
+              onPress={data.onRespect ?? respectChasePlaceholder}
               activeOpacity={0.8}
               accessibilityLabel="Send respect"
               accessibilityRole="button"
@@ -90,8 +97,8 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
               <Text style={[styles.pillBtnText, { color: colors.accent }]}>Respect {data.respectCount ?? 0}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.pillBtn, { borderColor: colors.border }]}
-              onPress={data.onChase}
+              style={[styles.pillBtn, { borderColor: colors.border }, !data.onChase && { opacity: 0.6 }]}
+              onPress={data.onChase ?? respectChasePlaceholder}
               activeOpacity={0.8}
               accessibilityLabel="Chase this user"
               accessibilityRole="button"
@@ -121,7 +128,7 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
               <Text style={[styles.metaMuted, { color: colors.text.muted }]}>
                 Top {data.topPercent ?? 0}% this week
               </Text>
-              <TouchableOpacity style={[styles.pillBtn, { borderColor: colors.border, alignSelf: "flex-start", marginTop: 8 }]} onPress={data.onRespect} activeOpacity={0.8} accessibilityLabel="Send respect" accessibilityRole="button">
+              <TouchableOpacity style={[styles.pillBtn, { borderColor: colors.border, alignSelf: "flex-start", marginTop: 8 }, !data.onRespect && { opacity: 0.6 }]} onPress={data.onRespect ?? respectChasePlaceholder} activeOpacity={0.8} accessibilityLabel="Send respect" accessibilityRole="button">
                 <Flame size={14} color={colors.accent} />
                 <Text style={[styles.pillBtnText, { color: colors.accent }]}>Respect {data.respectCount ?? 0}</Text>
               </TouchableOpacity>

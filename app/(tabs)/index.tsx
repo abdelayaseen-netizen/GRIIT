@@ -1047,8 +1047,13 @@ export default function HomeScreen() {
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent }]}>🔥 Streak: {s.streak} days</Text>
                       <Text style={[styles.liveFeedTime, { color: DS_COLORS.textMuted }]}>{s.timeAgo}</Text>
                       <View style={styles.liveFeedPills}>
-                        <TouchableOpacity style={styles.liveFeedPill}><Text style={styles.liveFeedPillText}>Respect {s.respect}</Text></TouchableOpacity>
-                        <TouchableOpacity style={styles.liveFeedPill} onPress={() => router.push(ROUTES.PROFILE_USERNAME(s.user) as never)}><Text style={styles.liveFeedPillText}>Chase</Text></TouchableOpacity>
+                        {/* TODO: Wire to API when respect/chase endpoints exist */}
+                        <TouchableOpacity style={[styles.liveFeedPill, { opacity: 0.6 }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
+                          <Text style={styles.liveFeedPillText}>Respect {s.respect}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.liveFeedPill, { opacity: 0.6 }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
+                          <Text style={styles.liveFeedPillText}>Chase</Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
                   </View>
@@ -1062,7 +1067,10 @@ export default function HomeScreen() {
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}>Hit <Text style={[styles.liveFeedBold, { color: DS_COLORS.accent }]}>{m.days} days</Text> straight</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>Top {m.topPercent}% this week</Text>
-                      <TouchableOpacity style={styles.liveFeedPill}><Text style={styles.liveFeedPillText}>Respect {m.respect}</Text></TouchableOpacity>
+                      {/* TODO: Wire to API when respect/chase endpoints exist */}
+                      <TouchableOpacity style={[styles.liveFeedPill, { opacity: 0.6 }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
+                        <Text style={styles.liveFeedPillText}>Respect {m.respect}</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 );
