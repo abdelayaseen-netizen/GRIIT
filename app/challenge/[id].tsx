@@ -734,7 +734,7 @@ export default function ChallengeDetailScreen() {
               await leaveMutation.mutateAsync({ challengeId: id });
               await refetchAll();
               await refetchTodayCheckins();
-              router.replace(ROUTES.TABS as never);
+              router.replace(ROUTES.TABS_DISCOVER as never);
             } catch (e: unknown) {
               const { title, message } = formatTRPCError(e);
               Alert.alert(title, message);
