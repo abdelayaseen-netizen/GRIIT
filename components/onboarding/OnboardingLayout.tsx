@@ -20,7 +20,6 @@ const STEP_FROM_PATH: Record<string, number> = {
   "/onboarding/social": 5,
   "/onboarding/proof": 6,
   "/onboarding/challenge": 7,
-  "/onboarding/signup": 8,
   "/onboarding/first-task": 9,
 };
 
@@ -99,7 +98,7 @@ export function OnboardingLayout({
 
           {showSkip ? (
             <TouchableOpacity
-              onPress={() => router.replace("/onboarding/signup" as never)}
+              onPress={() => router.replace("/auth/signup" as never)}
               style={styles.skipBtn}
               activeOpacity={0.7}
               accessibilityLabel="Skip to sign up"

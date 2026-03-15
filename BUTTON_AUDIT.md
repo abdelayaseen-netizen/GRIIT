@@ -68,7 +68,7 @@
 - `components/profile/ShareDisciplineCard.tsx` — (share, no nav)
 - `components/AuthGateModal.tsx` — router.push Sign up / Login
 - `components/PremiumPaywallModal.tsx` — router.push Pricing
-- `components/onboarding/OnboardingLayout.tsx` — router.back, router.replace /onboarding/signup
+- `components/onboarding/OnboardingLayout.tsx` — router.back, router.replace /auth/signup (Skip to sign up)
 - `components/onboarding/OnboardingFlow.tsx` — router.replace(path)
 
 ### 1.3 Hooks / utils that trigger navigation
@@ -195,7 +195,7 @@
 | 110 | `components/AuthGateModal.tsx` | Sign up / Log in | — | router.push | `/auth/signup`, `/auth/login` | ✅ | — |
 | 111 | `components/PremiumPaywallModal.tsx` | Upgrade / CTA | — | router.push | `/pricing` | ✅ | params: source |
 | 112 | `components/onboarding/OnboardingLayout.tsx` | Back | Pressable | router.back | Back | 🔄 | — |
-| 113 | `components/onboarding/OnboardingLayout.tsx` | (Sign up link) | — | router.replace | `/onboarding/signup` | ⚠️ | Route is onboarding flow; may mean different step |
+| 113 | `components/onboarding/OnboardingLayout.tsx` | Skip (to sign up) | TouchableOpacity | router.replace | `/auth/signup` | ✅ | Fixed: was /onboarding/signup (no such route) |
 | 114 | `hooks/useSubscription.ts` | (When premium required) | — | router.push | `/pricing` | ✅ | params: source |
 
 ---
@@ -216,7 +216,7 @@
 
 **Validation key:** ✅ Route exists and matches | ⚠️ Route exists but params/usage may vary | 🔄 Navigates back (router.back / goBack)
 
-**Finding:** All targets used in the audit exist as files under `app/`. No broken route strings found. One minor note: OnboardingLayout uses `router.replace("/onboarding/signup")` — there is no literal `app/onboarding/signup.tsx`; onboarding is a single flow in `app/onboarding/index.tsx` with steps. If "signup" is intended as a step, it may need to be handled inside the flow (e.g. step index or query) rather than as a path.
+**Finding:** All targets used in the audit exist as files under `app/`. No broken route strings found. **Resolved:** OnboardingLayout previously used `router.replace("/onboarding/signup")` (no such file). It was updated to `router.replace("/auth/signup")` so "Skip to sign up" navigates to the real auth signup screen.
 
 ---
 
@@ -285,12 +285,12 @@ See **Phase 2 & 3** table above (full list with validation).
 - ✅ All `app/` and navigation-related `components/` and `hooks/` scanned.
 - ✅ Every interactive element that triggers navigation or meaningful action included (back, push, replace, tab, link).
 - ✅ Duplicates noted (e.g. multiple “Back” or “Discover” from home).
-- ✅ Inconsistencies noted: OnboardingLayout uses `/onboarding/signup` (no such file; flow is single route with steps).
+- ✅ Inconsistencies resolved: OnboardingLayout now uses `/auth/signup` instead of non-existent `/onboarding/signup`.
 
 ---
 
 ## RECOMMENDATIONS
 
 1. **Commitment screen:** Either add a navigation path to `app/commitment.tsx` (e.g. from challenge detail as an alternative to the modal) or remove the route if the modal fully replaces it.
-2. **Onboarding path:** Replace or document `router.replace("/onboarding/signup")` so it aligns with the actual onboarding flow (e.g. step or query param).
+2. **Onboarding path:** Fixed. `router.replace("/onboarding/signup")` was replaced with `router.replace("/auth/signup")` in OnboardingLayout and store/onboardingStore step-8 route.
 3. **Orphan screens (day-missed, day1-quick-win, onboarding-questions):** Confirm intended entry (deep links, push, backend). If none, consider removing or adding explicit entry points.

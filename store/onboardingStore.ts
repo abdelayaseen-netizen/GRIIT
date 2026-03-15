@@ -14,7 +14,7 @@ const ONBOARDING_STEP_ROUTES: Record<number, string> = {
   5: "/onboarding/social",
   6: "/onboarding/proof",
   7: "/onboarding/challenge",
-  8: "/onboarding/signup",
+  8: "/auth/signup",
   9: "/onboarding/first-task",
 };
 
