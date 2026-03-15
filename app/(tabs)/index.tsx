@@ -55,7 +55,7 @@ import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedC
 import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
 import { useTheme } from "@/contexts/ThemeContext";
-import { MOCK_FEED, MOCK_SUGGESTED, type MockFeedItem } from "@/constants/mockFeedData";
+import type { MockFeedItem } from "@/constants/mockFeedData";
 import { SURFACE_SUBTLE } from "@/constants/theme";
 import { formatTimeRemaining } from "@/lib/challenge-timer";
 import {
@@ -635,10 +635,10 @@ export default function HomeScreen() {
         </View>
 
         {!isGuest && !hasActiveChallenge && (
-          <View style={[styles.welcomeCard, { backgroundColor: DS_COLORS.accentLight, borderColor: DS_COLORS.accent, borderWidth: 2, borderStyle: "dashed" }]}>
+          <View style={[styles.welcomeCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, borderWidth: 1 }]}>
             <RefreshCw size={24} color={DS_COLORS.accent} style={{ marginBottom: 8 }} />
             <Text style={styles.welcomeCardTitle}>
-              {((stats?.totalDaysSecured ?? 0) > 0 ? "Welcome back." : "Start your first challenge.")}
+              {((stats?.totalDaysSecured ?? 0) > 0 ? "Welcome back." : "Welcome back.")}
             </Text>
             <Text style={styles.welcomeCardSub}>
               {((stats?.totalDaysSecured ?? 0) > 0
@@ -646,13 +646,13 @@ export default function HomeScreen() {
                 : "Pick a challenge, commit, and secure your first day.")}
             </Text>
             <TouchableOpacity
-              style={[styles.welcomeCardButton, { backgroundColor: DS_COLORS.accent }]}
+              style={[styles.welcomeCardButtonOutlined, { borderColor: DS_COLORS.accent }]}
               onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
               activeOpacity={0.85}
               accessibilityLabel={(stats?.totalDaysSecured ?? 0) > 0 ? "Pick a Challenge" : "Find a challenge"}
               accessibilityRole="button"
             >
-              <Text style={styles.welcomeCardButtonText}>{(stats?.totalDaysSecured ?? 0) > 0 ? "Pick a Challenge" : "Find a challenge"}</Text>
+              <Text style={[styles.welcomeCardButtonOutlinedText, { color: DS_COLORS.accent }]}>Pick a Challenge</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -749,10 +749,10 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {!hasActiveChallenge && (suggestedChallenges.length > 0 || MOCK_SUGGESTED.length > 0) && (
+        {!hasActiveChallenge && suggestedChallenges.length > 0 && (
           <View style={styles.suggestedChallengesSection}>
             <Text style={[styles.suggestedChallengesTitle, { color: DS_COLORS.textMuted, letterSpacing: 1, fontSize: 12, fontWeight: "600" }]}>SUGGESTED FOR YOU</Text>
-            {(suggestedChallenges.length > 0 ? suggestedChallenges.slice(0, 3) : MOCK_SUGGESTED).map((c: { id: string; title?: string }) => (
+            {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string }) => (
               <TouchableOpacity
                 key={c.id}
                 style={[styles.suggestedChallengeRow, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
@@ -778,26 +778,25 @@ export default function HomeScreen() {
         </View>
 
         {(() => {
-          const feedItems = liveFeedItems.length > 0 ? liveFeedItems : (MOCK_FEED as unknown as LiveFeedCardData[]);
+          const feedItems = liveFeedItems;
           if (feedItems.length > 0) {
             return feedItems.map((item: MockFeedItem | LiveFeedCardData, i: number) => {
               const key = `${(item as MockFeedItem).type ?? (item as LiveFeedCardData).type}-${i}`;
               if ("type" in item && item.type === "secured") {
                 const s = item as Extract<MockFeedItem, { type: "secured" }>;
                 return (
-                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border }]}>
+                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border, borderLeftWidth: 4, borderLeftColor: DS_COLORS.accent }]}>
                     <InitialCircle username={s.user} size={44} />
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{s.user}</Text> secured Day {s.day} of {s.challenge}</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent }]}>🔥 Streak: {s.streak} days</Text>
                       <Text style={[styles.liveFeedTime, { color: DS_COLORS.textMuted }]}>{s.timeAgo}</Text>
                       <View style={styles.liveFeedPills}>
-                        {/* TODO: Wire to API when respect/chase endpoints exist */}
-                        <TouchableOpacity style={[styles.liveFeedPill, { opacity: 0.6 }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
-                          <Text style={styles.liveFeedPillText}>Respect {s.respect}</Text>
+                        <TouchableOpacity style={[styles.liveFeedPill, { backgroundColor: DS_COLORS.surfaceMuted, borderWidth: 1, borderColor: DS_COLORS.border }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
+                          <Text style={[styles.liveFeedPillText, { color: DS_COLORS.textPrimary }]}>Respect {s.respect}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.liveFeedPill, { opacity: 0.6 }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
-                          <Text style={styles.liveFeedPillText}>Chase</Text>
+                        <TouchableOpacity style={[styles.liveFeedPill, { backgroundColor: DS_COLORS.surfaceMuted, borderWidth: 1, borderColor: DS_COLORS.border }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
+                          <Text style={[styles.liveFeedPillText, { color: DS_COLORS.textPrimary }]}>Chase</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -813,8 +812,8 @@ export default function HomeScreen() {
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}>Hit <Text style={[styles.liveFeedBold, { color: DS_COLORS.accent }]}>{m.days} days</Text> straight</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>Top {m.topPercent}% this week</Text>
                       {/* TODO: Wire to API when respect/chase endpoints exist */}
-                      <TouchableOpacity style={[styles.liveFeedPill, { opacity: 0.6 }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
-                        <Text style={styles.liveFeedPillText}>Respect {m.respect}</Text>
+                      <TouchableOpacity style={[styles.liveFeedPill, { backgroundColor: DS_COLORS.surfaceMuted, borderWidth: 1, borderColor: DS_COLORS.border }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
+                        <Text style={[styles.liveFeedPillText, { color: DS_COLORS.textPrimary }]}>Respect {m.respect}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -837,7 +836,7 @@ export default function HomeScreen() {
                           else router.push(ROUTES.TABS_DISCOVER as never);
                         }}
                       >
-                        <Text style={styles.liveFeedCtaButtonText}>{challengeId ? "View Challenge >" : "Open Challenge >"}</Text>
+                        <Text style={styles.liveFeedCtaButtonText}>Open Challenge {'>'}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -851,7 +850,9 @@ export default function HomeScreen() {
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{r.user}</Text> moved to Rank &apos;<Text style={{ color: DS_COLORS.success, fontWeight: "700" }}>{r.newRank}</Text>&apos;</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.success }]}>📈 +{r.discipline} Discipline this week</Text>
-                      <TouchableOpacity onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}><Text style={[styles.liveFeedPillText, { color: DS_COLORS.accent }]}>View Profile {'>'}</Text></TouchableOpacity>
+                      <TouchableOpacity style={[styles.liveFeedViewProfileBtn, { borderColor: DS_COLORS.border }]} onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}>
+                        <Text style={[styles.liveFeedViewProfileBtnText, { color: DS_COLORS.accent }]}>View Profile {'>'}</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 );
@@ -1350,6 +1351,18 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     color: "#FFFFFF",
   },
+  welcomeCardButtonOutlined: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: "center",
+    alignSelf: "stretch",
+  },
+  welcomeCardButtonOutlinedText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+  },
   tierProgressSection: {
     marginBottom: DS_SPACING.lg,
   },
@@ -1406,7 +1419,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textPrimary,
   },
   todaysResetCard: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: SURFACE_SUBTLE,
     borderRadius: DS_RADIUS.cardAlt,
     padding: DS_SPACING.cardPadding,
     marginBottom: DS_SPACING.cardGap,
@@ -1698,7 +1711,19 @@ const styles = StyleSheet.create({
   liveFeedCtaButtonText: {
     color: DS_COLORS.white,
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "600" as const,
+  },
+  liveFeedViewProfileBtn: {
+    alignSelf: "flex-start",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  liveFeedViewProfileBtnText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
   },
   liveFeedEmpty: {
     padding: DS_SPACING.xxl,

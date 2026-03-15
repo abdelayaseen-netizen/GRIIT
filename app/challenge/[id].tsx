@@ -73,8 +73,6 @@ import {
 } from "@/lib/design-system";
 import { InitialCircle } from "@/src/components/ui";
 
-const MOCK_PARTICIPANTS = ["A", "K", "M", "J", "S"];
-
 /** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
   headerBg: string;
@@ -245,12 +243,14 @@ function InfoChip({ label, theme: _theme, dark }: { label: string; theme: Diffic
   );
 }
 
-function SocialAvatars() {
+function SocialAvatars({ participantsCount, participantUsernames }: { participantsCount: number; participantUsernames?: string[] }) {
+  const showAvatars = participantsCount > 0 && participantUsernames && participantUsernames.length > 0;
+  if (!showAvatars) return null;
   return (
     <View style={s.avatarStack}>
-      {MOCK_PARTICIPANTS.map((initial, i) => (
-        <View key={i} style={[s.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }]}>
-          <InitialCircle username={initial} size={32} />
+      {participantUsernames!.slice(0, 5).map((username, i) => (
+        <View key={username + i} style={[s.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }]}>
+          <InitialCircle username={username} size={32} />
         </View>
       ))}
     </View>
@@ -856,6 +856,7 @@ export default function ChallengeDetailScreen() {
   const progressPercent = isJoined && durationDays > 0
     ? Math.min((userCurrentDay / durationDays) * 100, 100)
     : 0;
+  const participantUsernames = (challenge as { participant_usernames?: string[] }).participant_usernames;
 
   return (
     <View style={[s.container, { backgroundColor: isDaily ? DS_COLORS.background : themeColors.background }]}>
@@ -934,13 +935,11 @@ export default function ChallengeDetailScreen() {
               </View>
 
               <View style={s.heroContent}>
-                {isDaily ? (
+                {isDaily && (
                   <View style={s.dailyLabel}>
                     <Zap size={11} color="rgba(255,255,255,0.8)" />
                     <Text style={s.dailyLabelText}>24-HOUR CHALLENGE</Text>
                   </View>
-                ) : (
-                  <Text style={s.heroEyebrow}>CHALLENGE</Text>
                 )}
                 <Text style={s.heroTitle}>{challenge.title}</Text>
                 <Text style={s.heroTagline} numberOfLines={2}>{challenge.short_hook || challenge.description}</Text>
@@ -1081,7 +1080,7 @@ export default function ChallengeDetailScreen() {
             {/* Participants summary card */}
             <View style={s.participantStatsCard}>
               <View style={s.socialRow}>
-                <SocialAvatars />
+                <SocialAvatars participantsCount={challenge.participants_count ?? 0} participantUsernames={participantUsernames} />
                 <View style={s.socialTextWrap}>
                   <Text style={s.socialPrimary}>
                     {formatCount(challenge.participants_count ?? 0)} in this challenge

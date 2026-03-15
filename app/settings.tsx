@@ -41,10 +41,10 @@ const REMINDER_PRESETS = [
 
 
 const CONSEQUENCES = [
-  { bulletColor: "#E8A230", title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
-  { bulletColor: "#D2734A", title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
-  { bulletColor: "#DC4A3C", title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
-  { bulletColor: "#B91C1C", title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
+  { bulletColor: "#F5A623", title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
+  { bulletColor: "#E8734A", title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
+  { bulletColor: "#E8453C", title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
+  { bulletColor: "#E8453C", title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
 ] as const;
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
@@ -341,8 +341,8 @@ export default function SettingsScreen() {
                 <Switch
                   value={dailyReminder}
                   onValueChange={handleReminderToggle}
-                  trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
-                  thumbColor={dailyReminder ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}
+                  trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+                  thumbColor={dailyReminder ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
                   accessibilityLabel="Toggle daily reminder"
                   accessibilityRole="switch"
                 />
@@ -397,8 +397,8 @@ export default function SettingsScreen() {
                     setLastCall(prev);
                   }
                 }}
-                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
-                thumbColor={lastCall ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+                thumbColor={lastCall ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
                 accessibilityLabel="Toggle last call reminder"
                 accessibilityRole="switch"
               />
@@ -422,8 +422,8 @@ export default function SettingsScreen() {
                     setFriendActivity(prev);
                   }
                 }}
-                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.toggleTrackOn }}
-                thumbColor={friendActivity ? DS_COLORS.accent : DS_COLORS.switchThumbInactive}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+                thumbColor={friendActivity ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
                 accessibilityLabel="Toggle friend activity notifications"
                 accessibilityRole="switch"
               />

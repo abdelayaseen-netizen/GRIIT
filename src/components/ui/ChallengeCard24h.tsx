@@ -73,18 +73,18 @@ function ChallengeCard24hInner(p: {
       accessibilityRole="button"
     >
       <View style={[s.topBar, { backgroundColor: topBarColor }]} />
+      <View style={[s.diffPillAbsolute, { backgroundColor: diff.bg }]}>
+        <Text style={[s.diffText, { color: diff.text }]}>{p.difficulty.toUpperCase()}</Text>
+      </View>
       <View style={s.body}>
         <View style={s.topRow}>
           <View style={s.countdownPill}>
             <Clock size={10} color="#DC2626" />
             <Text style={s.countdownText}>{countdown}</Text>
           </View>
-          <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
-            <Text style={[s.diffText, { color: diff.text }]}>{p.difficulty.toUpperCase()}</Text>
-          </View>
         </View>
-        <Text style={s.title} numberOfLines={1}>{p.title}</Text>
-        <Text style={s.desc} numberOfLines={1}>{p.description}</Text>
+        <Text style={s.title} numberOfLines={1} ellipsizeMode="tail">{p.title}</Text>
+        <Text style={s.desc} numberOfLines={1} ellipsizeMode="tail">{p.description}</Text>
         <View style={s.chipsRow}>
           {p.tasksPreview.slice(0, 2).map((task, i) => (
             <View key={i} style={s.taskChip}>
@@ -127,10 +127,18 @@ const s = StyleSheet.create({
     padding: 16,
     minWidth: 0,
   },
+  diffPillAbsolute: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     marginBottom: 8,
   },
   countdownPill: {
@@ -156,7 +164,7 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
   },
-  taskChipText: { fontSize: 12, fontWeight: "500", color: "#7A7A6D", maxWidth: 100 },
+  taskChipText: { fontSize: 12, fontWeight: "500", color: "#7A7A6D", maxWidth: 90 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   participants: { flexDirection: "row", alignItems: "center", gap: 4 },
   participantsEmoji: { fontSize: 12 },

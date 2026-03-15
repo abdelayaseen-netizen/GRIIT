@@ -20,7 +20,7 @@ export default function TabLayout() {
   }, [user]);
   const tabBorder = DS_COLORS.border;
   const tabActive = DS_COLORS.accent;
-  const tabInactive = DS_COLORS.textMuted;
+  const tabInactive = DS_COLORS.textSecondary;
   const centerBtnBg = DS_COLORS.commitmentButtonBg;
 
   return (
@@ -29,9 +29,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: tabActive,
         tabBarInactiveTintColor: tabInactive,
         headerShown: false,
-        sceneStyle: { backgroundColor: "#FAF8F5" },
+        sceneStyle: { backgroundColor: DS_COLORS.background },
         tabBarStyle: {
-          backgroundColor: "#FAF8F5",
+          backgroundColor: "#FFFFFF",
           borderTopColor: tabBorder,
           borderTopWidth: 1,
           paddingTop: 8,

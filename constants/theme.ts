@@ -1,32 +1,32 @@
 /**
- * GRIIT Design DNA — UI Overhaul spec.
- * Warm cream bg (#FAF8F5), charcoal text, orange accent (#E8845F).
+ * GRIIT Design DNA — UI Overhaul spec (match target designs exactly).
+ * Warm cream bg (#FDF8F4), charcoal text, warm orange accent (#E8734A).
  */
 export const BASE_COLORS = {
-  background: "#FAF8F5",
+  background: "#FDF8F4",
   surface: "#FFFFFF",
   card: "#FFFFFF",
   textPrimary: "#1A1A1A",
-  textSecondary: "#6B6B6B",
-  textMuted: "#9B9B9B",
-  accent: "#E8845F",
-  border: "#F0ECE6",
-  success: "#2D8A4E",
-  tabInactive: "#9B9B9B",
-  tabActive: "#E8845F",
+  textSecondary: "#8E8E93",
+  textMuted: "#B0A99F",
+  accent: "#E8734A",
+  border: "#F0EBE4",
+  success: "#34C759",
+  tabInactive: "#8E8E93",
+  tabActive: "#E8734A",
 } as const;
 
-/** Surface subtle (stats, Today's Reset) */
+/** Surface subtle (stats, Today's Reset) — warm cream */
 export const SURFACE_SUBTLE = "#FFF8F2";
-/** Accent light (badges, alerts) */
+/** Accent light (badges, FEATURED pill) */
 export const ACCENT_LIGHT = "#FFF0EA";
 /** Success light */
 export const SUCCESS_LIGHT = "#E8F5E9";
-/** Warning / amber */
-export const WARNING_COLOR = "#E8A82E";
+/** Warning / amber (medium difficulty) */
+export const WARNING_COLOR = "#F5A623";
 export const WARNING_LIGHT = "#FFF8E1";
-/** Danger */
-export const DANGER_COLOR = "#D94040";
+/** Danger / extreme / red */
+export const DANGER_COLOR = "#E8453C";
 export const DANGER_LIGHT = "#FFEBEE";
 /** Navy dark (GRIT logo) */
 export const NAVY_DARK = "#2C3539";
@@ -36,7 +36,7 @@ export const GOLD = "#C4960C";
 /** Dark commitment button (Continue, I Commit, Start Day 1) */
 export const COMMITMENT_BUTTON_BG = "#1A1A1A";
 /** Explore Challenges button */
-export const EXPLORE_BUTTON_BG = "#E8845F";
+export const EXPLORE_BUTTON_BG = "#E8734A";
 
 /** @deprecated Use BASE_COLORS or DS_COLORS. */
 export const COLORS = {

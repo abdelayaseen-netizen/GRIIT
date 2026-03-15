@@ -212,8 +212,8 @@ function SkeletonList({ cardColor }: { cardColor?: string }) {
 
 const FEATURED_PAGE_SIZE = 20;
 const screenWidth = Dimensions.get("window").width;
-const DAILY_CARD_WIDTH = screenWidth * 0.48;
-const DAILY_CARD_GAP = 12;
+const DAILY_CARD_WIDTH = Math.min(screenWidth * 0.72, 320);
+const DAILY_CARD_GAP = 16;
 
 export default function DiscoverScreen() {
   const router = useRouter();
@@ -516,7 +516,7 @@ export default function DiscoverScreen() {
                 index,
               })}
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[styles.dailyScrollContent, { paddingLeft: 16 }]}
+              contentContainerStyle={[styles.dailyScrollContent, { paddingLeft: 16, paddingRight: 24 }]}
               renderItem={renderDailyItem}
               snapToInterval={DAILY_CARD_WIDTH + DAILY_CARD_GAP}
               snapToAlignment="start"
@@ -586,7 +586,7 @@ export default function DiscoverScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: "#FAF8F5" }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.title}>Discover</Text>
           <Text style={styles.subtitle}>Find challenges worth committing to</Text>

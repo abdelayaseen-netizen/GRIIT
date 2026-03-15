@@ -51,6 +51,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import type { StatsFromApi } from "@/types";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
+function capitalizeDisplayName(s: string): string {
+  if (!s) return s;
+  return s
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function _openSubscriptionManagement() {
   if (Platform.OS === "ios") {
     Linking.openURL("https://apps.apple.com/account/subscriptions");
@@ -526,7 +534,7 @@ export default function ProfileScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: "#FAF8F5" }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
@@ -542,7 +550,7 @@ export default function ProfileScreen() {
           <Animated.View style={{ opacity: headerFade }}>
             <ProfileHeader
             avatarUrl={profile.avatar_url ?? undefined}
-            fullName={(profile.display_name || profile.username || "").trim() || "User"}
+            fullName={capitalizeDisplayName((profile.display_name || profile.username || "").trim() || "User")}
             username={profile.username ?? ""}
             currentTier={tierName ?? "Starter"}
             joinDate={joinedDate || undefined}

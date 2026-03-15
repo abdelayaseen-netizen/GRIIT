@@ -4,13 +4,18 @@ import { ChevronRight, Calendar } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
 
-const COMPACT_LEFT_BORDER_COLORS = ["#8B5CF6", "#3B82F6", "#14B8A6", "#F97316", "#EC4899"];
-const MUTED_TEXT = "#7A7A6D";
+const MUTED_TEXT = DS_COLORS.textSecondary;
 const DIFF_DOT_COLORS: Record<string, string> = {
-  Easy: "#16A34A",
-  Medium: "#CA8A04",
-  Hard: "#DC2626",
-  Extreme: "#991B1B",
+  Easy: DS_COLORS.success,
+  Medium: "#F5A623",
+  Hard: DS_COLORS.accent,
+  Extreme: DS_COLORS.danger,
+};
+const DIFF_BORDER_COLORS: Record<string, string> = {
+  Easy: DS_COLORS.success,
+  Medium: "#F5A623",
+  Hard: DS_COLORS.accent,
+  Extreme: DS_COLORS.danger,
 };
 
 function ChallengeRowCardInner(props: {
@@ -38,11 +43,10 @@ function ChallengeRowCardInner(props: {
     participantsCount,
     onPress,
     onPressIn,
-    index = 0,
     difficulty = "medium",
   } = props;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
-  const leftBorderColor = COMPACT_LEFT_BORDER_COLORS[index % 5];
+  const leftBorderColor = props.stripeColor ?? DIFF_BORDER_COLORS[difficulty] ?? DS_COLORS.accent;
   const dotColor = DIFF_DOT_COLORS[difficulty] ?? DIFF_DOT_COLORS.Medium;
   const { colors: themeColors } = useTheme();
   return (
@@ -57,7 +61,7 @@ function ChallengeRowCardInner(props: {
       <View style={s.content}>
         <View style={s.header}>
           <Text style={s.title} numberOfLines={1}>{title}</Text>
-          <View style={[s.difficultyDot, { backgroundColor: dotColor }]} />
+          <View style={[s.difficultyDot, { backgroundColor: dotColor }]} accessibilityLabel={`Difficulty: ${difficulty}`} />
         </View>
         <Text style={s.desc} numberOfLines={1}>{description}</Text>
         <View style={s.meta}>
@@ -69,7 +73,7 @@ function ChallengeRowCardInner(props: {
         </View>
       </View>
       <View style={s.arrowWrap}>
-        <ChevronRight size={16} color={MUTED_TEXT} />
+        <ChevronRight size={18} color={DS_COLORS.textSecondary} />
       </View>
     </TouchableOpacity>
   );
@@ -115,6 +119,7 @@ const s = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginLeft: 8,
+    alignSelf: "center",
   },
   desc: {
     fontSize: 13,

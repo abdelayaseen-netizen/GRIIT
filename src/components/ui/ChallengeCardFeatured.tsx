@@ -62,7 +62,7 @@ function ChallengeCardFeaturedInner(props: {
       accessibilityLabel={`${title}, ${participantsCount} participants`}
       accessibilityRole="button"
     >
-      <View style={s.stripe} />
+      <View style={[s.stripe, { backgroundColor: DS_COLORS.accent }]} />
       <View style={s.content}>
         <View style={s.topRow}>
           <View style={[s.featuredBadge, { backgroundColor: DS_COLORS.accentLight }]}>
@@ -95,7 +95,7 @@ function ChallengeCardFeaturedInner(props: {
             <Text style={s.metaDot}>·</Text>
             <Text style={[s.activeToday, { color: DS_COLORS.success, fontWeight: "600" }]}>{formatCount(activeTodayCount)} active today</Text>
           </View>
-          <Text style={[s.chevron, { color: DS_COLORS.textMuted }]}>&gt;</Text>
+          <Text style={[s.chevron, { color: DS_COLORS.textSecondary }]}>&gt;</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -119,7 +119,7 @@ const s = StyleSheet.create({
     elevation: 2,
   },
   stripe: {
-    width: 3,
+    width: 4,
     alignSelf: "stretch",
   },
   content: {
@@ -140,7 +140,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: DS_COLORS.accentLight,
   },
   featuredBadgeText: {
     fontSize: 11,
@@ -222,6 +222,6 @@ const s = StyleSheet.create({
   chevron: {
     fontSize: 16,
     fontWeight: "600",
-    color: DS_COLORS.textMuted,
+    color: DS_COLORS.textSecondary,
   },
 });
