@@ -574,10 +574,11 @@ export interface StatsFromApi {
   activeChallenges?: number;
 }
 
-/** Profile as returned by profiles.get (subscription_status, subscription_expiry, etc.). */
+/** Profile as returned by profiles.get (subscription_status, subscription_expiry, tier, etc.). */
 export interface ProfileFromApi {
   subscription_status?: string | null;
   subscription_expiry?: string | null;
+  tier?: string | null;
   display_name?: string | null;
   avatar_url?: string | null;
   username?: string | null;

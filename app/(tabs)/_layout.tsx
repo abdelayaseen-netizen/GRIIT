@@ -3,16 +3,13 @@ import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
-import { useApp } from "@/contexts/AppContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
-import { PremiumBadge } from "@/components/PremiumBadge";
 import { DS_COLORS, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { isPremium } = useApp();
   const { colors, colorScheme } = useTheme();
   const pushRegistrationAttempted = useRef(false);
 

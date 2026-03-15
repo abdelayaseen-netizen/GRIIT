@@ -31,7 +31,7 @@ export default function ChallengeCompleteScreen() {
 
   const [showCelebration, setShowCelebration] = useState(true);
   const [shareError, setShareError] = useState(false);
-  const shareCardRef = useRef<{ capture?: () => Promise<string> } | null>(null);
+  const shareCardRef = useRef<InstanceType<typeof ViewShot> | null>(null);
 
   useEffect(() => {
     track({

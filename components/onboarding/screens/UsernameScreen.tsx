@@ -169,7 +169,7 @@ export default function UsernameScreen({ onComplete }: UsernameScreenProps) {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={[styles.primaryButtonText, (username.length < 3 || !displayName.trim()) && styles.primaryButtonTextDisabled]}>
-              Let's go
+              Let&apos;s go
             </Text>
           )}
         </Pressable>

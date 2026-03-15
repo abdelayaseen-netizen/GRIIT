@@ -45,7 +45,6 @@ export const DS_COLORS = {
   createChallengeGreen: "#2D5A3E",
 
   // Semantic
-  success: "#2F7A52",
   successSoft: "#EAF5F0",
   warning: "#F5A623",
   warningSoft: "#FFFBEB",
@@ -94,7 +93,7 @@ export const DS_COLORS = {
   overlayDark: "#111",
   overlayDarker: "#0f0f0f",
   modalBackdrop: "rgba(0,0,0,0.5)",
-  grayMuted: "#999",
+  grayMuted: "#7A7A6D",
   grayMedium: "#6B7280",
   filterChipActiveBg: "#444",
 
@@ -104,7 +103,6 @@ export const DS_COLORS = {
   chipFill: "#F0EDE6",
   chipStroke: "#E0DDD6",
   inputPlaceholder: "#888884",
-  tabInactive: "#888884",
   centerButtonBg: "#1C1C1E",
 
   // Difficulty badges
@@ -167,8 +165,8 @@ export const DS_COLORS = {
   packBorderFaith: "#93C5FD",
   packBorderOrange: "#FDBA74",
   taskIndigoBg: "#6366F115",
-  grayDark: "#666666",
-  grayDarker: "#555555",
+  grayDark: "#7A7A6D",
+  grayDarker: "#2D3A2E",
   grayMid: "#CCCCCC",
   surfaceGray: "#EEEEEE",
   surfaceGrayDark: "#DDDDDD",

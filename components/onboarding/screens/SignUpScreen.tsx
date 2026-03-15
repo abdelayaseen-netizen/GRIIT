@@ -318,7 +318,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
 
       <View style={styles.footer}>
         <Text style={styles.termsText}>
-          By continuing, you agree to GRIIT's Terms of Service and Privacy Policy
+          By continuing, you agree to GRIIT&apos;s Terms of Service and Privacy Policy
         </Text>
       </View>
     </KeyboardAvoidingView>

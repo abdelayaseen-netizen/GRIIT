@@ -41,7 +41,7 @@ export async function maybePromptForReview(
       if (daysSince < MIN_DAYS_BETWEEN_PROMPTS) return;
     }
 
-    track("review_prompted", { total_days_secured: totalDaysSecured, trigger });
+    track({ name: "review_prompted", total_days_secured: totalDaysSecured, trigger });
     await StoreReview.requestReview();
     await AsyncStorage.setItem(REVIEW_PROMPT_KEY, Date.now().toString());
   } catch (error) {

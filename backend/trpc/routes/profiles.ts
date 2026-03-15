@@ -478,7 +478,6 @@ export const profilesRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const todayKey = getTodayDateKey();
       const weekStart = getWeekStartDateKey();
-      const weekEnd = getWeekEndDateKey();
       const { data: profile } = await ctx.supabase
         .from("profiles")
         .select("weekly_goal")

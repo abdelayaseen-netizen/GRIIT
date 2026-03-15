@@ -16,7 +16,7 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
       <View style={styles.header}>
         <Text style={styles.stepLabel}>STEP 1 OF 4</Text>
         <Text style={styles.title}>What do you want{'\n'}to build?</Text>
-        <Text style={styles.subtitle}>Pick up to 3. We'll find the right challenges for you.</Text>
+        <Text style={styles.subtitle}>Pick up to 3. We&apos;ll find the right challenges for you.</Text>
       </View>
 
       <View style={styles.grid}>

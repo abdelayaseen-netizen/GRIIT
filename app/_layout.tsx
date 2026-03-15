@@ -59,7 +59,7 @@ function AuthRedirector() {
   const router = useRouter();
   const { setMessage: setSessionExpiredMessage } = useSessionExpired();
   const onboardingCompleteFromStore = useOnboardingStore((s) => s.isComplete);
-  const currentStep = useOnboardingStore((s) => s.currentStep);
+  useOnboardingStore((s) => s.currentStep);
   const [hasLaunched, setHasLaunched] = useState<boolean | null>(null);
   const [profileChecked, setProfileChecked] = useState<boolean>(false);
   const [hasProfile, setHasProfile] = useState<boolean>(false);
@@ -158,7 +158,6 @@ function AuthRedirector() {
     if (loading || !profileChecked || !user) return;
 
     const first = typeof segments[0] === "string" ? segments[0] : "";
-    const second = typeof segments[1] === "string" ? segments[1] : "";
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;

@@ -22,7 +22,7 @@ interface AutoSuggestChallengeScreenProps {
 type ChallengeItem = { id: string; title?: string; short_hook?: string; duration_days?: number };
 
 export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMore }: AutoSuggestChallengeScreenProps) {
-  const { selectedGoals } = useOnboardingStore();
+  useOnboardingStore();
   const [challenges, setChallenges] = useState<ChallengeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<string | null>(null);
@@ -38,7 +38,8 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
         if (!cancelled) {
           setChallenges(items);
           if (items.length > 0) {
-            track('onboarding_challenge_auto_suggested', {
+            track({
+              name: 'onboarding_challenge_auto_suggested',
               challenge_id: items[0].id,
               challenge_name: items[0].title ?? '',
             });
@@ -70,7 +71,7 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
     setError('');
     try {
       await trpcMutate(TRPC.challenges.join, { challengeId });
-      track('onboarding_challenge_joined', { challenge_id: challengeId });
+      track({ name: 'onboarding_challenge_joined', challenge_id: challengeId });
       await setOnboardingCompleteAndContinue(onJoinComplete);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not join. Try again.');
@@ -80,7 +81,7 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
   };
 
   const handleBrowseMore = () => {
-    track('onboarding_challenge_skipped');
+    track({ name: 'onboarding_challenge_skipped' });
     setOnboardingCompleteAndContinue(onBrowseMore);
   };
 

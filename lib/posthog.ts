@@ -15,7 +15,7 @@ export function getPostHog() {
   if (!initialized) {
     try {
       posthog.init(API_KEY, {
-        host: HOST,
+        ...({ host: HOST } as Record<string, unknown>),
         person_profiles: "identified_only",
       });
       initialized = true;

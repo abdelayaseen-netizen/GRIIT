@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS } from "@/lib/design-system";
 import { BASE_COLORS } from "@/constants/theme";
 
 /** Fixed size for consistent image capture (e.g. 1080x1080 for stories). */

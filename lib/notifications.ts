@@ -240,7 +240,7 @@ export async function cancelLapsedUserReminders(): Promise<void> {
   }
 }
 
-const MILESTONE_DAYS = [7, 14, 30, 60, 100] as const;
+const MILESTONE_DAYS: readonly number[] = [7, 14, 30, 60, 100];
 
 /**
  * If the next day (streakCount + 1) is a milestone, schedule "One more day!" 12 hours from now.

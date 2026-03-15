@@ -35,7 +35,7 @@ export async function requestReviewIfAppropriate(context: RequestReviewContext):
       }
     }
 
-    const { StoreReview } = await import("expo-store-review");
+    const StoreReview = (await import("expo-store-review")).default;
     const isAvailable = await StoreReview.isAvailableAsync();
     if (!isAvailable) return;
 

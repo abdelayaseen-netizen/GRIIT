@@ -13,8 +13,8 @@ import ProgressDots from './ProgressDots';
 
 export default function OnboardingFlow() {
   const { currentStep, nextStep, prevStep, completeOnboarding } = useOnboardingStore();
-  const [authUserId, setAuthUserId] = useState<string>('');
-  const [username, setUsername] = useState('');
+  const [, setAuthUserId] = useState<string>('');
+  const [, setUsername] = useState('');
   const router = useRouter();
 
   // Compressed: 0=Splash, 1=Goals, 2=SignUp+Username, 3=AutoSuggestChallenge
@@ -40,7 +40,6 @@ export default function OnboardingFlow() {
   }, [completeOnboarding, router]);
 
   const handleStartApp = finishOnboardingAndGoTo('/(tabs)');
-  const handleBrowseMore = finishOnboardingAndGoTo('/(tabs)/discover');
 
   const renderScreen = () => {
     switch (currentStep) {

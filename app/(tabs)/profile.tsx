@@ -55,6 +55,7 @@ import { ROUTES } from "@/lib/routes";
 import { cancelLapsedUserReminders } from "@/lib/notifications";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { StatsFromApi } from "@/types";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 function openSubscriptionManagement() {
   if (Platform.OS === "ios") {
@@ -63,7 +64,6 @@ function openSubscriptionManagement() {
     Linking.openURL("https://play.google.com/store/account/subscriptions");
   }
 }
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 
 type StravaActivity = {
@@ -978,7 +978,7 @@ function createProfileStyles() {
     subscriptionSub: { fontSize: 13, marginTop: 4 },
     subscriptionLink: { flexDirection: "row", alignItems: "center", marginTop: 8 },
     subscriptionLinkText: { fontSize: 14, fontWeight: "600" },
-    subscriptionCta: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: DS_RADIUS.sm, alignItems: "center" },
+    subscriptionCta: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: DS_RADIUS.input, alignItems: "center" },
     subscriptionCtaText: { fontSize: 15, fontWeight: "600", color: "#FFF" },
     menuSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.lg },
     menuItem: {

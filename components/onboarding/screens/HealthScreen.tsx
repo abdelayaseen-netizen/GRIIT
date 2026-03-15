@@ -86,7 +86,7 @@ export default function HealthScreen({ onContinue }: HealthScreenProps) {
           </Text>
         </Pressable>
         <Pressable onPress={onContinue}>
-          <Text style={styles.skipText}>I'll do this later</Text>
+          <Text style={styles.skipText}>I&apos;ll do this later</Text>
         </Pressable>
       </View>
     </View>

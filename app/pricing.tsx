@@ -11,9 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
-  X,
   ChevronLeft,
-  Zap,
   Snowflake,
   Shield,
   PenLine,
@@ -174,7 +172,7 @@ export default function PricingScreen() {
         </View>
         <View style={styles.centered}>
           <Crown size={48} color={DS_COLORS.accent} />
-          <Text style={styles.title}>You're already on Premium</Text>
+          <Text style={styles.title}>You&apos;re already on Premium</Text>
           <Text style={styles.subtitle}>Enjoy unlimited access.</Text>
         </View>
       </SafeAreaView>
@@ -235,7 +233,7 @@ export default function PricingScreen() {
           </View>
         ) : offeringError ? (
           <View style={styles.retryWrap}>
-            <Text style={[styles.retryText, { color: DS_COLORS.textSecondary }]}>Couldn't load plans.</Text>
+            <Text style={[styles.retryText, { color: DS_COLORS.textSecondary }]}>Couldn&apos;t load plans.</Text>
             <TouchableOpacity
               onPress={loadOfferings}
               style={[styles.retryBtn, { backgroundColor: DS_COLORS.accent }]}
@@ -428,8 +426,8 @@ const styles = StyleSheet.create({
   packageCard: {
     flex: 1,
     backgroundColor: BASE_COLORS.surface,
-    borderRadius: DS_RADIUS.md,
-    padding: DS_SPACING.md,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.cardPadding,
     borderWidth: 2,
     borderColor: "transparent",
     ...DS_SHADOWS.card,
@@ -447,7 +445,7 @@ const styles = StyleSheet.create({
   skeletonCard: { backgroundColor: DS_COLORS.skeletonBg },
   packageLabel: { ...DS_TYPOGRAPHY.cardTitle, marginBottom: 4 },
   packagePrice: { fontSize: 22, fontWeight: "700", marginBottom: 2 },
-  packagePerMonth: { ...DS_TYPOGRAPHY.caption },
+  packagePerMonth: { ...DS_TYPOGRAPHY.metadata },
   saveBadge: {
     position: "absolute",
     top: 8,
@@ -469,13 +467,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: DS_RADIUS.sm,
+    borderRadius: DS_RADIUS.input,
   },
   retryBtnText: { color: "#FFF", fontWeight: "600" },
   errorText: { marginBottom: 8, textAlign: "center" },
   cta: {
     paddingVertical: 16,
-    borderRadius: DS_RADIUS.md,
+    borderRadius: DS_RADIUS.card,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 52,

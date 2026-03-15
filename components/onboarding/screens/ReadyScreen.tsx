@@ -28,11 +28,11 @@ export default function ReadyScreen({ username, onStart }: ReadyScreenProps) {
         </Animated.View>
 
         <Animated.View style={{ opacity, transform: [{ translateY: slideUp }] }}>
-          <Text style={styles.title}>You're in, @{username}.</Text>
+          <Text style={styles.title}>You&apos;re in, @{username}.</Text>
           <Text style={styles.subtitle}>
             Your discipline journey starts now.{'\n'}
             No one is coming to save you.{'\n'}
-            That's the point.
+            That&apos;s the point.
           </Text>
         </Animated.View>
 

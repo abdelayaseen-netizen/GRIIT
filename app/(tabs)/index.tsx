@@ -286,7 +286,7 @@ export default function HomeScreen() {
   const [dismissedUpgradePrompt, setDismissedUpgradePrompt] = useState(false);
   const [showShareProgressModal, setShowShareProgressModal] = useState(false);
   const [freezeSubmitting, setFreezeSubmitting] = useState(false);
-  const shareCardRef = useRef<{ capture?: () => Promise<string> } | null>(null);
+  const shareCardRef = useRef<InstanceType<typeof ViewShot> | null>(null);
   const [secureError, setSecureError] = useState<string>('');
   const [freezeError, setFreezeError] = useState<string>('');
   const secureBtnScale = useRef(new Animated.Value(1)).current;
@@ -548,7 +548,7 @@ export default function HomeScreen() {
       setTimeout(() => {
         setOptimisticDaySecured(false);
         if (isCompletion) {
-          const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? (stats as StatsFromApi).totalDaysSecured + 1 : totalDaysNum;
+          const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? ((stats as StatsFromApi)?.totalDaysSecured ?? 0) + 1 : totalDaysNum;
           router.push({
             pathname: ROUTES.CHALLENGE_COMPLETE,
             params: {
@@ -570,7 +570,7 @@ export default function HomeScreen() {
               challengeName: String(challengeTitle || ""),
             },
           } as never);
-          const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? (stats as StatsFromApi).totalDaysSecured + 1 : 0;
+          const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? ((stats as StatsFromApi)?.totalDaysSecured ?? 0) + 1 : 0;
           maybePromptForReview(totalDaysSecuredNow, "day_secured").catch(() => {});
           if (Platform.OS !== "web" && totalDaysSecuredNow === 1) {
             const key = "griit_notification_prompt_post_first_shown";

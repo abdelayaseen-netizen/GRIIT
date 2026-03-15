@@ -56,7 +56,10 @@ export type AnalyticsEvent =
   | { name: "restore_succeeded" }
   | { name: "challenge_completed"; challenge_name?: string; duration?: number }
   | { name: "weekly_goal_changed"; old_goal: number; new_goal: number }
-  | { name: "weekly_summary_shown"; goal: number; completed: number; met_goal: boolean };
+  | { name: "weekly_summary_shown"; goal: number; completed: number; met_goal: boolean }
+  | { name: "lapsed_notification_scheduled"; day: number }
+  | { name: "milestone_approaching_notification_scheduled"; milestone_day: number }
+  | { name: "review_prompted"; total_days_secured: number; trigger: string };
 
 export type UserProperties = {
   days_since_signup?: number;

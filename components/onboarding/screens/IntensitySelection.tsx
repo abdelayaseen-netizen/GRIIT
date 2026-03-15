@@ -15,7 +15,7 @@ export default function IntensitySelection({ onContinue }: IntensitySelectionPro
       <View style={styles.header}>
         <Text style={styles.stepLabel}>STEP 2 OF 4</Text>
         <Text style={styles.title}>How hard do{'\n'}you go?</Text>
-        <Text style={styles.subtitle}>Be honest. We'll match you with the right level.</Text>
+        <Text style={styles.subtitle}>Be honest. We&apos;ll match you with the right level.</Text>
       </View>
 
       <View style={styles.options}>

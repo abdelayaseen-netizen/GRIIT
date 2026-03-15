@@ -27,7 +27,6 @@ import {
   MapPin,
   Check,
   RefreshCw,
-  WifiOff,
   AlertTriangle,
   Globe,
   Users,
@@ -256,7 +255,7 @@ export default function CreateScreen() {
   const router = useRouter();
   const isGuest = useIsGuest();
   const { showGate } = useAuthGate();
-  const { isPremium } = useSubscription();
+  useSubscription(); // may gate create limits
   useTheme();
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
@@ -318,7 +317,7 @@ export default function CreateScreen() {
   const [, setLocationName] = useState("");
   const [, setRadiusMeters] = useState("150");
 
-  const { apiStatus, retryNow: retryApi } = useApi();
+  const { retryNow: retryApi } = useApi();
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';

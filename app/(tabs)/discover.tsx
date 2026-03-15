@@ -22,7 +22,7 @@ import {
   TrendingUp,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useTheme } from "@/contexts/ThemeContext";

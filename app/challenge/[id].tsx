@@ -47,7 +47,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { canJoinChallenge } from "@/lib/premium";
-import { FREE_LIMITS } from "@/lib/feature-flags";
+import { FLAGS } from "@/lib/feature-flags";
 import { useAuthGate } from "@/contexts/AuthGateContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import TeamStatusHeader from "@/components/challenge/TeamStatusHeader";
@@ -56,7 +56,6 @@ import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track } from "@/lib/analytics";
 import { useLeaveChallenge } from "@/lib/mutations";
 import { formatTRPCError } from "@/lib/api";
-import { FLAGS } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
 import { setPendingChallengeId } from "@/lib/onboarding-pending";
 import type {
@@ -444,7 +443,8 @@ export default function ChallengeDetailScreen() {
   const { user } = useAuth();
   const { showGate } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
-  const { isPremium, requirePremium } = useSubscription();
+  const isJoined = activeChallenge?.challenge_id === id;
+  const { requirePremium } = useSubscription();
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
@@ -570,8 +570,6 @@ export default function ChallengeDetailScreen() {
   }, [isDaily, challenge?.ends_at]);
 
   const isLoading = remoteLoading;
-  const isJoinedRemote = activeChallenge?.challenge_id === id;
-  const isJoined = isJoinedRemote;
 
   const userCurrentDay = useMemo(() => {
     if (!isJoined) return 0;
@@ -1113,7 +1111,7 @@ export default function ChallengeDetailScreen() {
                 {allTasks.map((task, index) => {
                   const checkin = todayCheckins.find((c: CheckinFromApi) => c.task_id === task.id);
                   const isCompleted =
-                    isJoinedRemote &&
+                    isJoined &&
                     todayCheckins.some(
                       (c: CheckinFromApi) => c.task_id === task.id && c.status === "completed"
                     );

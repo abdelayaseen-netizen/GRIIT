@@ -16,7 +16,7 @@ let purchaserInfoListener: (() => void) | null = null;
 
 /** Minimal types for RevenueCat (avoid importing full SDK in Expo Go). */
 export type CustomerInfo = {
-  entitlements: { active: Record<string, { expirationDate?: string }> };
+  entitlements: { active: Record<string, { expirationDate?: string | null }> };
 };
 export type PurchasesPackage = {
   identifier: string;
@@ -61,23 +61,26 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
 
   try {
     const RC = Purchases.default;
-    if (__DEV__ && Purchases.LOG_LEVEL) {
-      RC.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+    const RCAny = RC as typeof RC & { setLogLevel?: (level: number) => void };
+    const PurchasesModule = Purchases as typeof Purchases & { LOG_LEVEL?: { DEBUG: number } };
+    if (__DEV__ && PurchasesModule.LOG_LEVEL?.DEBUG != null && typeof RCAny.setLogLevel === "function") {
+      RCAny.setLogLevel(PurchasesModule.LOG_LEVEL.DEBUG);
     }
     await RC.configure({ apiKey, appUserID: userId });
 
-    const info = await RC.getCustomerInfo();
+    const info = (await RC.getCustomerInfo()) as CustomerInfo;
     const premium = info?.entitlements?.active?.[ENTITLEMENT_ID] != null;
     setSubscriptionState(premium ? "premium" : "free", info?.entitlements?.active?.[ENTITLEMENT_ID]?.expirationDate ?? null);
     notifySubscriptionChange(premium);
     await syncSubscriptionToSupabase(userId, info);
 
-    RC.addCustomerInfoUpdateListener(async (updatedInfo: CustomerInfo) => {
+    RC.addCustomerInfoUpdateListener((info) => {
+      const updatedInfo = info as CustomerInfo;
       const ent = updatedInfo?.entitlements?.active?.[ENTITLEMENT_ID];
       const isPremium = ent != null;
       setSubscriptionState(isPremium ? "premium" : "free", ent?.expirationDate ?? null);
       notifySubscriptionChange(isPremium);
-      await syncSubscriptionToSupabase(userId, updatedInfo);
+      void syncSubscriptionToSupabase(userId, updatedInfo);
     });
   } catch (err) {
     if (__DEV__) {
@@ -125,7 +128,8 @@ export async function getOfferings(): Promise<PurchasesOffering | null> {
   const Purchases = getPurchases();
   if (!Purchases?.default) return null;
   try {
-    const offerings = await Purchases.default.getOfferings();
+    const RC = Purchases.default as { getOfferings?: () => Promise<{ current?: PurchasesOffering | null }> };
+    const offerings = await RC.getOfferings?.();
     return offerings?.current ?? null;
   } catch {
     return null;
@@ -139,7 +143,9 @@ export async function purchasePackage(
   const Purchases = getPurchases();
   if (!Purchases?.default) return { success: false, error: "Purchases not available" };
   try {
-    const { customerInfo } = await Purchases.default.purchasePackage(pkg);
+    const RC = Purchases.default as { purchasePackage?: (p: PurchasesPackage) => Promise<{ customerInfo: CustomerInfo }> };
+    const result = await RC.purchasePackage?.(pkg);
+    const customerInfo = result?.customerInfo;
     const isPremium = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
     return { success: isPremium, customerInfo: customerInfo ?? undefined };
   } catch (err: unknown) {

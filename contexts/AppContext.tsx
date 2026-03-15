@@ -357,11 +357,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user?.id || !profileFetched) return;
     const p = profile || fallbackProfile;
     if (!p) return;
-    const tier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier ?? undefined;
+    const rawTier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier;
+    const tier = typeof rawTier === "string" ? rawTier : undefined;
     identify(user.id, {
       email: user.email ?? undefined,
       isPremium,
-      tier: tier ?? undefined,
+      tier,
     });
   }, [user?.id, user?.email, profile, fallbackProfile, profileFetched, isPremium, stats]);
 
