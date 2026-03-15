@@ -605,10 +605,8 @@ export default function ChallengeDetailScreen() {
       } catch { /* best-effort */ }
       await refetchAll();
       setShowCommitmentModal(false);
-      router.replace(ROUTES.TABS as never);
-      Alert.alert("You're in!", "Your challenge is under Active challenges. Secure your day to build your streak.", [
-        { text: "OK" },
-      ]);
+      challengeQuery.refetch();
+      Alert.alert("You're in!", "Start your first task below.", [{ text: "OK" }]);
     } catch (err: unknown) {
       const { title, message } = formatTRPCError(err);
       Alert.alert(title, message);
@@ -688,6 +686,34 @@ export default function ChallengeDetailScreen() {
   }, [router, activeChallenge?.id]);
 
   const allTasks = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
+  const todayTasksWithCompletion = useMemo(() => {
+    return allTasks.map((task) => {
+      const isCompleted =
+        isJoined &&
+        todayCheckins.some((c: CheckinFromApi) => c.task_id === task.id && c.status === "completed");
+      return { task, isCompleted };
+    });
+  }, [allTasks, isJoined, todayCheckins]);
+
+  const firstIncompleteTask = useMemo(
+    () => todayTasksWithCompletion.find(({ isCompleted }) => !isCompleted)?.task,
+    [todayTasksWithCompletion]
+  );
+
+  const handleContinueToday = useCallback(() => {
+    if (!isJoined || !id) return;
+    if (firstIncompleteTask) {
+      handleMissionStart(firstIncompleteTask);
+      return;
+    }
+    if (allTasks.length === 0) return;
+    Alert.alert(
+      "All tasks complete",
+      "Secure your day to lock it in. You can secure from Home, or stay here.",
+      [{ text: "OK" }]
+    );
+  }, [isJoined, id, firstIncompleteTask, allTasks.length, handleMissionStart]);
+
   const isThisActiveChallenge = !!(
     activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
   );
@@ -1209,7 +1235,7 @@ export default function ChallengeDetailScreen() {
             <Animated.View style={{ transform: [{ scale: ctaScaleAnim }], alignSelf: "stretch" }}>
             <TouchableOpacity
               style={[s.ctaButton, { backgroundColor: ctaBgColor }]}
-              onPress={isJoined ? () => router.push(ROUTES.TABS as never) : user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
+              onPress={isJoined ? handleContinueToday : user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
               onPressIn={handleCtaPressIn}
               onPressOut={handleCtaPressOut}
               disabled={joinDisabled}

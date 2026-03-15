@@ -37,6 +37,7 @@ export default function SecureConfirmationScreen() {
   const day = params.day as string | undefined;
   const streak = params.streak as string | undefined;
   const totalDays = params.totalDays as string | undefined;
+  const challengeId = params.challengeId as string | undefined;
   const isHardMode = params.isHardMode === "true";
   const challengeName = (params.challengeName as string) ?? "";
 
@@ -97,14 +98,20 @@ export default function SecureConfirmationScreen() {
 
     // Auto-back only for regular day secured; completion screen stays until user taps Share or What's next
     if (!isCompletion) {
-      const timer = setTimeout(() => router.back(), 2500);
+      const timer = setTimeout(() => {
+        if (challengeId) {
+          router.replace(ROUTES.CHALLENGE_ID(challengeId) as never);
+        } else {
+          router.replace(ROUTES.TABS as never);
+        }
+      }, 2500);
       return () => {
         clearTimeout(timer);
         clearTimeout(reviewDelay);
       };
     }
     return () => clearTimeout(reviewDelay);
-  }, [scaleAnim, fadeAnim, progressAnim, router, isCompletion, streakNum]);
+  }, [scaleAnim, fadeAnim, progressAnim, router, isCompletion, streakNum, challengeId]);
 
   if (!day || !streak || !totalDays) {
     return (

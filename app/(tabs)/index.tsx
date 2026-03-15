@@ -562,6 +562,10 @@ export default function HomeScreen() {
             },
           } as never);
         } else {
+          const challengeIdForNav =
+            (challenge as { id?: string })?.id ??
+            (activeChallenge as { challenges?: { id?: string } })?.challenges?.id ??
+            "";
           router.push({
             pathname: ROUTES.SECURE_CONFIRMATION,
             params: {
@@ -570,6 +574,7 @@ export default function HomeScreen() {
               totalDays: String(totalDaysNum),
               isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
               challengeName: String(challengeTitle || ""),
+              ...(challengeIdForNav ? { challengeId: challengeIdForNav } : {}),
             },
           } as never);
           const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? ((stats as StatsFromApi)?.totalDaysSecured ?? 0) + 1 : 0;

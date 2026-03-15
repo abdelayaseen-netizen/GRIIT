@@ -76,16 +76,16 @@ export default function CommitmentScreen() {
       const runStatus = result?.runStatus;
       if (runStatus === "waiting") {
         Alert.alert("You're in!", "Waiting for more people to join. Share the challenge so the team can start.", [
-          { text: "OK", onPress: () => router.replace(ROUTES.TABS as never) },
+          { text: "OK", onPress: () => router.replace(ROUTES.CHALLENGE_ID(challengeId) as never) },
         ]);
       } else {
         Alert.alert("You're in!", "Invite a friend to join with you?", [
-          { text: "Not now", onPress: () => router.replace(ROUTES.TABS as never) },
+          { text: "Not now", onPress: () => router.replace(ROUTES.CHALLENGE_ID(challengeId) as never) },
           {
             text: "Share",
             onPress: () => {
               inviteToChallenge({ name: title, id: challengeId }).catch(() => {});
-              router.replace(ROUTES.TABS as never);
+              router.replace(ROUTES.CHALLENGE_ID(challengeId) as never);
             },
           },
         ]);

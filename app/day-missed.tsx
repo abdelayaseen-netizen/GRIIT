@@ -16,13 +16,22 @@ import { ROUTES } from "@/lib/routes";
 
 export default function DayMissedScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams<{ challengeId?: string; isHardMode?: string; hasGrace?: string; graceUsed?: string }>();
 
+  const challengeId = params.challengeId;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const isHardMode = params.isHardMode === "true";
   const hasGrace = params.hasGrace === "true";
   const graceUsed = params.graceUsed === "true";
+
+  const goToDestination = () => {
+    if (challengeId) {
+      router.replace(ROUTES.CHALLENGE_ID(challengeId) as never);
+    } else {
+      router.replace(ROUTES.TABS as never);
+    }
+  };
 
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -40,7 +49,7 @@ export default function DayMissedScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.back();
+    goToDestination();
   };
 
   const getMessage = () => {
@@ -86,7 +95,7 @@ export default function DayMissedScreen() {
         {!shouldShowRestart && (
           <TouchableOpacity
             style={styles.continueButton}
-            onPress={() => router.back()}
+            onPress={goToDestination}
             activeOpacity={0.85}
             accessibilityLabel="Continue"
             accessibilityRole="button"
@@ -97,7 +106,7 @@ export default function DayMissedScreen() {
 
         <TouchableOpacity
           style={styles.homeButton}
-          onPress={() => router.push(ROUTES.TABS as never)}
+          onPress={goToDestination}
           activeOpacity={0.7}
           accessibilityLabel="Back to Home"
           accessibilityRole="button"
