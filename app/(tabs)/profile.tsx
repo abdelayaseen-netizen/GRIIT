@@ -20,8 +20,6 @@ import {
   Globe,
   Activity,
   Link2,
-  Check,
-  Crown,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -42,10 +40,6 @@ import {
   DisciplineCalendar,
   DisciplineGrowthCard,
   AchievementsSection,
-  CompletedChallengesSection,
-  SocialStatsCard,
-  ProfileCompletionCard,
-  ShareDisciplineCard,
 } from "@/components/profile";
 import type { AchievementItem } from "@/components/profile";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -552,7 +546,8 @@ export default function ProfileScreen() {
             currentTier={tierName ?? "Starter"}
             joinDate={joinedDate || undefined}
             onShare={handleShare}
-            bio={bioText || undefined}
+            bio={bioText || "A Disciplined Athlete"}
+            useBlackAvatar
           />
         </Animated.View>
 
@@ -563,49 +558,6 @@ export default function ProfileScreen() {
           friendRank={leaderboardRank}
           zeroStateHint={disciplineScore === 0 ? "Complete today's tasks to start your streak." : undefined}
         />
-
-        <View style={[styles.subscriptionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          {isPremium ? (
-            <>
-              <View style={styles.subscriptionRow}>
-                <Crown size={20} color={colors.accent} />
-                <Text style={[styles.subscriptionTitle, { color: colors.text.primary }]}>GRIIT Premium</Text>
-                <Check size={18} color={colors.success} />
-              </View>
-              {profile.subscription_expiry && (
-                <Text style={[styles.subscriptionSub, { color: colors.text.secondary }]}>
-                  Renews {new Date(profile.subscription_expiry).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                </Text>
-              )}
-              <TouchableOpacity
-                onPress={openSubscriptionManagement}
-                style={styles.subscriptionLink}
-                activeOpacity={0.7}
-                accessibilityLabel="Manage subscription"
-                accessibilityRole="button"
-              >
-                <Text style={[styles.subscriptionLinkText, { color: colors.accent }]}>Manage subscription</Text>
-                <ChevronRight size={16} color={colors.accent} />
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <View style={styles.subscriptionRow}>
-                <Crown size={20} color={colors.text.muted} />
-                <Text style={[styles.subscriptionTitle, { color: colors.text.primary }]}>GRIIT Free</Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => router.push({ pathname: ROUTES.PRICING as never, params: { source: "profile" } } as never)}
-                style={[styles.subscriptionCta, { backgroundColor: colors.accent }]}
-                activeOpacity={0.85}
-                accessibilityLabel="Upgrade to Premium"
-                accessibilityRole="button"
-              >
-                <Text style={styles.subscriptionCtaText}>Upgrade to Premium →</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
 
         <TierProgressBar
           currentPoints={totalDaysSecured}
@@ -637,37 +589,13 @@ export default function ProfileScreen() {
 
         <AchievementsSection achievements={achievements} loading={dashboardDataLoading || achievementsQuery.isLoading} />
 
-        <CompletedChallengesSection challenges={completedChallengesList} loading={dashboardDataLoading} />
-
-        {dashboardDataError && (
-          <View style={[styles.errorCard, { marginHorizontal: 20, marginTop: 16 }]}>
-            <Text style={[styles.errorSubtitle, { marginBottom: 12 }]}>Couldn&apos;t load some sections.</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => queryClient.invalidateQueries({ queryKey: ["profile"] })} activeOpacity={0.7} accessibilityLabel="Retry" accessibilityRole="button">
-              <Text style={styles.retryButtonText}>Retry</Text>
-            </TouchableOpacity>
+        {currentStreak === 0 && bestStreak > 0 && (
+          <View style={[styles.streakAtRiskCard, { backgroundColor: DS_COLORS.dangerLight }]}>
+            <View style={[styles.streakAtRiskDot, { backgroundColor: DS_COLORS.warning }]} />
+            <Text style={[styles.streakAtRiskTitle, { color: DS_COLORS.danger }]}>Streak at risk</Text>
+            <Text style={styles.streakAtRiskSub}>Secure today to recover your streak.</Text>
           </View>
         )}
-
-        <SocialStatsCard
-          friendRank={leaderboardRank}
-          friendsCount={accountabilityCount}
-          sharedChallenges={0}
-        />
-
-        <ProfileCompletionCard
-          bioAdded={!!bioText}
-          joinedChallenge={activeChallenges > 0 || completedChallengesCount > 0}
-          secured7Days={totalDaysSecured >= 7}
-          invitedFriend={accountabilityCount >= 1}
-        />
-
-        <ShareDisciplineCard
-          name={(profile.display_name || profile.username || "").trim() || "User"}
-          disciplineScore={disciplineScore}
-          currentStreak={currentStreak}
-          tier={tierName ?? "Starter"}
-          onShare={handleShare}
-        />
 
         <IntegrationsSection styles={styles} />
 
@@ -678,10 +606,10 @@ export default function ProfileScreen() {
               if (Platform.OS !== "web") {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              router.push(ROUTES.EDIT_PROFILE as never);
+              router.push(ROUTES.SETTINGS as never);
             }}
             activeOpacity={0.7}
-            accessibilityLabel="Edit your profile"
+            accessibilityLabel="Visibility and settings"
             accessibilityRole="button"
           >
             <View style={styles.menuIconWrap}>
@@ -730,7 +658,7 @@ export default function ProfileScreen() {
             accessibilityLabel="Sign out of your account"
             accessibilityRole="button"
           >
-            <Text style={[styles.signOutText, { color: DS_COLORS.accent }]}>↪ Sign Out</Text>
+            <Text style={[styles.signOutText, { color: DS_COLORS.danger }]}>↪ Sign Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -902,6 +830,18 @@ function createProfileStyles() {
     retryButtonText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "700" as const, color: DS_COLORS.white },
     signOutLink: { paddingVertical: DS_SPACING.sm },
     signOutLinkText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "500" as const, color: DS_COLORS.textMuted, textDecorationLine: "underline" as const },
+    streakAtRiskCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: DS_SPACING.cardPadding,
+      borderRadius: DS_RADIUS.cardAlt,
+      marginHorizontal: DS_SPACING.screenHorizontal,
+      marginTop: DS_SPACING.lg,
+      gap: DS_SPACING.sm,
+    },
+    streakAtRiskDot: { width: 8, height: 8, borderRadius: 4 },
+    streakAtRiskTitle: { fontSize: 15, fontWeight: "700" as const, flex: 1 },
+    streakAtRiskSub: { fontSize: 14, color: DS_COLORS.textSecondary, marginTop: 2 },
     menuEditLabel: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: DS_COLORS.textSecondary },
     integrationsSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.xl },
     integrationsTitle: {

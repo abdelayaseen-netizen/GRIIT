@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   title: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: "800" as const,
     letterSpacing: -0.5,
     color: DS_COLORS.textPrimary,
@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontWeight: "400" as const,
-    color: DS_COLORS.inputPlaceholder,
+    color: DS_COLORS.textSecondary,
     marginTop: 4,
   },
   searchRow: {

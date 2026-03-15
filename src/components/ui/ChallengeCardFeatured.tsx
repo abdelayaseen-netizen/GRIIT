@@ -4,16 +4,13 @@ import { Calendar, BookOpen, Users, Flame } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
 
-const ACCENT_ORANGE = "#D2734A";
-const MUTED_TEXT = "#7A7A6D";
-const ACTIVE_TODAY_GREEN = "#16A34A";
-const TASK_PILL_BG = "#F3F4F6";
+const TASK_PILL_BG = "#F5F3F0";
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
-  Easy: { bg: "#DCFCE7", text: "#16A34A" },
-  Medium: { bg: "#FEF9C3", text: "#CA8A04" },
-  Hard: { bg: "#FEE2E2", text: "#DC2626" },
-  Extreme: { bg: "#FEE2E2", text: "#991B1B" },
+  Easy: { bg: DS_COLORS.successLight, text: DS_COLORS.success },
+  Medium: { bg: DS_COLORS.warningLight, text: DS_COLORS.warning },
+  Hard: { bg: DS_COLORS.accentLight, text: DS_COLORS.accent },
+  Extreme: { bg: DS_COLORS.dangerLight, text: DS_COLORS.danger },
 };
 
 function getTaskEmoji(icon: string): string {
@@ -68,9 +65,9 @@ function ChallengeCardFeaturedInner(props: {
       <View style={s.stripe} />
       <View style={s.content}>
         <View style={s.topRow}>
-          <View style={s.featuredBadge}>
-            <Flame size={12} color={ACCENT_ORANGE} />
-            <Text style={s.featuredBadgeText}>FEATURED</Text>
+          <View style={[s.featuredBadge, { backgroundColor: DS_COLORS.accentLight }]}>
+            <Flame size={12} color={DS_COLORS.accent} />
+            <Text style={[s.featuredBadgeText, { color: DS_COLORS.accent }]}>FEATURED</Text>
           </View>
           <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
             <Text style={[s.diffText, { color: diff.text }]}>{difficulty.toUpperCase()}</Text>
@@ -87,22 +84,22 @@ function ChallengeCardFeaturedInner(props: {
         </View>
         <View style={s.metaRow}>
           <View style={s.metaLeft}>
-            <Calendar size={12} color={MUTED_TEXT} />
+            <Calendar size={12} color={DS_COLORS.textMuted} />
             <Text style={s.metaText}>{durationLabel}</Text>
             <Text style={s.metaDot}>·</Text>
-            <BookOpen size={12} color={MUTED_TEXT} />
+            <BookOpen size={12} color={DS_COLORS.textMuted} />
             <Text style={s.metaText}>{taskCount} tasks</Text>
             <Text style={s.metaDot}>·</Text>
-            <Users size={12} color={MUTED_TEXT} />
+            <Users size={12} color={DS_COLORS.textMuted} />
             <Text style={s.metaText}>{formatCount(participantsCount)}</Text>
             {activeTodayCount > 0 && (
               <>
                 <Text style={s.metaDot}>·</Text>
-                <Text style={s.activeToday}>{formatCount(activeTodayCount)} active today</Text>
+                <Text style={[s.activeToday, { color: DS_COLORS.success, fontWeight: "600" }]}>{formatCount(activeTodayCount)} active today</Text>
               </>
             )}
           </View>
-          <Text style={s.chevron}>&gt;</Text>
+          <Text style={[s.chevron, { color: DS_COLORS.textMuted }]}>&gt;</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -126,9 +123,8 @@ const s = StyleSheet.create({
     elevation: 2,
   },
   stripe: {
-    width: 4,
+    width: 3,
     alignSelf: "stretch",
-    backgroundColor: ACCENT_ORANGE,
   },
   content: {
     flex: 1,
@@ -168,12 +164,12 @@ const s = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#2D3A2E",
+    color: DS_COLORS.textPrimary,
     marginBottom: 6,
   },
   desc: {
     fontSize: 14,
-    color: MUTED_TEXT,
+    color: DS_COLORS.textSecondary,
     lineHeight: 20,
     marginBottom: 10,
   },
@@ -215,21 +211,21 @@ const s = StyleSheet.create({
   metaText: {
     fontSize: 12,
     fontWeight: "400",
-    color: MUTED_TEXT,
+    color: DS_COLORS.textMuted,
   },
   metaDot: {
     fontSize: 12,
-    color: MUTED_TEXT,
+    color: DS_COLORS.textMuted,
     marginHorizontal: 2,
   },
   activeToday: {
     fontSize: 13,
-    fontWeight: "700",
-    color: ACTIVE_TODAY_GREEN,
+    fontWeight: "600",
+    color: DS_COLORS.success,
   },
   chevron: {
     fontSize: 16,
     fontWeight: "600",
-    color: MUTED_TEXT,
+    color: DS_COLORS.textMuted,
   },
 });

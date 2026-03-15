@@ -18,7 +18,7 @@ export interface ProfileHeaderProps {
   showEditButton?: boolean;
 }
 
-const AVATAR_SIZE = 80;
+const AVATAR_SIZE = 100;
 
 const AVATAR_COLORS = [
   DS_COLORS.avatarColor1,
@@ -49,15 +49,16 @@ export default function ProfileHeader({
   onShare,
   bio,
   showEditButton = true,
+  useBlackAvatar = true,
 }: ProfileHeaderProps) {
   const router = useRouter();
   const displayName = fullName || username || "User";
-  const avatarBg = getAvatarColor(username || fullName || "U");
+  const avatarBg = useBlackAvatar ? DS_COLORS.textPrimary : getAvatarColor(username || fullName || "U");
 
   return (
     <View style={styles.container}>
       <View style={styles.avatarWrap}>
-        {avatarUrl ? (
+        {avatarUrl && !useBlackAvatar ? (
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatarPlaceholder, { backgroundColor: avatarBg }]}>
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarLetter: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: "700",
     color: DS_COLORS.white,
   },
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   username: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    fontSize: 14,
     color: DS_COLORS.textMuted,
     marginTop: DS_SPACING.xs,
     textAlign: "center",
@@ -145,8 +146,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_SPACING.lg,
     paddingVertical: 6,
     borderRadius: DS_RADIUS.input,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.borderAlt,
+    backgroundColor: "#F5F3F0",
   },
   bioPillText: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,

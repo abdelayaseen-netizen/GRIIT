@@ -10,10 +10,11 @@ export function SearchBar(props: {
   placeholder?: string;
   onClear?: () => void;
   editable?: boolean;
+  containerStyle?: import("react-native").StyleProp<import("react-native").ViewStyle>;
 }) {
-  const { value, onChangeText, placeholder = "Search challenges…", onClear, editable = true } = props;
+  const { value, onChangeText, placeholder = "Search challenges…", onClear, editable = true, containerStyle } = props;
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, containerStyle]}>
       <Search size={iconSizes.search} color={colors.searchIcon} />
       <TextInput
         style={styles.input}
@@ -39,12 +40,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: 44,
-    backgroundColor: DS_COLORS.white,
+    height: 48,
+    backgroundColor: "#F5F3F0",
     borderRadius: 12,
     paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderWidth: 0,
     gap: 10,
   },
   input: {

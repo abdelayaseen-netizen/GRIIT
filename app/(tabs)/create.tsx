@@ -704,52 +704,8 @@ export default function CreateScreen() {
         />
       </View>
 
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Who&apos;s in this challenge?</Text>
-        <View style={styles.challengeTypeRow}>
-          {PARTICIPATION_OPTIONS.map((opt) => {
-            const Icon = opt.Icon;
-            return (
-              <TouchableOpacity
-                key={opt.id}
-                style={[
-                  styles.participationCard,
-                  participationType === opt.id && styles.participationCardActive,
-                ]}
-                onPress={() => setParticipationType(opt.id)}
-                activeOpacity={0.7}
-                accessibilityLabel={`Select ${opt.label} participation`}
-                accessibilityRole="button"
-              >
-                <View style={[styles.participationIconWrap, participationType === opt.id && styles.participationIconWrapActive]}>
-                  <Icon size={22} color={participationType === opt.id ? DS_COLORS.white : DS_COLORS.textMuted} />
-                </View>
-                <Text style={[styles.participationLabel, participationType === opt.id && styles.participationLabelActive]}>{opt.label}</Text>
-                <Text style={styles.participationDesc} numberOfLines={2}>{opt.description}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      {isTeamOrShared && (
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Team size</Text>
-          <Text style={styles.stepHelper}>How many people? (2–10)</Text>
-          <View style={styles.durationRow}>
-            {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-              <DurationPill
-                key={n}
-                label={String(n)}
-                selected={teamSize === n}
-                onPress={() => setTeamSize(n)}
-              />
-            ))}
-          </View>
-        </View>
-      )}
-
-      {isSharedGoal && (
+      {/* Who's in this challenge section removed per GRIIT UI spec — flow is solo only */}
+      {false && isSharedGoal && (
         <>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Goal target</Text>

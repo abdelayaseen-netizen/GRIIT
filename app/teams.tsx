@@ -30,7 +30,7 @@ export default function TeamsScreen() {
           <View style={styles.headerRight} />
         </View>
         <View style={styles.content}>
-          <View style={[styles.iconWrap, { backgroundColor: DS_COLORS.accentSoft }]}>
+          <View style={[styles.iconWrap, { backgroundColor: DS_COLORS.accentLight }]}>
             <Users size={48} color={DS_COLORS.accent} />
           </View>
           <Text style={[styles.title, { color: DS_COLORS.textPrimary }]}>Small Groups, Big Results</Text>
@@ -90,8 +90,8 @@ const styles = StyleSheet.create({
     marginBottom: DS_SPACING.xl,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "700",
+    fontSize: 24,
+    fontWeight: "800" as const,
     textAlign: "center",
     marginBottom: 12,
   },

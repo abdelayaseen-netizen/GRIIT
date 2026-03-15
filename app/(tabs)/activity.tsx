@@ -48,7 +48,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/l
 
 function createActivityStyles(c: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.background },
+    container: { flex: 1, backgroundColor: DS_COLORS.background },
     header: {
       flexDirection: "row",
       alignItems: "center",
@@ -58,14 +58,14 @@ function createActivityStyles(c: ThemeColors) {
       gap: DS_SPACING.sm,
     },
     title: {
-      fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
-      fontWeight: DS_TYPOGRAPHY.pageTitle.fontWeight,
-      color: c.text.primary,
+      fontSize: 32,
+      fontWeight: "800" as const,
+      color: DS_COLORS.textPrimary,
     },
     subtitle: {
-      fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+      fontSize: 15,
       fontWeight: "400" as const,
-      color: c.text.secondary,
+      color: DS_COLORS.textSecondary,
       marginTop: 2,
     },
     teamsButton: {
@@ -75,10 +75,12 @@ function createActivityStyles(c: ThemeColors) {
       paddingHorizontal: DS_SPACING.md,
       paddingVertical: DS_SPACING.sm,
       borderRadius: DS_RADIUS.button,
-      backgroundColor: c.pill,
+      borderWidth: 1,
+      borderColor: DS_COLORS.border,
+      backgroundColor: "transparent",
       marginLeft: "auto" as const,
     },
-    teamsButtonText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: c.text.secondary },
+    teamsButtonText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: DS_COLORS.textSecondary },
     scrollView: { flex: 1 },
     scrollContent: { paddingBottom: DS_SPACING.xxxl },
     filterRow: {
@@ -161,12 +163,39 @@ function createActivityStyles(c: ThemeColors) {
     leaderboardMeta: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 },
     leaderboardStreak: { fontSize: 12, fontWeight: "600" as const, color: c.text.tertiary },
     movementFeedSection: { marginTop: DS_SPACING.xxl, paddingHorizontal: DS_SPACING.screenHorizontal },
+    proofOfWorkHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: DS_SPACING.sm,
+      marginBottom: 12,
+    },
+    publicBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: DS_COLORS.surfaceMuted,
+    },
+    publicBadgeText: { fontSize: 11, fontWeight: "600" as const, color: DS_COLORS.textMuted },
+    teamTabSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.lg },
+    teamEmptyCard: {
+      borderRadius: DS_RADIUS.cardAlt,
+      borderWidth: 1,
+      padding: DS_SPACING.xxl,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: DS_SPACING.lg,
+    },
+    teamEmptyTitle: { fontSize: 16, fontWeight: "700" as const, color: DS_COLORS.textPrimary, marginBottom: 4 },
+    teamEmptySub: { fontSize: 14, color: DS_COLORS.textMuted, textAlign: "center" },
     movementFeedSectionTitle: {
       fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
-      fontWeight: "600" as const,
-      color: c.text.tertiary,
+      fontWeight: "700" as const,
+      letterSpacing: 0.5,
       textTransform: "uppercase" as const,
-      letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,
+      color: DS_COLORS.textSecondary,
       marginBottom: DS_SPACING.md,
     },
     movementFeedItem: {
@@ -609,7 +638,13 @@ function CommunityActivityFeedSection({
   if (isLoading && items.length === 0) {
     return (
       <View style={styles.movementFeedSection}>
-        <Text style={styles.movementFeedSectionTitle}>ACTIVITY</Text>
+        <View style={styles.proofOfWorkHeader}>
+          <Text style={styles.movementFeedSectionTitle}>PROOF OF WORK</Text>
+          <View style={styles.publicBadge}>
+            <Globe size={10} color={DS_COLORS.textMuted} />
+            <Text style={styles.publicBadgeText}>Public</Text>
+          </View>
+        </View>
         <Text style={styles.onlyDisciplineShows}>{COPY.loading}</Text>
       </View>
     );
@@ -617,7 +652,13 @@ function CommunityActivityFeedSection({
   if (error && items.length === 0) {
     return (
       <View style={styles.movementFeedSection}>
-        <Text style={styles.movementFeedSectionTitle}>ACTIVITY</Text>
+        <View style={styles.proofOfWorkHeader}>
+          <Text style={styles.movementFeedSectionTitle}>PROOF OF WORK</Text>
+          <View style={styles.publicBadge}>
+            <Globe size={10} color={DS_COLORS.textMuted} />
+            <Text style={styles.publicBadgeText}>Public</Text>
+          </View>
+        </View>
         <Text style={styles.emptyLeaderboardText}>{COPY.couldNotLoadActivity}</Text>
       </View>
     );
@@ -625,7 +666,13 @@ function CommunityActivityFeedSection({
   if (items.length === 0) {
     return (
       <View style={styles.movementFeedSection}>
-        <Text style={styles.movementFeedSectionTitle}>ACTIVITY</Text>
+        <View style={styles.proofOfWorkHeader}>
+          <Text style={styles.movementFeedSectionTitle}>PROOF OF WORK</Text>
+          <View style={styles.publicBadge}>
+            <Globe size={10} color={DS_COLORS.textMuted} />
+            <Text style={styles.publicBadgeText}>Public</Text>
+          </View>
+        </View>
         <Text style={styles.onlyDisciplineShows}>
           Your community activity will appear here. Join a challenge to get started!
         </Text>
@@ -634,7 +681,13 @@ function CommunityActivityFeedSection({
   }
   return (
     <View style={styles.movementFeedSection}>
-      <Text style={styles.movementFeedSectionTitle}>ACTIVITY</Text>
+      <View style={styles.proofOfWorkHeader}>
+        <Text style={styles.movementFeedSectionTitle}>PROOF OF WORK</Text>
+        <View style={styles.publicBadge}>
+          <Globe size={10} color={DS_COLORS.textMuted} />
+          <Text style={styles.publicBadgeText}>Public</Text>
+        </View>
+      </View>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -878,8 +931,7 @@ export default function ActivityScreen() {
             <Text style={styles.subtitle}>Proof of discipline</Text>
           </View>
           <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8} accessibilityLabel="Open teams" accessibilityRole="button">
-          <Users size={16} color={colors.text.secondary} />
-          <Text style={styles.teamsButtonText}>Teams</Text>
+          <Text style={styles.teamsButtonText}>🧑‍🤝‍🧑 Teams</Text>
         </TouchableOpacity>
       </View>
 
@@ -891,8 +943,7 @@ export default function ActivityScreen() {
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <Globe size={14} color={feedFilter === "global" ? DS_COLORS.white : colors.text.secondary} />
-          <Text style={[styles.filterPillText, feedFilter === "global" && styles.filterPillTextActive]}>Global</Text>
+          <Text style={[styles.filterPillText, feedFilter === "global" && styles.filterPillTextActive]}>🌐 Global</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterPill, feedFilter === "friends" && styles.filterPillActive]}
@@ -901,18 +952,16 @@ export default function ActivityScreen() {
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <Users size={14} color={feedFilter === "friends" ? DS_COLORS.white : colors.text.secondary} />
-          <Text style={[styles.filterPillText, feedFilter === "friends" && styles.filterPillTextActive]}>Friends</Text>
+          <Text style={[styles.filterPillText, feedFilter === "friends" && styles.filterPillTextActive]}>🧑‍🤝‍🧑 Friends</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterPill, styles.filterPillDisabled]}
-          onPress={() => Alert.alert("Coming in the next update", "Team filter will show your team leaderboard.")}
+          style={[styles.filterPill, feedFilter === "team" && styles.filterPillActive]}
+          onPress={() => setFeedFilter("team")}
           accessibilityLabel="Show team activity"
           accessibilityRole="button"
           activeOpacity={0.8}
         >
-          <Users size={14} color={colors.text.muted} />
-          <Text style={styles.filterPillTextDisabled}>Team</Text>
+          <Text style={[styles.filterPillText, feedFilter === "team" && styles.filterPillTextActive]}>🧑‍🤝‍🧑 Team</Text>
         </TouchableOpacity>
       </View>
 
@@ -924,6 +973,21 @@ export default function ActivityScreen() {
           <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor={colors.accent} />
         }
       >
+        {feedFilter === "team" ? (
+          <View style={styles.teamTabSection}>
+            <View style={styles.sectionHeaderRow}>
+              <Users size={16} color={DS_COLORS.textSecondary} />
+              <Text style={styles.sectionTitle}>TEAM ACTIVITY</Text>
+            </View>
+            <View style={[styles.teamEmptyCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border }]}>
+              <Users size={40} color={DS_COLORS.textMuted} style={{ marginBottom: 12 }} />
+              <Text style={styles.teamEmptyTitle}>No team yet</Text>
+              <Text style={styles.teamEmptySub}>Create or join a team to see shared progress here.</Text>
+            </View>
+            <Text style={styles.onlyDisciplineShows}>Only discipline shows here.</Text>
+          </View>
+        ) : (
+        <>
         <View style={styles.dailyStatsWrap}>
           <DailyStatsCard securedToday={leaderboard.totalSecuredToday} styles={styles} />
         </View>
@@ -1015,6 +1079,8 @@ export default function ActivityScreen() {
         />
         <RecentActivitySection items={activityItems} error={activityFeedError} styles={styles} />
         <View style={styles.bottomSpacer} />
+        </>
+        )}
       </ScrollView>
     </SafeAreaView>
     </ErrorBoundary>

@@ -27,6 +27,7 @@ import {
   RefreshCw,
   AlertTriangle,
   Shield,
+  Zap,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
@@ -59,6 +60,8 @@ import { SuggestedFollows } from "@/components/SuggestedFollows";
 import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
 import { useTheme } from "@/contexts/ThemeContext";
+import { MOCK_FEED, MOCK_SUGGESTED, type MockFeedItem } from "@/constants/mockFeedData";
+import { SURFACE_SUBTLE } from "@/constants/theme";
 import { formatTimeRemaining } from "@/lib/challenge-timer";
 import {
   DS_COLORS,
@@ -753,17 +756,39 @@ export default function HomeScreen() {
           <GRIITWordmark spaced={!isGuest} subtitle={isGuest ? undefined : "Build Discipline Daily"} compact={!!isGuest} />
           {!isGuest && (
             <View style={styles.headerBadges}>
-              <View style={[styles.headerBadge, styles.headerBadgePill]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
+              <View style={[styles.headerBadgePill, { backgroundColor: "#F5F3F0" }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
                 <TrendingUp size={14} color={DS_COLORS.textSecondary} />
-                <Text style={styles.headerBadgePillText}>{stats?.longestStreak ?? 0}</Text>
+                <Text style={[styles.headerBadgePillText, { color: DS_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
               </View>
-              <View style={[styles.headerBadge, styles.headerBadgePill]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
+              <View style={[styles.headerBadgePill, { backgroundColor: "#F5F3F0" }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
                 <Flame size={14} color={DS_COLORS.accent} />
-                <Text style={styles.headerBadgePillText}>{currentStreak}</Text>
+                <Text style={[styles.headerBadgePillText, { color: DS_COLORS.textPrimary }]}>{currentStreak}</Text>
               </View>
             </View>
           )}
         </View>
+
+        {!isGuest && (
+          <View style={[styles.statsRowCard, { backgroundColor: SURFACE_SUBTLE }]}>
+            <View style={styles.statsRowCol}>
+              <Flame size={20} color={DS_COLORS.accent} />
+              <Text style={styles.statsRowNum}>{currentStreak}</Text>
+              <Text style={styles.statsRowLabel}>STREAK</Text>
+            </View>
+            <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
+            <View style={styles.statsRowCol}>
+              <TrendingUp size={20} color={DS_COLORS.textPrimary} />
+              <Text style={styles.statsRowNum}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={styles.statsRowLabel}>SCORE</Text>
+            </View>
+            <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
+            <View style={styles.statsRowCol}>
+              <View style={[styles.statsRowDot, { backgroundColor: DS_COLORS.accent }]} />
+              <Text style={styles.statsRowNum}>{tierName ?? "—"}</Text>
+              <Text style={styles.statsRowLabel}>RANK</Text>
+            </View>
+          </View>
+        )}
 
         {!isGuest && (nextTierName != null || tierName) && (
           <View style={styles.tierProgressSection}>
@@ -839,10 +864,33 @@ export default function HomeScreen() {
           </View>
         )}
 
+        {!isGuest && !hasActiveChallenge && (
+          <View style={[styles.welcomeCard, { backgroundColor: DS_COLORS.accentLight, borderColor: DS_COLORS.accent, borderWidth: 2, borderStyle: "dashed" }]}>
+            <RefreshCw size={24} color={DS_COLORS.accent} style={{ marginBottom: 8 }} />
+            <Text style={styles.welcomeCardTitle}>
+              {((stats?.totalDaysSecured ?? 0) > 0 ? "Welcome back." : "Start your first challenge.")}
+            </Text>
+            <Text style={styles.welcomeCardSub}>
+              {((stats?.totalDaysSecured ?? 0) > 0
+                ? "Secure 1 day today to restart momentum."
+                : "Pick a challenge, commit, and secure your first day.")}
+            </Text>
+            <TouchableOpacity
+              style={[styles.welcomeCardButton, { backgroundColor: DS_COLORS.accent }]}
+              onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
+              activeOpacity={0.85}
+              accessibilityLabel={(stats?.totalDaysSecured ?? 0) > 0 ? "Pick a Challenge" : "Find a challenge"}
+              accessibilityRole="button"
+            >
+              <Text style={styles.welcomeCardButtonText}>{(stats?.totalDaysSecured ?? 0) > 0 ? "Pick a Challenge" : "Find a challenge"}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {!isGuest && hasActiveChallenge && !isDaySecured && (
           <View style={styles.mainPromptBlock}>
             <Text style={[styles.secureTodayTitle, { color: colors.text.primary }]} accessibilityRole="header">Secure today to protect your streak.</Text>
-            <Text style={[styles.secureTodaySub, { color: colors.text.muted }]}>
+            <Text style={[styles.secureTodaySub, { color: DS_COLORS.accent }]}>
               {(() => {
                 const ac = activeChallenge as { ends_at?: string } | undefined;
                 if (ac?.ends_at) return `${formatTimeRemaining(ac.ends_at)} remaining.`;
@@ -850,7 +898,7 @@ export default function HomeScreen() {
                 return `${hours}h ${minutes}m remaining.`;
               })()}
             </Text>
-            <View style={styles.metricsCard}>
+            <View style={[styles.metricsCard, { backgroundColor: SURFACE_SUBTLE }]}>
               {nextTierName != null && pointsToNextTier > 0 && (
                 <View style={styles.metricsRow}>
                   <Flame size={18} color={colors.text.secondary} />
@@ -1013,42 +1061,9 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {false && hasActiveChallenge ? (
-          <View style={styles.activeSection}>
-            <Text style={styles.continueLabel}>Continue where you left off</Text>
-            <Text style={styles.secureTodayTitle}>Secure today to protect your streak.</Text>
-            {(() => {
-              const { hours, minutes } = getTimeUntilMidnight();
-              return (
-                <Text style={styles.secureTodaySub}>{hours}h {minutes}m remaining.</Text>
-              );
-            })()}
-
-            <View style={styles.metricsCard}>
-              {nextTierName != null && pointsToNextTier > 0 && (
-                <View style={styles.metricsRow}>
-                  <Flame size={18} color={colors.text.muted} />
-                  <Text style={styles.metricsText}>{pointsToNextTier} pts to {nextTierName}</Text>
-                </View>
-              )}
-              {(() => {
-                const ld = leaderboardData;
-                if (ld == null) return null;
-                const count = ld!.totalSecuredToday;
-                const show = count > 0 || ld!.currentUserRank != null;
-                if (!show) return null;
-                return (
-                  <View style={styles.metricsRow}>
-                    <Users size={18} color={colors.text.muted} />
-                    <Text style={styles.metricsText}>
-                      {count} {count === 1 ? "person" : "people"} secured today
-                    </Text>
-                  </View>
-                );
-              })()}
-            </View>
-
-            <View style={styles.todaysResetCard}>
+        {hasActiveChallenge ? (
+            <>
+            <View style={[styles.todaysResetCard, { backgroundColor: SURFACE_SUBTLE }]}>
               <View style={styles.todaysResetHeader}>
                 <Clock size={18} color={colors.accent} />
                 <Text style={styles.todaysResetTitle}>Today{"'"}s Reset</Text>
@@ -1150,40 +1165,13 @@ export default function HomeScreen() {
                 <Text style={[styles.securedText, { color: colors.text.primary }]}>Day {(activeChallenge as { current_day?: number })?.current_day ?? 1} Secured</Text>
               </View>
             )}
-          </View>
-        ) : (
-          <View style={[styles.welcomeBackCard, { backgroundColor: colors.accentLight, borderColor: colors.accent }]}>
-            <RefreshCw size={28} color={colors.accent} />
-            <Text style={[styles.welcomeBackTitle, { color: colors.text.primary }]}>
-              {isFirstTimeUser ? "Start your first challenge." : "Ready to restart?"}
-            </Text>
-            <Text style={[styles.welcomeBackSub, { color: DS_COLORS.textSecondary }]}>
-              {isFirstTimeUser
-                ? "Pick a challenge, commit, and secure your first day."
-                : "Your progress is saved. Pick up where you left off."}
-            </Text>
-            <TouchableOpacity
-              style={[styles.pickChallengeButton, isFirstTimeUser ? { backgroundColor: DS_COLORS.accent } : styles.pickChallengeButtonOutlined, isFirstTimeUser ? undefined : { borderColor: DS_COLORS.border }]}
-              onPress={() => {
-                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never));
-              }}
-              activeOpacity={0.85}
-              testID="discover-cta"
-              accessibilityLabel={isFirstTimeUser ? "Find a challenge" : "Pick a challenge"}
-              accessibilityRole="button"
-            >
-              <Text style={[styles.pickChallengeButtonText, isFirstTimeUser ? undefined : { color: DS_COLORS.textPrimary }]}>
-                {isFirstTimeUser ? "Find a challenge" : "Pick a Challenge"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+            </>
+        ) : null}
 
-        {!hasActiveChallenge && suggestedChallenges.length > 0 && (
+        {!hasActiveChallenge && (suggestedChallenges.length > 0 || MOCK_SUGGESTED.length > 0) && (
           <View style={styles.suggestedChallengesSection}>
-            <Text style={[styles.suggestedChallengesTitle, { color: DS_COLORS.textPrimary }]}>SUGGESTED FOR YOU</Text>
-            {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string }) => (
+            <Text style={[styles.suggestedChallengesTitle, { color: DS_COLORS.textMuted, letterSpacing: 1, fontSize: 12, fontWeight: "600" }]}>SUGGESTED FOR YOU</Text>
+            {(suggestedChallenges.length > 0 ? suggestedChallenges.slice(0, 3) : MOCK_SUGGESTED).map((c: { id: string; title?: string }) => (
               <TouchableOpacity
                 key={c.id}
                 style={[styles.suggestedChallengeRow, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
@@ -1222,34 +1210,71 @@ export default function HomeScreen() {
         )}
 
         {(() => {
-          if (liveFeedItems.length === 0 && !liveFeedQuery.isLoading) {
-            return (
-              <>
-                <View style={[styles.liveFeedEmpty, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-                  <Users size={32} color={colors.text.muted} style={{ marginBottom: 8 }} />
-                  <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>No activity yet</Text>
-                  <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Join a challenge to see the community in action.</Text>
-                </View>
-                {!isGuest && leaderboardEntries.length > 0 && (
-                  <SuggestedFollows
-                    title="People to follow"
-                    users={leaderboardEntries.map((e) => ({
-                      userId: e.userId,
-                      username: e.username,
-                      displayName: e.displayName,
-                      avatarUrl: e.avatarUrl ?? null,
-                      currentStreak: e.currentStreak,
-                      securedDaysThisWeek: e.securedDaysThisWeek,
-                    }))}
-                    currentUserId={user?.id}
-                    onUserPress={handleUserPress}
-                  />
-                )}
-              </>
-            );
-          }
-          if (liveFeedItems.length > 0) {
-            return liveFeedItems.map((item, i) => <LiveFeedCard key={item.type + i} data={item} />);
+          const feedItems = liveFeedItems.length > 0 ? liveFeedItems : (MOCK_FEED as unknown as LiveFeedCardData[]);
+          if (feedItems.length > 0) {
+            return feedItems.map((item: MockFeedItem | LiveFeedCardData, i: number) => {
+              const key = `${(item as MockFeedItem).type ?? (item as LiveFeedCardData).type}-${i}`;
+              if ("type" in item && item.type === "secured") {
+                const s = item as Extract<MockFeedItem, { type: "secured" }>;
+                return (
+                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border }]}>
+                    <Image source={{ uri: `https://i.pravatar.cc/150?u=${s.user}` }} style={styles.liveFeedAvatar} />
+                    <View style={styles.liveFeedBody}>
+                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{s.user}</Text> secured Day {s.day} of {s.challenge}</Text>
+                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent }]}>🔥 Streak: {s.streak} days</Text>
+                      <Text style={[styles.liveFeedTime, { color: DS_COLORS.textMuted }]}>{s.timeAgo}</Text>
+                      <View style={styles.liveFeedPills}>
+                        <TouchableOpacity style={styles.liveFeedPill}><Text style={styles.liveFeedPillText}>Respect {s.respect}</Text></TouchableOpacity>
+                        <TouchableOpacity style={styles.liveFeedPill} onPress={() => router.push(ROUTES.PROFILE_USERNAME(s.user) as never)}><Text style={styles.liveFeedPillText}>Chase</Text></TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                );
+              }
+              if ("type" in item && item.type === "milestone") {
+                const m = item as Extract<MockFeedItem, { type: "milestone" }>;
+                return (
+                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderLeftWidth: 3, borderLeftColor: DS_COLORS.gold }]}>
+                    <View style={[styles.liveFeedIconCircle, { backgroundColor: DS_COLORS.accentLight }]}><Trophy size={20} color={DS_COLORS.gold} /></View>
+                    <View style={styles.liveFeedBody}>
+                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}>Hit <Text style={[styles.liveFeedBold, { color: DS_COLORS.accent }]}>{m.days} days</Text> straight</Text>
+                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>Top {m.topPercent}% this week</Text>
+                      <TouchableOpacity style={styles.liveFeedPill}><Text style={styles.liveFeedPillText}>Respect {m.respect}</Text></TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              }
+              if ("type" in item && item.type === "challenge_cta") {
+                const c = item as Extract<MockFeedItem, { type: "challenge_cta" }>;
+                return (
+                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border }]}>
+                    <View style={[styles.liveFeedIconCircle, { backgroundColor: DS_COLORS.accentLight }]}><Zap size={20} color={DS_COLORS.accent} /></View>
+                    <View style={styles.liveFeedBody}>
+                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{c.percent}%</Text> of participants secured today</Text>
+                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>in {c.challenge}</Text>
+                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent, fontWeight: "600" }]}>Are you in?</Text>
+                      <TouchableOpacity style={[styles.liveFeedCtaButton, { backgroundColor: DS_COLORS.accent }]} onPress={() => router.push(ROUTES.CHALLENGE_ID(c.challengeId) as never)}>
+                        <Text style={styles.liveFeedCtaButtonText}>Open Challenge &gt;</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              }
+              if ("type" in item && item.type === "rank_up") {
+                const r = item as Extract<MockFeedItem, { type: "rank_up" }>;
+                return (
+                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderLeftWidth: 3, borderLeftColor: DS_COLORS.accent }]}>
+                    <Image source={{ uri: `https://i.pravatar.cc/150?u=${r.user}` }} style={styles.liveFeedAvatar} />
+                    <View style={styles.liveFeedBody}>
+                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{r.user}</Text> moved to Rank &apos;{r.newRank}&apos;</Text>
+                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.success }]}>📈 +{r.discipline} Discipline this week</Text>
+                      <TouchableOpacity onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}><Text style={[styles.liveFeedPillText, { color: DS_COLORS.accent }]}>View Profile &gt;</Text></TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              }
+              return <LiveFeedCard key={key} data={item as LiveFeedCardData} />;
+            });
           }
           if (liveFeedQuery.isLoading) {
             return (
@@ -1258,7 +1283,13 @@ export default function HomeScreen() {
               </View>
             );
           }
-          return null;
+          return (
+            <View style={[styles.liveFeedEmpty, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+              <Users size={32} color={colors.text.muted} style={{ marginBottom: 8 }} />
+              <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>No activity yet</Text>
+              <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Join a challenge to see the community in action.</Text>
+            </View>
+          );
         })()}
 
         {!isGuest && leaderboardError ? (
@@ -1283,12 +1314,13 @@ export default function HomeScreen() {
             <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>Loading leaderboard…</Text>
           </View>
         ) : leaderboardData?.currentUserRank != null ? (
-          <View style={styles.yourPositionCard}>
+          <View style={[styles.yourPositionCard, styles.yourPositionCardAccent]}>
             <Target size={28} color={colors.accent} />
-            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>YOUR STATUS</Text>
-            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>You&apos;re ranked #{leaderboardData.currentUserRank} among friends this week.</Text>
+            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>YOUR POSITION</Text>
+            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>You are ranked <Text style={styles.feedBold}>#{leaderboardData.currentUserRank}</Text> among friends this week.</Text>
+            <Text style={[styles.yourPositionSub, { color: DS_COLORS.textSecondary }]}>You&apos;re <Text style={[styles.feedBold, { color: DS_COLORS.accent }]}>{Math.max(0, (stats?.longestStreak ?? 0) - currentStreak)} days</Text> away from your best streak.</Text>
             <TouchableOpacity
-              style={[styles.secureNowButton, { backgroundColor: DS_COLORS.success }]}
+              style={[styles.secureNowButton, { backgroundColor: DS_COLORS.accent }]}
               onPress={() => requireAuth("secure", () => router.push(ROUTES.TABS_DISCOVER as never))}
               activeOpacity={0.85}
               accessibilityLabel="Secure your day"
@@ -1715,6 +1747,71 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     color: DS_COLORS.textPrimary,
   },
+  statsRowCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
+  statsRowCol: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  statsRowNum: {
+    fontSize: 28,
+    fontWeight: "800" as const,
+    color: DS_COLORS.textPrimary,
+  },
+  statsRowLabel: {
+    fontSize: 12,
+    fontWeight: "400" as const,
+    color: DS_COLORS.textMuted,
+    letterSpacing: 0.5,
+  },
+  statsRowDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    marginVertical: 4,
+  },
+  statsRowDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  welcomeCard: {
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    alignItems: "center",
+  },
+  welcomeCardTitle: {
+    fontSize: 22,
+    fontWeight: "800" as const,
+    color: DS_COLORS.textPrimary,
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  welcomeCardSub: {
+    fontSize: 14,
+    fontWeight: "400" as const,
+    color: DS_COLORS.textMuted,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  welcomeCardButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  welcomeCardButtonText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#FFFFFF",
+  },
   tierProgressSection: {
     marginBottom: DS_SPACING.lg,
   },
@@ -1989,6 +2086,73 @@ const styles = StyleSheet.create({
     textAlign: "right",
     color: DS_COLORS.textMuted,
   },
+  liveFeedCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: DS_SPACING.cardPadding,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: 1,
+    marginBottom: 12,
+    gap: 12,
+  },
+  liveFeedAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  liveFeedBody: {
+    flex: 1,
+  },
+  liveFeedText: {
+    fontSize: 15,
+    marginBottom: 2,
+  },
+  liveFeedBold: {
+    fontWeight: "700",
+  },
+  liveFeedMeta: {
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  liveFeedTime: {
+    fontSize: 12,
+    color: DS_COLORS.textMuted,
+    marginBottom: 8,
+  },
+  liveFeedPills: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  liveFeedPill: {
+    backgroundColor: "#F5F3F0",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  liveFeedPillText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  liveFeedIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  liveFeedCtaButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: DS_RADIUS.button,
+    marginTop: 8,
+    alignItems: "center",
+  },
+  liveFeedCtaButtonText: {
+    color: DS_COLORS.white,
+    fontSize: 15,
+    fontWeight: "600",
+  },
   liveFeedEmpty: {
     padding: DS_SPACING.xxl,
     marginBottom: DS_SPACING.lg,
@@ -2028,7 +2192,7 @@ const styles = StyleSheet.create({
     marginBottom: DS_SPACING.sm,
   },
   suggestedChallengeTitle: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    fontSize: 16,
     fontWeight: "600",
     flex: 1,
     marginRight: DS_SPACING.sm,
@@ -2045,6 +2209,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: DS_COLORS.textSecondary,
     marginTop: 4,
+    marginBottom: 12,
+    textAlign: "center",
   },
   feedCard: {
     backgroundColor: DS_COLORS.surface,
@@ -2195,6 +2361,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: DS_BORDERS.width,
     borderColor: DS_COLORS.border,
+  },
+  yourPositionCardAccent: {
+    backgroundColor: DS_COLORS.accentLight,
+    borderWidth: 2,
+    borderColor: DS_COLORS.accent,
+    padding: 24,
   },
   guestChallengeCard: {
     alignItems: "flex-start",

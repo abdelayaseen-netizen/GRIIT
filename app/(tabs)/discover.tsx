@@ -85,10 +85,10 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.ComponentType<{ size?: number; color?: string }> }[] = [
-  { key: "all", label: "All", icon: Sparkles },
-  { key: "fitness", label: "Fitness", icon: Dumbbell },
-  { key: "mind", label: "Mind", icon: Brain },
-  { key: "discipline", label: "Discipline", icon: Target },
+  { key: "all", label: "✨ All", icon: Sparkles },
+  { key: "fitness", label: "🏋️ Fitness", icon: Dumbbell },
+  { key: "mind", label: "🧠 Mind", icon: Brain },
+  { key: "discipline", label: "🛡 Discipline", icon: Target },
 ];
 
 function isDailyActive(c: StarterChallenge): boolean {
@@ -201,7 +201,7 @@ function SkeletonList({ cardColor }: { cardColor?: string }) {
 
 const FEATURED_PAGE_SIZE = 20;
 const screenWidth = Dimensions.get("window").width;
-const DAILY_CARD_WIDTH = screenWidth * 0.8;
+const DAILY_CARD_WIDTH = screenWidth * 0.48;
 const DAILY_CARD_GAP = 12;
 
 export default function DiscoverScreen() {
@@ -510,10 +510,9 @@ export default function DiscoverScreen() {
 
         {featuredChallenges.length > 0 && (
           <View style={styles.section}>
-            <SectionHeader
-              title="📈 Featured"
-              icon={<TrendingUp size={18} color={DS_COLORS.accent} />}
-            />
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>📈 Featured</Text>
+            </View>
             <FlatList
               data={featuredChallenges}
               keyExtractor={(item) => item.id}
@@ -529,10 +528,9 @@ export default function DiscoverScreen() {
 
         {otherChallenges.length > 0 && (
           <View style={styles.section}>
-            <SectionHeader
-              title="✨ More Challenges"
-              icon={<Sparkles size={18} color={DS_COLORS.textPrimary} />}
-            />
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>✨ More Challenges</Text>
+            </View>
             <FlatList
               data={otherChallenges}
               keyExtractor={(item) => item.id}
@@ -592,19 +590,14 @@ export default function DiscoverScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={[styles.categoryScroll, { paddingRight: 20 }]}
           >
-            {CATEGORY_FILTERS.map((cat) => {
-              const isActive = activeCategory === cat.key;
-              const IconComp = cat.icon;
-              return (
-                <FilterChip
-                  key={cat.key}
-                  label={cat.label}
-                  selected={isActive}
-                  onPress={() => handleCategoryPress(cat.key)}
-                  icon={<IconComp size={14} color={isActive ? DS_COLORS.white : DS_COLORS.textPrimary} />}
-                />
-              );
-            })}
+            {CATEGORY_FILTERS.map((cat) => (
+              <FilterChip
+                key={cat.key}
+                label={cat.label}
+                selected={activeCategory === cat.key}
+                onPress={() => handleCategoryPress(cat.key)}
+              />
+            ))}
           </ScrollView>
         </View>
 

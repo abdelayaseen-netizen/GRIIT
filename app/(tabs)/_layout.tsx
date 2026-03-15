@@ -18,12 +18,12 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBg = colors.background;
+  const tabBg = DS_COLORS.background;
   const tabBorder = DS_COLORS.border;
-  const tabActive = colors.accent;
-  const tabInactive = colors.text.tertiary;
+  const tabActive = DS_COLORS.accent;
+  const tabInactive = DS_COLORS.textMuted;
   const isCreateScreen = typeof pathname === "string" && pathname.includes("create");
-  const centerBtnBg = isCreateScreen ? colors.accent : (colorScheme === "dark" ? colors.pill : DS_COLORS.centerButtonBg);
+  const centerBtnBg = isCreateScreen ? colors.accent : DS_COLORS.commitmentButtonBg;
 
   return (
     <Tabs
@@ -39,8 +39,8 @@ export default function TabLayout() {
           height: DS_MEASURES.tabBarHeight,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: "400" as const,
+          fontSize: 11,
+          fontWeight: "500" as const,
           marginTop: 4,
           marginBottom: 8,
         },

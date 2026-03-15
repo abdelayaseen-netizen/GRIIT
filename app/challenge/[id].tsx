@@ -826,7 +826,7 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const headerGradientColors = isDaily ? [DS_COLORS.challenge24hHeaderBg, DS_COLORS.challenge24hHeaderBg] as const : ["#C06030", "#D2734A"] as const;
+  const headerGradientColors = isDaily ? [DS_COLORS.challenge24hHeaderBg, DS_COLORS.challenge24hHeaderBg] as const : ["#C4784A", "#A65F3A"] as const;
   const ctaBgColor = isDaily && !expired ? DS_COLORS.success : DS_COLORS.accent;
   const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
@@ -1081,27 +1081,22 @@ export default function ChallengeDetailScreen() {
               </View>
             </View>
 
-            {/* Progress stats card (two metrics, divider between) */}
-            {(() => {
-              const items: { value: number; label: string }[] = [];
-              if (challenge.hard_pick_rate != null) items.push({ value: challenge.hard_pick_rate, label: "pick Hard Mode" });
-              if (challenge.hard_finish_rate != null) items.push({ value: challenge.hard_finish_rate, label: "finish Hard Mode" });
-              if (challenge.completion_rate != null && challenge.hard_pick_rate == null) items.push({ value: challenge.completion_rate, label: "completion rate" });
-              if (items.length === 0) return null;
-              return (
-                <View style={s.progressStatsCard}>
-                  {items.map((item, i) => (
-                    <React.Fragment key={item.label}>
-                      {i > 0 && <View style={s.progressStatDivider} />}
-                      <View style={s.progressStatItem}>
-                        <Text style={s.progressStatValue}>{item.value}%</Text>
-                        <Text style={s.progressStatLabel}>{item.label}</Text>
-                      </View>
-                    </React.Fragment>
-                  ))}
-                </View>
-              );
-            })()}
+            {/* Stats row: secured today % | completion rate % (spec 3.3) */}
+            <View style={s.statsRowCard}>
+              <View style={s.statsRowCol}>
+                <Text style={s.statsRowValue}>
+                  {challenge.participants_count
+                    ? Math.round(((challenge.active_today_count ?? 0) / Math.max(1, challenge.participants_count)) * 100)
+                    : 0}%
+                </Text>
+                <Text style={s.statsRowLabel}>secured today</Text>
+              </View>
+              <View style={s.statsRowDivider} />
+              <View style={s.statsRowCol}>
+                <Text style={s.statsRowValue}>{challenge.completion_rate ?? 0}%</Text>
+                <Text style={s.statsRowLabel}>completion rate</Text>
+              </View>
+            </View>
 
             {/* Today's Missions (hidden when team failed or shared-goal-only) */}
             {!(isTeamChallenge && runStatus === "failed") && (
@@ -1160,11 +1155,11 @@ export default function ChallengeDetailScreen() {
                     const isWarning = rule.toLowerCase().includes("miss") || rule.toLowerCase().includes("fail") || rule.toLowerCase().includes("reset");
                     return (
                       <View key={i} style={[s.ruleRow, i < rules.length - 1 && s.ruleRowBorder]}>
-                        <View style={[s.ruleBullet, isWarning && s.ruleBulletWarning]}>
+                        <View style={[s.ruleBullet, isWarning && s.ruleBulletWarning, !isWarning && s.ruleBulletOrange]}>
                           {isWarning ? (
-                            <AlertTriangle size={12} color={DS_COLORS.materialRed} />
+                            <AlertTriangle size={12} color={DS_COLORS.danger} />
                           ) : (
-                            <Check size={12} color={DS_COLORS.materialGreen} />
+                            <Check size={12} color={DS_COLORS.accent} />
                           )}
                         </View>
                         <Text style={[s.ruleText, isWarning && s.ruleTextWarning]}>{rule}</Text>
@@ -1295,14 +1290,29 @@ export default function ChallengeDetailScreen() {
               </View>
               <View style={s.commitmentRow}>
                 <Text style={s.commitmentLabel}>Mode</Text>
-                <Text style={[s.commitmentValue, { color: theme.accent, fontWeight: "600" }]}>
+                <Text style={[s.commitmentValue, { color: DS_COLORS.accent, fontWeight: "600" }]}>
                   {difficultyLabel}{difficulty === "hard" || difficulty === "extreme" ? " Mode" : ""}
                 </Text>
               </View>
             </View>
-            <View style={s.commitmentWarning}>
-              <AlertTriangle size={14} color="#DC2626" style={{ marginRight: 8 }} />
-              <Text style={s.commitmentWarningText}>One missed day resets progress to Day 1.</Text>
+            <View style={s.commitmentCheckCard}>
+              <Text style={s.commitmentCheckCardTitle}>COMMITMENT CHECK</Text>
+              <View style={s.commitmentCheckCardRow}>
+                <Text style={s.commitmentCheckCardLabel}>Time per day</Text>
+                <Text style={s.commitmentCheckCardValue}>~15 min</Text>
+              </View>
+              <View style={[s.commitmentCheckCardRow, s.commitmentRowBorder]}>
+                <Text style={s.commitmentCheckCardLabel}>Best for</Text>
+                <Text style={s.commitmentCheckCardValue}>Mornings</Text>
+              </View>
+              <View style={s.commitmentCheckCardRow}>
+                <Text style={s.commitmentCheckCardLabel}>Daily tasks</Text>
+                <Text style={s.commitmentCheckCardValue}>{challenge?.tasks?.length ?? 0} tasks</Text>
+              </View>
+            </View>
+            <View style={[s.commitmentWarning, { backgroundColor: DS_COLORS.dangerLight }]}>
+              <AlertTriangle size={14} color={DS_COLORS.danger} style={{ marginRight: 8 }} />
+              <Text style={[s.commitmentWarningText, { color: DS_COLORS.danger }]}>One missed day resets progress to Day 1.</Text>
             </View>
             <TouchableOpacity
               style={s.commitmentCheckRow}
@@ -1698,6 +1708,35 @@ const s = StyleSheet.create({
     borderWidth: DS_BORDERS.width,
     borderColor: DS_COLORS.border,
   },
+  statsRowCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: DS_COLORS.surfaceSubtle,
+    borderRadius: DS_RADIUS.cardAlt,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.lg,
+  },
+  statsRowCol: {
+    flex: 1,
+    alignItems: "center",
+  },
+  statsRowValue: {
+    fontSize: 24,
+    fontWeight: "800" as const,
+    color: DS_COLORS.accent,
+    marginBottom: DS_SPACING.xs,
+  },
+  statsRowLabel: {
+    fontSize: 13,
+    fontWeight: "400" as const,
+    color: DS_COLORS.textMuted,
+  },
+  statsRowDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    backgroundColor: DS_COLORS.border,
+    marginVertical: DS_SPACING.xs,
+  },
   progressStatsCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -1930,6 +1969,9 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  ruleBulletOrange: {
+    backgroundColor: DS_COLORS.accentLight,
+  },
   ruleBulletWarning: {
     backgroundColor: DS_COLORS.dangerSoft,
   },
@@ -2098,6 +2140,38 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: DS_COLORS.border,
   },
+  commitmentCheckCard: {
+    width: "100%",
+    marginTop: DS_SPACING.xl,
+    backgroundColor: DS_COLORS.surfaceSubtle,
+    borderRadius: 12,
+    padding: DS_SPACING.cardPadding,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
+  commitmentCheckCardTitle: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    color: DS_COLORS.textMuted,
+    letterSpacing: 1,
+    marginBottom: DS_SPACING.md,
+    textTransform: "uppercase" as const,
+  },
+  commitmentCheckCardRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: DS_SPACING.sm,
+  },
+  commitmentCheckCardLabel: {
+    fontSize: 14,
+    color: DS_COLORS.textSecondary,
+  },
+  commitmentCheckCardValue: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: DS_COLORS.textPrimary,
+  },
   commitmentLabel: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     color: DS_COLORS.textMuted,
@@ -2161,7 +2235,8 @@ const s = StyleSheet.create({
     marginTop: DS_SPACING.xl,
   },
   commitmentConfirmDisabled: {
-    backgroundColor: "rgba(210,115,74,0.5)",
+    backgroundColor: DS_COLORS.accent,
+    opacity: 0.5,
   },
   commitmentConfirmText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
