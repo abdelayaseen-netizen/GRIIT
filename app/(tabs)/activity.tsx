@@ -700,7 +700,7 @@ function CommunityActivityFeedSection({
           const desc = getFeedLine(e);
           const onPress = () => {
             if (e.challenge_id) {
-              router.push(ROUTES.CHALLENGE_ID(e.challenge_id));
+              router.push(ROUTES.CHALLENGE_ID(e.challenge_id) as never);
             } else if (e.username) {
               router.push(ROUTES.PROFILE_USERNAME(e.username));
             }

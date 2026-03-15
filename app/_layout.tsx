@@ -163,19 +163,20 @@ function AuthRedirector() {
     const inOnboarding = first === SEGMENTS.ONBOARDING;
     const inDay1QuickWin = first === SEGMENTS.DAY1_QUICK_WIN;
     const inTabs = first === "(tabs)";
+    const inChallenge = first === "challenge";
 
     if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
       router.replace(ROUTES.CREATE_PROFILE as never);
       return;
     }
 
-    // Only redirect TO tabs when not already in tabs — otherwise we'd reset to Home and break tab navigation
-    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin && !inTabs) {
+    // Only redirect TO tabs when not already in tabs — don't redirect when viewing challenge detail (or we'd dump user to Home)
+    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inDay1QuickWin && !inTabs && !inChallenge) {
       router.replace(ROUTES.TABS as never);
       return;
     }
 
-    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding && !inTabs) {
+    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding && !inTabs && !inChallenge) {
       router.replace(ROUTES.TABS as never);
       return;
     }
@@ -216,7 +217,9 @@ function RootLayoutNav() {
     check();
   }, []);
 
-  const inOnboarding = (typeof segments[0] === "string" ? segments[0] : "") === "onboarding";
+  const firstSegment = typeof segments[0] === "string" ? segments[0] : "";
+  const inOnboarding = firstSegment === "onboarding";
+  const inChallenge = firstSegment === "challenge";
   if (checkingOnboarding) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: DS_COLORS?.background ?? "#0A0A0A" }}>
@@ -224,7 +227,7 @@ function RootLayoutNav() {
       </View>
     );
   }
-  if (needsOnboarding && !inOnboarding) {
+  if (needsOnboarding && !inOnboarding && !inChallenge) {
     return <Redirect href="/onboarding" />;
   }
 
