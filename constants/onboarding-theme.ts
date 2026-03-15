@@ -1,26 +1,28 @@
+/** GRIIT Design DNA — cream bg, charcoal text, burnt orange accent, dark CTA */
 export const ONBOARDING_COLORS = {
-  background: '#0A0A0A',
-  backgroundSecondary: '#141414',
-  backgroundTertiary: '#1C1C1E',
-  surface: '#1C1C1E',
-  surfaceElevated: '#2C2C2E',
+  background: '#F5F1EB',
+  backgroundSecondary: '#FAF8F5',
+  backgroundTertiary: '#FFFFFF',
+  surface: '#FFFFFF',
+  surfaceElevated: '#FFFFFF',
 
-  accent: '#E8593C',
-  accentLight: '#FF7A5C',
-  accentMuted: 'rgba(232, 89, 60, 0.15)',
-  accentBorder: 'rgba(232, 89, 60, 0.3)',
+  accent: '#D2734A',
+  accentLight: '#FFF7ED',
+  accentMuted: 'rgba(210, 115, 74, 0.15)',
+  accentBorder: 'rgba(210, 115, 74, 0.3)',
 
-  textPrimary: '#FFFFFF',
-  textSecondary: '#A1A1AA',
-  textTertiary: '#71717A',
+  textPrimary: '#2D3A2E',
+  textSecondary: '#7A7A6D',
+  textTertiary: '#B0ACA3',
   textOnAccent: '#FFFFFF',
 
-  success: '#22C55E',
-  successMuted: 'rgba(34, 197, 94, 0.15)',
-  warning: '#F59E0B',
+  success: '#2D7A4F',
+  successMuted: 'rgba(45, 122, 79, 0.15)',
+  warning: '#E8A230',
 
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderActive: 'rgba(232, 89, 60, 0.5)',
+  border: '#E8E4DD',
+  borderActive: '#2D3A2E',
+  commitmentButtonBg: '#2D2D2D',
 } as const;
 
 export const ONBOARDING_TYPOGRAPHY = {

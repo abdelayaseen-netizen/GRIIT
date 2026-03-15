@@ -7,6 +7,8 @@ type GRIITWordmarkProps = {
   color?: string;
   subtitleColor?: string;
   compact?: boolean;
+  /** Design DNA: spaced "G R I T" (uppercase with spaces) */
+  spaced?: boolean;
 };
 
 /**
@@ -17,6 +19,7 @@ export function GRIITWordmark({
   color = DS_COLORS.textPrimary,
   subtitleColor = DS_COLORS.textSecondary,
   compact = false,
+  spaced = false,
 }: GRIITWordmarkProps) {
   return (
     <View style={compact ? styles.compactWrap : styles.wrap}>
@@ -33,7 +36,7 @@ export function GRIITWordmark({
         ]}
         allowFontScaling={false}
       >
-        GRIIT
+        {spaced ? "G R I T" : "GRIIT"}
       </Text>
       {subtitle ? (
         <Text

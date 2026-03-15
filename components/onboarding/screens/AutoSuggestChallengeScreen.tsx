@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: T.subheadingSize, fontWeight: T.subheadingWeight, color: C.textPrimary, marginBottom: 6 },
   cardHook: { fontSize: T.bodySize, color: C.textSecondary, marginBottom: 8 },
   cardMeta: { fontSize: T.captionSize, color: C.textTertiary, marginBottom: 20 },
-  primaryButton: { backgroundColor: C.accent, height: S.buttonHeight, borderRadius: S.buttonRadius, justifyContent: 'center', alignItems: 'center' },
+  primaryButton: { backgroundColor: C.commitmentButtonBg, height: S.buttonHeight, borderRadius: S.buttonRadius, justifyContent: 'center', alignItems: 'center' },
   primaryButtonDisabled: { opacity: 0.7 },
   primaryButtonText: { fontSize: T.bodySize, fontWeight: '700', color: C.textOnAccent },
   secondaryButton: { height: S.buttonHeight, borderRadius: S.buttonRadius, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: C.border },

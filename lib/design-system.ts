@@ -2,9 +2,9 @@
  * GRIIT Design System — Rork visual spec.
  * Base palette from constants/theme.ts; extended tokens here.
  */
-import { BASE_COLORS } from "@/constants/theme";
+import { BASE_COLORS, COMMITMENT_BUTTON_BG, EXPLORE_BUTTON_BG } from "@/constants/theme";
 
-// ─── COLORS (base from theme, rest extended) ─────────────────────────────────
+// ─── COLORS (GRIIT Design DNA — base from theme, rest extended) ───────────────
 export const DS_COLORS = {
   // Base (from constants/theme.ts)
   background: BASE_COLORS.background,
@@ -17,25 +17,31 @@ export const DS_COLORS = {
   success: BASE_COLORS.success,
   tabInactive: BASE_COLORS.tabInactive,
 
-  backgroundAlt: "#F8F6F2",
-  surfaceWarm: "#FCFCFA",
+  backgroundAlt: "#FAF8F5",
+  surfaceWarm: "#FAF8F5",
   surfaceMuted: "#F2F0EB",
-  textPrimaryAlt: "#141414",
-  textSecondaryAlt: "#888884",
-  textMuted: "#AAAAAA",
-  borderAlt: "#E8E5DE",
+  textPrimaryAlt: "#2D3A2E",
+  textSecondaryAlt: "#7A7A6D",
+  textMuted: "#B0ACA3",
+  textTertiary: "#B0ACA3",
+  borderAlt: "#E8E4DD",
   borderFocus: BASE_COLORS.accent,
   filterPillInactiveBorder: "#E0DDD6",
-  accentDark: "#D96A3E",
-  accentSoft: "#FFF5F0",
-  accentLight: "#FFF8F5",
-  cardSelectedBg: "#FFF8F5",
+  accentDark: "#C2663E",
+  accentSoft: "#FFF7ED",
+  accentLight: "#FFF7ED",
+  cardSelectedBg: "#FFF7ED",
+
+  // Commitment / CTA (Design DNA)
+  commitmentButtonBg: COMMITMENT_BUTTON_BG,
+  exploreButtonBg: EXPLORE_BUTTON_BG,
+  buttonDisabledBg: "#C4C0B8",
+  buttonDisabledText: "#FFFFFF",
+  selectedBorder: "#2D3A2E",
 
   // Auth / form
-  errorText: "#CC3333",
-  buttonDisabledBg: "#E8E5DE",
-  buttonDisabledText: "#888884",
-  green: "#2F7A52",
+  errorText: "#DC4A3C",
+  green: "#2D7A4F",
 
   // Semantic
   success: "#2F7A52",
@@ -50,8 +56,8 @@ export const DS_COLORS = {
   materialRed: "#F44336",
   materialGreen: "#4CAF50",
 
-  // Onboarding (light only — aliases for compatibility)
-  onboardingBg: "#F0EDE6",
+  // Onboarding (cream — Design DNA)
+  onboardingBg: BASE_COLORS.background,
   borderDark: "#E8E5DE",
   darkCard: "#FFFFFF",
   darkTextSecondary: "#A0A0A0",
@@ -118,9 +124,9 @@ export const DS_COLORS = {
   challengePausedTitle: "#C84030",
   rebuildModeText: "#E07B4A",
 
-  // Settings
-  settingsPageBg: "#EAF0F0",
-  settingsBackCircle: "#EDF0F0",
+  // Settings (Design DNA — cream)
+  settingsPageBg: BASE_COLORS.background,
+  settingsBackCircle: "#E8E4DD",
 
   // Challenge detail 24h header
   challenge24hHeaderBg: "#3E7A55",
@@ -262,13 +268,13 @@ export const DS_BORDERS = {
   colorStrong: DS_COLORS.textPrimary,
 } as const;
 
-// ─── SHADOWS (Rork: shadowColor #000, opacity 0.04, radius 8, elevation 2) ─
+// ─── SHADOWS (Design DNA: very subtle card — opacity 0.04, radius 6) ───────────
 export const DS_SHADOWS = {
   card: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 2,
   },
   button: {

@@ -1,19 +1,24 @@
 /**
- * Single source of truth for base palette. lib/design-system.ts imports these.
- * Cream/orange/green design system — matches Home and tab bar.
+ * GRIIT Design DNA — single source of truth for base palette.
+ * Warm cream bg, charcoal text, burnt orange accent, dark commitment buttons.
  */
 export const BASE_COLORS = {
-  background: "#F0EDE6",
+  background: "#F5F1EB",
   surface: "#FFFFFF",
   card: "#FFFFFF",
-  textPrimary: "#1A1A1A",
-  textSecondary: "#888884",
-  accent: "#E07B4A",
-  border: "#E8E5DE",
-  success: "#2F7A52",
-  tabInactive: "#888884",
-  tabActive: "#E07B4A",
+  textPrimary: "#2D3A2E",
+  textSecondary: "#7A7A6D",
+  accent: "#D2734A",
+  border: "#E8E4DD",
+  success: "#2D7A4F",
+  tabInactive: "#7A7A6D",
+  tabActive: "#D2734A",
 } as const;
+
+/** Dark commitment button (Continue, I Commit, Start Day 1) */
+export const COMMITMENT_BUTTON_BG = "#2D2D2D";
+/** Explore Challenges button (navy/charcoal) */
+export const EXPLORE_BUTTON_BG = "#2D3A5F";
 
 /** @deprecated Use BASE_COLORS or DS_COLORS. Kept for any direct theme.ts imports. */
 export const COLORS = {
@@ -22,7 +27,7 @@ export const COLORS = {
   text: BASE_COLORS.textPrimary,
   textSecondary: BASE_COLORS.textSecondary,
   accent: BASE_COLORS.accent,
-  accentLight: "#FFF0E8",
+  accentLight: "#FFF7ED",
   border: BASE_COLORS.border,
   success: BASE_COLORS.success,
   warning: "#E8A230",

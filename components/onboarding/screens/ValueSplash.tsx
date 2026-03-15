@@ -35,10 +35,10 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
 
       <Animated.View style={[styles.brandContainer, { opacity: fadeTitle }]}>
-        <Text style={styles.brandMark}>GRIIT</Text>
+        <Text style={styles.brandMark}>G R I T</Text>
       </Animated.View>
 
       <View style={styles.heroSection}>
@@ -76,7 +76,7 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
 
       <Animated.View style={[styles.ctaContainer, { opacity: fadeButton }]}>
         <Pressable style={styles.primaryButton} onPress={() => { track({ name: 'onboarding_started' }); onContinue(); }}>
-          <Text style={styles.primaryButtonText}>I'm ready</Text>
+          <Text style={styles.primaryButtonText}>Continue &gt;</Text>
         </Pressable>
         <Text style={styles.footerText}>
           Takes 60 seconds · No credit card needed
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   brandMark: {
     fontSize: 20,
     fontWeight: '800',
-    color: C.accent,
+    color: C.textPrimary,
     letterSpacing: 6,
   },
   heroSection: { flex: 1, justifyContent: 'center' },

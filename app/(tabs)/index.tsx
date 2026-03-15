@@ -751,18 +751,45 @@ export default function HomeScreen() {
         )}
 
         <View style={styles.header}>
-          <GRIITWordmark compact />
-          <View style={styles.headerBadges}>
-            <View style={styles.headerBadge} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
-              <TrendingUp size={14} color={DS_COLORS.white} />
-              <Text style={styles.headerBadgeText}>{stats?.longestStreak ?? 0}</Text>
+          <GRIITWordmark spaced={!isGuest} subtitle={isGuest ? undefined : "Build Discipline Daily"} compact={!!isGuest} />
+          {!isGuest && (
+            <View style={styles.headerBadges}>
+              <View style={[styles.headerBadge, styles.headerBadgePill]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
+                <TrendingUp size={14} color={DS_COLORS.textSecondary} />
+                <Text style={styles.headerBadgePillText}>{stats?.longestStreak ?? 0}</Text>
+              </View>
+              <View style={[styles.headerBadge, styles.headerBadgePill]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
+                <Flame size={14} color={DS_COLORS.accent} />
+                <Text style={styles.headerBadgePillText}>{currentStreak}</Text>
+              </View>
             </View>
-            <View style={styles.headerBadge} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
-              <Flame size={14} color={DS_COLORS.white} />
-              <Text style={styles.headerBadgeText}>{currentStreak}</Text>
+          )}
+        </View>
+
+        {!isGuest && (nextTierName != null || tierName) && (
+          <View style={styles.tierProgressSection}>
+            <Text style={[styles.tierProgressTitle, { color: colors.text.primary }]}>
+              {pointsToNextTier > 0 && nextTierName ? `${pointsToNextTier} pts to ${nextTierName}.` : tierName ? `${tierName}.` : "Keep building."}
+            </Text>
+            <Text style={[styles.tierProgressSub, { color: colors.text.muted }]}>Keep pushing.</Text>
+            <View style={[styles.tierProgressCard, { backgroundColor: colors.card, borderColor: colors.border }, DS_SHADOWS.card]}>
+              {pointsToNextTier > 0 && nextTierName && (
+                <View style={styles.metricsRow}>
+                  <Flame size={18} color={colors.text.secondary} />
+                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
+                </View>
+              )}
+              {leaderboardData != null && (
+                <View style={styles.metricsRow}>
+                  <Users size={18} color={colors.text.secondary} />
+                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>
+                    {leaderboardData.totalSecuredToday} friends secured today
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
-        </View>
+        )}
 
         {showRecoveryBanner && (
           <View style={[styles.recoveryBanner, { backgroundColor: colors.warningLight, borderColor: colors.border }]}>
@@ -1607,13 +1634,13 @@ export default function HomeScreen() {
               >
                 <Text style={[styles.streakLostCloseText, { color: DS_COLORS.textSecondary }]}>✕</Text>
               </TouchableOpacity>
-              <View style={styles.streakLostIconWrap}>
-                <Flame size={28} color={colors.text.muted} />
+              <View style={[styles.streakLostIconWrap, { backgroundColor: DS_COLORS.surfaceMuted }]}>
+                <Flame size={28} color={DS_COLORS.textMuted} />
               </View>
               <Text style={[styles.streakLostTitle, { color: DS_COLORS.textPrimary }]}>Streak lost.</Text>
               <Text style={[styles.streakLostSub, { color: DS_COLORS.textSecondary }]}>Start again today.</Text>
               <TouchableOpacity
-                style={styles.streakLostButton}
+                style={[styles.streakLostButton, { backgroundColor: DS_COLORS.commitmentButtonBg }]}
                 onPress={() => setShowStreakLostModal(false)}
                 activeOpacity={0.85}
                 accessibilityLabel="Continue"
@@ -1715,10 +1742,40 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: DS_COLORS.black,
   },
+  headerBadgePill: {
+    backgroundColor: DS_COLORS.surface,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
   headerBadgeText: {
     fontSize: 13,
     fontWeight: "700" as const,
     color: DS_COLORS.white,
+  },
+  headerBadgePillText: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    color: DS_COLORS.textPrimary,
+  },
+  tierProgressSection: {
+    marginBottom: DS_SPACING.lg,
+  },
+  tierProgressTitle: {
+    fontSize: 24,
+    fontWeight: "700" as const,
+    marginBottom: 4,
+    lineHeight: 30,
+  },
+  tierProgressSub: {
+    fontSize: 14,
+    fontWeight: "400" as const,
+    marginBottom: 12,
+  },
+  tierProgressCard: {
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.cardPadding,
+    gap: 12,
+    borderWidth: 1,
   },
   mainPromptBlock: {
     marginBottom: 16,
@@ -1803,11 +1860,12 @@ const styles = StyleSheet.create({
   statsSummaryCard: {
     flexDirection: "row",
     backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
+    borderRadius: DS_RADIUS.card,
     padding: DS_SPACING.cardPadding + 2,
     marginBottom: DS_SPACING.sectionGap,
     borderWidth: DS_BORDERS.width,
     borderColor: DS_COLORS.border,
+    ...DS_SHADOWS.card,
   },
   statsSummaryCol: {
     flex: 1,
@@ -2750,7 +2808,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   streakLostButton: {
-    backgroundColor: DS_COLORS.black,
     borderRadius: 14,
     height: 52,
     width: "100%",

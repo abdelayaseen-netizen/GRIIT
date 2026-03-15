@@ -81,6 +81,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: C.background },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 4 },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  backButtonText: { fontSize: 22, color: C.textSecondary },
+  backButtonText: { fontSize: 22, color: C.textPrimary },
   backButtonPlaceholder: { width: 40 },
 });

@@ -36,13 +36,19 @@ const styles = StyleSheet.create({
     width: S.progressDotSize,
     height: S.progressDotSize,
     borderRadius: S.progressDotSize / 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: '#C4C0B8',
+    borderWidth: 1,
+    borderColor: '#C4C0B8',
   },
   dotActive: {
     backgroundColor: C.accent,
-    width: 24,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 0,
   },
   dotCompleted: {
-    backgroundColor: 'rgba(232, 89, 60, 0.4)',
+    backgroundColor: C.success,
+    borderColor: C.success,
   },
 });

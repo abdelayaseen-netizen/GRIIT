@@ -41,10 +41,10 @@ const REMINDER_PRESETS = [
 
 
 const CONSEQUENCES = [
-  { bulletColor: DS_COLORS.milestoneGold, title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
-  { bulletColor: DS_COLORS.accent, title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
-  { bulletColor: DS_COLORS.danger, title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
-  { bulletColor: DS_COLORS.dangerDark, title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
+  { bulletColor: "#E8A230", title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
+  { bulletColor: "#D2734A", title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
+  { bulletColor: "#DC4A3C", title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
+  { bulletColor: "#B91C1C", title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
 ] as const;
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
@@ -237,8 +237,7 @@ export default function SettingsScreen() {
         {/* Privacy & Visibility */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Eye size={18} color={DS_COLORS.textPrimary} />
-            <Text style={[styles.sectionTitleLarge, { color: DS_COLORS.textPrimary }]}>Privacy & Visibility</Text>
+            <Text style={[styles.sectionTitleLarge, { color: DS_COLORS.textPrimary }]}>👁 Privacy & Visibility</Text>
           </View>
           <Text style={[styles.privacyDesc, { color: DS_COLORS.textSecondary }]}>
             Control who sees your profile, challenges, and activity. Like TikTok privacy settings.
@@ -616,7 +615,7 @@ export default function SettingsScreen() {
 
         {/* Consequences */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>🛡 Consequences</Text>
+          <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>⏱ Consequences</Text>
           <View style={[styles.card, styles.consequenceCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
             {CONSEQUENCES.map((item, i) => (
               <View key={i} style={styles.consequenceRow}>
@@ -637,7 +636,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS_COLORS.settingsPageBg },
+  safe: { flex: 1, backgroundColor: DS_COLORS.background },
   header: {
     flexDirection: "row",
     alignItems: "center",

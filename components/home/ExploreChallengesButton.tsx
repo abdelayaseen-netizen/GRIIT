@@ -1,10 +1,10 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
-import { Sparkles } from "lucide-react-native";
+import { ChevronRight } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_MEASURES } from "@/lib/design-system";
 
 export default function ExploreChallengesButton() {
   const router = useRouter();
@@ -21,9 +21,8 @@ export default function ExploreChallengesButton() {
       activeOpacity={0.85}
       testID="explore-challenges-button"
     >
-      <Sparkles size={18} color={DS_COLORS.accent} />
-      <Text style={styles.label}>Explore challenges</Text>
-      <Text style={styles.chevron}>›</Text>
+      <Text style={styles.label}>Explore Challenges</Text>
+      <ChevronRight size={18} color={DS_COLORS.white} strokeWidth={2.5} />
     </TouchableOpacity>
   );
 }
@@ -34,21 +33,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: DS_SPACING.sm,
+    minHeight: DS_MEASURES.ctaHeight,
     paddingVertical: DS_SPACING.lg,
     paddingHorizontal: DS_SPACING.lg,
     marginBottom: DS_SPACING.lg,
-    backgroundColor: DS_COLORS.accentSoft,
-    borderRadius: DS_RADIUS.buttonPill,
+    backgroundColor: DS_COLORS.exploreButtonBg,
+    borderRadius: DS_RADIUS.ctaButton,
     width: "100%",
   },
   label: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600",
-    color: DS_COLORS.accent,
-  },
-  chevron: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: DS_COLORS.accent,
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
+    fontWeight: DS_TYPOGRAPHY.button.fontWeight,
+    color: DS_COLORS.white,
   },
 });
