@@ -1081,7 +1081,7 @@ export default function TaskEditorModal({
           onRight={handleSave}
           rightDisabled={!canSave()}
           rightButtonVariant="primary"
-          rightButtonPill={!!editingTask}
+          rightButtonPill
           accessibilityCancelLabel="Cancel editing task"
           accessibilityRightLabel="Save task"
         />

@@ -35,13 +35,14 @@ const s = StyleSheet.create({
     borderColor: t.colors.borderLight,
   },
   pillSelected: {
-    backgroundColor: t.colors.accentOrangeCreate,
-    borderWidth: 0,
+    backgroundColor: t.colors.cardBg,
+    borderWidth: 2,
+    borderColor: t.colors.accentOrangeCreate,
   },
   text: {
     fontSize: t.typography.primaryBody.fontSize,
     fontWeight: "600",
     color: t.colors.textPrimary,
   },
-  textSelected: { color: t.colors.white },
+  textSelected: { color: t.colors.accentOrangeCreate },
 });

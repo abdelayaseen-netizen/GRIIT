@@ -57,7 +57,7 @@ const s = StyleSheet.create({
     paddingHorizontal: t.spacing.gridL,
   },
   buttonGreen: {
-    backgroundColor: t.colors.accentGreen,
+    backgroundColor: t.colors.accentGreenCreate ?? t.colors.accentGreen,
   },
   buttonDisabled: {
     opacity: 0.5,

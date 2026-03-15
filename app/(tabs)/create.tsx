@@ -209,10 +209,10 @@ const CHALLENGE_PACKS: {
 
 const PACK_CARD_BORDER: Record<string, string> = {
   athlete: DS_COLORS.border,
-  faith: DS_COLORS.packBorderFaith,
+  faith: "#F5D5C0",
   entrepreneur: DS_COLORS.border,
-  hyrox: DS_COLORS.packBorderOrange,
-  morning: DS_COLORS.packBorderOrange,
+  hyrox: "#F5D5C0",
+  morning: "#F5D5C0",
 };
 
 const PARTICIPATION_OPTIONS: { id: ParticipationTypeUI; label: string; description: string; Icon: typeof User }[] = [
@@ -1251,14 +1251,14 @@ export default function CreateScreen() {
           {step > 1 && (
             <TouchableOpacity style={styles.backButton} onPress={handleBack} accessibilityLabel="Go to previous step" accessibilityRole="button">
               <ChevronLeft size={20} color={DS_COLORS.textSecondary} />
-              <Text style={styles.backButtonText}>Back</Text>
+              <Text style={styles.backButtonText}>&lt; Back</Text>
             </TouchableOpacity>
           )}
           <View style={styles.footerSpacer} />
           {step < 3 ? (
             <View style={{ flex: 1 }}>
               <PrimaryButtonCreate
-                label={step === 2 ? "Review Challenge" : "Continue to Tasks"}
+                label={step === 2 ? "Review >" : "Next: Add Tasks >"}
                 onPress={handleNext}
                 variant="orange"
                 fullWidth
@@ -1641,7 +1641,7 @@ const step2Styles = RNStyleSheet.create({
   packTitle: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: DS_COLORS.textPrimary,
+    color: DS_COLORS.accent,
     marginBottom: 4,
   },
   packDesc: {

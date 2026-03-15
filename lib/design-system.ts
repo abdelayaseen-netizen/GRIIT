@@ -42,6 +42,7 @@ export const DS_COLORS = {
   // Auth / form
   errorText: "#DC4A3C",
   green: "#2D7A4F",
+  createChallengeGreen: "#2D5A3E",
 
   // Semantic
   success: "#2F7A52",

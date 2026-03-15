@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   X,
-  Check,
+  ChevronLeft,
   Zap,
   Snowflake,
   Shield,
@@ -20,12 +20,12 @@ import {
   BarChart3,
   Crown,
   RefreshCw,
+  Unlock,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
-import { useTheme } from "@/contexts/ThemeContext";
-import { BASE_COLORS, SHADOWS } from "@/constants/theme";
+import { BASE_COLORS } from "@/constants/theme";
 import {
   getOfferings,
   purchasePackage,
@@ -46,12 +46,12 @@ const SOURCE_MESSAGES: Record<string, string> = {
 };
 
 const FEATURES = [
-  { icon: Zap, label: "Unlimited active challenges" },
-  { icon: Snowflake, label: "Streak freezes (2/month)" },
-  { icon: Shield, label: "Last Stand recovery" },
-  { icon: PenLine, label: "Custom challenge creation" },
-  { icon: BarChart3, label: "Detailed discipline analytics" },
-  { icon: Crown, label: "Premium badge" },
+  { icon: Unlock, label: "Unlimited Active Challenges", desc: "No cap on how many you can run at once" },
+  { icon: Snowflake, label: "Streak Freeze", desc: "Protect your streak. 2 freezes per month included." },
+  { icon: Shield, label: "Last Stand", desc: "One final chance to save a broken streak" },
+  { icon: PenLine, label: "Custom Challenges", desc: "Build challenges from scratch with custom tasks" },
+  { icon: BarChart3, label: "Discipline Analytics", desc: "Weekly trends, detailed stats, and progress insights" },
+  { icon: Crown, label: "Premium Badge", desc: "Stand out on leaderboards and profiles" },
 ];
 
 function parsePrice(priceString: string): number {
@@ -63,7 +63,6 @@ export default function PricingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ source?: string }>();
   const source = params.source ?? "";
-  const { colors } = useTheme();
   const { isPremium, refreshPremiumStatus } = useApp();
 
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
@@ -167,14 +166,14 @@ export default function PricingScreen() {
 
   if (isPremium) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} hitSlop={12} accessibilityLabel="Close">
-            <X size={24} color={colors.text.primary} />
+          <TouchableOpacity onPress={handleBack} hitSlop={12} accessibilityLabel="Go back">
+            <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
           </TouchableOpacity>
         </View>
         <View style={styles.centered}>
-          <Crown size={48} color={colors.accent} />
+          <Crown size={48} color={DS_COLORS.accent} />
           <Text style={styles.title}>You're already on Premium</Text>
           <Text style={styles.subtitle}>Enjoy unlimited access.</Text>
         </View>
@@ -194,12 +193,17 @@ export default function PricingScreen() {
     monthlyPrice > 0 && annualPrice > 0 ? Math.round((1 - annualPrice / 12 / monthlyPrice) * 100) : 0;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <View style={[styles.hero, { backgroundColor: DS_COLORS.accent }]}>
+        <Text style={styles.heroLogo}>G R I T</Text>
+        <Text style={styles.heroTitle}>Unlock your full potential.</Text>
+        <Text style={styles.heroSubtitle}>Build discipline without limits.</Text>
+      </View>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} hitSlop={12} accessibilityLabel="Close">
-          <X size={24} color={colors.text.primary} />
+        <TouchableOpacity onPress={handleBack} hitSlop={12} accessibilityLabel="Go back">
+          <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>GRIIT Premium</Text>
+        <Text style={[styles.headerTitle, { color: DS_COLORS.textPrimary }]}>GRIIT Premium</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -208,13 +212,18 @@ export default function PricingScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.tagline, { color: colors.text.secondary }]}>{tagline}</Text>
+        <Text style={[styles.tagline, { color: DS_COLORS.textSecondary }]}>{tagline}</Text>
 
         <View style={styles.featureList}>
-          {FEATURES.map(({ icon: Icon, label }) => (
-            <View key={label} style={[styles.featureRow, { borderLeftColor: colors.accent }]}>
-              <Icon size={20} color={colors.accent} />
-              <Text style={[styles.featureLabel, { color: colors.text.primary }]}>{label}</Text>
+          {FEATURES.map(({ icon: Icon, label, desc }) => (
+            <View key={label} style={[styles.featureRow, { borderLeftColor: DS_COLORS.accent }]}>
+              <View style={[styles.featureIconWrap, { backgroundColor: DS_COLORS.accentSoft }]}>
+                <Icon size={20} color={DS_COLORS.accent} />
+              </View>
+              <View style={styles.featureTextWrap}>
+                <Text style={[styles.featureLabel, { color: DS_COLORS.textPrimary }]}>{label}</Text>
+                {desc ? <Text style={[styles.featureDesc, { color: DS_COLORS.textSecondary }]}>{desc}</Text> : null}
+              </View>
             </View>
           ))}
         </View>
@@ -226,10 +235,10 @@ export default function PricingScreen() {
           </View>
         ) : offeringError ? (
           <View style={styles.retryWrap}>
-            <Text style={[styles.retryText, { color: colors.text.secondary }]}>Couldn't load plans.</Text>
+            <Text style={[styles.retryText, { color: DS_COLORS.textSecondary }]}>Couldn't load plans.</Text>
             <TouchableOpacity
               onPress={loadOfferings}
-              style={[styles.retryBtn, { backgroundColor: colors.accent }]}
+              style={[styles.retryBtn, { backgroundColor: DS_COLORS.accent }]}
               activeOpacity={0.8}
             >
               <RefreshCw size={18} color="#FFF" />
@@ -247,11 +256,11 @@ export default function PricingScreen() {
                   selectedPackage?.identifier === monthlyPkg.identifier && styles.packageCardSelected,
                 ]}
               >
-                <Text style={[styles.packageLabel, { color: colors.text.primary }]}>Monthly</Text>
-                <Text style={[styles.packagePrice, { color: colors.text.primary }]}>
+                <Text style={[styles.packageLabel, { color: DS_COLORS.textPrimary }]}>Monthly</Text>
+                <Text style={[styles.packagePrice, { color: DS_COLORS.textPrimary }]}>
                   {monthlyPkg.product?.priceString ?? "—"}
                 </Text>
-                <Text style={[styles.packagePerMonth, { color: colors.text.secondary }]}>per month</Text>
+                <Text style={[styles.packagePerMonth, { color: DS_COLORS.textSecondary }]}>Flexible</Text>
               </TouchableOpacity>
             )}
             {annualPkg && (
@@ -260,19 +269,19 @@ export default function PricingScreen() {
                 activeOpacity={0.8}
                 style={[
                   styles.packageCard,
-                  selectedPackage?.identifier === annualPkg.identifier && styles.packageCardSelected,
+                  selectedPackage?.identifier === annualPkg.identifier && styles.packageCardAnnualSelected,
                 ]}
               >
                 {savePercent > 0 && (
-                  <View style={[styles.saveBadge, { backgroundColor: colors.success }]}>
+                  <View style={[styles.saveBadge, { backgroundColor: DS_COLORS.success }]}>
                     <Text style={styles.saveBadgeText}>Save {savePercent}%</Text>
                   </View>
                 )}
-                <Text style={[styles.packageLabel, { color: colors.text.primary }]}>Annual</Text>
-                <Text style={[styles.packagePrice, { color: colors.text.primary }]}>
+                <Text style={[styles.packageLabel, { color: DS_COLORS.textPrimary }]}>Annual</Text>
+                <Text style={[styles.packagePrice, { color: DS_COLORS.textPrimary }]}>
                   {annualPkg.product?.priceString ?? "—"}
                 </Text>
-                <Text style={[styles.packagePerMonth, { color: colors.text.secondary }]}>
+                <Text style={[styles.packagePerMonth, { color: DS_COLORS.textSecondary }]}>
                   {annualPrice > 0 ? `$${(annualPrice / 12).toFixed(2)}/mo` : "per year"}
                 </Text>
               </TouchableOpacity>
@@ -281,7 +290,7 @@ export default function PricingScreen() {
         ) : null}
 
         {purchaseError ? (
-          <Text style={[styles.errorText, { color: colors.danger }]}>{purchaseError}</Text>
+          <Text style={[styles.errorText, { color: DS_COLORS.danger }]}>{purchaseError}</Text>
         ) : null}
 
         <TouchableOpacity
@@ -290,8 +299,8 @@ export default function PricingScreen() {
           activeOpacity={0.8}
           style={[
             styles.cta,
-            { backgroundColor: colors.accent },
-            (!selectedPackage || purchasing) && { backgroundColor: colors.border, opacity: 0.9 },
+            { backgroundColor: DS_COLORS.accent },
+            (!selectedPackage || purchasing) && { backgroundColor: DS_COLORS.border, opacity: 0.9 },
           ]}
         >
           {purchasing ? (
@@ -314,25 +323,25 @@ export default function PricingScreen() {
           activeOpacity={0.7}
         >
           {restoring ? (
-            <ActivityIndicator size="small" color={colors.accent} />
+            <ActivityIndicator size="small" color={DS_COLORS.accent} />
           ) : (
-            <Text style={[styles.restoreText, { color: colors.accent }]}>Restore purchases</Text>
+            <Text style={[styles.restoreText, { color: DS_COLORS.accent }]}>Restore purchases</Text>
           )}
         </TouchableOpacity>
         {restoreMessage ? (
-          <Text style={[styles.restoreMessage, { color: colors.text.secondary }]}>{restoreMessage}</Text>
+          <Text style={[styles.restoreMessage, { color: DS_COLORS.textSecondary }]}>{restoreMessage}</Text>
         ) : null}
 
-        <Text style={[styles.legal, { color: colors.text.secondary }]}>
-          Subscription auto-renews. Cancel anytime in Settings.
+        <Text style={[styles.legal, { color: DS_COLORS.textSecondary }]}>
+          Subscription auto-renews. Cancel anytime.
         </Text>
         <View style={styles.legalLinks}>
           <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
-            <Text style={[styles.legalLink, { color: colors.accent }]}>Terms</Text>
+            <Text style={[styles.legalLink, { color: DS_COLORS.accent }]}>Terms of Service</Text>
           </TouchableOpacity>
-          <Text style={[styles.legal, { color: colors.text.secondary }]}> · </Text>
+          <Text style={[styles.legal, { color: DS_COLORS.textSecondary }]}> · </Text>
           <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
-            <Text style={[styles.legalLink, { color: colors.accent }]}>Privacy</Text>
+            <Text style={[styles.legalLink, { color: DS_COLORS.accent }]}>Privacy Policy</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -342,18 +351,44 @@ export default function PricingScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  hero: {
+    paddingVertical: DS_SPACING.xxl,
+    paddingHorizontal: DS_SPACING.lg,
+    alignItems: "center",
+  },
+  heroLogo: {
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: 4,
+    color: DS_COLORS.white,
+    marginBottom: DS_SPACING.md,
+  },
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: DS_COLORS.white,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    fontWeight: "400",
+    color: "rgba(255,255,255,0.9)",
+    textAlign: "center",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: DS_SPACING.md,
     paddingVertical: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.background,
   },
   headerTitle: {
     ...DS_TYPOGRAPHY.sectionHeader,
     color: DS_COLORS.textPrimary,
   },
-  scroll: { flex: 1 },
+  scroll: { flex: 1, backgroundColor: DS_COLORS.background },
   scrollContent: { paddingHorizontal: DS_SPACING.lg, paddingBottom: 40 },
   tagline: {
     ...DS_TYPOGRAPHY.screenSubtitle,
@@ -362,21 +397,29 @@ const styles = StyleSheet.create({
   },
   featureList: {
     backgroundColor: BASE_COLORS.surface,
-    borderRadius: DS_RADIUS.md,
-    padding: DS_SPACING.md,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.cardPadding,
     marginBottom: DS_SPACING.xl,
-    ...SHADOWS.card,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 10,
-    paddingLeft: 12,
-    borderLeftWidth: 3,
+    paddingVertical: 12,
     marginBottom: 4,
   },
-  featureLabel: { ...DS_TYPOGRAPHY.cardSubtitle, flex: 1 },
+  featureIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  featureTextWrap: { flex: 1 },
+  featureLabel: { ...DS_TYPOGRAPHY.cardSubtitle, fontWeight: "600", marginBottom: 2 },
+  featureDesc: { fontSize: 13, lineHeight: 18 },
   packageRow: {
     flexDirection: "row",
     gap: 12,
@@ -389,10 +432,15 @@ const styles = StyleSheet.create({
     padding: DS_SPACING.md,
     borderWidth: 2,
     borderColor: "transparent",
-    ...SHADOWS.card,
+    ...DS_SHADOWS.card,
   },
   packageCardSelected: {
+    borderColor: DS_COLORS.border,
+    backgroundColor: DS_COLORS.surface,
+  },
+  packageCardAnnualSelected: {
     borderColor: DS_COLORS.accent,
+    borderWidth: 2,
     backgroundColor: DS_COLORS.cardSelectedBg,
   },
   skeleton: { minHeight: 120 },

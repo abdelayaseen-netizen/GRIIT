@@ -46,6 +46,7 @@ export const colors = {
   accentOrangeCreate: DS_COLORS.accent,
   accentOrangeSoft: DS_COLORS.accentSoft,
   accentGreen: DS_COLORS.success,
+  accentGreenCreate: (DS_COLORS as { createChallengeGreen?: string }).createChallengeGreen ?? DS_COLORS.success,
   accentGreenSoft: DS_COLORS.successSoft,
   accentBlue: DS_COLORS.checkinBlue,
   accentPurple: DS_COLORS.taskIndigo,
