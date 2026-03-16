@@ -11,6 +11,7 @@ import {
   isTaskRequired,
 } from "../../lib/challenge-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { joinChallengeDirect } from "../../lib/join-challenge";
 
 /** Ensure 24h challenges have ends_at for frontend countdown (derive from live_date if missing). */
 function with24hEndsAt<T extends { duration_type?: string; ends_at?: string | null; live_date?: string | null }>(row: T): T {
@@ -397,52 +398,21 @@ export const challengesRouter = createTRPCRouter({
         return { joined: true, runStatus: "waiting" as const };
       }
 
-      const rpcParams = { p_challenge_id: input.challengeId };
       if (process.env.NODE_ENV !== "production") {
-        console.log("[JOIN-BACKEND] About to call join_challenge RPC with:", JSON.stringify(rpcParams));
+        console.log("[JOIN-BACKEND] Calling joinChallengeDirect for challengeId:", input.challengeId);
       }
-      const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("join_challenge", rpcParams);
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[JOIN-BACKEND] RPC result rows:", rpcRows != null ? (Array.isArray(rpcRows) ? rpcRows.length : 1) : 0);
-        console.log("[JOIN-BACKEND] RPC error:", rpcError != null ? JSON.stringify({ code: (rpcError as { code?: string }).code, message: (rpcError as { message?: string }).message }) : "none");
-      }
-
-      if (!rpcError) {
-        const activeChallenge = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
-        if (activeChallenge) {
-          const { data: ch } = await ctx.supabase.from("challenges").select("name").eq("id", input.challengeId).single();
-          await ctx.supabase.from("activity_events").insert({
-            user_id: ctx.userId,
-            event_type: "joined_challenge",
-            challenge_id: input.challengeId,
-            metadata: { challenge_name: (ch as { name?: string })?.name ?? "Challenge" },
-          });
-          return activeChallenge;
-        }
-      }
-
-      const code = (rpcError as { code?: string })?.code;
-      const msg = (rpcError as { message?: string })?.message ?? "";
-      if (msg.includes("ALREADY_JOINED")) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
-      }
-      if (msg.includes("NOT_FOUND")) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
-      }
-      if (msg.includes("UNAUTHORIZED")) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Please sign in again." });
-      }
-      if (code === "42883") {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Join is not available. Deploy migration 20250306000000_join_challenge_rpc.sql.",
-        });
-      }
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: msg || "Failed to join challenge.",
+      const activeChallenge = await joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId);
+      const { data: ch } = await ctx.supabase.from("challenges").select("name").eq("id", input.challengeId).single();
+      await ctx.supabase.from("activity_events").insert({
+        user_id: ctx.userId,
+        event_type: "joined_challenge",
+        challenge_id: input.challengeId,
+        metadata: { challenge_name: (ch as { name?: string })?.name ?? "Challenge" },
       });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[JOIN-BACKEND] Join SUCCESS, active_challenge id:", activeChallenge.id);
+      }
+      return activeChallenge;
     }),
 
   /** Leave a challenge: remove active_challenge (and cascade check_ins) or remove from challenge_members if team waiting. Creator cannot leave. */

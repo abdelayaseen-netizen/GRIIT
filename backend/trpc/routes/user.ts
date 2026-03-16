@@ -93,33 +93,19 @@ export const userRouter = createTRPCRouter({
         : null;
 
       if (challengeUuid) {
-        const { data: existing } = await ctx.supabase
-          .from("active_challenges")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("challenge_id", challengeUuid)
-          .eq("status", "active")
-          .limit(1)
-          .maybeSingle();
-
-        if (!existing) {
-          try {
-            const { error: rpcError } = await ctx.supabase.rpc("join_challenge", {
-              p_challenge_id: challengeUuid,
-            });
-            if (rpcError) {
-              const msg = (rpcError as { message?: string }).message ?? "";
-              if (msg.includes("ALREADY_JOINED")) {
-                // already joined, ignore
-              } else if (msg.includes("NOT_FOUND") || (rpcError as { code?: string }).code === "23503") {
-                // challenge missing or FK constraint; do not crash onboarding
-              } else if (process.env.NODE_ENV !== "test") {
-                const { logger } = await import("../../lib/logger");
-                logger.warn({ msg }, "user.completeOnboarding join_challenge failed");
-              }
-            }
-          } catch {
-            // do not crash onboarding if join fails
+        try {
+          const { joinChallengeDirect } = await import("../../lib/join-challenge");
+          await joinChallengeDirect(ctx.supabase, userId, challengeUuid);
+        } catch (err: unknown) {
+          const code = (err as { code?: string })?.code;
+          const msg = (err as { message?: string })?.message ?? "";
+          if (code === "BAD_REQUEST" && msg.includes("already joined")) {
+            // idempotent, ignore
+          } else if (code === "NOT_FOUND" || (err as { code?: string })?.data?.code === "23503") {
+            // challenge missing or FK constraint; do not crash onboarding
+          } else if (process.env.NODE_ENV !== "test") {
+            const { logger } = await import("../../lib/logger");
+            logger.warn({ msg, code }, "user.completeOnboarding joinChallengeDirect failed");
           }
         }
       }
