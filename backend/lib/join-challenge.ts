@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
 import { getTodayDateKey } from "./date-utils";
 
-export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day: number; progress_percent: number; created_at?: string; completed_at?: string | null };
+export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string; completed_at?: string | null };
 
 /**
  * Join a challenge for the given user: insert active_challenges, seed check_ins for all tasks, upsert streaks.
@@ -49,6 +49,7 @@ export async function joinChallengeDirect(
     endAt.setDate(endAt.getDate() + durationDays);
   }
 
+  // Insert only columns that exist in all environments (some DBs lack current_day, progress_percent)
   const { data: activeChallenge, error: insertErr } = await supabase
     .from("active_challenges")
     .insert({
@@ -57,8 +58,6 @@ export async function joinChallengeDirect(
       status: "active",
       start_at: startAt.toISOString(),
       end_at: endAt.toISOString(),
-      current_day: 1,
-      progress_percent: 0,
     })
     .select()
     .single();
@@ -73,52 +72,53 @@ export async function joinChallengeDirect(
     });
   }
 
-  const { data: tasks } = await supabase
-    .from("challenge_tasks")
-    .select("id")
-    .eq("challenge_id", challengeId);
-
-  const taskList = (tasks ?? []) as { id: string }[];
-  if (taskList.length > 0) {
-    const dateKey = getTodayDateKey();
-    const checkIns = taskList.map((t) => ({
-      user_id: userId,
-      active_challenge_id: activeChallenge.id,
-      task_id: t.id,
-      date_key: dateKey,
-      status: "pending",
-    }));
-    const { error: checkInsErr } = await supabase.from("check_ins").insert(checkIns);
-    if (checkInsErr) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("[JOIN-BACKEND] Insert check_ins error:", checkInsErr);
+  // Best-effort: seed check_ins for each task (don't fail join if table/columns differ)
+  try {
+    const { data: tasks } = await supabase
+      .from("challenge_tasks")
+      .select("id")
+      .eq("challenge_id", challengeId);
+    const taskList = (tasks ?? []) as { id: string }[];
+    if (taskList.length > 0) {
+      const dateKey = getTodayDateKey();
+      const checkIns = taskList.map((t) => ({
+        user_id: userId,
+        active_challenge_id: activeChallenge.id,
+        task_id: t.id,
+        date_key: dateKey,
+        status: "pending",
+      }));
+      const { error: checkInsErr } = await supabase.from("check_ins").insert(checkIns);
+      if (checkInsErr && process.env.NODE_ENV !== "production") {
+        console.warn("[JOIN-BACKEND] Insert check_ins (best-effort) failed:", checkInsErr.message);
       }
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: checkInsErr.message || "Failed to create check-ins.",
-      });
+    }
+  } catch (e) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[JOIN-BACKEND] check_ins best-effort failed:", e);
     }
   }
 
-  const { data: existingStreak } = await supabase
-    .from("streaks")
-    .select("user_id")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!existingStreak) {
-    const { error: streakErr } = await supabase.from("streaks").insert({
-      user_id: userId,
-      active_streak_count: 0,
-      longest_streak_count: 0,
-    });
-    if (streakErr) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("[JOIN-BACKEND] Insert streaks error:", streakErr);
-      }
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: streakErr.message || "Failed to initialize streak.",
+  // Best-effort: ensure streaks row exists (don't fail join if table/columns differ)
+  try {
+    const { data: existingStreak } = await supabase
+      .from("streaks")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!existingStreak) {
+      const { error: streakErr } = await supabase.from("streaks").insert({
+        user_id: userId,
+        active_streak_count: 0,
+        longest_streak_count: 0,
       });
+      if (streakErr && process.env.NODE_ENV !== "production") {
+        console.warn("[JOIN-BACKEND] Insert streaks (best-effort) failed:", streakErr.message);
+      }
+    }
+  } catch (e) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[JOIN-BACKEND] streaks best-effort failed:", e);
     }
   }
 
