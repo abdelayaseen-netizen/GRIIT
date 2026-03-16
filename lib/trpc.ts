@@ -49,13 +49,22 @@ export async function trpcMutate<T = any>(
   input?: unknown,
 ): Promise<T> {
   const url = getTrpcUrl();
+  const fullUrl = `${url}/${path}`;
   const authHeaders = await getAuthHeaders();
 
   const body = input !== undefined
     ? JSON.stringify(serialize(input))
     : undefined;
 
-  const response = await fetchWithRetry(`${url}/${path}`, {
+  if (typeof __DEV__ !== "undefined" && __DEV__) {
+    console.log("[TRPC] Making request to:", fullUrl);
+    console.log("[TRPC] Method: POST");
+    const token = (authHeaders.authorization ?? "").replace(/^Bearer\s+/i, "");
+    console.log("[TRPC] Auth token present:", !!token, token ? `${token.substring(0, 20)}...` : "none");
+    console.log("[TRPC] Body:", body);
+  }
+
+  const response = await fetchWithRetry(fullUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -64,16 +73,22 @@ export async function trpcMutate<T = any>(
     body,
   });
 
+  const responseText = await response.text().catch(() => "");
+
+  if (typeof __DEV__ !== "undefined" && __DEV__) {
+    console.log("[TRPC] Response status:", response.status);
+    console.log("[TRPC] Response body:", responseText?.substring(0, 500));
+  }
+
   if (!response.ok) {
     if (response.status === 401) {
       await supabase.auth.signOut();
       notifySessionExpired();
     }
-    const text = await response.text().catch(() => "");
     let errorMessage = `tRPC mutation failed: ${path} (${response.status})`;
     let errorCode: string | undefined;
     try {
-      const parsed = JSON.parse(text);
+      const parsed = JSON.parse(responseText);
       if (parsed?.error?.message) errorMessage = parsed.error.message;
       else if (parsed?.error?.json?.message) errorMessage = parsed.error.json.message;
       errorCode = parsed?.error?.data?.code ?? parsed?.error?.code;
@@ -83,10 +98,24 @@ export async function trpcMutate<T = any>(
     throw err;
   }
 
-  const json = await response.json();
+  let json: { result?: { data?: unknown }; error?: { message?: string; data?: { code?: string } } };
+  try {
+    json = JSON.parse(responseText);
+  } catch {
+    throw new Error(`tRPC mutation failed: ${path} — invalid JSON response`);
+  }
+
+  if (json?.error) {
+    const errorMessage = json.error.message ?? "Request failed";
+    const errorCode = json.error.data?.code;
+    const err = new Error(errorMessage) as Error & { data?: { code?: string } };
+    if (errorCode) err.data = { code: errorCode };
+    throw err;
+  }
+
   const result = json?.result?.data;
-  if (result !== undefined) {
-    return deserialize(result) as T;
+  if (result !== undefined && result !== null) {
+    return deserialize(result as Parameters<typeof deserialize>[0]) as T;
   }
   return json as T;
 }

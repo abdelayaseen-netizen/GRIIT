@@ -577,9 +577,16 @@ export default function ChallengeDetailScreen() {
   }, [challenge, id]);
 
   const handleCommitmentConfirm = useCallback(async () => {
+    if (__DEV__) {
+      console.log("[JOIN] handleCommitmentConfirm called");
+      console.log("[JOIN] challengeId:", id);
+      console.log("[JOIN] user:", user?.id);
+      console.log("[JOIN] commitmentUnderstood:", commitmentUnderstood);
+    }
     if (!id || commitmentJoining) return;
     const list = await trpcQuery(TRPC.challenges.listMyActive) as unknown[];
     const count = Array.isArray(list) ? list.length : 0;
+    if (__DEV__) console.log("[JOIN] joinLimit check — activeCount:", count, "allowed:", canJoinChallenge(count).allowed);
     if (!canJoinChallenge(count).allowed) {
       if (!requirePremium("challenge_limit")) {
         Alert.alert(
@@ -596,7 +603,9 @@ export default function ChallengeDetailScreen() {
     setCommitmentJoining(true);
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await trpcMutate(TRPC.challenges.join, { challengeId: id });
+      if (__DEV__) console.log("[JOIN] About to call trpcMutate with:", { challengeId: id });
+      const result = await trpcMutate(TRPC.challenges.join, { challengeId: id });
+      if (__DEV__) console.log("[JOIN] Mutation SUCCESS:", result);
       try {
         await trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id });
       } catch { /* best-effort */ }
@@ -605,12 +614,17 @@ export default function ChallengeDetailScreen() {
       challengeQuery.refetch();
       Alert.alert("You're in!", "Start your first task below.", [{ text: "OK" }]);
     } catch (err: unknown) {
+      if (__DEV__) {
+        console.error("[JOIN] Mutation FAILED:", err);
+        console.error("[JOIN] Error message:", (err as Error)?.message);
+        console.error("[JOIN] Error data:", (err as { data?: unknown })?.data);
+      }
       const { title, message } = formatTRPCError(err);
       Alert.alert(title, message);
     } finally {
       setCommitmentJoining(false);
     }
-  }, [id, commitmentJoining, refetchAll, router, requirePremium]);
+  }, [id, commitmentJoining, commitmentUnderstood, user?.id, refetchAll, router, requirePremium]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
