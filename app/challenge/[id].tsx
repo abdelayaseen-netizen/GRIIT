@@ -571,17 +571,26 @@ export default function ChallengeDetailScreen() {
 
   const handleJoin = useCallback(() => {
     if (!challenge || !id) return;
-    if (!joinLimit.allowed && !requirePremium("challenge_limit")) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCommitmentUnderstood(false);
     setShowCommitmentModal(true);
-  }, [challenge, id, joinLimit.allowed, requirePremium]);
+  }, [challenge, id]);
 
   const handleCommitmentConfirm = useCallback(async () => {
     if (!id || commitmentJoining) return;
     const list = await trpcQuery(TRPC.challenges.listMyActive) as unknown[];
     const count = Array.isArray(list) ? list.length : 0;
-    if (!canJoinChallenge(count).allowed && !requirePremium("challenge_limit")) {
+    if (!canJoinChallenge(count).allowed) {
+      if (!requirePremium("challenge_limit")) {
+        Alert.alert(
+          "Challenge limit reached",
+          "You've reached the maximum number of active challenges. Upgrade to add more.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Upgrade", onPress: () => requirePremium("challenge_limit") },
+          ]
+        );
+      }
       return;
     }
     setCommitmentJoining(true);

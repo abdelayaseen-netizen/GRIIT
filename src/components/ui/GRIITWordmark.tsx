@@ -7,7 +7,7 @@ type GRIITWordmarkProps = {
   color?: string;
   subtitleColor?: string;
   compact?: boolean;
-  /** Design DNA: spaced "G R I T" (uppercase with spaces) */
+  /** Design DNA: spaced "G R I I T" (uppercase with spaces) */
   spaced?: boolean;
 };
 
@@ -36,7 +36,7 @@ export function GRIITWordmark({
         ]}
         allowFontScaling={false}
       >
-        GRIT
+        GRIIT
       </Text>
       {subtitle ? (
         <Text

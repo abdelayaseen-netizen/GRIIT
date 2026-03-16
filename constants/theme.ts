@@ -28,7 +28,7 @@ export const WARNING_LIGHT = "#FFF8E1";
 /** Danger / extreme / red */
 export const DANGER_COLOR = "#E8453C";
 export const DANGER_LIGHT = "#FFEBEE";
-/** Navy dark (GRIT logo) */
+/** Navy dark (GRIIT logo) */
 export const NAVY_DARK = "#2C3539";
 /** Gold (milestones, trophies) */
 export const GOLD = "#C4960C";
