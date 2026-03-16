@@ -221,8 +221,8 @@ function RootLayoutNav() {
   const inChallenge = firstSegment === "challenge";
   if (checkingOnboarding) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: DS_COLORS?.background ?? "#0A0A0A" }}>
-        <ActivityIndicator size="large" color={DS_COLORS?.accent ?? "#E8593C"} />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: DS_COLORS?.background ?? "#F7F4EF" }}>
+        <ActivityIndicator size="large" color={DS_COLORS?.accent ?? "#E8733A"} />
       </View>
     );
   }
@@ -384,11 +384,5 @@ export default function RootLayout() {
 }
 
 function ThemeAwareStatusBar() {
-  const { colorScheme } = useTheme();
-  return (
-    <StatusBar
-      barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
-      backgroundColor="transparent"
-    />
-  );
+  return <StatusBar barStyle="dark-content" backgroundColor="transparent" />;
 }

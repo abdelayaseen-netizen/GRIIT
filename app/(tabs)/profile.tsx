@@ -928,7 +928,7 @@ function createProfileStyles() {
     subscriptionLink: { flexDirection: "row", alignItems: "center", marginTop: 8 },
     subscriptionLinkText: { fontSize: 14, fontWeight: "600" },
     subscriptionCta: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: DS_RADIUS.input, alignItems: "center" },
-    subscriptionCtaText: { fontSize: 15, fontWeight: "600", color: "#FFF" },
+    subscriptionCtaText: { fontSize: 15, fontWeight: "600", color: DS_COLORS.white },
     menuSection: { paddingHorizontal: DS_SPACING.screenHorizontal, paddingTop: DS_SPACING.lg },
     menuItem: {
       flexDirection: "row" as const,

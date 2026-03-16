@@ -193,7 +193,7 @@ export default function PricingScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
       <View style={[styles.hero, { backgroundColor: DS_COLORS.accent }]}>
-        <Text style={styles.heroLogo}>G R I T</Text>
+        <Text style={styles.heroLogo}>G R I I T</Text>
         <Text style={styles.heroTitle}>Unlock your full potential.</Text>
         <Text style={styles.heroSubtitle}>Build discipline without limits.</Text>
       </View>

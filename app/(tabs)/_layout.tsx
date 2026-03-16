@@ -19,9 +19,9 @@ export default function TabLayout() {
     registerPushTokenWithBackend();
   }, [user]);
   const tabBorder = DS_COLORS.border;
-  const tabActive = DS_COLORS.accent;
-  const tabInactive = DS_COLORS.textSecondary;
-  const centerBtnBg = DS_COLORS.commitmentButtonBg;
+  const tabActive = DS_COLORS.tabActive;
+  const tabInactive = DS_COLORS.tabInactive;
+  const centerBtnBg = DS_COLORS.blackBtn;
 
   return (
     <Tabs
@@ -31,7 +31,7 @@ export default function TabLayout() {
         headerShown: false,
         sceneStyle: { backgroundColor: DS_COLORS.background },
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: DS_COLORS.white,
           borderTopColor: tabBorder,
           borderTopWidth: 1,
           paddingTop: 8,
@@ -68,7 +68,7 @@ export default function TabLayout() {
           tabBarIcon: () => (
             <View style={styles.createTabIconWrap}>
               <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
-                <Plus color="#FFFFFF" size={24} strokeWidth={2.5} />
+                <Plus color={DS_COLORS.white} size={24} strokeWidth={2.5} />
               </View>
             </View>
           ),

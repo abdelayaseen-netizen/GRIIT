@@ -622,11 +622,11 @@ export default function HomeScreen() {
           <GRIITWordmark spaced={!isGuest} subtitle={isGuest ? undefined : "Build Discipline Daily"} compact={!!isGuest} />
           {!isGuest && (
             <View style={styles.headerBadges}>
-              <View style={[styles.headerBadgePill, { backgroundColor: "#F5F3F0" }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
+              <View style={[styles.headerBadgePill, { backgroundColor: DS_COLORS.surfaceMuted }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
                 <TrendingUp size={14} color={DS_COLORS.textSecondary} />
                 <Text style={[styles.headerBadgePillText, { color: DS_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
               </View>
-              <View style={[styles.headerBadgePill, { backgroundColor: "#F5F3F0" }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
+              <View style={[styles.headerBadgePill, { backgroundColor: DS_COLORS.surfaceMuted }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
                 <Flame size={14} color={DS_COLORS.accent} />
                 <Text style={[styles.headerBadgePillText, { color: DS_COLORS.textPrimary }]}>{currentStreak}</Text>
               </View>
@@ -807,7 +807,7 @@ export default function HomeScreen() {
                 const m = item as Extract<MockFeedItem, { type: "milestone" }>;
                 return (
                   <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderLeftWidth: 3, borderLeftColor: DS_COLORS.gold }]}>
-                    <View style={[styles.liveFeedIconCircle, { backgroundColor: "#FFF8E1" }]}><Trophy size={20} color={DS_COLORS.gold} /></View>
+                    <View style={[styles.liveFeedIconCircle, { backgroundColor: DS_COLORS.warningLight }]}><Trophy size={20} color={DS_COLORS.gold} /></View>
                     <View style={styles.liveFeedBody}>
                       <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}>Hit <Text style={[styles.liveFeedBold, { color: DS_COLORS.accent }]}>{m.days} days</Text> straight</Text>
                       <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>Top {m.topPercent}% this week</Text>
@@ -1349,7 +1349,7 @@ const styles = StyleSheet.create({
   welcomeCardButtonText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.white,
   },
   welcomeCardButtonOutlined: {
     paddingHorizontal: 24,
@@ -1684,7 +1684,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   liveFeedPill: {
-    backgroundColor: "#F5F3F0",
+    backgroundColor: DS_COLORS.surfaceMuted,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,

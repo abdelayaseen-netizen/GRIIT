@@ -41,10 +41,10 @@ const REMINDER_PRESETS = [
 
 
 const CONSEQUENCES = [
-  { bulletColor: "#F5A623", title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
-  { bulletColor: "#E8734A", title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
-  { bulletColor: "#E8453C", title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
-  { bulletColor: "#E8453C", title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
+  { bulletColor: DS_COLORS.warning, title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
+  { bulletColor: DS_COLORS.accent, title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
+  { bulletColor: DS_COLORS.danger, title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
+  { bulletColor: DS_COLORS.danger, title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
 ] as const;
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";

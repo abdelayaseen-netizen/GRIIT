@@ -38,7 +38,7 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
       <StatusBar barStyle="dark-content" />
 
       <Animated.View style={[styles.brandContainer, { opacity: fadeTitle }]}>
-        <Text style={styles.brandMark}>G R I T</Text>
+        <Text style={styles.brandMark}>G R I I T</Text>
       </Animated.View>
 
       <View style={styles.heroSection}>

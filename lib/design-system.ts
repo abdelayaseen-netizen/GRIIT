@@ -7,7 +7,9 @@ import {
   COMMITMENT_BUTTON_BG,
   EXPLORE_BUTTON_BG,
   SURFACE_SUBTLE,
+  SURFACE_MUTED,
   ACCENT_LIGHT,
+  ACCENT_SOFT,
   SUCCESS_LIGHT,
   WARNING_COLOR,
   WARNING_LIGHT,
@@ -15,11 +17,24 @@ import {
   DANGER_LIGHT,
   NAVY_DARK,
   GOLD,
+  BLACK_BTN,
+  CHIP_FILL,
+  PILL,
+  BADGE_GREEN_BG,
+  BADGE_GREEN_TEXT,
+  BADGE_YELLOW_BG,
+  BADGE_YELLOW_TEXT,
+  BADGE_ORANGE_BG,
+  BADGE_ORANGE_TEXT,
+  BADGE_RED_BG,
+  BADGE_RED_TEXT,
+  CATEGORY_FITNESS,
+  CATEGORY_MIND,
+  CATEGORY_DISCIPLINE,
 } from "@/constants/theme";
 
-// ─── COLORS (GRIIT UI Overhaul — warm cream, orange accent) ─────────────────
+// ─── COLORS (GRIIT — Rork spec, light only) ─────────────────────────────────
 export const DS_COLORS = {
-  // Base (from constants/theme.ts)
   background: BASE_COLORS.background,
   surface: BASE_COLORS.surface,
   card: BASE_COLORS.card,
@@ -30,10 +45,12 @@ export const DS_COLORS = {
   border: BASE_COLORS.border,
   success: BASE_COLORS.success,
   tabInactive: BASE_COLORS.tabInactive,
+  tabActive: BASE_COLORS.tabActive,
 
-  // Overhaul tokens
   surfaceSubtle: SURFACE_SUBTLE,
+  surfaceMuted: SURFACE_MUTED,
   accentLight: ACCENT_LIGHT,
+  accentSoft: ACCENT_SOFT,
   accentBorder: BASE_COLORS.accent,
   successLight: SUCCESS_LIGHT,
   warning: WARNING_COLOR,
@@ -42,10 +59,27 @@ export const DS_COLORS = {
   dangerLight: DANGER_LIGHT,
   navyDark: NAVY_DARK,
   gold: GOLD,
+  blackBtn: BLACK_BTN,
+  chipFill: CHIP_FILL,
+  pill: PILL,
+  white: "#FFFFFF",
+  borderStrong: BASE_COLORS.textPrimary,
+  shadow: "rgba(0,0,0,0.04)",
+  shadowMedium: "rgba(0,0,0,0.08)",
+  badgeGreenBg: BADGE_GREEN_BG,
+  badgeGreenText: BADGE_GREEN_TEXT,
+  badgeYellowBg: BADGE_YELLOW_BG,
+  badgeYellowText: BADGE_YELLOW_TEXT,
+  badgeOrangeBg: BADGE_ORANGE_BG,
+  badgeOrangeText: BADGE_ORANGE_TEXT,
+  badgeRedBg: BADGE_RED_BG,
+  badgeRedText: BADGE_RED_TEXT,
+  categoryFitness: CATEGORY_FITNESS,
+  categoryMind: CATEGORY_MIND,
+  categoryDiscipline: CATEGORY_DISCIPLINE,
 
   backgroundAlt: BASE_COLORS.background,
   surfaceWarm: BASE_COLORS.background,
-  surfaceMuted: "#F2F0EB",
   textPrimaryAlt: BASE_COLORS.textPrimary,
   textSecondaryAlt: BASE_COLORS.textSecondary,
   textTertiary: BASE_COLORS.textMuted,
@@ -53,7 +87,6 @@ export const DS_COLORS = {
   borderFocus: BASE_COLORS.accent,
   filterPillInactiveBorder: "#E0DDD6",
   accentDark: "#C2663E",
-  accentSoft: ACCENT_LIGHT,
   cardSelectedBg: ACCENT_LIGHT,
 
   // Commitment / CTA
@@ -69,7 +102,7 @@ export const DS_COLORS = {
   createChallengeGreen: "#2D5A3E",
 
   // Semantic
-  successSoft: "#EAF5F0",
+  successSoft: SUCCESS_LIGHT,
   warningSoft: WARNING_LIGHT,
   dangerSoft: DANGER_LIGHT,
   dangerDark: "#B91C1C",
@@ -120,9 +153,7 @@ export const DS_COLORS = {
   filterChipActiveBg: "#444",
 
   // UI
-  white: "#FFFFFF",
   black: "#1A1A1A",
-  chipFill: "#F0EDE6",
   chipStroke: "#E0DDD6",
   inputPlaceholder: "#888884",
   centerButtonBg: "#1C1C1E",
