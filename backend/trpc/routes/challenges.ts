@@ -312,6 +312,11 @@ export const challengesRouter = createTRPCRouter({
   join: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[JOIN-BACKEND] Join procedure called");
+        console.log("[JOIN-BACKEND] Input:", JSON.stringify(input));
+        console.log("[JOIN-BACKEND] User ID:", ctx.userId ?? "null");
+      }
       const { data: existingActive } = await ctx.supabase
         .from("active_challenges")
         .select("id")
@@ -392,9 +397,16 @@ export const challengesRouter = createTRPCRouter({
         return { joined: true, runStatus: "waiting" as const };
       }
 
-      const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("join_challenge", {
-        p_challenge_id: input.challengeId,
-      });
+      const rpcParams = { p_challenge_id: input.challengeId };
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[JOIN-BACKEND] About to call join_challenge RPC with:", JSON.stringify(rpcParams));
+      }
+      const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("join_challenge", rpcParams);
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[JOIN-BACKEND] RPC result rows:", rpcRows != null ? (Array.isArray(rpcRows) ? rpcRows.length : 1) : 0);
+        console.log("[JOIN-BACKEND] RPC error:", rpcError != null ? JSON.stringify({ code: (rpcError as { code?: string }).code, message: (rpcError as { message?: string }).message }) : "none");
+      }
 
       if (!rpcError) {
         const activeChallenge = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
@@ -418,13 +430,19 @@ export const challengesRouter = createTRPCRouter({
       if (msg.includes("NOT_FOUND")) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
       }
+      if (msg.includes("UNAUTHORIZED")) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Please sign in again." });
+      }
       if (code === "42883") {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Join is not available. Deploy migration 20250306000000_join_challenge_rpc.sql.",
         });
       }
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: msg || "Failed to join challenge.",
+      });
     }),
 
   /** Leave a challenge: remove active_challenge (and cascade check_ins) or remove from challenge_members if team waiting. Creator cannot leave. */

@@ -107,9 +107,14 @@ export async function trpcMutate<T = any>(
 
   if (json?.error) {
     const errorMessage = json.error.message ?? "Request failed";
-    const errorCode = json.error.data?.code;
-    const err = new Error(errorMessage) as Error & { data?: { code?: string } };
-    if (errorCode) err.data = { code: errorCode };
+    const errorData = json.error.data;
+    const errorCode = errorData?.code;
+    const err = new Error(errorMessage) as Error & { data?: { code?: string; message?: string } };
+    if (errorData) err.data = errorData;
+    else if (errorCode) err.data = { code: errorCode };
+    if (typeof __DEV__ !== "undefined" && __DEV__) {
+      console.error("[TRPC] Server error response:", JSON.stringify(json.error, null, 2));
+    }
     throw err;
   }
 

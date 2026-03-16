@@ -292,7 +292,9 @@ export function formatTRPCError(error: unknown): {
   if (code && code in TRPC_ERROR_TITLES) {
     title = TRPC_ERROR_TITLES[code as keyof typeof TRPC_ERROR_TITLES];
     if (code in TRPC_ERROR_USER_MESSAGE) {
-      return { title, message: TRPC_ERROR_USER_MESSAGE[code as keyof typeof TRPC_ERROR_USER_MESSAGE] ?? message, isNetwork: false };
+      const genericMessage = TRPC_ERROR_USER_MESSAGE[code as keyof typeof TRPC_ERROR_USER_MESSAGE];
+      const serverMessage = rawMessage?.trim();
+      return { title, message: serverMessage || (genericMessage ?? message), isNetwork: false };
     }
   }
 
