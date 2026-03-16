@@ -8,6 +8,7 @@ export interface LifetimeStatsCardProps {
   longestStreak: number;
   daysSecured: number;
   challengesCompleted: number;
+  activeChallengesCount?: number;
   totalDisciplinePoints?: number;
 }
 
@@ -18,14 +19,15 @@ export default function LifetimeStatsCard({
   longestStreak,
   daysSecured,
   challengesCompleted,
+  activeChallengesCount = 0,
   totalDisciplinePoints: _totalDisciplinePoints = 0,
 }: LifetimeStatsCardProps) {
   const safe = (n: number) => Math.max(0, Number(n) || 0);
   const items = [
-    { icon: Flame, color: DS_COLORS.accent, value: safe(currentStreak), label: "STREAK" },
-    { icon: Trophy, color: DS_COLORS.milestoneGold, value: safe(longestStreak), label: "BEST" },
-    { icon: Target, color: DS_COLORS.success, value: safe(daysSecured), label: "SECURED" },
-    { icon: Award, color: DS_COLORS.accent, value: safe(challengesCompleted), label: "DONE" },
+    { icon: Flame, color: DS_COLORS.accent, value: safe(currentStreak), label: "STREAK", sublabel: "days" },
+    { icon: Trophy, color: DS_COLORS.milestoneGold, value: safe(longestStreak), label: "BEST", sublabel: "days" },
+    { icon: Target, color: DS_COLORS.success, value: safe(activeChallengesCount), label: "ACTIVE", sublabel: "challenges" },
+    { icon: Award, color: DS_COLORS.accent, value: safe(challengesCompleted), label: "DONE", sublabel: "completed" },
   ];
 
   return (
@@ -33,13 +35,17 @@ export default function LifetimeStatsCard({
       {items.map((item, i) => {
         const Icon = item.icon;
         return (
-          <View key={i} style={styles.cell}>
-            <View style={styles.iconWrap}>
-              <Icon size={18} color={item.color} />
+          <React.Fragment key={i}>
+            {i > 0 ? <View style={styles.divider} /> : null}
+            <View style={styles.cell}>
+              <View style={[styles.iconWrap, { backgroundColor: `${item.color}20` }]}>
+                <Icon size={18} color={item.color} />
+              </View>
+              <Text style={styles.value}>{item.value}</Text>
+              <Text style={styles.label}>{item.label}</Text>
+              <Text style={styles.sublabel}>{item.sublabel}</Text>
             </View>
-            <Text style={styles.value}>{item.value}</Text>
-            <Text style={styles.label}>{item.label}</Text>
-          </View>
+          </React.Fragment>
         );
       })}
     </View>
@@ -51,15 +57,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginHorizontal: 20,
     marginBottom: 16,
-    gap: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+    backgroundColor: DS_COLORS.surface,
+    padding: 16,
+    gap: 0,
+  },
+  divider: {
+    width: 1,
+    alignSelf: "stretch",
+    backgroundColor: DS_COLORS.border,
   },
   cell: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: DS_COLORS.backgroundAlt,
-    borderRadius: 12,
-    paddingVertical: 16,
   },
   iconWrap: {
     width: ICON_CIRCLE,
@@ -70,7 +83,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   value: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "700",
     color: DS_COLORS.textPrimary,
   },
@@ -80,6 +93,12 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase",
+    marginTop: 2,
+  },
+  sublabel: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: DS_COLORS.textMuted,
     marginTop: 2,
   },
 });

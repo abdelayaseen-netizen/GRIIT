@@ -220,9 +220,9 @@ function CountdownTimer({ endsAt, theme }: { endsAt: string; theme: DifficultyTh
   if (countdown.expired) return null;
 
   return (
-    <View style={[s.countdownCard, { borderColor: theme.chipBorder }]}>
+    <View style={[s.countdownCard, { borderColor: DS_COLORS.border }]}>
       <View style={s.countdownLeft}>
-        <Animated.View style={[s.liveDot, { backgroundColor: theme.accent, opacity: pulseAnim }]} />
+        <Animated.View style={[s.liveDot, { backgroundColor: DS_COLORS.success, opacity: pulseAnim }]} />
         <Text style={s.countdownLabel}>Ends in</Text>
       </View>
       <Text style={[s.countdownValue, { color: theme.accent }]}>{countdown.text}</Text>
@@ -863,8 +863,10 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const headerGradientColors = isDaily ? [DS_COLORS.challenge24hHeaderBg, DS_COLORS.challenge24hHeaderBg] as const : ["#C4784A", "#A65F3A"] as const;
-  const ctaBgColor = isDaily && !expired ? DS_COLORS.success : DS_COLORS.accent;
+  const CHALLENGE_24H_GREEN = "#2D6A4F";
+  const CHALLENGE_24H_GREEN_END = "#3D8B6A";
+  const headerGradientColors = isDaily ? [CHALLENGE_24H_GREEN, CHALLENGE_24H_GREEN_END] as const : ["#C4784A", "#A65F3A"] as const;
+  const ctaBgColor = isDaily && !expired ? CHALLENGE_24H_GREEN : DS_COLORS.accent;
   const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
@@ -961,7 +963,7 @@ export default function ChallengeDetailScreen() {
                 {isDaily && (
                   <View style={s.dailyLabel}>
                     <Zap size={11} color="rgba(255,255,255,0.8)" />
-                    <Text style={s.dailyLabelText}>24-HOUR CHALLENGE</Text>
+                    <Text style={s.dailyLabelText}>⚡ 24-HOUR CHALLENGE</Text>
                   </View>
                 )}
                 <Text style={s.heroTitle}>{challenge.title}</Text>
@@ -1541,8 +1543,8 @@ const s = StyleSheet.create({
   dailyLabelText: {
     fontSize: 11,
     fontWeight: "600" as const,
-    color: "rgba(255,255,255,0.8)",
-    letterSpacing: 1,
+    color: "rgba(255,255,255,0.9)",
+    letterSpacing: 1.5,
     textTransform: "uppercase" as const,
   },
   heroTitle: {
@@ -1609,7 +1611,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: DS_SPACING.lg,
@@ -1627,9 +1629,9 @@ const s = StyleSheet.create({
     borderRadius: 4,
   },
   countdownLabel: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
+    fontSize: 15,
     fontWeight: "500" as const,
-    color: DS_COLORS.textSecondary,
+    color: DS_COLORS.textPrimary,
   },
   countdownValue: {
     fontSize: 24,
@@ -1747,10 +1749,11 @@ const s = StyleSheet.create({
   statsRowCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DS_COLORS.surfaceSubtle,
-    borderRadius: DS_RADIUS.cardAlt,
-    padding: DS_SPACING.cardPadding,
+    backgroundColor: DS_COLORS.surfaceMuted,
+    borderRadius: 14,
+    padding: 16,
     marginBottom: DS_SPACING.lg,
+    borderWidth: 0,
   },
   statsRowCol: {
     flex: 1,
@@ -1758,14 +1761,14 @@ const s = StyleSheet.create({
   },
   statsRowValue: {
     fontSize: 24,
-    fontWeight: "800" as const,
+    fontWeight: "700" as const,
     color: DS_COLORS.accent,
     marginBottom: DS_SPACING.xs,
   },
   statsRowLabel: {
     fontSize: 13,
     fontWeight: "400" as const,
-    color: DS_COLORS.textMuted,
+    color: DS_COLORS.textSecondary,
   },
   statsRowDivider: {
     width: 1,
@@ -1824,13 +1827,13 @@ const s = StyleSheet.create({
     flex: 1,
   },
   socialPrimary: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600" as const,
+    fontSize: 15,
+    fontWeight: "700" as const,
     color: DS_COLORS.textPrimary,
     letterSpacing: -0.1,
   },
   socialSecondary: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontSize: 13,
     fontWeight: "400" as const,
     color: DS_COLORS.textSecondary,
     marginTop: DS_SPACING.xs,
@@ -2064,16 +2067,16 @@ const s = StyleSheet.create({
   ctaButton: {
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 50,
-    paddingVertical: DS_SPACING.lg,
-    borderRadius: 12,
-    backgroundColor: "#D2734A",
+    minHeight: 56,
+    paddingVertical: 18,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.accent,
     width: Platform.OS === "web" ? 400 : undefined,
     alignSelf: "stretch" as const,
     minWidth: 280,
   },
   ctaText: {
-    fontSize: DS_TYPOGRAPHY.button.fontSize,
+    fontSize: 17,
     fontWeight: "700" as const,
     color: DS_COLORS.white,
   },
@@ -2091,7 +2094,7 @@ const s = StyleSheet.create({
   ctaMicro: {
     fontSize: 12,
     fontWeight: "400" as const,
-    color: "#7A7A6D",
+    color: DS_COLORS.textMuted,
     marginTop: DS_SPACING.sm,
     textAlign: "center",
   },

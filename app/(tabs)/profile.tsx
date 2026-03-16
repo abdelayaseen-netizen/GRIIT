@@ -355,11 +355,11 @@ export default function ProfileScreen() {
 
   const currentStreak = stats?.activeStreak || 0;
   const bestStreak = stats?.longestStreak || 0;
-  const _activeChallenges = stats?.activeChallenges || 0;
+  const activeChallengesCount = stats?.activeChallenges ?? 0;
   const completedChallengesCount = stats?.completedChallenges || 0;
   const totalDaysSecured = (stats as StatsFromApi)?.totalDaysSecured ?? 0;
   const tierName = (stats as StatsFromApi)?.tier ?? "Starter";
-  void _openSubscriptionManagement; void _completedChallengesList; void _accountabilityCount; void _dashboardDataError; void _activeChallenges;
+  void _openSubscriptionManagement; void _completedChallengesList; void _accountabilityCount; void _dashboardDataError;
 
   const handleShare = useCallback(async () => {
     if (Platform.OS !== "web") {
@@ -580,8 +580,19 @@ export default function ProfileScreen() {
           longestStreak={bestStreak}
           daysSecured={totalDaysSecured}
           challengesCompleted={completedChallengesCount}
+          activeChallengesCount={activeChallengesCount}
           totalDisciplinePoints={totalDaysSecured}
         />
+
+        <TouchableOpacity
+          style={[styles.discoverCta, { backgroundColor: DS_COLORS.accent }]}
+          onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+          activeOpacity={0.85}
+          accessibilityLabel="Discover a Challenge"
+          accessibilityRole="button"
+        >
+          <Text style={styles.discoverCtaText}>📈 Discover a Challenge</Text>
+        </TouchableOpacity>
 
         <DisciplineCalendar
           securedDateKeys={securedDateKeys}
@@ -648,7 +659,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.menuTextWrap}>
               <Text style={styles.menuText}>Settings</Text>
-              <Text style={styles.menuSubtext}>Privacy, notifications, consequences</Text>
+              <Text style={styles.menuSubtext}>Notifications, privacy, account</Text>
             </View>
             <ChevronRight size={18} color={DS_COLORS.textMuted} />
           </TouchableOpacity>
@@ -667,7 +678,7 @@ export default function ProfileScreen() {
             accessibilityLabel="Sign out of your account"
             accessibilityRole="button"
           >
-            <Text style={[styles.signOutText, { color: DS_COLORS.danger }]}>↪ Sign Out</Text>
+            <Text style={[styles.signOutText, { color: DS_COLORS.accent, fontSize: 15, fontWeight: "700" }]}>↪ Sign Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -837,6 +848,14 @@ function createProfileStyles() {
       marginBottom: DS_SPACING.lg,
     },
     retryButtonText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "700" as const, color: DS_COLORS.white },
+    discoverCta: {
+      marginHorizontal: DS_SPACING.screenHorizontal,
+      marginBottom: DS_SPACING.lg,
+      paddingVertical: DS_SPACING.lg,
+      borderRadius: 14,
+      alignItems: "center",
+    },
+    discoverCtaText: { fontSize: 16, fontWeight: "700" as const, color: DS_COLORS.white },
     signOutLink: { paddingVertical: DS_SPACING.sm },
     signOutLinkText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "500" as const, color: DS_COLORS.textMuted, textDecorationLine: "underline" as const },
     streakAtRiskCard: {

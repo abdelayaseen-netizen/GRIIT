@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   Shield,
   Zap,
+  Compass,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
@@ -511,7 +512,7 @@ export default function HomeScreen() {
               One day at a time. No excuses.
             </Text>
             <TouchableOpacity
-              style={[styles.heroCTA, { backgroundColor: colors.accent }]}
+              style={[styles.heroCTA, { backgroundColor: DS_COLORS.accent }]}
               onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
               activeOpacity={0.85}
               accessibilityLabel="Explore challenges"
@@ -635,24 +636,24 @@ export default function HomeScreen() {
         </View>
 
         {!isGuest && !hasActiveChallenge && (
-          <View style={[styles.welcomeCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, borderWidth: 1 }]}>
-            <RefreshCw size={24} color={DS_COLORS.accent} style={{ marginBottom: 8 }} />
-            <Text style={styles.welcomeCardTitle}>
-              {((stats?.totalDaysSecured ?? 0) > 0 ? "Welcome back." : "Welcome back.")}
-            </Text>
+          <View style={[styles.welcomeCard, styles.startBuildingCard]}>
+            <View style={[styles.startBuildingIconWrap, { backgroundColor: DS_COLORS.accentLight }]}>
+              <Compass size={28} color={DS_COLORS.accent} />
+            </View>
+            <Text style={styles.startBuildingTitle}>Start Building</Text>
             <Text style={styles.welcomeCardSub}>
               {((stats?.totalDaysSecured ?? 0) > 0
                 ? "Secure 1 day today to restart momentum."
                 : "Pick a challenge, commit, and secure your first day.")}
             </Text>
             <TouchableOpacity
-              style={[styles.welcomeCardButtonOutlined, { borderColor: DS_COLORS.accent }]}
+              style={[styles.exploreChallengesPrimaryBtn, { backgroundColor: DS_COLORS.accent }]}
               onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
               activeOpacity={0.85}
-              accessibilityLabel={(stats?.totalDaysSecured ?? 0) > 0 ? "Pick a Challenge" : "Find a challenge"}
+              accessibilityLabel="Explore Challenges"
               accessibilityRole="button"
             >
-              <Text style={[styles.welcomeCardButtonOutlinedText, { color: DS_COLORS.accent }]}>Pick a Challenge</Text>
+              <Text style={styles.exploreChallengesPrimaryBtnText}>Explore Challenges ›</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.exploreChallengesButton, { backgroundColor: DS_COLORS.accentLight }]}
@@ -668,7 +669,7 @@ export default function HomeScreen() {
 
         {!isGuest && hasActiveChallenge && !isDaySecured && (
           <View style={[styles.todayNotSecuredCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-            <View style={[styles.todayNotSecuredIconWrap, { backgroundColor: DS_COLORS.accentLight }]}>
+            <View style={[styles.todayNotSecuredIconWrap, { backgroundColor: DS_COLORS.accent }]}>
               <Text style={styles.todayNotSecuredExclamation}>!</Text>
             </View>
             <View style={styles.todayNotSecuredBody}>
@@ -755,7 +756,7 @@ export default function HomeScreen() {
             )}
 
         {!isGuest && (
-          <View style={[styles.statsRowCard, { backgroundColor: SURFACE_SUBTLE }]}>
+          <View style={styles.statsRowCard}>
             <View style={styles.statsRowCol}>
               <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.accentLight }]}>
                 <Flame size={20} color={DS_COLORS.accent} />
@@ -1329,7 +1330,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     backgroundColor: DS_COLORS.surface,
@@ -1350,7 +1351,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: DS_SPACING.cardPadding,
-    borderRadius: DS_RADIUS.card,
+    borderRadius: 14,
     borderWidth: 1,
     marginBottom: DS_SPACING.lg,
   },
@@ -1365,7 +1366,7 @@ const styles = StyleSheet.create({
   todayNotSecuredExclamation: {
     fontSize: 20,
     fontWeight: "700" as const,
-    color: DS_COLORS.accent,
+    color: DS_COLORS.white,
   },
   todayNotSecuredBody: { flex: 1 },
   todayNotSecuredTitle: {
@@ -1373,6 +1374,39 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     color: DS_COLORS.textPrimary,
     marginBottom: 4,
+  },
+  startBuildingCard: {
+    borderRadius: 16,
+    padding: 32,
+    alignItems: "center",
+  },
+  startBuildingIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  startBuildingTitle: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+    color: DS_COLORS.textPrimary,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  exploreChallengesPrimaryBtn: {
+    alignSelf: "stretch",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 14,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  exploreChallengesPrimaryBtnText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: DS_COLORS.white,
   },
   todayNotSecuredSub: {
     fontSize: 14,
@@ -1383,12 +1417,11 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: DS_RADIUS.button,
+    borderRadius: 14,
     alignItems: "center",
-    marginTop: 12,
   },
   exploreChallengesButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700" as const,
     color: DS_COLORS.accent,
   },
@@ -1428,11 +1461,12 @@ const styles = StyleSheet.create({
   statsRowCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
+    backgroundColor: DS_COLORS.surface,
   },
   statsRowCol: {
     flex: 1,
@@ -1453,10 +1487,11 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textPrimary,
   },
   statsRowLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "400" as const,
     color: DS_COLORS.textMuted,
     letterSpacing: 0.5,
+    textTransform: "uppercase" as const,
   },
   statsRowDivider: {
     width: 1,

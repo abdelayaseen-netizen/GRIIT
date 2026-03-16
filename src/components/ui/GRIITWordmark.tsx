@@ -44,7 +44,7 @@ export function GRIITWordmark({
             styles.subtitle,
             {
               color: subtitleColor,
-              fontSize: DS_TYPOGRAPHY.wordmarkSubtitle.fontSize,
+              fontSize: 13,
               fontWeight: DS_TYPOGRAPHY.wordmarkSubtitle.fontWeight,
               marginTop: compact ? DS_SPACING.xs : DS_SPACING.sm,
             },
