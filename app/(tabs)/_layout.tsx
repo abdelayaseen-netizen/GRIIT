@@ -1,5 +1,5 @@
 import { Tabs, usePathname } from "expo-router";
-import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
+import { Home, Compass, Plus, Flame, User, Users } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
@@ -84,6 +84,16 @@ export default function TabLayout() {
           tabBarAccessibilityLabel: "Movement tab",
         }}
       />
+      {user ? (
+        <Tabs.Screen
+          name="teams"
+          options={{
+            title: "Teams",
+            tabBarIcon: ({ color, size }) => <Users color={color} size={size || 24} />,
+            tabBarAccessibilityLabel: "Teams tab",
+          }}
+        />
+      ) : null}
       <Tabs.Screen
         name="profile"
         options={{

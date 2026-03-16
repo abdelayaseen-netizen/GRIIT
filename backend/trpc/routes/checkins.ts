@@ -543,4 +543,70 @@ export const checkinsRouter = createTRPCRouter({
 
       return { success: true, newStreakCount, lastStandEarned };
     }),
+
+  markAsShared: protectedProcedure
+    .input(z.object({ completionId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: row } = await ctx.supabase
+        .from("check_ins")
+        .select("id, active_challenge_id")
+        .eq("id", input.completionId)
+        .single();
+      if (!row) return { success: false };
+      const { data: ac } = await ctx.supabase
+        .from("active_challenges")
+        .select("user_id")
+        .eq("id", (row as { active_challenge_id?: string }).active_challenge_id)
+        .single();
+      if (!ac || (ac as { user_id?: string }).user_id !== ctx.userId) return { success: false };
+      await ctx.supabase
+        .from("check_ins")
+        .update({ shared: true })
+        .eq("id", input.completionId);
+      return { success: true };
+    }),
+
+  getShareStats: protectedProcedure.query(async ({ ctx }) => {
+    const { data: acList } = await ctx.supabase
+      .from("active_challenges")
+      .select("id")
+      .eq("user_id", ctx.userId);
+    const acIds = (acList ?? []).map((r: { id: string }) => r.id);
+    if (acIds.length === 0) return { totalShared: 0 };
+    const { count } = await ctx.supabase
+      .from("check_ins")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "completed")
+      .eq("shared", true)
+      .in("active_challenge_id", acIds);
+    return { totalShared: count ?? 0 };
+  }),
+
+  getMilestoneShared: protectedProcedure
+    .input(z.object({ activeChallengeId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+      const { data } = await ctx.supabase
+        .from("active_challenges")
+        .select("milestone_30_shared, milestone_75_shared")
+        .eq("id", input.activeChallengeId)
+        .single();
+      const row = data as { milestone_30_shared?: boolean; milestone_75_shared?: boolean } | null;
+      return {
+        milestone_30_shared: row?.milestone_30_shared ?? false,
+        milestone_75_shared: row?.milestone_75_shared ?? false,
+      };
+    }),
+
+  setMilestoneShared: protectedProcedure
+    .input(z.object({ activeChallengeId: z.string().uuid(), milestoneDay: z.union([z.literal(30), z.literal(75)]) }))
+    .mutation(async ({ input, ctx }) => {
+      await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+      const col = input.milestoneDay === 30 ? "milestone_30_shared" : "milestone_75_shared";
+      await ctx.supabase
+        .from("active_challenges")
+        .update({ [col]: true })
+        .eq("id", input.activeChallengeId);
+      return { success: true };
+    }),
 });

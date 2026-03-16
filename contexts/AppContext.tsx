@@ -46,7 +46,7 @@ type AppContextValue = {
     location_latitude?: number;
     location_longitude?: number;
     timer_seconds_on_screen?: number;
-  }) => Promise<{ firstTaskOfDay?: boolean } | void>;
+  }) => Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void>;
   secureDay: () => Promise<{
     newStreakCount: number;
     lastStandEarned?: boolean;
@@ -405,7 +405,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     location_latitude?: number;
     location_longitude?: number;
     timer_seconds_on_screen?: number;
-  }): Promise<{ firstTaskOfDay?: boolean } | void> => {
+  }): Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void> => {
     const requiredTasks = (challenge?.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
     const completedCountBefore = todayCheckins.filter((c: TodayCheckinForUser) =>
       c.status === 'completed' && requiredTasks.some((rt: { id: string }) => rt.id === c.task_id)
@@ -425,11 +425,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTodayCheckins((prev) => [...prev, optimisticCheckin]);
 
     return trpcMutate(TRPC.checkins.complete, params)
-      .then(() => {
+      .then((data: { id?: string } | undefined) => {
         if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
         void fetchActiveChallenge();
         void fetchStats();
-        return { firstTaskOfDay };
+        return { firstTaskOfDay, completionId: data?.id };
       })
       .catch(() => {
         setTodayCheckins(previousCheckins);

@@ -18,6 +18,9 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
+import ViewShot from "react-native-view-shot";
+import { ProofShareCard } from "@/components/ShareCard";
+import { shareCompletion } from "@/lib/share-completion";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -72,7 +75,12 @@ export default function TaskCompleteScreen() {
     taskDescription?: string;
     taskConfig?: string;
   }>();
-  const { activeChallenge, completeTask } = useApp();
+  const { activeChallenge, completeTask, challenge, profile, stats } = useApp();
+  const shareRef = useRef<ViewShot | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [completionId, setCompletionId] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [sharedFeedback, setSharedFeedback] = useState(false);
 
   const taskId = params.taskId ?? "";
   const activeChallengeId = params.activeChallengeId ?? activeChallenge?.id ?? "";
@@ -226,7 +234,7 @@ export default function TaskCompleteScreen() {
     if (!activeChallengeId || !taskId || !canSubmit) return;
     setIsSubmitting(true);
     try {
-      await completeTask({
+      const result = await completeTask({
         activeChallengeId,
         taskId,
         noteText: taskType === "journal" ? journalText.trim() : undefined,
@@ -240,13 +248,99 @@ export default function TaskCompleteScreen() {
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
       });
       if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Task complete", "Nice work.", [{ text: "OK", onPress: () => router.back() }]);
+      const id = result && typeof result === "object" && "completionId" in result ? (result as { completionId?: string }).completionId : undefined;
+      setCompletionId(id ?? null);
+      setSubmitted(true);
     } catch (err: unknown) {
       Alert.alert("Could not complete", err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [activeChallengeId, taskId, canSubmit, completeTask, taskType, journalText, timerSeconds, photoUrl, heartRateData, userLocation, isHardMode, router]);
+  }, [activeChallengeId, taskId, canSubmit, completeTask, taskType, journalText, timerSeconds, photoUrl, heartRateData, userLocation, isHardMode]);
+
+  const handleShare = useCallback(async () => {
+    setShareLoading(true);
+    try {
+      const username = (profile as { username?: string })?.username ?? "GRIIT User";
+      const challengeName = (challenge as { title?: string })?.title ?? "Challenge";
+      const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? 1;
+      const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
+      const gpsCoords = userLocation
+        ? `${userLocation.lat.toFixed(4)}° N, ${userLocation.lng.toFixed(4)}° W`
+        : null;
+      await shareCompletion({
+        ref: shareRef as React.RefObject<{ capture?: () => Promise<string> } | null>,
+        completionId: completionId ?? undefined,
+        username,
+        dayNumber,
+        challengeName,
+        proofPhotoUri: photoUri ?? photoUrl ?? null,
+        streakCount,
+        gpsCoords,
+        date: new Date().toLocaleDateString(),
+      });
+      setSharedFeedback(true);
+      setTimeout(() => setSharedFeedback(false), 2000);
+    } finally {
+      setShareLoading(false);
+    }
+  }, [completionId, profile, challenge, activeChallenge, stats, userLocation, photoUri, photoUrl]);
+
+  if (submitted) {
+    const username = (profile as { username?: string })?.username ?? "GRIIT User";
+    const challengeName = (challenge as { title?: string })?.title ?? "Challenge";
+    const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? 1;
+    const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
+    const gpsCoords = userLocation
+      ? `${userLocation.lat.toFixed(4)}° N, ${userLocation.lng.toFixed(4)}° W`
+      : null;
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
+        <Stack.Screen options={{ title: taskName, headerBackVisible: true }} />
+        <View style={{ opacity: 0, position: "absolute", left: -9999, pointerEvents: "none" }}>
+          <ViewShot
+            ref={shareRef}
+            options={{ format: "png", width: 1080, height: 1080 }}
+            style={{ width: 1080, height: 1080 }}
+          >
+            <ProofShareCard
+              username={username}
+              dayNumber={dayNumber}
+              challengeName={challengeName}
+              proofPhotoUri={photoUri ?? photoUrl ?? null}
+              streakCount={streakCount}
+              gpsCoords={gpsCoords}
+              date={new Date().toLocaleDateString()}
+            />
+          </ViewShot>
+        </View>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+          <Text style={styles.title}>Task complete</Text>
+          <Text style={styles.subtitle}>Nice work.</Text>
+          <TouchableOpacity
+            style={[styles.submitButton, { backgroundColor: "#E8593C" }]}
+            onPress={handleShare}
+            disabled={shareLoading}
+          >
+            {shareLoading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : sharedFeedback ? (
+              <Text style={styles.submitButtonText}>Shared! ✓</Text>
+            ) : (
+              <Text style={styles.submitButtonText}>Share your proof</Text>
+            )}
+          </TouchableOpacity>
+          <Text style={[styles.sectionHint, { textAlign: "center", marginTop: 8 }]}>Show the world you showed up</Text>
+          <TouchableOpacity
+            style={[styles.submitButton, { backgroundColor: DS_COLORS.border, marginTop: 24 }]}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.submitButtonText, { color: DS_COLORS.textPrimary }]}>Done</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>

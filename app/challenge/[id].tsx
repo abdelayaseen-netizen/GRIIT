@@ -45,6 +45,8 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useProStatus } from "@/hooks/useProStatus";
+import { checkGate, getPaywallTrigger, FREE_TIER } from "@/lib/feature-gates";
 import { canJoinChallenge } from "@/lib/premium";
 import { FLAGS } from "@/lib/feature-flags";
 import { useAuthGate } from "@/contexts/AuthGateContext";
@@ -270,8 +272,9 @@ function MissionRow({
   stravaVerifyPending,
   onConnectStrava,
   onVerifyStrava,
+  isPro = true,
 }: {
-  task: ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null; timeEnforcementEnabled?: boolean; anchorTimeLocal?: string; verification_method?: string | null };
+  task: ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null; timeEnforcementEnabled?: boolean; anchorTimeLocal?: string; verification_method?: string | null; require_location?: boolean; require_heart_rate?: boolean };
   theme: DifficultyTheme;
   isCompleted: boolean;
   isLast: boolean;
@@ -283,7 +286,9 @@ function MissionRow({
   stravaVerifyPending?: boolean;
   onConnectStrava?: () => void;
   onVerifyStrava?: () => Promise<void>;
+  isPro?: boolean;
 }) {
+  const isLockedProFeature = !isPro && (task.require_location === true || task.require_heart_rate === true);
   const IconComp = TASK_ICONS[task.type] || Target;
   const isJournal = task.type === "journal";
   const hasTimeEnforcement = task.timeEnforcementEnabled && task.anchorTimeLocal;
@@ -324,6 +329,11 @@ function MissionRow({
       <View style={s.missionContent}>
         <View style={s.missionTitleRow}>
           <Text style={[s.missionTitle, isCompleted && s.missionTitleDone]}>{task.title}</Text>
+          {isLockedProFeature && (
+            <View style={s.proBadge}>
+              <Text style={s.proBadgeText}>PRO</Text>
+            </View>
+          )}
           {isJournal && (
             <View style={s.journalPill}>
               <Text style={s.journalPillText}>Journal</Text>
@@ -433,6 +443,7 @@ export default function ChallengeDetailScreen() {
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
   const isJoined = activeChallenge?.challenge_id === id;
   const { requirePremium } = useSubscription();
+  const { isPro } = useProStatus();
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
@@ -586,18 +597,14 @@ export default function ChallengeDetailScreen() {
     if (!id || commitmentJoining) return;
     const list = await trpcQuery(TRPC.challenges.listMyActive) as unknown[];
     const count = Array.isArray(list) ? list.length : 0;
+    const isPro = await (await import("@/lib/revenue-cat")).isProUser();
+    if (count >= FREE_TIER.MAX_FREE_ACTIVE_CHALLENGES && !isPro) {
+      router.push("/paywall" as never);
+      return;
+    }
     if (__DEV__) console.log("[JOIN] joinLimit check — activeCount:", count, "allowed:", canJoinChallenge(count).allowed);
     if (!canJoinChallenge(count).allowed) {
-      if (!requirePremium("challenge_limit")) {
-        Alert.alert(
-          "Challenge limit reached",
-          "You've reached the maximum number of active challenges. Upgrade to add more.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Upgrade", onPress: () => requirePremium("challenge_limit") },
-          ]
-        );
-      }
+      Alert.alert("Challenge limit reached", "You've reached the maximum number of active challenges.");
       return;
     }
     setCommitmentJoining(true);
@@ -624,7 +631,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setCommitmentJoining(false);
     }
-  }, [id, commitmentJoining, commitmentUnderstood, user?.id, refetchAll, router, requirePremium]);
+  }, [id, commitmentJoining, commitmentUnderstood, user?.id, refetchAll, router]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -1151,12 +1158,13 @@ export default function ChallengeDetailScreen() {
                   return (
                     <MissionRow
                       key={task.id}
-                      task={task as ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null; timeEnforcementEnabled?: boolean; anchorTimeLocal?: string; verification_method?: string | null }}
+                      task={task as ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null; timeEnforcementEnabled?: boolean; anchorTimeLocal?: string; verification_method?: string | null; require_location?: boolean; require_heart_rate?: boolean }}
                       theme={theme}
                       isCompleted={isCompleted}
                       isLast={index === allTasks.length - 1}
                       onStart={() => handleMissionStart(task)}
                       checkin={checkin}
+                      isPro={isPro}
                       verificationMethod={(task as { verification_method?: string }).verification_method}
                       stravaConnected={hasStravaTasks ? stravaConnected : null}
                       activeChallengeId={isThisActiveChallenge ? activeChallengeId : undefined}
@@ -1930,6 +1938,17 @@ const s = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600" as const,
     color: DS_COLORS.linkBlue,
+  },
+  proBadge: {
+    backgroundColor: "#E8593C",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  proBadgeText: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+    color: "#FFFFFF",
   },
   missionTitle: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,

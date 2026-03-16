@@ -39,6 +39,7 @@ export const ROUTES = {
   CHALLENGE_COMPLETE: "/challenge/complete",
   TEAMS: "/teams",
   PRICING: "/pricing",
+  PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",
   LEGAL_TERMS: "/legal/terms",
 } as const;

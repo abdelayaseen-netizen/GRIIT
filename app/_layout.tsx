@@ -20,6 +20,7 @@ import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { configureRevenueCat } from "@/lib/revenue-cat";
 
 const HAS_LAUNCHED_KEY = "griit_has_launched";
 
@@ -198,10 +199,19 @@ function AuthRedirector() {
 }
 
 function RootLayoutNav() {
+  const { user } = useAuth();
   const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
+
+  useEffect(() => {
+    configureRevenueCat(user?.id ?? null);
+  }, [user?.id]);
   const segments = useSegments();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  useEffect(() => {
+    configureRevenueCat(user?.id ?? null);
+  }, [user?.id]);
 
   useEffect(() => {
     const check = async () => {
@@ -259,7 +269,10 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen name="invite/[code]" options={{ headerShown: false }} />
+      <Stack.Screen name="paywall" options={{ headerShown: false }} />
       <Stack.Screen name="teams" options={{ headerShown: false }} />
+      <Stack.Screen name="create-team" options={{ title: "Create team", presentation: "modal" }} />
+      <Stack.Screen name="join-team" options={{ title: "Join team", presentation: "modal" }} />
       <Stack.Screen name="profile/[username]" options={{ headerShown: false }} />
       <Stack.Screen 
         name="task/run" 

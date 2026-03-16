@@ -450,6 +450,7 @@ export default function HomeScreen() {
               isHardMode: (challenge?.difficulty === "hard" || challenge?.difficulty === "extreme").toString(),
               challengeName: String(challengeTitle || ""),
               ...(challengeIdForNav ? { challengeId: challengeIdForNav } : {}),
+              ...(activeChallenge?.id ? { activeChallengeId: activeChallenge.id } : {}),
             },
           } as never);
           const totalDaysSecuredNow = (stats as StatsFromApi)?.totalDaysSecured != null ? ((stats as StatsFromApi)?.totalDaysSecured ?? 0) + 1 : 0;

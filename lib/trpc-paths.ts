@@ -47,6 +47,10 @@ export const TRPC = {
     getTodayCheckinsForUser: 'checkins.getTodayCheckinsForUser',
     complete: 'checkins.complete',
     secureDay: 'checkins.secureDay',
+    markAsShared: 'checkins.markAsShared',
+    getShareStats: 'checkins.getShareStats',
+    setMilestoneShared: 'checkins.setMilestoneShared',
+    getMilestoneShared: 'checkins.getMilestoneShared',
   },
   stories: {
     list: 'stories.list',
@@ -94,6 +98,13 @@ export const TRPC = {
   },
   feed: {
     list: 'feed.list',
+  },
+  teams: {
+    createTeam: 'teams.createTeam',
+    joinTeam: 'teams.joinTeam',
+    getMyTeam: 'teams.getMyTeam',
+    leaveTeam: 'teams.leaveTeam',
+    getTeamFeed: 'teams.getTeamFeed',
   },
   achievements: {
     getForUser: 'achievements.getForUser',

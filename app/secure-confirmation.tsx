@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,16 +6,21 @@ import {
   Animated,
   Platform,
   TouchableOpacity,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, Check, Share2, ChevronRight } from "lucide-react-native";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DS_COLORS } from "@/lib/design-system";
 import { shareDaySecured, shareChallengeComplete } from "@/lib/share";
 import { requestReviewIfAppropriate } from "@/lib/request-review";
 import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
+import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 
 const SECURE_DAY_MESSAGES = [
   "Day {day} Secured.",
@@ -38,6 +43,7 @@ export default function SecureConfirmationScreen() {
   const streak = params.streak as string | undefined;
   const totalDays = params.totalDays as string | undefined;
   const challengeId = params.challengeId as string | undefined;
+  const activeChallengeId = params.activeChallengeId as string | undefined;
   const isHardMode = params.isHardMode === "true";
   const challengeName = (params.challengeName as string) ?? "";
 
@@ -45,6 +51,29 @@ export default function SecureConfirmationScreen() {
   const totalNum = parseInt(totalDays ?? "0", 10);
   const streakNum = parseInt(streak ?? "0", 10);
   const isCompletion = totalNum > 1 && dayNum === totalNum;
+  const isMilestoneDay = dayNum === 30 || dayNum === 75;
+
+  const milestoneQuery = useQuery({
+    queryKey: ["milestoneShared", activeChallengeId],
+    queryFn: () => trpcQuery(TRPC.checkins.getMilestoneShared, { activeChallengeId: activeChallengeId! }) as Promise<{ milestone_30_shared: boolean; milestone_75_shared: boolean }>,
+    enabled: !!activeChallengeId && isMilestoneDay,
+  });
+  const setMilestoneShared = useMutation({
+    mutationFn: (milestoneDay: 30 | 75) =>
+      trpcMutate(TRPC.checkins.setMilestoneShared, { activeChallengeId: activeChallengeId!, milestoneDay }),
+  });
+  const alreadyShared = dayNum === 30
+    ? milestoneQuery.data?.milestone_30_shared
+    : dayNum === 75
+    ? milestoneQuery.data?.milestone_75_shared
+    : true;
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [milestoneShareLoading, setMilestoneShareLoading] = useState(false);
+  useEffect(() => {
+    if (isMilestoneDay && !!activeChallengeId && milestoneQuery.data !== undefined && !alreadyShared) {
+      setShowMilestoneModal(true);
+    }
+  }, [isMilestoneDay, activeChallengeId, milestoneQuery.data, alreadyShared]);
 
   const headerMessage = React.useMemo(() => {
     if (isCompletion && challengeName) {
@@ -243,9 +272,97 @@ export default function SecureConfirmationScreen() {
           )}
         </Animated.View>
       </View>
+
+      {showMilestoneModal && isMilestoneDay && (
+        <Modal visible transparent animationType="fade">
+          <View style={milestoneStyles.backdrop}>
+            <View style={milestoneStyles.card}>
+              <Text style={milestoneStyles.dayText}>Day {dayNum}</Text>
+              <Text style={milestoneStyles.title}>You actually did it.</Text>
+              <TouchableOpacity
+                style={milestoneStyles.shareCta}
+                onPress={async () => {
+                  setMilestoneShareLoading(true);
+                  try {
+                    await shareDaySecured({
+                      streak: streakNum,
+                      challengeName,
+                      dayNumber: dayNum,
+                    });
+                    await setMilestoneShared.mutateAsync(dayNum as 30 | 75);
+                    setShowMilestoneModal(false);
+                  } catch {
+                    // user cancelled or error
+                  } finally {
+                    setMilestoneShareLoading(false);
+                  }
+                }}
+                disabled={milestoneShareLoading}
+              >
+                {milestoneShareLoading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={milestoneStyles.shareCtaText}>Share this moment</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={milestoneStyles.continueBtn}
+                onPress={async () => {
+                  if (activeChallengeId) await setMilestoneShared.mutateAsync(dayNum as 30 | 75);
+                  setShowMilestoneModal(false);
+                }}
+              >
+                <Text style={milestoneStyles.continueBtnText}>Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
+
+const milestoneStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  card: {
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: 24,
+    padding: 32,
+    width: "100%",
+    maxWidth: 340,
+    alignItems: "center",
+  },
+  dayText: {
+    fontSize: 48,
+    fontWeight: "800",
+    color: "#E8593C",
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: DS_COLORS.textPrimary,
+    marginBottom: 28,
+  },
+  shareCta: {
+    backgroundColor: "#E8593C",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 14,
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  shareCtaText: { fontSize: 17, fontWeight: "700", color: "#FFFFFF" },
+  continueBtn: { paddingVertical: 12 },
+  continueBtnText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textSecondary },
+});
 
 const styles = StyleSheet.create({
   container: {
