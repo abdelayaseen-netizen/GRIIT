@@ -491,7 +491,7 @@ export default function HomeScreen() {
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <HomeScreenSkeleton />
         </ScrollView>
@@ -501,7 +501,7 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
             <Text style={styles.heroEmoji} accessibilityRole="header">🔥</Text>
@@ -592,7 +592,7 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <Celebration
         visible={showCelebration}
         onComplete={() => { setShowCelebration(false); setCelebrationPayload(null); }}
@@ -604,7 +604,7 @@ export default function HomeScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.background }]}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: DS_COLORS.background }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -622,13 +622,13 @@ export default function HomeScreen() {
           <GRIITWordmark spaced={!isGuest} subtitle={isGuest ? undefined : "Build Discipline Daily"} compact={!!isGuest} />
           {!isGuest && (
             <View style={styles.headerBadges}>
-              <View style={[styles.headerBadgePill, { backgroundColor: DS_COLORS.surfaceMuted }]} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
-                <TrendingUp size={14} color={DS_COLORS.textSecondary} />
-                <Text style={[styles.headerBadgePillText, { color: DS_COLORS.textPrimary }]}>{stats?.longestStreak ?? 0}</Text>
+              <View style={styles.headerBadgePill} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
+                <TrendingUp size={14} color={DS_COLORS.textPrimary} />
+                <Text style={styles.headerBadgePillText}>{stats?.longestStreak ?? 0}</Text>
               </View>
-              <View style={[styles.headerBadgePill, { backgroundColor: DS_COLORS.surfaceMuted }]} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
-                <Flame size={14} color={DS_COLORS.accent} />
-                <Text style={[styles.headerBadgePillText, { color: DS_COLORS.textPrimary }]}>{currentStreak}</Text>
+              <View style={styles.headerBadgePill} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
+                <Flame size={14} color={DS_COLORS.textPrimary} />
+                <Text style={styles.headerBadgePillText}>{currentStreak}</Text>
               </View>
             </View>
           )}
@@ -653,6 +653,47 @@ export default function HomeScreen() {
               accessibilityRole="button"
             >
               <Text style={[styles.welcomeCardButtonOutlinedText, { color: DS_COLORS.accent }]}>Pick a Challenge</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.exploreChallengesButton, { backgroundColor: DS_COLORS.accentLight }]}
+              onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
+              activeOpacity={0.85}
+              accessibilityLabel="Explore challenges"
+              accessibilityRole="button"
+            >
+              <Text style={styles.exploreChallengesButtonText}>✨ Explore challenges ›</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!isGuest && hasActiveChallenge && !isDaySecured && (
+          <View style={[styles.todayNotSecuredCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+            <View style={[styles.todayNotSecuredIconWrap, { backgroundColor: DS_COLORS.accentLight }]}>
+              <Text style={styles.todayNotSecuredExclamation}>!</Text>
+            </View>
+            <View style={styles.todayNotSecuredBody}>
+              <Text style={styles.todayNotSecuredTitle}>Today is not secured</Text>
+              <Text style={styles.todayNotSecuredSub}>Complete your required tasks to secure today.</Text>
+            </View>
+          </View>
+        )}
+
+        {!isGuest && homeActiveQuery.isError && (
+          <View style={[styles.challengesErrorCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
+            <AlertTriangle size={32} color={DS_COLORS.textMuted} style={{ marginBottom: 12 }} />
+            <Text style={styles.challengesErrorLabel}>CHALLENGES</Text>
+            <Text style={[styles.challengesErrorText, { color: DS_COLORS.textPrimary }]}>
+              Couldn&apos;t load your challenges. Check your connection and try again.
+            </Text>
+            <TouchableOpacity
+              style={[styles.challengesErrorRetryBtn, { backgroundColor: DS_COLORS.accent }]}
+              onPress={() => homeActiveQuery.refetch()}
+              activeOpacity={0.85}
+              accessibilityLabel="Retry loading challenges"
+              accessibilityRole="button"
+            >
+              <RefreshCw size={16} color={DS_COLORS.white} />
+              <Text style={styles.challengesErrorRetryText}>🔄 Retry</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -716,19 +757,25 @@ export default function HomeScreen() {
         {!isGuest && (
           <View style={[styles.statsRowCard, { backgroundColor: SURFACE_SUBTLE }]}>
             <View style={styles.statsRowCol}>
-              <Flame size={20} color={DS_COLORS.accent} />
+              <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.accentLight }]}>
+                <Flame size={20} color={DS_COLORS.accent} />
+              </View>
               <Text style={styles.statsRowNum}>{currentStreak}</Text>
               <Text style={styles.statsRowLabel}>STREAK</Text>
             </View>
             <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
             <View style={styles.statsRowCol}>
-              <TrendingUp size={20} color={DS_COLORS.textPrimary} />
+              <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.successSoft }]}>
+                <TrendingUp size={20} color={DS_COLORS.success} />
+              </View>
               <Text style={styles.statsRowNum}>{stats?.longestStreak ?? 0}</Text>
               <Text style={styles.statsRowLabel}>SCORE</Text>
             </View>
             <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
             <View style={styles.statsRowCol}>
-              <View style={[styles.statsRowDot, { backgroundColor: DS_COLORS.accent }]} />
+              <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.accentLight }]}>
+                <Target size={20} color={DS_COLORS.accent} />
+              </View>
               <Text style={styles.statsRowNum}>{tierName ?? "—"}</Text>
               <Text style={styles.statsRowLabel}>RANK</Text>
             </View>
@@ -868,11 +915,18 @@ export default function HomeScreen() {
             );
           }
           return (
-            <View style={[styles.liveFeedEmpty, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-              <Users size={32} color={colors.text.muted} style={{ marginBottom: 8 }} />
-              <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>No activity yet</Text>
-              <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Join a challenge to see the community in action.</Text>
-            </View>
+            <>
+              <View style={[styles.liveFeedEmpty, styles.liveFeedEmptyCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
+                <Users size={40} color={DS_COLORS.textMuted} style={{ marginBottom: 12 }} />
+                <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>No activity yet</Text>
+                <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Join a challenge to see the community in action.</Text>
+              </View>
+              <View style={[styles.liveFeedEmpty, styles.liveFeedEmptyCard, styles.leaderboardEmptyCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
+                <Target size={40} color={DS_COLORS.accent} style={{ marginBottom: 12 }} />
+                <Text style={[styles.leaderboardEmptyLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
+                <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>Be the first this week.</Text>
+              </View>
+            </>
           );
         })()}
 
@@ -1272,6 +1326,12 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.black,
   },
   headerBadgePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
     backgroundColor: DS_COLORS.surface,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
@@ -1282,9 +1342,88 @@ const styles = StyleSheet.create({
     color: DS_COLORS.white,
   },
   headerBadgePillText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700" as const,
     color: DS_COLORS.textPrimary,
+  },
+  todayNotSecuredCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: DS_SPACING.cardPadding,
+    borderRadius: DS_RADIUS.card,
+    borderWidth: 1,
+    marginBottom: DS_SPACING.lg,
+  },
+  todayNotSecuredIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: DS_SPACING.md,
+  },
+  todayNotSecuredExclamation: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: DS_COLORS.accent,
+  },
+  todayNotSecuredBody: { flex: 1 },
+  todayNotSecuredTitle: {
+    fontSize: 17,
+    fontWeight: "700" as const,
+    color: DS_COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  todayNotSecuredSub: {
+    fontSize: 14,
+    fontWeight: "400" as const,
+    color: DS_COLORS.textSecondary,
+  },
+  exploreChallengesButton: {
+    alignSelf: "stretch",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: DS_RADIUS.button,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  exploreChallengesButtonText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: DS_COLORS.accent,
+  },
+  challengesErrorCard: {
+    padding: DS_SPACING.xxl,
+    borderRadius: DS_RADIUS.cardAlt,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+    alignItems: "center",
+    marginBottom: DS_SPACING.lg,
+  },
+  challengesErrorLabel: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    letterSpacing: 1,
+    color: DS_COLORS.textMuted,
+    marginBottom: 8,
+  },
+  challengesErrorText: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  challengesErrorRetryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  challengesErrorRetryText: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: DS_COLORS.white,
   },
   statsRowCard: {
     flexDirection: "row",
@@ -1299,6 +1438,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     gap: 4,
+  },
+  statsRowIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
   },
   statsRowNum: {
     fontSize: 28,
@@ -1735,9 +1882,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: DS_COLORS.surface,
   },
+  liveFeedEmptyCard: {
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
+  leaderboardEmptyCard: {
+    marginBottom: DS_SPACING.md,
+  },
+  leaderboardEmptyLabel: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
   liveFeedEmptyTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 4,
   },
   liveFeedEmptySub: {

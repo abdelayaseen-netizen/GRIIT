@@ -58,12 +58,12 @@ function createActivityStyles(c: ThemeColors) {
       gap: DS_SPACING.sm,
     },
     title: {
-      fontSize: 32,
-      fontWeight: "800" as const,
+      fontSize: 28,
+      fontWeight: "700" as const,
       color: DS_COLORS.textPrimary,
     },
     subtitle: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: "400" as const,
       color: DS_COLORS.textSecondary,
       marginTop: 2,
@@ -71,16 +71,16 @@ function createActivityStyles(c: ThemeColors) {
     teamsButton: {
       flexDirection: "row",
       alignItems: "center",
-      gap: DS_SPACING.sm,
-      paddingHorizontal: DS_SPACING.md,
-      paddingVertical: DS_SPACING.sm,
-      borderRadius: DS_RADIUS.button,
+      gap: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: DS_COLORS.border,
-      backgroundColor: "transparent",
+      backgroundColor: DS_COLORS.surface,
       marginLeft: "auto" as const,
     },
-    teamsButtonText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: DS_COLORS.textSecondary },
+    teamsButtonText: { fontSize: 14, fontWeight: "700" as const, color: DS_COLORS.textPrimary },
     scrollView: { flex: 1 },
     scrollContent: { paddingBottom: DS_SPACING.xxxl },
     filterRow: {
@@ -93,31 +93,33 @@ function createActivityStyles(c: ThemeColors) {
     filterPill: {
       flexDirection: "row",
       alignItems: "center",
-      gap: DS_SPACING.sm,
-      paddingHorizontal: DS_SPACING.lg,
-      paddingVertical: DS_SPACING.md,
-      borderRadius: 999,
-      backgroundColor: c.pill,
+      gap: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: DS_COLORS.surface,
+      borderWidth: 1,
+      borderColor: DS_COLORS.border,
     },
-    filterPillActive: { backgroundColor: c.text.primary },
-    filterPillText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: c.text.secondary },
-    filterPillTextActive: { color: DS_COLORS.white },
+    filterPillActive: { backgroundColor: DS_COLORS.blackBtn, borderColor: DS_COLORS.blackBtn },
+    filterPillText: { fontSize: 14, fontWeight: "500" as const, color: DS_COLORS.textSecondary },
+    filterPillTextActive: { color: DS_COLORS.white, fontWeight: "700" as const },
     filterPillDisabled: { backgroundColor: c.border, opacity: 0.8 },
     filterPillTextDisabled: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "600" as const, color: c.text.muted },
     dailyStatsWrap: { paddingHorizontal: DS_SPACING.screenHorizontal, marginBottom: DS_SPACING.xl },
     dailyStatsCard: {
-      backgroundColor: c.card,
-      borderRadius: DS_RADIUS.cardAlt,
-      padding: DS_SPACING.cardPadding,
-      borderWidth: DS_BORDERS.width,
-      borderColor: c.border,
+      backgroundColor: DS_COLORS.surface,
+      borderRadius: 14,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: DS_COLORS.border,
       flexDirection: "row",
       justifyContent: "space-between",
     },
     dailyStatRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-    dailyStatValue: { fontSize: 16, fontWeight: "700" as const, color: c.text.primary },
-    dailyStatLabel: { fontSize: 14, fontWeight: "400" as const, color: c.text.primary },
-    topThisWeekSection: { paddingHorizontal: DS_SPACING.screenHorizontal, marginBottom: DS_SPACING.xs },
+    dailyStatValue: { fontSize: 15, fontWeight: "700" as const, color: c.text.primary },
+    dailyStatLabel: { fontSize: 15, fontWeight: "400" as const, color: c.text.primary },
+    topThisWeekSection: { paddingHorizontal: DS_SPACING.screenHorizontal, marginTop: 24, marginBottom: 12 },
     topThisWeekScroll: { paddingHorizontal: 0, gap: 14, paddingBottom: 8 },
     topThisWeekItem: { alignItems: "center", width: 80 },
     topThisWeekAvatarWrap: { position: "relative" as const, marginBottom: 6 },
@@ -128,9 +130,10 @@ function createActivityStyles(c: ThemeColors) {
     topThisWeekName: { fontSize: 12, fontWeight: "600" as const, color: c.text.primary, marginBottom: 2 },
     topThisWeekScoreRow: { flexDirection: "row", alignItems: "center", gap: 4 },
     topThisWeekScore: { fontSize: 13, fontWeight: "600" as const, color: c.text.primary },
-    weeklyLeaderboardTitle: { fontSize: 20, fontWeight: "700" as const, color: c.text.primary },
+    topThisWeekSectionTitle: { fontSize: 18, fontWeight: "700" as const, color: DS_COLORS.textPrimary },
+    weeklyLeaderboardTitle: { fontSize: 18, fontWeight: "700" as const, color: c.text.primary },
     weeklyLeaderboardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-    resetsSunday: { fontSize: 12, fontWeight: "500" as const, color: c.text.tertiary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: DS_COLORS.surfaceMuted },
+    resetsSunday: { fontSize: 11, fontWeight: "500" as const, color: DS_COLORS.textMuted, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: DS_COLORS.surfaceMuted },
     topThreeRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
     topThreeCard: { flex: 1, backgroundColor: c.card, borderRadius: DS_RADIUS.cardAlt, padding: DS_SPACING.md, alignItems: "center", borderWidth: DS_BORDERS.width, borderColor: c.border },
     topThreeCardFirst: { backgroundColor: c.accentLight, borderColor: c.accent + "80" },
@@ -141,9 +144,9 @@ function createActivityStyles(c: ThemeColors) {
     topThreeScore: { fontSize: 14, fontWeight: "700" as const, color: c.text.primary, marginBottom: 6 },
     topThreeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 4 },
     topThreeBadgeText: { fontSize: 10, fontWeight: "700" as const },
-    leaderboardSection: { marginTop: DS_SPACING.xxl, paddingHorizontal: DS_SPACING.screenHorizontal },
+    leaderboardSection: { marginTop: 24, paddingHorizontal: DS_SPACING.screenHorizontal },
     sectionHeaderRow: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 12 },
-    sectionTitle: { fontSize: 20, fontWeight: "700" as const, color: c.text.primary, textTransform: "uppercase" as const, letterSpacing: 1 },
+    sectionTitle: { fontSize: 12, fontWeight: "600" as const, color: DS_COLORS.textMuted, textTransform: "uppercase" as const, letterSpacing: 1.5 },
     leaderboardRankNum: { fontSize: 14, fontWeight: "600" as const, color: c.text.tertiary, width: 28 },
     leaderboardNameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
     leaderboardScoreRight: { fontSize: 14, fontWeight: "700" as const, color: c.text.primary },
@@ -162,7 +165,7 @@ function createActivityStyles(c: ThemeColors) {
     leaderboardName: { fontSize: 14, fontWeight: "600" as const, color: c.text.primary },
     leaderboardMeta: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 },
     leaderboardStreak: { fontSize: 12, fontWeight: "600" as const, color: c.text.tertiary },
-    movementFeedSection: { marginTop: DS_SPACING.xxl, paddingHorizontal: DS_SPACING.screenHorizontal },
+    movementFeedSection: { marginTop: 24, paddingHorizontal: DS_SPACING.screenHorizontal },
     proofOfWorkHeader: {
       flexDirection: "row",
       alignItems: "center",
@@ -191,12 +194,12 @@ function createActivityStyles(c: ThemeColors) {
     teamEmptyTitle: { fontSize: 16, fontWeight: "700" as const, color: DS_COLORS.textPrimary, marginBottom: 4 },
     teamEmptySub: { fontSize: 14, color: DS_COLORS.textMuted, textAlign: "center" },
     movementFeedSectionTitle: {
-      fontSize: 20,
-      fontWeight: "700" as const,
-      letterSpacing: 1,
+      fontSize: 12,
+      fontWeight: "600" as const,
+      letterSpacing: 1.5,
       textTransform: "uppercase" as const,
       color: DS_COLORS.textMuted,
-      marginBottom: DS_SPACING.md,
+      marginBottom: 12,
     },
     movementFeedItem: {
       flexDirection: "row",
@@ -220,7 +223,8 @@ function createActivityStyles(c: ThemeColors) {
     movementFeedRespectCount: { fontSize: 12, fontWeight: "500" as const, color: c.text.tertiary },
     movementFeedNudge: { flexDirection: "row", alignItems: "center", gap: 4 },
     movementFeedNudgeText: { fontSize: 12, fontWeight: "500" as const, color: c.text.tertiary },
-    emptyLeaderboardText: { fontSize: 14, fontWeight: "500" as const, color: c.text.secondary, textAlign: "center", paddingVertical: 20 },
+    emptyLeaderboardText: { fontSize: 15, fontWeight: "500" as const, color: DS_COLORS.textSecondary, textAlign: "center", paddingVertical: 20 },
+    emptyLeaderboardTextRetry: { fontSize: 14, fontWeight: "500" as const, color: DS_COLORS.textSecondary, textAlign: "center", paddingVertical: 20 },
     onlyDisciplineShows: { fontSize: 13, fontWeight: "400" as const, color: c.text.tertiary, textAlign: "center", marginTop: 20, marginBottom: 8 },
     recentSection: { marginTop: DS_SPACING.xxl, paddingHorizontal: DS_SPACING.screenHorizontal },
     recentItem: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 10, borderRadius: 10, marginBottom: 2 },
@@ -914,7 +918,7 @@ export default function ActivityScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Movement</Text>
@@ -1000,13 +1004,13 @@ export default function ActivityScreen() {
         )}
         <View style={styles.topThisWeekSection}>
           <View style={styles.sectionHeaderRow}>
-            <TrendingUp size={16} color={colors.accent} />
-            <Text style={styles.weeklyLeaderboardTitle}>Top This Week</Text>
+            <TrendingUp size={18} color={colors.accent} />
+            <Text style={styles.topThisWeekSectionTitle}>Top This Week</Text>
           </View>
           {leaderboardLoading ? (
             <Text style={styles.emptyLeaderboardText}>{COPY.loading}</Text>
           ) : leaderboardError ? (
-            <Text style={styles.emptyLeaderboardText}>{COPY.couldNotLoad} {COPY.pullToRetry}</Text>
+            <Text style={styles.emptyLeaderboardTextRetry}>{COPY.couldNotLoad} {COPY.pullToRetry}</Text>
           ) : leaderboard.entries.length === 0 ? (
             <Text style={styles.emptyLeaderboardText}>{COPY.beFirstThisWeek}</Text>
           ) : (
@@ -1033,13 +1037,13 @@ export default function ActivityScreen() {
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>
             </View>
-            <Text style={styles.emptyLeaderboardText}>{COPY.couldNotLoad} {COPY.pullToRetry}</Text>
+            <Text style={styles.emptyLeaderboardTextRetry}>{COPY.couldNotLoad} {COPY.pullToRetry}</Text>
           </View>
         ) : leaderboard.entries.length === 0 ? (
           <View style={styles.leaderboardSection}>
             <View style={styles.weeklyLeaderboardHeader}>
               <View style={styles.sectionHeaderRow}>
-                <Trophy size={16} color={DS_COLORS.milestoneGold} />
+                <Trophy size={18} color={DS_COLORS.milestoneGold} />
                 <Text style={styles.weeklyLeaderboardTitle}>Weekly Leaderboard</Text>
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>

@@ -784,7 +784,7 @@ export default function ChallengeDetailScreen() {
 
   if (!id) {
     return (
-      <SafeAreaView style={[s.container, { backgroundColor: themeColors.background }]} edges={["bottom"]}>
+      <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Not found</Text>
@@ -798,7 +798,7 @@ export default function ChallengeDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={[s.loadingContainer, { backgroundColor: themeColors.background }]}>
+      <View style={[s.loadingContainer, { backgroundColor: DS_COLORS.background }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.skeletonHeader} />
         <View style={s.skeletonBody}>
@@ -817,7 +817,7 @@ export default function ChallengeDetailScreen() {
 
   if (remoteLoadError) {
     return (
-      <SafeAreaView style={[s.container, { backgroundColor: themeColors.background }]} edges={["bottom"]}>
+      <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Couldn&apos;t load challenge</Text>
@@ -835,7 +835,7 @@ export default function ChallengeDetailScreen() {
 
   if (!challenge) {
     return (
-      <SafeAreaView style={[s.container, { backgroundColor: themeColors.background }]} edges={["bottom"]}>
+      <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Challenge not found</Text>
@@ -882,7 +882,7 @@ export default function ChallengeDetailScreen() {
   const participantUsernames = (challenge as { participant_usernames?: string[] }).participant_usernames;
 
   return (
-    <View style={[s.container, { backgroundColor: isDaily ? DS_COLORS.background : themeColors.background }]}>
+    <View style={[s.container, { backgroundColor: DS_COLORS.background }]}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
