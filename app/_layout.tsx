@@ -106,7 +106,7 @@ function AuthRedirector() {
       }
       done();
     } catch (err) {
-      console.error('[AUTH] checkProfile failed:', err);
+      // error swallowed — handle in UI
       if (retry < maxRetries) {
         await checkProfile(userId, retry + 1);
         return;

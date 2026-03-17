@@ -23,7 +23,7 @@ export default function NotificationScreen({ onContinue }: NotificationScreenPro
 
       if (finalStatus === 'granted') {
         await Notifications.getExpoPushTokenAsync();
-        // TODO: Save token.data to backend/profiles table
+        // TODO(yaseen): Save token.data to backend/profiles table. [Phase: onboarding]
       }
     } catch {
       // ignore

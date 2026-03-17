@@ -63,9 +63,8 @@ export async function joinChallengeDirect(
     .single();
 
   if (insertErr) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[JOIN-BACKEND] Insert active_challenges error:", insertErr);
-    }
+    const { logger } = await import("./logger");
+    logger.error({ err: insertErr }, "[JOIN-BACKEND] Insert active_challenges error");
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: insertErr.message || "Failed to join challenge.",
@@ -89,14 +88,14 @@ export async function joinChallengeDirect(
         status: "pending",
       }));
       const { error: checkInsErr } = await supabase.from("check_ins").insert(checkIns);
-      if (checkInsErr && process.env.NODE_ENV !== "production") {
-        console.warn("[JOIN-BACKEND] Insert check_ins (best-effort) failed:", checkInsErr.message);
+      if (checkInsErr) {
+        const { logger } = await import("./logger");
+        logger.warn({ message: checkInsErr.message }, "[JOIN-BACKEND] Insert check_ins (best-effort) failed");
       }
     }
   } catch (e) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("[JOIN-BACKEND] check_ins best-effort failed:", e);
-    }
+    const { logger } = await import("./logger");
+    logger.warn({ err: e }, "[JOIN-BACKEND] check_ins best-effort failed");
   }
 
   // Best-effort: ensure streaks row exists (don't fail join if table/columns differ)
@@ -112,14 +111,14 @@ export async function joinChallengeDirect(
         active_streak_count: 0,
         longest_streak_count: 0,
       });
-      if (streakErr && process.env.NODE_ENV !== "production") {
-        console.warn("[JOIN-BACKEND] Insert streaks (best-effort) failed:", streakErr.message);
+      if (streakErr) {
+        const { logger } = await import("./logger");
+        logger.warn({ message: streakErr.message }, "[JOIN-BACKEND] Insert streaks (best-effort) failed");
       }
     }
   } catch (e) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("[JOIN-BACKEND] streaks best-effort failed:", e);
-    }
+    const { logger } = await import("./logger");
+    logger.warn({ err: e }, "[JOIN-BACKEND] streaks best-effort failed");
   }
 
   return activeChallenge as JoinChallengeResult;

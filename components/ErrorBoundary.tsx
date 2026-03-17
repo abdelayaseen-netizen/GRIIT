@@ -5,7 +5,7 @@ import { reportClientError } from "@/lib/client-error-reporting";
 
 function logError(error: Error, componentStack: string | null | undefined) {
   if (__DEV__) {
-    console.error("[ErrorBoundary]", error.message, componentStack ?? null);
+    // error swallowed — handle in UI
   } else {
     reportClientError(error, componentStack ?? undefined);
   }

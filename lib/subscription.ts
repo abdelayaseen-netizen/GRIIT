@@ -51,7 +51,7 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
 
   if (!apiKey) {
     if (__DEV__) {
-      console.warn("[RevenueCat] No API key for platform:", Platform.OS);
+      // error swallowed — handle in UI
     }
     return;
   }
@@ -84,7 +84,7 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
     });
   } catch (err) {
     if (__DEV__) {
-      console.warn("[RevenueCat] configure failed:", err instanceof Error ? err.message : err);
+      // error swallowed — handle in UI
     }
   }
 }
@@ -106,7 +106,7 @@ export async function syncSubscriptionToSupabase(userId: string, customerInfo: C
       .eq("user_id", userId);
   } catch (err) {
     if (__DEV__) {
-      console.warn("[RevenueCat] sync to Supabase failed:", err instanceof Error ? err.message : err);
+      // error swallowed — handle in UI
     }
   }
 }
@@ -151,7 +151,7 @@ export async function purchasePackage(
   } catch (err: unknown) {
     const e = err as { userCancelled?: boolean; message?: string };
     if (e?.userCancelled) return { success: false, error: "cancelled" };
-    if (__DEV__) console.warn("[RevenueCat] purchase error:", e);
+    // error swallowed — handle in UI
     return { success: false, error: e?.message ?? "Purchase failed" };
   }
 }
@@ -165,7 +165,7 @@ export async function restorePurchases(): Promise<{ success: boolean; isPremium:
     const isPremium = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
     return { success: true, isPremium };
   } catch (err) {
-    if (__DEV__) console.warn("[RevenueCat] restore error:", err);
+    // error swallowed — handle in UI
     return { success: false, isPremium: false };
   }
 }

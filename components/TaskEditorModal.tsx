@@ -141,7 +141,7 @@ const TASK_TYPE_STYLES: Record<TaskType, { color: string; selectedBg: string }> 
 
 const TASK_TYPES: {
   id: TaskType;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ size?: number; color?: string }>;
   label: string;
   description: string;
   color: string;
@@ -157,7 +157,7 @@ const TASK_TYPES: {
 
 const TASK_TYPE_MAP: Record<
   TaskType,
-  { icon: React.ComponentType<any>; label: string; color: string }
+  { icon: React.ComponentType<{ size?: number; color?: string }>; label: string; color: string }
 > = {
   journal: { icon: BookOpen, label: "Journal", color: TASK_TYPE_STYLES.journal.color },
   timer: { icon: Timer, label: "Timer", color: TASK_TYPE_STYLES.timer.color },

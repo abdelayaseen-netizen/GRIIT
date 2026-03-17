@@ -24,7 +24,7 @@ describe("Nudge messages", () => {
 });
 
 function createMockSupabase(overrides: {
-  recentNudges?: any[];
+  recentNudges?: unknown[];
   insertError?: Error | null;
   senderProfile?: { display_name?: string; username?: string } | null;
 } = {}) {
@@ -34,7 +34,7 @@ function createMockSupabase(overrides: {
     senderProfile = { display_name: "Alice", username: "alice" },
   } = overrides;
 
-  const chain: any = {
+  const chain: Record<string, unknown> = {
     from: () => chain,
     select: () => chain,
     eq: () => chain,
@@ -60,7 +60,7 @@ function createMockSupabase(overrides: {
 describe("nudges.send (via createCaller)", () => {
   it("rejects self-nudging with BAD_REQUEST", async () => {
     const supabase = createMockSupabase();
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -78,7 +78,7 @@ describe("nudges.send (via createCaller)", () => {
 
   it("rejects second nudge within 24 hours with TOO_MANY_REQUESTS", async () => {
     const supabase = createMockSupabase({ recentNudges: [{ id: "existing" }] });
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -93,7 +93,7 @@ describe("nudges.send (via createCaller)", () => {
 
   it("inserts nudge and returns success when no recent nudge", async () => {
     const supabase = createMockSupabase({ recentNudges: [] });
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_A,
       supabase,
       req: {} as Request,

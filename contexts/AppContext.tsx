@@ -128,11 +128,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const premiumFromProfile = subStatus === 'premium' || subStatus === 'trial';
       setIsPremium(premiumFromProfile);
       setProfileError(false);
-      initSubscription(user.id).catch((err: unknown) => {
-        if (__DEV__) {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (__DEV__) console.warn("[AppContext] initSubscription failed:", msg);
-        }
+      initSubscription(user.id).catch(() => {
+        // error swallowed — handle in UI
       });
     } catch {
       setProfileError(true);
@@ -152,7 +149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const fetchActiveChallenge = useCallback(async (): Promise<any> => {
+  const fetchActiveChallenge = useCallback(async (): Promise<unknown> => {
     if (!user) return null;
     try {
       const data = await trpcQuery(TRPC.challenges.getActive);
@@ -206,8 +203,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     requestNotificationPermissions().then((ok) => {
       if (ok) {
         setupNotificationChannel();
-        registerPushTokenWithBackend().catch((err: unknown) => {
-          if (__DEV__) console.warn("[AppContext] registerPushTokenWithBackend failed:", err instanceof Error ? err.message : err);
+        registerPushTokenWithBackend().catch(() => {
+          // error swallowed — handle in UI
         });
       }
     });
@@ -223,17 +220,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (lastKey === todayKey) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount).catch((err: unknown) => {
-        if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
+      scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount).catch(() => {
+        // error swallowed — handle in UI
       });
     } else {
-      scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount).catch((err: unknown) => {
-        if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
+      scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount).catch(() => {
+        // error swallowed — handle in UI
       });
     }
     const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
-    scheduleLapsedUserReminders({ streakCount, challengeName }).catch((err: unknown) => {
-      if (__DEV__) console.warn("[AppContext] scheduleLapsedUserReminders failed:", err instanceof Error ? err.message : err);
+    scheduleLapsedUserReminders({ streakCount, challengeName }).catch(() => {
+      // error swallowed — handle in UI
     });
     return () => {
       cancelSecureReminders();
@@ -465,14 +462,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
         const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
         const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch((err: unknown) => {
-          if (__DEV__) console.warn("[AppContext] scheduleNextSecureReminder failed:", err instanceof Error ? err.message : err);
+        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch(() => {
+          // error swallowed — handle in UI
         });
         await cancelLapsedUserReminders();
         const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
         await scheduleLapsedUserReminders({ streakCount: newStreakCount, challengeName });
-        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch((err: unknown) => {
-          if (__DEV__) console.warn("[AppContext] scheduleMilestoneApproachingIfNeeded failed:", err instanceof Error ? err.message : err);
+        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch(() => {
+          // error swallowed — handle in UI
         });
       }
       return result;

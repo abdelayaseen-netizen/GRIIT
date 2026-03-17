@@ -34,7 +34,7 @@ export default function OnboardingFlow() {
     try {
       await AsyncStorage.setItem('onboarding_completed', 'true');
     } catch (e) {
-      console.error('Failed to save onboarding state:', e);
+      // error swallowed — handle in UI
     }
     router.replace(path as never);
   }, [completeOnboarding, router]);

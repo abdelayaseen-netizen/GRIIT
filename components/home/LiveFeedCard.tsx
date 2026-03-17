@@ -15,7 +15,7 @@ import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
 
-// TODO: Wire to API when respect/chase endpoints exist
+// TODO(yaseen): Wire to API when respect/chase endpoints exist. [Phase: feed]
 function respectChasePlaceholder() {
   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!");

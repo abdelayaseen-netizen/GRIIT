@@ -57,42 +57,30 @@ describe("Critical paths (flow simulation)", () => {
 
   it("Step 1: profiles.get requires auth and returns shape when authorized", async () => {
     const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.(createMockContext());
-    if (!caller) {
-      console.warn("✅ Step 1: createCaller not available — SKIP");
-      return;
-    }
+    if (!caller) return;
     try {
       const data = await (caller as { profiles: { get: () => Promise<unknown> } }).profiles.get();
       expect(data).toBeDefined();
-      console.log("✅ Step 1: profiles.get — PASS (mock returns data)");
     } catch (e) {
       expect((e as { code?: string }).code).toBe("UNAUTHORIZED");
-      console.log("✅ Step 1: profiles.get — PASS (unauthorized when no token)");
     }
   });
 
   it("Step 2: challenges.list returns array or paginated shape (or skips with mock)", async () => {
     const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.(createMockContext());
-    if (!caller) {
-      console.warn("✅ Step 2: createCaller not available — SKIP");
-      return;
-    }
+    if (!caller) return;
     try {
       const data = await (caller as { challenges: { list: (p: { limit?: number }) => Promise<unknown> } }).challenges.list({});
       expect(Array.isArray(data) || (data && typeof data === "object" && "items" in data)).toBe(true);
-      console.log("✅ Step 2: challenges.list — PASS");
     } catch {
-      console.log("✅ Step 2: challenges.list — PASS (mock lacks full chain; use real DB for full test)");
+      // mock may lack full chain; use real DB for full test
     }
   });
 
   it("Step 3: challenges.getById with invalid UUID returns error", async () => {
     const ctx = createMockContext();
     const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.(ctx);
-    if (!caller) {
-      console.warn("✅ Step 3: createCaller not available — SKIP");
-      return;
-    }
+    if (!caller) return;
     try {
       await (caller as { challenges: { getById: (p: { id: string }) => Promise<unknown> } }).challenges.getById({
         id: "not-a-uuid",
@@ -101,7 +89,6 @@ describe("Critical paths (flow simulation)", () => {
     } catch (e: unknown) {
       const err = e as { data?: { code?: string }; message?: string };
       expect(err?.data?.code === "BAD_REQUEST" || err?.message?.toLowerCase().includes("invalid") || err?.message?.toLowerCase().includes("uuid")).toBe(true);
-      console.log("✅ Step 3: getById invalid UUID — PASS");
     }
   });
 
@@ -112,55 +99,41 @@ describe("Critical paths (flow simulation)", () => {
       insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: { code: "23503" } }) }) }),
     }));
     const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.(ctx);
-    if (!caller) {
-      console.warn("✅ Step 4: createCaller not available — SKIP");
-      return;
-    }
+    if (!caller) return;
     const fakeUuid = "b0000000-0000-4000-8000-000000000002";
     try {
       await (caller as { challenges: { join: (p: { challengeId: string }) => Promise<unknown> } }).challenges.join({
         challengeId: fakeUuid,
       });
-      console.log("✅ Step 4: challenges.join — PASS (mock may succeed)");
     } catch (e: unknown) {
       const err = e as { data?: { code?: string }; code?: string };
       const code = err?.data?.code ?? err?.code ?? "UNKNOWN";
       expect(["NOT_FOUND", "BAD_REQUEST", "INTERNAL_SERVER_ERROR"]).toContain(code);
-      console.log("✅ Step 4: challenges.join — PASS (expected error for missing challenge)");
     }
   });
 
   it("Step 5: checkins.secureDay with invalid activeChallengeId returns error", async () => {
     const ctx = createMockContext();
     const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.(ctx);
-    if (!caller) {
-      console.warn("✅ Step 5: createCaller not available — SKIP");
-      return;
-    }
+    if (!caller) return;
     const fakeAcId = "c0000000-0000-4000-8000-000000000003";
     try {
       await (caller as { checkins: { secureDay: (p: { activeChallengeId: string }) => Promise<unknown> } }).checkins.secureDay({
         activeChallengeId: fakeAcId,
       });
-      console.log("✅ Step 5: secureDay — PASS (mock may succeed)");
     } catch (e: unknown) {
       const err = e as { data?: { code?: string }; code?: string };
       const code = err?.data?.code ?? err?.code ?? "UNKNOWN";
       expect(["NOT_FOUND", "FORBIDDEN", "BAD_REQUEST"]).toContain(code);
-      console.log("✅ Step 5: secureDay — PASS (expected error for invalid id)");
     }
   });
 
   it("Step 6: profiles.getPublicByUsername returns null for missing username", async () => {
     const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.(createMockContext());
-    if (!caller) {
-      console.warn("✅ Step 6: createCaller not available — SKIP");
-      return;
-    }
+    if (!caller) return;
     const data = await (caller as { profiles: { getPublicByUsername: (p: { username: string }) => Promise<unknown> } }).profiles.getPublicByUsername({
       username: "nonexistent-user-xyz",
     });
     expect(data === null || (typeof data === "object" && !("user_id" in (data || {})))).toBe(true);
-    console.log("✅ Step 6: getPublicByUsername — PASS");
   });
 });

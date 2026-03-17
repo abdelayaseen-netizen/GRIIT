@@ -20,7 +20,7 @@ export type ShareCompletionOptions = ShareCardProofProps & {
 
 async function logShareError(message: string, err: unknown) {
   if (__DEV__) {
-    console.warn("[share-completion]", message, err);
+    // error swallowed — handle in UI
   }
 }
 

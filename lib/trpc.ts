@@ -56,14 +56,6 @@ export async function trpcMutate<T = any>(
     ? JSON.stringify(serialize(input))
     : undefined;
 
-  if (typeof __DEV__ !== "undefined" && __DEV__) {
-    console.log("[TRPC] Making request to:", fullUrl);
-    console.log("[TRPC] Method: POST");
-    const token = (authHeaders.authorization ?? "").replace(/^Bearer\s+/i, "");
-    console.log("[TRPC] Auth token present:", !!token, token ? `${token.substring(0, 20)}...` : "none");
-    console.log("[TRPC] Body:", body);
-  }
-
   const response = await fetchWithRetry(fullUrl, {
     method: "POST",
     headers: {
@@ -74,11 +66,6 @@ export async function trpcMutate<T = any>(
   });
 
   const responseText = await response.text().catch(() => "");
-
-  if (typeof __DEV__ !== "undefined" && __DEV__) {
-    console.log("[TRPC] Response status:", response.status);
-    console.log("[TRPC] Response body:", responseText?.substring(0, 500));
-  }
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -112,9 +99,7 @@ export async function trpcMutate<T = any>(
     const err = new Error(errorMessage) as Error & { data?: { code?: string; message?: string } };
     if (errorData) err.data = errorData;
     else if (errorCode) err.data = { code: errorCode };
-    if (typeof __DEV__ !== "undefined" && __DEV__) {
-      console.error("[TRPC] Server error response:", JSON.stringify(json.error, null, 2));
-    }
+    // error swallowed — handle in UI
     throw err;
   }
 

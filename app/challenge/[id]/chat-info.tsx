@@ -22,11 +22,12 @@ import {
   AlertCircle,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
+import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
 import { InitialCircle } from "@/src/components/ui";
-
-const MOCK_MEMBER_INITIALS = ["S", "M", "J", "A", "K", "D"];
+import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 
 export default function ChallengeChatInfoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,6 +38,15 @@ export default function ChallengeChatInfoScreen() {
     chatRoomSettings,
     updateChatRoomSettings,
   } = useApp();
+
+  const teamMembersQuery = useQuery({
+    queryKey: ["chat-info", "teamMembers", id],
+    queryFn: () => trpcQuery(TRPC.challenges.getTeamMembers, { challengeId: id ?? "" }) as Promise<{ profile?: { username?: string | null; display_name?: string | null } }[]>,
+    enabled: !!id,
+  });
+  const memberInitials = (teamMembersQuery.data ?? [])
+    .slice(0, 5)
+    .map((m) => (m.profile?.username ?? m.profile?.display_name ?? "?").charAt(0).toUpperCase());
 
   type ChallengeWithChat = { id: string; roomId?: string; title?: string; themeColor?: string; participantsCount?: number; participants_count?: number; activeTodayCount?: number };
   const challenge = (challenges as ChallengeWithChat[]).find((c) => c.id === id);
@@ -154,14 +164,16 @@ export default function ChallengeChatInfoScreen() {
           </View>
           <TouchableOpacity style={styles.membersCard}>
             <View style={styles.avatarStack}>
-              {MOCK_MEMBER_INITIALS.slice(0, 5).map((initial, index) => (
-                <View key={index} style={[styles.stackAvatar, { marginLeft: index > 0 ? -10 : 0, zIndex: 5 - index }]}>
+              {memberInitials.map((initial, index) => (
+                <View key={`${initial}-${index}`} style={[styles.stackAvatar, { marginLeft: index > 0 ? -10 : 0, zIndex: 5 - index }]}>
                   <InitialCircle username={initial} size={36} />
                 </View>
               ))}
-              <View style={[styles.stackAvatar, styles.moreAvatar, { marginLeft: -10 }]}>
-                <Text style={styles.moreAvatarText}>+{Math.max(0, (challenge.participantsCount ?? challenge.participants_count ?? 0) - 5)}</Text>
-              </View>
+              {(challenge.participantsCount ?? challenge.participants_count ?? 0) > memberInitials.length && (
+                <View style={[styles.stackAvatar, styles.moreAvatar, { marginLeft: memberInitials.length > 0 ? -10 : 0 }]}>
+                  <Text style={styles.moreAvatarText}>+{Math.max(0, (challenge.participantsCount ?? challenge.participants_count ?? 0) - memberInitials.length)}</Text>
+                </View>
+              )}
             </View>
             <View style={styles.membersText}>
               <Text style={styles.membersTitle}>View all members</Text>

@@ -29,7 +29,7 @@ export function configureRevenueCat(appUserId: string | null): void {
     if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     configured = true;
   } catch (e) {
-    if (__DEV__) console.warn("[RevenueCat] configure failed:", e);
+    // error swallowed — handle in UI
   }
 }
 
@@ -38,7 +38,7 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
     const info = await Purchases.getCustomerInfo();
     return info;
   } catch (e) {
-    if (__DEV__) console.warn("[RevenueCat] getCustomerInfo failed:", e);
+    // error swallowed — handle in UI
     return null;
   }
 }
@@ -71,7 +71,7 @@ export async function restorePurchases(): Promise<{ success: boolean }> {
     const hasPro = info?.entitlements?.active?.pro != null;
     return { success: hasPro };
   } catch (e) {
-    if (__DEV__) console.warn("[RevenueCat] restore failed:", e);
+    // error swallowed — handle in UI
     return { success: false };
   }
 }

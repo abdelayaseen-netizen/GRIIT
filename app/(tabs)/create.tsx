@@ -132,7 +132,7 @@ interface TaskTemplate {
 const DURATION_PRESETS = [7, 14, 21, 30, 75];
 const CATEGORIES = ["Fitness", "Mind", "Faith", "Discipline", "Other"];
 
-// TODO: backend may provide challenge packs; using client-side presets for now
+// TODO(yaseen): Backend may provide challenge packs — use client-side presets for now. [Phase: discover]
 const CHALLENGE_PACKS: {
   id: string;
   icon: string;

@@ -56,7 +56,6 @@ import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedC
 import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
 import { useTheme } from "@/contexts/ThemeContext";
-import type { MockFeedItem } from "@/constants/mockFeedData";
 import { SURFACE_SUBTLE } from "@/constants/theme";
 import { formatTimeRemaining } from "@/lib/challenge-timer";
 import {
@@ -217,7 +216,7 @@ export default function HomeScreen() {
     queryKey: ["home", "activeList"],
     queryFn: async (): Promise<{ challengesWithProgress: ChallengeWithProgress[]; totalRemaining: number }> => {
       const [list, checkins] = await Promise.all([
-        trpcQuery(TRPC.challenges.listMyActive) as Promise<any[]>,
+        trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
         trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
       ]);
       const acList = Array.isArray(list) ? list : [];
@@ -829,85 +828,9 @@ export default function HomeScreen() {
         {(() => {
           const feedItems = liveFeedItems;
           if (feedItems.length > 0) {
-            return feedItems.map((item: MockFeedItem | LiveFeedCardData, i: number) => {
-              const key = `${(item as MockFeedItem).type ?? (item as LiveFeedCardData).type}-${i}`;
-              if ("type" in item && item.type === "secured") {
-                const s = item as Extract<MockFeedItem, { type: "secured" }>;
-                return (
-                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border, borderLeftWidth: 4, borderLeftColor: DS_COLORS.accent }]}>
-                    <InitialCircle username={s.user} size={44} />
-                    <View style={styles.liveFeedBody}>
-                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{s.user}</Text> secured Day {s.day} of {s.challenge}</Text>
-                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent }]}>🔥 Streak: {s.streak} days</Text>
-                      <Text style={[styles.liveFeedTime, { color: DS_COLORS.textMuted }]}>{s.timeAgo}</Text>
-                      <View style={styles.liveFeedPills}>
-                        <TouchableOpacity style={[styles.liveFeedPill, { backgroundColor: DS_COLORS.surfaceMuted, borderWidth: 1, borderColor: DS_COLORS.border }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
-                          <Text style={[styles.liveFeedPillText, { color: DS_COLORS.textPrimary }]}>Respect {s.respect}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.liveFeedPill, { backgroundColor: DS_COLORS.surfaceMuted, borderWidth: 1, borderColor: DS_COLORS.border }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
-                          <Text style={[styles.liveFeedPillText, { color: DS_COLORS.textPrimary }]}>Chase</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                );
-              }
-              if ("type" in item && item.type === "milestone") {
-                const m = item as Extract<MockFeedItem, { type: "milestone" }>;
-                return (
-                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderLeftWidth: 3, borderLeftColor: DS_COLORS.gold }]}>
-                    <View style={[styles.liveFeedIconCircle, { backgroundColor: DS_COLORS.warningLight }]}><Trophy size={20} color={DS_COLORS.gold} /></View>
-                    <View style={styles.liveFeedBody}>
-                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}>Hit <Text style={[styles.liveFeedBold, { color: DS_COLORS.accent }]}>{m.days} days</Text> straight</Text>
-                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>Top {m.topPercent}% this week</Text>
-                      {/* TODO: Wire to API when respect/chase endpoints exist */}
-                      <TouchableOpacity style={[styles.liveFeedPill, { backgroundColor: DS_COLORS.surfaceMuted, borderWidth: 1, borderColor: DS_COLORS.border }]} onPress={() => { if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!"); }}>
-                        <Text style={[styles.liveFeedPillText, { color: DS_COLORS.textPrimary }]}>Respect {m.respect}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              }
-              if ("type" in item && item.type === "challenge_cta") {
-                const c = item as Extract<MockFeedItem, { type: "challenge_cta" }>;
-                const challengeId = "challengeId" in c ? (c as { challengeId?: string }).challengeId : undefined;
-                return (
-                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderColor: DS_COLORS.border }]}>
-                    <View style={[styles.liveFeedIconCircle, { backgroundColor: DS_COLORS.accentLight }]}><Zap size={20} color={DS_COLORS.accent} /></View>
-                    <View style={styles.liveFeedBody}>
-                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{c.percent}%</Text> of participants secured today</Text>
-                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.textMuted }]}>in {c.challenge}</Text>
-                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.accent, fontWeight: "600" }]}>Are you in?</Text>
-                      <TouchableOpacity
-                        style={[styles.liveFeedCtaButton, { backgroundColor: DS_COLORS.accent }]}
-                        onPress={() => {
-                          if (challengeId) router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
-                          else router.push(ROUTES.TABS_DISCOVER as never);
-                        }}
-                      >
-                        <Text style={styles.liveFeedCtaButtonText}>Open Challenge {'>'}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              }
-              if ("type" in item && item.type === "rank_up") {
-                const r = item as Extract<MockFeedItem, { type: "rank_up" }>;
-                return (
-                  <View key={key} style={[styles.liveFeedCard, { backgroundColor: DS_COLORS.surface, borderLeftWidth: 3, borderLeftColor: DS_COLORS.accent }]}>
-                    <InitialCircle username={r.user} size={44} />
-                    <View style={styles.liveFeedBody}>
-                      <Text style={[styles.liveFeedText, { color: DS_COLORS.textPrimary }]}><Text style={styles.liveFeedBold}>{r.user}</Text> moved to Rank &apos;<Text style={{ color: DS_COLORS.success, fontWeight: "700" }}>{r.newRank}</Text>&apos;</Text>
-                      <Text style={[styles.liveFeedMeta, { color: DS_COLORS.success }]}>📈 +{r.discipline} Discipline this week</Text>
-                      <TouchableOpacity style={[styles.liveFeedViewProfileBtn, { borderColor: DS_COLORS.border }]} onPress={() => router.push(ROUTES.PROFILE_USERNAME(r.user) as never)}>
-                        <Text style={[styles.liveFeedViewProfileBtnText, { color: DS_COLORS.accent }]}>View Profile {'>'}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              }
-              return <LiveFeedCard key={key} data={item as LiveFeedCardData} />;
-            });
+            return feedItems.map((item: LiveFeedCardData, i: number) => (
+              <LiveFeedCard key={`feed-${item.username ?? "u"}-${i}`} data={item} />
+            ));
           }
           if (liveFeedQuery.isLoading) {
             return (

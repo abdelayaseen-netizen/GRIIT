@@ -245,6 +245,7 @@ export const challengesRouter = createTRPCRouter({
               for (const r of rows) {
                 if (!requiredTaskIds.has(r.task_id)) continue;
                 if (!completedByAcId.has(r.active_challenge_id)) completedByAcId.set(r.active_challenge_id, new Set());
+                // guaranteed non-null: just set in previous line
                 completedByAcId.get(r.active_challenge_id)!.add(r.task_id);
               }
               for (const m of memberRows) {
@@ -313,11 +314,8 @@ export const challengesRouter = createTRPCRouter({
   join: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[JOIN-BACKEND] Join procedure called");
-        console.log("[JOIN-BACKEND] Input:", JSON.stringify(input));
-        console.log("[JOIN-BACKEND] User ID:", ctx.userId ?? "null");
-      }
+      const { logger } = await import("../../lib/logger");
+      logger.info({ input, userId: ctx.userId }, "[JOIN-BACKEND] Join procedure called");
       const { data: existingActive } = await ctx.supabase
         .from("active_challenges")
         .select("id")
@@ -398,9 +396,7 @@ export const challengesRouter = createTRPCRouter({
         return { joined: true, runStatus: "waiting" as const };
       }
 
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[JOIN-BACKEND] Calling joinChallengeDirect for challengeId:", input.challengeId);
-      }
+      logger.debug({ challengeId: input.challengeId }, "[JOIN-BACKEND] Calling joinChallengeDirect");
       const activeChallenge = await joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId);
       const { data: ch } = await ctx.supabase.from("challenges").select("name").eq("id", input.challengeId).single();
       await ctx.supabase.from("activity_events").insert({
@@ -409,9 +405,7 @@ export const challengesRouter = createTRPCRouter({
         challenge_id: input.challengeId,
         metadata: { challenge_name: (ch as { name?: string })?.name ?? "Challenge" },
       });
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[JOIN-BACKEND] Join SUCCESS, active_challenge id:", activeChallenge.id);
-      }
+      logger.info({ activeChallengeId: activeChallenge.id }, "[JOIN-BACKEND] Join SUCCESS");
       return activeChallenge;
     }),
 

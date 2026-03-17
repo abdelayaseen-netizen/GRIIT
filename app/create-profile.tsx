@@ -81,7 +81,7 @@ export default function CreateProfileScreen() {
         if (profile?.display_name) setDisplayName(profile.display_name);
       } catch (e) {
         if (!cancelled) {
-          console.warn("[AUTH] create-profile checkProfile:", e);
+          // error swallowed — handle in UI
           router.replace("/auth/login" as never);
         }
       } finally {

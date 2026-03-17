@@ -250,7 +250,7 @@ function SocialAvatars({ participantsCount, participantUsernames }: { participan
   if (!showAvatars) return null;
   return (
     <View style={s.avatarStack}>
-      {participantUsernames!.slice(0, 5).map((username, i) => (
+      {(participantUsernames ?? []).slice(0, 5).map((username, i) => (
         <View key={username + i} style={[s.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }]}>
           <InitialCircle username={username} size={32} />
         </View>
@@ -588,12 +588,6 @@ export default function ChallengeDetailScreen() {
   }, [challenge, id]);
 
   const handleCommitmentConfirm = useCallback(async () => {
-    if (__DEV__) {
-      console.log("[JOIN] handleCommitmentConfirm called");
-      console.log("[JOIN] challengeId:", id);
-      console.log("[JOIN] user:", user?.id);
-      console.log("[JOIN] commitmentUnderstood:", commitmentUnderstood);
-    }
     if (!id || commitmentJoining) return;
     const list = await trpcQuery(TRPC.challenges.listMyActive) as unknown[];
     const count = Array.isArray(list) ? list.length : 0;
@@ -602,7 +596,6 @@ export default function ChallengeDetailScreen() {
       router.push("/paywall" as never);
       return;
     }
-    if (__DEV__) console.log("[JOIN] joinLimit check — activeCount:", count, "allowed:", canJoinChallenge(count).allowed);
     if (!canJoinChallenge(count).allowed) {
       Alert.alert("Challenge limit reached", "You've reached the maximum number of active challenges.");
       return;
@@ -610,9 +603,7 @@ export default function ChallengeDetailScreen() {
     setCommitmentJoining(true);
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      if (__DEV__) console.log("[JOIN] About to call trpcMutate with:", { challengeId: id });
       const result = await trpcMutate(TRPC.challenges.join, { challengeId: id });
-      if (__DEV__) console.log("[JOIN] Mutation SUCCESS:", result);
       try {
         await trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id });
       } catch { /* best-effort */ }
@@ -621,11 +612,7 @@ export default function ChallengeDetailScreen() {
       challengeQuery.refetch();
       Alert.alert("You're in!", "Start your first task below.", [{ text: "OK" }]);
     } catch (err: unknown) {
-      if (__DEV__) {
-        console.error("[JOIN] Mutation FAILED:", err);
-        console.error("[JOIN] Error message:", (err as Error)?.message);
-        console.error("[JOIN] Error data:", (err as { data?: unknown })?.data);
-      }
+      // error swallowed — handle in UI
       const { title, message } = formatTRPCError(err);
       Alert.alert(title, message);
     } finally {

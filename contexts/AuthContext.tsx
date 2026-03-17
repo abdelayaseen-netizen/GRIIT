@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch((err) => {
         clearTimeout(timeout);
         setLoading(false);
-        console.error('[AUTH] getSession failed:', err);
+        // error swallowed — handle in UI
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

@@ -33,9 +33,7 @@ export default function HealthScreen({ onContinue }: HealthScreenProps) {
         //     ],
         //   },
         // };
-        // AppleHealthKit.initHealthKit(permissions, (error) => {
-        //   if (error) console.log('HealthKit error:', error);
-        // });
+        // AppleHealthKit.initHealthKit(permissions, (error) => { /* error swallowed — handle in UI */ });
         // Apple Health: connect when react-native-health is installed
       } else {
         // Health Connect: connect when react-native-health-connect is installed

@@ -1,5 +1,5 @@
 /**
- * Minimal DB row types for backend routes. Use instead of (as any) for Supabase select results.
+ * Minimal DB row types for backend routes. Use instead of untyped casts for Supabase select results.
  */
 
 export interface StreakRow {

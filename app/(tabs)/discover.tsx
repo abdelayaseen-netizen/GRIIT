@@ -26,7 +26,6 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
-import type { StarterChallenge } from "@/mocks/starter-challenges";
 import { styles } from "@/styles/discover-styles";
 import {
   SearchBar,
@@ -90,38 +89,25 @@ const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.Component
   { key: "discipline", label: "🛡 Discipline", icon: Target },
 ];
 
-/** Mock 24h challenges when API returns none (per GRIIT UI spec). */
-function getMock24hChallenges(): StarterChallenge[] {
-  const tonight = new Date();
-  tonight.setHours(23, 59, 59, 999);
-  const endsAt = tonight.toISOString();
-  return [
-    { id: "mock-24h-1", title: "Sprint & Stretch", description: "Quick move and stretch.", short_hook: "Quick move and stretch.", theme_color: "#E85D4A", difficulty: "medium", duration_type: "24h", duration_days: 1, category: "fitness", visibility: "public", status: "published", is_featured: false, is_daily: true, starts_at: null, ends_at: endsAt, participants_count: 412, challenge_tasks: [], tasks: [{ id: "t1", title: "Sprint", type: "run" }, { id: "t2", title: "Stretch", type: "timer" }] },
-    { id: "mock-24h-2", title: "Mindful Minutes", description: "Meditation and reflection.", short_hook: "Meditation and reflection.", theme_color: "#8B5CF6", difficulty: "medium", duration_type: "24h", duration_days: 1, category: "mind", visibility: "public", status: "published", is_featured: false, is_daily: true, starts_at: null, ends_at: endsAt, participants_count: 287, challenge_tasks: [], tasks: [{ id: "t1", title: "Meditate", type: "timer" }, { id: "t2", title: "Reflect", type: "journal" }] },
-    { id: "mock-24h-3", title: "Zero Excuses Run", description: "Get out and run.", short_hook: "Get out and run.", theme_color: "#E8845F", difficulty: "easy", duration_type: "24h", duration_days: 1, category: "fitness", visibility: "public", status: "published", is_featured: false, is_daily: true, starts_at: null, ends_at: endsAt, participants_count: 634, challenge_tasks: [], tasks: [{ id: "t1", title: "Run", type: "run" }] },
-  ];
-}
-
-function isDailyActive(c: StarterChallenge): boolean {
+function isDailyActive(c: FeaturedChallengeRaw): boolean {
   if (!c.is_daily) return false;
   if (!c.ends_at) return true;
   return new Date(c.ends_at).getTime() > Date.now();
 }
 
-function matchesCategory(c: StarterChallenge, cat: CategoryKey): boolean {
+function matchesCategory(c: FeaturedChallengeRaw, cat: CategoryKey): boolean {
   if (cat === "all") return true;
   if (cat === "mind" && (c.category === "mind" || c.category === "mental")) return true;
   return c.category === cat;
 }
 
-function matchesSearch(c: StarterChallenge, q: string): boolean {
+function matchesSearch(c: FeaturedChallengeRaw, q: string): boolean {
   if (!q) return true;
   const lower = q.toLowerCase();
-  return (
-    c.title.toLowerCase().includes(lower) ||
-    c.description.toLowerCase().includes(lower) ||
-    c.short_hook.toLowerCase().includes(lower)
-  );
+  const title = (c.title ?? "").toLowerCase();
+  const desc = (c.description ?? "").toLowerCase();
+  const hook = (c.short_hook ?? "").toLowerCase();
+  return title.includes(lower) || desc.includes(lower) || hook.includes(lower);
 }
 
 function SkeletonPulse({ style }: { style: import("react-native").StyleProp<import("react-native").ViewStyle> }) {
@@ -504,7 +490,7 @@ export default function DiscoverScreen() {
               caption="New every day"
             />
             <FlatList
-              data={dailyChallenges.length > 0 ? dailyChallenges : getMock24hChallenges()}
+              data={dailyChallenges}
               keyExtractor={(item) => item.id}
               horizontal
               initialNumToRender={5}

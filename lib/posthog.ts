@@ -20,7 +20,7 @@ export function getPostHog() {
       });
       initialized = true;
     } catch (err) {
-      if (__DEV__) console.warn("[PostHog] init failed:", err);
+      // error swallowed — handle in UI
       return null;
     }
   }

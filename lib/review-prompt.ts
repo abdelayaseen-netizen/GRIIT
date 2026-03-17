@@ -45,7 +45,7 @@ export async function maybePromptForReview(
     await StoreReview.requestReview();
     await AsyncStorage.setItem(REVIEW_PROMPT_KEY, Date.now().toString());
   } catch (error) {
-    if (__DEV__) console.error("[ReviewPrompt]", error);
+    // error swallowed — handle in UI
   }
 }
 

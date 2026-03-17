@@ -100,9 +100,8 @@ describe("Edge cases", () => {
         tasks: [{ id: "t1", title: "Task", type: "simple", required: true }],
       });
       expect(result).toBeDefined();
-      console.log("Edge: create with script in title — backend may store as-is; sanitize in client or add backend sanitization");
     } catch {
-      console.log("Edge: create with script in title — rejected by validation (acceptable)");
+      // rejected by validation (acceptable)
     }
   });
 });

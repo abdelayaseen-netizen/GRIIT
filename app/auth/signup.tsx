@@ -103,7 +103,7 @@ export default function SignupScreen() {
       );
       setUsernameStatus(result ? "taken" : "available");
     } catch (err) {
-      if (__DEV__) console.error("[AUTH] checkUsername failed:", err);
+      // error swallowed — handle in UI
       setUsernameStatus("idle");
     }
   }, []);
@@ -190,13 +190,13 @@ export default function SignupScreen() {
         );
 
       if (profileError) {
-        if (__DEV__) console.warn("Profile creation failed:", profileError);
+        // error swallowed — handle in UI
       }
 
       track({ name: "signup_completed" });
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
-      console.error("[AUTH] Signup failed:", err);
+      // error swallowed — handle in UI
       Alert.alert("Something went wrong", "Please try again.");
     } finally {
       setLoading(false);

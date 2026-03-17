@@ -23,7 +23,7 @@ function createMockSupabase(overrides: {
     insertError = null,
   } = overrides;
 
-  const selectChain: any = {
+  const selectChain: Record<string, unknown> = {
     from: () => selectChain,
     select: () => selectChain,
     eq: () => selectChain,
@@ -43,13 +43,13 @@ function createMockSupabase(overrides: {
         data: existingPair,
         error: null,
       }),
-    then: (resolve: (v: any) => void) => {
+    then: (resolve: (v: unknown) => void) => {
       if (existingPair) resolve({ data: [existingPair], error: null });
       else resolve({ data: [], error: null });
     },
   };
 
-  let selectReturnData: any[] = [];
+  let selectReturnData: unknown[] = [];
   if (overrides.acceptedCount !== undefined) {
     selectReturnData = Array(acceptedCount).fill({ id: "x" });
   }
@@ -57,7 +57,7 @@ function createMockSupabase(overrides: {
     selectReturnData = Array(invitesToday).fill({ id: "y" });
   }
 
-  const chain: any = {
+  const chain: Record<string, unknown> = {
     from: () => chain,
     select: () => chain,
     eq: () => chain,
@@ -93,7 +93,7 @@ function createMockSupabase(overrides: {
         data: partnerExists ? { user_id: USER_B } : null,
         error: partnerExists ? null : { code: "PGRST116" },
       }),
-    then: (resolve: (v: any) => void) => {
+    then: (resolve: (v: unknown) => void) => {
       resolve({ data: selectReturnData, error: null });
     },
   };
@@ -115,7 +115,7 @@ function createMockSupabase(overrides: {
 describe("accountability.invite", () => {
   it("rejects self-invite with BAD_REQUEST", async () => {
     const supabase = createMockSupabase();
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -130,7 +130,7 @@ describe("accountability.invite", () => {
 
   it("rejects when inviter already has 3 accepted partners", async () => {
     const supabase = createMockSupabase({ acceptedCount: 3 });
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -145,7 +145,7 @@ describe("accountability.invite", () => {
 
   it("rejects when partner profile does not exist (user not found)", async () => {
     const supabase = createMockSupabase({ partnerExists: false });
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -160,7 +160,7 @@ describe("accountability.invite", () => {
 
   it("creates pending invite when no existing relationship", async () => {
     const supabase = createMockSupabase({ existingPair: null, partnerExists: true });
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -177,13 +177,13 @@ describe("accountability.invite", () => {
 
 describe("accountability.respond", () => {
   it("rejects when invite not found", async () => {
-    const chain: any = {
+    const chain: Record<string, unknown> = {
       from: () => chain,
       select: () => chain,
       eq: () => chain,
       single: () => Promise.resolve({ data: null, error: { message: "Not found" } }),
     };
-    const caller = (appRouter as any).createCaller?.({
+    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
       userId: USER_B,
       supabase: chain,
       req: {} as Request,

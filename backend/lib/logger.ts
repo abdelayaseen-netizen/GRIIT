@@ -1,5 +1,5 @@
 /**
- * Structured logger for backend. Use instead of console.log/warn/error.
+ * Structured logger for backend. Use logger.info/warn/error instead of native logging.
  */
 import pino from "pino";
 

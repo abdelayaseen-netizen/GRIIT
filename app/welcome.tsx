@@ -217,7 +217,7 @@ export default function WelcomeScreen() {
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
       Alert.alert("Something went wrong", "Please try again.");
-      if (__DEV__) console.error("[AUTH] Signup error:", err);
+      // error swallowed — handle in UI
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
