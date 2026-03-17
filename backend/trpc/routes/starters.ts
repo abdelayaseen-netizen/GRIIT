@@ -95,7 +95,14 @@ export const startersRouter = createTRPCRouter({
         .select()
         .single();
 
-      requireNoError(acError, "Failed to create active challenge.");
+      if (acError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ err: acError, challengeId }, "[starters.joinStarter] Insert active_challenges failed");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: acError.message || acError.code || "Failed to create active challenge.",
+        });
+      }
 
       const dateKey = getTodayDateKey();
       const checkIns = tasks.map((t) => ({

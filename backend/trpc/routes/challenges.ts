@@ -712,9 +712,11 @@ export const challengesRouter = createTRPCRouter({
         .single();
 
       if (challengeError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ err: challengeError, payload: insertPayload }, "[challenges.create] Insert challenges failed");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create challenge.",
+          message: challengeError.message || challengeError.code || "Failed to create challenge.",
         });
       }
 
@@ -726,7 +728,12 @@ export const challengesRouter = createTRPCRouter({
           status: "active",
         });
         if (memberError) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create challenge." });
+          const { logger } = await import("../../lib/logger");
+          logger.error({ err: memberError, challengeId: challenge.id }, "[challenges.create] Insert challenge_members failed");
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: memberError.message || memberError.code || "Failed to create challenge.",
+          });
         }
       }
 
@@ -759,9 +766,11 @@ export const challengesRouter = createTRPCRouter({
         .select();
 
       if (tasksError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ err: tasksError, challengeId: challenge.id }, "[challenges.create] Insert challenge_tasks failed");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create tasks.",
+          message: tasksError.message || tasksError.code || "Failed to create tasks.",
         });
       }
 
