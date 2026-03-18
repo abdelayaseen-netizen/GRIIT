@@ -40,7 +40,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
       setError('Please enter your name');
       return;
     }
-    const { selectedGoals, intensityLevel } = await import('@/store/onboarding-store').then((m) => m.useOnboardingStore.getState());
+    const { selectedGoals, intensityLevel } = await import('@/store/onboardingStore').then((m) => m.useOnboardingStore.getState());
     const { error: profileError } = await supabase
       .from('profiles')
       .upsert(
@@ -181,7 +181,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
         ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ').trim()
         : 'User';
       const fallbackUsername = 'user_' + user.id.slice(0, 8);
-      const { selectedGoals, intensityLevel } = await import('@/store/onboarding-store').then((m) => m.useOnboardingStore.getState());
+      const { selectedGoals, intensityLevel } = await import('@/store/onboardingStore').then((m) => m.useOnboardingStore.getState());
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert(
