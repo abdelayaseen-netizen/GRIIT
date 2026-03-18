@@ -1,130 +1,223 @@
 /**
- * GRIIT Design System v2 — Complete UI Redesign
+ * GRIIT Design System v3 — Complete UI Redesign with Approved Reference Values
  * Source of truth for all colors, typography, spacing, and radius values.
  * NO raw hex values should exist outside this file.
+ * ALL tokens are flat static exports — NO Object.assign, NO runtime merging.
  */
 
 export const DS_COLORS = {
-  // Backgrounds
-  BG_PRIMARY: '#F0EEE8',        // Warm off-white — main app background (matches target screenshots)
-  BG_CARD: '#FFFFFF',           // Pure white card surfaces
-  BG_CARD_TINTED: '#F7F5F0',   // Slightly warm card variant
-  BG_HEADER_DEFAULT: '#E8593C', // GRIIT orange-red — hero headers for challenge detail
-  BG_DARK: '#111111',           // Near-black for overlays / dark mode elements
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CORE BACKGROUNDS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  BG_PAGE: '#F0EDE8',           // Warm off-white — main screen background
+  BG_CARD: '#FFFFFF',           // Pure white — all card surfaces
+  BG_CARD_TINTED: '#F7F5F0',    // Warm card variant
+  BG_DARK: '#111111',           // Near-black overlays / dark UI elements
 
-  // Brand
-  ACCENT_PRIMARY: '#E8593C',    // GRIIT orange-red — primary CTAs, active states, icons
-  ACCENT_SECONDARY: '#D44E33',  // Darker orange for pressed states
-  ACCENT_GREEN: '#3D7A5A',      // Success / completion states (keep muted, not neon)
-  ACCENT_GREEN_BG: '#EBF5EE',   // Light green background for completed cards
-  ACCENT_GREEN_ICON: '#4A9068', // Green icon tint
+  // Legacy uppercase aliases
+  BG_PRIMARY: '#F0EDE8',
+  BG_HEADER_DEFAULT: '#E8845F',
 
-  // Text
-  TEXT_PRIMARY: '#111111',      // Near-black — headings, body
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ACCENT COLORS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  ACCENT: '#E8845F',            // GRIIT orange — primary CTAs, active nav, icons
+  ACCENT_DARK: '#D4724E',       // Pressed state for orange
+  ACCENT_TINT: '#FFF0ED',       // Light orange bg for task icons, badges
+  ACCENT_TINT_BORDER: '#F5C4B4', // Border for orange-tint containers
+
+  // Legacy uppercase
+  ACCENT_PRIMARY: '#E8845F',
+  ACCENT_SECONDARY: '#D4724E',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GREEN / SUCCESS COLORS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  GREEN: '#3D7A5A',             // Success / completion
+  GREEN_BG: '#EBF5EE',          // Light green for completed cards
+  GREEN_ICON: '#4A9068',        // Green icon tint
+
+  // Legacy uppercase
+  ACCENT_GREEN: '#3D7A5A',
+  ACCENT_GREEN_BG: '#EBF5EE',
+  ACCENT_GREEN_ICON: '#4A9068',
+  SUCCESS_LIGHT: '#EBF5EE',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TEXT COLORS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  TEXT_PRIMARY: '#111111',      // Headings and body
   TEXT_SECONDARY: '#666666',    // Subtext, labels, metadata
-  TEXT_TERTIARY: '#767676',     // Placeholder, disabled — WCAG AA contrast (4.5:1 on #F0EEE8)
-  TEXT_ON_ACCENT: '#FFFFFF',    // White text on colored backgrounds
-  TEXT_ORANGE: '#E8593C',       // Orange text for stats, highlights
+  TEXT_MUTED: '#999999',        // Placeholders, disabled
+  TEXT_ON_DARK: '#FFFFFF',      // Text on dark/colored backgrounds
 
-  // UI Elements
-  BORDER_DEFAULT: '#E8E5DF',    // Subtle card border
-  BORDER_CARD: '#EFEFEF',       // Card inner border
+  // Legacy
+  TEXT_TERTIARY: '#999999',
+  TEXT_ORANGE: '#E8845F',
+  TEXT_ON_ACCENT: '#FFFFFF',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BORDER / DIVIDER COLORS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  BORDER: '#E8E5DF',            // Default card border
   DIVIDER: '#EEEBE5',           // Section dividers
-  SHADOW: 'rgba(0,0,0,0.06)',   // Card shadow color
+  SHADOW: 'rgba(0,0,0,0.06)',
 
-  // Stats / Rank
-  STREAK_ICON: '#E8593C',       // Flame icon
-  SCORE_ICON: '#666666',        // Trending arrow
-  RANK_DOT: '#AAAAAA',          // Neutral dot for rank
+  // Legacy
+  BORDER_DEFAULT: '#E8E5DF',
+  BORDER_CARD: '#EFEFEF',
 
-  // Tab bar
-  TAB_ACTIVE: '#E8593C',
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TAB BAR (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  TAB_ACTIVE: '#E8845F',
   TAB_INACTIVE: '#AAAAAA',
   TAB_BG: '#FFFFFF',
 
-  // Live feed
-  LIVE_DOT: '#E8593C',
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIVE / STREAK (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  LIVE_DOT: '#E8845F',
+  STREAK_ICON: '#E8845F',
 
-  // Misc
-  TRANSPARENT: 'transparent',
-
-  // Additional UI colors for compatibility
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BASIC COLORS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
   WHITE: '#FFFFFF',
   BLACK: '#111111',
-  SUCCESS_LIGHT: '#E8F5E9',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WARNING / DANGER (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
   WARNING: '#F5A623',
+  WARNING_BG: '#FFFBEB',
   WARNING_LIGHT: '#FFFBEB',
   DANGER: '#DC2626',
+  DANGER_BG: '#FEF2F2',
   DANGER_LIGHT: '#FEF2F2',
 
-  // Category colors
-  CATEGORY_FITNESS: '#E8593C',
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY COLORS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  CATEGORY_FITNESS: '#E8845F',
   CATEGORY_MIND: '#7C6BC4',
   CATEGORY_DISCIPLINE: '#111111',
+  CATEGORY_PEACH: '#F5D5C0',
 
-  // Difficulty badges
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DIFFICULTY BADGES (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
   DIFFICULTY_EASY_BG: '#EBF5EE',
   DIFFICULTY_EASY_TEXT: '#3D7A5A',
   DIFFICULTY_MEDIUM_BG: '#FFF8E8',
   DIFFICULTY_MEDIUM_TEXT: '#C17D00',
   DIFFICULTY_HARD_BG: '#FFF0ED',
-  DIFFICULTY_HARD_TEXT: '#E8593C',
+  DIFFICULTY_HARD_TEXT: '#E8845F',
   DIFFICULTY_EXTREME_BG: '#FFE5E5',
   DIFFICULTY_EXTREME_TEXT: '#DC2626',
+  DIFFICULTY_MEDIUM: '#F5A623',
 
-  // Featured badge
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FEATURED / TIMER (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
   FEATURED_BG: '#FFF0ED',
-  FEATURED_TEXT: '#E8593C',
-
-  // Timer
+  FEATURED_TEXT: '#E8845F',
   TIMER_BG: '#FFF0ED',
-  TIMER_TEXT: '#E8593C',
+  TIMER_TEXT: '#E8845F',
 
-  // Explore button
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TASK ICONS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  TASK_ICON_BG: '#FFF0ED',
+  TASK_ICON_COLOR: '#E8845F',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EXPLORE BUTTON (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  EXPLORE_BTN_BG: '#2D5BE3',
+  EXPLORE_BTN_TEXT: '#FFFFFF',
   EXPLORE_BUTTON_BG: '#2D5BE3',
   EXPLORE_BUTTON_TEXT: '#FFFFFF',
 
-  // Task icons
-  TASK_ICON_BG: '#FFF0ED',
-  TASK_ICON_COLOR: '#E8593C',
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INPUT (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  INPUT_BG: '#FFFFFF',
+  INPUT_BORDER: '#E8E5DF',
+  INPUT_BORDER_FOCUS: '#E8845F',
+  INPUT_PLACEHOLDER: '#999999',
 
-  // Modal/overlay
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SKELETON / MODAL (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  SKELETON_BG: '#E8E5DF',
   MODAL_BACKDROP: 'rgba(0,0,0,0.5)',
   OVERLAY_DARK: 'rgba(0,0,0,0.7)',
 
-  // Input
-  INPUT_PLACEHOLDER: '#999999',
-  INPUT_BG: '#FFFFFF',
-  INPUT_BORDER: '#E8E5DF',
-  INPUT_BORDER_FOCUS: '#E8593C',
-
-  // Switch/toggle
-  SWITCH_TRACK_ON: '#E8593C',
-  SWITCH_TRACK_OFF: '#E8E5DF',
-  SWITCH_THUMB: '#FFFFFF',
-
-  // Avatar
-  AVATAR_BORDER: '#FFFFFF',
-
-  // Skeleton loading
-  SKELETON_BG: '#E8E5DF',
-
-  // Green completed states
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COMPLETED STATES (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
   COMPLETED_BORDER: '#C5DFD0',
+  PROGRESS_BG: '#C5DFD0',
   COMPLETED_PROGRESS_BG: '#C5DFD0',
 
-  // Quick context card icons
-  ICON_BG_BLUE: '#EEF0F8',
-  ICON_COLOR_BLUE: '#4A6FA5',
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AVATAR (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  AVATAR_BORDER: '#FFFFFF',
+  AVATAR_1: '#E8845F',
+  AVATAR_2: '#2D8A4E',
+  AVATAR_3: '#7B61FF',
+  AVATAR_4: '#00897B',
+  AVATAR_5: '#C4960C',
+  AVATAR_6: '#D94040',
+  AVATAR_COLOR_1: '#E8845F',
+  AVATAR_COLOR_2: '#2D8A4E',
+  AVATAR_COLOR_3: '#7B61FF',
+  AVATAR_COLOR_4: '#00897B',
+  AVATAR_COLOR_5: '#C4960C',
+  AVATAR_COLOR_6: '#D94040',
 
-  // Streak tinted bg
-  STREAK_TINTED_BG: '#FFF0ED',
-
-  // Purple stripe (for variety in cards)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STRIPES (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
   PURPLE_STRIPE: '#7C6BC4',
   BLUE_STRIPE: '#2563EB',
 
-  // Phase 6 cleanup tokens
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HEADER COLORS (from approved reference)
+  // ═══════════════════════════════════════════════════════════════════════════
+  HEADER_GREEN: '#2D6A4F',
+  HEADER_ORANGE: '#C4784A',
+  CHALLENGE_HEADER_DARK: '#2D3A2E',
+  DARK_GREEN_HEADER: '#2D3A2E',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MISC / TRANSPARENT
+  // ═══════════════════════════════════════════════════════════════════════════
+  TRANSPARENT: 'transparent',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SWITCH/TOGGLE
+  // ═══════════════════════════════════════════════════════════════════════════
+  SWITCH_TRACK_ON: '#E8845F',
+  SWITCH_TRACK_OFF: '#E8E5DF',
+  SWITCH_THUMB: '#FFFFFF',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUICK CONTEXT CARD ICONS
+  // ═══════════════════════════════════════════════════════════════════════════
+  ICON_BG_BLUE: '#EEF0F8',
+  ICON_COLOR_BLUE: '#4A6FA5',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STREAK TINTED BG
+  // ═══════════════════════════════════════════════════════════════════════════
+  STREAK_TINTED_BG: '#FFF0ED',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 6 CLEANUP TOKENS
+  // ═══════════════════════════════════════════════════════════════════════════
   ERROR_RED: '#DC2626',
   ERROR_BG: '#FEF2F2',
   DISABLED_BG: '#C4C0B8',
@@ -136,23 +229,139 @@ export const DS_COLORS = {
   CARD_ALT_BG: '#F5F3F0',
   TASK_PILL_BG: '#F5F3F0',
   SELECTED_BG: '#FFF0EA',
-  DARK_GREEN_HEADER: '#2D3A2E',
   PRESSED_ORANGE: '#D2734A',
   GRAY_CARD_BG: '#F3F4F6',
   SCORE_ARROW: '#666666',
-  CATEGORY_PEACH: '#F5D5C0',
-  PAYWALL_BULLET: '#E8593C',
+  PAYWALL_BULLET: '#E8845F',
   SHARE_CARD_BG: '#000000',
   PROFILE_HEADER_BG: '#F5F3F0',
-  DIFFICULTY_MEDIUM: '#F5A623',
+  SCORE_ICON: '#666666',
+  RANK_DOT: '#AAAAAA',
 
-  // Avatar colors for InitialCircle
-  AVATAR_COLOR_1: '#E8845F',
-  AVATAR_COLOR_2: '#2D8A4E',
-  AVATAR_COLOR_3: '#7B61FF',
-  AVATAR_COLOR_4: '#00897B',
-  AVATAR_COLOR_5: '#C4960C',
-  AVATAR_COLOR_6: '#D94040',
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TASK TYPE COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  taskIndigo: '#6366F1',
+  taskIndigoBg: '#EEF2FF',
+  taskAmber: '#F59E0B',
+  taskEmerald: '#10B981',
+  taskPhotoPink: '#EC4899',
+  grayMedium: '#6B7280',
+  grayLight: '#F3F4F6',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LINK / BUTTON COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  linkBlue: '#2563EB',
+  checkinBlue: '#2563EB',
+  acceptGreen: '#10B981',
+  centerButtonBg: '#E8845F',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CREATE FLOW COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  createErrorText: '#DC2626',
+  createErrorBg: '#FEF2F2',
+  createChallengeGreen: '#10B981',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CHIP / FILTER
+  // ═══════════════════════════════════════════════════════════════════════════
+  chipFill: '#F7F5F0',
+  chipStroke: '#E8E5DF',
+  filterChipActiveBg: '#111111',
+  featuredLabelBg: '#EBF5EE',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BADGES
+  // ═══════════════════════════════════════════════════════════════════════════
+  badgeYellowGreenText: '#65A30D',
+  badgeYellowGreenBg: '#ECFCCB',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MILESTONES
+  // ═══════════════════════════════════════════════════════════════════════════
+  milestoneBronze: '#CD7F32',
+  milestoneSilver: '#C0C0C0',
+  milestoneGold: '#FFD700',
+  milestoneDiamond: '#B9F2FF',
+  silverRank: '#C0C0C0',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RUN / AMBER STATES
+  // ═══════════════════════════════════════════════════════════════════════════
+  amberLightBg: '#FFFBEB',
+  amberDarkText: '#92400E',
+  dangerMid: '#EF4444',
+  dangerLightBg: '#FEF2F2',
+  darkSurface: '#1F2937',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MISC TOKENS
+  // ═══════════════════════════════════════════════════════════════════════════
+  shadowBlack: '#000000',
+  purpleStripe: '#7C6BC4',
+  blueStripe: '#2563EB',
+  buttonDisabledBg: '#C4C0B8',
+  buttonDisabledText: '#888888',
+  rankGoldBg: '#FEF3C7',
+  activityOrange: '#E8845F',
+  borderFocus: '#E8845F',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BACKWARD COMPATIBILITY ALIASES (lowercase — for gradual migration)
+  // These are DIRECT properties, NOT added via Object.assign
+  // ═══════════════════════════════════════════════════════════════════════════
+  background: '#F0EDE8',
+  surface: '#FFFFFF',
+  card: '#FFFFFF',
+  textPrimary: '#111111',
+  textSecondary: '#666666',
+  textMuted: '#999999',
+  accent: '#E8845F',
+  accentDark: '#D4724E',
+  border: '#E8E5DF',
+  success: '#3D7A5A',
+  tabInactive: '#AAAAAA',
+  tabActive: '#E8845F',
+  white: '#FFFFFF',
+  black: '#111111',
+  navyDark: '#111111',
+  surfaceSubtle: '#FFF0ED',
+  surfaceMuted: '#F7F5F0',
+  accentLight: '#FFF0ED',
+  accentSoft: '#FFF0ED',
+  successLight: '#EBF5EE',
+  successSoft: '#EBF5EE',
+  dangerLight: '#FEF2F2',
+  dangerSoft: '#FEF2F2',
+  danger: '#DC2626',
+  dangerDark: '#B91C1C',
+  warning: '#F5A623',
+  warningLight: '#FFFBEB',
+  warningSoft: '#FFFBEB',
+  pill: '#F7F5F0',
+  blackBtn: '#111111',
+  commitmentButtonBg: '#111111',
+  exploreButtonBg: '#2D5BE3',
+  modalBackdrop: 'rgba(0,0,0,0.5)',
+  overlayDark: 'rgba(0,0,0,0.7)',
+  surfaceWarm: '#F7F5F0',
+  errorText: '#DC2626',
+  milestoneGold: '#FFD700',
+  difficultyEasyHeader: '#3D7A5A',
+  purpleTintLight: '#F3F0FF',
+  purpleTintWarm: '#EDE8FF',
+  journalPurple: '#7C6BC4',
+  journalStartBlue: '#2563EB',
+  runOrange: '#E8845F',
+  borderAlt: '#EFEFEF',
+  challenge24hHeaderBg: '#2D6A4F',
+  avatarPurple: '#7C6BC4',
+  emeraldDark: '#065F46',
+  challengeHeaderDark: '#2D3A2E',
+  alertRedBorder: '#FECACA',
+  inputPlaceholder: '#999999',
 } as const;
 
 export const DS_TYPOGRAPHY = {
@@ -178,9 +387,30 @@ export const DS_TYPOGRAPHY = {
   LINE_TIGHT: 1.15,
   LINE_NORMAL: 1.4,
   LINE_RELAXED: 1.6,
-};
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NAMED TEXT STYLES (from approved reference)
+  // These are DIRECT properties, NOT added via Object.assign
+  // ═══════════════════════════════════════════════════════════════════════════
+  wordmark: { fontSize: 24, fontWeight: '800' as const, letterSpacing: 3, lineHeight: 28 },
+  wordmarkSubtitle: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
+  pageTitle: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.5, lineHeight: 34 },
+  sectionTitle: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 26 },
+  cardTitle: { fontSize: 17, fontWeight: '700' as const, letterSpacing: -0.2 },
+  body: { fontSize: 15, fontWeight: '500' as const, lineHeight: 24 },
+  bodySmall: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22 },
+  secondary: { fontSize: 13, fontWeight: '400' as const, lineHeight: 20 },
+  metadata: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
+  eyebrow: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 1, lineHeight: 16 },
+  button: { fontSize: 17, fontWeight: '700' as const, lineHeight: 22 },
+  buttonSmall: { fontSize: 13, fontWeight: '600' as const, lineHeight: 18 },
+  statValue: { fontSize: 28, fontWeight: '700' as const },
+  statLabel: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.5 },
+  tabLabel: { fontSize: 11, fontWeight: '600' as const },
+} as const;
 
 export const DS_SPACING = {
+  // Primary uppercase tokens
   XS: 4,
   SM: 8,
   MD: 12,
@@ -190,19 +420,61 @@ export const DS_SPACING = {
   XXL: 32,
   SCREEN_H: 20,   // Horizontal screen padding
   SCREEN_V: 16,   // Vertical screen padding
-};
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOWERCASE ALIASES (for backward compatibility)
+  // These are DIRECT properties, NOT added via Object.assign
+  // ═══════════════════════════════════════════════════════════════════════════
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  section: 40,
+  screenHorizontal: 20,
+  screenHorizontalAlt: 20,
+  screenTopPadding: 16,
+  sectionGap: 12,
+  sectionGapLarge: 32,
+  cardPadding: 16,
+  cardGap: 12,
+  inputLabelGap: 8,
+  listItemGap: 12,
+} as const;
 
 export const DS_RADIUS = {
+  // Primary uppercase tokens
   SM: 8,
   MD: 12,
   LG: 16,
   XL: 20,
   PILL: 100,
-};
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOWERCASE ALIASES (for backward compatibility)
+  // These are DIRECT properties, NOT added via Object.assign
+  // ═══════════════════════════════════════════════════════════════════════════
+  input: 12,
+  card: 16,
+  cardAlt: 16,
+  pill: 100,
+  button: 14,
+  buttonPill: 14,
+  chip: 100,
+  iconButton: 22,
+  centerNavButton: 100,
+  searchBar: 12,
+  filterPill: 100,
+  ctaButton: 14,
+  featuredBadge: 6,
+  modal: 20,
+} as const;
 
 export const DS_SHADOWS = {
   card: {
-    shadowColor: DS_COLORS.SHADOW,
+    shadowColor: 'rgba(0,0,0,0.06)',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 6,
@@ -215,13 +487,6 @@ export const DS_SHADOWS = {
     shadowRadius: 4,
     elevation: 1,
   },
-  centerButton: {
-    shadowColor: DS_COLORS.SHADOW,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 8,
-  },
   button: {
     shadowColor: 'rgba(0,0,0,0.08)',
     shadowOffset: { width: 0, height: 2 },
@@ -229,11 +494,48 @@ export const DS_SHADOWS = {
     shadowRadius: 4,
     elevation: 2,
   },
+  centerButton: {
+    shadowColor: 'rgba(0,0,0,0.18)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  // Uppercase alias
+  CARD: {
+    shadowColor: 'rgba(0,0,0,0.06)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  SUBTLE: {
+    shadowColor: 'rgba(0,0,0,0.04)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  BUTTON: {
+    shadowColor: 'rgba(0,0,0,0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  CENTER_BTN: {
+    shadowColor: 'rgba(0,0,0,0.18)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
 } as const;
 
 export const DS_MEASURES = {
   TAB_BAR_HEIGHT: 80,
   CENTER_BUTTON_SIZE: 54,
+  CENTER_BTN_SIZE: 54,
   CTA_HEIGHT: 56,
   CTA_HEIGHT_COMPACT: 52,
   INPUT_HEIGHT: 56,
@@ -241,6 +543,7 @@ export const DS_MEASURES = {
   FILTER_PILL_HEIGHT: 36,
   HEADER_HEIGHT: 56,
   PROGRESS_BAR_HEIGHT: 3,
+  PROGRESS_BAR_H: 3,
   AVATAR_SM: 28,
   AVATAR_MD: 44,
   AVATAR_LG: 72,
@@ -252,134 +555,11 @@ export const DS_MEASURES = {
   STAT_ICON_SIZE: 20,
 } as const;
 
-// Backward compatibility aliases (mapped to new tokens)
-// These allow gradual migration from old token names
-export const DS_COLORS_COMPAT = {
-  // Old names → new values
-  background: DS_COLORS.BG_PRIMARY,
-  surface: DS_COLORS.BG_CARD,
-  card: DS_COLORS.BG_CARD,
-  textPrimary: DS_COLORS.TEXT_PRIMARY,
-  textSecondary: DS_COLORS.TEXT_SECONDARY,
-  textMuted: DS_COLORS.TEXT_TERTIARY,
-  accent: DS_COLORS.ACCENT_PRIMARY,
-  border: DS_COLORS.BORDER_DEFAULT,
-  success: DS_COLORS.ACCENT_GREEN,
-  tabInactive: DS_COLORS.TAB_INACTIVE,
-  tabActive: DS_COLORS.TAB_ACTIVE,
-  white: DS_COLORS.WHITE,
-  black: DS_COLORS.BLACK,
-  navyDark: DS_COLORS.TEXT_PRIMARY,
-  surfaceSubtle: DS_COLORS.STREAK_TINTED_BG,
-  surfaceMuted: DS_COLORS.BG_CARD_TINTED,
-  accentLight: DS_COLORS.STREAK_TINTED_BG,
-  accentSoft: DS_COLORS.STREAK_TINTED_BG,
-  successLight: DS_COLORS.SUCCESS_LIGHT,
-  successSoft: DS_COLORS.SUCCESS_LIGHT,
-  dangerLight: DS_COLORS.DANGER_LIGHT,
-  dangerSoft: DS_COLORS.DANGER_LIGHT,
-  danger: DS_COLORS.DANGER,
-  dangerDark: '#B91C1C',
-  warning: DS_COLORS.WARNING,
-  warningLight: DS_COLORS.WARNING_LIGHT,
-  warningSoft: DS_COLORS.WARNING_LIGHT,
-  chipFill: DS_COLORS.BG_CARD_TINTED,
-  pill: DS_COLORS.BG_CARD_TINTED,
-  blackBtn: DS_COLORS.BLACK,
-  commitmentButtonBg: DS_COLORS.BLACK,
-  exploreButtonBg: DS_COLORS.EXPLORE_BUTTON_BG,
-  modalBackdrop: DS_COLORS.MODAL_BACKDROP,
-  overlayDark: DS_COLORS.OVERLAY_DARK,
-  surfaceWarm: DS_COLORS.BG_CARD_TINTED,
-  errorText: DS_COLORS.DANGER,
-  milestoneGold: DS_COLORS.DIFFICULTY_MEDIUM_TEXT,
-  // Challenge detail tokens
-  difficultyEasyHeader: DS_COLORS.ACCENT_GREEN,
-  purpleTintLight: '#F3F0FF',
-  purpleTintWarm: '#EDE8FF',
-  journalPurple: '#7C6BC4',
-  journalStartBlue: '#2563EB',
-  runOrange: DS_COLORS.ACCENT_PRIMARY,
-  borderAlt: DS_COLORS.BORDER_CARD,
-  challenge24hHeaderBg: DS_COLORS.HEADER_GRADIENT_DAILY_START,
-  avatarPurple: '#7C6BC4',
-  linkBlue: '#2563EB',
-  emeraldDark: '#065F46',
-  shadowBlack: '#000000',
-} as const;
-
-// Merge compatibility aliases into DS_COLORS for backward compatibility
-Object.assign(DS_COLORS, DS_COLORS_COMPAT);
-
-// Typography compatibility
-export const DS_TYPOGRAPHY_COMPAT = {
-  wordmark: { fontSize: 24, fontWeight: '800' as const, letterSpacing: 3, lineHeight: 28 },
-  wordmarkSubtitle: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
-  pageTitle: { fontSize: DS_TYPOGRAPHY.SIZE_2XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 34 },
-  sectionTitle: { fontSize: DS_TYPOGRAPHY.SIZE_LG, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, letterSpacing: -0.2, lineHeight: 26 },
-  cardTitle: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, letterSpacing: -0.2 },
-  body: { fontSize: DS_TYPOGRAPHY.SIZE_BASE, fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM, lineHeight: 24 },
-  bodySmall: { fontSize: DS_TYPOGRAPHY.SIZE_BASE, fontWeight: DS_TYPOGRAPHY.WEIGHT_REGULAR, lineHeight: 22 },
-  secondary: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_REGULAR, lineHeight: 20 },
-  metadata: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM, lineHeight: 18 },
-  eyebrow: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16 },
-  button: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 22 },
-  buttonSmall: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, lineHeight: 18 },
-  statValue: { fontSize: DS_TYPOGRAPHY.SIZE_2XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
-  statLabel: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 0.5 },
-};
-
-Object.assign(DS_TYPOGRAPHY, DS_TYPOGRAPHY_COMPAT);
-
-// Spacing compatibility
-export const DS_SPACING_COMPAT = {
-  xs: DS_SPACING.XS,
-  sm: DS_SPACING.SM,
-  md: DS_SPACING.MD,
-  lg: DS_SPACING.BASE,
-  xl: DS_SPACING.LG,
-  xxl: DS_SPACING.XL,
-  xxxl: DS_SPACING.XXL,
-  section: 40,
-  screenHorizontal: DS_SPACING.SCREEN_H,
-  screenHorizontalAlt: DS_SPACING.SCREEN_H,
-  screenTopPadding: DS_SPACING.SCREEN_V,
-  sectionGap: DS_SPACING.MD,
-  sectionGapLarge: DS_SPACING.XXL,
-  cardPadding: DS_SPACING.BASE,
-  cardGap: DS_SPACING.MD,
-  inputLabelGap: DS_SPACING.SM,
-  listItemGap: DS_SPACING.MD,
-};
-
-Object.assign(DS_SPACING, DS_SPACING_COMPAT);
-
-// Radius compatibility
-export const DS_RADIUS_COMPAT = {
-  input: DS_RADIUS.MD,
-  card: DS_RADIUS.LG,
-  cardAlt: DS_RADIUS.LG,
-  pill: DS_RADIUS.PILL,
-  button: 14,
-  buttonPill: 14,
-  chip: DS_RADIUS.PILL,
-  iconButton: 22,
-  centerNavButton: DS_RADIUS.PILL,
-  searchBar: DS_RADIUS.MD,
-  filterPill: DS_RADIUS.PILL,
-  ctaButton: 14,
-  featuredBadge: 6,
-  modal: DS_RADIUS.XL,
-};
-
-Object.assign(DS_RADIUS, DS_RADIUS_COMPAT);
-
-// Borders compatibility
 export const DS_BORDERS = {
   width: 1,
   widthStrong: 2,
-  color: DS_COLORS.BORDER_DEFAULT,
-  colorStrong: DS_COLORS.TEXT_PRIMARY,
+  color: '#E8E5DF',
+  colorStrong: '#111111',
 } as const;
 
 // Type exports
