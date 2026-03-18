@@ -88,7 +88,7 @@ export const profilesRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const { data, error } = await ctx.supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, streak_freeze_used_count, streak_freeze_reset_at, preferred_secure_time, onboarding_completed, created_at')
         .eq('user_id', ctx.userId)
         .single();
 
@@ -213,7 +213,7 @@ export const profilesRouter = createTRPCRouter({
         }
       }
       if (Object.keys(updatePayload).length === 0) {
-        return (await ctx.supabase.from('profiles').select('*').eq('user_id', ctx.userId).single()).data;
+        return (await ctx.supabase.from('profiles').select('user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, streak_freeze_used_count, streak_freeze_reset_at, preferred_secure_time, onboarding_completed, created_at').eq('user_id', ctx.userId).single()).data;
       }
 
       const { data, error } = await ctx.supabase
@@ -248,7 +248,7 @@ export const profilesRouter = createTRPCRouter({
           .eq('status', 'completed'),
         ctx.supabase
           .from('streaks')
-          .select('*')
+          .select('user_id, active_streak_count, longest_streak_count, last_checkin_date')
           .eq('user_id', ctx.userId)
           .maybeSingle(),
         ctx.supabase
