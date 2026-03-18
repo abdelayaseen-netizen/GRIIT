@@ -40,6 +40,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useDebounce } from "@/hooks/useDebounce";
+import type { StarterChallenge } from "@/mocks/starter-challenges";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline";
 
@@ -201,6 +202,51 @@ const screenWidth = Dimensions.get("window").width;
 const DAILY_CARD_WIDTH = Math.min(screenWidth * 0.72, 320);
 const DAILY_CARD_GAP = 16;
 
+const PLACEHOLDER_24HR_CHALLENGES: StarterChallenge[] = [
+  {
+    id: "placeholder-1",
+    title: "Sprint & Stretch",
+    description: "Sprint for 10 minutes, stretch for 10 minutes.",
+    short_hook: "30 minutes to feel unstoppable.",
+    theme_color: DS_COLORS.ACCENT_PRIMARY,
+    difficulty: "medium",
+    duration_type: "24h",
+    duration_days: 1,
+    category: "fitness",
+    visibility: "public",
+    status: "published",
+    is_featured: false,
+    is_daily: true,
+    starts_at: null,
+    ends_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+    participants_count: 412,
+    active_today_count: 87,
+    challenge_tasks: [],
+    tasks: [{ type: "timer", title: "Sprint" }, { type: "timer", title: "Stretch" }] as StarterChallenge["tasks"],
+  },
+  {
+    id: "placeholder-2",
+    title: "Mindful Minutes",
+    description: "Three 5-minute breathing breaks today.",
+    short_hook: "Three pauses. Total clarity.",
+    theme_color: DS_COLORS.PURPLE_STRIPE,
+    difficulty: "easy",
+    duration_type: "24h",
+    duration_days: 1,
+    category: "mind",
+    visibility: "public",
+    status: "published",
+    is_featured: false,
+    is_daily: true,
+    starts_at: null,
+    ends_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+    participants_count: 287,
+    active_today_count: 56,
+    challenge_tasks: [],
+    tasks: [{ type: "timer", title: "Breathe" }, { type: "journal", title: "Reflect" }] as StarterChallenge["tasks"],
+  },
+];
+
 export default function DiscoverScreen() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -282,10 +328,15 @@ export default function DiscoverScreen() {
   }, [featuredData]);
 
   const dailyChallenges = useMemo(() => {
-    return allChallenges
+    const realDaily = allChallenges
       .filter((c) => c.is_daily && isDailyActive(c))
       .filter((c) => matchesCategory(c, activeCategory))
       .filter((c) => matchesSearch(c, debouncedQuery));
+    if (realDaily.length > 0) return realDaily;
+    if (activeCategory === "all" && !debouncedQuery) {
+      return PLACEHOLDER_24HR_CHALLENGES as DiscoverChallenge[];
+    }
+    return realDaily;
   }, [allChallenges, activeCategory, debouncedQuery]);
 
   const nonDailyChallenges = useMemo(() => {

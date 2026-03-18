@@ -655,15 +655,6 @@ export default function HomeScreen() {
             >
               <Text style={styles.exploreChallengesPrimaryBtnText}>Explore Challenges ›</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.exploreChallengesButton, { backgroundColor: DS_COLORS.accentLight }]}
-              onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
-              activeOpacity={0.85}
-              accessibilityLabel="Explore challenges"
-              accessibilityRole="button"
-            >
-              <Text style={styles.exploreChallengesButtonText}>✨ Explore challenges ›</Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -766,16 +757,16 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
             <View style={styles.statsRowCol}>
-              <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.successSoft }]}>
-                <TrendingUp size={20} color={DS_COLORS.success} />
+              <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.BG_CARD_TINTED }]}>
+                <TrendingUp size={20} color={DS_COLORS.TEXT_SECONDARY} />
               </View>
               <Text style={styles.statsRowNum}>{stats?.longestStreak ?? 0}</Text>
               <Text style={styles.statsRowLabel}>SCORE</Text>
             </View>
             <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
             <View style={styles.statsRowCol}>
-              <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.accentLight }]}>
-                <Target size={20} color={DS_COLORS.accent} />
+              <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.BG_CARD_TINTED }]}>
+                <Target size={20} color={DS_COLORS.TEXT_TERTIARY} />
               </View>
               <Text style={styles.statsRowNum}>{tierName ?? "—"}</Text>
               <Text style={styles.statsRowLabel}>RANK</Text>
@@ -800,7 +791,7 @@ export default function HomeScreen() {
         {!hasActiveChallenge && suggestedChallenges.length > 0 && (
           <View style={styles.suggestedChallengesSection}>
             <Text style={[styles.suggestedChallengesTitle, { color: DS_COLORS.textMuted, letterSpacing: 1, fontSize: 12, fontWeight: "600" }]}>SUGGESTED FOR YOU</Text>
-            {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string }) => (
+            {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string; duration_days?: number; difficulty?: string }) => (
               <TouchableOpacity
                 key={c.id}
                 style={[styles.suggestedChallengeRow, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
@@ -812,8 +803,13 @@ export default function HomeScreen() {
                 accessibilityLabel={`Open challenge: ${c.title ?? "Challenge"}`}
                 accessibilityRole="button"
               >
-                <Text style={[styles.suggestedChallengeTitle, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{c.title ?? "Challenge"}</Text>
-                <ChevronRight size={18} color={colors.text.muted} />
+                <View style={styles.suggestedChallengeLeft}>
+                  <Text style={[styles.suggestedChallengeTitle, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{c.title ?? "Challenge"}</Text>
+                  <Text style={styles.suggestedChallengeMeta}>
+                    {c.duration_days ? `${c.duration_days} days` : "Multi-day"} · {c.difficulty ? c.difficulty.charAt(0).toUpperCase() + c.difficulty.slice(1) : "Medium"}
+                  </Text>
+                </View>
+                <ChevronRight size={18} color={DS_COLORS.TEXT_TERTIARY} />
               </TouchableOpacity>
             ))}
           </View>
@@ -1406,14 +1402,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statsRowNum: {
-    fontSize: 28,
-    fontWeight: "800" as const,
+    fontSize: 22,
+    fontWeight: "700" as const,
     color: DS_COLORS.textPrimary,
   },
   statsRowLabel: {
     fontSize: 11,
-    fontWeight: "400" as const,
-    color: DS_COLORS.textMuted,
+    fontWeight: "500" as const,
+    color: DS_COLORS.textSecondary,
+    letterSpacing: 1,
+    textTransform: "uppercase" as const,
     letterSpacing: 0.5,
     textTransform: "uppercase" as const,
   },
@@ -1878,15 +1876,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: DS_SPACING.cardPadding,
-    borderRadius: DS_RADIUS.cardAlt,
+    borderRadius: DS_RADIUS.LG,
     borderWidth: DS_BORDERS.width,
     marginBottom: DS_SPACING.sm,
   },
-  suggestedChallengeTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+  suggestedChallengeLeft: {
     flex: 1,
     marginRight: DS_SPACING.sm,
+  },
+  suggestedChallengeTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  suggestedChallengeMeta: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 3,
   },
   yourPositionInFeedCard: {
     padding: DS_SPACING.cardPadding,

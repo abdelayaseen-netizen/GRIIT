@@ -8,28 +8,37 @@ import Purchases, {
   LOG_LEVEL,
 } from "react-native-purchases";
 
-const REVENUECAT_IOS_KEY = "REVENUECAT_IOS_KEY";
-const REVENUECAT_ANDROID_KEY = "REVENUECAT_ANDROID_KEY";
+const REVENUECAT_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || "";
+const REVENUECAT_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || "";
 
 let configured = false;
 
 /**
  * Initialize RevenueCat with the current app user ID (Supabase user id).
  * Call once on app startup after user is known.
+ * Silently fails if API keys are not configured (development mode).
  */
 export function configureRevenueCat(appUserId: string | null): void {
+  if (configured) return;
   if (!appUserId) return;
+  
+  const apiKey = Platform.select({
+    ios: REVENUECAT_IOS_KEY,
+    android: REVENUECAT_ANDROID_KEY,
+    default: REVENUECAT_IOS_KEY,
+  });
+  
+  if (!apiKey || apiKey.startsWith("REVENUECAT_") || apiKey.length < 10) {
+    if (__DEV__) console.log("[RevenueCat] Skipping configuration — no valid API key");
+    return;
+  }
+  
   try {
-    const apiKey = Platform.select({
-      ios: REVENUECAT_IOS_KEY,
-      android: REVENUECAT_ANDROID_KEY,
-      default: REVENUECAT_IOS_KEY,
-    });
     Purchases.configure({ apiKey, appUserID: appUserId });
     if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     configured = true;
   } catch (e) {
-    // error swallowed — handle in UI
+    if (__DEV__) console.log("[RevenueCat] Configuration failed:", e);
   }
 }
 

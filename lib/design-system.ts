@@ -277,7 +277,9 @@ export const DS_COLORS_COMPAT = {
   successLight: DS_COLORS.SUCCESS_LIGHT,
   successSoft: DS_COLORS.SUCCESS_LIGHT,
   dangerLight: DS_COLORS.DANGER_LIGHT,
+  dangerSoft: DS_COLORS.DANGER_LIGHT,
   danger: DS_COLORS.DANGER,
+  dangerDark: '#B91C1C',
   warning: DS_COLORS.WARNING,
   warningLight: DS_COLORS.WARNING_LIGHT,
   warningSoft: DS_COLORS.WARNING_LIGHT,
@@ -291,6 +293,19 @@ export const DS_COLORS_COMPAT = {
   surfaceWarm: DS_COLORS.BG_CARD_TINTED,
   errorText: DS_COLORS.DANGER,
   milestoneGold: DS_COLORS.DIFFICULTY_MEDIUM_TEXT,
+  // Challenge detail tokens
+  difficultyEasyHeader: DS_COLORS.ACCENT_GREEN,
+  purpleTintLight: '#F3F0FF',
+  purpleTintWarm: '#EDE8FF',
+  journalPurple: '#7C6BC4',
+  journalStartBlue: '#2563EB',
+  runOrange: DS_COLORS.ACCENT_PRIMARY,
+  borderAlt: DS_COLORS.BORDER_CARD,
+  challenge24hHeaderBg: DS_COLORS.HEADER_GRADIENT_DAILY_START,
+  avatarPurple: '#7C6BC4',
+  linkBlue: '#2563EB',
+  emeraldDark: '#065F46',
+  shadowBlack: '#000000',
 } as const;
 
 // Merge compatibility aliases into DS_COLORS for backward compatibility
@@ -309,6 +324,7 @@ export const DS_TYPOGRAPHY_COMPAT = {
   metadata: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM, lineHeight: 18 },
   eyebrow: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16 },
   button: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 22 },
+  buttonSmall: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, lineHeight: 18 },
   statValue: { fontSize: DS_TYPOGRAPHY.SIZE_2XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   statLabel: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 0.5 },
 };

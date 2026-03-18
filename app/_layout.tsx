@@ -209,10 +209,6 @@ function RootLayoutNav() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   useEffect(() => {
-    configureRevenueCat(user?.id ?? null);
-  }, [user?.id]);
-
-  useEffect(() => {
     const check = async () => {
       try {
         const completed = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);

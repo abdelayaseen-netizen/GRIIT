@@ -75,6 +75,12 @@ export default function TabLayout() {
           tabBarAccessibilityLabel: "Profile tab",
         }}
       />
+      <Tabs.Screen
+        name="teams"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

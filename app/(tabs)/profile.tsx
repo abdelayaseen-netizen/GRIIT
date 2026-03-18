@@ -594,6 +594,17 @@ export default function ProfileScreen() {
           <Text style={styles.discoverCtaText}>📈 Discover a Challenge</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.premiumCta, { backgroundColor: DS_COLORS.BG_CARD, borderColor: DS_COLORS.accent }]}
+          onPress={() => router.push(ROUTES.PAYWALL as never)}
+          activeOpacity={0.85}
+          accessibilityLabel="Upgrade to GRIIT Premium"
+          accessibilityRole="button"
+        >
+          <Text style={styles.premiumCtaText}>⚡ Go Premium</Text>
+          <ChevronRight size={18} color={DS_COLORS.accent} />
+        </TouchableOpacity>
+
         <DisciplineCalendar
           securedDateKeys={securedDateKeys}
           currentStreak={currentStreak}
@@ -856,6 +867,18 @@ function createProfileStyles() {
       alignItems: "center",
     },
     discoverCtaText: { fontSize: 16, fontWeight: "700" as const, color: DS_COLORS.white },
+    premiumCta: {
+      marginHorizontal: DS_SPACING.screenHorizontal,
+      marginBottom: DS_SPACING.lg,
+      paddingVertical: DS_SPACING.lg,
+      paddingHorizontal: DS_SPACING.lg,
+      borderRadius: 14,
+      borderWidth: 1,
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "center" as const,
+    },
+    premiumCtaText: { fontSize: 16, fontWeight: "600" as const, color: DS_COLORS.accent },
     signOutLink: { paddingVertical: DS_SPACING.sm },
     signOutLinkText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "500" as const, color: DS_COLORS.textMuted, textDecorationLine: "underline" as const },
     streakAtRiskCard: {
