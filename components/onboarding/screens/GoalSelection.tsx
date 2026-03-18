@@ -75,10 +75,10 @@ const styles = StyleSheet.create({
   goalTitleSelected: { color: C.textPrimary },
   goalSubtitle: { fontSize: T.captionSize, color: C.textTertiary },
   checkMark: { width: 24, height: 24, borderRadius: 12, backgroundColor: C.borderActive, justifyContent: 'center', alignItems: 'center' },
-  checkMarkText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  checkMarkText: { color: C.WHITE, fontSize: 14, fontWeight: '700' },
   ctaContainer: { paddingTop: 16 },
   primaryButton: { backgroundColor: C.commitmentButtonBg, height: S.buttonHeight, borderRadius: S.buttonRadius, justifyContent: 'center', alignItems: 'center' },
-  primaryButtonDisabled: { backgroundColor: '#C4C0B8' },
+  primaryButtonDisabled: { backgroundColor: C.DISABLED_BG },
   primaryButtonText: { fontSize: T.bodySize, fontWeight: '700', color: C.textOnAccent },
-  primaryButtonTextDisabled: { color: '#fff' },
+  primaryButtonTextDisabled: { color: C.WHITE },
 });

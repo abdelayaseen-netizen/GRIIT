@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_SPACING.lg,
     paddingVertical: 6,
     borderRadius: DS_RADIUS.input,
-    backgroundColor: "#F5F3F0",
+    backgroundColor: DS_COLORS.PROFILE_HEADER_BG,
   },
   bioPillText: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,

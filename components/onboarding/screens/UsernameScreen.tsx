@@ -166,7 +166,7 @@ export default function UsernameScreen({ onComplete }: UsernameScreenProps) {
           disabled={username.length < 3 || !displayName.trim() || loading}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={C.WHITE} />
           ) : (
             <Text style={[styles.primaryButtonText, (username.length < 3 || !displayName.trim()) && styles.primaryButtonTextDisabled]}>
               Let&apos;s go

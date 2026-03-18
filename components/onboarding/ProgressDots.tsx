@@ -36,9 +36,9 @@ const styles = StyleSheet.create({
     width: S.progressDotSize,
     height: S.progressDotSize,
     borderRadius: S.progressDotSize / 2,
-    backgroundColor: '#C4C0B8',
+    backgroundColor: C.DISABLED_BG,
     borderWidth: 1,
-    borderColor: '#C4C0B8',
+    borderColor: C.DISABLED_BG,
   },
   dotActive: {
     backgroundColor: C.accent,

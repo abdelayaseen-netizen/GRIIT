@@ -8,7 +8,6 @@ import { useRouter } from "expo-router";
 import { useCreateTeam } from "@/hooks/useTeams";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
-const ACCENT = "#E8593C";
 const MAX_NAME_LEN = 30;
 
 export default function CreateTeamScreen() {
@@ -53,14 +52,14 @@ export default function CreateTeamScreen() {
         <Text style={styles.hint}>{name.length}/{MAX_NAME_LEN}</Text>
         {error ? <Text style={[styles.error, { color: DS_COLORS.errorText }]}>{error}</Text> : null}
         <TouchableOpacity
-          style={[styles.btn, { backgroundColor: ACCENT }, (!valid || createTeam.isPending) && styles.btnDisabled]}
+          style={[styles.btn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }, (!valid || createTeam.isPending) && styles.btnDisabled]}
           onPress={handleCreate}
           disabled={!valid || createTeam.isPending}
           accessibilityRole="button"
           accessibilityLabel="Create team"
         >
           {createTeam.isPending ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
           ) : (
             <Text style={styles.btnText}>Create team</Text>
           )}
@@ -91,5 +90,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   btnDisabled: { opacity: 0.5 },
-  btnText: { fontSize: 17, fontWeight: "700", color: "#FFFFFF" },
+  btnText: { fontSize: 17, fontWeight: "700", color: DS_COLORS.WHITE },
 });

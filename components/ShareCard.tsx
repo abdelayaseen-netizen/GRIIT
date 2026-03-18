@@ -62,7 +62,7 @@ export function ProofShareCard({
 
 const proofStyles = StyleSheet.create({
   card: {
-    backgroundColor: "#000000",
+    backgroundColor: DS_COLORS.SHARE_CARD_BG,
     overflow: "hidden",
   },
   wordmark: {
@@ -71,7 +71,7 @@ const proofStyles = StyleSheet.create({
     left: 48,
     fontSize: 36,
     fontWeight: "800",
-    color: "#E8593C",
+    color: DS_COLORS.ACCENT_PRIMARY,
     letterSpacing: 2,
     zIndex: 2,
   },
@@ -97,19 +97,19 @@ const proofStyles = StyleSheet.create({
   streakBig: {
     fontSize: 120,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: DS_COLORS.WHITE,
     marginBottom: 16,
   },
   username: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: DS_COLORS.WHITE,
     marginBottom: 8,
   },
   dayComplete: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#E8593C",
+    color: DS_COLORS.ACCENT_PRIMARY,
   },
   bottomStrip: {
     position: "absolute",
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   tierText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#FFF",
+    color: DS_COLORS.WHITE,
   },
   cta: {
     fontSize: 16,

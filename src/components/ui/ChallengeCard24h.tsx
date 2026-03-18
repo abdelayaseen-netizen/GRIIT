@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Clock } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_SHADOWS } from "@/lib/design-system";
 
-const TOP_BAR_COLORS = ["#E85D4A", "#8B5CF6", "#3B82F6", "#14B8A6"] as const;
+const TOP_BAR_COLORS = [DS_COLORS.ACCENT_PRIMARY, DS_COLORS.PURPLE_STRIPE, DS_COLORS.BLUE_STRIPE, DS_COLORS.ACCENT_GREEN] as const;
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
-  Easy: { bg: "#DCFCE7", text: "#16A34A" },
-  Medium: { bg: "#FEF9C3", text: "#CA8A04" },
-  Hard: { bg: "#FEE2E2", text: "#DC2626" },
-  Extreme: { bg: "#FEE2E2", text: "#991B1B" },
+  Easy: { bg: DS_COLORS.DIFFICULTY_EASY_BG, text: DS_COLORS.DIFFICULTY_EASY_TEXT },
+  Medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+  Hard: { bg: DS_COLORS.DIFFICULTY_HARD_BG, text: DS_COLORS.DIFFICULTY_HARD_TEXT },
+  Extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
 };
 
 function useCountdown(endsAt: string | null): string {
@@ -22,6 +22,7 @@ function useCountdown(endsAt: string | null): string {
   }, [endsAt]);
   return text;
 }
+
 function formatCountdown(endsAt: string | null): string {
   if (!endsAt) return "--:--:--";
   const diff = new Date(endsAt).getTime() - Date.now();
@@ -79,7 +80,7 @@ function ChallengeCard24hInner(p: {
       <View style={s.body}>
         <View style={s.topRow}>
           <View style={s.countdownPill}>
-            <Clock size={10} color="#DC2626" />
+            <Clock size={10} color={DS_COLORS.TIMER_TEXT} />
             <Text style={s.countdownText}>{countdown}</Text>
           </View>
         </View>
@@ -108,23 +109,19 @@ export const ChallengeCard24h = React.memo(ChallengeCard24hInner);
 
 const s = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: DS_RADIUS.LG,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: DS_COLORS.BORDER_CARD,
+    ...DS_SHADOWS.card,
   },
   topBar: {
     height: 3,
     width: "100%",
   },
   body: {
-    padding: 16,
+    padding: DS_SPACING.BASE,
     minWidth: 0,
   },
   diffPillAbsolute: {
@@ -132,42 +129,42 @@ const s = StyleSheet.create({
     top: 12,
     right: 12,
     zIndex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: DS_SPACING.SM,
     paddingVertical: 3,
     borderRadius: 6,
   },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: DS_SPACING.SM,
   },
   countdownPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: DS_SPACING.SM,
+    paddingVertical: DS_SPACING.XS,
     borderRadius: 10,
-    backgroundColor: "#FEE2E2",
+    backgroundColor: DS_COLORS.TIMER_BG,
   },
-  countdownText: { fontSize: 11, fontWeight: "700", color: "#DC2626" },
-  diffPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  countdownText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TIMER_TEXT },
+  diffPill: { paddingHorizontal: DS_SPACING.SM, paddingVertical: 3, borderRadius: 6 },
   diffText: { fontSize: 11, fontWeight: "600" },
-  title: { fontSize: 18, fontWeight: "700", color: "#2D3A2E", marginBottom: 6 },
-  desc: { fontSize: 14, color: "#7A7A6D", lineHeight: 20, marginBottom: 10 },
+  title: { fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
+  desc: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 20, marginBottom: 10 },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 },
   taskChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingVertical: DS_SPACING.SM,
+    borderRadius: DS_RADIUS.PILL,
   },
-  taskChipText: { fontSize: 12, fontWeight: "500", color: "#7A7A6D", maxWidth: 90 },
+  taskChipText: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY, maxWidth: 90 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   participants: { flexDirection: "row", alignItems: "center", gap: 4 },
   participantsEmoji: { fontSize: 12 },
-  participantsText: { fontSize: 12, fontWeight: "500", color: "#7A7A6D" },
-  chevron: { fontSize: 16, fontWeight: "600", color: "#7A7A6D" },
+  participantsText: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
+  chevron: { fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
 });

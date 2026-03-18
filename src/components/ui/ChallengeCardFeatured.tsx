@@ -4,8 +4,6 @@ import { Calendar, BookOpen, Users, Flame } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
 
-const TASK_PILL_BG = "#F5F3F0";
-
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Easy: { bg: DS_COLORS.successLight, text: DS_COLORS.success },
   Medium: { bg: DS_COLORS.warningLight, text: DS_COLORS.warning },
@@ -112,7 +110,7 @@ const s = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.BLACK,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -178,7 +176,7 @@ const s = StyleSheet.create({
   taskChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: TASK_PILL_BG,
+    backgroundColor: DS_COLORS.TASK_PILL_BG,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,

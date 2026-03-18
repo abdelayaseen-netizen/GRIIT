@@ -231,8 +231,8 @@ function RootLayoutNav() {
   const inChallenge = firstSegment === "challenge";
   if (checkingOnboarding) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: DS_COLORS?.background ?? "#F7F4EF" }}>
-        <ActivityIndicator size="large" color={DS_COLORS?.accent ?? "#E8733A"} />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: DS_COLORS?.background ?? DS_COLORS.FALLBACK_BG }}>
+        <ActivityIndicator size="large" color={DS_COLORS?.accent ?? DS_COLORS.ACCENT_PRIMARY} />
       </View>
     );
   }

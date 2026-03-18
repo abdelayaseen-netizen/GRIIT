@@ -208,10 +208,10 @@ const CHALLENGE_PACKS: {
 
 const PACK_CARD_BORDER: Record<string, string> = {
   athlete: DS_COLORS.border,
-  faith: "#F5D5C0",
+  faith: DS_COLORS.CATEGORY_PEACH,
   entrepreneur: DS_COLORS.border,
-  hyrox: "#F5D5C0",
-  morning: "#F5D5C0",
+  hyrox: DS_COLORS.CATEGORY_PEACH,
+  morning: DS_COLORS.CATEGORY_PEACH,
 };
 
 const DEADLINE_OPTIONS: { id: DeadlineTypeUI; label: string; description: string }[] = [
@@ -699,12 +699,12 @@ export default function CreateScreen() {
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={[styles.label, { fontSize: 12, fontWeight: "600", color: "#9B9B9B", letterSpacing: 1 }]}>WHO&apos;S IN THIS CHALLENGE?</Text>
+        <Text style={[styles.label, { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_TERTIARY, letterSpacing: 1 }]}>WHO&apos;S IN THIS CHALLENGE?</Text>
         <View style={styles.whosInRow}>
           <TouchableOpacity
             style={[
               styles.whosInCard,
-              participationType === "solo" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: "#FFF0EA" },
+              participationType === "solo" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: DS_COLORS.SELECTED_BG },
             ]}
             onPress={() => setParticipationType("solo")}
             activeOpacity={0.85}
@@ -720,7 +720,7 @@ export default function CreateScreen() {
           <TouchableOpacity
             style={[
               styles.whosInCard,
-              participationType === "team" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: "#FFF0EA" },
+              participationType === "team" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: DS_COLORS.SELECTED_BG },
             ]}
             onPress={() => setParticipationType("team")}
             activeOpacity={0.85}
@@ -736,7 +736,7 @@ export default function CreateScreen() {
           <TouchableOpacity
             style={[
               styles.whosInCard,
-              participationType === "shared_goal" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: "#FFF0EA" },
+              participationType === "shared_goal" && { borderWidth: 2, borderColor: DS_COLORS.accent, backgroundColor: DS_COLORS.SELECTED_BG },
             ]}
             onPress={() => setParticipationType("shared_goal")}
             activeOpacity={0.85}

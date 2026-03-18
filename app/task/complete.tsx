@@ -318,12 +318,12 @@ export default function TaskCompleteScreen() {
           <Text style={styles.title}>Task complete</Text>
           <Text style={styles.subtitle}>Nice work.</Text>
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: "#E8593C" }]}
+            style={[styles.submitButton, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
             onPress={handleShare}
             disabled={shareLoading}
           >
             {shareLoading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
             ) : sharedFeedback ? (
               <Text style={styles.submitButtonText}>Shared! ✓</Text>
             ) : (

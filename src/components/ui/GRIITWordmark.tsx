@@ -7,31 +7,30 @@ type GRIITWordmarkProps = {
   color?: string;
   subtitleColor?: string;
   compact?: boolean;
-  /** Design DNA: spaced "G R I I T" (uppercase with spaces) */
   spaced?: boolean;
 };
 
-/**
- * GRIIT brand wordmark — intentional tracking, bold letterforms, balanced.
- */
 export function GRIITWordmark({
   subtitle = "Build Discipline Daily",
-  color = DS_COLORS.textPrimary,
-  subtitleColor = DS_COLORS.textSecondary,
+  color,
+  subtitleColor,
   compact = false,
   spaced: _spaced = false,
 }: GRIITWordmarkProps) {
+  const textColor = color || DS_COLORS.TEXT_PRIMARY;
+  const subColor = subtitleColor || DS_COLORS.TEXT_SECONDARY;
+
   return (
     <View style={compact ? styles.compactWrap : styles.wrap}>
       <Text
         style={[
           styles.wordmark,
           {
-            color: color === DS_COLORS.textPrimary ? DS_COLORS.navyDark : color,
-            fontSize: 24,
-            fontWeight: "800",
-            letterSpacing: 3,
-            lineHeight: 28,
+            color: textColor,
+            fontSize: DS_TYPOGRAPHY.SIZE_2XL,
+            fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK,
+            letterSpacing: -0.5,
+            lineHeight: DS_TYPOGRAPHY.SIZE_2XL * DS_TYPOGRAPHY.LINE_TIGHT,
           },
         ]}
         allowFontScaling={false}
@@ -43,10 +42,10 @@ export function GRIITWordmark({
           style={[
             styles.subtitle,
             {
-              color: subtitleColor,
-              fontSize: 13,
-              fontWeight: DS_TYPOGRAPHY.wordmarkSubtitle.fontWeight,
-              marginTop: compact ? DS_SPACING.xs : DS_SPACING.sm,
+              color: subColor,
+              fontSize: DS_TYPOGRAPHY.SIZE_SM,
+              fontWeight: DS_TYPOGRAPHY.WEIGHT_REGULAR,
+              marginTop: compact ? DS_SPACING.XS : DS_SPACING.SM,
             },
           ]}
           allowFontScaling={false}
@@ -59,7 +58,7 @@ export function GRIITWordmark({
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginTop: DS_SPACING.sm },
+  wrap: { marginTop: DS_SPACING.SM },
   compactWrap: {},
   wordmark: { ...(Platform.OS === "ios" ? {} : { fontFamily: "sans-serif-medium" }) },
   subtitle: {},

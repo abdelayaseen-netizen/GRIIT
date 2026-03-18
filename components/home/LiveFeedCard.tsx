@@ -1,6 +1,6 @@
 /**
  * LIVE feed card component. Renders 4 types: secured_day, milestone, challenge_promo, rank_up.
- * Left border stripe 3px, cardRadius 16, cardShadow. Uses theme and design tokens.
+ * Left border stripe 3px, cardRadius 16, cardShadow. Uses design system tokens.
  */
 
 import React from "react";
@@ -13,9 +13,8 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS } from "@/lib/design-system";
 
-// TODO(yaseen): Wire to API when respect/chase endpoints exist. [Phase: feed]
 function respectChasePlaceholder() {
   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!");
@@ -27,21 +26,17 @@ export type LiveFeedCardType = "secured_day" | "milestone" | "challenge_promo" |
 
 export interface LiveFeedCardData {
   type: LiveFeedCardType;
-  /** secured_day */
   username?: string;
   day?: number;
   challengeName?: string;
   streakDays?: number;
   minutesAgo?: number;
   respectCount?: number;
-  /** milestone */
   rankBadge?: string;
   hitDays?: number;
   topPercent?: number;
-  /** challenge_promo */
   percentSecured?: number;
   openChallengeId?: string;
-  /** rank_up */
   rankName?: string;
   disciplineDelta?: number;
   onRespect?: () => void;
@@ -55,9 +50,8 @@ interface LiveFeedCardProps {
 }
 
 function AvatarPlaceholder({ size = 40 }: { size?: number }) {
-  const { colors } = useTheme();
   return (
-    <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.pill }]} />
+    <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: DS_COLORS.BG_CARD_TINTED }]} />
   );
 }
 
@@ -66,45 +60,46 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
 
   if (data.type === "secured_day") {
     return (
-      <View style={[styles.card, { backgroundColor: colors.card, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: colors.accent }]}>
+      <View style={[styles.card, { backgroundColor: DS_COLORS.BG_CARD, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: DS_COLORS.ACCENT_PRIMARY }]}>
         <View style={styles.cardInner}>
           <View style={styles.row1}>
-            <AvatarPlaceholder size={40} />
+            <AvatarPlaceholder size={44} />
             <View style={styles.body}>
-              <Text style={[styles.username, { color: colors.text.primary }]} numberOfLines={1}>
+              <Text style={[styles.username, { color: DS_COLORS.TEXT_PRIMARY }]} numberOfLines={1}>
                 {data.username ?? "user"}
               </Text>
-              <Text style={[styles.securedLine, { color: colors.text.secondary }]}>
+              <Text style={[styles.securedLine, { color: DS_COLORS.TEXT_SECONDARY }]}>
                 secured Day {data.day ?? 0} of {data.challengeName ?? "Challenge"}
               </Text>
-              <Text style={[styles.meta, { color: colors.success }]}>
-                🔥 Streak: {data.streakDays ?? 0} days
-              </Text>
-              <Text style={[styles.metaMuted, { color: colors.text.muted }]}>
-                · {data.minutesAgo ?? 0}m ago
-              </Text>
+              <View style={styles.metaRow}>
+                <Flame size={14} color={DS_COLORS.STREAK_ICON} />
+                <Text style={[styles.streakText, { color: DS_COLORS.TEXT_ORANGE }]}>
+                  Streak: {data.streakDays ?? 0} days
+                </Text>
+                <Text style={[styles.timeText, { color: DS_COLORS.TEXT_TERTIARY }]}>
+                  · {data.minutesAgo ?? 0}m ago
+                </Text>
+              </View>
             </View>
           </View>
           <View style={styles.pillRow}>
             <TouchableOpacity
-              style={[styles.pillBtn, { borderColor: colors.border }, !data.onRespect && { opacity: 0.6 }]}
+              style={[styles.pillBtn, { backgroundColor: DS_COLORS.BG_CARD_TINTED, borderColor: DS_COLORS.BORDER_CARD }]}
               onPress={data.onRespect ?? respectChasePlaceholder}
               activeOpacity={0.8}
               accessibilityLabel="Send respect"
               accessibilityRole="button"
             >
-              <Flame size={14} color={colors.accent} />
-              <Text style={[styles.pillBtnText, { color: colors.accent }]}>Respect {data.respectCount ?? 0}</Text>
+              <Text style={[styles.pillBtnText, { color: DS_COLORS.TEXT_PRIMARY }]}>🔥 Respect {data.respectCount ?? 0}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.pillBtn, { borderColor: colors.border }, !data.onChase && { opacity: 0.6 }]}
+              style={[styles.pillBtn, { backgroundColor: DS_COLORS.BG_CARD_TINTED, borderColor: DS_COLORS.BORDER_CARD }]}
               onPress={data.onChase ?? respectChasePlaceholder}
               activeOpacity={0.8}
               accessibilityLabel="Chase this user"
               accessibilityRole="button"
             >
-              <Users size={14} color={colors.text.secondary} />
-              <Text style={[styles.pillBtnText, { color: colors.text.secondary }]}>Chase</Text>
+              <Text style={[styles.pillBtnText, { color: DS_COLORS.TEXT_PRIMARY }]}>👥 Chase</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -114,24 +109,20 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
 
   if (data.type === "milestone") {
     return (
-      <View style={[styles.card, { backgroundColor: colors.card, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: colors.streak.gold }]}>
+      <View style={[styles.card, { backgroundColor: DS_COLORS.BG_CARD, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: DS_COLORS.DIFFICULTY_MEDIUM_TEXT }]}>
         <View style={styles.cardInner}>
           <View style={styles.row1}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.warningLight }]}>
-              <Trophy size={20} color={colors.streak.gold} />
+            <View style={[styles.iconCircle, { backgroundColor: DS_COLORS.WARNING_LIGHT }]}>
+              <Trophy size={20} color={DS_COLORS.DIFFICULTY_MEDIUM_TEXT} />
             </View>
             <View style={styles.body}>
-              <Text style={[styles.username, { color: colors.text.primary }]}>{data.username ?? "user"}</Text>
-              <Text style={[styles.securedLine, { color: colors.text.primary }]}>
-                Hit <Text style={[styles.bold, { color: colors.accent }]}>{data.hitDays ?? 0} days</Text> straight
+              <Text style={[styles.username, { color: DS_COLORS.TEXT_PRIMARY }]}>{data.username ?? "user"}</Text>
+              <Text style={[styles.securedLine, { color: DS_COLORS.TEXT_PRIMARY }]}>
+                Hit <Text style={[styles.bold, { color: DS_COLORS.ACCENT_PRIMARY }]}>{data.hitDays ?? 0} days</Text> straight
               </Text>
-              <Text style={[styles.metaMuted, { color: colors.text.muted }]}>
+              <Text style={[styles.metaMuted, { color: DS_COLORS.TEXT_TERTIARY }]}>
                 Top {data.topPercent ?? 0}% this week
               </Text>
-              <TouchableOpacity style={[styles.pillBtn, { borderColor: colors.border, alignSelf: "flex-start", marginTop: 8 }, !data.onRespect && { opacity: 0.6 }]} onPress={data.onRespect ?? respectChasePlaceholder} activeOpacity={0.8} accessibilityLabel="Send respect" accessibilityRole="button">
-                <Flame size={14} color={colors.accent} />
-                <Text style={[styles.pillBtnText, { color: colors.accent }]}>Respect {data.respectCount ?? 0}</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -141,22 +132,22 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
 
   if (data.type === "challenge_promo") {
     return (
-      <View style={[styles.card, { backgroundColor: colors.accentLight, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: colors.accent }]}>
+      <View style={[styles.card, { backgroundColor: DS_COLORS.STREAK_TINTED_BG, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: DS_COLORS.ACCENT_PRIMARY }]}>
         <View style={styles.cardInner}>
           <View style={styles.row1}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.accent + "20" }]}>
-              <Zap size={20} color={colors.accent} />
+            <View style={[styles.iconCircle, { backgroundColor: DS_COLORS.TASK_ICON_BG }]}>
+              <Zap size={20} color={DS_COLORS.ACCENT_PRIMARY} />
             </View>
             <View style={styles.body}>
-              <Text style={[styles.percentBig, { color: colors.text.primary }]}>
-                <Text style={[styles.bold, { color: colors.text.primary }]}>{data.percentSecured ?? 0}%</Text> of participants secured today
+              <Text style={[styles.percentBig, { color: DS_COLORS.TEXT_PRIMARY }]}>
+                <Text style={[styles.bold, { color: DS_COLORS.TEXT_PRIMARY }]}>{data.percentSecured ?? 0}%</Text> of participants secured today
               </Text>
-              <Text style={[styles.securedLine, { color: colors.text.secondary }]}>
+              <Text style={[styles.securedLine, { color: DS_COLORS.TEXT_SECONDARY }]}>
                 in {data.challengeName ?? "Challenge"}
               </Text>
-              <Text style={[styles.areYouIn, { color: colors.accent }]}>Are you in?</Text>
+              <Text style={[styles.areYouIn, { color: DS_COLORS.ACCENT_PRIMARY }]}>Are you in?</Text>
               <TouchableOpacity
-                style={[styles.openChallengeBtn, { backgroundColor: colors.accent }]}
+                style={[styles.openChallengeBtn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
                 onPress={() => data.openChallengeId && data.onOpenChallenge?.(data.openChallengeId)}
                 activeOpacity={0.85}
                 accessibilityLabel="Open challenge"
@@ -173,25 +164,25 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
 
   if (data.type === "rank_up") {
     return (
-      <View style={[styles.card, { backgroundColor: colors.card, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: colors.success }]}>
+      <View style={[styles.card, { backgroundColor: DS_COLORS.BG_CARD, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: DS_COLORS.ACCENT_GREEN }]}>
         <View style={styles.cardInner}>
           <View style={styles.row1}>
-            <AvatarPlaceholder size={40} />
+            <AvatarPlaceholder size={44} />
             <View style={styles.body}>
-              <Text style={[styles.securedLine, { color: colors.text.primary }]}>
-                {data.username ?? "user"} moved to Rank <Text style={[styles.bold, { color: colors.accent }]}>&quot;{data.rankName ?? "Rank"}&quot;</Text>
+              <Text style={[styles.securedLine, { color: DS_COLORS.TEXT_PRIMARY }]}>
+                {data.username ?? "user"} moved to Rank <Text style={[styles.bold, { color: DS_COLORS.ACCENT_PRIMARY }]}>"{data.rankName ?? "Rank"}"</Text>
               </Text>
-              <Text style={[styles.meta, { color: colors.success }]}>
+              <Text style={[styles.meta, { color: DS_COLORS.ACCENT_GREEN }]}>
                 📈 +{data.disciplineDelta ?? 0} Discipline this week
               </Text>
               <TouchableOpacity
-                style={[styles.viewProfileBtn, { borderColor: colors.border }]}
+                style={[styles.viewProfileBtn, { borderColor: DS_COLORS.BORDER_DEFAULT }]}
                 onPress={data.onViewProfile}
                 activeOpacity={0.8}
                 accessibilityLabel="View profile"
                 accessibilityRole="button"
               >
-                <Text style={[styles.viewProfileBtnText, { color: colors.text.secondary }]}>View Profile &gt;</Text>
+                <Text style={[styles.viewProfileBtnText, { color: DS_COLORS.TEXT_SECONDARY }]}>View Profile &gt;</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -208,29 +199,30 @@ export default React.memo(LiveFeedCardInner);
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: DS_RADIUS.cardAlt,
-    marginBottom: DS_SPACING.cardGap,
+    borderRadius: DS_RADIUS.LG,
+    marginBottom: DS_SPACING.MD,
     overflow: "hidden",
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_COLORS.BG_CARD,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_COLORS.BORDER_CARD,
+    ...DS_SHADOWS.card,
   },
   cardInner: {
     flex: 1,
-    padding: DS_SPACING.lg,
+    padding: DS_SPACING.BASE,
   },
   row1: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: DS_SPACING.md,
+    gap: DS_SPACING.MD,
   },
   avatar: {
-    backgroundColor: DS_COLORS.chipFill,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -239,11 +231,11 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
     marginBottom: 2,
   },
   securedLine: {
-    fontSize: 14,
+    fontSize: 15,
     marginBottom: 2,
   },
   percentBig: {
@@ -260,6 +252,19 @@ const styles = StyleSheet.create({
   metaMuted: {
     fontSize: 13,
   },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  streakText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  timeText: {
+    fontSize: 13,
+  },
   areYouIn: {
     fontSize: 14,
     fontWeight: "600",
@@ -269,37 +274,37 @@ const styles = StyleSheet.create({
   pillRow: {
     flexDirection: "row",
     gap: 8,
-    marginTop: 10,
+    marginTop: 8,
   },
   pillBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: DS_RADIUS.PILL,
     borderWidth: 1,
   },
   pillBtnText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "500",
   },
   openChallengeBtn: {
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     marginTop: 4,
   },
   openChallengeBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    color: DS_COLORS.white,
+    color: DS_COLORS.WHITE,
   },
   viewProfileBtn: {
     alignSelf: "flex-start",
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     marginTop: 6,
   },

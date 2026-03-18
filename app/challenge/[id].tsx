@@ -857,10 +857,8 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const CHALLENGE_24H_GREEN = "#2D6A4F";
-  const CHALLENGE_24H_GREEN_END = "#3D8B6A";
-  const headerGradientColors = isDaily ? [CHALLENGE_24H_GREEN, CHALLENGE_24H_GREEN_END] as const : ["#C4784A", "#A65F3A"] as const;
-  const ctaBgColor = isDaily && !expired ? CHALLENGE_24H_GREEN : DS_COLORS.accent;
+  const headerGradientColors = isDaily ? [DS_COLORS.HEADER_GRADIENT_DAILY_START, DS_COLORS.HEADER_GRADIENT_DAILY_END] as const : [DS_COLORS.HEADER_GRADIENT_DEFAULT_START, DS_COLORS.HEADER_GRADIENT_DEFAULT_END] as const;
+  const ctaBgColor = isDaily && !expired ? DS_COLORS.HEADER_GRADIENT_DAILY_START : DS_COLORS.accent;
   const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
@@ -1927,7 +1925,7 @@ const s = StyleSheet.create({
     color: DS_COLORS.linkBlue,
   },
   proBadge: {
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -1935,7 +1933,7 @@ const s = StyleSheet.create({
   proBadgeText: {
     fontSize: 10,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.WHITE,
   },
   missionTitle: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
@@ -2129,7 +2127,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 24,
   },
   commitmentCard: {
-    backgroundColor: "#FAF8F5",
+    backgroundColor: DS_COLORS.BG_PRIMARY,
     borderRadius: 24,
     padding: 24,
     width: "100%",
@@ -2153,7 +2151,7 @@ const s = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: DS_COLORS.GRAY_CARD_BG,
     alignItems: "center",
     justifyContent: "center",
     marginTop: DS_SPACING.sm,
@@ -2169,7 +2167,7 @@ const s = StyleSheet.create({
   commitmentDetails: {
     width: "100%",
     marginTop: DS_SPACING.xl,
-    backgroundColor: "#FAF8F5",
+    backgroundColor: DS_COLORS.BG_PRIMARY,
     borderRadius: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
@@ -2232,7 +2230,7 @@ const s = StyleSheet.create({
   commitmentWarning: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: DS_COLORS.ERROR_BG,
     borderRadius: 12,
     padding: DS_SPACING.lg,
     marginTop: DS_SPACING.xl,
@@ -2241,7 +2239,7 @@ const s = StyleSheet.create({
   commitmentWarningText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#DC2626",
+    color: DS_COLORS.ERROR_RED,
     flex: 1,
   },
   commitmentCheckRow: {
@@ -2261,8 +2259,8 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   commitmentCheckboxChecked: {
-    backgroundColor: "#2D3A2E",
-    borderColor: "#2D3A2E",
+    backgroundColor: DS_COLORS.DARK_GREEN_HEADER,
+    borderColor: DS_COLORS.DARK_GREEN_HEADER,
   },
   commitmentCheckLabel: {
     fontSize: 14,
@@ -2271,7 +2269,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
   commitmentConfirmBtn: {
-    backgroundColor: "#D2734A",
+    backgroundColor: DS_COLORS.PRESSED_ORANGE,
     borderRadius: 12,
     paddingVertical: 16,
     minHeight: 50,

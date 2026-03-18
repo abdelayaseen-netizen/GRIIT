@@ -1,140 +1,113 @@
 /**
- * GRIIT Design DNA — Rork spec. Single source of truth for colors and tokens.
- * Warm cream #F7F4EF, dark text #0B0B0F, accent #E8733A. No dark mode.
+ * GRIIT Theme Constants — Aligned with Design System v2
+ * Re-exports from design-system.ts for backwards compatibility
  */
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_RADIUS, DS_SHADOWS, DS_MEASURES } from '@/lib/design-system';
+
+// Re-export everything from design system
+export {
+  DS_COLORS,
+  DS_TYPOGRAPHY,
+  DS_SPACING,
+  DS_RADIUS,
+  DS_SHADOWS,
+  DS_MEASURES,
+};
+
+// Legacy compatibility exports (mapped to new tokens)
 export const BASE_COLORS = {
-  background: "#F7F4EF",
-  surface: "#FFFFFF",
-  card: "#FFFFFF",
-  textPrimary: "#0B0B0F",
-  textSecondary: "#6B6B73",
-  textMuted: "#9A9AA3",
-  accent: "#E8733A",
-  border: "#E7E3DC",
-  success: "#2E7D32",
-  tabInactive: "#9A9AA3",
-  tabActive: "#E8733A",
+  background: DS_COLORS.BG_PRIMARY,
+  surface: DS_COLORS.BG_CARD,
+  card: DS_COLORS.BG_CARD,
+  textPrimary: DS_COLORS.TEXT_PRIMARY,
+  textSecondary: DS_COLORS.TEXT_SECONDARY,
+  textMuted: DS_COLORS.TEXT_TERTIARY,
+  accent: DS_COLORS.ACCENT_PRIMARY,
+  border: DS_COLORS.BORDER_DEFAULT,
+  success: DS_COLORS.ACCENT_GREEN,
+  tabInactive: DS_COLORS.TAB_INACTIVE,
+  tabActive: DS_COLORS.TAB_ACTIVE,
 } as const;
 
-export const SURFACE_MUTED = "#F3F1EC";
-export const SURFACE_SUBTLE = "#FFF5F0";
-export const ACCENT_LIGHT = "#FFF0E8";
-export const ACCENT_SOFT = "#F7D2C3";
-export const SUCCESS_LIGHT = "#E8F5E9";
-export const WARNING_COLOR = "#F5A623";
-export const WARNING_LIGHT = "#FFFBEB";
-export const DANGER_COLOR = "#D32F2F";
-export const DANGER_LIGHT = "#FEF2F2";
-export const NAVY_DARK = "#0B0B0F";
-export const GOLD = "#C4960C";
+export const SURFACE_MUTED = DS_COLORS.BG_CARD_TINTED;
+export const SURFACE_SUBTLE = DS_COLORS.STREAK_TINTED_BG;
+export const ACCENT_LIGHT = DS_COLORS.STREAK_TINTED_BG;
+export const ACCENT_SOFT = DS_COLORS.STREAK_TINTED_BG;
+export const SUCCESS_LIGHT = DS_COLORS.SUCCESS_LIGHT;
+export const WARNING_COLOR = DS_COLORS.WARNING;
+export const WARNING_LIGHT = DS_COLORS.WARNING_LIGHT;
+export const DANGER_COLOR = DS_COLORS.DANGER;
+export const DANGER_LIGHT = DS_COLORS.DANGER_LIGHT;
+export const NAVY_DARK = DS_COLORS.TEXT_PRIMARY;
+export const GOLD = DS_COLORS.DIFFICULTY_MEDIUM_TEXT;
 
-export const BORDER_STRONG = "#0B0B0F";
-export const CHIP_FILL = "#F3F4F6";
-export const PILL = "#F3F4F6";
-export const SHADOW = "rgba(0,0,0,0.04)";
-export const SHADOW_MEDIUM = "rgba(0,0,0,0.08)";
-export const BLACK_BTN = "#0B0B0F";
+export const BORDER_STRONG = DS_COLORS.TEXT_PRIMARY;
+export const CHIP_FILL = DS_COLORS.BG_CARD_TINTED;
+export const PILL = DS_COLORS.BG_CARD_TINTED;
+export const SHADOW = DS_COLORS.SHADOW;
+export const SHADOW_MEDIUM = 'rgba(0,0,0,0.08)';
+export const BLACK_BTN = DS_COLORS.BLACK;
 
-export const COMMITMENT_BUTTON_BG = "#0B0B0F";
-export const EXPLORE_BUTTON_BG = "#E8733A";
+export const COMMITMENT_BUTTON_BG = DS_COLORS.BLACK;
+export const EXPLORE_BUTTON_BG = DS_COLORS.EXPLORE_BUTTON_BG;
 
-export const BADGE_GREEN_BG = "#E8F5E9";
-export const BADGE_GREEN_TEXT = "#2E7D32";
-export const BADGE_YELLOW_BG = "#FFFBEB";
-export const BADGE_YELLOW_TEXT = "#F5A623";
-export const BADGE_ORANGE_BG = "#FFF0E8";
-export const BADGE_ORANGE_TEXT = "#E8733A";
-export const BADGE_RED_BG = "#FEF2F2";
-export const BADGE_RED_TEXT = "#D32F2F";
+export const BADGE_GREEN_BG = DS_COLORS.ACCENT_GREEN_BG;
+export const BADGE_GREEN_TEXT = DS_COLORS.ACCENT_GREEN;
+export const BADGE_YELLOW_BG = DS_COLORS.WARNING_LIGHT;
+export const BADGE_YELLOW_TEXT = DS_COLORS.WARNING;
+export const BADGE_ORANGE_BG = DS_COLORS.STREAK_TINTED_BG;
+export const BADGE_ORANGE_TEXT = DS_COLORS.ACCENT_PRIMARY;
+export const BADGE_RED_BG = DS_COLORS.DANGER_LIGHT;
+export const BADGE_RED_TEXT = DS_COLORS.DANGER;
 
-export const CATEGORY_FITNESS = "#E8734A";
-export const CATEGORY_MIND = "#7C6BC4";
-export const CATEGORY_DISCIPLINE = "#1A1A1A";
+export const CATEGORY_FITNESS = DS_COLORS.CATEGORY_FITNESS;
+export const CATEGORY_MIND = DS_COLORS.CATEGORY_MIND;
+export const CATEGORY_DISCIPLINE = DS_COLORS.CATEGORY_DISCIPLINE;
 
-/** @deprecated Use BASE_COLORS or DS_COLORS. */
+/** @deprecated Use DS_COLORS directly */
 export const COLORS = {
-  background: BASE_COLORS.background,
-  cardBackground: BASE_COLORS.surface,
-  text: BASE_COLORS.textPrimary,
-  textSecondary: BASE_COLORS.textSecondary,
-  accent: BASE_COLORS.accent,
-  accentLight: ACCENT_LIGHT,
-  border: BASE_COLORS.border,
-  success: BASE_COLORS.success,
-  warning: WARNING_COLOR,
-  tabInactive: BASE_COLORS.tabInactive,
-  tabActive: BASE_COLORS.tabActive,
+  background: DS_COLORS.BG_PRIMARY,
+  cardBackground: DS_COLORS.BG_CARD,
+  text: DS_COLORS.TEXT_PRIMARY,
+  textSecondary: DS_COLORS.TEXT_SECONDARY,
+  accent: DS_COLORS.ACCENT_PRIMARY,
+  accentLight: DS_COLORS.STREAK_TINTED_BG,
+  border: DS_COLORS.BORDER_DEFAULT,
+  success: DS_COLORS.ACCENT_GREEN,
+  warning: DS_COLORS.WARNING,
+  tabInactive: DS_COLORS.TAB_INACTIVE,
+  tabActive: DS_COLORS.TAB_ACTIVE,
 } as const;
 
 export const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-} as const;
-
-export const DS_SPACING = {
-  screenHorizontal: 20,
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  cardPadding: 16,
-  listItemGap: 12,
+  xs: DS_SPACING.XS,
+  sm: DS_SPACING.SM,
+  md: DS_SPACING.MD,
+  lg: DS_SPACING.BASE,
+  xl: DS_SPACING.XL,
 } as const;
 
 export const BORDER_RADIUS = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: DS_RADIUS.SM,
+  md: DS_RADIUS.MD,
+  lg: DS_RADIUS.LG,
+  xl: DS_RADIUS.XL,
   full: 9999,
-  card: 12,
-  pill: 20,
+  card: DS_RADIUS.MD,
+  pill: DS_RADIUS.PILL,
 } as const;
 
-export const DS_RADIUS = {
-  card: 14,
-  cardAlt: 16,
-  pill: 20,
-  button: 14,
-  iconButton: 14,
-  badge: 8,
-} as const;
-
-export const SHADOWS = {
-  card: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-} as const;
-
-export const DS_SHADOWS = {
-  card: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-} as const;
+export const SHADOWS = DS_SHADOWS;
 
 export const TYPOGRAPHY = {
-  pageTitle: { fontSize: 26, fontWeight: "700" as const, letterSpacing: -0.5 },
-  sectionHeader: { fontSize: 20, fontWeight: "700" as const, letterSpacing: -0.3 },
-  cardTitle: { fontSize: 17, fontWeight: "700" as const, letterSpacing: -0.2 },
-  cardTitleLarge: { fontSize: 20, fontWeight: "800" as const, letterSpacing: -0.4 },
-  body: { fontSize: 15, fontWeight: "400" as const, lineHeight: 22 },
-  secondary: { fontSize: 14, fontWeight: "400" as const },
-  meta: { fontSize: 13, fontWeight: "500" as const, letterSpacing: -0.1 },
-  metaSmall: { fontSize: 12, fontWeight: "500" as const },
-  badgeLabel: { fontSize: 10, fontWeight: "800" as const },
-  caption: { fontSize: 11, fontWeight: "600" as const },
+  pageTitle: { fontSize: DS_TYPOGRAPHY.SIZE_2XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5 },
+  sectionHeader: { fontSize: DS_TYPOGRAPHY.SIZE_LG, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, letterSpacing: -0.3 },
+  cardTitle: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, letterSpacing: -0.2 },
+  cardTitleLarge: { fontSize: DS_TYPOGRAPHY.SIZE_LG, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.4 },
+  body: { fontSize: DS_TYPOGRAPHY.SIZE_BASE, fontWeight: DS_TYPOGRAPHY.WEIGHT_REGULAR, lineHeight: 22 },
+  secondary: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_REGULAR },
+  meta: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM, letterSpacing: -0.1 },
+  metaSmall: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM },
+  badgeLabel: { fontSize: 10, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD },
+  caption: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
 } as const;
-
-export const DS_TYPOGRAPHY = TYPOGRAPHY;

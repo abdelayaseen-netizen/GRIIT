@@ -239,7 +239,7 @@ export default function PricingScreen() {
               style={[styles.retryBtn, { backgroundColor: DS_COLORS.accent }]}
               activeOpacity={0.8}
             >
-              <RefreshCw size={18} color="#FFF" />
+              <RefreshCw size={18} color={DS_COLORS.WHITE} />
               <Text style={styles.retryBtnText}>Retry</Text>
             </TouchableOpacity>
           </View>
@@ -302,7 +302,7 @@ export default function PricingScreen() {
           ]}
         >
           {purchasing ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={DS_COLORS.WHITE} />
           ) : (
             <Text style={styles.ctaText}>
               {selectedPackage
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
-  saveBadgeText: { color: "#FFF", fontSize: 11, fontWeight: "700" },
+  saveBadgeText: { color: DS_COLORS.WHITE, fontSize: 11, fontWeight: "700" },
   retryWrap: {
     alignItems: "center",
     paddingVertical: DS_SPACING.xl,
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: DS_RADIUS.input,
   },
-  retryBtnText: { color: "#FFF", fontWeight: "600" },
+  retryBtnText: { color: DS_COLORS.WHITE, fontWeight: "600" },
   errorText: { marginBottom: 8, textAlign: "center" },
   cta: {
     paddingVertical: 16,

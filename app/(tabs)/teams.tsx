@@ -25,8 +25,6 @@ import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 
-const ACCENT = "#E8593C";
-
 export default function TeamsTabScreen() {
   const router = useRouter();
   const { isPro } = useProStatus();
@@ -106,7 +104,7 @@ export default function TeamsTabScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={teamsQuery.isRefetching} onRefresh={onRefresh} tintColor={ACCENT} />}
+          refreshControl={<RefreshControl refreshing={teamsQuery.isRefetching} onRefresh={onRefresh} tintColor={DS_COLORS.ACCENT_PRIMARY} />}
         >
           <Text style={styles.heading}>Find your squad</Text>
           <Text style={styles.subtext}>Accountability partners increase your success rate by 2×</Text>
@@ -118,7 +116,7 @@ export default function TeamsTabScreen() {
               accessibilityRole="button"
               accessibilityLabel="Create a team"
             >
-              <Users size={28} color={ACCENT} style={{ marginBottom: 8 }} />
+              <Users size={28} color={DS_COLORS.ACCENT_PRIMARY} style={{ marginBottom: 8 }} />
               <Text style={styles.cardTitle}>Create a team</Text>
               <Text style={styles.cardSub}>You become owner, enter team name</Text>
             </TouchableOpacity>
@@ -129,7 +127,7 @@ export default function TeamsTabScreen() {
               accessibilityRole="button"
               accessibilityLabel="Join a team"
             >
-              <Users size={28} color={ACCENT} style={{ marginBottom: 8 }} />
+              <Users size={28} color={DS_COLORS.ACCENT_PRIMARY} style={{ marginBottom: 8 }} />
               <Text style={styles.cardTitle}>Join a team</Text>
               <Text style={styles.cardSub}>Enter 8-character invite code</Text>
             </TouchableOpacity>
@@ -147,7 +145,7 @@ export default function TeamsTabScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={teamsQuery.isRefetching || teamFeedQuery.isRefetching} onRefresh={onRefresh} tintColor={ACCENT} />}
+        refreshControl={<RefreshControl refreshing={teamsQuery.isRefetching || teamFeedQuery.isRefetching} onRefresh={onRefresh} tintColor={DS_COLORS.ACCENT_PRIMARY} />}
       >
         <View style={styles.headerRow}>
           <Text style={styles.teamName}>{team.name}</Text>
@@ -229,7 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.card,
     padding: DS_SPACING.lg,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: DS_COLORS.ACCENT_PRIMARY,
   },
   cardHalf: { minWidth: 0 },
   cardTitle: { fontSize: 16, fontWeight: "700", color: DS_COLORS.textPrimary, marginBottom: 4 },

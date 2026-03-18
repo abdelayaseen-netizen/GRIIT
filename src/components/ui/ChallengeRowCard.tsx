@@ -7,13 +7,13 @@ import { DS_COLORS } from "@/lib/design-system";
 const MUTED_TEXT = DS_COLORS.textSecondary;
 const DIFF_DOT_COLORS: Record<string, string> = {
   Easy: DS_COLORS.success,
-  Medium: "#F5A623",
+  Medium: DS_COLORS.DIFFICULTY_MEDIUM,
   Hard: DS_COLORS.accent,
   Extreme: DS_COLORS.danger,
 };
 const DIFF_BORDER_COLORS: Record<string, string> = {
   Easy: DS_COLORS.success,
-  Medium: "#F5A623",
+  Medium: DS_COLORS.DIFFICULTY_MEDIUM,
   Hard: DS_COLORS.accent,
   Extreme: DS_COLORS.danger,
 };
@@ -91,7 +91,7 @@ const s = StyleSheet.create({
     borderLeftWidth: 4,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    shadowColor: "#000",
+    shadowColor: DS_COLORS.BLACK,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -111,7 +111,7 @@ const s = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#2D3A2E",
+    color: DS_COLORS.DARK_GREEN_HEADER,
     flex: 1,
   },
   difficultyDot: {

@@ -1,7 +1,15 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
-const INITIAL_CIRCLE_COLORS = ["#E8845F", "#2D8A4E", "#7B61FF", "#00897B", "#C4960C", "#D94040"] as const;
+const INITIAL_CIRCLE_COLORS = [
+  DS_COLORS.AVATAR_COLOR_1,
+  DS_COLORS.AVATAR_COLOR_2,
+  DS_COLORS.AVATAR_COLOR_3,
+  DS_COLORS.AVATAR_COLOR_4,
+  DS_COLORS.AVATAR_COLOR_5,
+  DS_COLORS.AVATAR_COLOR_6,
+] as const;
 
 function getInitialColor(username: string): string {
   const code = (username || "?").charCodeAt(0) ?? 0;
@@ -25,7 +33,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
-    color: "#FFFFFF",
+    color: DS_COLORS.WHITE,
     fontWeight: "700",
   },
 });

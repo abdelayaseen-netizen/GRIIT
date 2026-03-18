@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   pillText: {
-    color: "#FFFFFF",
+    color: DS_COLORS.WHITE,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.5,

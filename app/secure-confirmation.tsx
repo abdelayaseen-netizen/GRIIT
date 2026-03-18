@@ -300,7 +300,7 @@ export default function SecureConfirmationScreen() {
                 disabled={milestoneShareLoading}
               >
                 {milestoneShareLoading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
                 ) : (
                   <Text style={milestoneStyles.shareCtaText}>Share this moment</Text>
                 )}
@@ -341,7 +341,7 @@ const milestoneStyles = StyleSheet.create({
   dayText: {
     fontSize: 48,
     fontWeight: "800",
-    color: "#E8593C",
+    color: DS_COLORS.ACCENT_PRIMARY,
     marginBottom: 8,
   },
   title: {
@@ -351,7 +351,7 @@ const milestoneStyles = StyleSheet.create({
     marginBottom: 28,
   },
   shareCta: {
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 14,
@@ -359,7 +359,7 @@ const milestoneStyles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  shareCtaText: { fontSize: 17, fontWeight: "700", color: "#FFFFFF" },
+  shareCtaText: { fontSize: 17, fontWeight: "700", color: DS_COLORS.WHITE },
   continueBtn: { paddingVertical: 12 },
   continueBtnText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textSecondary },
 });

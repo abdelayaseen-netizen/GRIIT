@@ -2,6 +2,7 @@ import React from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Search, X } from "lucide-react-native";
 import { colors, iconSizes } from "@/src/theme/tokens";
+import { DS_COLORS } from "@/lib/design-system";
 
 export function SearchBar(props: {
   value: string;
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     height: 48,
-    backgroundColor: "#F5F3F0",
+    backgroundColor: DS_COLORS.CARD_ALT_BG,
     borderRadius: 12,
     paddingHorizontal: 14,
     borderWidth: 0,

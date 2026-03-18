@@ -117,7 +117,7 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
             disabled={joiningId !== null}
           >
             {joiningId === suggested.id ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={C.WHITE} />
             ) : (
               <Text style={styles.primaryButtonText}>Join challenge</Text>
             )}

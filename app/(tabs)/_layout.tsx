@@ -1,16 +1,14 @@
 import { Tabs, usePathname } from "expo-router";
-import { Home, Compass, Plus, Flame, User, Users } from "lucide-react-native";
+import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { registerPushTokenWithBackend } from "@/lib/register-push-token";
-import { DS_COLORS, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
   void usePathname();
   const { user } = useAuth();
-  const { colors: _colors, colorScheme: _colorScheme } = useTheme();
   const pushRegistrationAttempted = useRef(false);
 
   useEffect(() => {
@@ -18,31 +16,16 @@ export default function TabLayout() {
     pushRegistrationAttempted.current = true;
     registerPushTokenWithBackend();
   }, [user]);
-  const tabBorder = DS_COLORS.border;
-  const tabActive = DS_COLORS.tabActive;
-  const tabInactive = DS_COLORS.tabInactive;
-  const centerBtnBg = DS_COLORS.blackBtn;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: tabActive,
-        tabBarInactiveTintColor: tabInactive,
+        tabBarActiveTintColor: DS_COLORS.TAB_ACTIVE,
+        tabBarInactiveTintColor: DS_COLORS.TAB_INACTIVE,
         headerShown: false,
-        sceneStyle: { backgroundColor: DS_COLORS.background },
-        tabBarStyle: {
-          backgroundColor: DS_COLORS.white,
-          borderTopColor: tabBorder,
-          borderTopWidth: 1,
-          paddingTop: 8,
-          height: DS_MEASURES.tabBarHeight,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "500" as const,
-          marginTop: 4,
-          marginBottom: 8,
-        },
+        sceneStyle: { backgroundColor: DS_COLORS.BG_PRIMARY },
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabBarLabel,
       }}
     >
       <Tabs.Screen
@@ -66,9 +49,9 @@ export default function TabLayout() {
         options={{
           title: "Create",
           tabBarIcon: () => (
-            <View style={styles.createTabIconWrap}>
-              <View style={[styles.centerButton, { backgroundColor: centerBtnBg }]}>
-                <Plus color={DS_COLORS.white} size={24} strokeWidth={2.5} />
+            <View style={styles.centerButtonWrapper}>
+              <View style={styles.centerButton}>
+                <Plus color={DS_COLORS.WHITE} size={24} strokeWidth={2.5} />
               </View>
             </View>
           ),
@@ -84,16 +67,6 @@ export default function TabLayout() {
           tabBarAccessibilityLabel: "Movement tab",
         }}
       />
-      {user ? (
-        <Tabs.Screen
-          name="teams"
-          options={{
-            title: "Teams",
-            tabBarIcon: ({ color, size }) => <Users color={color} size={size || 24} />,
-            tabBarAccessibilityLabel: "Teams tab",
-          }}
-        />
-      ) : null}
       <Tabs.Screen
         name="profile"
         options={{
@@ -107,15 +80,33 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  createTabIconWrap: { position: "relative" },
-  createProBadge: { position: "absolute", top: -4, right: -4 },
-  centerButton: {
-    width: DS_MEASURES.centerNavButtonSize,
-    height: DS_MEASURES.centerNavButtonSize,
-    borderRadius: DS_MEASURES.centerNavButtonSize / 2,
+  tabBar: {
+    backgroundColor: DS_COLORS.TAB_BG,
+    borderTopColor: DS_COLORS.BORDER_DEFAULT,
+    borderTopWidth: 1,
+    height: DS_MEASURES.TAB_BAR_HEIGHT,
+    paddingTop: DS_SPACING.SM,
+    paddingBottom: DS_SPACING.SM,
+  },
+  tabBarLabel: {
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM,
+    marginTop: DS_SPACING.XS,
+    marginBottom: DS_SPACING.SM,
+  },
+  centerButtonWrapper: {
+    position: "relative",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+  },
+  centerButton: {
+    width: DS_MEASURES.CENTER_BUTTON_SIZE,
+    height: DS_MEASURES.CENTER_BUTTON_SIZE,
+    borderRadius: DS_MEASURES.CENTER_BUTTON_SIZE / 2,
+    backgroundColor: DS_COLORS.BLACK,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
     ...DS_SHADOWS.centerButton,
   },
 });

@@ -302,7 +302,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
             />
             <Pressable style={styles.primaryButton} onPress={handleEmailSignUp} disabled={loading}>
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={C.WHITE} />
               ) : (
                 <Text style={styles.primaryButtonText}>Create account</Text>
               )}

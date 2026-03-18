@@ -17,8 +17,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-sy
 import { purchasePro, restorePurchases } from "@/lib/revenue-cat";
 import { useProStatus } from "@/hooks/useProStatus";
 
-const ACCENT = "#E8593C";
-const ERROR_COLOR = DS_COLORS.errorText ?? "#E24B4A";
+const ERROR_COLOR = DS_COLORS.errorText ?? DS_COLORS.ERROR_RED;
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -66,7 +65,7 @@ export default function PaywallScreen() {
   }, [router, refetchPro]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background ?? "#000000" }]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background ?? DS_COLORS.BLACK }]} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.logo}>GRIIT</Text>
         <Text style={styles.subheading}>Unlock your full potential</Text>
@@ -92,7 +91,7 @@ export default function PaywallScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.primaryBtn, { backgroundColor: ACCENT }]}
+          style={[styles.primaryBtn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
           onPress={handlePurchase}
           disabled={loading || restoreLoading}
           activeOpacity={0.85}
@@ -100,7 +99,7 @@ export default function PaywallScreen() {
           accessibilityLabel="Start Pro subscription"
         >
           {loading ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
           ) : (
             <Text style={styles.primaryBtnText}>Start Pro — $9.99/mo</Text>
           )}
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#E8593C",
+    color: DS_COLORS.ACCENT_PRIMARY,
     letterSpacing: 2,
     marginBottom: 8,
   },
@@ -155,13 +154,13 @@ const styles = StyleSheet.create({
   },
   valueProps: { marginBottom: 28 },
   valueRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  bullet: { fontSize: 16, color: "#E8593C", marginRight: 12 },
+  bullet: { fontSize: 16, color: DS_COLORS.ACCENT_PRIMARY, marginRight: 12 },
   valueText: { fontSize: 16, color: DS_COLORS.textPrimary, flex: 1 },
   pricingBlock: { marginBottom: 24 },
   price: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: DS_COLORS.WHITE,
     marginBottom: 4,
   },
   priceSub: { fontSize: 14, color: DS_COLORS.textMuted },
@@ -171,7 +170,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  primaryBtnText: { fontSize: 17, fontWeight: "700", color: "#FFFFFF" },
+  primaryBtnText: { fontSize: 17, fontWeight: "700", color: DS_COLORS.WHITE },
   secondaryBtn: {
     paddingVertical: 14,
     alignItems: "center",
