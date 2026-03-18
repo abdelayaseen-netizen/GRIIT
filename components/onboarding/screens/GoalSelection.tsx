@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S, GOAL_OPTIONS } from '@/constants/onboarding-theme';
-import { useOnboardingStore } from '@/store/onboarding-store';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import { track } from '@/lib/analytics';
 
 interface GoalSelectionProps {

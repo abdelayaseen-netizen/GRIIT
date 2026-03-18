@@ -27,11 +27,11 @@ function mapEntitlementToStatus(expiresDate: string | null): SubscriptionStatus 
 export const profilesRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({
-      username: z.string().min(3),
-      display_name: z.string().optional(),
-      bio: z.string().optional(),
-      avatar_url: z.string().optional(),
-      cover_url: z.string().optional(),
+      username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
+      display_name: z.string().max(50).optional(),
+      bio: z.string().max(500).optional(),
+      avatar_url: z.string().max(2000).optional(),
+      cover_url: z.string().max(2000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const { data, error } = await ctx.supabase
@@ -342,7 +342,11 @@ export const profilesRouter = createTRPCRouter({
             const tokens = (pushRes?.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
             const pt = (profileTokenRes?.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
             const allT = [...new Set([...tokens, pt].filter(Boolean))].filter((t: string | null | undefined): t is string => typeof t === "string");
-            await sendExpoPush(allT, 'Last Stand used', 'Your streak continues.');
+            try {
+              await sendExpoPush(allT, 'Last Stand used', 'Your streak continues.');
+            } catch (pushErr) {
+              console.error('[PUSH] Failed to send Last Stand notification:', pushErr);
+            }
           }
         }
         }

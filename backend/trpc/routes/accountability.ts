@@ -141,11 +141,15 @@ export const accountabilityRouter = createTRPCRouter({
       const tokensFromTable = pushTokensRes.error ? [] : (pushTokensRes.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
       const profileToken = (profileTokenRes.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
       const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
-      await sendExpoPush(
-        allTokens,
-        "Accountability partner",
-        `${inviterName} wants to be your accountability partner`
-      );
+      try {
+        await sendExpoPush(
+          allTokens,
+          "Accountability partner",
+          `${inviterName} wants to be your accountability partner`
+        );
+      } catch (pushErr) {
+        console.error('[PUSH] Failed to send accountability invite notification:', pushErr);
+      }
 
       return { success: true, inviteId: row.id, status: "pending" as const };
     }),
@@ -274,11 +278,15 @@ export const accountabilityRouter = createTRPCRouter({
         const tokens = pushRes.error ? [] : (pushRes.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
         const pt = (profileTokenRes.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
         const allT = [...new Set([...tokens, pt].filter(Boolean))].filter((t): t is string => typeof t === "string");
-        await sendExpoPush(
-          allT,
-          "Accountability partner",
-          `${accepterName} accepted your accountability partner request`
-        );
+        try {
+          await sendExpoPush(
+            allT,
+            "Accountability partner",
+            `${accepterName} accepted your accountability partner request`
+          );
+        } catch (pushErr) {
+          console.error('[PUSH] Failed to send accountability accept notification:', pushErr);
+        }
 
         return { success: true, status: "accepted" as const };
       }

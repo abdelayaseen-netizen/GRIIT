@@ -21,8 +21,7 @@ import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { configureRevenueCat } from "@/lib/revenue-cat";
-
-const HAS_LAUNCHED_KEY = "griit_has_launched";
+import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -67,7 +66,7 @@ function AuthRedirector() {
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(HAS_LAUNCHED_KEY).then((v) => setHasLaunched(v === "true"));
+    AsyncStorage.getItem(STORAGE_KEYS.HAS_LAUNCHED).then((v) => setHasLaunched(v === "true"));
   }, []);
 
   const checkProfile = useCallback(async (userId: string, retry = 0) => {
@@ -216,7 +215,7 @@ function RootLayoutNav() {
   useEffect(() => {
     const check = async () => {
       try {
-        const completed = await AsyncStorage.getItem("onboarding_completed");
+        const completed = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
         setNeedsOnboarding(completed !== "true");
       } catch {
         setNeedsOnboarding(true);

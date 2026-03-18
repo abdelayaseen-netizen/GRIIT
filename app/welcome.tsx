@@ -29,8 +29,7 @@ import { mapAuthError } from "@/lib/auth-helpers";
 import { track } from "@/lib/analytics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS, DS_BORDERS } from "@/lib/design-system";
 import { GRIITWordmark } from "@/src/components/ui";
-
-const HAS_LAUNCHED_KEY = "griit_has_launched";
+import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 const TOTAL_STEPS = 4;
 
 const GOAL_OPTIONS: { id: string; label: string; emoji: string }[] = [
@@ -212,7 +211,7 @@ export default function WelcomeScreen() {
         { onConflict: "user_id" }
       );
 
-      await AsyncStorage.setItem(HAS_LAUNCHED_KEY, "true");
+      await AsyncStorage.setItem(STORAGE_KEYS.HAS_LAUNCHED, "true");
       track({ name: "signup_completed" });
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {

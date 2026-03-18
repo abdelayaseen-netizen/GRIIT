@@ -73,7 +73,11 @@ export const nudgesRouter = createTRPCRouter({
       const tokensFromTable = pushResult.error ? [] : (pushResult.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
       const profileToken = (recipientProfile as ProfileWithExpoRow | null)?.expo_push_token ?? null;
       const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
-      await sendExpoPush(allTokens, "Nudge", pushBody);
+      try {
+        await sendExpoPush(allTokens, "Nudge", pushBody);
+      } catch (pushErr) {
+        console.error('[PUSH] Failed to send nudge notification:', pushErr);
+      }
 
       return { success: true, nudgeId: row.id, message };
     }),

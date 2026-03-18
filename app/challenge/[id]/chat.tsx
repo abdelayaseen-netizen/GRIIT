@@ -319,6 +319,9 @@ export default function ChallengeChatScreen() {
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
             initialNumToRender={20}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews
             contentContainerStyle={styles.messageList}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}

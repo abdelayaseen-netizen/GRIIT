@@ -160,6 +160,9 @@ export default function SharedGoalProgress({
             data={recentLogs}
             keyExtractor={(item) => item.id}
             initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews
             scrollEnabled={false}
             renderItem={({ item }) => (
               <View style={[styles.logRow, { borderBottomColor: colors.border }]}>

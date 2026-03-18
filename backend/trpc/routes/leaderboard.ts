@@ -34,7 +34,8 @@ export const leaderboardRouter = createTRPCRouter({
         .from("day_secures")
         .select("user_id, date_key")
         .gte("date_key", weekStartKey)
-        .lte("date_key", todayKey);
+        .lte("date_key", todayKey)
+        .limit(10000);
 
       const countByUser = new Map<string, number>();
       for (const row of secures ?? []) {
@@ -65,7 +66,8 @@ export const leaderboardRouter = createTRPCRouter({
         ctx.supabase
           .from("day_secures")
           .select("user_id")
-          .eq("date_key", todayKey),
+          .eq("date_key", todayKey)
+          .limit(5000),
         ctx.supabase
           .from("respects")
           .select("recipient_id")

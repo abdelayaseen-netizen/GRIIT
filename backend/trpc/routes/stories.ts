@@ -2,6 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import type { StoryWithViews } from "../../types/db";
+import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 
 const MEDIA_URL_MAX = 2000;
 const CAPTION_MAX = 500;
@@ -48,16 +49,18 @@ export const storiesRouter = createTRPCRouter({
       const safeOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
 
       const now = new Date().toISOString();
+      const visibleUserIds = await getVisibleUserIds(ctx.supabase, ctx.userId);
 
       const { data, error } = await ctx.supabase
         .from("stories")
         .select(
           `
-          *,
+          id, user_id, media_url, media_type, caption, expires_at, created_at,
           profiles (username, avatar_url),
           story_views!left (user_id)
         `
         )
+        .in("user_id", visibleUserIds)
         .gt("expires_at", now)
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);

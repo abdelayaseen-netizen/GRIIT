@@ -31,6 +31,8 @@ export async function trpcQuery<T = any>(
   if (!response.ok) {
     if (response.status === 401) {
       await supabase.auth.signOut();
+      const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+      await clearOnboardingStorage();
       notifySessionExpired();
     }
     throw new Error(`tRPC query failed: ${path} (${response.status})`);
@@ -70,6 +72,8 @@ export async function trpcMutate<T = any>(
   if (!response.ok) {
     if (response.status === 401) {
       await supabase.auth.signOut();
+      const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+      await clearOnboardingStorage();
       notifySessionExpired();
     }
     let errorMessage = `tRPC mutation failed: ${path} (${response.status})`;

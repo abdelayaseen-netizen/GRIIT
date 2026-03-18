@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
-import { useOnboardingStore } from '@/store/onboarding-store';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
 import { supabase } from '@/lib/supabase';

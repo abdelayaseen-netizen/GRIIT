@@ -3,7 +3,8 @@ import { View, StyleSheet, SafeAreaView, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ONBOARDING_COLORS as C } from '@/constants/onboarding-theme';
-import { useOnboardingStore } from '@/store/onboarding-store';
+import { useOnboardingStore } from '@/store/onboardingStore';
+import { STORAGE_KEYS } from '@/lib/constants/storage-keys';
 
 import ValueSplash from './screens/ValueSplash';
 import GoalSelection from './screens/GoalSelection';
@@ -32,7 +33,7 @@ export default function OnboardingFlow() {
     track({ name: 'onboarding_completed' });
     completeOnboarding();
     try {
-      await AsyncStorage.setItem('onboarding_completed', 'true');
+      await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
     } catch (e) {
       // error swallowed — handle in UI
     }

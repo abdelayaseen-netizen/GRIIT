@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
 import { supabase } from '@/lib/supabase';
-import { useOnboardingStore } from '@/store/onboarding-store';
+import { useOnboardingStore } from '@/store/onboardingStore';
 
 interface UsernameScreenProps {
   onComplete: (username: string) => void;

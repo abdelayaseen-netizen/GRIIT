@@ -22,7 +22,7 @@ export const DS_COLORS = {
   // Text
   TEXT_PRIMARY: '#111111',      // Near-black — headings, body
   TEXT_SECONDARY: '#666666',    // Subtext, labels, metadata
-  TEXT_TERTIARY: '#999999',     // Placeholder, disabled
+  TEXT_TERTIARY: '#767676',     // Placeholder, disabled — WCAG AA contrast (4.5:1 on #F0EEE8)
   TEXT_ON_ACCENT: '#FFFFFF',    // White text on colored backgrounds
   TEXT_ORANGE: '#E8593C',       // Orange text for stats, highlights
 

@@ -84,47 +84,73 @@ export const teamsRouter = createTRPCRouter({
       .select("user_id, role, joined_at")
       .eq("team_id", team.id);
     requireNoError(membersErr, "Failed to load members.");
+    
+    const userIds = (members ?? []).map((m: { user_id: string }) => m.user_id);
+    if (userIds.length === 0) {
+      return { team, members: [] };
+    }
+
     const dateKey = getTodayDateKey();
-    const membersWithProfile = await Promise.all(
-      (members ?? []).map(async (m: { user_id: string; role: string; joined_at: string }) => {
-        const { data: profile } = await ctx.supabase
-          .from("profiles")
-          .select("username, display_name, avatar_url")
-          .eq("user_id", m.user_id)
-          .maybeSingle();
-        const { data: acList } = await ctx.supabase
-          .from("active_challenges")
-          .select("id")
-          .eq("user_id", m.user_id)
-          .eq("status", "active");
-        const acIds = (acList ?? []).map((r: { id: string }) => r.id);
-        let todayCount = 0;
-        if (acIds.length > 0) {
-          const { count } = await ctx.supabase
-            .from("check_ins")
-            .select("id", { count: "exact", head: true })
-            .in("active_challenge_id", acIds)
-            .eq("date_key", dateKey)
-            .eq("status", "completed");
-          todayCount = count ?? 0;
-        }
-        const { data: streakRow } = await ctx.supabase
-          .from("streaks")
-          .select("active_streak_count")
-          .eq("user_id", m.user_id)
-          .maybeSingle();
-        return {
-          user_id: m.user_id,
-          username: (profile as { username?: string })?.username ?? null,
-          display_name: (profile as { display_name?: string })?.display_name ?? null,
-          avatar_url: (profile as { avatar_url?: string })?.avatar_url ?? null,
-          role: m.role,
-          joined_at: m.joined_at,
-          today_completion_count: todayCount,
-          current_streak: (streakRow as { active_streak_count?: number })?.active_streak_count ?? 0,
-        };
-      })
+    
+    const [profilesRes, activeChallengesRes, streaksRes] = await Promise.all([
+      ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", userIds),
+      ctx.supabase
+        .from("active_challenges")
+        .select("id, user_id")
+        .in("user_id", userIds)
+        .eq("status", "active"),
+      ctx.supabase
+        .from("streaks")
+        .select("user_id, active_streak_count")
+        .in("user_id", userIds),
+    ]);
+
+    const profileMap = new Map(
+      (profilesRes.data ?? []).map((p: { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }) => [p.user_id, p])
     );
+    const streakMap = new Map(
+      (streaksRes.data ?? []).map((s: { user_id: string; active_streak_count?: number }) => [s.user_id, s.active_streak_count ?? 0])
+    );
+
+    const acIds = (activeChallengesRes.data ?? []).map((r: { id: string }) => r.id);
+    const todayCountMap = new Map<string, number>();
+
+    if (acIds.length > 0) {
+      const { data: checkins } = await ctx.supabase
+        .from("check_ins")
+        .select("active_challenge_id")
+        .in("active_challenge_id", acIds)
+        .eq("date_key", dateKey)
+        .eq("status", "completed");
+
+      const acToUser = new Map(
+        (activeChallengesRes.data ?? []).map((r: { id: string; user_id: string }) => [r.id, r.user_id])
+      );
+
+      for (const c of checkins ?? []) {
+        const userId = acToUser.get(c.active_challenge_id);
+        if (userId) {
+          todayCountMap.set(userId, (todayCountMap.get(userId) ?? 0) + 1);
+        }
+      }
+    }
+
+    const membersWithProfile = (members ?? []).map((m: { user_id: string; role: string; joined_at: string }) => {
+      const profile = profileMap.get(m.user_id);
+      return {
+        user_id: m.user_id,
+        username: profile?.username ?? null,
+        display_name: profile?.display_name ?? null,
+        avatar_url: profile?.avatar_url ?? null,
+        role: m.role,
+        joined_at: m.joined_at,
+        today_completion_count: todayCountMap.get(m.user_id) ?? 0,
+        current_streak: streakMap.get(m.user_id) ?? 0,
+      };
+    });
     return { team, members: membersWithProfile };
   }),
 

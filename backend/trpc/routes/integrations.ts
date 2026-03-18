@@ -82,7 +82,7 @@ export const integrationsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { data: row, error: fetchError } = await ctx.supabase
         .from("connected_accounts")
-        .select("*")
+        .select("id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scope, metadata_json, created_at, updated_at")
         .eq("user_id", ctx.userId)
         .eq("provider", PROVIDER_STRAVA)
         .maybeSingle();
@@ -94,7 +94,7 @@ export const integrationsRouter = createTRPCRouter({
         });
       }
 
-      const connection = row as unknown as ConnectedAccountRow;
+      const connection = row as ConnectedAccountRow;
       const accessToken = await ensureValidToken(connection, async (updates) => {
         await ctx.supabase
           .from("connected_accounts")
@@ -121,7 +121,7 @@ export const integrationsRouter = createTRPCRouter({
   getStravaAthlete: protectedProcedure.query(async ({ ctx }) => {
     const { data: row, error: fetchError } = await ctx.supabase
       .from("connected_accounts")
-      .select("*")
+      .select("id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scope, metadata_json, created_at, updated_at")
       .eq("user_id", ctx.userId)
       .eq("provider", PROVIDER_STRAVA)
       .maybeSingle();
@@ -133,7 +133,7 @@ export const integrationsRouter = createTRPCRouter({
       });
     }
 
-    const connection = row as unknown as ConnectedAccountRow;
+    const connection = row as ConnectedAccountRow;
     const accessToken = await ensureValidToken(connection, async (updates) => {
       await ctx.supabase
         .from("connected_accounts")

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
-import { useOnboardingStore } from '@/store/onboarding-store';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import { getApiBaseUrl } from '@/lib/api';
 
 interface Challenge {

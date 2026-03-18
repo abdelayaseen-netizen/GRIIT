@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 
 export const feedRouter = createTRPCRouter({
   list: protectedProcedure
@@ -11,9 +12,12 @@ export const feedRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      const visibleUserIds = await getVisibleUserIds(ctx.supabase, ctx.userId);
+
       let query = ctx.supabase
         .from("activity_events")
         .select("id, user_id, event_type, challenge_id, metadata, created_at")
+        .in("user_id", visibleUserIds)
         .order("created_at", { ascending: false })
         .limit(input.limit);
 

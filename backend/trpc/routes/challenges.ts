@@ -381,7 +381,7 @@ export const challengesRouter = createTRPCRouter({
           if (participationType === "team") {
             const { data: myActive } = await ctx.supabase
               .from("active_challenges")
-              .select("*")
+              .select("id, user_id, challenge_id, status, current_day, created_at")
               .eq("user_id", ctx.userId)
               .eq("challenge_id", input.challengeId)
               .eq("status", "active")
@@ -560,13 +560,13 @@ export const challengesRouter = createTRPCRouter({
   // Premium status read from profiles table (validated server-side only). When enforcing create limits, read subscription_status from DB.
   create: protectedProcedure
     .input(z.object({
-      title: z.string().min(1, "Title is required"),
-      description: z.string().optional().default(""),
+      title: z.string().min(1, "Title is required").max(200, "Title too long"),
+      description: z.string().max(5000).optional().default(""),
       type: z.enum(['standard', 'one_day']),
       durationDays: z.number().min(1, "Duration must be at least 1 day"),
       visibility: z.enum(['PUBLIC', 'FRIENDS', 'PRIVATE']).optional().default('FRIENDS'),
-      categories: z.array(z.string()).optional(),
-      liveDate: z.string().optional(),
+      categories: z.array(z.string().max(50)).max(10).optional(),
+      liveDate: z.string().max(64).optional(),
       replayPolicy: z.enum(['live_only', 'allow_replay']).optional(),
       requireSameRules: z.boolean().optional(),
       showReplayLabel: z.boolean().optional(),
@@ -575,28 +575,28 @@ export const challengesRouter = createTRPCRouter({
       sharedGoalTarget: z.number().positive().optional(),
       sharedGoalUnit: z.string().max(50).optional(),
       deadlineType: z.enum(['none', 'soft', 'hard']).optional(),
-      deadlineDate: z.string().optional(),
+      deadlineDate: z.string().max(64).optional(),
       tasks: z.array(z.object({
-        title: z.string().min(1, "Task title is required"),
-        type: z.string(),
+        title: z.string().min(1, "Task title is required").max(300),
+        type: z.string().max(50),
         required: z.boolean(),
         minWords: z.number().optional(),
         targetValue: z.number().optional(),
-        unit: z.string().optional(),
-        trackingMode: z.string().optional(),
+        unit: z.string().max(50).optional(),
+        trackingMode: z.string().max(50).optional(),
         photoRequired: z.boolean().optional(),
-        locationName: z.string().optional(),
+        locationName: z.string().max(200).optional(),
         radiusMeters: z.number().optional(),
         durationMinutes: z.number().optional(),
         mustCompleteInSession: z.boolean().optional(),
         strictTimerMode: z.boolean().optional(),
         requirePhotoProof: z.boolean().optional(),
-        locations: z.array(z.any()).optional(),
-        startTime: z.string().optional(),
+        locations: z.array(z.any()).max(20).optional(),
+        startTime: z.string().max(16).optional(),
         startWindowMinutes: z.number().optional(),
         minSessionMinutes: z.number().optional(),
-        journalType: z.array(z.string()).optional(),
-        journalPrompt: z.string().optional(),
+        journalType: z.array(z.string().max(50)).max(10).optional(),
+        journalPrompt: z.string().max(1000).optional(),
         allowFreeWrite: z.boolean().optional(),
         captureMood: z.boolean().optional(),
         captureEnergy: z.boolean().optional(),
@@ -606,7 +606,7 @@ export const challengesRouter = createTRPCRouter({
         wordLimitWords: z.number().min(20).max(1000).nullable().optional(),
         timeEnforcementEnabled: z.boolean().optional(),
         scheduleType: z.enum(["NONE", "DAILY", "CUSTOM_DATES"]).optional(),
-        anchorTimeLocal: z.string().nullable().optional(),
+        anchorTimeLocal: z.string().max(16).nullable().optional(),
         taskDurationMinutes: z.number().nullable().optional(),
         windowStartOffsetMin: z.number().nullable().optional(),
         windowEndOffsetMin: z.number().nullable().optional(),
@@ -614,10 +614,10 @@ export const challengesRouter = createTRPCRouter({
         hardWindowStartOffsetMin: z.number().nullable().optional(),
         hardWindowEndOffsetMin: z.number().nullable().optional(),
         timezoneMode: z.enum(["USER_LOCAL", "CHALLENGE_TIMEZONE"]).optional(),
-        challengeTimezone: z.string().nullable().optional(),
-        verificationMethod: z.string().optional(),
+        challengeTimezone: z.string().max(64).nullable().optional(),
+        verificationMethod: z.string().max(50).optional(),
         verificationRuleJson: z.record(z.string(), z.unknown()).nullable().optional(),
-      })).min(0),
+      })).min(0).max(50),
     }).superRefine((data, ctx) => {
       if (data.participationType !== "shared_goal" && data.tasks.length < 1) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one task is required for non–shared-goal challenges." });
