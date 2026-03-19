@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
 import Typography from "@/constants/typography";
 
 export const styles = StyleSheet.create({
@@ -567,6 +567,10 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 24,
+    paddingHorizontal: DS_SPACING.BASE,
+    paddingVertical: DS_SPACING.BASE,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
   },
   reviewTaskRow: {
     flexDirection: "row",

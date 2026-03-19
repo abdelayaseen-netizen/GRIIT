@@ -191,6 +191,27 @@ function formatCount(n: number): string {
   return String(n);
 }
 
+function estimateDailyMinutesFromTasks(tasks: ChallengeTaskFromApi[]): number {
+  let total = 0;
+  for (const t of tasks) {
+    const dm = typeof t.duration_minutes === "number" ? t.duration_minutes : null;
+    if (dm != null && dm > 0) total += dm;
+    else if (t.type === "timer") total += 15;
+    else if (t.type === "run") total += 12;
+    else total += 5;
+  }
+  return Math.max(5, Math.round(total));
+}
+
+function formatChallengeMetaLabel(raw: string | null | undefined): string {
+  if (!raw || !String(raw).trim()) return "—";
+  return String(raw)
+    .replace(/_/g, " ")
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function getCountdown(endsAt: string | null): { text: string; expired: boolean } {
   if (!endsAt) return { text: "", expired: false };
   const expired = isChallengeExpired(endsAt);
@@ -783,6 +804,37 @@ export default function ChallengeDetailScreen() {
     );
   }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router]);
 
+  const difficulty = (challenge?.difficulty || "medium") as string;
+
+  const headerColor = useMemo(() => {
+    const cat = (challenge?.category ?? "").toUpperCase();
+    if (cat === "FITNESS") return DS_COLORS.HEADER_FITNESS_DEEP;
+    if (cat === "MIND") return DS_COLORS.HEADER_MIND_DEEP;
+    if (cat === "DISCIPLINE") return DS_COLORS.HEADER_DISCIPLINE_DEEP;
+    if (cat === "FAITH") return DS_COLORS.HEADER_FAITH_DEEP;
+    return DS_COLORS.HEADER_DEFAULT;
+  }, [challenge?.category]);
+
+  const eyebrowLabel = useMemo(() => {
+    if (challenge?.is_featured) return "🏆 FEATURED";
+    if (challenge?.duration_type === "24h" || (challenge as { challenge_type?: string })?.challenge_type === "one_day" || isDaily)
+      return "⚡ 24-HOUR CHALLENGE";
+    if ((challenge?.participants_count ?? 0) > 100)
+      return `🔥 ${formatCount(challenge?.participants_count ?? 0)} active today`;
+    if (challenge?.difficulty === "extreme") return "💀 EXTREME CHALLENGE";
+    return null;
+  }, [challenge?.is_featured, challenge?.duration_type, challenge?.participants_count, challenge?.difficulty, isDaily]);
+
+  const difficultyPillStyle = useMemo(() => {
+    const map: Record<string, { bg: string; text: string }> = {
+      easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
+      medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+      hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
+      extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
+    };
+    return map[difficulty] ?? map.medium;
+  }, [difficulty]);
+
   if (!id) {
     return (
       <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
@@ -852,7 +904,6 @@ export default function ChallengeDetailScreen() {
   }
 
   const isPending = joinPending;
-  const difficulty = (challenge.difficulty || "medium") as string;
   const theme = getTheme(difficulty);
   const rules = challenge.rules || [];
   const failCondition = challenge.fail_condition;
@@ -864,25 +915,6 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-
-  const headerColor = useMemo(() => {
-    const cat = (challenge?.category ?? "").toUpperCase();
-    if (cat === "FITNESS") return DS_COLORS.HEADER_FITNESS_DEEP;
-    if (cat === "MIND") return DS_COLORS.HEADER_MIND_DEEP;
-    if (cat === "DISCIPLINE") return DS_COLORS.HEADER_DISCIPLINE_DEEP;
-    if (cat === "FAITH") return DS_COLORS.HEADER_FAITH_DEEP;
-    return DS_COLORS.HEADER_DEFAULT;
-  }, [challenge?.category]);
-
-  const eyebrowLabel = useMemo(() => {
-    if (challenge?.is_featured) return "🏆 FEATURED";
-    if (challenge?.duration_type === "24h" || (challenge as { challenge_type?: string })?.challenge_type === "one_day" || isDaily)
-      return "⚡ 24-HOUR CHALLENGE";
-    if ((challenge?.participants_count ?? 0) > 100)
-      return `🔥 ${formatCount(challenge.participants_count ?? 0)} active today`;
-    if (challenge?.difficulty === "extreme") return "💀 EXTREME CHALLENGE";
-    return null;
-  }, [challenge?.is_featured, challenge?.duration_type, challenge?.participants_count, challenge?.difficulty, isDaily]);
 
   const headerGradientColors = [headerColor, headerColor] as const;
   const ctaBgColor = isDaily && !expired ? DS_COLORS.HEADER_GRADIENT_DAILY_START : DS_COLORS.accent;
@@ -902,15 +934,24 @@ export default function ChallengeDetailScreen() {
     : 0;
   const participantUsernames = (challenge as { participant_usernames?: string[] }).participant_usernames;
 
-  const difficultyPillStyle = useMemo(() => {
-    const map: Record<string, { bg: string; text: string }> = {
-      easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
-      medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
-      hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
-      extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
-    };
-    return map[difficulty] ?? map.medium;
-  }, [difficulty]);
+  const aboutDetailRows: { label: string; value: string; valueAccent?: boolean }[] = [
+    { label: "Duration", value: durationLabel },
+    { label: "Daily Time", value: `~${estimateDailyMinutesFromTasks(allTasks)} min` },
+    { label: "Difficulty", value: difficultyLabel },
+    { label: "Category", value: formatChallengeMetaLabel(challenge.category) },
+    ...(typeof challenge.participants_count === "number"
+      ? [
+          {
+            label: "Participants",
+            value:
+              challenge.participants_count > 0
+                ? `${challenge.participants_count} people`
+                : "Be the first to join",
+            valueAccent: challenge.participants_count === 0,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <View style={[s.container, { backgroundColor: DS_COLORS.BG_PAGE }]}>
@@ -919,7 +960,7 @@ export default function ChallengeDetailScreen() {
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
         <ScrollView
           style={s.scroll}
-          contentContainerStyle={s.scrollContent}
+          contentContainerStyle={[s.scrollContent, s.scrollContentGrow]}
           showsVerticalScrollIndicator={false}
           bounces={true}
           refreshControl={
@@ -1219,12 +1260,25 @@ export default function ChallengeDetailScreen() {
             )}
 
             {/* About */}
-            {challenge.about && (
-              <View style={s.aboutSection}>
-                <Text style={s.sectionTitle}>About</Text>
-                <Text style={s.aboutText}>{challenge.about}</Text>
+            <View style={s.aboutSection}>
+              <Text style={s.sectionTitle}>About</Text>
+              {challenge.about ? <Text style={s.aboutText}>{challenge.about}</Text> : null}
+              <View style={s.aboutDetailsCard}>
+                {aboutDetailRows.map((row, i) => (
+                  <View
+                    key={row.label}
+                    style={[s.aboutDetailRow, i < aboutDetailRows.length - 1 && s.aboutDetailRowBorder]}
+                  >
+                    <Text style={s.aboutDetailLabel}>{row.label}</Text>
+                    <Text
+                      style={[s.aboutDetailValue, row.valueAccent && { color: DS_COLORS.accent, fontWeight: "600" as const }]}
+                    >
+                      {row.value}
+                    </Text>
+                  </View>
+                ))}
               </View>
-            )}
+            </View>
 
             {isJoined && id && (
               <TouchableOpacity
@@ -1415,6 +1469,7 @@ const s = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 160 },
+  scrollContentGrow: { flexGrow: 1 },
 
   loadingContainer: {
     flex: 1,
@@ -2064,7 +2119,7 @@ const s = StyleSheet.create({
     fontWeight: "600" as const,
   },
   aboutSection: {
-    marginBottom: DS_SPACING.xxl,
+    marginBottom: DS_SPACING.lg,
   },
   aboutText: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
@@ -2072,6 +2127,38 @@ const s = StyleSheet.create({
     color: DS_COLORS.textSecondary,
     lineHeight: 24,
     letterSpacing: -0.1,
+  },
+  aboutDetailsCard: {
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.BASE,
+    marginTop: DS_SPACING.BASE,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.border,
+  },
+  aboutDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    gap: DS_SPACING.md,
+  },
+  aboutDetailRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: DS_COLORS.borderAlt,
+  },
+  aboutDetailLabel: {
+    width: 120,
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: DS_COLORS.textSecondary,
+  },
+  aboutDetailValue: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: DS_COLORS.textPrimary,
+    textAlign: "right" as const,
   },
 
   leaveBtn: {
@@ -2087,7 +2174,7 @@ const s = StyleSheet.create({
   },
 
   bottomSpacer: {
-    height: DS_SPACING.xl,
+    height: DS_SPACING.md,
   },
 
   stickyFooter: {

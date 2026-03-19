@@ -1,10 +1,11 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
 
 const STEPPER_CIRCLE = 28;
-const CONNECTOR_HEIGHT = 4;
+const CONNECTOR_HEIGHT = 2;
+const BORDER_WIDTH = 2;
 
 interface ChallengeStepperProps {
   currentStep: number;
@@ -34,7 +35,7 @@ export function ChallengeStepper({
               ]}
             >
               {isCompleted ? (
-                <Check size={16} color={DS_COLORS.white} strokeWidth={2.5} />
+                <Check size={14} color={DS_COLORS.white} strokeWidth={2.5} />
               ) : (
                 <Text
                   style={[
@@ -51,8 +52,7 @@ export function ChallengeStepper({
               <View
                 style={[
                   s.connector,
-                  isCompleted && s.connectorCompleted,
-                  !isCompleted && s.connectorIncomplete,
+                  step < currentStep ? s.connectorCompleted : s.connectorIncomplete,
                 ]}
               />
             )}
@@ -77,34 +77,40 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   circleCompleted: {
-    backgroundColor: DS_COLORS.success,
+    backgroundColor: DS_COLORS.accent,
+    borderWidth: 0,
   },
   circleActive: {
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_COLORS.surface,
+    borderWidth: BORDER_WIDTH,
+    borderColor: DS_COLORS.accent,
   },
   circleInactive: {
-    backgroundColor: DS_COLORS.stepperGray,
+    backgroundColor: DS_COLORS.surface,
+    borderWidth: BORDER_WIDTH,
+    borderColor: DS_COLORS.border,
   },
   circleText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: DS_COLORS.textPrimary,
   },
   circleTextActive: {
-    color: DS_COLORS.white,
+    color: DS_COLORS.accent,
   },
   circleTextInactive: {
-    color: DS_COLORS.inputPlaceholder,
+    color: DS_COLORS.textMuted,
   },
   connector: {
     width: 32,
     height: CONNECTOR_HEIGHT,
-    marginHorizontal: 4,
+    marginHorizontal: DS_SPACING.xs,
+    borderRadius: CONNECTOR_HEIGHT / 2,
   },
   connectorCompleted: {
-    backgroundColor: DS_COLORS.success,
+    backgroundColor: DS_COLORS.accent,
   },
   connectorIncomplete: {
-    backgroundColor: DS_COLORS.stepperGray,
+    backgroundColor: DS_COLORS.border,
   },
 });

@@ -75,6 +75,14 @@ import ViewShot from "react-native-view-shot";
 import { ShareCard } from "@/components/ShareCard";
 import { shareProgressImage, shareDaySecured } from "@/lib/share";
 
+function suggestedChallengeAccentColor(category: string | null | undefined): string {
+  const c = (category ?? "").toLowerCase();
+  if (c.includes("fit") || c === "fitness" || c.includes("physical")) return DS_COLORS.accent;
+  if (c.includes("mind") || c.includes("mental")) return DS_COLORS.SUGGESTED_CARD_ACCENT_MIND;
+  if (c.includes("life") || c.includes("habit") || c.includes("lifestyle")) return DS_COLORS.SUGGESTED_CARD_ACCENT_LIFESTYLE;
+  return DS_COLORS.accent;
+}
+
 function getTimeUntilMidnight(): { hours: number; minutes: number } {
   const now = new Date();
   const midnight = new Date(now);
@@ -789,12 +797,19 @@ export default function HomeScreen() {
         )}
 
         {!isGuest && (
-          <View style={styles.statsRowCard}>
+          <View
+            style={[
+              styles.statsRowCard,
+              hasActiveChallengesFromList ? styles.statsRowCardTightTop : styles.statsRowCardSpacedTop,
+            ]}
+          >
             <View style={styles.statsRowCol}>
               <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.accentLight }]}>
                 <Flame size={20} color={DS_COLORS.accent} />
               </View>
-              <Text style={styles.statsRowNum}>{currentStreak}</Text>
+              <Text style={styles.statsRowNum} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
+                {currentStreak}
+              </Text>
               <Text style={styles.statsRowLabel}>STREAK</Text>
             </View>
             <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
@@ -802,7 +817,9 @@ export default function HomeScreen() {
               <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.BG_CARD_TINTED }]}>
                 <TrendingUp size={20} color={DS_COLORS.TEXT_SECONDARY} />
               </View>
-              <Text style={styles.statsRowNum}>{stats?.longestStreak ?? 0}</Text>
+              <Text style={styles.statsRowNum} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
+                {stats?.longestStreak ?? 0}
+              </Text>
               <Text style={styles.statsRowLabel}>SCORE</Text>
             </View>
             <View style={[styles.statsRowDivider, { backgroundColor: DS_COLORS.border }]} />
@@ -810,7 +827,9 @@ export default function HomeScreen() {
               <View style={[styles.statsRowIconCircle, { backgroundColor: DS_COLORS.BG_CARD_TINTED }]}>
                 <Target size={20} color={DS_COLORS.TEXT_TERTIARY} />
               </View>
-              <Text style={styles.statsRowNum}>{tierName ?? "—"}</Text>
+              <Text style={styles.statsRowNum} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+                {tierName ?? "—"}
+              </Text>
               <Text style={styles.statsRowLabel}>RANK</Text>
             </View>
           </View>
@@ -833,7 +852,7 @@ export default function HomeScreen() {
         {!hasActiveChallenge && suggestedChallenges.length > 0 && (
           <View style={styles.suggestedChallengesSection}>
             <Text style={[styles.suggestedChallengesTitle, { color: DS_COLORS.textMuted, letterSpacing: 1, fontSize: 12, fontWeight: "600" }]}>SUGGESTED FOR YOU</Text>
-            {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string; duration_days?: number; difficulty?: string }) => (
+            {suggestedChallenges.slice(0, 3).map((c: { id: string; title?: string; duration_days?: number; difficulty?: string; category?: string | null }) => (
               <TouchableOpacity
                 key={c.id}
                 style={[styles.suggestedChallengeRow, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
@@ -845,6 +864,11 @@ export default function HomeScreen() {
                 accessibilityLabel={`Open challenge: ${c.title ?? "Challenge"}`}
                 accessibilityRole="button"
               >
+                <View
+                  style={[styles.suggestedChallengeAccentDot, { backgroundColor: suggestedChallengeAccentColor(c.category) }]}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
                 <View style={styles.suggestedChallengeLeft}>
                   <Text style={[styles.suggestedChallengeTitle, { color: DS_COLORS.textPrimary }]} numberOfLines={1}>{c.title ?? "Challenge"}</Text>
                   <Text style={styles.suggestedChallengeMeta}>
@@ -1556,15 +1580,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 14,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: DS_SPACING.BASE,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     backgroundColor: DS_COLORS.surface,
   },
+  statsRowCardSpacedTop: {
+    marginTop: DS_SPACING.XL,
+  },
+  statsRowCardTightTop: {
+    marginTop: DS_SPACING.md,
+  },
   statsRowCol: {
     flex: 1,
     alignItems: "center",
+    justifyContent: "center",
     gap: 4,
+    minWidth: 0,
   },
   statsRowIconCircle: {
     width: 40,
@@ -1575,18 +1607,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statsRowNum: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700" as const,
     color: DS_COLORS.TEXT_PRIMARY,
+    textAlign: "center" as const,
+    width: "100%",
   },
   statsRowLabel: {
     fontSize: 11,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textSecondary,
+    fontWeight: "600" as const,
+    color: DS_COLORS.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase" as const,
-    letterSpacing: 0.5,
-    textTransform: "uppercase" as const,
+    textAlign: "center" as const,
   },
   statsRowDivider: {
     width: 1,
@@ -2096,14 +2129,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: DS_SPACING.cardPadding,
+    paddingVertical: DS_SPACING.cardPadding,
+    paddingHorizontal: DS_SPACING.BASE,
     borderRadius: DS_RADIUS.LG,
     borderWidth: DS_BORDERS.width,
     marginBottom: DS_SPACING.sm,
+    gap: 0,
+  },
+  suggestedChallengeAccentDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 20,
+    alignSelf: "center",
   },
   suggestedChallengeLeft: {
     flex: 1,
     marginRight: DS_SPACING.sm,
+    minWidth: 0,
   },
   suggestedChallengeTitle: {
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,

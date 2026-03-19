@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { colors, typography, measures } from "@/src/theme/tokens";
+import { DS_COLORS, DS_SPACING, DS_MEASURES, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 type Props = {
   icon: React.ReactNode;
@@ -9,6 +9,8 @@ type Props = {
   showDivider?: boolean;
   iconBackgroundColor?: string;
 };
+
+const ICON = DS_MEASURES.AVATAR_MD;
 
 export function DailyTaskRow({ icon, title, metadata, showDivider = true, iconBackgroundColor }: Props) {
   return (
@@ -31,31 +33,31 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    minHeight: measures.dailyTaskRowHeight,
-    paddingVertical: 12,
+    minHeight: 72,
+    paddingVertical: DS_SPACING.md,
+    gap: DS_SPACING.md,
   },
   iconWrap: {
-    width: measures.previewIconSize,
-    height: measures.previewIconSize,
-    borderRadius: 12,
-    backgroundColor: colors.borderLight,
+    width: ICON,
+    height: ICON,
+    borderRadius: ICON / 2,
+    backgroundColor: DS_COLORS.border,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
   },
   textWrap: { flex: 1, minWidth: 0 },
   title: {
-    fontSize: typography.dailyTaskTitle.fontSize,
-    fontWeight: typography.dailyTaskTitle.fontWeight,
-    color: colors.textPrimary,
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.textPrimary,
   },
   meta: {
-    fontSize: typography.dailyTaskMeta.fontSize,
-    color: colors.textSecondaryCreate,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.borderLight,
+    backgroundColor: DS_COLORS.border,
   },
 });

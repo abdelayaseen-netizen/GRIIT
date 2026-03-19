@@ -97,6 +97,12 @@ export const DS_COLORS = {
   DANGER_LIGHT: '#FEF2F2',
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // SUGGESTED CHALLENGE CARDS (home — category dot accents)
+  // ═══════════════════════════════════════════════════════════════════════════
+  SUGGESTED_CARD_ACCENT_MIND: '#5B8DEF',
+  SUGGESTED_CARD_ACCENT_LIFESTYLE: '#34C759',
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // CATEGORY COLORS (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
   CATEGORY_FITNESS: '#E8845F',
