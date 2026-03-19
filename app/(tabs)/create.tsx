@@ -451,6 +451,10 @@ export default function CreateScreen() {
       deadlineDate: deadlineDate.trim() || undefined,
     };
     const payload = buildCreatePayload(draft);
+    // Ensure title from state is always sent (guard against wrong mapping)
+    const titleToSubmit = title.trim();
+    if (__DEV__) console.log("Submitting title:", titleToSubmit);
+    (payload as { title: string }).title = titleToSubmit;
 
     interface CreateChallengeResponse { id?: string; data?: { id?: string }; title?: string; duration_days?: number; tasks?: unknown[]; difficulty?: string }
     trpcMutate(TRPC.challenges.create, payload)
@@ -460,20 +464,20 @@ export default function CreateScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        const id = challenge?.id ?? challenge?.data?.id;
-        if (!id) {
+        const newChallengeId = challenge?.id ?? (challenge as { data?: { id?: string } })?.data?.id;
+        if (!newChallengeId) {
           setSubmitStatus('error');
-          Alert.alert("Create succeeded", "Challenge was created. Opening it now.", [
-            { text: "OK", onPress: () => router.replace(ROUTES.TABS as never) },
+          Alert.alert("Create succeeded", "Challenge was created. Opening Discover.", [
+            { text: "OK", onPress: () => router.replace(ROUTES.TABS_DISCOVER as never) },
           ]);
           return;
         }
         const successParams: Record<string, string> = {
-          challengeId: id,
-          title: challenge?.title ?? title,
+          challengeId: newChallengeId,
+          title: (challenge?.title as string) ?? title,
           duration: String(challenge?.duration_days ?? getDuration()),
           tasksCount: String(challenge?.tasks?.length ?? tasks.length),
-          difficulty: challenge?.difficulty ?? "medium",
+          difficulty: (challenge?.difficulty as string) ?? "medium",
           isCreateSuccess: "true",
         };
         if (isTeamOrShared) successParams.waitingForTeam = "true";
@@ -490,7 +494,12 @@ export default function CreateScreen() {
         } catch {
           // ignore storage errors
         }
-        router.push({ pathname: ROUTES.SUCCESS, params: successParams } as never);
+        Alert.alert(
+          "Challenge Created! 🎉",
+          "Your challenge is now live.",
+          [{ text: "View Challenge", onPress: () => router.replace(`/challenge/${newChallengeId}` as never) }]
+        );
+        router.replace(`/challenge/${newChallengeId}` as never);
         setTitle("");
         setDescription("");
         setChallengeType("standard");
@@ -1289,8 +1298,8 @@ export default function CreateScreen() {
         onClose={() => {
           setShowPaywallAfterCreate(false);
           const pending = paywallThenNavigateRef.current;
-          if (pending) {
-            router.push({ pathname: ROUTES.SUCCESS, params: pending.params } as never);
+          if (pending?.params?.challengeId) {
+            router.replace(`/challenge/${pending.params.challengeId}` as never);
             paywallThenNavigateRef.current = null;
           }
         }}

@@ -86,7 +86,7 @@ export const challengesRouter = createTRPCRouter({
       return noPagination ? items : withCursor;
     }),
 
-  /** Featured challenges for Discover tab with pagination. Backward compatible. */
+  /** Featured challenges for Discover tab with pagination. Backward compatible. Shows PUBLIC or current user's own challenges. */
   getFeatured: publicProcedure
     .input(z.object({
       search: z.string().max(100).optional(),
@@ -102,10 +102,15 @@ export const challengesRouter = createTRPCRouter({
       let query = ctx.supabase
         .from("challenges")
         .select("*, challenge_tasks (*)", { count: "exact" })
-        .eq("visibility", "PUBLIC")
         .eq("status", "published")
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);
+
+      if (ctx.userId) {
+        query = query.or(`visibility.eq.PUBLIC,creator_id.eq.${ctx.userId}`);
+      } else {
+        query = query.eq("visibility", "PUBLIC");
+      }
 
       const search = input?.search?.trim();
       if (search) query = query.ilike("title", `%${search}%`);
@@ -719,6 +724,13 @@ export const challengesRouter = createTRPCRouter({
           message: challengeError.message || challengeError.code || "Failed to create challenge.",
         });
       }
+
+      await ctx.supabase.from("activity_events").insert({
+        user_id: ctx.userId,
+        event_type: "challenge_created",
+        challenge_id: challenge.id,
+        metadata: { title: (challenge as { title?: string }).title ?? input.title },
+      });
 
       if (isTeamOrShared) {
         const { error: memberError } = await ctx.supabase.from("challenge_members").insert({
