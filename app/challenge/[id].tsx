@@ -705,8 +705,17 @@ export default function ChallengeDetailScreen() {
     [todayTasksWithCompletion]
   );
 
+  const isThisActiveChallenge = !!(
+    activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
+  );
+  const activeChallengeId = activeChallenge?.id as string | undefined;
+
   const handleContinueToday = useCallback(() => {
     if (!isJoined || !id) return;
+    if (activeChallengeId) {
+      router.push(`/challenge/active/${activeChallengeId}` as never);
+      return;
+    }
     if (firstIncompleteTask) {
       handleMissionStart(firstIncompleteTask);
       return;
@@ -717,12 +726,7 @@ export default function ChallengeDetailScreen() {
       "Secure your day to lock it in. You can secure from Home, or stay here.",
       [{ text: "OK" }]
     );
-  }, [isJoined, id, firstIncompleteTask, allTasks.length, handleMissionStart]);
-
-  const isThisActiveChallenge = !!(
-    activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
-  );
-  const activeChallengeId = activeChallenge?.id as string | undefined;
+  }, [isJoined, id, activeChallengeId, router, firstIncompleteTask, allTasks.length, handleMissionStart]);
   const hasStravaTasks = allTasks.some((t) => (t as { verification_method?: string }).verification_method === "strava_activity");
 
   useEffect(() => {
@@ -1069,28 +1073,12 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Progress Section (joined only; hidden when team failed) */}
+            {/* Progress (joined only; simple day line — no progress grid) */}
             {isJoined && !isDaily && !(isTeamChallenge && runStatus === "failed") && (
-              <View style={s.progressSection}>
-                <View style={s.progressHeader}>
-                  <Text style={s.sectionLabel}>Progress</Text>
-                  <Text style={s.progressValue}>{userCurrentDay}/{challenge.duration_days}</Text>
-                </View>
-                <View style={[s.progressBarBg, { backgroundColor: theme.progressBg }]}>
-                  <View style={[s.progressBarFill, { width: `${progressPercent}%`, backgroundColor: theme.progressFill }]} />
-                </View>
-                <View style={[s.streakAlert, { backgroundColor: theme.warningBg, borderColor: theme.warningBorder }]}>
-                  <TrendingUp size={13} color={theme.warningText} />
-                  <Text style={[s.streakAlertText, { color: theme.warningText }]}>
-                    Complete today to keep streak
-                  </Text>
-                </View>
-                {failCondition && (
-                  <View style={[s.failAlert, { backgroundColor: "rgba(185,28,28,0.06)", borderColor: "rgba(185,28,28,0.15)" }]}>
-                    <Shield size={13} color={DS_COLORS.dangerDark} />
-                    <Text style={s.failAlertText}>{failCondition}</Text>
-                  </View>
-                )}
+              <View style={[s.progressSimpleCard, { backgroundColor: DS_COLORS.BG_CARD }]}>
+                <Text style={[s.progressSimpleText, { color: DS_COLORS.TEXT_SECONDARY }]}>
+                  Day {userCurrentDay} of {challenge.duration_days}
+                </Text>
               </View>
             )}
 
@@ -1649,6 +1637,14 @@ const s = StyleSheet.create({
     color: DS_COLORS.dangerDark,
   },
 
+  progressSimpleCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  progressSimpleText: {
+    fontSize: 13,
+  },
   progressSection: {
     marginBottom: DS_SPACING.xl,
   },

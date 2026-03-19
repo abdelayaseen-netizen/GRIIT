@@ -189,6 +189,9 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   HEADER_GREEN: '#2D6A4F',
   HEADER_ORANGE: '#C4784A',
+  HEADER_MIND: '#3D6B8E',
+  HEADER_FITNESS: '#C4784A',
+  HEADER_DISCIPLINE: '#4A3728',
   CHALLENGE_HEADER_DARK: '#2D3A2E',
   DARK_GREEN_HEADER: '#2D3A2E',
 
