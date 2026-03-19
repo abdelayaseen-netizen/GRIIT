@@ -28,7 +28,6 @@ import {
   AlertTriangle,
   Shield,
   Zap,
-  Compass,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
