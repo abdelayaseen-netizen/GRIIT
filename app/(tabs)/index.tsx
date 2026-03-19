@@ -15,10 +15,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import {
+  Camera,
   ChevronRight,
   Clock,
+  FileText,
   Flame,
   Target,
+  Timer,
   Trophy,
   TrendingUp,
   Users,
@@ -230,8 +233,9 @@ export default function HomeScreen() {
       interface AcRow {
         id: string;
         challenge_id: string;
-        start_at?: string;
-        started_at?: string;
+        start_at?: string | null;
+        started_at?: string | null;
+        created_at?: string | null;
         challenges?: { id?: string; title?: string; duration_days?: number; challenge_tasks?: { id: string; title?: string; type?: string; required?: boolean }[] };
       }
       const withProgress: ChallengeWithProgress[] = acList.map((ac: AcRow) => {
@@ -239,14 +243,16 @@ export default function HomeScreen() {
         const tasks = ch?.challenge_tasks ?? [];
         const required = tasks.filter((t: { required?: boolean }) => t.required !== false);
         const completedSet = checkinsByAcId[ac.id] ?? new Set();
-        const todayTasks = required.map((t: { id: string; title?: string; type?: string }) => ({
+        const todayTasksRaw = required.map((t: { id: string; title?: string; type?: string }) => ({
           id: t.id,
           title: t.title ?? t.type ?? "Task",
           completed: completedSet.has(t.id),
+          type: t.type ?? "MANUAL",
         }));
+        const todayTasks = todayTasksRaw as ChallengeWithProgress["todayTasks"];
         const completedCount = todayTasks.filter((t: { completed: boolean }) => t.completed).length;
         totalRemaining += Math.max(0, required.length - completedCount);
-        const startAt = ac.start_at ?? (ac as { started_at?: string }).started_at;
+        const startAt = ac.start_at ?? ac.started_at ?? ac.created_at;
         const currentDay = startAt
           ? Math.floor((Date.now() - new Date(startAt).getTime()) / (1000 * 60 * 60 * 24)) + 1
           : 1;
@@ -264,7 +270,7 @@ export default function HomeScreen() {
       return { challengesWithProgress: withProgress, totalRemaining };
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !isGuest && !!user?.id,
+    enabled: !!user?.id && !isGuest,
   });
   const homeChallengesWithProgress = homeActiveQuery.data?.challengesWithProgress ?? [];
   const hasActiveChallengesFromList = homeChallengesWithProgress.length > 0;
@@ -495,17 +501,18 @@ export default function HomeScreen() {
           }
         }
       }, 1200);
-    } catch {
+    } catch (error) {
+      console.error("[HomeScreen] secureDay failed:", error);
       setOptimisticDaySecured(false);
       setShowCelebration(false);
       setCelebrationPayload(null);
-      setSecureError("Couldn't secure day. Try again.");
+      setSecureError(error instanceof Error ? error.message : "Couldn't secure day. Try again.");
     }
   }, [secureDay, secureBtnScale, activeChallenge, stats, challenge, router, daysSinceLastSecure, leaderboardQuery, homeActiveQuery]);
 
   if (!isGuest && isLoading && !initialFetchDone) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["top"]}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <HomeScreenSkeleton />
         </ScrollView>
@@ -515,7 +522,7 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["top"]}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
             <Text style={styles.heroEmoji} accessibilityRole="header">🔥</Text>
@@ -606,7 +613,7 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["top"]}>
         <Celebration
         visible={showCelebration}
         onComplete={() => { setShowCelebration(false); setCelebrationPayload(null); }}
@@ -618,7 +625,7 @@ export default function HomeScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: DS_COLORS.background }]}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: DS_COLORS.BG_PAGE }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -637,167 +644,149 @@ export default function HomeScreen() {
           {!isGuest && (
             <View style={styles.headerBadges}>
               <View style={styles.headerBadgePill} accessibilityLabel={`Score: ${stats?.longestStreak ?? 0}`} accessibilityRole="text">
-                <TrendingUp size={14} color={DS_COLORS.textPrimary} />
+                <TrendingUp size={14} color={DS_COLORS.TEXT_PRIMARY} />
                 <Text style={styles.headerBadgePillText}>{stats?.longestStreak ?? 0}</Text>
               </View>
               <View style={styles.headerBadgePill} accessibilityLabel={`Streak: ${currentStreak} days`} accessibilityRole="text">
-                <Flame size={14} color={DS_COLORS.textPrimary} />
+                <Flame size={14} color={DS_COLORS.TEXT_PRIMARY} />
                 <Text style={styles.headerBadgePillText}>{currentStreak}</Text>
               </View>
             </View>
           )}
         </View>
 
-        {!isGuest && homeActiveQuery.isSuccess && !hasActiveChallengesFromList && (
-          <View style={[styles.welcomeCard, styles.startBuildingCard]}>
-            <View style={[styles.startBuildingIconWrap, { backgroundColor: DS_COLORS.accentLight }]}>
-              <Compass size={28} color={DS_COLORS.accent} />
-            </View>
-            <Text style={styles.startBuildingTitle}>Start Building</Text>
-            <Text style={styles.welcomeCardSub}>
-              Pick a challenge and begin your transformation.
+        {!isGuest && (
+          <View style={styles.streakHeroSection}>
+            <Text style={styles.streakHeroLabel}>YOUR STREAK</Text>
+            <Text style={[styles.streakHeroNumber, currentStreak === 0 && styles.streakHeroNumberZero]}>
+              {currentStreak}
             </Text>
-            <TouchableOpacity
-              style={[styles.exploreChallengesPrimaryBtn, { backgroundColor: DS_COLORS.accent }]}
-              onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
-              activeOpacity={0.85}
-              accessibilityLabel="Explore Challenges"
-              accessibilityRole="button"
-            >
-              <Text style={styles.exploreChallengesPrimaryBtnText}>Explore Challenges →</Text>
-            </TouchableOpacity>
+            <Flame size={32} color={currentStreak === 0 ? DS_COLORS.TEXT_MUTED : DS_COLORS.ACCENT_PRIMARY} style={styles.streakHeroFlame} />
+            <Text style={styles.streakHeroDaysLabel}>day streak</Text>
+            {currentStreak > 0 ? (
+              <View style={styles.streakTimePill}>
+                <Text style={styles.streakTimePillText}>
+                  {(() => {
+                    const ac = homeChallengesWithProgress[0] ? null : (activeChallenge as { ends_at?: string } | undefined);
+                    if (ac?.ends_at) return `${formatTimeRemaining(ac.ends_at)} remaining to secure today`;
+                    const { hours, minutes } = getTimeUntilMidnight();
+                    return `${hours}h ${minutes}m remaining to secure today`;
+                  })()}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.streakHeroStartCopy}>Start your streak today.</Text>
+            )}
           </View>
         )}
 
-        {!isGuest && hasActiveChallenge && !isDaySecured && (
-          <View style={[styles.todayNotSecuredCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-            <View style={[styles.todayNotSecuredIconWrap, { backgroundColor: DS_COLORS.accent }]}>
-              <Text style={styles.todayNotSecuredExclamation}>!</Text>
-            </View>
-            <View style={styles.todayNotSecuredBody}>
-              <Text style={styles.todayNotSecuredTitle}>Today is not secured</Text>
-              <Text style={styles.todayNotSecuredSub}>Complete your required tasks to secure today.</Text>
-            </View>
+        {!isGuest && homeActiveQuery.isLoading && (
+          <View style={styles.skeletonWrap}>
+            <HomeScreenSkeleton />
           </View>
         )}
 
         {!isGuest && homeActiveQuery.isError && (
           <View style={[styles.challengesErrorCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
-            <AlertTriangle size={32} color={DS_COLORS.textMuted} style={{ marginBottom: 12 }} />
-            <Text style={styles.challengesErrorLabel}>CHALLENGES</Text>
-            <Text style={[styles.challengesErrorText, { color: DS_COLORS.textPrimary }]}>
-              Couldn&apos;t load your challenges.
-            </Text>
+            <AlertTriangle size={32} color={DS_COLORS.TEXT_MUTED} style={{ marginBottom: 12 }} />
+            <Text style={styles.challengesErrorLabel}>Couldn&apos;t load your challenges.</Text>
             <TouchableOpacity
-              style={[styles.challengesErrorRetryBtn, { backgroundColor: DS_COLORS.accent }]}
+              style={[styles.challengesErrorRetryBtn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
               onPress={() => homeActiveQuery.refetch()}
               activeOpacity={0.85}
               accessibilityLabel="Retry loading challenges"
               accessibilityRole="button"
             >
-              <RefreshCw size={16} color={DS_COLORS.white} />
+              <RefreshCw size={16} color={DS_COLORS.WHITE} />
               <Text style={styles.challengesErrorRetryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!isGuest && homeActiveQuery.isSuccess && !hasActiveChallengesFromList && (
+          <View style={[styles.emptyStateCard, { backgroundColor: DS_COLORS.BG_CARD }, DS_SHADOWS.card]}>
+            <Compass size={32} color={DS_COLORS.ACCENT_PRIMARY} style={{ marginBottom: 12 }} />
+            <Text style={styles.emptyStateTitle}>Start Building</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Pick a challenge and begin your transformation.
+            </Text>
+            <TouchableOpacity
+              style={[styles.emptyStateCta, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
+              onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
+              activeOpacity={0.85}
+              accessibilityLabel="Explore Challenges"
+              accessibilityRole="button"
+            >
+              <Text style={styles.emptyStateCtaText}>Explore Challenges →</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {!isGuest && homeActiveQuery.isSuccess && hasActiveChallengesFromList && (
           <View style={styles.activeChallengesSection}>
-            {homeChallengesWithProgress.map((item) => (
-              <View key={item.activeChallengeId} style={[styles.challengeCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-                <View style={styles.challengeCardHeader}>
-                  <Text style={styles.challengeCardTitle} numberOfLines={1}>{item.challengeName}</Text>
-                  <Text style={styles.challengeCardDay}>
-                    {item.durationDays ? `Day ${item.currentDay ?? 1} of ${item.durationDays}` : "Active"}
-                  </Text>
-                </View>
-                {item.todayTasks.length > 0 && (
-                  <View style={styles.challengeCardTaskList}>
-                    {item.todayTasks.map((task) => (
-                      <View key={task.id} style={styles.challengeCardTaskRow}>
-                        {task.completed ? (
-                          <CheckCircle2 size={18} color={DS_COLORS.success} />
-                        ) : (
-                          <Circle size={18} color={DS_COLORS.border} strokeWidth={2} />
-                        )}
-                        <Text style={[styles.challengeCardTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                <TouchableOpacity
-                  style={[styles.continueButton, { backgroundColor: DS_COLORS.accent }]}
-                  onPress={() => {
-                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push(ROUTES.CHALLENGE_ACTIVE(item.activeChallengeId) as never);
-                  }}
-                  activeOpacity={0.85}
-                  accessibilityLabel="Continue"
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.continueButtonText}>Continue</Text>
-                  <ChevronRight size={18} color={DS_COLORS.white} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {!isGuest && hasActiveChallenge && !isDaySecured && (
-          <View style={styles.mainPromptBlock}>
-            <Text style={[styles.secureTodayTitle, { color: colors.text.primary }]} accessibilityRole="header">Secure today to protect your streak.</Text>
-            <Text style={[styles.secureTodaySub, { color: DS_COLORS.accent }]}>
-              {(() => {
-                const ac = activeChallenge as { ends_at?: string } | undefined;
-                if (ac?.ends_at) return `${formatTimeRemaining(ac.ends_at)} remaining.`;
-                const { hours, minutes } = getTimeUntilMidnight();
-                return `${hours}h ${minutes}m remaining.`;
-              })()}
-            </Text>
-            <View style={[styles.metricsCard, { backgroundColor: SURFACE_SUBTLE }]}>
-              {nextTierName != null && pointsToNextTier > 0 && (
-                <View style={styles.metricsRow}>
-                  <Flame size={18} color={colors.text.secondary} />
-                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>{pointsToNextTier} pts to {nextTierName}</Text>
-                </View>
-              )}
-              {leaderboardData != null && (
-                <View style={styles.metricsRow}>
-                  <Users size={18} color={colors.text.secondary} />
-                  <Text style={[styles.metricsText, { color: colors.text.secondary }]}>
-                    {leaderboardData.totalSecuredToday} friends secured today
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        {!isGuest && hasActiveChallenge && !hasActiveChallengesFromList && tasks.length > 0 && (
-              <View style={styles.todaysResetCard}>
-                <View style={styles.todaysResetHeader}>
-                  <Clock size={18} color={colors.text.primary} />
-                  <Text style={[styles.todaysResetTitle, { color: colors.text.primary }]}>Today&apos;s Reset</Text>
-                  <Text style={[styles.todaysResetTime, { color: colors.text.muted }]}>
-                    {(() => {
-                      const ac = activeChallenge as { ends_at?: string } | undefined;
-                      if (ac?.ends_at) return formatTimeRemaining(ac.ends_at) + " left";
-                      const { hours, minutes } = getTimeUntilMidnight();
-                      return `${hours}h ${minutes}m left`;
-                    })()}
-                  </Text>
-                </View>
-                <View style={[styles.todaysResetDivider, { backgroundColor: colors.border }]} />
-                <View style={styles.todaysResetTaskList}>
-                  {tasks.map((task) => (
-                    <View key={task.id} style={styles.todaysResetTaskRow}>
-                      <Circle size={18} color={colors.border} strokeWidth={2} />
-                      <Text style={[styles.todaysResetTaskText, { color: colors.text.primary }, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
+            {homeChallengesWithProgress.map((item) => {
+              const allDone = item.todayTasks.length > 0 && item.todayTasks.every((t) => t.completed);
+              return (
+                <View key={item.activeChallengeId} style={[styles.challengeCard, { backgroundColor: DS_COLORS.BG_CARD, marginHorizontal: 20, marginTop: 8 }, DS_SHADOWS.card]}>
+                  <View style={styles.challengeCardHeader}>
+                    <Text style={styles.challengeCardTitle} numberOfLines={1}>{item.challengeName}</Text>
+                    <View style={styles.challengeCardDayPill}>
+                      <Text style={styles.challengeCardDayPillText}>
+                        Day {item.currentDay ?? 1}/{item.durationDays ?? 0}
+                      </Text>
                     </View>
-                  ))}
+                  </View>
+                  {item.todayTasks.length > 0 && (
+                    <>
+                      <Text style={styles.todaysMissionsLabel}>TODAY&apos;S MISSIONS</Text>
+                      {item.todayTasks.map((task, idx) => {
+                        const taskType = (task as { type?: string }).type ?? "MANUAL";
+                        const IconComponent = taskType === "PHOTO" ? Camera : taskType === "TIMER" ? Timer : taskType === "JOURNAL" ? FileText : task.completed ? CheckCircle2 : Circle;
+                        return (
+                          <View key={task.id}>
+                            {idx > 0 && <View style={styles.challengeTaskSeparator} />}
+                            <View style={styles.challengeCardTaskRow}>
+                              <View style={styles.challengeTaskIconWrap}>
+                                {task.completed ? (
+                                  <CheckCircle2 size={16} color={DS_COLORS.ACCENT_GREEN} />
+                                ) : (
+                                  <IconComponent size={16} color={DS_COLORS.ACCENT_PRIMARY} />
+                                )}
+                              </View>
+                              <View style={styles.challengeCardTaskMiddle}>
+                                <Text style={[styles.challengeCardTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
+                                <Text style={styles.challengeCardTaskSub}>{taskType}</Text>
+                              </View>
+                              {task.completed ? (
+                                <CheckCircle2 size={18} color={DS_COLORS.ACCENT_GREEN} />
+                              ) : (
+                                <Text style={styles.challengeCardStartLink}>Start ›</Text>
+                              )}
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </>
+                  )}
+                  <TouchableOpacity
+                    style={[styles.continueButton, { backgroundColor: allDone ? DS_COLORS.ACCENT_GREEN : DS_COLORS.ACCENT_PRIMARY }]}
+                    onPress={() => {
+                      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push(ROUTES.CHALLENGE_ACTIVE(item.activeChallengeId) as never);
+                    }}
+                    activeOpacity={0.85}
+                    accessibilityLabel={allDone ? "Day secured" : "Continue today"}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.continueButtonText}>
+                      {allDone ? "Day Secured ✓" : "Continue Today →"}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-            )}
+              );
+            })}
+          </View>
+        )}
 
         {!isGuest && (
           <View style={styles.statsRowCard}>
@@ -1269,7 +1258,7 @@ const syncingBannerStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DS_COLORS.background,
+    backgroundColor: DS_COLORS.BG_PAGE,
   },
   scroll: {
     flex: 1,
@@ -1318,7 +1307,138 @@ const styles = StyleSheet.create({
   headerBadgePillText: {
     fontSize: 14,
     fontWeight: "700" as const,
-    color: DS_COLORS.textPrimary,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  streakHeroSection: {
+    alignItems: "center",
+    paddingVertical: DS_SPACING.xl,
+    paddingHorizontal: DS_SPACING.screenHorizontal,
+  },
+  streakHeroLabel: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    letterSpacing: 2,
+    color: DS_COLORS.TEXT_MUTED,
+    marginBottom: 4,
+  },
+  streakHeroNumber: {
+    fontSize: 72,
+    fontWeight: "800" as const,
+    color: DS_COLORS.ACCENT_PRIMARY,
+  },
+  streakHeroNumberZero: {
+    color: DS_COLORS.TEXT_MUTED,
+  },
+  streakHeroFlame: {
+    marginTop: 4,
+  },
+  streakHeroDaysLabel: {
+    fontSize: 16,
+    fontWeight: "500" as const,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 4,
+  },
+  streakTimePill: {
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    alignSelf: "center",
+    marginTop: 12,
+  },
+  streakTimePillText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: DS_COLORS.ACCENT_PRIMARY,
+  },
+  streakHeroStartCopy: {
+    fontSize: 14,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 12,
+    textAlign: "center",
+  },
+  skeletonWrap: {
+    marginBottom: DS_SPACING.lg,
+  },
+  emptyStateCard: {
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginTop: 8,
+    padding: 24,
+    alignItems: "center",
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: "800" as const,
+    color: DS_COLORS.TEXT_PRIMARY,
+    textAlign: "center",
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    lineHeight: 22,
+    marginTop: 6,
+  },
+  emptyStateCta: {
+    marginTop: 16,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "stretch",
+  },
+  emptyStateCtaText: {
+    fontSize: 15,
+    fontWeight: "700" as const,
+    color: DS_COLORS.WHITE,
+  },
+  challengeCardDayPill: {
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    borderRadius: 100,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  challengeCardDayPillText: {
+    fontSize: 11,
+    fontWeight: "600" as const,
+    color: DS_COLORS.ACCENT_PRIMARY,
+  },
+  todaysMissionsLabel: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    letterSpacing: 1.5,
+    color: DS_COLORS.TEXT_MUTED,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  challengeTaskIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  challengeCardTaskMiddle: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  challengeCardTaskSub: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_MUTED,
+  },
+  challengeCardStartLink: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: DS_COLORS.ACCENT_PRIMARY,
+  },
+  challengeTaskSeparator: {
+    height: 0.5,
+    backgroundColor: DS_COLORS.DIVIDER,
+    marginVertical: 0,
   },
   todayNotSecuredCard: {
     flexDirection: "row",
@@ -1455,9 +1575,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statsRowNum: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700" as const,
-    color: DS_COLORS.textPrimary,
+    color: DS_COLORS.TEXT_PRIMARY,
   },
   statsRowLabel: {
     fontSize: 11,
@@ -1622,13 +1742,6 @@ const styles = StyleSheet.create({
   },
   activeChallengesSection: {
     marginBottom: DS_SPACING.lg,
-  },
-  challengeCard: {
-    borderRadius: DS_RADIUS.card,
-    padding: DS_SPACING.cardPadding,
-    marginBottom: DS_SPACING.md,
-    borderWidth: DS_BORDERS.width,
-    ...DS_SHADOWS.card,
   },
   challengeCardHeader: {
     flexDirection: "row",
@@ -2413,6 +2526,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 20,
+    marginBottom: DS_SPACING.md,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     ...DS_SHADOWS.card,
