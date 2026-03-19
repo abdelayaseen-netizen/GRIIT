@@ -4,7 +4,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS } from "@/lib/design-syste
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DS_COLORS.background,
+    backgroundColor: DS_COLORS.BG_PAGE,
   },
   header: {
     paddingHorizontal: 20,
@@ -12,21 +12,35 @@ export const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   title: {
-    fontSize: 32,
+    fontSize: 38,
     fontWeight: "800" as const,
     letterSpacing: -0.5,
-    color: DS_COLORS.textPrimary,
+    color: DS_COLORS.TEXT_PRIMARY,
   },
   subtitle: {
     fontSize: 15,
     fontWeight: "400" as const,
-    color: DS_COLORS.textSecondary,
+    color: DS_COLORS.TEXT_SECONDARY,
     marginTop: 4,
   },
   searchRow: {
     paddingHorizontal: 20,
     marginTop: 16,
     marginBottom: 12,
+  },
+  searchBarWrap: {
+    height: 44,
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  searchBarInner: {
+    flex: 1,
+    height: 44,
+    backgroundColor: "transparent",
+    borderWidth: 0,
   },
   categoryRow: {
     marginTop: 12,

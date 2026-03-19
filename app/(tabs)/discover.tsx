@@ -42,7 +42,7 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
 
-type CategoryKey = "all" | "fitness" | "mind" | "discipline";
+type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "other";
 
 /** Backend challenges.getFeatured can return paginated { items, nextCursor } or legacy array. */
 type GetFeaturedResponse =
@@ -84,10 +84,12 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.ComponentType<{ size?: number; color?: string }> }[] = [
-  { key: "all", label: "✨ All", icon: Sparkles },
-  { key: "fitness", label: "🏋️ Fitness", icon: Dumbbell },
-  { key: "mind", label: "🧠 Mind", icon: Brain },
-  { key: "discipline", label: "🛡 Discipline", icon: Target },
+  { key: "all", label: "All", icon: Sparkles },
+  { key: "fitness", label: "Fitness", icon: Dumbbell },
+  { key: "mind", label: "Mind", icon: Brain },
+  { key: "discipline", label: "Discipline", icon: Target },
+  { key: "faith", label: "Faith", icon: Zap },
+  { key: "other", label: "Other", icon: Sparkles },
 ];
 
 function isDailyActive(c: FeaturedChallengeRaw): boolean {
@@ -99,7 +101,8 @@ function isDailyActive(c: FeaturedChallengeRaw): boolean {
 function matchesCategory(c: FeaturedChallengeRaw, cat: CategoryKey): boolean {
   if (cat === "all") return true;
   if (cat === "mind" && (c.category === "mind" || c.category === "mental")) return true;
-  return c.category === cat;
+  if (cat === "other") return !["fitness", "mind", "discipline", "faith"].includes((c.category ?? "").toLowerCase());
+  return (c.category ?? "").toLowerCase() === cat;
 }
 
 function matchesSearch(c: FeaturedChallengeRaw, q: string): boolean {
@@ -199,53 +202,8 @@ function SkeletonList({ cardColor }: { cardColor?: string }) {
 
 const FEATURED_PAGE_SIZE = 20;
 const screenWidth = Dimensions.get("window").width;
-const DAILY_CARD_WIDTH = Math.min(screenWidth * 0.72, 320);
 const DAILY_CARD_GAP = 16;
-
-const PLACEHOLDER_24HR_CHALLENGES: StarterChallenge[] = [
-  {
-    id: "placeholder-1",
-    title: "Sprint & Stretch",
-    description: "Sprint for 10 minutes, stretch for 10 minutes.",
-    short_hook: "30 minutes to feel unstoppable.",
-    theme_color: DS_COLORS.ACCENT_PRIMARY,
-    difficulty: "medium",
-    duration_type: "24h",
-    duration_days: 1,
-    category: "fitness",
-    visibility: "public",
-    status: "published",
-    is_featured: false,
-    is_daily: true,
-    starts_at: null,
-    ends_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-    participants_count: 412,
-    active_today_count: 87,
-    challenge_tasks: [],
-    tasks: [{ type: "timer", title: "Sprint" }, { type: "timer", title: "Stretch" }] as StarterChallenge["tasks"],
-  },
-  {
-    id: "placeholder-2",
-    title: "Mindful Minutes",
-    description: "Three 5-minute breathing breaks today.",
-    short_hook: "Three pauses. Total clarity.",
-    theme_color: DS_COLORS.PURPLE_STRIPE,
-    difficulty: "easy",
-    duration_type: "24h",
-    duration_days: 1,
-    category: "mind",
-    visibility: "public",
-    status: "published",
-    is_featured: false,
-    is_daily: true,
-    starts_at: null,
-    ends_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-    participants_count: 287,
-    active_today_count: 56,
-    challenge_tasks: [],
-    tasks: [{ type: "timer", title: "Breathe" }, { type: "journal", title: "Reflect" }] as StarterChallenge["tasks"],
-  },
-];
+const DAILY_CARD_WIDTH = (screenWidth - 48) / 2;
 
 export default function DiscoverScreen() {
   const router = useRouter();
@@ -328,15 +286,10 @@ export default function DiscoverScreen() {
   }, [featuredData]);
 
   const dailyChallenges = useMemo(() => {
-    const realDaily = allChallenges
+    return allChallenges
       .filter((c) => c.is_daily && isDailyActive(c))
       .filter((c) => matchesCategory(c, activeCategory))
       .filter((c) => matchesSearch(c, debouncedQuery));
-    if (realDaily.length > 0) return realDaily;
-    if (activeCategory === "all" && !debouncedQuery) {
-      return PLACEHOLDER_24HR_CHALLENGES as DiscoverChallenge[];
-    }
-    return realDaily;
   }, [allChallenges, activeCategory, debouncedQuery]);
 
   const nonDailyChallenges = useMemo(() => {
@@ -369,7 +322,9 @@ export default function DiscoverScreen() {
       if (!id) return;
       try {
         if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      } catch { /* ignore */ }
+      } catch (err) {
+        console.error("[Discover] haptic failed:", err);
+      }
       router.push(ROUTES.CHALLENGE_ID(id) as never);
     },
     [router]
@@ -410,7 +365,8 @@ export default function DiscoverScreen() {
           description={c.short_hook}
           endsAt={c.ends_at}
           difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-          stripeColor={c.theme_color || DS_COLORS.accent}
+          stripeColor={c.theme_color}
+          category={c.category}
           tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
           participantsCount={c.participants_count ?? 0}
           onPress={() => handleChallengePress(c.id)}
@@ -428,12 +384,15 @@ export default function DiscoverScreen() {
         title={c.title}
         description={c.short_hook ?? c.description}
         difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-        stripeColor={c.theme_color || DS_COLORS.accent}
-        tasksPreview={c.tasks.slice(0, 3).map((t) => ({ icon: t.type, label: t.title }))}
+        stripeColor={c.theme_color || DS_COLORS.ACCENT_PRIMARY}
+        category={c.category}
+        tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
         durationLabel={getDurationLabel(c)}
         taskCount={c.tasks.length}
-        participantsCount={(c.participants_count ?? 0) > 0 ? (c.participants_count ?? 0) : 2800}
+        participantsCount={c.participants_count ?? 0}
         activeTodayCount={c.active_today_count ?? 0}
+        isFeatured={c.is_featured === true}
+        is24h={c.is_daily === true || c.duration_type === "24h"}
         onPressIn={() => handlePrefetchChallenge(c.id)}
         onPress={() => handleChallengePress(c.id)}
       />
@@ -446,11 +405,11 @@ export default function DiscoverScreen() {
       <ChallengeRowCard
         title={c.title}
         description={c.short_hook ?? c.description}
-        stripeColor={c.theme_color || DS_COLORS.accent}
+        stripeColor={c.theme_color || undefined}
+        category={c.category}
         durationLabel={getDurationLabel(c)}
         taskCount={c.tasks.length}
         participantsCount={c.participants_count ?? 0}
-        statusDotColor={c.theme_color}
         onPressIn={() => handlePrefetchChallenge(c.id)}
         onPress={() => handleChallengePress(c.id)}
         participationType={c.participation_type}
@@ -623,19 +582,22 @@ export default function DiscoverScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.title}>Discover</Text>
-          <Text style={styles.subtitle}>Find challenges worth committing to</Text>
+          <Text style={styles.subtitle}>Find challenges worth committing to.</Text>
         </View>
 
         <View style={styles.searchRow}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search challenges..."
-            onClear={clearSearch}
-          />
+          <View style={styles.searchBarWrap}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search challenges..."
+              onClear={clearSearch}
+              containerStyle={[styles.searchBarInner, { borderRadius: 12 }]}
+            />
+          </View>
         </View>
 
         <View style={styles.categoryRow}>

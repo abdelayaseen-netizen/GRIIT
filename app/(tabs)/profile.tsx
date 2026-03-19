@@ -107,7 +107,8 @@ function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
       ]);
       setStravaEnabled(enabled);
       setStravaConnection(conn);
-    } catch {
+    } catch (err) {
+      console.error("[Profile] loadIntegrations failed:", err);
       setStravaEnabled(false);
       setStravaConnection(null);
     }

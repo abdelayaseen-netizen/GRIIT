@@ -48,7 +48,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/l
 
 function createActivityStyles(c: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: DS_COLORS.background },
+    container: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
     header: {
       flexDirection: "row",
       alignItems: "center",
@@ -58,16 +58,27 @@ function createActivityStyles(c: ThemeColors) {
       gap: DS_SPACING.sm,
     },
     title: {
-      fontSize: 28,
-      fontWeight: "700" as const,
-      color: DS_COLORS.textPrimary,
+      fontSize: 38,
+      fontWeight: "800" as const,
+      color: DS_COLORS.TEXT_PRIMARY,
     },
     subtitle: {
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: "400" as const,
-      color: DS_COLORS.textSecondary,
-      marginTop: 2,
+      color: DS_COLORS.TEXT_SECONDARY,
+      marginTop: 4,
     },
+    emptySection: { alignItems: "center" as const, paddingVertical: 24, paddingHorizontal: 24 },
+    emptyTitle: { fontSize: 18, fontWeight: "700" as const, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
+    emptySub: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" as const, lineHeight: 22 },
+    emptyBtn: {
+      marginTop: 12,
+      backgroundColor: DS_COLORS.ACCENT_PRIMARY,
+      borderRadius: 10,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+    },
+    emptyBtnText: { color: DS_COLORS.WHITE, fontSize: 14, fontWeight: "700" as const },
     teamsButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -425,7 +436,10 @@ function MovementFeedSection({
     <View style={styles.movementFeedSection}>
       <Text style={styles.movementFeedSectionTitle}>THIS WEEK</Text>
       {entries.length === 0 ? (
-        <Text style={styles.onlyDisciplineShows}>Be the first this week.</Text>
+        <View style={styles.emptySection}>
+          <Text style={styles.emptyTitle}>No one&apos;s at the top yet.</Text>
+          <Text style={styles.emptySub}>Complete tasks today to take the lead.</Text>
+        </View>
       ) : (
         <>
           <FlatList
@@ -667,13 +681,17 @@ function CommunityActivityFeedSection({
         <View style={styles.proofOfWorkHeader}>
           <Text style={styles.movementFeedSectionTitle}>PROOF OF WORK</Text>
           <View style={styles.publicBadge}>
-            <Globe size={10} color={DS_COLORS.textMuted} />
+            <Globe size={10} color={DS_COLORS.TEXT_MUTED} />
             <Text style={styles.publicBadgeText}>Public</Text>
           </View>
         </View>
-        <Text style={styles.onlyDisciplineShows}>
-          Your community activity will appear here. Join a challenge to get started!
-        </Text>
+        <View style={styles.emptySection}>
+          <Text style={styles.emptyTitle}>Your community is quiet.</Text>
+          <Text style={styles.emptySub}>Join a challenge and be the first to show up.</Text>
+          <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push("/(tabs)/discover")} activeOpacity={0.85} accessibilityLabel="Find a challenge" accessibilityRole="button">
+            <Text style={styles.emptyBtnText}>Find a Challenge →</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -922,7 +940,7 @@ export default function ActivityScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Movement</Text>
-            <Text style={styles.subtitle}>Proof of discipline</Text>
+            <Text style={styles.subtitle}>Proof of discipline.</Text>
           </View>
           <TouchableOpacity style={styles.teamsButton} onPress={handleTeamsPress} activeOpacity={0.8} accessibilityLabel="Open teams" accessibilityRole="button">
           <Text style={styles.teamsButtonText}>🧑‍🤝‍🧑 Teams</Text>
@@ -1012,7 +1030,10 @@ export default function ActivityScreen() {
           ) : leaderboardError ? (
             <Text style={styles.emptyLeaderboardTextRetry}>{COPY.couldNotLoad} {COPY.pullToRetry}</Text>
           ) : leaderboard.entries.length === 0 ? (
-            <Text style={styles.emptyLeaderboardText}>{COPY.beFirstThisWeek}</Text>
+            <View style={styles.emptySection}>
+              <Text style={styles.emptyTitle}>No one&apos;s at the top yet.</Text>
+              <Text style={styles.emptySub}>Complete tasks today to take the lead.</Text>
+            </View>
           ) : (
             <TopThisWeekRow entries={leaderboard.entries} styles={styles} />
           )}
@@ -1048,7 +1069,10 @@ export default function ActivityScreen() {
               </View>
               <Text style={styles.resetsSunday}>Resets Sunday</Text>
             </View>
-            <Text style={styles.emptyLeaderboardText}>{COPY.beFirstThisWeek}</Text>
+            <View style={styles.emptySection}>
+              <Text style={styles.emptyTitle}>The board is wide open.</Text>
+              <Text style={styles.emptySub}>Every task you complete earns points. Start now.</Text>
+            </View>
           </View>
         ) : (
           <LeaderboardSection entries={leaderboard.entries} styles={styles} />

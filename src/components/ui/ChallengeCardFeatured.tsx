@@ -1,38 +1,49 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Calendar, BookOpen, Users, Flame } from "lucide-react-native";
-import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { Calendar, ListTodo, Users } from "lucide-react-native";
+import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
-  Easy: { bg: DS_COLORS.successLight, text: DS_COLORS.success },
-  Medium: { bg: DS_COLORS.warningLight, text: DS_COLORS.warning },
-  Hard: { bg: DS_COLORS.accentLight, text: DS_COLORS.accent },
-  Extreme: { bg: DS_COLORS.dangerLight, text: DS_COLORS.danger },
+  Easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
+  Medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+  Hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
+  Extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
 };
+
+function getStripeColorByCategory(category?: string): string {
+  const cat = (category ?? "").toUpperCase();
+  if (cat === "FITNESS") return DS_COLORS.ACCENT_PRIMARY;
+  if (cat === "MIND") return DS_COLORS.CATEGORY_MIND_STRIPE;
+  if (cat === "DISCIPLINE") return DS_COLORS.ACCENT_GREEN;
+  if (cat === "FAITH") return DS_COLORS.CATEGORY_FAITH_STRIPE;
+  return DS_COLORS.ACCENT_PRIMARY;
+}
 
 function getTaskEmoji(icon: string): string {
   const map: Record<string, string> = {
     timer: "⏱",
     photo: "📸",
-    journal: "📝",
+    journal: "✍️",
     run: "🏃",
     checkin: "📍",
     manual: "✓",
   };
-  return map[icon] ?? "•";
+  return map[(icon ?? "").toLowerCase()] ?? "✓";
 }
 
 function ChallengeCardFeaturedInner(props: {
   title: string;
   description: string;
   difficulty: string;
-  stripeColor: string;
+  stripeColor?: string;
+  category?: string;
   tasksPreview: { icon: string; label: string }[];
   durationLabel: string;
   taskCount: number;
   participantsCount: number;
   activeTodayCount: number;
+  isFeatured?: boolean;
+  is24h?: boolean;
   onPress: () => void;
   onPressIn?: () => void;
 }) {
@@ -44,37 +55,47 @@ function ChallengeCardFeaturedInner(props: {
     durationLabel,
     taskCount,
     participantsCount,
-    activeTodayCount,
     onPress,
     onPressIn,
+    category,
+    isFeatured,
+    is24h,
   } = props;
-  const { colors: themeColors } = useTheme();
+  const stripeColor = props.stripeColor ?? getStripeColorByCategory(category);
   const diff = DIFF_STYLES[difficulty] ?? DIFF_STYLES.Medium;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n));
+  const eyebrowLabel =
+    isFeatured ? "🏆 FEATURED" :
+    is24h ? "⚡ 24-HOUR" :
+    (participantsCount ?? 0) > 100 ? `🔥 ${formatCount(participantsCount)} active` :
+    null;
   return (
     <TouchableOpacity
-      style={[s.card, { backgroundColor: themeColors.card }]}
+      style={[s.card, DS_SHADOWS.card]}
       onPressIn={onPressIn}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityLabel={`${title}, ${participantsCount} participants`}
       accessibilityRole="button"
     >
-      <View style={[s.stripe, { backgroundColor: DS_COLORS.accent }]} />
+      <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.topRow}>
-          <View style={[s.featuredBadge, { backgroundColor: DS_COLORS.accentLight }]}>
-            <Flame size={12} color={DS_COLORS.accent} />
-            <Text style={[s.featuredBadgeText, { color: DS_COLORS.accent }]}>FEATURED</Text>
-          </View>
+          {eyebrowLabel ? (
+            <View style={[s.eyebrowBadge, is24h ? s.eyebrow24h : s.eyebrowFeatured]}>
+              <Text style={[s.eyebrowText, is24h ? s.eyebrow24hText : s.eyebrowFeaturedText]}>{eyebrowLabel}</Text>
+            </View>
+          ) : (
+            <View style={s.eyebrowSpacer} />
+          )}
           <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
-            <Text style={[s.diffText, { color: diff.text }]}>{difficulty.toUpperCase()}</Text>
+            <Text style={[s.diffText, { color: diff.text }]}>{difficulty}</Text>
           </View>
         </View>
         <Text style={s.title} numberOfLines={1}>{title}</Text>
-        <Text style={s.desc} numberOfLines={1}>{description}</Text>
+        <Text style={s.desc} numberOfLines={2}>{description}</Text>
         <View style={s.chipsRow}>
-          {tasksPreview.slice(0, 3).map((task, i) => (
+          {tasksPreview.slice(0, 2).map((task, i) => (
             <View key={i} style={s.taskChip}>
               <Text style={s.taskChipText} numberOfLines={1}>{getTaskEmoji(task.icon)} {task.label}</Text>
             </View>
@@ -82,18 +103,20 @@ function ChallengeCardFeaturedInner(props: {
         </View>
         <View style={s.metaRow}>
           <View style={s.metaLeft}>
-            <Calendar size={12} color={DS_COLORS.textMuted} />
+            <Calendar size={14} color={DS_COLORS.TEXT_MUTED} />
             <Text style={s.metaText}>{durationLabel}</Text>
             <Text style={s.metaDot}>·</Text>
-            <BookOpen size={12} color={DS_COLORS.textMuted} />
+            <ListTodo size={14} color={DS_COLORS.TEXT_MUTED} />
             <Text style={s.metaText}>{taskCount} tasks</Text>
-            <Text style={s.metaDot}>·</Text>
-            <Users size={12} color={DS_COLORS.textMuted} />
-            <Text style={s.metaText}>{formatCount(participantsCount)}</Text>
-            <Text style={s.metaDot}>·</Text>
-            <Text style={[s.activeToday, { color: DS_COLORS.success, fontWeight: "600" }]}>{formatCount(activeTodayCount)} active today</Text>
+            {(participantsCount ?? 0) > 0 && (
+              <>
+                <Text style={s.metaDot}>·</Text>
+                <Users size={14} color={DS_COLORS.TEXT_MUTED} />
+                <Text style={s.metaText}>{formatCount(participantsCount)} members</Text>
+              </>
+            )}
           </View>
-          <Text style={[s.chevron, { color: DS_COLORS.textSecondary }]}>&gt;</Text>
+          <Text style={s.joinLink}>Join ›</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -105,16 +128,11 @@ export const ChallengeCardFeatured = React.memo(ChallengeCardFeaturedInner);
 const s = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: DS_COLORS.white,
+    backgroundColor: DS_COLORS.BG_CARD,
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-    shadowColor: DS_COLORS.BLACK,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
   },
   stripe: {
     width: 4,
@@ -131,60 +149,70 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 6,
   },
-  featuredBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
+  eyebrowBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: DS_COLORS.accentLight,
   },
-  featuredBadgeText: {
+  eyebrowFeatured: {
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+  },
+  eyebrow24h: {
+    backgroundColor: DS_COLORS.ICON_BG_BLUE,
+  },
+  eyebrow24hText: {
+    color: DS_COLORS.CATEGORY_MIND_STRIPE,
+  },
+  eyebrowFeaturedText: {
+    color: DS_COLORS.ACCENT_PRIMARY,
+  },
+  eyebrowSpacer: { width: 0 },
+  eyebrowText: {
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
-    color: DS_COLORS.accent,
   },
   diffPill: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 100,
   },
   diffText: {
     fontSize: 12,
     fontWeight: "600",
   },
   title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: DS_COLORS.textPrimary,
-    marginBottom: 6,
+    fontSize: 20,
+    fontWeight: "800",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginTop: 8,
+    marginBottom: 4,
   },
   desc: {
     fontSize: 14,
-    color: DS_COLORS.textSecondary,
+    color: DS_COLORS.TEXT_SECONDARY,
     lineHeight: 20,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   chipsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
-    marginBottom: 10,
+    marginTop: 8,
   },
   taskChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DS_COLORS.TASK_PILL_BG,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
+    backgroundColor: DS_COLORS.BG_PAGE,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
+    marginRight: 6,
   },
   taskChipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "500",
-    color: DS_COLORS.textMuted,
+    color: DS_COLORS.TEXT_SECONDARY,
     maxWidth: 120,
   },
   metaRow: {
@@ -193,6 +221,7 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     flexWrap: "wrap",
     gap: 4,
+    marginTop: 12,
   },
   metaLeft: {
     flexDirection: "row",
@@ -203,23 +232,18 @@ const s = StyleSheet.create({
     minWidth: 0,
   },
   metaText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "400",
-    color: DS_COLORS.textMuted,
+    color: DS_COLORS.TEXT_MUTED,
   },
   metaDot: {
-    fontSize: 12,
-    color: DS_COLORS.textMuted,
+    fontSize: 13,
+    color: DS_COLORS.TEXT_MUTED,
     marginHorizontal: 2,
   },
-  activeToday: {
-    fontSize: 13,
+  joinLink: {
+    fontSize: 14,
     fontWeight: "600",
-    color: DS_COLORS.success,
-  },
-  chevron: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: DS_COLORS.textSecondary,
+    color: DS_COLORS.ACCENT_PRIMARY,
   },
 });

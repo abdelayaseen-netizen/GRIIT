@@ -9,13 +9,13 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   // CORE BACKGROUNDS (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
-  BG_PAGE: '#F0EDE8',           // Warm off-white — main screen background
+  BG_PAGE: '#F5F5F5',           // Cool neutral grey — main screen background
   BG_CARD: '#FFFFFF',           // Pure white — all card surfaces
   BG_CARD_TINTED: '#F7F5F0',    // Warm card variant
   BG_DARK: '#111111',           // Near-black overlays / dark UI elements
 
   // Legacy uppercase aliases
-  BG_PRIMARY: '#F0EDE8',
+  BG_PRIMARY: '#F5F5F5',
   BG_HEADER_DEFAULT: '#E8845F',
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -101,7 +101,9 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   CATEGORY_FITNESS: '#E8845F',
   CATEGORY_MIND: '#7C6BC4',
+  CATEGORY_MIND_STRIPE: '#4A5568',
   CATEGORY_DISCIPLINE: '#111111',
+  CATEGORY_FAITH_STRIPE: '#7C6BC4',
   CATEGORY_PEACH: '#F5D5C0',
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -194,6 +196,12 @@ export const DS_COLORS = {
   HEADER_DISCIPLINE: '#4A3728',
   CHALLENGE_HEADER_DARK: '#2D3A2E',
   DARK_GREEN_HEADER: '#2D3A2E',
+  /** Deep saturated challenge header by category (cursorrules) */
+  HEADER_FITNESS_DEEP: '#2D1810',
+  HEADER_MIND_DEEP: '#1A1A2E',
+  HEADER_DISCIPLINE_DEEP: '#1A3A2A',
+  HEADER_FAITH_DEEP: '#1A1A2E',
+  HEADER_DEFAULT: '#2D1810',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // MISC / TRANSPARENT
@@ -315,7 +323,7 @@ export const DS_COLORS = {
   // BACKWARD COMPATIBILITY ALIASES (lowercase — for gradual migration)
   // These are DIRECT properties, NOT added via Object.assign
   // ═══════════════════════════════════════════════════════════════════════════
-  background: '#F0EDE8',
+  background: '#F5F5F5',
   surface: '#FFFFFF',
   card: '#FFFFFF',
   textPrimary: '#111111',

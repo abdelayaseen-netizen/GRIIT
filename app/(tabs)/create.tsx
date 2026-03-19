@@ -464,7 +464,7 @@ export default function CreateScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        const newChallengeId = challenge?.id ?? (challenge as { data?: { id?: string } })?.data?.id;
+        const newChallengeId = challenge?.id ?? (challenge as { data?: { id?: string }; challenge?: { id?: string } })?.data?.id ?? (challenge as { challenge?: { id?: string } })?.challenge?.id;
         if (!newChallengeId) {
           setSubmitStatus('error');
           Alert.alert("Create succeeded", "Challenge was created. Opening Discover.", [
@@ -491,8 +491,8 @@ export default function CreateScreen() {
             setShowPaywallAfterCreate(true);
             return;
           }
-        } catch {
-          // ignore storage errors
+        } catch (storageErr) {
+          console.error("[Create] AsyncStorage create count failed:", storageErr);
         }
         Alert.alert(
           "Challenge Created! 🎉",

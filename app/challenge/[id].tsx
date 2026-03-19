@@ -180,10 +180,10 @@ const TASK_ICONS: Record<string, React.ElementType> = {
 };
 
 const CTA_LABELS: Record<string, { join: string; active: string }> = {
-  easy: { join: "Commit", active: "Continue Today" },
-  medium: { join: "Commit", active: "Continue Today" },
-  hard: { join: "Start", active: "Continue Today" },
-  extreme: { join: "Start", active: "Continue Today" },
+  easy: { join: "Commit to This Challenge", active: "Continue Today" },
+  medium: { join: "Commit to This Challenge", active: "Continue Today" },
+  hard: { join: "Commit to This Challenge", active: "Continue Today" },
+  extreme: { join: "Commit to This Challenge", active: "Continue Today" },
 };
 
 function formatCount(n: number): string {
@@ -537,7 +537,8 @@ export default function ChallengeDetailScreen() {
       ]);
       setSharedContributions(Array.isArray(contrib) ? contrib : []);
       setSharedRecentLogs(Array.isArray(logs) ? logs : []);
-    } catch {
+    } catch (error) {
+      console.error("[ChallengeDetail] fetchSharedGoalData failed:", error);
       setSharedContributions([]);
       setSharedRecentLogs([]);
     } finally {
@@ -606,7 +607,9 @@ export default function ChallengeDetailScreen() {
       const result = await trpcMutate(TRPC.challenges.join, { challengeId: id });
       try {
         await trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id });
-      } catch { /* best-effort */ }
+      } catch (refErr) {
+        console.error("[ChallengeDetail] markJoinedChallenge failed:", refErr);
+      }
       await refetchAll();
       setShowCommitmentModal(false);
       challengeQuery.refetch();
@@ -861,7 +864,27 @@ export default function ChallengeDetailScreen() {
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
-  const headerGradientColors = isDaily ? [DS_COLORS.HEADER_GRADIENT_DAILY_START, DS_COLORS.HEADER_GRADIENT_DAILY_END] as const : [DS_COLORS.HEADER_GRADIENT_DEFAULT_START, DS_COLORS.HEADER_GRADIENT_DEFAULT_END] as const;
+
+  const headerColor = useMemo(() => {
+    const cat = (challenge?.category ?? "").toUpperCase();
+    if (cat === "FITNESS") return DS_COLORS.HEADER_FITNESS_DEEP;
+    if (cat === "MIND") return DS_COLORS.HEADER_MIND_DEEP;
+    if (cat === "DISCIPLINE") return DS_COLORS.HEADER_DISCIPLINE_DEEP;
+    if (cat === "FAITH") return DS_COLORS.HEADER_FAITH_DEEP;
+    return DS_COLORS.HEADER_DEFAULT;
+  }, [challenge?.category]);
+
+  const eyebrowLabel = useMemo(() => {
+    if (challenge?.is_featured) return "🏆 FEATURED";
+    if (challenge?.duration_type === "24h" || (challenge as { challenge_type?: string })?.challenge_type === "one_day" || isDaily)
+      return "⚡ 24-HOUR CHALLENGE";
+    if ((challenge?.participants_count ?? 0) > 100)
+      return `🔥 ${formatCount(challenge.participants_count ?? 0)} active today`;
+    if (challenge?.difficulty === "extreme") return "💀 EXTREME CHALLENGE";
+    return null;
+  }, [challenge?.is_featured, challenge?.duration_type, challenge?.participants_count, challenge?.difficulty, isDaily]);
+
+  const headerGradientColors = [headerColor, headerColor] as const;
   const ctaBgColor = isDaily && !expired ? DS_COLORS.HEADER_GRADIENT_DAILY_START : DS_COLORS.accent;
   const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
@@ -879,8 +902,18 @@ export default function ChallengeDetailScreen() {
     : 0;
   const participantUsernames = (challenge as { participant_usernames?: string[] }).participant_usernames;
 
+  const difficultyPillStyle = useMemo(() => {
+    const map: Record<string, { bg: string; text: string }> = {
+      easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
+      medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+      hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
+      extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
+    };
+    return map[difficulty] ?? map.medium;
+  }, [difficulty]);
+
   return (
-    <View style={[s.container, { backgroundColor: DS_COLORS.background }]}>
+    <View style={[s.container, { backgroundColor: DS_COLORS.BG_PAGE }]}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
@@ -956,10 +989,9 @@ export default function ChallengeDetailScreen() {
               </View>
 
               <View style={s.heroContent}>
-                {isDaily && (
+                {eyebrowLabel != null && (
                   <View style={s.dailyLabel}>
-                    <Zap size={11} color="rgba(255,255,255,0.8)" />
-                    <Text style={s.dailyLabelText}>⚡ 24-HOUR CHALLENGE</Text>
+                    <Text style={s.dailyLabelText}>{eyebrowLabel}</Text>
                   </View>
                 )}
                 <Text style={s.heroTitle}>{challenge.title}</Text>
@@ -973,11 +1005,11 @@ export default function ChallengeDetailScreen() {
                       <InfoChip label={`Day ${userCurrentDay} / ${challenge.duration_days}`} theme={theme} dark />
                     </>
                   )}
-                  {difficulty === "hard" || difficulty === "extreme" ? (
-                    <InfoChip label={`${difficultyLabel} Mode`} theme={theme} dark />
-                  ) : (
-                    <InfoChip label={difficultyLabel} theme={theme} dark />
-                  )}
+                  <View style={[s.difficultyPill, { backgroundColor: difficultyPillStyle.bg }]}>
+                    <Text style={[s.difficultyPillText, { color: difficultyPillStyle.text }]}>
+                      {difficulty === "hard" || difficulty === "extreme" ? `${difficultyLabel} Mode` : difficultyLabel}
+                    </Text>
+                  </View>
                   {visibilityLabel && (
                     <View style={[s.infoChip, s.visibilityChip, { borderColor: "rgba(255,255,255,0.35)", backgroundColor: "rgba(255,255,255,0.15)" }]}>
                       {visibilityIcon}
@@ -1088,13 +1120,10 @@ export default function ChallengeDetailScreen() {
                 <SocialAvatars participantsCount={challenge.participants_count ?? 0} participantUsernames={participantUsernames} />
                 <View style={s.socialTextWrap}>
                   <Text style={s.socialPrimary}>
-                    {formatCount(challenge.participants_count ?? 0)} in this challenge
+                    {(challenge.participants_count ?? 0) === 0
+                      ? "Be the first to start something real."
+                      : `${formatCount(challenge.participants_count ?? 0)} in this challenge${(challenge.active_today_count ?? 0) > 0 ? ` · ${formatCount(challenge.active_today_count ?? 0)} active today` : ""}`}
                   </Text>
-                  {(challenge.active_today_count ?? 0) > 0 && (
-                    <Text style={s.socialSecondary}>
-                      {formatCount(challenge.active_today_count ?? 0)} active today
-                    </Text>
-                  )}
                 </View>
               </View>
             </View>
@@ -1558,6 +1587,15 @@ const s = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 5,
+  },
+  difficultyPill: {
+    paddingHorizontal: DS_SPACING.md,
+    paddingVertical: DS_SPACING.sm,
+    borderRadius: 100,
+  },
+  difficultyPillText: {
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontWeight: "600" as const,
   },
   infoChip: {
     paddingHorizontal: DS_SPACING.md,

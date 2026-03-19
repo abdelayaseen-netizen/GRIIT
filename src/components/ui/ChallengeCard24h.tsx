@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Clock } from "lucide-react-native";
-import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_SHADOWS } from "@/lib/design-system";
 
-const TOP_BAR_COLORS = [DS_COLORS.ACCENT_PRIMARY, DS_COLORS.PURPLE_STRIPE, DS_COLORS.BLUE_STRIPE, DS_COLORS.ACCENT_GREEN] as const;
+function getStripeColorByCategory(category?: string): string {
+  const cat = (category ?? "").toUpperCase();
+  if (cat === "FITNESS") return DS_COLORS.ACCENT_PRIMARY;
+  if (cat === "MIND") return DS_COLORS.CATEGORY_MIND_STRIPE;
+  if (cat === "DISCIPLINE") return DS_COLORS.ACCENT_GREEN;
+  if (cat === "FAITH") return DS_COLORS.CATEGORY_FAITH_STRIPE;
+  return DS_COLORS.ACCENT_PRIMARY;
+}
 
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Easy: { bg: DS_COLORS.DIFFICULTY_EASY_BG, text: DS_COLORS.DIFFICULTY_EASY_TEXT },
@@ -51,7 +57,8 @@ function ChallengeCard24hInner(p: {
   countdownText?: string;
   endsAt?: string | null;
   difficulty: string;
-  stripeColor: string;
+  stripeColor?: string;
+  category?: string;
   tasksPreview: { icon: string; label: string }[];
   participantsCount: number;
   onPress: () => void;
@@ -62,12 +69,11 @@ function ChallengeCard24hInner(p: {
   const countdown = p.endsAt != null ? countdownFromHook : (p.countdownText ?? "--:--:--");
   const diff = DIFF_STYLES[p.difficulty] ?? DIFF_STYLES.Medium;
   const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
-  const { colors: themeColors } = useTheme();
-  const topBarColor = p.stripeColor || TOP_BAR_COLORS[(p.index ?? 0) % 4];
+  const topBarColor = p.stripeColor ?? getStripeColorByCategory(p.category);
   const cardWidth = p.cardWidth ?? 280;
   return (
     <TouchableOpacity
-      style={[s.card, { width: cardWidth, backgroundColor: themeColors.card }]}
+      style={[s.card, { width: cardWidth }]}
       onPress={p.onPress}
       activeOpacity={0.85}
       accessibilityLabel={`24 hour challenge: ${p.title}, ${p.participantsCount} participants`}
@@ -110,18 +116,18 @@ export const ChallengeCard24h = React.memo(ChallengeCard24hInner);
 const s = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: DS_RADIUS.LG,
+    borderRadius: 14,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: DS_COLORS.BORDER_CARD,
-    ...DS_SHADOWS.card,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+    ...DS_SHADOWS.cardSubtle,
   },
   topBar: {
     height: 3,
     width: "100%",
   },
   body: {
-    padding: DS_SPACING.BASE,
+    padding: 14,
     minWidth: 0,
   },
   diffPillAbsolute: {
@@ -131,7 +137,7 @@ const s = StyleSheet.create({
     zIndex: 1,
     paddingHorizontal: DS_SPACING.SM,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 100,
   },
   topRow: {
     flexDirection: "row",
@@ -148,23 +154,23 @@ const s = StyleSheet.create({
     backgroundColor: DS_COLORS.TIMER_BG,
   },
   countdownText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TIMER_TEXT },
-  diffPill: { paddingHorizontal: DS_SPACING.SM, paddingVertical: 3, borderRadius: 6 },
+  diffPill: { paddingHorizontal: DS_SPACING.SM, paddingVertical: 3, borderRadius: 100 },
   diffText: { fontSize: 11, fontWeight: "600" },
-  title: { fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
-  desc: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 20, marginBottom: 10 },
-  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 },
+  title: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 8, marginBottom: 4 },
+  desc: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, lineHeight: 18, marginBottom: 8 },
+  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 },
   taskChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DS_COLORS.BG_CARD_TINTED,
-    paddingHorizontal: 12,
-    paddingVertical: DS_SPACING.SM,
-    borderRadius: DS_RADIUS.PILL,
+    backgroundColor: DS_COLORS.BG_PAGE,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
   },
   taskChipText: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY, maxWidth: 90 },
-  footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
   participants: { flexDirection: "row", alignItems: "center", gap: 4 },
   participantsEmoji: { fontSize: 12 },
-  participantsText: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
-  chevron: { fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
+  participantsText: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED },
+  chevron: { fontSize: 14, fontWeight: "600", color: DS_COLORS.ACCENT_PRIMARY },
 });

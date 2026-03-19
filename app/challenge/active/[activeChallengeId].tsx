@@ -26,6 +26,7 @@ import { supabase } from "@/lib/supabase";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS } from "@/lib/design-system";
+import { useApp } from "@/contexts/AppContext";
 
 type TaskRow = {
   id: string;
@@ -59,10 +60,11 @@ type ActiveChallengeRow = {
 
 function getHeaderColor(category: string | undefined): string {
   const cat = category?.toUpperCase();
-  if (cat === "MIND") return DS_COLORS.HEADER_MIND;
-  if (cat === "FITNESS") return DS_COLORS.HEADER_FITNESS;
-  if (cat === "DISCIPLINE") return DS_COLORS.HEADER_DISCIPLINE;
-  return DS_COLORS.HEADER_ORANGE;
+  if (cat === "FITNESS") return DS_COLORS.HEADER_FITNESS_DEEP;
+  if (cat === "MIND") return DS_COLORS.HEADER_MIND_DEEP;
+  if (cat === "DISCIPLINE") return DS_COLORS.HEADER_DISCIPLINE_DEEP;
+  if (cat === "FAITH") return DS_COLORS.HEADER_FAITH_DEEP;
+  return DS_COLORS.HEADER_DEFAULT;
 }
 
 const AVATAR_COLORS = [
@@ -137,13 +139,24 @@ export default function ActiveChallengeDetailScreen() {
   const securedTodayPct = memberCount > 0 ? Math.round((activeToday / Math.max(1, memberCount)) * 100) : 0;
   const completionRate = (challenge as { completion_rate?: number })?.completion_rate ?? 0;
   const headerColor = useMemo(() => getHeaderColor(challenge?.category ?? undefined), [challenge?.category]);
-  const challengeTypeLabel = challenge?.duration_type === "24h" ? "24-HOUR CHALLENGE" : "STANDARD";
+  const eyebrowLabel = useMemo(() => {
+    if (challenge?.duration_type === "24h") return "⚡ 24-HOUR CHALLENGE";
+    if ((challenge as { is_featured?: boolean })?.is_featured) return "🏆 FEATURED";
+    const pc = (challenge as { participants_count?: number })?.participants_count ?? 0;
+    if (pc > 100) return `🔥 ${pc} active today`;
+    if (challenge?.difficulty === "extreme") return "💀 EXTREME CHALLENGE";
+    return null;
+  }, [challenge?.duration_type, challenge?.difficulty, challenge]);
+  const { stats } = useApp();
+  const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
 
   const onRefresh = useCallback(() => refetch(), [refetch]);
 
   const handleContinueToday = useCallback(() => {
     if (!id || !activeChallenge) return;
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(allDoneToday ? Haptics.ImpactFeedbackStyle.Heavy : Haptics.ImpactFeedbackStyle.Light);
+    }
     if (allDoneToday) {
       router.push(ROUTES.TABS_HOME as never);
       return;
@@ -229,7 +242,7 @@ export default function ActiveChallengeDetailScreen() {
             <MoreHorizontal size={20} color={DS_COLORS.WHITE} />
           </TouchableOpacity>
         </View>
-        <Text style={s.eyebrow}>⚡ {challengeTypeLabel}</Text>
+        {eyebrowLabel != null && <Text style={s.eyebrow}>{eyebrowLabel}</Text>}
         <Text style={s.challengeTitle}>{challenge?.title ?? "Challenge"}</Text>
         {challenge?.description ? (
           <Text style={s.challengeSubtitle} numberOfLines={2}>{challenge.description}</Text>
@@ -298,7 +311,7 @@ export default function ActiveChallengeDetailScreen() {
                   key={task.id}
                   style={s.missionRow}
                   onPress={() => {
-                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     router.push({
                       pathname: ROUTES.TASK_COMPLETE,
                       params: {
@@ -351,6 +364,20 @@ export default function ActiveChallengeDetailScreen() {
           {/* About */}
           <Text style={s.sectionTitleAbout}>About</Text>
           <Text style={s.aboutText}>{challenge?.description ?? ""}</Text>
+
+          {/* Day secured celebration card */}
+          {allDoneToday && (
+            <View style={s.celebrationCard}>
+              <Text style={s.celebrationEmoji}>🔥</Text>
+              <Text style={s.celebrationTitle}>You showed up.</Text>
+              <Text style={s.celebrationSub}>
+                Day {currentDay} secured. Keep the streak alive.
+              </Text>
+              <Text style={s.celebrationStreak}>
+                {streakCount} day streak
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -499,6 +526,33 @@ const s = StyleSheet.create({
   ruleText: { flex: 1, fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 20 },
   sectionTitleAbout: { fontSize: 20, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 12 },
   aboutText: { fontSize: 15, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 24, marginBottom: 32 },
+  celebrationCard: {
+    backgroundColor: DS_COLORS.GREEN_BG,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+    marginHorizontal: 0,
+    marginBottom: 12,
+  },
+  celebrationEmoji: { fontSize: 32 },
+  celebrationTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: DS_COLORS.ACCENT_GREEN,
+    marginTop: 8,
+  },
+  celebrationSub: {
+    fontSize: 14,
+    color: DS_COLORS.ACCENT_GREEN,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  celebrationStreak: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: DS_COLORS.ACCENT_GREEN,
+    marginTop: 8,
+  },
   footer: {
     position: "absolute",
     left: 0,

@@ -1,27 +1,29 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, Calendar } from "lucide-react-native";
-import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
 
-const MUTED_TEXT = DS_COLORS.textSecondary;
-const DIFF_DOT_COLORS: Record<string, string> = {
-  Easy: DS_COLORS.success,
-  Medium: DS_COLORS.DIFFICULTY_MEDIUM,
-  Hard: DS_COLORS.accent,
-  Extreme: DS_COLORS.danger,
-};
-const DIFF_BORDER_COLORS: Record<string, string> = {
-  Easy: DS_COLORS.success,
-  Medium: DS_COLORS.DIFFICULTY_MEDIUM,
-  Hard: DS_COLORS.accent,
-  Extreme: DS_COLORS.danger,
+function getStripeColorByCategory(category?: string): string {
+  const cat = (category ?? "").toUpperCase();
+  if (cat === "FITNESS") return DS_COLORS.ACCENT_PRIMARY;
+  if (cat === "MIND") return DS_COLORS.CATEGORY_MIND_STRIPE;
+  if (cat === "DISCIPLINE") return DS_COLORS.ACCENT_GREEN;
+  if (cat === "FAITH") return DS_COLORS.CATEGORY_FAITH_STRIPE;
+  return DS_COLORS.ACCENT_PRIMARY;
+}
+
+const DIFF_PILL: Record<string, { bg: string; text: string }> = {
+  Easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
+  Medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+  Hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
+  Extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
 };
 
 function ChallengeRowCardInner(props: {
   title: string;
   description: string;
-  stripeColor: string;
+  stripeColor?: string;
+  category?: string;
   durationLabel: string;
   taskCount: number;
   participantsCount: number;
@@ -43,37 +45,41 @@ function ChallengeRowCardInner(props: {
     participantsCount,
     onPress,
     onPressIn,
-    difficulty = "medium",
+    difficulty = "Medium",
   } = props;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
-  const leftBorderColor = props.stripeColor ?? DIFF_BORDER_COLORS[difficulty] ?? DS_COLORS.accent;
-  const dotColor = DIFF_DOT_COLORS[difficulty] ?? DIFF_DOT_COLORS.Medium;
-  const { colors: themeColors } = useTheme();
+  const stripeColor = props.stripeColor ?? getStripeColorByCategory(props.category);
+  const diff = DIFF_PILL[difficulty] ?? DIFF_PILL.Medium;
   return (
     <TouchableOpacity
-      style={[s.card, { backgroundColor: themeColors.card, borderLeftColor: leftBorderColor }]}
+      style={[s.card, DS_SHADOWS.cardSubtle]}
       onPressIn={onPressIn}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityLabel={`${title}, ${participantsCount} participants`}
       accessibilityRole="button"
     >
+      <View style={[s.stripe, { backgroundColor: stripeColor }]} />
       <View style={s.content}>
         <View style={s.header}>
-          <Text style={s.title} numberOfLines={1}>{title}</Text>
-          <View style={[s.difficultyDot, { backgroundColor: dotColor }]} accessibilityLabel={`Difficulty: ${difficulty}`} />
+          <Text style={s.title} numberOfLines={2}>{title}</Text>
+          <View style={[s.diffPill, { backgroundColor: diff.bg }]}>
+            <Text style={[s.diffText, { color: diff.text }]}>{difficulty}</Text>
+          </View>
         </View>
         <Text style={s.desc} numberOfLines={1}>{description}</Text>
         <View style={s.meta}>
           <View style={s.metaLeft}>
-            <Calendar size={12} color={MUTED_TEXT} />
+            <Calendar size={12} color={DS_COLORS.TEXT_MUTED} />
             <Text style={s.metaLeftText}>{durationLabel} · {taskCount} tasks</Text>
           </View>
-          <Text style={s.metaRight}>{formatCount(participantsCount)} joined</Text>
+          {(participantsCount ?? 0) > 0 && (
+            <Text style={s.metaRight}>{formatCount(participantsCount)} members</Text>
+          )}
         </View>
       </View>
       <View style={s.arrowWrap}>
-        <ChevronRight size={18} color={DS_COLORS.textSecondary} />
+        <ChevronRight size={18} color={DS_COLORS.ACCENT_PRIMARY} />
       </View>
     </TouchableOpacity>
   );
@@ -85,52 +91,55 @@ const s = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DS_COLORS.white,
-    borderRadius: 12,
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: 14,
     overflow: "hidden",
-    borderLeftWidth: 4,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-    shadowColor: DS_COLORS.BLACK,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+  },
+  stripe: {
+    width: 4,
+    alignSelf: "stretch",
   },
   content: {
     flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    padding: 14,
     minWidth: 0,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
-    color: DS_COLORS.DARK_GREEN_HEADER,
+    color: DS_COLORS.TEXT_PRIMARY,
     flex: 1,
   },
-  difficultyDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  diffPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 100,
     marginLeft: 8,
-    alignSelf: "center",
+  },
+  diffText: {
+    fontSize: 11,
+    fontWeight: "600",
   },
   desc: {
-    fontSize: 13,
-    color: MUTED_TEXT,
+    fontSize: 12,
+    color: DS_COLORS.TEXT_SECONDARY,
     lineHeight: 18,
+    marginTop: 4,
     marginBottom: 8,
   },
   meta: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 8,
   },
   metaLeft: {
     flexDirection: "row",
@@ -140,15 +149,15 @@ const s = StyleSheet.create({
   metaLeftText: {
     fontSize: 12,
     fontWeight: "400",
-    color: MUTED_TEXT,
+    color: DS_COLORS.TEXT_MUTED,
   },
   metaRight: {
     fontSize: 12,
     fontWeight: "400",
-    color: MUTED_TEXT,
+    color: DS_COLORS.TEXT_MUTED,
   },
   arrowWrap: {
-    paddingRight: 16,
+    paddingRight: 14,
     alignItems: "center",
     justifyContent: "center",
   },

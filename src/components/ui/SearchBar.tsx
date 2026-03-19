@@ -1,7 +1,6 @@
 import React from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Search, X } from "lucide-react-native";
-import { colors, iconSizes } from "@/src/theme/tokens";
 import { DS_COLORS } from "@/lib/design-system";
 
 export function SearchBar(props: {
@@ -15,11 +14,11 @@ export function SearchBar(props: {
   const { value, onChangeText, placeholder = "Search challenges…", onClear, editable = true, containerStyle } = props;
   return (
     <View style={[styles.container, containerStyle]}>
-      <Search size={iconSizes.search} color={colors.searchIcon} />
+      <Search size={16} color={DS_COLORS.TEXT_MUTED} />
       <TextInput
         style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor={colors.searchPlaceholder}
+        placeholderTextColor={DS_COLORS.TEXT_MUTED}
         value={value}
         onChangeText={onChangeText}
         editable={editable}
@@ -29,7 +28,7 @@ export function SearchBar(props: {
       />
       {value.length > 0 && onClear && (
         <TouchableOpacity onPress={onClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityLabel="Clear search" accessibilityRole="button">
-          <X size={16} color={colors.searchIcon} />
+          <X size={16} color={DS_COLORS.TEXT_MUTED} />
         </TouchableOpacity>
       )}
     </View>
@@ -40,8 +39,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: 48,
-    backgroundColor: DS_COLORS.CARD_ALT_BG,
+    height: 44,
+    backgroundColor: DS_COLORS.BG_CARD,
     borderRadius: 12,
     paddingHorizontal: 14,
     borderWidth: 0,
@@ -51,7 +50,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: "400" as const,
-    color: colors.textPrimary,
+    color: DS_COLORS.TEXT_PRIMARY,
     paddingVertical: 0,
   },
 });
