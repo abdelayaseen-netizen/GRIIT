@@ -74,6 +74,7 @@ import {
   DS_MEASURES,
 } from "@/lib/design-system";
 import { InitialCircle } from "@/src/components/ui";
+import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
 
 /** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
@@ -496,6 +497,7 @@ export default function ChallengeDetailScreen() {
   const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
+  const [showJoinCelebration, setShowJoinCelebration] = useState(false);
   const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
   const [commitmentUnderstood, setCommitmentUnderstood] = useState(false);
   const insets = useSafeAreaInsets();
@@ -634,7 +636,7 @@ export default function ChallengeDetailScreen() {
       await refetchAll();
       setShowCommitmentModal(false);
       challengeQuery.refetch();
-      Alert.alert("You're in!", "Start your first task below.", [{ text: "OK" }]);
+      setShowJoinCelebration(true);
     } catch (err: unknown) {
       // error swallowed — handle in UI
       const { title, message } = formatTRPCError(err);
@@ -643,6 +645,10 @@ export default function ChallengeDetailScreen() {
       setCommitmentJoining(false);
     }
   }, [id, commitmentJoining, commitmentUnderstood, user?.id, refetchAll, router]);
+
+  const onJoinCelebrationDismiss = useCallback(() => {
+    setShowJoinCelebration(false);
+  }, []);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -1457,6 +1463,13 @@ export default function ChallengeDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      <JoinCelebrationModal
+        visible={showJoinCelebration}
+        onDismiss={onJoinCelebrationDismiss}
+        challengeName={challenge?.title ?? ""}
+        durationDays={challenge?.duration_days ?? 0}
+      />
     </View>
   );
 }

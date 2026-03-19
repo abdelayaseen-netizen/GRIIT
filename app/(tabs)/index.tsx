@@ -15,13 +15,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import {
-  Camera,
   ChevronRight,
   Clock,
-  FileText,
   Flame,
   Target,
-  Timer,
   Trophy,
   TrendingUp,
   Users,
@@ -38,7 +35,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useSubscription } from "@/hooks/useSubscription";
-import { HomeScreenSkeleton } from "@/components/SkeletonLoader";
+import { HomeScreenSkeleton, TodaysMissionsSkeleton } from "@/components/SkeletonLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Celebration from "@/components/Celebration";
 import { RETENTION_CONFIG } from "@/lib/retention-config";
@@ -664,6 +661,110 @@ export default function HomeScreen() {
         </View>
 
         {!isGuest && (
+          <View style={styles.todaysMissionsOuter}>
+            <Text style={styles.todaysMissionsHeading}>Today&apos;s Missions</Text>
+            {homeActiveQuery.isLoading && <TodaysMissionsSkeleton />}
+            {homeActiveQuery.isError && (
+              <View style={[styles.challengesErrorCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
+                <AlertTriangle size={32} color={DS_COLORS.TEXT_MUTED} style={{ marginBottom: 12 }} />
+                <Text style={styles.challengesErrorLabel}>Couldn&apos;t load your challenges.</Text>
+                <TouchableOpacity
+                  style={[styles.challengesErrorRetryBtn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
+                  onPress={() => homeActiveQuery.refetch()}
+                  activeOpacity={0.85}
+                  accessibilityLabel="Retry loading challenges"
+                  accessibilityRole="button"
+                >
+                  <RefreshCw size={16} color={DS_COLORS.WHITE} />
+                  <Text style={styles.challengesErrorRetryText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {homeActiveQuery.isSuccess && !hasActiveChallengesFromList && (
+              <View style={[styles.emptyStateCard, { backgroundColor: DS_COLORS.BG_CARD, borderRadius: DS_RADIUS.card, marginHorizontal: 0 }, DS_SHADOWS.card]}>
+                <Text style={styles.emptyStateTitle}>No active challenges</Text>
+                <Text style={styles.emptyStateSubtitle}>
+                  No active challenges. Find one on Discover.
+                </Text>
+                <TouchableOpacity
+                  onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
+                  activeOpacity={0.85}
+                  accessibilityLabel="Go to Discover tab"
+                  accessibilityRole="link"
+                >
+                  <Text style={styles.emptyStateDiscoverLink}>Go to Discover</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {homeActiveQuery.isSuccess && hasActiveChallengesFromList && (
+              <View style={styles.activeChallengesSection}>
+                {homeChallengesWithProgress.map((item, cardIndex) => {
+                  return (
+                    <View
+                      key={item.activeChallengeId}
+                      style={[
+                        styles.challengeCard,
+                        {
+                          backgroundColor: DS_COLORS.BG_CARD,
+                          borderRadius: DS_RADIUS.card,
+                          marginTop: cardIndex === 0 ? 0 : DS_SPACING.sm,
+                        },
+                        DS_SHADOWS.card,
+                      ]}
+                    >
+                      <View style={styles.challengeCardHeader}>
+                        <Text style={styles.challengeCardTitle} numberOfLines={1}>
+                          {item.challengeName}
+                        </Text>
+                        <View style={styles.challengeCardDayPill}>
+                          <Text style={styles.challengeCardDayPillText}>
+                            Day {item.currentDay ?? 1} / {item.durationDays ?? 0}
+                          </Text>
+                        </View>
+                      </View>
+                      {item.todayTasks.length > 0 &&
+                        item.todayTasks.map((task, idx) => (
+                          <View key={task.id}>
+                            {idx > 0 && <View style={styles.challengeTaskSeparator} />}
+                            <View style={styles.challengeCardTaskRow}>
+                              {task.completed ? (
+                                <CheckCircle2 size={20} color={DS_COLORS.ACCENT_GREEN} />
+                              ) : (
+                                <Circle size={20} color={DS_COLORS.border} strokeWidth={2} />
+                              )}
+                              <Text
+                                style={[
+                                  styles.challengeCardTaskText,
+                                  task.completed && styles.todaysResetTaskDone,
+                                ]}
+                                numberOfLines={2}
+                              >
+                                {task.title}
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      <TouchableOpacity
+                        style={[styles.continueButton, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
+                        onPress={() => {
+                          if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never);
+                        }}
+                        activeOpacity={0.85}
+                        accessibilityLabel="Continue to challenge"
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.continueButtonText}>Continue</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
+
+        {!isGuest && (
           <View style={styles.streakHeroSection}>
             <Text style={styles.streakHeroLabel}>YOUR STREAK</Text>
             <Text style={[styles.streakHeroNumber, currentStreak === 0 && styles.streakHeroNumberZero]}>
@@ -685,114 +786,6 @@ export default function HomeScreen() {
             ) : (
               <Text style={styles.streakHeroStartCopy}>Start your streak today.</Text>
             )}
-          </View>
-        )}
-
-        {!isGuest && homeActiveQuery.isLoading && (
-          <View style={styles.skeletonWrap}>
-            <HomeScreenSkeleton />
-          </View>
-        )}
-
-        {!isGuest && homeActiveQuery.isError && (
-          <View style={[styles.challengesErrorCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
-            <AlertTriangle size={32} color={DS_COLORS.TEXT_MUTED} style={{ marginBottom: 12 }} />
-            <Text style={styles.challengesErrorLabel}>Couldn&apos;t load your challenges.</Text>
-            <TouchableOpacity
-              style={[styles.challengesErrorRetryBtn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
-              onPress={() => homeActiveQuery.refetch()}
-              activeOpacity={0.85}
-              accessibilityLabel="Retry loading challenges"
-              accessibilityRole="button"
-            >
-              <RefreshCw size={16} color={DS_COLORS.WHITE} />
-              <Text style={styles.challengesErrorRetryText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {!isGuest && homeActiveQuery.isSuccess && !hasActiveChallengesFromList && (
-          <View style={[styles.emptyStateCard, { backgroundColor: DS_COLORS.BG_CARD }, DS_SHADOWS.card]}>
-            <Compass size={32} color={DS_COLORS.ACCENT_PRIMARY} style={{ marginBottom: 12 }} />
-            <Text style={styles.emptyStateTitle}>Start Building</Text>
-            <Text style={styles.emptyStateSubtitle}>
-              Pick a challenge and begin your transformation.
-            </Text>
-            <TouchableOpacity
-              style={[styles.emptyStateCta, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
-              onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
-              activeOpacity={0.85}
-              accessibilityLabel="Explore Challenges"
-              accessibilityRole="button"
-            >
-              <Text style={styles.emptyStateCtaText}>Explore Challenges →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {!isGuest && homeActiveQuery.isSuccess && hasActiveChallengesFromList && (
-          <View style={styles.activeChallengesSection}>
-            {homeChallengesWithProgress.map((item) => {
-              const allDone = item.todayTasks.length > 0 && item.todayTasks.every((t) => t.completed);
-              return (
-                <View key={item.activeChallengeId} style={[styles.challengeCard, { backgroundColor: DS_COLORS.BG_CARD, marginHorizontal: 20, marginTop: 8 }, DS_SHADOWS.card]}>
-                  <View style={styles.challengeCardHeader}>
-                    <Text style={styles.challengeCardTitle} numberOfLines={1}>{item.challengeName}</Text>
-                    <View style={styles.challengeCardDayPill}>
-                      <Text style={styles.challengeCardDayPillText}>
-                        Day {item.currentDay ?? 1}/{item.durationDays ?? 0}
-                      </Text>
-                    </View>
-                  </View>
-                  {item.todayTasks.length > 0 && (
-                    <>
-                      <Text style={styles.todaysMissionsLabel}>TODAY&apos;S MISSIONS</Text>
-                      {item.todayTasks.map((task, idx) => {
-                        const taskType = (task as { type?: string }).type ?? "MANUAL";
-                        const IconComponent = taskType === "PHOTO" ? Camera : taskType === "TIMER" ? Timer : taskType === "JOURNAL" ? FileText : task.completed ? CheckCircle2 : Circle;
-                        return (
-                          <View key={task.id}>
-                            {idx > 0 && <View style={styles.challengeTaskSeparator} />}
-                            <View style={styles.challengeCardTaskRow}>
-                              <View style={styles.challengeTaskIconWrap}>
-                                {task.completed ? (
-                                  <CheckCircle2 size={16} color={DS_COLORS.ACCENT_GREEN} />
-                                ) : (
-                                  <IconComponent size={16} color={DS_COLORS.ACCENT_PRIMARY} />
-                                )}
-                              </View>
-                              <View style={styles.challengeCardTaskMiddle}>
-                                <Text style={[styles.challengeCardTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
-                                <Text style={styles.challengeCardTaskSub}>{taskType}</Text>
-                              </View>
-                              {task.completed ? (
-                                <CheckCircle2 size={18} color={DS_COLORS.ACCENT_GREEN} />
-                              ) : (
-                                <Text style={styles.challengeCardStartLink}>Start ›</Text>
-                              )}
-                            </View>
-                          </View>
-                        );
-                      })}
-                    </>
-                  )}
-                  <TouchableOpacity
-                    style={[styles.continueButton, { backgroundColor: allDone ? DS_COLORS.ACCENT_GREEN : DS_COLORS.ACCENT_PRIMARY }]}
-                    onPress={() => {
-                      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      router.push(ROUTES.CHALLENGE_ACTIVE(item.activeChallengeId) as never);
-                    }}
-                    activeOpacity={0.85}
-                    accessibilityLabel={allDone ? "Day secured" : "Continue today"}
-                    accessibilityRole="button"
-                  >
-                    <Text style={styles.continueButtonText}>
-                      {allDone ? "Day Secured ✓" : "Continue Today →"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
           </View>
         )}
 
@@ -1383,6 +1376,25 @@ const styles = StyleSheet.create({
   },
   skeletonWrap: {
     marginBottom: DS_SPACING.lg,
+  },
+  todaysMissionsOuter: {
+    paddingHorizontal: 20,
+    marginBottom: DS_SPACING.lg,
+  },
+  todaysMissionsHeading: {
+    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
+    fontWeight: DS_TYPOGRAPHY.sectionTitle.fontWeight,
+    letterSpacing: DS_TYPOGRAPHY.sectionTitle.letterSpacing,
+    lineHeight: DS_TYPOGRAPHY.sectionTitle.lineHeight,
+    color: DS_COLORS.textPrimary,
+    marginBottom: DS_SPACING.md,
+  },
+  emptyStateDiscoverLink: {
+    marginTop: DS_SPACING.md,
+    fontSize: DS_TYPOGRAPHY.buttonSmall.fontSize,
+    fontWeight: "600" as const,
+    color: DS_COLORS.accent,
+    textAlign: "center",
   },
   emptyStateCard: {
     borderRadius: 16,

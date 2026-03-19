@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, Animated, StyleSheet, ViewStyle } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
 
 interface SkeletonProps {
   width?: number | string;
@@ -36,6 +36,29 @@ export function Skeleton({ width = "100%", height = 16, borderRadius = 8, style 
         style,
       ]}
     />
+  );
+}
+
+/** Compact skeleton for Home "Today's Missions" block only. */
+export function TodaysMissionsSkeleton() {
+  return (
+    <View style={{ paddingHorizontal: 20, marginBottom: DS_SPACING.lg }}>
+      <Skeleton width={180} height={18} borderRadius={6} style={{ marginBottom: DS_SPACING.md }} />
+      <View
+        style={{
+          backgroundColor: DS_COLORS.BG_CARD,
+          borderRadius: DS_RADIUS.card,
+          padding: DS_SPACING.cardPadding,
+          borderWidth: 1,
+          borderColor: DS_COLORS.BORDER,
+        }}
+      >
+        <Skeleton width="70%" height={16} borderRadius={4} style={{ marginBottom: DS_SPACING.sm }} />
+        <Skeleton width={100} height={14} borderRadius={4} style={{ marginBottom: DS_SPACING.lg }} />
+        <Skeleton width="100%" height={44} borderRadius={8} style={{ marginBottom: DS_SPACING.sm }} />
+        <Skeleton width="100%" height={44} borderRadius={8} />
+      </View>
+    </View>
   );
 }
 

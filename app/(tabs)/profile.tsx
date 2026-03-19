@@ -95,23 +95,32 @@ function IntegrationsSection({ styles }: { styles: ProfileStyles }) {
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   const loadIntegrations = useCallback(async () => {
+    let enabled = false;
     try {
-      const [enabled, conn] = await Promise.all([
-        trpcQuery(TRPC.integrations.isStravaEnabled) as Promise<boolean>,
-        trpcQuery(TRPC.integrations.getStravaConnection) as Promise<{
-          id: string;
-          provider: string;
-          providerUserId: string;
-          createdAt: string;
-        } | null>,
-      ]);
-      setStravaEnabled(enabled);
-      setStravaConnection(conn);
-    } catch (err) {
-      console.error("[Profile] loadIntegrations failed:", err);
-      setStravaEnabled(false);
-      setStravaConnection(null);
+      enabled = (await trpcQuery(TRPC.integrations.isStravaEnabled)) as boolean;
+    } catch {
+      enabled = false;
     }
+    setStravaEnabled(enabled);
+
+    let conn: {
+      id: string;
+      provider: string;
+      providerUserId: string;
+      createdAt: string;
+    } | null = null;
+    try {
+      conn = (await trpcQuery(TRPC.integrations.getStravaConnection)) as {
+        id: string;
+        provider: string;
+        providerUserId: string;
+        createdAt: string;
+      } | null;
+    } catch {
+      console.warn("[Profile] Strava connection unavailable; showing disconnected state.");
+      conn = null;
+    }
+    setStravaConnection(conn);
   }, []);
 
   useEffect(() => {

@@ -42,29 +42,30 @@ export const integrationsRouter = createTRPCRouter({
     return getStravaPublicConfig().enabled;
   }),
 
-  /** Get current user's Strava connection (no tokens in response). */
+  /** Get current user's Strava connection (no tokens in response). Never throws — returns null if disconnected or on any failure. */
   getStravaConnection: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await ctx.supabase
-      .from("connected_accounts")
-      .select("id, provider, provider_user_id, expires_at, scope, metadata_json, created_at, updated_at")
-      .eq("user_id", ctx.userId)
-      .eq("provider", PROVIDER_STRAVA)
-      .maybeSingle();
+    try {
+      const { data, error } = await ctx.supabase
+        .from("connected_accounts")
+        .select("id, provider, provider_user_id, expires_at, scope, metadata_json, created_at, updated_at")
+        .eq("user_id", ctx.userId)
+        .eq("provider", PROVIDER_STRAVA)
+        .maybeSingle();
 
-    if (error) {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load connection" });
+      if (error || !data) return null;
+      return {
+        id: data.id,
+        provider: data.provider,
+        providerUserId: data.provider_user_id,
+        expiresAt: data.expires_at,
+        scope: data.scope,
+        metadata: (data.metadata_json as Record<string, unknown>) ?? {},
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+    } catch {
+      return null;
     }
-    if (!data) return null;
-    return {
-      id: data.id,
-      provider: data.provider,
-      providerUserId: data.provider_user_id,
-      expiresAt: data.expires_at,
-      scope: data.scope,
-      metadata: (data.metadata_json as Record<string, unknown>) ?? {},
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
   }),
 
   /** Fetch recent Strava activities. Uses stored connection; refreshes token if needed. */
