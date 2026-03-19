@@ -25,6 +25,8 @@ export const ROUTES = {
   ACCOUNTABILITY_ADD_DAY1: "/accountability/add?from=day1",
   SUCCESS: "/success",
   CHALLENGE_ID: (id: string) => `/challenge/${id}` as const,
+  /** Active challenge detail (post-join); use activeChallengeId from active_challenges.id */
+  CHALLENGE_ACTIVE: (activeChallengeId: string) => `/challenge/active/${activeChallengeId}` as const,
   PROFILE_USERNAME: (username: string) => `/profile/${username}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
   TASK_JOURNAL: "/task/journal",

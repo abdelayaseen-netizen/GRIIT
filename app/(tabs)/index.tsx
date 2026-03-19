@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Users,
   Circle,
+  CheckCircle2,
   RefreshCw,
   AlertTriangle,
   Shield,
@@ -118,7 +119,7 @@ export default function HomeScreen() {
   const _handleUserPress = useCallback((u: { username: string }) => {
     router.push(ROUTES.PROFILE_USERNAME(u.username) as never);
   }, [router]);
-  const { user: _user } = useAuth();
+  const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const isGuest = useIsGuest();
   const guestQuote = useMemo(
@@ -213,7 +214,7 @@ export default function HomeScreen() {
   }, [liveFeedQuery.data?.items]);
 
   const homeActiveQuery = useQuery({
-    queryKey: ["home", "activeList"],
+    queryKey: ["home", "activeList", user?.id ?? ""],
     queryFn: async (): Promise<{ challengesWithProgress: ChallengeWithProgress[]; totalRemaining: number }> => {
       const [list, checkins] = await Promise.all([
         trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
@@ -226,7 +227,13 @@ export default function HomeScreen() {
         if (c.status === "completed") checkinsByAcId[c.active_challenge_id].add(c.task_id);
       }
       let totalRemaining = 0;
-      interface AcRow { id: string; challenge_id: string; challenges?: { id?: string; title?: string; challenge_tasks?: { id: string; title?: string; type?: string; required?: boolean }[] }; current_day?: number }
+      interface AcRow {
+        id: string;
+        challenge_id: string;
+        start_at?: string;
+        started_at?: string;
+        challenges?: { id?: string; title?: string; duration_days?: number; challenge_tasks?: { id: string; title?: string; type?: string; required?: boolean }[] };
+      }
       const withProgress: ChallengeWithProgress[] = acList.map((ac: AcRow) => {
         const ch = ac.challenges;
         const tasks = ch?.challenge_tasks ?? [];
@@ -239,22 +246,28 @@ export default function HomeScreen() {
         }));
         const completedCount = todayTasks.filter((t: { completed: boolean }) => t.completed).length;
         totalRemaining += Math.max(0, required.length - completedCount);
+        const startAt = ac.start_at ?? (ac as { started_at?: string }).started_at;
+        const currentDay = startAt
+          ? Math.floor((Date.now() - new Date(startAt).getTime()) / (1000 * 60 * 60 * 24)) + 1
+          : 1;
+        const durationDays = ch?.duration_days ?? 1;
         return {
           activeChallengeId: ac.id,
           challengeId: ch?.id ?? ac.challenge_id,
           challengeName: ch?.title ?? "Challenge",
           todayTaskProgress: required.length > 0 ? `${completedCount}/${required.length}` : "0/0",
           todayTasks,
+          currentDay,
+          durationDays,
         };
       });
       return { challengesWithProgress: withProgress, totalRemaining };
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !isGuest,
+    enabled: !isGuest && !!user?.id,
   });
-  const _homeChallengesWithProgress = homeActiveQuery.data?.challengesWithProgress ?? null;
-  const _homeTotalRemaining = homeActiveQuery.data?.totalRemaining ?? 0;
-  const _homeDataError = homeActiveQuery.isError;
+  const homeChallengesWithProgress = homeActiveQuery.data?.challengesWithProgress ?? [];
+  const hasActiveChallengesFromList = homeChallengesWithProgress.length > 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -589,7 +602,7 @@ export default function HomeScreen() {
     inputRange: [0, 1],
     outputRange: [0, 0.15],
   });
-  void _handleUserPress; void _user; void _leaderboardEntries; void _homeChallengesWithProgress; void _homeTotalRemaining; void _homeDataError; void _lastStandRequiresPremium; void _isFirstTimeUser; void _progressColor; void _handleSecureDay; void _glowOpacity;
+  void _handleUserPress; void _leaderboardEntries; void _lastStandRequiresPremium; void _isFirstTimeUser; void _progressColor; void _handleSecureDay; void _glowOpacity;
 
   return (
     <ErrorBoundary>
@@ -635,16 +648,14 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {!isGuest && !hasActiveChallenge && (
+        {!isGuest && homeActiveQuery.isSuccess && !hasActiveChallengesFromList && (
           <View style={[styles.welcomeCard, styles.startBuildingCard]}>
             <View style={[styles.startBuildingIconWrap, { backgroundColor: DS_COLORS.accentLight }]}>
               <Compass size={28} color={DS_COLORS.accent} />
             </View>
             <Text style={styles.startBuildingTitle}>Start Building</Text>
             <Text style={styles.welcomeCardSub}>
-              {((stats?.totalDaysSecured ?? 0) > 0
-                ? "Secure 1 day today to restart momentum."
-                : "Pick a challenge, commit, and secure your first day.")}
+              Pick a challenge and begin your transformation.
             </Text>
             <TouchableOpacity
               style={[styles.exploreChallengesPrimaryBtn, { backgroundColor: DS_COLORS.accent }]}
@@ -653,7 +664,7 @@ export default function HomeScreen() {
               accessibilityLabel="Explore Challenges"
               accessibilityRole="button"
             >
-              <Text style={styles.exploreChallengesPrimaryBtnText}>Explore Challenges ›</Text>
+              <Text style={styles.exploreChallengesPrimaryBtnText}>Explore Challenges →</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -675,7 +686,7 @@ export default function HomeScreen() {
             <AlertTriangle size={32} color={DS_COLORS.textMuted} style={{ marginBottom: 12 }} />
             <Text style={styles.challengesErrorLabel}>CHALLENGES</Text>
             <Text style={[styles.challengesErrorText, { color: DS_COLORS.textPrimary }]}>
-              Couldn&apos;t load your challenges. Check your connection and try again.
+              Couldn&apos;t load your challenges.
             </Text>
             <TouchableOpacity
               style={[styles.challengesErrorRetryBtn, { backgroundColor: DS_COLORS.accent }]}
@@ -685,8 +696,50 @@ export default function HomeScreen() {
               accessibilityRole="button"
             >
               <RefreshCw size={16} color={DS_COLORS.white} />
-              <Text style={styles.challengesErrorRetryText}>🔄 Retry</Text>
+              <Text style={styles.challengesErrorRetryText}>Retry</Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {!isGuest && homeActiveQuery.isSuccess && hasActiveChallengesFromList && (
+          <View style={styles.activeChallengesSection}>
+            {homeChallengesWithProgress.map((item) => (
+              <View key={item.activeChallengeId} style={[styles.challengeCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+                <View style={styles.challengeCardHeader}>
+                  <Text style={styles.challengeCardTitle} numberOfLines={1}>{item.challengeName}</Text>
+                  <Text style={styles.challengeCardDay}>
+                    {item.durationDays ? `Day ${item.currentDay ?? 1} of ${item.durationDays}` : "Active"}
+                  </Text>
+                </View>
+                {item.todayTasks.length > 0 && (
+                  <View style={styles.challengeCardTaskList}>
+                    {item.todayTasks.map((task) => (
+                      <View key={task.id} style={styles.challengeCardTaskRow}>
+                        {task.completed ? (
+                          <CheckCircle2 size={18} color={DS_COLORS.success} />
+                        ) : (
+                          <Circle size={18} color={DS_COLORS.border} strokeWidth={2} />
+                        )}
+                        <Text style={[styles.challengeCardTaskText, task.completed && styles.todaysResetTaskDone]}>{task.title}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={[styles.continueButton, { backgroundColor: DS_COLORS.accent }]}
+                  onPress={() => {
+                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push(ROUTES.CHALLENGE_ACTIVE(item.activeChallengeId) as never);
+                  }}
+                  activeOpacity={0.85}
+                  accessibilityLabel="Continue"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                  <ChevronRight size={18} color={DS_COLORS.white} />
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
         )}
 
@@ -720,7 +773,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {!isGuest && hasActiveChallenge && tasks.length > 0 && (
+        {!isGuest && hasActiveChallenge && !hasActiveChallengesFromList && tasks.length > 0 && (
               <View style={styles.todaysResetCard}>
                 <View style={styles.todaysResetHeader}>
                   <Clock size={18} color={colors.text.primary} />
@@ -1566,6 +1619,61 @@ const styles = StyleSheet.create({
   todaysResetTaskDone: {
     color: DS_COLORS.textSecondary,
     textDecorationLine: "line-through",
+  },
+  activeChallengesSection: {
+    marginBottom: DS_SPACING.lg,
+  },
+  challengeCard: {
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.cardPadding,
+    marginBottom: DS_SPACING.md,
+    borderWidth: DS_BORDERS.width,
+    ...DS_SHADOWS.card,
+  },
+  challengeCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: DS_SPACING.md,
+  },
+  challengeCardTitle: {
+    fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
+    fontWeight: "700",
+    color: DS_COLORS.textPrimary,
+    flex: 1,
+  },
+  challengeCardDay: {
+    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
+    fontWeight: "600",
+    color: DS_COLORS.textSecondary,
+    marginLeft: DS_SPACING.sm,
+  },
+  challengeCardTaskList: {
+    gap: DS_SPACING.sm,
+    marginBottom: DS_SPACING.md,
+  },
+  challengeCardTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.sm,
+  },
+  challengeCardTaskText: {
+    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
+    color: DS_COLORS.textPrimary,
+    flex: 1,
+  },
+  continueButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: DS_SPACING.sm,
+    paddingVertical: 14,
+    borderRadius: DS_RADIUS.button,
+  },
+  continueButtonText: {
+    fontSize: DS_TYPOGRAPHY.button.fontSize,
+    fontWeight: "700",
+    color: DS_COLORS.white,
   },
   statsSummaryCard: {
     flexDirection: "row",

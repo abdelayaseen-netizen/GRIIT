@@ -35,6 +35,8 @@ export interface ChallengeWithProgress {
   challengeName: string;
   todayTaskProgress: string;
   todayTasks: TodayTaskItem[];
+  currentDay?: number;
+  durationDays?: number;
   participationType?: string;
   runStatus?: string;
   teamSize?: number;
