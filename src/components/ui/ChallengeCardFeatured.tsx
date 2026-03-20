@@ -108,7 +108,7 @@ function ChallengeCardFeaturedInner(props: {
             <Text style={s.metaText}>{durationLabel}</Text>
             <Text style={s.metaDot}>·</Text>
             <ListTodo size={14} color={DS_COLORS.TEXT_MUTED} />
-            <Text style={s.metaText}>{taskCount} goals</Text>
+            <Text style={s.metaText}>{taskCount} {taskCount === 1 ? "goal" : "goals"}</Text>
             {(participantsCount ?? 0) > 0 && (
               <>
                 <Text style={s.metaDot}>·</Text>

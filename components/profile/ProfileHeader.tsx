@@ -1,220 +1,99 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from "react-native";
-import * as Haptics from "expo-haptics";
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { Share2 } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 export interface ProfileHeaderProps {
   avatarUrl?: string | null;
   fullName: string;
   username: string;
-  disciplineTitle?: string;
   currentTier: string;
   joinDate?: string;
   onShare?: () => void;
   bio?: string;
-  /** Only show Edit button on own profile. Default true. */
   showEditButton?: boolean;
-  /** Use dark avatar placeholder when no photo. Default true. */
-  useBlackAvatar?: boolean;
 }
 
-const AVATAR_SIZE = 100;
-
-const AVATAR_COLORS = [
-  DS_COLORS.avatarColor1,
-  DS_COLORS.avatarColor2,
-  DS_COLORS.avatarColor3,
-  DS_COLORS.avatarColor4,
-  DS_COLORS.avatarColor5,
-  DS_COLORS.avatarColor6,
-  DS_COLORS.avatarColor7,
-  DS_COLORS.avatarColor8,
-];
-
-function getAvatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const idx = Math.abs(hash) % AVATAR_COLORS.length;
-  return AVATAR_COLORS[idx] ?? DS_COLORS.avatarColor1;
-}
+const RANK_DOT: Record<string, string> = {
+  Starter: "#E8593C",
+  Builder: "#FF9800",
+  Disciplined: "#5B7FD4",
+  Elite: "#9C27B0",
+  Legend: "#FFD700",
+};
 
 export default function ProfileHeader({
-  avatarUrl,
   fullName,
   username,
-  disciplineTitle: _disciplineTitle,
   currentTier,
   joinDate,
   onShare,
   bio,
   showEditButton = true,
-  useBlackAvatar = true,
 }: ProfileHeaderProps) {
   const router = useRouter();
   const displayName = fullName || username || "User";
-  const avatarBg = useBlackAvatar ? DS_COLORS.textPrimary : getAvatarColor(username || fullName || "U");
+  const rankDot = RANK_DOT[currentTier] ?? "#E8593C";
 
   return (
     <View style={styles.container}>
-      <View style={styles.avatarWrap}>
-        {avatarUrl && !useBlackAvatar ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-        ) : (
-          <View style={[styles.avatarPlaceholder, { backgroundColor: avatarBg }]}>
-            <Text style={styles.avatarLetter}>{displayName.charAt(0).toUpperCase()}</Text>
-          </View>
-        )}
-      </View>
+      <Pressable style={styles.avatarWrap}>
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.avatarLetter}>{displayName.charAt(0).toUpperCase()}</Text>
+        </View>
+      </Pressable>
       <Text style={styles.fullName}>{displayName}</Text>
       <Text style={styles.username}>@{username || "user"}</Text>
-      {bio ? (
-        <View style={styles.bioPill}>
-          <Text style={styles.bioPillText}>{bio}</Text>
+      <Text style={[styles.bio, !bio?.trim() && styles.bioPlaceholder]}>{bio?.trim() ? bio : "Tap edit to add a bio"}</Text>
+      <View style={styles.pills}>
+        <View style={styles.pill}>
+          <View style={[styles.rankDot, { backgroundColor: rankDot }]} />
+          <Text style={styles.pillText}>{currentTier}</Text>
         </View>
-      ) : null}
-      <View style={styles.tierBadge}>
-        <View style={[styles.tierDot, { backgroundColor: DS_COLORS.accent }]} />
-        <Text style={styles.tierBadgeText}>{currentTier}</Text>
+        <View style={styles.pill}>
+          <Text style={styles.joinedText}>{`Joined ${joinDate ?? ""}`.trim()}</Text>
+        </View>
       </View>
-      {joinDate ? (
-        <Text style={styles.joinDate}>Joined {joinDate}</Text>
-      ) : null}
       <View style={styles.actions}>
-        {showEditButton && (
-          <TouchableOpacity
-            style={styles.editBtn}
-            onPress={() => {
-              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push(ROUTES.EDIT_PROFILE as never);
-            }}
-            activeOpacity={0.7}
-            accessibilityLabel="Edit your profile"
-            accessibilityRole="button"
-          >
-            <Text style={styles.editBtnText}>✏️ Edit</Text>
+        {showEditButton ? (
+          <TouchableOpacity style={styles.editBtn} onPress={() => router.push(ROUTES.EDIT_PROFILE as never)} activeOpacity={0.7}>
+            <Text style={styles.editBtnText}>Edit</Text>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.shareBtn} onPress={onShare} activeOpacity={0.7} accessibilityLabel="Share your profile" accessibilityRole="button">
-          <Text style={styles.shareBtnText}>🔗 Share</Text>
+        ) : null}
+        <TouchableOpacity style={styles.shareBtn} onPress={onShare} activeOpacity={0.7}>
+          <Share2 size={14} color="#888" />
+          <Text style={styles.shareBtnText}>Share</Text>
         </TouchableOpacity>
+      </View>
+      <View style={styles.socialRow}>
+        <Text style={styles.socialText}>0 followers</Text>
+        <Text style={styles.socialText}> · </Text>
+        <Text style={styles.socialText}>0 following</Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    paddingVertical: DS_SPACING.xxl,
-    paddingHorizontal: DS_SPACING.screenHorizontalAlt,
-  },
-  avatarWrap: {
-    marginBottom: DS_SPACING.md,
-  },
-  avatar: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-  },
-  avatarPlaceholder: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarLetter: {
-    fontSize: 36,
-    fontWeight: "700",
-    color: DS_COLORS.white,
-  },
-  fullName: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: DS_COLORS.textPrimary,
-    textAlign: "center",
-  },
-  username: {
-    fontSize: 14,
-    color: DS_COLORS.textMuted,
-    marginTop: DS_SPACING.xs,
-    textAlign: "center",
-  },
-  bioPill: {
-    marginTop: DS_SPACING.sm,
-    paddingHorizontal: DS_SPACING.lg,
-    paddingVertical: 6,
-    borderRadius: DS_RADIUS.input,
-    backgroundColor: DS_COLORS.PROFILE_HEADER_BG,
-  },
-  bioPillText: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    color: DS_COLORS.textSecondary,
-  },
-  tierBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: DS_SPACING.sm,
-    paddingHorizontal: DS_SPACING.md,
-    paddingVertical: 6,
-    borderRadius: DS_RADIUS.input,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-  },
-  tierDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  tierBadgeText: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600",
-    color: DS_COLORS.textPrimary,
-  },
-  joinDate: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    color: DS_COLORS.textMuted,
-    marginTop: DS_SPACING.sm,
-    textAlign: "center",
-  },
-  actions: {
-    flexDirection: "row",
-    gap: DS_SPACING.md,
-    marginTop: DS_SPACING.lg,
-  },
-  editBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: DS_SPACING.xxl,
-    height: 40,
-    justifyContent: "center",
-    borderRadius: DS_RADIUS.button,
-    borderWidth: 1.5,
-    borderColor: DS_COLORS.borderAlt,
-    backgroundColor: DS_COLORS.surface,
-  },
-  editBtnText: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600",
-    color: DS_COLORS.textPrimary,
-  },
-  shareBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: DS_SPACING.xxl,
-    height: 40,
-    justifyContent: "center",
-    borderRadius: DS_RADIUS.button,
-    borderWidth: 1.5,
-    borderColor: DS_COLORS.borderAlt,
-    backgroundColor: DS_COLORS.surface,
-  },
-  shareBtnText: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600",
-    color: DS_COLORS.textPrimary,
-  },
+  container: { alignItems: "center", paddingVertical: 24, paddingHorizontal: 24 },
+  avatarWrap: { marginBottom: 8 },
+  avatarPlaceholder: { width: 72, height: 72, borderRadius: 36, backgroundColor: "#1A1A1A", alignItems: "center", justifyContent: "center" },
+  avatarLetter: { fontSize: 28, fontWeight: "700", color: "#fff" },
+  fullName: { marginTop: 12, fontSize: 18, fontWeight: "700", color: "#1A1A1A", textAlign: "center" },
+  username: { fontSize: 12, color: "#999", marginTop: 4, textAlign: "center" },
+  bio: { marginTop: 6, paddingHorizontal: 40, fontSize: 13, color: "#666", textAlign: "center" },
+  bioPlaceholder: { color: "#BBB", fontStyle: "italic" },
+  pills: { flexDirection: "row", justifyContent: "center", gap: 8, marginTop: 10 },
+  pill: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", paddingVertical: 4, paddingHorizontal: 12, borderRadius: 12 },
+  rankDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
+  pillText: { fontSize: 11, fontWeight: "600", color: "#1A1A1A" },
+  joinedText: { fontSize: 11, color: "#999" },
+  actions: { flexDirection: "row", justifyContent: "center", gap: 8, marginTop: 12 },
+  editBtn: { borderWidth: 1, borderColor: "#E8593C", borderRadius: 20, paddingVertical: 8, paddingHorizontal: 20 },
+  editBtnText: { fontSize: 12, fontWeight: "600", color: "#E8593C" },
+  shareBtn: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderColor: "#D9D5CC", borderRadius: 20, paddingVertical: 8, paddingHorizontal: 20 },
+  shareBtnText: { fontSize: 12, fontWeight: "600", color: "#888" },
+  socialRow: { flexDirection: "row", justifyContent: "center", marginTop: 10 },
+  socialText: { fontSize: 12, color: "#999" },
 });

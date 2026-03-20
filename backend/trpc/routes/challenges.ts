@@ -494,32 +494,38 @@ export const challengesRouter = createTRPCRouter({
   /** All active challenges for the current user (for home Daily Status + Active Challenges). */
   listMyActive: protectedProcedure
     .query(async ({ ctx }) => {
-      const { data, error } = await ctx.supabase
-        .from('active_challenges')
-        .select(`
-          *,
-          challenges (
+      try {
+        const { data, error } = await ctx.supabase
+          .from('active_challenges')
+          .select(`
             *,
-            challenge_tasks (*)
-          )
-        `)
-        .eq('user_id', ctx.userId)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(50);
+            challenges (
+              *,
+              challenge_tasks (*)
+            )
+          `)
+          .eq('user_id', ctx.userId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      if (error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenges." });
-      }
-      const list = (data ?? []) as { challenges?: { challenge_tasks?: ChallengeTaskRowRaw[] } }[];
-      for (const row of list) {
-        if (row.challenges?.challenge_tasks) {
-          (row.challenges as { challenge_tasks: ChallengeTaskRowRaw[] }).challenge_tasks = mapTaskRowsToApi(
-            row.challenges.challenge_tasks
-          ) as unknown as ChallengeTaskRowRaw[];
+        if (error) {
+          console.error("[listMyActive] Supabase error:", JSON.stringify(error));
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenges." });
         }
+        const list = (data ?? []) as { challenges?: { challenge_tasks?: ChallengeTaskRowRaw[] } }[];
+        for (const row of list) {
+          if (row.challenges?.challenge_tasks) {
+            (row.challenges as { challenge_tasks: ChallengeTaskRowRaw[] }).challenge_tasks = mapTaskRowsToApi(
+              row.challenges.challenge_tasks
+            ) as unknown as ChallengeTaskRowRaw[];
+          }
+        }
+        return list;
+      } catch (err) {
+        console.error("[listMyActive] caught:", err);
+        throw err;
       }
-      return list;
     }),
 
   startTeamChallenge: protectedProcedure

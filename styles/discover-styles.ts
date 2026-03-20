@@ -11,14 +11,32 @@ export const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 0,
   },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   title: {
-    ...DS_TYPOGRAPHY.pageTitle,
-    color: DS_COLORS.TEXT_PRIMARY,
+    fontSize: 22,
+    fontWeight: "700" as const,
+    color: "#1A1A1A",
+    letterSpacing: -0.5,
   },
   subtitle: {
-    ...DS_TYPOGRAPHY.secondary,
-    color: DS_COLORS.TEXT_SECONDARY,
+    fontSize: 12,
+    fontWeight: "500" as const,
+    color: "#999999",
     marginTop: 4,
+  },
+  searchIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: DS_COLORS.WHITE,
+    borderWidth: 0.5,
+    borderColor: "#E0DCD4",
   },
   searchRow: {
     paddingHorizontal: 20,
@@ -45,7 +63,7 @@ export const styles = StyleSheet.create({
   },
   categoryScroll: {
     paddingHorizontal: DS_SPACING.screenHorizontal,
-    gap: DS_SPACING.sm,
+    gap: 6,
   },
   errorBanner: {
     flexDirection: "row",
@@ -630,5 +648,119 @@ export const styles = StyleSheet.create({
     height: 180,
     borderRadius: 16,
     backgroundColor: DS_COLORS.chipFill,
+  },
+
+  v3Header: {
+    paddingHorizontal: 24,
+    paddingTop: 18,
+  },
+  v3HeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  v3Title: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+    color: "#1A1A1A",
+    letterSpacing: -0.5,
+  },
+  v3Subtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    color: "#999",
+  },
+  v3SearchBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#fff",
+    borderWidth: 0.5,
+    borderColor: "#E0DCD4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  v3SearchInlineWrap: {
+    paddingHorizontal: 24,
+    paddingTop: 10,
+  },
+  v3SearchInline: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 0.5,
+    borderColor: "#E8E5DF",
+  },
+  v3SearchLabel: {
+    fontSize: 12,
+    color: "#777",
+  },
+  v3SearchClear: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: "#E8593C",
+  },
+  v3PillsWrap: {
+    paddingTop: 14,
+  },
+  v3PillsContent: {
+    paddingHorizontal: 24,
+    gap: 6,
+  },
+  v3SectionPad: {
+    paddingHorizontal: 24,
+  },
+  v3SectionHeader: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  v3SectionHeaderSolo: {
+    paddingHorizontal: 24,
+    marginTop: 26,
+    marginBottom: 12,
+  },
+  v3SectionHeaderBetween: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  v3SectionTitle: {
+    fontSize: 15,
+    fontWeight: "700" as const,
+    color: "#1A1A1A",
+  },
+  v3Dot: {
+    marginLeft: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#E8593C",
+  },
+  v3FlatPad: {
+    paddingHorizontal: 24,
+  },
+  v3ListPad: {
+    paddingHorizontal: 24,
+  },
+  v3SeeAll: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: "#E8593C",
+  },
+  v3PopularWrap: {
+    marginHorizontal: 24,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    overflow: "hidden",
   },
 });

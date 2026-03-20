@@ -32,9 +32,9 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 16,
-    height: 34,
-    borderRadius: 100,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
     backgroundColor: DS_COLORS.BG_CARD,
     borderWidth: 0.5,
     borderColor: DS_COLORS.BORDER,
@@ -44,11 +44,12 @@ const s = StyleSheet.create({
     borderColor: DS_COLORS.TEXT_PRIMARY,
   },
   text: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "500" as const,
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: "#555555",
   },
   textActive: {
     color: DS_COLORS.WHITE,
+    fontWeight: "600" as const,
   },
 });

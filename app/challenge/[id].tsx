@@ -468,6 +468,8 @@ export default function ChallengeDetailScreen() {
     queryKey: ["challenge", "listMyActive", id],
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
     enabled: !!user && !isJoined,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const activeCount = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
   const joinLimit = canJoinChallenge(activeCount);
@@ -611,8 +613,7 @@ export default function ChallengeDetailScreen() {
 
   const handleCommitmentConfirm = useCallback(async () => {
     if (!id || commitmentJoining) return;
-    const list = await trpcQuery(TRPC.challenges.listMyActive) as unknown[];
-    const count = Array.isArray(list) ? list.length : 0;
+    const count = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
     const isPro = await (await import("@/lib/revenue-cat")).isProUser();
     if (count >= FREE_TIER.MAX_FREE_ACTIVE_CHALLENGES && !isPro) {
       router.push("/paywall" as never);
@@ -645,7 +646,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setCommitmentJoining(false);
     }
-  }, [id, commitmentJoining, commitmentUnderstood, user?.id, refetchAll, router, queryClient, myActiveListQuery]);
+  }, [id, commitmentJoining, user?.id, refetchAll, router, queryClient, myActiveListQuery]);
 
   const onJoinCelebrationDismiss = useCallback(() => {
     setShowJoinCelebration(false);

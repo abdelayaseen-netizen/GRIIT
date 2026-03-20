@@ -142,8 +142,10 @@ export default function EditProfileScreen() {
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
+                maxLength={150}
                 editable={!isPending}
               />
+              <Text style={styles.counter}>{`${bio.length}/150`}</Text>
             </View>
 
             <View style={styles.inputGroup}>
@@ -269,5 +271,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 8,
     textAlign: 'center',
+  },
+  counter: {
+    marginTop: 6,
+    fontSize: 11,
+    color: DS_COLORS.textMuted,
+    textAlign: 'right',
   },
 });

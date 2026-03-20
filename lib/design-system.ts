@@ -273,6 +273,9 @@ export const DS_COLORS = {
   checkinBlue: '#2563EB',
   acceptGreen: '#10B981',
   centerButtonBg: '#E8845F',
+  DISCOVER_CORAL: '#E8593C',
+  DISCOVER_BLUE: '#5B7FD4',
+  DISCOVER_GREEN: '#4CAF50',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CREATE FLOW COLORS

@@ -1,706 +1,226 @@
-import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Animated,
-  FlatList,
-  Platform,
-  ActivityIndicator,
-  Dimensions,
-} from "react-native";
+import React, { useMemo, useState, useCallback } from "react";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import {
-  Sparkles,
-  Dumbbell,
-  Brain,
-  Target,
-  Zap,
-  Users,
-} from "lucide-react-native";
+import { Search } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
-import {
-  SearchBar,
-  FilterChip,
-  SectionHeader,
-  EmptyState,
-  ChallengeCard24h,
-  ChallengeCardFeatured,
-  ChallengeRowCard,
-} from "@/src/components/ui";
+import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
-import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useDebounce } from "@/hooks/useDebounce";
-import type { StarterChallenge } from "@/mocks/starter-challenges";
+import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
+import { DailyCard } from "@/components/challenges/DailyCard";
+import { TeamChallengeCard } from "@/components/challenges/TeamChallengeCard";
+import { PopularChallengeRow } from "@/components/challenges/PopularChallengeRow";
 
-type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "team" | "other";
+type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "team";
 
-/** Backend challenges.getFeatured can return paginated { items, nextCursor } or legacy array. */
-type GetFeaturedResponse =
-  | { items: FeaturedChallengeRaw[]; nextCursor?: string | null }
-  | FeaturedChallengeRaw[];
-
-type FeaturedChallengeRaw = {
+type ApiChallenge = {
   id: string;
   title?: string;
   description?: string;
   short_hook?: string;
-  theme_color?: string;
   difficulty?: string;
   duration_type?: string;
   duration_days?: number;
   category?: string;
   visibility?: string;
-  status?: string;
   is_featured?: boolean;
   is_daily?: boolean;
-  starts_at?: string | null;
   ends_at?: string | null;
   participants_count?: number;
-  active_today_count?: number;
-  tasks?: unknown[];
-  challenge_tasks?: unknown[];
   participation_type?: string;
-  run_status?: string;
   team_size?: number;
-  shared_goal_target?: number;
-  shared_goal_unit?: string;
 };
 
-const DIFFICULTY_LABELS: Record<string, string> = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
-  extreme: "Extreme",
-};
+type GetFeaturedResponse = { items: ApiChallenge[]; nextCursor?: string | null } | ApiChallenge[];
 
-const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.ComponentType<{ size?: number; color?: string }> }[] = [
-  { key: "all", label: "All", icon: Sparkles },
-  { key: "fitness", label: "Fitness", icon: Dumbbell },
-  { key: "mind", label: "Mind", icon: Brain },
-  { key: "discipline", label: "Discipline", icon: Target },
-  { key: "faith", label: "Faith", icon: Zap },
-  { key: "team", label: "Team", icon: Users },
-  { key: "other", label: "Other", icon: Sparkles },
+const CATEGORIES: { key: CategoryKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "fitness", label: "Fitness" },
+  { key: "mind", label: "Mind" },
+  { key: "discipline", label: "Discipline" },
+  { key: "faith", label: "Faith" },
+  { key: "team", label: "Team" },
 ];
 
-function isDailyActive(c: FeaturedChallengeRaw): boolean {
-  if (!c.is_daily) return false;
-  if (!c.ends_at) return true;
-  return new Date(c.ends_at).getTime() > Date.now();
-}
-
-function isTeamParticipation(c: FeaturedChallengeRaw): boolean {
+function isTeam(c: ApiChallenge): boolean {
   const pt = (c.participation_type ?? "solo").toLowerCase();
   return pt === "duo" || pt === "team";
 }
 
-function teamSizeLabel(c: FeaturedChallengeRaw): string {
-  const pt = (c.participation_type ?? "solo").toLowerCase();
-  if (pt === "duo") return "👥 Duo";
-  const n = c.team_size ?? 4;
-  if (n >= 5) return "👥 4+ people";
-  if (n >= 3) return "👥 3-4 people";
-  return "👥 Team";
+function isDaily(c: ApiChallenge): boolean {
+  if (c.is_daily) return true;
+  if (c.duration_type === "24h") return true;
+  return (c.duration_days ?? 0) === 1;
 }
 
-function isDailyChallengeRow(c: FeaturedChallengeRaw): boolean {
-  const dt = c.duration_type ?? "";
-  const dd = c.duration_days ?? 0;
-  return !!(c.is_daily || dt === "24h" || dd === 1);
+function isActiveDaily(c: ApiChallenge): boolean {
+  if (!isDaily(c)) return false;
+  if (!c.ends_at) return true;
+  return new Date(c.ends_at).getTime() > Date.now();
 }
 
-function matchesCategory(c: FeaturedChallengeRaw, cat: CategoryKey): boolean {
+function categoryMatch(c: ApiChallenge, cat: CategoryKey): boolean {
   if (cat === "all") return true;
-  if (cat === "team") return isTeamParticipation(c);
-  if (cat === "mind" && (c.category === "mind" || c.category === "mental")) return true;
-  if (cat === "other") return !["fitness", "mind", "discipline", "faith"].includes((c.category ?? "").toLowerCase());
+  if (cat === "team") return isTeam(c);
   return (c.category ?? "").toLowerCase() === cat;
 }
 
-function matchesSearch(c: FeaturedChallengeRaw, q: string): boolean {
+function searchMatch(c: ApiChallenge, q: string): boolean {
   if (!q) return true;
-  const lower = q.toLowerCase();
-  const title = (c.title ?? "").toLowerCase();
-  const desc = (c.description ?? "").toLowerCase();
-  const hook = (c.short_hook ?? "").toLowerCase();
-  return title.includes(lower) || desc.includes(lower) || hook.includes(lower);
+  const s = q.toLowerCase();
+  return (c.title ?? "").toLowerCase().includes(s) || (c.description ?? "").toLowerCase().includes(s) || (c.short_hook ?? "").toLowerCase().includes(s);
 }
-
-function SkeletonPulse({ style }: { style: import("react-native").StyleProp<import("react-native").ViewStyle> }) {
-  const animValue = useRef(new Animated.Value(0.3)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(animValue, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(animValue, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-      ])
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [animValue]);
-
-  return <Animated.View style={[style, { opacity: animValue }]} />;
-}
-
-function SkeletonCard({ featured, cardColor }: { featured: boolean; cardColor?: string }) {
-  const { colors } = useTheme();
-  const bg = cardColor ?? colors.card;
-  if (featured) {
-    return (
-      <View style={[styles.skeletonFeaturedCard, { backgroundColor: bg }]}>
-        <View style={styles.skeletonAccent} />
-        <View style={styles.skeletonFeaturedContent}>
-          <View style={styles.skeletonTopRow}>
-            <SkeletonPulse style={styles.skeletonBadge} />
-            <SkeletonPulse style={styles.skeletonDiffPill} />
-          </View>
-          <SkeletonPulse style={styles.skeletonTitle} />
-          <SkeletonPulse style={styles.skeletonHook} />
-          <View style={styles.skeletonChipsRow}>
-            <SkeletonPulse style={styles.skeletonChip} />
-            <SkeletonPulse style={styles.skeletonChipMed} />
-          </View>
-          <SkeletonPulse style={styles.skeletonMeta} />
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.skeletonCompactCard, { backgroundColor: bg }]}>
-      <View style={styles.skeletonCompactBar} />
-      <View style={styles.skeletonCompactContent}>
-        <SkeletonPulse style={styles.skeletonCompactTitle} />
-        <SkeletonPulse style={styles.skeletonCompactDesc} />
-        <SkeletonPulse style={styles.skeletonCompactMeta} />
-      </View>
-    </View>
-  );
-}
-
-function SkeletonList({ cardColor }: { cardColor?: string }) {
-  return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <SkeletonPulse style={styles.skeletonSectionIcon} />
-          <SkeletonPulse style={styles.skeletonSectionLabel} />
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.skeletonDailyScroll}>
-          {[0, 1, 2].map((i) => (
-            <SkeletonPulse key={`sd-${i}`} style={styles.skeletonDailyCard} />
-          ))}
-        </ScrollView>
-      </View>
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <SkeletonPulse style={styles.skeletonSectionIcon} />
-          <SkeletonPulse style={styles.skeletonSectionLabel} />
-        </View>
-        <View style={styles.featuredList}>
-          {[0, 1, 2].map((i) => (
-            <SkeletonCard key={`sf-${i}`} featured cardColor={cardColor} />
-          ))}
-        </View>
-      </View>
-    </ScrollView>
-  );
-}
-
-const FEATURED_PAGE_SIZE = 20;
-const screenWidth = Dimensions.get("window").width;
-const DAILY_CARD_GAP = 16;
-const DAILY_CARD_WIDTH = (screenWidth - 48) / 2;
 
 export default function DiscoverScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
-  const isGuest = useIsGuest();
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
-  const debouncedQuery = useDebounce(searchQuery, 300);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 250);
 
   const featuredQuery = useInfiniteQuery({
-    queryKey: ["discover", "featured", activeCategory, debouncedQuery],
+    queryKey: ["discover", "v3", activeCategory, debouncedQuery],
     queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
-      const params: Record<string, string | number | undefined> = {
-        limit: FEATURED_PAGE_SIZE,
-        cursor: pageParam ?? undefined,
-        category: activeCategory !== "all" ? activeCategory : undefined,
-        search: debouncedQuery || undefined,
-      };
-      const data = (await trpcQuery(TRPC.challenges.getFeatured, params)) as GetFeaturedResponse;
-      const isPaginated = data != null && typeof data === "object" && !Array.isArray(data) && "items" in data;
-      const items = isPaginated ? (data.items ?? []) : Array.isArray(data) ? data : [];
-      const nextCursor = isPaginated && "nextCursor" in data ? data.nextCursor ?? undefined : undefined;
-      return { items, nextCursor: nextCursor ?? undefined };
+      const data = (await trpcQuery(TRPC.challenges.getFeatured, {
+        limit: 30,
+        cursor: pageParam,
+      })) as GetFeaturedResponse;
+      if (Array.isArray(data)) return { items: data, nextCursor: undefined as string | undefined };
+      return { items: data.items ?? [], nextCursor: data.nextCursor ?? undefined };
     },
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as string | undefined,
     staleTime: 5 * 60 * 1000,
   });
 
-  const featuredData = useMemo(
-    () => featuredQuery.data?.pages.flatMap((p) => p.items ?? []) ?? [],
-    [featuredQuery.data?.pages]
-  );
+  const all = useMemo(() => (featuredQuery.data?.pages.flatMap((p) => p.items) ?? []).filter((c) => (c.visibility ?? "public").toLowerCase() === "public"), [featuredQuery.data?.pages]);
+  const filtered = useMemo(() => all.filter((c) => categoryMatch(c, activeCategory)).filter((c) => searchMatch(c, debouncedQuery)), [all, activeCategory, debouncedQuery]);
 
-  const isLoading = featuredQuery.isLoading;
-  const isError = featuredQuery.isError;
-  /** Extends StarterChallenge with optional team/shared-goal fields from API. */
-  type DiscoverChallenge = StarterChallenge & {
-    participation_type?: string;
-    run_status?: string;
-    team_size?: number;
-    shared_goal_target?: number;
-    shared_goal_unit?: string;
-  };
+  const hero = useMemo(() => {
+    const featured = filtered.find((c) => c.is_featured === true);
+    if (featured) return featured;
+    return [...filtered].sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0))[0] ?? null;
+  }, [filtered]);
 
-  const allChallenges = useMemo((): DiscoverChallenge[] => {
-    const serverData = featuredData as FeaturedChallengeRaw[];
-    if (serverData && serverData.length > 0) {
-      return serverData.map((c) => {
-        const tasks = c.tasks ?? c.challenge_tasks ?? [];
-        return {
-          id: c.id,
-          title: c.title ?? "",
-          description: c.description ?? "",
-          short_hook: c.short_hook ?? c.description ?? "",
-          theme_color: c.theme_color ?? DS_COLORS.accent,
-          difficulty: c.difficulty ?? "medium",
-          duration_type: c.duration_type ?? "multi_day",
-          duration_days: c.duration_days ?? 30,
-          category: c.category ?? "fitness",
-          visibility: c.visibility ?? "public",
-          status: c.status ?? "published",
-          is_featured: c.is_featured ?? false,
-          is_daily: c.is_daily ?? (c.duration_type === "24h"),
-          starts_at: c.starts_at ?? null,
-          ends_at: c.ends_at ?? null,
-          participants_count: c.participants_count ?? 0,
-          active_today_count: c.active_today_count ?? 0,
-          challenge_tasks: tasks as StarterChallenge["challenge_tasks"],
-          tasks: tasks as StarterChallenge["tasks"],
-          participation_type: c.participation_type,
-          run_status: c.run_status,
-          team_size: c.team_size,
-          shared_goal_target: c.shared_goal_target,
-          shared_goal_unit: c.shared_goal_unit,
-        };
-      });
-    }
-    return [];
-  }, [featuredData]);
+  const heroId = hero?.id ?? "";
+  const daily = useMemo(() => filtered.filter((c) => c.id !== heroId).filter((c) => isActiveDaily(c)).filter((c) => !isTeam(c)).slice(0, 8), [filtered, heroId]);
+  const team = useMemo(() => filtered.filter((c) => c.id !== heroId).filter((c) => isTeam(c)).slice(0, 4), [filtered, heroId]);
+  const popular = useMemo(() => filtered.filter((c) => c.id !== heroId).filter((c) => !isDaily(c) && !isTeam(c)).sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0)).slice(0, 5), [filtered, heroId]);
 
-  const filteredAll = useMemo(
-    () =>
-      allChallenges
-        .filter((c) => matchesCategory(c, activeCategory))
-        .filter((c) => matchesSearch(c, debouncedQuery)),
-    [allChallenges, activeCategory, debouncedQuery]
-  );
-
-  const dailyChallenges = useMemo(() => {
-    return filteredAll.filter((c) => isDailyChallengeRow(c) && isDailyActive(c) && !isTeamParticipation(c));
-  }, [filteredAll]);
-
-  const teamChallenges = useMemo(() => {
-    return filteredAll.filter((c) => isTeamParticipation(c));
-  }, [filteredAll]);
-
-  const standardChallenges = useMemo(() => {
-    return filteredAll.filter((c) => !isDailyChallengeRow(c) && !isTeamParticipation(c));
-  }, [filteredAll]);
-
-  const FEATURED_SECTION_SIZE = 5;
-  const featuredChallenges = useMemo(
-    () => standardChallenges.slice(0, FEATURED_SECTION_SIZE),
-    [standardChallenges]
-  );
-  const otherChallenges = useMemo(
-    () => standardChallenges.slice(FEATURED_SECTION_SIZE),
-    [standardChallenges]
-  );
-
-  const totalVisible =
-    dailyChallenges.length + teamChallenges.length + featuredChallenges.length + otherChallenges.length;
-
-  const handleRefresh = useCallback(() => {
-    featuredQuery.refetch();
-  }, [featuredQuery]);
-
-  const queryClient = useQueryClient();
-  const handleChallengePress = useCallback(
-    (challengeId: string) => {
-      const id = challengeId != null ? String(challengeId) : "";
-      if (!id) return;
-      try {
-        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      } catch (err) {
-        console.error("[Discover] haptic failed:", err);
-      }
-      router.push(ROUTES.CHALLENGE_ID(id) as never);
-    },
-    [router]
-  );
-  const handlePrefetchChallenge = useCallback(
-    (challengeId: string) => {
-      const id = challengeId != null ? String(challengeId) : "";
-      if (!id) return;
-      queryClient.prefetchQuery({
-        queryKey: ["challenge", id],
-        queryFn: () => trpcQuery(TRPC.challenges.getById, { id }),
-        staleTime: 5 * 60 * 1000,
-      });
-    },
-    [queryClient]
-  );
-
-  const handleCategoryPress = useCallback((key: CategoryKey) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setActiveCategory(key);
-  }, []);
-
-  const clearSearch = useCallback(() => {
-    setSearchQuery("");
-  }, []);
-
-  const getDurationLabel = useCallback((challenge: StarterChallenge) => {
-    if (challenge.duration_type === "24h" || challenge.is_daily) return "24H";
-    const days = challenge.duration_days;
-    return `${days} day${days === 1 ? "" : "s"}`;
-  }, []);
-
-  const renderDailyItem = useCallback(
-    ({ item: c, index }: { item: StarterChallenge; index: number }) => (
-      <View style={{ marginRight: DAILY_CARD_GAP }}>
-        <ChallengeCard24h
-          title={c.title}
-          description={c.short_hook}
-          endsAt={c.ends_at}
-          difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-          stripeColor={c.theme_color}
-          category={c.category}
-          tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
-          participantsCount={c.participants_count ?? 0}
-          onPress={() => handleChallengePress(c.id)}
-          cardWidth={DAILY_CARD_WIDTH}
-          index={index}
-        />
-      </View>
-    ),
-    [handleChallengePress]
-  );
-
-  const renderFeaturedItem = useCallback(
-    ({ item: c }: { item: DiscoverChallenge }) => (
-      <ChallengeCardFeatured
-        title={c.title}
-        description={c.short_hook ?? c.description}
-        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-        stripeColor={c.theme_color || DS_COLORS.ACCENT_PRIMARY}
-        category={c.category}
-        tasksPreview={c.tasks.slice(0, 2).map((t) => ({ icon: t.type, label: t.title }))}
-        durationLabel={getDurationLabel(c)}
-        taskCount={c.tasks.length}
-        participantsCount={c.participants_count ?? 0}
-        activeTodayCount={c.active_today_count ?? 0}
-        isFeatured={c.is_featured === true}
-        is24h={c.is_daily === true || c.duration_type === "24h"}
-        onPressIn={() => handlePrefetchChallenge(c.id)}
-        onPress={() => handleChallengePress(c.id)}
-      />
-    ),
-    [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
-  );
-
-  const renderOtherItem = useCallback(
-    ({ item: c, index }: { item: DiscoverChallenge; index: number }) => (
-      <ChallengeRowCard
-        title={c.title}
-        description={c.short_hook ?? c.description}
-        stripeColor={c.theme_color || undefined}
-        category={c.category}
-        durationLabel={getDurationLabel(c)}
-        taskCount={c.tasks.length}
-        participantsCount={c.participants_count ?? 0}
-        onPressIn={() => handlePrefetchChallenge(c.id)}
-        onPress={() => handleChallengePress(c.id)}
-        participationType={c.participation_type}
-        teamSize={c.team_size}
-        sharedGoalTarget={c.shared_goal_target}
-        sharedGoalUnit={c.shared_goal_unit}
-        index={index}
-        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-      />
-    ),
-    [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
-  );
-
-  const renderTeamItem = useCallback(
-    ({ item: c, index }: { item: DiscoverChallenge; index: number }) => (
-      <ChallengeRowCard
-        title={c.title}
-        description={c.short_hook ?? c.description}
-        stripeColor={c.theme_color || undefined}
-        category={c.category}
-        durationLabel={getDurationLabel(c)}
-        taskCount={c.tasks.length}
-        participantsCount={c.participants_count ?? 0}
-        teamMeta={teamSizeLabel(c)}
-        onPressIn={() => handlePrefetchChallenge(c.id)}
-        onPress={() => handleChallengePress(c.id)}
-        participationType={c.participation_type}
-        teamSize={c.team_size}
-        index={index}
-        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
-      />
-    ),
-    [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
-  );
-
-  const renderErrorBanner = () => {
-    if (!isError) return null;
-    return (
-      <View style={styles.errorBanner}>
-        <Text style={styles.errorBannerText}>📡 Offline mode</Text>
-        <TouchableOpacity
-          onPress={handleRefresh}
-          activeOpacity={0.7}
-          testID="discover-retry-button"
-          accessibilityLabel="Retry loading"
-          accessibilityRole="button"
-        >
-          <Text style={[styles.retryPillText, { color: colors.accent }]}>Retry</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const renderContent = () => {
-    if (isLoading) {
-      return <SkeletonList cardColor={colors.card} />;
-    }
-
-    const hasLoaded = featuredQuery.data?.pages != null && featuredQuery.data.pages.length > 0;
-    if (totalVisible === 0 && !hasLoaded) {
-      const isFiltered = Boolean(searchQuery || activeCategory !== "all");
-      if (isGuest) {
-        return (
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIcon}>
-              <Text style={{ fontSize: 28 }}>🚀</Text>
-            </View>
-            <Text style={styles.emptyTitle}>Challenges coming soon</Text>
-            <Text style={styles.emptySubtext}>We&apos;re building something great. Check back soon.</Text>
-            <TouchableOpacity style={styles.emptyRefreshButton} onPress={handleRefresh} activeOpacity={0.7} accessibilityLabel="Refresh" accessibilityRole="button">
-              <Text style={styles.emptyRefreshText}>↻ Refresh</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      }
-      return (
-        <EmptyState
-          title={isFiltered ? "No challenges found" : "No challenges yet. Be the first to create one!"}
-          subtitle={searchQuery ? "Try a different search or category" : activeCategory !== "all" ? "Try another category or clear filters." : "Create a challenge and invite others to join."}
-          primaryCtaLabel={searchQuery ? "Clear search" : isFiltered ? "Clear filters" : "Create challenge"}
-          onPrimaryCta={searchQuery ? clearSearch : isFiltered ? () => { setActiveCategory("all"); setSearchQuery(""); handleRefresh(); } : () => router.push(ROUTES.TABS_CREATE as never)}
-          secondaryCtaLabel="Refresh"
-          onSecondaryCta={handleRefresh}
-        />
-      );
-    }
-
-    return (
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled
-        refreshControl={
-          <RefreshControl
-            refreshing={featuredQuery.isRefetching && !featuredQuery.isFetchingNextPage}
-            onRefresh={handleRefresh}
-            tintColor={DS_COLORS.accent}
-          />
-        }
-      >
-        {renderErrorBanner()}
-
-        {hasLoaded && (
-          <View style={styles.section}>
-            <SectionHeader
-              title="⚡ 24-Hour Challenges"
-              icon={<Zap size={18} color={DS_COLORS.accent} />}
-              caption="New every day"
-            />
-            {dailyChallenges.length > 0 ? (
-              <FlatList
-                data={dailyChallenges}
-                keyExtractor={(item) => item.id}
-                horizontal
-                initialNumToRender={5}
-                maxToRenderPerBatch={5}
-                windowSize={5}
-                getItemLayout={(_data, index) => ({
-                  length: DAILY_CARD_WIDTH + DAILY_CARD_GAP,
-                  offset: (DAILY_CARD_WIDTH + DAILY_CARD_GAP) * index,
-                  index,
-                })}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={[styles.dailyScrollContent, { paddingLeft: 16, paddingRight: 24 }]}
-                renderItem={renderDailyItem}
-                snapToInterval={DAILY_CARD_WIDTH + DAILY_CARD_GAP}
-                snapToAlignment="start"
-                decelerationRate="fast"
-              />
-            ) : (
-              <Text
-                style={[
-                  DS_TYPOGRAPHY.secondary,
-                  { paddingHorizontal: 20, paddingBottom: 8, color: DS_COLORS.TEXT_MUTED },
-                ]}
-              >
-                No 24-hour challenges match this filter. Try All or another category.
-              </Text>
-            )}
-          </View>
-        )}
-
-        {teamChallenges.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🤝 Team Challenges</Text>
-            </View>
-            <FlatList
-              data={teamChallenges}
-              keyExtractor={(item) => item.id}
-              renderItem={renderTeamItem}
-              scrollEnabled={false}
-              initialNumToRender={10}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              style={styles.compactList}
-            />
-          </View>
-        )}
-
-        {featuredChallenges.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>📈 Featured</Text>
-            </View>
-            <FlatList
-              data={featuredChallenges}
-              keyExtractor={(item) => item.id}
-              renderItem={renderFeaturedItem}
-              scrollEnabled={false}
-              initialNumToRender={10}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              style={styles.featuredList}
-            />
-          </View>
-        )}
-
-        {otherChallenges.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>✨ More Challenges</Text>
-            </View>
-            <FlatList
-              data={otherChallenges}
-              keyExtractor={(item) => item.id}
-              renderItem={renderOtherItem}
-              scrollEnabled={false}
-              initialNumToRender={10}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              style={styles.compactList}
-            />
-          </View>
-        )}
-
-        {featuredQuery.hasNextPage ? (
-          <View style={styles.loadMoreWrap}>
-            <TouchableOpacity
-              style={styles.loadMoreBtn}
-              onPress={() => featuredQuery.fetchNextPage()}
-              disabled={featuredQuery.isFetchingNextPage}
-              activeOpacity={0.8}
-              accessibilityLabel="Load more challenges"
-              accessibilityRole="button"
-            >
-              {featuredQuery.isFetchingNextPage ? (
-                <ActivityIndicator size="small" color={DS_COLORS.accent} />
-              ) : (
-                <Text style={styles.loadMoreText}>Load more</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        ) : null}
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-    );
-  };
+  const openChallenge = useCallback((id: string) => {
+    if (!id) return;
+    if (typeof Haptics.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(ROUTES.CHALLENGE_ID(id) as never);
+  }, [router]);
 
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Discover</Text>
-          <Text style={styles.subtitle}>Find challenges worth committing to.</Text>
-        </View>
-
-        <View style={styles.searchRow}>
-          <View style={styles.searchBarWrap}>
-            <SearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search challenges..."
-              onClear={clearSearch}
-              containerStyle={[styles.searchBarInner, { borderRadius: 12 }]}
-            />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={featuredQuery.isRefetching} onRefresh={() => featuredQuery.refetch()} tintColor={DS_COLORS.ACCENT_PRIMARY} />}
+        >
+          <View style={styles.v3Header}>
+            <View style={styles.v3HeaderRow}>
+              <Text style={styles.v3Title}>Discover</Text>
+              <TouchableOpacity style={styles.v3SearchBtn} onPress={() => setSearchOpen((v) => !v)} activeOpacity={0.8}>
+                <Search size={15} color="#888" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.v3Subtitle}>What are you willing to commit to?</Text>
           </View>
-        </View>
 
-        <View style={styles.categoryRow}>
-          <ScrollView
+          {searchOpen ? (
+            <View style={styles.v3SearchInlineWrap}>
+              <View style={styles.v3SearchInline}>
+                <Text style={styles.v3SearchLabel}>Search: </Text>
+                <TouchableOpacity onPress={() => setQuery("")}><Text style={styles.v3SearchClear}>Clear</Text></TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
+
+          <View style={styles.v3PillsWrap}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.v3PillsContent}>
+              {CATEGORIES.map((c) => (
+                <FilterChip key={c.key} label={c.label} selected={activeCategory === c.key} onPress={() => setActiveCategory(c.key)} />
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.v3SectionPad}><HeroFeaturedCard challenge={hero ? { id: hero.id, title: hero.title ?? "Challenge", description: hero.short_hook ?? hero.description, duration_days: hero.duration_days, participants_count: hero.participants_count } : null} onPress={openChallenge} /></View>
+
+          <View style={styles.v3SectionHeader}><Text style={styles.v3SectionTitle}>Expires tonight</Text><View style={styles.v3Dot} /></View>
+          <FlatList
             horizontal
+            data={daily}
+            keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.categoryScroll, { paddingRight: 20 }]}
-          >
-            {CATEGORY_FILTERS.map((cat) => (
-              <FilterChip
-                key={cat.key}
-                label={cat.label}
-                selected={activeCategory === cat.key}
-                onPress={() => handleCategoryPress(cat.key)}
+            contentContainerStyle={styles.v3FlatPad}
+            ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
+            renderItem={({ item }) => (
+              <DailyCard
+                challenge={{
+                  id: item.id,
+                  title: item.title ?? "Challenge",
+                  description: item.short_hook ?? item.description,
+                  difficulty: item.difficulty,
+                  participants_count: item.participants_count,
+                }}
+                onPress={openChallenge}
+              />
+            )}
+          />
+
+          <View style={styles.v3SectionHeaderSolo}><Text style={styles.v3SectionTitle}>Bring your people</Text></View>
+          <View style={styles.v3ListPad}>
+            {team.map((c) => (
+              <TeamChallengeCard
+                key={c.id}
+                challenge={{
+                  id: c.id,
+                  title: c.title ?? "Team Challenge",
+                  description: c.short_hook ?? c.description,
+                  difficulty: c.difficulty,
+                  duration_days: c.duration_days,
+                  team_size: c.team_size,
+                  participants_count: c.participants_count,
+                }}
+                onPress={openChallenge}
               />
             ))}
-          </ScrollView>
-        </View>
+          </View>
 
-        {renderContent()}
+          <View style={styles.v3SectionHeaderBetween}>
+            <Text style={styles.v3SectionTitle}>Challenges for you</Text>
+            <TouchableOpacity onPress={() => setActiveCategory("all")}><Text style={styles.v3SeeAll}>See all</Text></TouchableOpacity>
+          </View>
+          <View style={styles.v3PopularWrap}>
+            {popular.map((c, i) => (
+              <PopularChallengeRow
+                key={c.id}
+                challenge={{
+                  id: c.id,
+                  title: c.title ?? "Challenge",
+                  difficulty: c.difficulty,
+                  duration_days: c.duration_days,
+                  participants_count: c.participants_count,
+                }}
+                index={i}
+                isLast={i === popular.length - 1}
+                onPress={openChallenge}
+              />
+            ))}
+          </View>
+          <View style={{ height: 24 }} />
+        </ScrollView>
       </SafeAreaView>
     </ErrorBoundary>
   );
 }
-

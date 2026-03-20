@@ -76,7 +76,7 @@ function ChallengeRowCardInner(props: {
             <Calendar size={12} color={DS_COLORS.TEXT_MUTED} />
             <Text style={s.metaLeftText}>
               {props.teamMeta ? `${props.teamMeta} · ` : ""}
-              {durationLabel} · {taskCount} goals
+              {durationLabel} · {taskCount} {taskCount === 1 ? "goal" : "goals"}
             </Text>
           </View>
           {(participantsCount ?? 0) > 0 && (
