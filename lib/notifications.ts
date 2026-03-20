@@ -18,8 +18,10 @@ const DEFAULT_PREFERRED_TIME = "20:00";
 export const ENABLE_TWO_HOURS_LEFT = true;
 
 function parsePreferredTime(preferredTime: string): { hour: number; minute: number } {
-  const [h, m] = (preferredTime || DEFAULT_PREFERRED_TIME).split(":").map(Number);
-  return { hour: isNaN(h) ? 20 : h, minute: isNaN(m) ? 0 : m };
+  const seg = (preferredTime || DEFAULT_PREFERRED_TIME).split(":");
+  const h = Number(seg[0]);
+  const m = Number(seg[1]);
+  return { hour: Number.isFinite(h) ? h : 20, minute: Number.isFinite(m) ? m : 0 };
 }
 
 /** Format hour/minute as "8:00 PM" for notification body. */

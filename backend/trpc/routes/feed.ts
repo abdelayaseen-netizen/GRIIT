@@ -61,9 +61,10 @@ export const feedRouter = createTRPCRouter({
         };
       });
 
+      const lastItem = items.length > 0 ? items[items.length - 1] : undefined;
       return {
         items: withProfiles,
-        nextCursor: items.length === input.limit && items.length > 0 ? items[items.length - 1].created_at : null,
+        nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null,
       };
     }),
 });

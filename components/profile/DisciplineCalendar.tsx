@@ -26,7 +26,7 @@ export default function DisciplineCalendar({
     for (let i = 0; i < TOTAL_CELLS; i++) {
       const d = new Date(start);
       d.setDate(d.getDate() + i);
-      const key = d.toISOString().split("T")[0];
+      const key = d.toISOString().slice(0, 10);
       out.push({ key, secured: set.has(key) });
     }
     return out;

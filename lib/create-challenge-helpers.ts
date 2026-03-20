@@ -247,7 +247,7 @@ export function canProceedStep1(
     const hasGoal = (sharedGoalTarget ?? 0) > 0 && Boolean((sharedGoalUnit ?? "").trim());
     if (!hasGoal) return false;
     if (deadlineType === "hard" && deadlineDate) {
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().slice(0, 10);
       if (deadlineDate < today) return false;
     }
     return true;

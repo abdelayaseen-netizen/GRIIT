@@ -39,7 +39,7 @@ export function Skeleton({ width = "100%", height = 16, borderRadius = 8, style 
   );
 }
 
-/** Compact skeleton for Home "Today's Missions" block only. */
+/** Compact skeleton for Home "Today's Goals" block only. */
 export function TodaysMissionsSkeleton() {
   return (
     <View style={{ paddingHorizontal: 20, marginBottom: DS_SPACING.lg }}>

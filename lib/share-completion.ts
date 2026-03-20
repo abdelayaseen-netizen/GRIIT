@@ -2,7 +2,7 @@
  * Capture ProofShareCard as image and open native share sheet. Fire-and-forget markAsShared.
  */
 import type { RefObject } from "react";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as MediaLibrary from "expo-media-library";
 import { trpcMutate } from "@/lib/trpc";
@@ -18,7 +18,7 @@ export type ShareCompletionOptions = ShareCardProofProps & {
   completionId?: string | null;
 };
 
-async function logShareError(message: string, err: unknown) {
+async function logShareError(_message: string, _err: unknown) {
   if (__DEV__) {
     // error swallowed — handle in UI
   }
@@ -30,7 +30,9 @@ export async function shareCompletion(options: ShareCompletionOptions): Promise<
     if (!ref?.current?.capture) return;
     const uri = await ref.current.capture();
     if (!uri) return;
-    const filename = FileSystem.cacheDirectory + `griit-proof-${Date.now()}.png`;
+    const base = FileSystem.cacheDirectory;
+    if (!base) return;
+    const filename = `${base}griit-proof-${Date.now()}.png`;
     await FileSystem.copyAsync({ from: uri, to: filename });
     const canShare = await Sharing.isAvailableAsync();
     if (canShare) {

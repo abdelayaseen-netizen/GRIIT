@@ -22,6 +22,9 @@ export const teamsRouter = createTRPCRouter({
         .select("id, name, invite_code, created_by, created_at, max_members")
         .single();
       requireNoError(teamErr, "Failed to create team.");
+      if (!team) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create team." });
+      }
       const { error: memberErr } = await ctx.supabase
         .from("team_members")
         .insert({ team_id: team.id, user_id: ctx.userId, role: "owner" });
@@ -79,6 +82,9 @@ export const teamsRouter = createTRPCRouter({
       .eq("id", membership.team_id)
       .single();
     requireNoError(teamErr, "Failed to load team.");
+    if (!team) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Team not found." });
+    }
     const { data: members, error: membersErr } = await ctx.supabase
       .from("team_members")
       .select("user_id, role, joined_at")

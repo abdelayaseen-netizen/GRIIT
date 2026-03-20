@@ -3,17 +3,23 @@
  * Date keys are YYYY-MM-DD (UTC date string).
  */
 export function getTodayDateKey(): string {
-  return new Date().toISOString().split("T")[0];
+  return new Date().toISOString().slice(0, 10);
 }
 
 export function dateKeyFromDate(d: Date): string {
-  return d.toISOString().split("T")[0];
+  return d.toISOString().slice(0, 10);
 }
 
 /** Parse YYYY-MM-DD to Date at midnight local time (matches streak/freeze "yesterday" logic). */
 export function parseDateKey(key: string): Date {
-  const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d);
+  const parts = key.split("-").map(Number);
+  const y = parts[0];
+  const m = parts[1];
+  const day = parts[2];
+  if (y === undefined || m === undefined || day === undefined) {
+    throw new Error(`Invalid date key: ${key}`);
+  }
+  return new Date(y, m - 1, day);
 }
 
 /** Monday of the week for the given date (ISO week). Returns YYYY-MM-DD. */
@@ -22,15 +28,21 @@ export function getWeekStartDateKey(date: Date = new Date()): string {
   const day = d.getUTCDay();
   const diff = day === 0 ? 6 : day - 1;
   d.setUTCDate(d.getUTCDate() - diff);
-  return d.toISOString().split("T")[0];
+  return d.toISOString().slice(0, 10);
 }
 
 /** Sunday of the week for the given date. Returns YYYY-MM-DD. */
 export function getWeekEndDateKey(date: Date = new Date()): string {
   const start = getWeekStartDateKey(date);
-  const [y, m, d] = start.split("-").map(Number);
+  const parts = start.split("-").map(Number);
+  const y = parts[0];
+  const m = parts[1];
+  const d = parts[2];
+  if (y === undefined || m === undefined || d === undefined) {
+    throw new Error(`Invalid week start key: ${start}`);
+  }
   const end = new Date(Date.UTC(y, m - 1, d + 6));
-  return end.toISOString().split("T")[0];
+  return end.toISOString().slice(0, 10);
 }
 
 /**

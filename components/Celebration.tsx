@@ -21,7 +21,8 @@ const CONFETTI_COLORS = [
   DS_COLORS.confettiCyan,
   DS_COLORS.confettiPurple,
   DS_COLORS.linkBlue,
-];
+] as const;
+const CONFETTI_COLOR_FALLBACK = DS_COLORS.runOrange;
 
 interface ConfettiPiece {
   id: number;
@@ -97,7 +98,7 @@ export default function Celebration({ visible, onComplete, titleText, streakCoun
         rotation: new Animated.Value(0),
         scale: new Animated.Value(1),
         opacity: new Animated.Value(1),
-        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)] ?? CONFETTI_COLOR_FALLBACK,
         size: 6 + Math.random() * 6,
         shape: ["square", "rectangle", "circle"][Math.floor(Math.random() * 3)] as "square" | "rectangle" | "circle",
       });

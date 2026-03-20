@@ -18,9 +18,11 @@ export interface TimeWindowState {
 
 function parseHHMM(time: string): { hours: number; minutes: number } {
   const parts = time.split(":");
+  const h = parts[0] ?? "0";
+  const m = parts[1] ?? "0";
   return {
-    hours: parseInt(parts[0], 10) || 0,
-    minutes: parseInt(parts[1], 10) || 0,
+    hours: parseInt(h, 10) || 0,
+    minutes: parseInt(m, 10) || 0,
   };
 }
 
@@ -152,8 +154,8 @@ export function validateTimeEnforcement(config: Partial<TimeEnforcementConfig>):
   if (parts.length !== 2) {
     return { valid: false, error: "Time must be in HH:mm format" };
   }
-  const h = parseInt(parts[0], 10);
-  const m = parseInt(parts[1], 10);
+  const h = parseInt(parts[0] ?? "", 10);
+  const m = parseInt(parts[1] ?? "", 10);
   if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) {
     return { valid: false, error: "Invalid time value" };
   }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Clock } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_SHADOWS } from "@/lib/design-system";
 
 function getStripeColorByCategory(category?: string): string {
   const cat = (category ?? "").toUpperCase();
@@ -12,9 +12,10 @@ function getStripeColorByCategory(category?: string): string {
   return DS_COLORS.ACCENT_PRIMARY;
 }
 
+const DIFF_STYLES_DEFAULT = { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT };
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Easy: { bg: DS_COLORS.DIFFICULTY_EASY_BG, text: DS_COLORS.DIFFICULTY_EASY_TEXT },
-  Medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+  Medium: DIFF_STYLES_DEFAULT,
   Hard: { bg: DS_COLORS.DIFFICULTY_HARD_BG, text: DS_COLORS.DIFFICULTY_HARD_TEXT },
   Extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
 };
@@ -67,7 +68,7 @@ function ChallengeCard24hInner(p: {
 }) {
   const countdownFromHook = useCountdown(p.endsAt ?? null);
   const countdown = p.endsAt != null ? countdownFromHook : (p.countdownText ?? "--:--:--");
-  const diff = DIFF_STYLES[p.difficulty] ?? DIFF_STYLES.Medium;
+  const diff = DIFF_STYLES[p.difficulty] ?? DIFF_STYLES_DEFAULT;
   const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
   const topBarColor = p.stripeColor ?? getStripeColorByCategory(p.category);
   const cardWidth = p.cardWidth ?? 280;

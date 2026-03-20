@@ -298,9 +298,9 @@ export const checkinsRouter = createTRPCRouter({
         }
         const { data: profileRow } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();
         const totalDaysSecured = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
-        const { data: chRow } = await ctx.supabase.from("challenges").select("duration_days, name").eq("id", challengeId ?? "").single();
+        const { data: chRow } = await ctx.supabase.from("challenges").select("duration_days, title").eq("id", challengeId ?? "").single();
         const durationDays = (chRow as { duration_days?: number } | null)?.duration_days ?? 0;
-        const challengeName = (chRow as { name?: string } | null)?.name ?? "Challenge";
+        const challengeName = (chRow as { title?: string } | null)?.title ?? "Challenge";
         const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
 
         await ctx.supabase.from("activity_events").insert({
@@ -492,9 +492,9 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const newCurrentDay = (ac?.current_day ?? 0) + 1;
-      const { data: chMeta } = await ctx.supabase.from("challenges").select("duration_days, name").eq("id", challengeId ?? "").single();
+      const { data: chMeta } = await ctx.supabase.from("challenges").select("duration_days, title").eq("id", challengeId ?? "").single();
       const durationDays = (chMeta as { duration_days?: number } | null)?.duration_days ?? 0;
-      const challengeName = (chMeta as { name?: string } | null)?.name ?? "Challenge";
+      const challengeName = (chMeta as { title?: string } | null)?.title ?? "Challenge";
       const challengeJustCompleted = durationDays > 0 && newCurrentDay >= durationDays;
 
       await ctx.supabase.from("activity_events").insert({

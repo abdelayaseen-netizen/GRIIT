@@ -128,9 +128,13 @@ export const startersRouter = createTRPCRouter({
         );
       requireNoError(streakErr, "Failed to initialize streak.");
 
+      const firstTask = tasks[0];
+      if (!firstTask) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Starter challenge has no tasks." });
+      }
       return {
         activeChallengeId: activeChallenge.id,
-        taskId: tasks[0].id,
+        taskId: firstTask.id,
         challengeId,
       };
     }),

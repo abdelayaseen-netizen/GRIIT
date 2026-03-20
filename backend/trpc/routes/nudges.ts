@@ -11,7 +11,8 @@ export const NUDGE_MESSAGES = [
 ] as const;
 
 export function pickRandomMessage(): string {
-  return NUDGE_MESSAGES[Math.floor(Math.random() * NUDGE_MESSAGES.length)];
+  const i = Math.floor(Math.random() * NUDGE_MESSAGES.length);
+  return NUDGE_MESSAGES[i] ?? NUDGE_MESSAGES[0];
 }
 
 export const nudgesRouter = createTRPCRouter({

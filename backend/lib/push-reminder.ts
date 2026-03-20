@@ -87,14 +87,20 @@ const EVENING_TEMPLATES: Array<{ title: (streak: number) => string; body: (strea
 ];
 
 function pickMorningCopy(streak: number): { title: string; body: string } {
-  const template = MORNING_TEMPLATES[Math.floor(Math.random() * MORNING_TEMPLATES.length)];
+  const fallback = MORNING_TEMPLATES[0];
+  if (!fallback) return { title: "Secure your day", body: "Open GRIIT" };
+  const i = Math.floor(Math.random() * MORNING_TEMPLATES.length);
+  const template = MORNING_TEMPLATES[i] ?? fallback;
   const displayStreak = Math.max(1, streak);
   const title = template.title.replace(/\{streak\}/g, String(displayStreak));
   return { title, body: template.body(displayStreak) };
 }
 
 function pickEveningCopy(streak: number): { title: string; body: string } {
-  const template = EVENING_TEMPLATES[Math.floor(Math.random() * EVENING_TEMPLATES.length)];
+  const fallback = EVENING_TEMPLATES[0];
+  if (!fallback) return { title: "Secure your day", body: "Before midnight." };
+  const i = Math.floor(Math.random() * EVENING_TEMPLATES.length);
+  const template = EVENING_TEMPLATES[i] ?? fallback;
   return { title: template.title(streak), body: template.body(streak) };
 }
 

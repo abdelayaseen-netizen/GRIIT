@@ -68,7 +68,7 @@ export const sharedGoalRouter = createTRPCRouter({
 
       const total = (logs ?? []).reduce((acc: number, r: { amount: number }) => acc + Number(r.amount), 0);
       const target = c.shared_goal_target ?? 0;
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().slice(0, 10);
 
       if (target > 0 && total >= target) {
         await ctx.supabase.from("challenges").update({ run_status: "completed" }).eq("id", input.challengeId);

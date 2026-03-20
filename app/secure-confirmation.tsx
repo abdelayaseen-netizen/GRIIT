@@ -13,7 +13,7 @@ import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Shield, Check, Share2, ChevronRight } from "lucide-react-native";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { DS_COLORS } from "@/lib/design-system";
 import { shareDaySecured, shareChallengeComplete } from "@/lib/share";
 import { requestReviewIfAppropriate } from "@/lib/request-review";
@@ -83,7 +83,8 @@ export default function SecureConfirmationScreen() {
       return "Challenge complete!";
     }
     const d = day ?? "0";
-    const msg = SECURE_DAY_MESSAGES[Math.floor(Math.random() * SECURE_DAY_MESSAGES.length)];
+    const i = Math.floor(Math.random() * SECURE_DAY_MESSAGES.length);
+    const msg = SECURE_DAY_MESSAGES[i] ?? SECURE_DAY_MESSAGES[0] ?? "";
     return msg.replace(/\{day\}/g, d);
   }, [day, isCompletion, challengeName]);
 

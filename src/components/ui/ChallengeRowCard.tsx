@@ -12,9 +12,10 @@ function getStripeColorByCategory(category?: string): string {
   return DS_COLORS.ACCENT_PRIMARY;
 }
 
+const DIFF_PILL_DEFAULT = { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT };
 const DIFF_PILL: Record<string, { bg: string; text: string }> = {
   Easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
-  Medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+  Medium: DIFF_PILL_DEFAULT,
   Hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
   Extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
 };
@@ -32,6 +33,8 @@ function ChallengeRowCardInner(props: {
   onPressIn?: () => void;
   participationType?: string;
   teamSize?: number;
+  /** Shown before duration when set (e.g. team Discover cards). */
+  teamMeta?: string;
   sharedGoalTarget?: number;
   sharedGoalUnit?: string;
   index?: number;
@@ -49,7 +52,7 @@ function ChallengeRowCardInner(props: {
   } = props;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
   const stripeColor = props.stripeColor ?? getStripeColorByCategory(props.category);
-  const diff = DIFF_PILL[difficulty] ?? DIFF_PILL.Medium;
+  const diff = DIFF_PILL[difficulty] ?? DIFF_PILL_DEFAULT;
   return (
     <TouchableOpacity
       style={[s.card, DS_SHADOWS.cardSubtle]}
@@ -71,7 +74,10 @@ function ChallengeRowCardInner(props: {
         <View style={s.meta}>
           <View style={s.metaLeft}>
             <Calendar size={12} color={DS_COLORS.TEXT_MUTED} />
-            <Text style={s.metaLeftText}>{durationLabel} · {taskCount} tasks</Text>
+            <Text style={s.metaLeftText}>
+              {props.teamMeta ? `${props.teamMeta} · ` : ""}
+              {durationLabel} · {taskCount} goals
+            </Text>
           </View>
           {(participantsCount ?? 0) > 0 && (
             <Text style={s.metaRight}>{formatCount(participantsCount)} members</Text>

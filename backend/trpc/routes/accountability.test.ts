@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { appRouter } from "../app-router";
+import { createTestCaller } from "../create-test-caller";
 
 vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
 
@@ -115,7 +115,7 @@ function createMockSupabase(overrides: {
 describe("accountability.invite", () => {
   it("rejects self-invite with BAD_REQUEST", async () => {
     const supabase = createMockSupabase();
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -130,7 +130,7 @@ describe("accountability.invite", () => {
 
   it("rejects when inviter already has 3 accepted partners", async () => {
     const supabase = createMockSupabase({ acceptedCount: 3 });
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -145,7 +145,7 @@ describe("accountability.invite", () => {
 
   it("rejects when partner profile does not exist (user not found)", async () => {
     const supabase = createMockSupabase({ partnerExists: false });
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -160,7 +160,7 @@ describe("accountability.invite", () => {
 
   it("creates pending invite when no existing relationship", async () => {
     const supabase = createMockSupabase({ existingPair: null, partnerExists: true });
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -183,7 +183,7 @@ describe("accountability.respond", () => {
       eq: () => chain,
       single: () => Promise.resolve({ data: null, error: { message: "Not found" } }),
     };
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_B,
       supabase: chain,
       req: {} as Request,

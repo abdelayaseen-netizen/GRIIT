@@ -239,13 +239,15 @@ export default function RunTaskScreen() {
           
           if (prev.length > 0) {
             const lastPoint = prev[prev.length - 1];
-            const segmentDistance = calculateDistance(
-              lastPoint.lat, lastPoint.lng,
-              newPoint.lat, newPoint.lng
-            );
-            
-            if (segmentDistance < 0.1) {
-              setDistanceMiles((d) => d + segmentDistance);
+            if (lastPoint) {
+              const segmentDistance = calculateDistance(
+                lastPoint.lat, lastPoint.lng,
+                newPoint.lat, newPoint.lng
+              );
+
+              if (segmentDistance < 0.1) {
+                setDistanceMiles((d) => d + segmentDistance);
+              }
             }
           }
           

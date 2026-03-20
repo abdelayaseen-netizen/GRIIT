@@ -41,7 +41,7 @@ export function useCelebration(): UseCelebrationReturn {
       const keys = Object.keys(shownIds);
       if (keys.length > 100) {
         const sortedKeys = keys.sort((a, b) => {
-          return new Date(shownIds[a]).getTime() - new Date(shownIds[b]).getTime();
+          return new Date(shownIds[a] ?? 0).getTime() - new Date(shownIds[b] ?? 0).getTime();
         });
         const keysToRemove = sortedKeys.slice(0, keys.length - 50);
         keysToRemove.forEach((k) => delete shownIds[k]);

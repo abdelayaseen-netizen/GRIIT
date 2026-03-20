@@ -85,8 +85,13 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
   const checkinsByAcId = useMemo(() => {
     const map: Record<string, Set<string>> = {};
     for (const c of todayCheckins) {
-      if (!map[c.active_challenge_id]) map[c.active_challenge_id] = new Set();
-      if (c.status === "completed") map[c.active_challenge_id].add(c.task_id);
+      const acId = c.active_challenge_id;
+      let setForAc = map[acId];
+      if (!setForAc) {
+        setForAc = new Set();
+        map[acId] = setForAc;
+      }
+      if (c.status === "completed") setForAc.add(c.task_id);
     }
     return map;
   }, [todayCheckins]);

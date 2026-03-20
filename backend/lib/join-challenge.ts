@@ -58,6 +58,8 @@ export async function joinChallengeDirect(
       status: "active",
       start_at: startAt.toISOString(),
       end_at: endAt.toISOString(),
+      current_day: 1,
+      progress_percent: 0,
     })
     .select()
     .single();

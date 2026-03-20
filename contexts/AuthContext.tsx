@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         clearTimeout(timeout);
         setLoading(false);
         // error swallowed — handle in UI

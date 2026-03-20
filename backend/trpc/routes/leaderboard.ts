@@ -6,7 +6,7 @@ import { getTodayDateKey } from "../../lib/date-utils";
 function getWeekStartDateKey(): string {
   const d = new Date();
   d.setDate(d.getDate() - 6);
-  return d.toISOString().split("T")[0];
+  return d.toISOString().slice(0, 10);
 }
 
 const LEADERBOARD_MAX = 100;

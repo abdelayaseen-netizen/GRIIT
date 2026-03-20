@@ -37,11 +37,12 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
         const items = (list as ChallengeItem[]).slice(0, 2);
         if (!cancelled) {
           setChallenges(items);
-          if (items.length > 0) {
+          const first = items[0];
+          if (first) {
             track({
               name: 'onboarding_challenge_auto_suggested',
-              challenge_id: items[0].id,
-              challenge_name: items[0].title ?? '',
+              challenge_id: first.id,
+              challenge_name: first.title ?? '',
             });
           }
         }

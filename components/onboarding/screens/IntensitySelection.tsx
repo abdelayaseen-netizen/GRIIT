@@ -8,7 +8,7 @@ interface IntensitySelectionProps {
 }
 
 export default function IntensitySelection({ onContinue }: IntensitySelectionProps) {
-  const { intensityLevel, setIntensity } = useOnboardingStore();
+  const { intensityLevel, setIntensityLevel } = useOnboardingStore();
 
   return (
     <View style={styles.container}>
@@ -25,7 +25,7 @@ export default function IntensitySelection({ onContinue }: IntensitySelectionPro
             <Pressable
               key={option.id}
               style={[styles.intensityCard, isSelected && styles.intensityCardSelected]}
-              onPress={() => setIntensity(option.id)}
+              onPress={() => setIntensityLevel(option.id)}
             >
               <View style={styles.intensityHeader}>
                 <Text style={styles.intensityEmoji}>{option.emoji}</Text>

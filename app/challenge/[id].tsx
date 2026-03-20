@@ -32,7 +32,6 @@ import {
   Shield,
   ChevronLeft,
   MoreHorizontal,
-  TrendingUp,
   Clock,
   Users,
   Lock,
@@ -44,9 +43,8 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useProStatus } from "@/hooks/useProStatus";
-import { checkGate, getPaywallTrigger, FREE_TIER } from "@/lib/feature-gates";
+import { FREE_TIER } from "@/lib/feature-gates";
 import { canJoinChallenge } from "@/lib/premium";
 import { FLAGS } from "@/lib/feature-flags";
 import { useAuthGate } from "@/contexts/AuthGateContext";
@@ -167,7 +165,7 @@ const DIFFICULTY_THEMES: Record<string, DifficultyTheme> = {
 };
 
 function getTheme(difficulty: string): DifficultyTheme {
-  return DIFFICULTY_THEMES[difficulty] || DIFFICULTY_THEMES.medium;
+  return (DIFFICULTY_THEMES[difficulty] ?? DIFFICULTY_THEMES.medium) as DifficultyTheme;
 }
 
 const TASK_ICONS: Record<string, React.ElementType> = {
@@ -180,11 +178,12 @@ const TASK_ICONS: Record<string, React.ElementType> = {
   custom: Zap,
 };
 
+const CTA_LABELS_DEFAULT = { join: "Commit to This Challenge", active: "Continue Today" };
 const CTA_LABELS: Record<string, { join: string; active: string }> = {
-  easy: { join: "Commit to This Challenge", active: "Continue Today" },
-  medium: { join: "Commit to This Challenge", active: "Continue Today" },
-  hard: { join: "Commit to This Challenge", active: "Continue Today" },
-  extreme: { join: "Commit to This Challenge", active: "Continue Today" },
+  easy: CTA_LABELS_DEFAULT,
+  medium: CTA_LABELS_DEFAULT,
+  hard: CTA_LABELS_DEFAULT,
+  extreme: CTA_LABELS_DEFAULT,
 };
 
 function formatCount(n: number): string {
@@ -464,7 +463,6 @@ export default function ChallengeDetailScreen() {
   const { showGate } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
   const isJoined = activeChallenge?.challenge_id === id;
-  const { requirePremium } = useSubscription();
   const { isPro } = useProStatus();
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
@@ -627,15 +625,18 @@ export default function ChallengeDetailScreen() {
     setCommitmentJoining(true);
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      const result = await trpcMutate(TRPC.challenges.join, { challengeId: id });
+      await trpcMutate(TRPC.challenges.join, { challengeId: id });
       try {
         await trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id });
       } catch (refErr) {
         console.error("[ChallengeDetail] markJoinedChallenge failed:", refErr);
       }
       await refetchAll();
+      await queryClient.invalidateQueries({ queryKey: ["home", "activeList"] });
+      await queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
+      await queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       setShowCommitmentModal(false);
-      challengeQuery.refetch();
+      myActiveListQuery.refetch();
       setShowJoinCelebration(true);
     } catch (err: unknown) {
       // error swallowed — handle in UI
@@ -644,11 +645,12 @@ export default function ChallengeDetailScreen() {
     } finally {
       setCommitmentJoining(false);
     }
-  }, [id, commitmentJoining, commitmentUnderstood, user?.id, refetchAll, router]);
+  }, [id, commitmentJoining, commitmentUnderstood, user?.id, refetchAll, router, queryClient, myActiveListQuery]);
 
   const onJoinCelebrationDismiss = useCallback(() => {
     setShowJoinCelebration(false);
-  }, []);
+    router.replace(ROUTES.TABS_HOME as never);
+  }, [router]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -752,7 +754,7 @@ export default function ChallengeDetailScreen() {
     }
     if (allTasks.length === 0) return;
     Alert.alert(
-      "All tasks complete",
+      "All goals complete",
       "Secure your day to lock it in. You can secure from Home, or stay here.",
       [{ text: "OK" }]
     );
@@ -832,13 +834,14 @@ export default function ChallengeDetailScreen() {
   }, [challenge?.is_featured, challenge?.duration_type, challenge?.participants_count, challenge?.difficulty, isDaily]);
 
   const difficultyPillStyle = useMemo(() => {
+    const defaultPill = { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT };
     const map: Record<string, { bg: string; text: string }> = {
       easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
-      medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+      medium: defaultPill,
       hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
       extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
     };
-    return map[difficulty] ?? map.medium;
+    return map[difficulty] ?? defaultPill;
   }, [difficulty]);
 
   if (!id) {
@@ -912,11 +915,10 @@ export default function ChallengeDetailScreen() {
   const isPending = joinPending;
   const theme = getTheme(difficulty);
   const rules = challenge.rules || [];
-  const failCondition = challenge.fail_condition;
 
   const durationLabel = isDaily ? "24 hours" : `${challenge.duration_days} days`;
   const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-  const ctaLabels = CTA_LABELS[difficulty] || CTA_LABELS.medium;
+  const ctaLabels: { join: string; active: string } = CTA_LABELS[difficulty] ?? CTA_LABELS_DEFAULT;
   const ctaLabel = isDaily
     ? expired ? "Expired" : "Accept Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
@@ -934,10 +936,6 @@ export default function ChallengeDetailScreen() {
     ? <Lock size={11} color={DS_COLORS.white} />
     : null;
 
-  const durationDays = challenge?.duration_days ?? 0;
-  const progressPercent = isJoined && durationDays > 0
-    ? Math.min((userCurrentDay / durationDays) * 100, 100)
-    : 0;
   const participantUsernames = (challenge as { participant_usernames?: string[] }).participant_usernames;
 
   const aboutDetailRows: { label: string; value: string; valueAccent?: boolean }[] = [
@@ -1192,10 +1190,10 @@ export default function ChallengeDetailScreen() {
               </View>
             </View>
 
-            {/* Today's Missions (hidden when team failed or shared-goal-only) */}
+            {/* Today's Goals (hidden when team failed or shared-goal-only) */}
             {!(isTeamChallenge && runStatus === "failed") && (
             <View style={s.missionsSection}>
-              <Text style={s.sectionTitle}>Today&apos;s Missions</Text>
+              <Text style={s.sectionTitle}>Today&apos;s Goals</Text>
               <View style={s.missionsCard}>
                 {allTasks.map((task, index) => {
                   const checkin = todayCheckins.find((c: CheckinFromApi) => c.task_id === task.id);
@@ -1414,8 +1412,8 @@ export default function ChallengeDetailScreen() {
                 <Text style={s.commitmentCheckCardValue}>Mornings</Text>
               </View>
               <View style={s.commitmentCheckCardRow}>
-                <Text style={s.commitmentCheckCardLabel}>Daily tasks</Text>
-                <Text style={s.commitmentCheckCardValue}>{challenge?.tasks?.length ?? 0} tasks</Text>
+                <Text style={s.commitmentCheckCardLabel}>Daily goals</Text>
+                <Text style={s.commitmentCheckCardValue}>{challenge?.tasks?.length ?? 0} goals</Text>
               </View>
             </View>
             <View style={[s.commitmentWarning, { backgroundColor: DS_COLORS.dangerLight }]}>
@@ -1468,7 +1466,6 @@ export default function ChallengeDetailScreen() {
         visible={showJoinCelebration}
         onDismiss={onJoinCelebrationDismiss}
         challengeName={challenge?.title ?? ""}
-        durationDays={challenge?.duration_days ?? 0}
       />
     </View>
   );

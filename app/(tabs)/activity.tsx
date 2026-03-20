@@ -58,13 +58,11 @@ function createActivityStyles(c: ThemeColors) {
       gap: DS_SPACING.sm,
     },
     title: {
-      fontSize: 38,
-      fontWeight: "800" as const,
+      ...DS_TYPOGRAPHY.pageTitle,
       color: DS_COLORS.TEXT_PRIMARY,
     },
     subtitle: {
-      fontSize: 15,
-      fontWeight: "400" as const,
+      ...DS_TYPOGRAPHY.secondary,
       color: DS_COLORS.TEXT_SECONDARY,
       marginTop: 4,
     },
@@ -205,10 +203,7 @@ function createActivityStyles(c: ThemeColors) {
     teamEmptyTitle: { fontSize: 16, fontWeight: "700" as const, color: DS_COLORS.textPrimary, marginBottom: 4 },
     teamEmptySub: { fontSize: 14, color: DS_COLORS.textMuted, textAlign: "center" },
     movementFeedSectionTitle: {
-      fontSize: 12,
-      fontWeight: "600" as const,
-      letterSpacing: 1.5,
-      textTransform: "uppercase" as const,
+      ...DS_TYPOGRAPHY.eyebrow,
       color: DS_COLORS.textMuted,
       marginBottom: 12,
     },

@@ -16,10 +16,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import {
   ChevronRight,
-  Clock,
   Flame,
   Target,
-  Trophy,
   TrendingUp,
   Users,
   Circle,
@@ -27,7 +25,6 @@ import {
   RefreshCw,
   AlertTriangle,
   Shield,
-  Zap,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
@@ -53,7 +50,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { type ChallengeWithProgress } from "@/components/home/ActiveChallenges";
 import LiveFeedCard, { type LiveFeedCardData } from "@/components/home/LiveFeedCard";
-import type { TodayCheckinForUser, ChallengeTaskFromApi, StatsFromApi } from "@/types";
+import type { TodayCheckinForUser, StatsFromApi } from "@/types";
 import { ROUTES } from "@/lib/routes";
 import { useTheme } from "@/contexts/ThemeContext";
 import { SURFACE_SUBTLE } from "@/constants/theme";
@@ -66,7 +63,7 @@ import {
   DS_BORDERS,
   DS_SHADOWS,
 } from "@/lib/design-system";
-import { GRIITWordmark, InitialCircle } from "@/src/components/ui";
+import { GRIITWordmark } from "@/src/components/ui";
 import ViewShot from "react-native-view-shot";
 import { ShareCard } from "@/components/ShareCard";
 import { shareProgressImage, shareDaySecured } from "@/lib/share";
@@ -129,10 +126,11 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const isGuest = useIsGuest();
-  const guestQuote = useMemo(
-    () => MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)],
-    []
-  );
+  const guestQuote = useMemo((): { text: string; author: string } => {
+    const fallback = MOTIVATION_QUOTES[0] ?? { text: "", author: "" };
+    const i = Math.floor(Math.random() * MOTIVATION_QUOTES.length);
+    return MOTIVATION_QUOTES[i] ?? fallback;
+  }, []);
   const {
     activeChallenge,
     challenge,
@@ -144,7 +142,6 @@ export default function HomeScreen() {
     isError,
     initialFetchDone,
     refetchAll,
-    todayCheckins,
     todayDateLocal,
   } = useApp();
   const { colors } = useTheme();
@@ -227,13 +224,6 @@ export default function HomeScreen() {
         trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
         trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
       ]);
-      const acList = Array.isArray(list) ? list : [];
-      const checkinsByAcId: Record<string, Set<string>> = {};
-      for (const c of checkins ?? []) {
-        if (!checkinsByAcId[c.active_challenge_id]) checkinsByAcId[c.active_challenge_id] = new Set();
-        if (c.status === "completed") checkinsByAcId[c.active_challenge_id].add(c.task_id);
-      }
-      let totalRemaining = 0;
       interface AcRow {
         id: string;
         challenge_id: string;
@@ -242,14 +232,26 @@ export default function HomeScreen() {
         created_at?: string | null;
         challenges?: { id?: string; title?: string; duration_days?: number; challenge_tasks?: { id: string; title?: string; type?: string; required?: boolean }[] };
       }
-      const withProgress: ChallengeWithProgress[] = acList.map((ac: AcRow) => {
+      const acList = (Array.isArray(list) ? list : []) as AcRow[];
+      const checkinsByAcId: Record<string, Set<string>> = {};
+      for (const c of checkins ?? []) {
+        const acId = c.active_challenge_id;
+        let setForAc = checkinsByAcId[acId];
+        if (!setForAc) {
+          setForAc = new Set();
+          checkinsByAcId[acId] = setForAc;
+        }
+        if (c.status === "completed") setForAc.add(c.task_id);
+      }
+      let totalRemaining = 0;
+      const withProgress: ChallengeWithProgress[] = acList.map((ac) => {
         const ch = ac.challenges;
         const tasks = ch?.challenge_tasks ?? [];
         const required = tasks.filter((t: { required?: boolean }) => t.required !== false);
         const completedSet = checkinsByAcId[ac.id] ?? new Set();
         const todayTasksRaw = required.map((t: { id: string; title?: string; type?: string }) => ({
           id: t.id,
-          title: t.title ?? t.type ?? "Task",
+          title: t.title ?? t.type ?? "Goal",
           completed: completedSet.has(t.id),
           type: t.type ?? "MANUAL",
         }));
@@ -288,6 +290,14 @@ export default function HomeScreen() {
         }
       });
     }, [])
+  );
+
+  const refetchHomeActiveList = homeActiveQuery.refetch;
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id || isGuest) return;
+      void refetchHomeActiveList();
+    }, [user?.id, isGuest, refetchHomeActiveList])
   );
 
   const todayKey = todayDateLocal;
@@ -330,13 +340,11 @@ export default function HomeScreen() {
     canUseFreeze: _canUseFreeze,
     freezesRemaining,
     lastStandsAvailable: _lastStandsAvailable,
-    isDaySecured,
+    isDaySecured: _isDaySecured,
   } = retention;
   const { isPremium, requirePremium: _requirePremium } = useSubscription();
   const _lastStandRequiresPremium = (stats as StatsFromApi)?.lastStandRequiresPremium ?? false;
   const tierName = (stats as StatsFromApi)?.tier ?? null;
-  const nextTierName = (stats as StatsFromApi)?.nextTierName ?? null;
-  const pointsToNextTier = (stats as StatsFromApi)?.pointsToNextTier ?? 0;
   const yesterdayKey = getYesterdayDateKey();
   const daySecured = optimisticDaySecured || (computeProgress.progress === 100 && !canSecureDay);
   const _isFirstTimeUser = (stats?.longestStreak ?? 0) === 0 && (stats?.totalDaysSecured ?? 0) === 0 && !hasActiveChallenge;
@@ -356,15 +364,6 @@ export default function HomeScreen() {
       track({ name: "app_opened", streak_count: currentStreak, isPremium });
     }
   }, [isGuest, initialFetchDone, currentStreak, isPremium]);
-
-  const tasks = useMemo((): { id: string; title: string; completed: boolean }[] => {
-    if (!challenge?.challenge_tasks) return [];
-    return (challenge.challenge_tasks as ChallengeTaskFromApi[]).map((t) => ({
-      id: t.id,
-      title: t.title ?? t.type,
-      completed: todayCheckins.some((c) => c.task_id === t.id && c.status === "completed"),
-    }));
-  }, [challenge?.challenge_tasks, todayCheckins]);
 
   const _progressColor = daySecured
     ? DS_COLORS.success
@@ -661,12 +660,12 @@ export default function HomeScreen() {
 
         {!isGuest && (
           <View style={styles.todaysMissionsOuter}>
-            <Text style={styles.todaysMissionsHeading}>Today&apos;s Missions</Text>
+            <Text style={styles.todaysMissionsHeading}>Today&apos;s Goals</Text>
             {homeActiveQuery.isLoading && <TodaysMissionsSkeleton />}
             {homeActiveQuery.isError && (
               <View style={[styles.challengesErrorCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
                 <AlertTriangle size={32} color={DS_COLORS.TEXT_MUTED} style={{ marginBottom: 12 }} />
-                <Text style={styles.challengesErrorLabel}>Couldn&apos;t load your challenges.</Text>
+                <Text style={styles.challengesErrorLabel}>Couldn&apos;t load your goals.</Text>
                 <TouchableOpacity
                   style={[styles.challengesErrorRetryBtn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
                   onPress={() => homeActiveQuery.refetch()}
@@ -681,9 +680,9 @@ export default function HomeScreen() {
             )}
             {homeActiveQuery.isSuccess && !hasActiveChallengesFromList && (
               <View style={[styles.emptyStateCard, { backgroundColor: DS_COLORS.BG_CARD, borderRadius: DS_RADIUS.card, marginHorizontal: 0 }, DS_SHADOWS.card]}>
-                <Text style={styles.emptyStateTitle}>No active challenges</Text>
+                <Text style={styles.emptyStateTitle}>No active goals yet</Text>
                 <Text style={styles.emptyStateSubtitle}>
-                  No active challenges. Find one on Discover.
+                  Discover a challenge to get started.
                 </Text>
                 <TouchableOpacity
                   onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
@@ -899,11 +898,28 @@ export default function HomeScreen() {
                 <Users size={40} color={DS_COLORS.textMuted} style={{ marginBottom: 12 }} />
                 <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>No activity yet</Text>
                 <Text style={[styles.liveFeedEmptySub, { color: DS_COLORS.textMuted }]}>Join a challenge to see the community in action.</Text>
+                <TouchableOpacity
+                  onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
+                  style={[styles.liveEmptyCta, { borderColor: DS_COLORS.ACCENT_PRIMARY }]}
+                  activeOpacity={0.85}
+                  accessibilityLabel="Explore challenges"
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.liveEmptyCtaText, { color: DS_COLORS.ACCENT_PRIMARY }]}>Explore Challenges →</Text>
+                </TouchableOpacity>
               </View>
               <View style={[styles.liveFeedEmpty, styles.liveFeedEmptyCard, styles.leaderboardEmptyCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
                 <Target size={40} color={DS_COLORS.accent} style={{ marginBottom: 12 }} />
                 <Text style={[styles.leaderboardEmptyLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
                 <Text style={[styles.liveFeedEmptyTitle, { color: DS_COLORS.textPrimary }]}>Be the first this week.</Text>
+                <TouchableOpacity
+                  onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
+                  activeOpacity={0.85}
+                  accessibilityLabel="Browse challenges"
+                  accessibilityRole="link"
+                >
+                  <Text style={[styles.leaderboardBrowseLink, { color: DS_COLORS.ACCENT_PRIMARY }]}>Browse Challenges →</Text>
+                </TouchableOpacity>
               </View>
             </>
           );
@@ -945,6 +961,19 @@ export default function HomeScreen() {
             >
               <Shield size={18} color={DS_COLORS.white} />
               <Text style={styles.secureNowButtonText}>Secure Now</Text>
+            </TouchableOpacity>
+          </View>
+        ) : !isGuest && leaderboardData != null && !leaderboardLoading ? (
+          <View style={[styles.yourPositionCard, { backgroundColor: DS_COLORS.surfaceMuted }]}>
+            <Text style={[styles.yourPositionLabel, { color: DS_COLORS.textMuted }]}>LEADERBOARD</Text>
+            <Text style={[styles.yourPositionText, { color: DS_COLORS.textPrimary }]}>You&apos;re not ranked yet this week.</Text>
+            <TouchableOpacity
+              onPress={() => requireAuth("join", () => router.push(ROUTES.TABS_DISCOVER as never))}
+              activeOpacity={0.85}
+              accessibilityLabel="Browse challenges"
+              accessibilityRole="link"
+            >
+              <Text style={[styles.leaderboardBrowseLink, { color: DS_COLORS.ACCENT_PRIMARY, marginTop: 10 }]}>Browse Challenges →</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -2124,6 +2153,22 @@ const styles = StyleSheet.create({
   },
   liveFeedEmptySub: {
     fontSize: 14,
+    textAlign: "center",
+  },
+  liveEmptyCta: {
+    marginTop: DS_SPACING.md,
+    paddingVertical: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.card,
+    borderWidth: 1,
+  },
+  liveEmptyCtaText: {
+    ...DS_TYPOGRAPHY.buttonSmall,
+    fontWeight: "700" as const,
+  },
+  leaderboardBrowseLink: {
+    ...DS_TYPOGRAPHY.buttonSmall,
+    fontWeight: "600" as const,
     textAlign: "center",
   },
   suggestedChallengesSection: {

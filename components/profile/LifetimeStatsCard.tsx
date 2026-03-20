@@ -17,7 +17,7 @@ const ICON_CIRCLE = 36;
 export default function LifetimeStatsCard({
   currentStreak = 0,
   longestStreak,
-  daysSecured,
+  daysSecured: _daysSecured,
   challengesCompleted,
   activeChallengesCount = 0,
   totalDisciplinePoints: _totalDisciplinePoints = 0,

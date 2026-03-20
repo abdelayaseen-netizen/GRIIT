@@ -248,7 +248,7 @@ export const profilesRouter = createTRPCRouter({
           .eq('status', 'completed'),
         ctx.supabase
           .from('streaks')
-          .select('user_id, active_streak_count, longest_streak_count, last_checkin_date')
+          .select('user_id, active_streak_count, longest_streak_count, last_completed_date_key, last_stands_available')
           .eq('user_id', ctx.userId)
           .maybeSingle(),
         ctx.supabase
@@ -291,7 +291,7 @@ export const profilesRouter = createTRPCRouter({
       const todayKey = getTodayDateKey();
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayKey = yesterday.toISOString().split('T')[0];
+      const yesterdayKey = yesterday.toISOString().slice(0, 10);
 
       let effectiveMissedDays = 0;
       let missedDateKeys: string[] = [];

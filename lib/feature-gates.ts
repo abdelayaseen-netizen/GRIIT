@@ -38,7 +38,18 @@ export function checkGate(gate: GateKey, isPro: boolean): boolean {
   if (gate === "MAX_FREE_ACTIVE_CHALLENGES") {
     return true; // Limit is enforced by count, not this boolean
   }
-  return FREE_TIER[gate as keyof typeof FREE_TIER] === true;
+  switch (gate) {
+    case "GPS_VERIFICATION":
+      return FREE_TIER.GPS_VERIFICATION;
+    case "LEADERBOARD_ACCESS":
+      return FREE_TIER.LEADERBOARD_ACCESS;
+    case "TEAMS_ACCESS":
+      return FREE_TIER.TEAMS_ACCESS;
+    case "HEART_RATE_VERIFICATION":
+      return FREE_TIER.HEART_RATE_VERIFICATION;
+    default:
+      return false;
+  }
 }
 
 /**

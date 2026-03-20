@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { appRouter } from "../app-router";
+import { createTestCaller } from "../create-test-caller";
 import { NUDGE_MESSAGES, pickRandomMessage } from "./nudges";
 
 vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
@@ -60,7 +60,7 @@ function createMockSupabase(overrides: {
 describe("nudges.send (via createCaller)", () => {
   it("rejects self-nudging with BAD_REQUEST", async () => {
     const supabase = createMockSupabase();
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -78,7 +78,7 @@ describe("nudges.send (via createCaller)", () => {
 
   it("rejects second nudge within 24 hours with TOO_MANY_REQUESTS", async () => {
     const supabase = createMockSupabase({ recentNudges: [{ id: "existing" }] });
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_A,
       supabase,
       req: {} as Request,
@@ -93,7 +93,7 @@ describe("nudges.send (via createCaller)", () => {
 
   it("inserts nudge and returns success when no recent nudge", async () => {
     const supabase = createMockSupabase({ recentNudges: [] });
-    const caller = (appRouter as { createCaller?: (c: unknown) => unknown }).createCaller?.({
+    const caller = createTestCaller({
       userId: USER_A,
       supabase,
       req: {} as Request,

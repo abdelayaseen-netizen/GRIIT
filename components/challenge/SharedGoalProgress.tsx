@@ -74,14 +74,14 @@ export default function SharedGoalProgress({
   const deadlineLabel = useMemo(() => {
     if (!deadlineDate) return null;
     if (deadlineType === "hard") {
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().slice(0, 10);
       if (deadlineDate < today) return "FAILED — deadline missed";
       const end = new Date(deadlineDate).getTime();
       const days = Math.ceil((end - Date.now()) / 86_400_000);
       return days > 0 ? `${days} days remaining` : "Due today";
     }
     if (deadlineType === "soft") {
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().slice(0, 10);
       if (deadlineDate < today) return "Past target date — keep going!";
       return `Due: ${deadlineDate}`;
     }

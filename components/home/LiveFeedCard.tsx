@@ -9,10 +9,8 @@ import {
   Flame,
   Trophy,
   Zap,
-  Users,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS } from "@/lib/design-system";
 
 function respectChasePlaceholder() {
@@ -56,8 +54,6 @@ function AvatarPlaceholder({ size = 40 }: { size?: number }) {
 }
 
 const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps) {
-  const { colors } = useTheme();
-
   if (data.type === "secured_day") {
     return (
       <View style={[styles.card, { backgroundColor: DS_COLORS.BG_CARD, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: DS_COLORS.ACCENT_PRIMARY }]}>

@@ -114,7 +114,7 @@ export async function fetchWithRetry(
       const response = await fetchWithTimeout(input, init, 12000);
 
       if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < RETRY_DELAYS.length) {
-        await sleep(RETRY_DELAYS[attempt]);
+        await sleep(RETRY_DELAYS[attempt] ?? 500);
         continue;
       }
 
@@ -123,7 +123,7 @@ export async function fetchWithRetry(
       lastError = error;
 
       if (isNetworkLikeError(error) && attempt < RETRY_DELAYS.length) {
-        await sleep(RETRY_DELAYS[attempt]);
+        await sleep(RETRY_DELAYS[attempt] ?? 500);
         continue;
       }
 

@@ -101,7 +101,10 @@ export const userRouter = createTRPCRouter({
           const msg = (err as { message?: string })?.message ?? "";
           if (code === "BAD_REQUEST" && msg.includes("already joined")) {
             // idempotent, ignore
-          } else if (code === "NOT_FOUND" || (err as { code?: string })?.data?.code === "23503") {
+          } else if (
+            code === "NOT_FOUND" ||
+            (err as { data?: { code?: string } }).data?.code === "23503"
+          ) {
             // challenge missing or FK constraint; do not crash onboarding
           } else if (process.env.NODE_ENV !== "test") {
             const { logger } = await import("../../lib/logger");

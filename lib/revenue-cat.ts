@@ -3,10 +3,8 @@
  * Initialize with Supabase user ID; use placeholder API keys (Yaseen will replace).
  */
 import { Platform } from "react-native";
-import Purchases, {
-  type CustomerInfo,
-  LOG_LEVEL,
-} from "react-native-purchases";
+import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import type { CustomerInfo } from "react-native-purchases";
 
 const REVENUECAT_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || "";
 const REVENUECAT_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || "";
@@ -57,7 +55,8 @@ export async function purchasePro(): Promise<{ success: boolean; error?: string 
     const offerings = await Purchases.getOfferings();
     const pkg =
       offerings.current?.availablePackages?.find(
-        (p) => p.packageType === "MONTHLY" || p.identifier.toLowerCase().includes("monthly")
+        (p: { packageType: string; identifier: string }) =>
+          p.packageType === "MONTHLY" || p.identifier.toLowerCase().includes("monthly")
       ) ?? offerings.current?.availablePackages?.[0];
     if (!pkg) {
       return { success: false, error: "No subscription package available." };

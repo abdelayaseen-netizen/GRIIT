@@ -221,7 +221,7 @@ const DEADLINE_OPTIONS: { id: DeadlineTypeUI; label: string; description: string
 ];
 
 const CHALLENGE_TYPES: { id: ChallengeType; label: string; description: string }[] = [
-  { id: "standard", label: "Standard", description: "Multi-day challenge with daily tasks" },
+  { id: "standard", label: "Standard", description: "Multi-day challenge with daily goals" },
   { id: "one_day", label: "24-Hour", description: "One day challenge, can be live or replayable" },
 ];
 
@@ -398,7 +398,7 @@ export default function CreateScreen() {
     }
     const validation = validateTasks();
     if (!validation.valid) {
-      Alert.alert("Invalid Task", validation.error || "Please fix task configuration");
+      Alert.alert("Invalid goal", validation.error || "Please fix goal configuration");
       return;
     }
     if (!title.trim()) {
@@ -416,14 +416,14 @@ export default function CreateScreen() {
         return;
       }
       if (deadlineType === "hard" && deadlineDate.trim()) {
-        const today = new Date().toISOString().split("T")[0];
+        const today = new Date().toISOString().slice(0, 10);
         if (deadlineDate.trim() < today) {
           Alert.alert("Invalid Deadline", "Hard deadline must be in the future");
           return;
         }
       }
     } else if (tasks.length === 0) {
-      Alert.alert("No Tasks", "Add at least one task to your challenge");
+      Alert.alert("No goals", "Add at least one goal to your challenge");
       return;
     }
     setSubmitStatus('submitting');
@@ -583,7 +583,7 @@ export default function CreateScreen() {
       return;
     }
     if (step === 2 && !canProceedStep2) {
-      Alert.alert("Add Tasks", "Add at least one daily task");
+      Alert.alert("Add goals", "Add at least one daily goal");
       return;
     }
     animateStep("next");
@@ -986,7 +986,7 @@ export default function CreateScreen() {
 
   const renderStep2 = () => (
     <Animated.View style={[styles.stepContent, { transform: [{ translateX: slideAnim }] }]}>
-      <Text style={step2Styles.sectionTitle}>Daily Tasks</Text>
+      <Text style={step2Styles.sectionTitle}>Daily Goals</Text>
       <Text style={step2Styles.sectionSubtitle}>
         {isSharedGoal
           ? "Your team will log progress toward the goal. Add optional daily habits below."
@@ -994,7 +994,7 @@ export default function CreateScreen() {
       </Text>
       <Text style={styles.stepHelper}>
         {isSharedGoal
-          ? `Goal: ${sharedGoalTarget || "—"} ${sharedGoalUnit.trim() || ""}. Tasks are optional for shared goals.`
+          ? `Goal: ${sharedGoalTarget || "—"} ${sharedGoalUnit.trim() || ""}. Extra daily goals are optional for shared goals.`
           : "The best challenges are simple and repeatable."}
       </Text>
 
@@ -1009,7 +1009,7 @@ export default function CreateScreen() {
 
       <View style={step2Styles.packsSection}>
         <Text style={step2Styles.packsTitle}>QUICK START WITH PACKS</Text>
-        <Text style={step2Styles.packsSubtitle}>One tap applies a full set of daily tasks</Text>
+        <Text style={step2Styles.packsSubtitle}>One tap applies a full set of daily goals</Text>
         <View style={step2Styles.packsGrid}>
           {CHALLENGE_PACKS.map((pack) => (
             <TouchableOpacity
@@ -1020,13 +1020,13 @@ export default function CreateScreen() {
                 setTasks(pack.buildTasks());
               }}
               activeOpacity={0.7}
-              accessibilityLabel={`Apply ${pack.title} tasks`}
+              accessibilityLabel={`Apply ${pack.title} goals`}
               accessibilityRole="button"
             >
               <Text style={step2Styles.packIcon}>{pack.icon}</Text>
               <Text style={step2Styles.packTitle} numberOfLines={1}>{pack.title}</Text>
               <Text style={step2Styles.packDesc} numberOfLines={2}>{pack.description}</Text>
-              <Text style={step2Styles.packTaskCount}>{pack.taskCount} tasks</Text>
+              <Text style={step2Styles.packTaskCount}>{pack.taskCount} goals</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -1037,7 +1037,7 @@ export default function CreateScreen() {
           <View style={step2Styles.emptyIcon}>
             <Plus size={28} color={DS_COLORS.inputPlaceholder} />
           </View>
-          <Text style={step2Styles.emptyTitle}>No tasks yet</Text>
+          <Text style={step2Styles.emptyTitle}>No goals yet</Text>
           <Text style={step2Styles.emptyDesc}>Add your first daily task to get started</Text>
         </View>
       ) : (
@@ -1101,7 +1101,7 @@ export default function CreateScreen() {
         accessibilityRole="button"
       >
         <Plus size={18} color={DS_COLORS.white} />
-        <Text style={step2Styles.addBtnText}>{tasks.length === 0 ? "Add your first daily task" : "+ Add Task"}</Text>
+        <Text style={step2Styles.addBtnText}>{tasks.length === 0 ? "Add your first daily goal" : "+ Add Goal"}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -1149,7 +1149,7 @@ export default function CreateScreen() {
       </View>
 
       <Text style={styles.reviewSectionTitle}>
-        {isSharedGoal ? "Daily tasks (optional)" : "Daily tasks"} ({tasks.length})
+        {isSharedGoal ? "Daily goals (optional)" : "Daily goals"} ({tasks.length})
       </Text>
       <View style={styles.reviewTaskList}>
         {tasks.map((task, idx) => {
@@ -1269,12 +1269,12 @@ export default function CreateScreen() {
           {step < 3 ? (
             <View style={{ flex: 1 }}>
               <PrimaryButtonCreate
-                label={step === 2 ? "Review >" : "Next: Add Tasks >"}
+                label={step === 2 ? "Review >" : "Next: Add Goals >"}
                 onPress={handleNext}
                 variant="orange"
                 fullWidth
                 disabled={!(step === 1 ? canProceedStep1 : canProceedStep2)}
-                accessibilityLabel={step === 2 ? "Review your challenge" : "Continue to add tasks"}
+                accessibilityLabel={step === 2 ? "Review your challenge" : "Continue to add goals"}
               />
             </View>
           ) : (

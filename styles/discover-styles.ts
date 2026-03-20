@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 export const styles = StyleSheet.create({
   container: {
@@ -12,14 +12,11 @@ export const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   title: {
-    fontSize: 38,
-    fontWeight: "800" as const,
-    letterSpacing: -0.5,
+    ...DS_TYPOGRAPHY.pageTitle,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   subtitle: {
-    fontSize: 15,
-    fontWeight: "400" as const,
+    ...DS_TYPOGRAPHY.secondary,
     color: DS_COLORS.TEXT_SECONDARY,
     marginTop: 4,
   },
@@ -157,8 +154,7 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: "700" as const,
+    ...DS_TYPOGRAPHY.sectionTitle,
     color: DS_COLORS.textPrimary,
   },
   sectionCaption: {

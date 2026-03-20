@@ -535,6 +535,7 @@ export interface ChallengeDetailFromApi {
   hard_pick_rate?: number | null;
   hard_finish_rate?: number | null;
   completion_rate?: number | null;
+  is_featured?: boolean | null;
 }
 
 export interface TeamMemberForListApi {

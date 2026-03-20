@@ -8,10 +8,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   Alert,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -19,10 +17,10 @@ import * as Clipboard from "expo-clipboard";
 import { Users, Copy, LogOut, Check } from "lucide-react-native";
 import { useMyTeam, useTeamFeed, useLeaveTeam } from "@/hooks/useTeams";
 import { useProStatus } from "@/hooks/useProStatus";
-import { checkGate, getPaywallTrigger, GATES } from "@/lib/feature-gates";
+import { checkGate, GATES } from "@/lib/feature-gates";
 import { InitialCircle } from "@/src/components/ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 
 export default function TeamsTabScreen() {
@@ -31,7 +29,6 @@ export default function TeamsTabScreen() {
   const teamsQuery = useMyTeam();
   const leaveMutation = useLeaveTeam();
   const [copied, setCopied] = useState(false);
-  const [leaveConfirm, setLeaveConfirm] = useState(false);
 
   const myTeam = teamsQuery.data;
   const teamId = myTeam?.team?.id ?? null;
@@ -77,9 +74,7 @@ export default function TeamsTabScreen() {
           text: "Leave",
           style: "destructive",
           onPress: () => {
-            leaveMutation.mutate(myTeam.team.id, {
-              onSuccess: () => setLeaveConfirm(false),
-            });
+            leaveMutation.mutate(myTeam.team.id);
           },
         },
       ]

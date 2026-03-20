@@ -315,6 +315,12 @@ export default function ProfileScreen() {
     staleTime: 5 * 60 * 1000,
     enabled: !isGuest && !!user?.id,
   });
+  const activeListQuery = useQuery({
+    queryKey: ["profile", user?.id, "activeChallenges"],
+    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
 
   const _completedChallengesList = Array.isArray(completedQuery.data) ? completedQuery.data : [];
   const securedDateKeys = Array.isArray(securedDatesQuery.data) ? securedDatesQuery.data : [];
@@ -338,13 +344,15 @@ export default function ProfileScreen() {
   const onRefresh = useCallback(async () => {
     await refetchAll();
     await queryClient.refetchQueries({ queryKey: ["profile"] });
-  }, [refetchAll, queryClient]);
+    await activeListQuery.refetch();
+  }, [refetchAll, queryClient, activeListQuery]);
 
   const isRefetching =
     completedQuery.isRefetching ||
     securedDatesQuery.isRefetching ||
     leaderboardProfileQuery.isRefetching ||
-    accountabilityQuery.isRefetching;
+    accountabilityQuery.isRefetching ||
+    activeListQuery.isRefetching;
 
   const handleLogout = useCallback(() => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -575,7 +583,7 @@ export default function ProfileScreen() {
           tier={tierName}
           daysSecured={totalDaysSecured}
           friendRank={leaderboardRank}
-          zeroStateHint={disciplineScore === 0 ? "Complete today's tasks to start your streak." : undefined}
+          zeroStateHint={disciplineScore === 0 ? "Complete today's goals to start your streak." : undefined}
         />
 
         <TierProgressBar
@@ -593,6 +601,49 @@ export default function ProfileScreen() {
           activeChallengesCount={activeChallengesCount}
           totalDisciplinePoints={totalDaysSecured}
         />
+
+        <View style={styles.activeChallengesSection}>
+          <Text style={styles.activeChallengesHeading}>Active challenges</Text>
+          {activeListQuery.isLoading ? (
+            <Text style={styles.activeChallengesEmpty}>Loading…</Text>
+          ) : !Array.isArray(activeListQuery.data) || activeListQuery.data.length === 0 ? (
+            <Text style={styles.activeChallengesEmpty}>No active challenges</Text>
+          ) : (
+            (activeListQuery.data as {
+              id: string;
+              current_day?: number;
+              start_at?: string;
+              challenges?: { id?: string; title?: string; duration_days?: number };
+            }[]).map((ac) => {
+              const ch = ac.challenges;
+              const total = Math.max(1, ch?.duration_days ?? 1);
+              const day = Math.min(total, Math.max(1, ac.current_day ?? 1));
+              const pct = Math.min(100, Math.round((day / total) * 100));
+              const cid = ch?.id;
+              return (
+                <TouchableOpacity
+                  key={ac.id}
+                  style={styles.activeChallengeRow}
+                  onPress={() => {
+                    if (cid) router.push(ROUTES.CHALLENGE_ID(cid) as never);
+                  }}
+                  activeOpacity={0.85}
+                  disabled={!cid}
+                  accessibilityLabel={`Open ${ch?.title ?? "challenge"}`}
+                  accessibilityRole="button"
+                >
+                  <View style={styles.activeChallengeRowText}>
+                    <Text style={styles.activeChallengeTitle} numberOfLines={1}>{ch?.title ?? "Challenge"}</Text>
+                    <Text style={styles.activeChallengeMeta}>
+                      Day {day} of {total} · {pct}% progress
+                    </Text>
+                  </View>
+                  <ChevronRight size={18} color={DS_COLORS.textMuted} />
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </View>
 
         <TouchableOpacity
           style={[styles.discoverCta, { backgroundColor: DS_COLORS.accent }]}
@@ -889,6 +940,40 @@ function createProfileStyles() {
       alignItems: "center" as const,
     },
     premiumCtaText: { fontSize: 16, fontWeight: "600" as const, color: DS_COLORS.accent },
+    activeChallengesSection: {
+      marginHorizontal: DS_SPACING.screenHorizontal,
+      marginBottom: DS_SPACING.lg,
+    },
+    activeChallengesHeading: {
+      ...DS_TYPOGRAPHY.eyebrow,
+      color: DS_COLORS.textMuted,
+      marginBottom: DS_SPACING.sm,
+    },
+    activeChallengesEmpty: {
+      ...DS_TYPOGRAPHY.secondary,
+      color: DS_COLORS.textSecondary,
+      paddingVertical: DS_SPACING.md,
+    },
+    activeChallengeRow: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      backgroundColor: DS_COLORS.card,
+      borderRadius: DS_RADIUS.cardAlt,
+      borderWidth: DS_BORDERS.width,
+      borderColor: DS_COLORS.border,
+      padding: DS_SPACING.cardPadding,
+      marginBottom: DS_SPACING.sm,
+    },
+    activeChallengeRowText: { flex: 1, minWidth: 0 },
+    activeChallengeTitle: {
+      ...DS_TYPOGRAPHY.cardTitle,
+      color: DS_COLORS.textPrimary,
+    },
+    activeChallengeMeta: {
+      ...DS_TYPOGRAPHY.secondary,
+      color: DS_COLORS.textMuted,
+      marginTop: 4,
+    },
     signOutLink: { paddingVertical: DS_SPACING.sm },
     signOutLinkText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, fontWeight: "500" as const, color: DS_COLORS.textMuted, textDecorationLine: "underline" as const },
     streakAtRiskCard: {

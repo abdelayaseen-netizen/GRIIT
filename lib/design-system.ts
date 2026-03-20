@@ -365,7 +365,6 @@ export const DS_COLORS = {
   overlayDark: 'rgba(0,0,0,0.7)',
   surfaceWarm: '#F7F5F0',
   errorText: '#DC2626',
-  milestoneGold: '#FFD700',
   difficultyEasyHeader: '#3D7A5A',
   purpleTintLight: '#F3F0FF',
   purpleTintWarm: '#EDE8FF',
@@ -379,6 +378,53 @@ export const DS_COLORS = {
   challengeHeaderDark: '#2D3A2E',
   alertRedBorder: '#FECACA',
   inputPlaceholder: '#999999',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // camelCase / legacy aliases (TypeScript cleanup — match references across app)
+  // ═══════════════════════════════════════════════════════════════════════════
+  crownGold: '#D4A017',
+  moodYellow: '#FBBF24',
+  journalCardBg: '#FFFFFF',
+  taskIndigoAlpha: 'rgba(99,102,241,0.12)',
+  taskAmberAlpha: 'rgba(245,158,11,0.12)',
+  photoThumbBg: '#F3F4F6',
+  confettiCyan: '#22D3EE',
+  confettiPurple: '#A78BFA',
+  borderDark: '#111111',
+  grayDarker: '#374151',
+  dangerDarkest: '#991B1B',
+  overlayDarker: 'rgba(0,0,0,0.75)',
+  grayMuted: '#9CA3AF',
+  cardSelectedBg: '#FFF0EA',
+  skeletonBg: '#E8E5DF',
+  avatarPurpleText: '#5B21B6',
+  journalPurpleVivid: '#6D28D9',
+  journalPurpleLight: '#EDE9FE',
+  photoPinkBg: '#FCE7F3',
+  runGreenBg: '#EBF5EE',
+  chipGrayBg: '#F3F4F6',
+  checkinBlueBg: '#EEF0F8',
+  surfaceAlt: '#F5F3F0',
+  avatarColor1: '#E8845F',
+  avatarColor2: '#2D8A4E',
+  avatarColor3: '#7B61FF',
+  avatarColor4: '#00897B',
+  avatarColor5: '#C4960C',
+  avatarColor6: '#D94040',
+  avatarColor7: '#7C6BC4',
+  avatarColor8: '#2563EB',
+  settingsPageBg: '#F5F5F5',
+  switchThumbInactive: '#E8E5DF',
+  settingsBackCircle: '#F3F4F6',
+  difficultyExtremeText: '#DC2626',
+  difficultyExtremeBg: '#FFE5E5',
+  difficultyMediumText: '#C17D00',
+  difficultyMediumBg: '#FFF8E8',
+} as const;
+
+/** Brand primary for special moments (e.g. join celebration CTA). */
+export const GRIIT_COLORS = {
+  primary: "#E8593C",
 } as const;
 
 export const DS_TYPOGRAPHY = {
@@ -424,6 +470,12 @@ export const DS_TYPOGRAPHY = {
   statValue: { fontSize: 28, fontWeight: '700' as const },
   statLabel: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.5 },
   tabLabel: { fontSize: 11, fontWeight: '600' as const },
+  /** Section titles on secondary screens (e.g. pricing) */
+  sectionHeader: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 26 },
+  screenTitle: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.5, lineHeight: 34 },
+  screenSubtitle: { fontSize: 13, fontWeight: '400' as const, lineHeight: 20 },
+  cardSubtitle: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22 },
+  ctaButton: { fontSize: 17, fontWeight: '700' as const, lineHeight: 22 },
 } as const;
 
 export const DS_SPACING = {
@@ -485,6 +537,8 @@ export const DS_RADIUS = {
   searchBar: 12,
   filterPill: 100,
   ctaButton: 14,
+  /** Full-width primary CTA pill (join celebration, etc.) */
+  joinCta: 28,
   featuredBadge: 6,
   modal: 20,
 } as const;
@@ -570,6 +624,9 @@ export const DS_MEASURES = {
   ICON_XL: 36,
   TASK_ICON_CONTAINER: 36,
   STAT_ICON_SIZE: 20,
+  /** camelCase alias */
+  progressBarHeight: 3,
+  ctaHeight: 56,
 } as const;
 
 export const DS_BORDERS = {

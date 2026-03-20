@@ -298,10 +298,10 @@ export default function ActiveChallengeDetailScreen() {
             </View>
           </View>
 
-          {/* Today's Missions */}
-          <Text style={s.sectionTitle}>Today&apos;s Missions</Text>
+          {/* Today's Goals */}
+          <Text style={s.sectionTitle}>Today&apos;s Goals</Text>
           <View style={[s.card, s.missionCard]}>
-            {tasks.map((task, index) => {
+            {tasks.map((task) => {
               const isCompleted = completedTaskIds.has(task.id);
               const IconComp = getTaskIcon(task);
               const estMin = task.estimated_minutes ?? (task as { duration_minutes?: number }).duration_minutes;

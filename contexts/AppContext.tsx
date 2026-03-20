@@ -498,7 +498,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ]);
     const activeResult = results[2];
     const activeData = activeResult.status === 'fulfilled' ? activeResult.value : null;
-    if (activeData?.id) await fetchTodayCheckins(activeData.id);
+    const ac = activeData as { id?: string } | null | undefined;
+    if (ac?.id) await fetchTodayCheckins(ac.id);
   }, [fetchProfile, fetchStats, fetchActiveChallenge, fetchStories, fetchTodayCheckins]);
 
   const refetchTodayCheckins = useCallback(async () => {

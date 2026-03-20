@@ -19,13 +19,14 @@ import {
   Brain,
   Target,
   Zap,
+  Users,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
 import {
   SearchBar,
@@ -42,7 +43,7 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { StarterChallenge } from "@/mocks/starter-challenges";
 
-type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "other";
+type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "team" | "other";
 
 /** Backend challenges.getFeatured can return paginated { items, nextCursor } or legacy array. */
 type GetFeaturedResponse =
@@ -89,6 +90,7 @@ const CATEGORY_FILTERS: { key: CategoryKey; label: string; icon: React.Component
   { key: "mind", label: "Mind", icon: Brain },
   { key: "discipline", label: "Discipline", icon: Target },
   { key: "faith", label: "Faith", icon: Zap },
+  { key: "team", label: "Team", icon: Users },
   { key: "other", label: "Other", icon: Sparkles },
 ];
 
@@ -98,8 +100,29 @@ function isDailyActive(c: FeaturedChallengeRaw): boolean {
   return new Date(c.ends_at).getTime() > Date.now();
 }
 
+function isTeamParticipation(c: FeaturedChallengeRaw): boolean {
+  const pt = (c.participation_type ?? "solo").toLowerCase();
+  return pt === "duo" || pt === "team";
+}
+
+function teamSizeLabel(c: FeaturedChallengeRaw): string {
+  const pt = (c.participation_type ?? "solo").toLowerCase();
+  if (pt === "duo") return "👥 Duo";
+  const n = c.team_size ?? 4;
+  if (n >= 5) return "👥 4+ people";
+  if (n >= 3) return "👥 3-4 people";
+  return "👥 Team";
+}
+
+function isDailyChallengeRow(c: FeaturedChallengeRaw): boolean {
+  const dt = c.duration_type ?? "";
+  const dd = c.duration_days ?? 0;
+  return !!(c.is_daily || dt === "24h" || dd === 1);
+}
+
 function matchesCategory(c: FeaturedChallengeRaw, cat: CategoryKey): boolean {
   if (cat === "all") return true;
+  if (cat === "team") return isTeamParticipation(c);
   if (cat === "mind" && (c.category === "mind" || c.category === "mental")) return true;
   if (cat === "other") return !["fitness", "mind", "discipline", "faith"].includes((c.category ?? "").toLowerCase());
   return (c.category ?? "").toLowerCase() === cat;
@@ -285,31 +308,38 @@ export default function DiscoverScreen() {
     return [];
   }, [featuredData]);
 
-  const dailyChallenges = useMemo(() => {
-    return allChallenges
-      .filter((c) => c.is_daily && isDailyActive(c))
-      .filter((c) => matchesCategory(c, activeCategory))
-      .filter((c) => matchesSearch(c, debouncedQuery));
-  }, [allChallenges, activeCategory, debouncedQuery]);
+  const filteredAll = useMemo(
+    () =>
+      allChallenges
+        .filter((c) => matchesCategory(c, activeCategory))
+        .filter((c) => matchesSearch(c, debouncedQuery)),
+    [allChallenges, activeCategory, debouncedQuery]
+  );
 
-  const nonDailyChallenges = useMemo(() => {
-    return allChallenges
-      .filter((c) => !c.is_daily)
-      .filter((c) => matchesCategory(c, activeCategory))
-      .filter((c) => matchesSearch(c, debouncedQuery));
-  }, [allChallenges, activeCategory, debouncedQuery]);
+  const dailyChallenges = useMemo(() => {
+    return filteredAll.filter((c) => isDailyChallengeRow(c) && isDailyActive(c) && !isTeamParticipation(c));
+  }, [filteredAll]);
+
+  const teamChallenges = useMemo(() => {
+    return filteredAll.filter((c) => isTeamParticipation(c));
+  }, [filteredAll]);
+
+  const standardChallenges = useMemo(() => {
+    return filteredAll.filter((c) => !isDailyChallengeRow(c) && !isTeamParticipation(c));
+  }, [filteredAll]);
 
   const FEATURED_SECTION_SIZE = 5;
   const featuredChallenges = useMemo(
-    () => nonDailyChallenges.slice(0, FEATURED_SECTION_SIZE),
-    [nonDailyChallenges]
+    () => standardChallenges.slice(0, FEATURED_SECTION_SIZE),
+    [standardChallenges]
   );
   const otherChallenges = useMemo(
-    () => nonDailyChallenges.slice(FEATURED_SECTION_SIZE),
-    [nonDailyChallenges]
+    () => standardChallenges.slice(FEATURED_SECTION_SIZE),
+    [standardChallenges]
   );
 
-  const totalVisible = dailyChallenges.length + featuredChallenges.length + otherChallenges.length;
+  const totalVisible =
+    dailyChallenges.length + teamChallenges.length + featuredChallenges.length + otherChallenges.length;
 
   const handleRefresh = useCallback(() => {
     featuredQuery.refetch();
@@ -423,6 +453,28 @@ export default function DiscoverScreen() {
     [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
   );
 
+  const renderTeamItem = useCallback(
+    ({ item: c, index }: { item: DiscoverChallenge; index: number }) => (
+      <ChallengeRowCard
+        title={c.title}
+        description={c.short_hook ?? c.description}
+        stripeColor={c.theme_color || undefined}
+        category={c.category}
+        durationLabel={getDurationLabel(c)}
+        taskCount={c.tasks.length}
+        participantsCount={c.participants_count ?? 0}
+        teamMeta={teamSizeLabel(c)}
+        onPressIn={() => handlePrefetchChallenge(c.id)}
+        onPress={() => handleChallengePress(c.id)}
+        participationType={c.participation_type}
+        teamSize={c.team_size}
+        index={index}
+        difficulty={DIFFICULTY_LABELS[c.difficulty] ?? "Medium"}
+      />
+    ),
+    [handleChallengePress, handlePrefetchChallenge, getDurationLabel]
+  );
+
   const renderErrorBanner = () => {
     if (!isError) return null;
     return (
@@ -492,31 +544,60 @@ export default function DiscoverScreen() {
       >
         {renderErrorBanner()}
 
-        {(dailyChallenges.length > 0 || featuredQuery.data != null) && (
+        {hasLoaded && (
           <View style={styles.section}>
             <SectionHeader
               title="⚡ 24-Hour Challenges"
               icon={<Zap size={18} color={DS_COLORS.accent} />}
               caption="New every day"
             />
+            {dailyChallenges.length > 0 ? (
+              <FlatList
+                data={dailyChallenges}
+                keyExtractor={(item) => item.id}
+                horizontal
+                initialNumToRender={5}
+                maxToRenderPerBatch={5}
+                windowSize={5}
+                getItemLayout={(_data, index) => ({
+                  length: DAILY_CARD_WIDTH + DAILY_CARD_GAP,
+                  offset: (DAILY_CARD_WIDTH + DAILY_CARD_GAP) * index,
+                  index,
+                })}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={[styles.dailyScrollContent, { paddingLeft: 16, paddingRight: 24 }]}
+                renderItem={renderDailyItem}
+                snapToInterval={DAILY_CARD_WIDTH + DAILY_CARD_GAP}
+                snapToAlignment="start"
+                decelerationRate="fast"
+              />
+            ) : (
+              <Text
+                style={[
+                  DS_TYPOGRAPHY.secondary,
+                  { paddingHorizontal: 20, paddingBottom: 8, color: DS_COLORS.TEXT_MUTED },
+                ]}
+              >
+                No 24-hour challenges match this filter. Try All or another category.
+              </Text>
+            )}
+          </View>
+        )}
+
+        {teamChallenges.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>🤝 Team Challenges</Text>
+            </View>
             <FlatList
-              data={dailyChallenges}
+              data={teamChallenges}
               keyExtractor={(item) => item.id}
-              horizontal
-              initialNumToRender={5}
-              maxToRenderPerBatch={5}
+              renderItem={renderTeamItem}
+              scrollEnabled={false}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
               windowSize={5}
-              getItemLayout={(_data, index) => ({
-                length: DAILY_CARD_WIDTH + DAILY_CARD_GAP,
-                offset: (DAILY_CARD_WIDTH + DAILY_CARD_GAP) * index,
-                index,
-              })}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[styles.dailyScrollContent, { paddingLeft: 16, paddingRight: 24 }]}
-              renderItem={renderDailyItem}
-              snapToInterval={DAILY_CARD_WIDTH + DAILY_CARD_GAP}
-              snapToAlignment="start"
-              decelerationRate="fast"
+              style={styles.compactList}
             />
           </View>
         )}

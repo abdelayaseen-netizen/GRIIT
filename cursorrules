@@ -1,0 +1,582 @@
+# GRIIT — Cursor Rules v1.0
+# ============================================================
+# READ THIS ENTIRE FILE BEFORE TOUCHING ANY CODE.
+# This is the permanent brain for all Cursor Agent work on GRIIT.
+# Every prompt, every fix, every feature must follow these rules.
+# No exceptions. No shortcuts. No assumptions.
+# ============================================================
+
+---
+
+## SECTION 1 — PROJECT IDENTITY
+
+App name: GRIIT — always double-I. Never GRIT, never Grit, never grit.
+Wordmark display: G R I I T (spaced, uppercase, exactly like this)
+Tagline: "Discipline is not optional."
+Concept: Duolingo for discipline meets Strava for self-improvement.
+Audience: Males 18–30. Mental toughness, physical resilience, daily habit-building.
+Platform: React Native + Expo (iOS + Android, managed workflow — never eject)
+Repository: https://github.com/abdelayaseen-netizen/GRIIT.git
+Backend URL: grit-backend-production.up.railway.app
+
+### GRIIT SPELLING — ZERO TOLERANCE
+Before EVERY commit, run:
+```powershell
+Get-ChildItem -Recurse -Filter "*.tsx" app/, src/ | Select-String "\bGRIT\b" | Select-Object -First 20
+Get-ChildItem -Recurse -Filter "*.ts" lib/, backend/ | Select-String "\bGRIT\b" | Select-Object -First 20
+```
+Fix every single-I "GRIT" in user-facing strings before committing.
+Exception only: legacy variable names that are not user-facing and predate this rule.
+
+---
+
+## SECTION 2 — TECH STACK
+
+### Frontend
+- React Native + Expo SDK (managed workflow)
+- expo-router for file-based routing
+- TypeScript — no `any` types unless absolutely necessary with a comment explaining why
+- Zustand for client state
+- TanStack React Query for server state
+- Lucide React Native for all icons
+- RevenueCat for in-app purchases (scaffolded — do not remove)
+
+### Backend
+- Hono + tRPC deployed on Railway
+- Backend folder: `backend/`
+- tRPC routes: `backend/trpc/routes/`
+- Type definitions: `backend/types/db.ts`
+- ALWAYS redeploy after any backend file change:
+```powershell
+cd backend
+railway up --service grit-backend
+cd ..
+```
+Never assume backend changes are live without redeploying. Never skip this step.
+
+### Database & Auth
+- Supabase (project ref: iazdfbqwudlodozgoyov)
+- Auth: Supabase Auth (auth.users table)
+- Every new auth user automatically gets a profile via database trigger — never manually insert profiles on signup
+- All schema changes via Supabase SQL Editor — never via code
+- After every schema change: `NOTIFY pgrst, 'reload schema';`
+- After schema changes, always update `backend/types/db.ts` immediately
+
+### Data Fetching
+- tRPC via `trpcQuery()` and `trpcMutate()` from `@/lib/trpc` for most operations
+- Direct Supabase client for auth, profiles, and real-time queries
+- React Query keys MUST include userId: `['resource', 'action', user?.id ?? '']`
+- Queries requiring auth: `enabled: !!user?.id && !isGuest`
+- staleTime: 5 * 60 * 1000 for non-real-time data
+
+---
+
+## SECTION 3 — DATABASE SCHEMA
+
+### Tables (public schema)
+```
+profiles              — user profiles (id = auth.users.id)
+challenges            — all challenges
+challenge_tasks       — tasks belonging to a challenge
+active_challenges     — user's joined challenges
+check_ins             — daily task completions
+activity_events       — feed events (joins, completions, streaks)
+challenge_participants — members of a challenge
+streaks               — streak tracking
+user_achievements     — badges and milestones
+stories               — proof photos / posts
+story_views           — who viewed a story
+invite_tracking       — referral and invite links
+```
+
+### Critical FK Rules
+- active_challenges.user_id → profiles.id (NOT auth.users.id directly)
+- Never insert into active_challenges without confirming the user has a profile
+- New auth users get profiles automatically via trigger — do not duplicate this in code
+
+### Visibility Values — ALWAYS UPPERCASE
+- 'PUBLIC', 'FRIENDS', 'PRIVATE' — never lowercase
+- Backend enforces .toUpperCase() on insert
+- All queries must filter with uppercase values
+
+### Challenge Status Values
+- 'published' — live and joinable
+- 'draft' — not visible
+- 'archived' — no longer active
+
+### challenges Table Key Columns
+id, title, description, duration_days, difficulty, category, status, visibility,
+participation_type, challenge_type, creator_id, duration_type, live_date,
+replay_policy, require_same_rules, show_replay_label, run_status, team_size,
+shared_goal_target, shared_goal_unit, deadline_type, deadline_date,
+starts_at, ends_at, updated_at, rules, reset_type, max_participants
+
+### active_challenges Table Key Columns
+id, user_id, challenge_id, status, started_at, start_at, end_at, created_at
+
+---
+
+## SECTION 4 — NAVIGATION RULES
+
+### Tab Bar (5 items)
+1. Home        → app/(tabs)/index.tsx
+2. Discover    → app/(tabs)/discover.tsx
+3. Create (+)  → app/(tabs)/create.tsx  (center black circle button)
+4. Movement    → app/(tabs)/movement.tsx
+5. Profile     → app/(tabs)/profile.tsx
+
+### Screen Routes
+- Pre-join challenge:  app/challenge/[id].tsx
+- Active challenge:    app/challenge/active/[activeChallengeId].tsx
+- Create profile:      app/create-profile.tsx
+- Edit profile:        app/edit-profile.tsx
+- Onboarding:          app/onboarding/ screens
+
+### Navigation Flow — NEVER DEVIATE FROM THIS
+1. Discover → tap challenge card → app/challenge/[id].tsx
+2. app/challenge/[id].tsx → tap Commit → Commit confirmation modal → join succeeds → app/challenge/active/[activeChallengeId].tsx
+3. Home active challenge card → tap Continue → app/challenge/active/[activeChallengeId].tsx
+4. Create challenge succeeds → navigate to app/challenge/[newChallengeId].tsx
+5. New user signup → profile auto-created via DB trigger → onboarding flow → Home
+6. Onboarding complete → app/(tabs)/index.tsx
+
+### TWO CHALLENGE SCREENS — NEVER MERGE THEM
+- app/challenge/[id].tsx = PRE-JOIN (Commit button, member count, task preview)
+- app/challenge/active/[activeChallengeId].tsx = POST-JOIN (today's tasks, progress, Continue Today)
+- Do NOT add active-challenge UI to the pre-join screen
+- Do NOT add pre-join UI to the active challenge screen
+
+---
+
+## SECTION 5 — BUSINESS RULES
+
+### Challenge Limits
+- Free users: maximum 2 active challenges at once
+- Paid users (GRIIT Pro): unlimited active challenges
+- Enforce this check BEFORE inserting into active_challenges
+- When free user tries to join a 3rd challenge: show paywall screen
+
+### Streak System
+- A day is "secured" when ALL required tasks for that day are completed
+- Free users: 2 streak freezes total (lifetime, not per-week)
+- Paid users: 5 streak freezes total
+- Freeze consumed automatically on missed day if available
+- If no freezes remain and user misses a day: streak resets to 0
+- Streak reset must trigger a push notification within 1 hour
+
+### Paywall Trigger — CRITICAL
+- NEVER show paywall before user completes their first task
+- Show paywall at the exact moment user tries to join their 2nd challenge
+- Plans: Monthly, Annual
+- Payment system: RevenueCat (scaffolded — activate in v2)
+- Do NOT remove RevenueCat scaffolding
+
+### Task Verification Types
+- JOURNAL  — user writes text (minimum 50 characters)
+- TIMER    — user stays on screen with countdown, cannot background app
+- PHOTO    — user uploads a photo as proof
+- MANUAL   — honor system, user taps complete
+- CHECKIN  — location-based (v2 — do not build yet)
+- HEALTH   — Apple Health / Whoop (v2 — do not build yet)
+
+### The "Aha Moment" Rule
+- The aha moment for GRIIT = user completes first task + sees "Day 1 Secured"
+- This MUST happen within the first session
+- Every flow decision should be optimized to get users to this moment faster
+- Remove any step between signup and first task completion that isn't absolutely necessary
+
+---
+
+## SECTION 6 — DESIGN SYSTEM
+
+### Source of Truth
+- ALL colors, typography, spacing, radius, shadows: lib/design-system.ts
+- ALL component tokens: theme/griit-design-tokens.ts
+- NO raw hex values anywhere except lib/design-system.ts
+- NO Object.assign in lib/design-system.ts — all exports flat and static
+- NO inline styles with hardcoded values — always use design tokens
+
+### Core Colors
+```
+Page background:     DS_COLORS.BG_PAGE        = #F5F5F5  (cool neutral grey)
+Card surface:        DS_COLORS.BG_CARD        = #FFFFFF  (pure white)
+Primary accent:      DS_COLORS.ACCENT_PRIMARY = #E8593C  (GRIIT fire orange)
+Accent dark:         DS_COLORS.ACCENT_DARK    = #D4472B  (pressed state)
+Accent tint:         DS_COLORS.ACCENT_TINT    = #FFF0ED  (light orange bg)
+Text primary:        DS_COLORS.TEXT_PRIMARY   = #111111
+Text secondary:      DS_COLORS.TEXT_SECONDARY = #666666
+Text muted:          DS_COLORS.TEXT_MUTED     = #999999
+Success green:       DS_COLORS.ACCENT_GREEN   = #2D7A4F
+Success tint:        DS_COLORS.GREEN_BG       = #EBF5EE
+Border:              DS_COLORS.BORDER         = #E8E5DF
+Divider:             DS_COLORS.DIVIDER        = #EEEBE5
+Shadow:              DS_COLORS.SHADOW         = rgba(0,0,0,0.06)
+```
+
+### Challenge Header Colors (deep saturated — by category)
+```
+FITNESS:    #2D1810  (deep rust/ember — intensity and physical heat)
+MIND:       #1A1A2E  (deep navy/indigo — focus and cognitive depth)
+DISCIPLINE: #1A3A2A  (deep forest green — power and military precision)
+FAITH:      #1A1A2E  (same as MIND)
+Default:    #2D1810  (fitness/ember as safe default)
+```
+Why deep saturated darks instead of black or warm brown:
+- Pure black headers feel premium/heavy (Spotify) — wrong energy for action-oriented app
+- Warm brown headers feel casual (coffee shop) — wrong for discipline app
+- Deep domain colors create subconscious category meaning before user reads a word
+
+### Eyebrow Label Rules (replaces "STANDARD")
+- NEVER use "STANDARD" as an eyebrow label — it is a dead label
+- Use live meaningful data instead:
+  - "🔥 {count} ACTIVE TODAY" when count > 0
+  - "⚡ 24-HOUR CHALLENGE" for daily challenges
+  - "🏆 FEATURED" for featured challenges
+  - "✓ CREATOR VERIFIED" for verified challenges
+  - "🆕 NEW" for challenges created in last 7 days
+
+### Difficulty Badge Colors (filled pills — not text only)
+```
+Easy:    green filled  — bg: DS_COLORS.GREEN_BG,   text: DS_COLORS.ACCENT_GREEN
+Medium:  amber filled  — bg: #FFF8E8,               text: #C17D00
+Hard:    orange filled — bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY
+Extreme: red filled    — bg: #FFE5E5,               text: #DC2626
+```
+
+### Typography Rules
+```
+Page titles (Discover, Movement, Home): 34–40px, fontWeight '800'
+Section headers:  20px, fontWeight '700'
+Card titles:      17px, fontWeight '700'
+Body:             15px, fontWeight '400' or '500'
+Labels/metadata:  13px, fontWeight '400'
+Eyebrow text:     11px, fontWeight '700', letterSpacing 1.5, UPPERCASE
+Button text:      17px, fontWeight '700'
+Stat numbers:     28–40px, fontWeight '800'
+```
+
+### Streak Display Rule
+- The streak number is the HERO element of the home screen
+- Minimum size: 48px bold with flame icon
+- Must be the first thing visible when user opens the app
+- Never bury the streak in a stat card — it must dominate the screen
+
+### Card Rules
+- All cards: white (#FFFFFF), borderRadius 16, DS_SHADOWS.card
+- Page background: DS_COLORS.BG_PAGE (#F5F5F5) — not warm beige, not pure white
+- Card borders: 0.5px solid DS_COLORS.BORDER
+- Challenge cards: 4px colored left accent border by category
+  - FITNESS = DS_COLORS.ACCENT_PRIMARY (#E8593C)
+  - MIND = #4A5568 (slate)
+  - DISCIPLINE = DS_COLORS.ACCENT_GREEN (#2D7A4F)
+
+### Button Rules
+```
+Primary CTA:  DS_COLORS.ACCENT_PRIMARY bg, white text, height 56, borderRadius 14
+Success CTA:  DS_COLORS.ACCENT_GREEN bg, white text, height 56, borderRadius 14
+Dark CTA:     #111111 bg, white text, height 56, borderRadius 14
+Destructive:  #DC2626 bg, white text, height 56, borderRadius 14
+Pill buttons: borderRadius 100
+Secondary:    transparent bg, DS_COLORS.BORDER border, DS_COLORS.TEXT_PRIMARY text
+```
+ONE primary CTA per screen. All secondary actions must be visually subordinate.
+
+### Tab Bar Rules
+```
+Active icon:          DS_COLORS.ACCENT_PRIMARY (#E8593C)
+Inactive icon:        #AAAAAA
+Center create button: #111111 circle, white + icon, 54px diameter
+Tab bar background:   #FFFFFF with top border 0.5px DS_COLORS.BORDER
+```
+
+### Empty State Rules
+- NEVER show a blank screen or just "Be the first" text
+- Every empty state must be an invitation to action:
+  - No active challenges → show "Start Building" + Explore Challenges CTA
+  - No activity feed → show "Join a challenge to see your community move"
+  - No friends → show "Invite friends" prompt
+  - 0 members in challenge → show "Be the first to start something real"
+- Empty states are retention opportunities, not dead ends
+
+### Day Secured Celebration Rules
+- When ALL tasks complete: screen must transform
+- CTA button turns DS_COLORS.ACCENT_GREEN with "Day Secured ✓"
+- Brief confetti/pulse animation plays (use react-native-reanimated)
+- Copy changes to: "You showed up. Day X secured."
+- Shows: tomorrow's task preview + current streak count
+- Haptic feedback: trigger heavy impact haptic (Haptics.impactAsync)
+- This is the highest-value emotional moment in the entire app
+
+### Animation & Haptic Rules
+- Task completion: checkmark animation + medium haptic
+- Day secured: confetti + heavy haptic
+- Streak milestone (7, 14, 30, 75 days): full celebration screen
+- Never use animations that delay user action — keep under 300ms
+- Use react-native-reanimated for all animations
+
+### No Gradients Rule
+- NEVER use gradients anywhere in the app
+- All surfaces must be flat solid colors
+- Gradients age fast and look cheap on mobile without a full design team
+
+---
+
+## SECTION 7 — COPY & TONE RULES
+
+GRIIT's copy must reinforce user identity, not just confirm actions.
+
+### Replace Generic Copy With Identity Copy
+```
+❌ "Task completed"          → ✅ "Secured."
+❌ "Done"                    → ✅ "You showed up."
+❌ "Challenge joined"        → ✅ "Day 1 starts now."
+❌ "Error occurred"          → ✅ Specific error message, always
+❌ "Loading..."              → ✅ Context-specific: "Loading your challenges..."
+❌ "No data available"       → ✅ Invitation to action (see Empty State Rules)
+❌ "Continue"                → ✅ "Secure Today" or "Start [Task Name]"
+❌ "Submit"                  → ✅ "Commit" or "Lock It In"
+❌ "Standard"  (label)       → ✅ Live social proof (see Eyebrow Label Rules)
+```
+
+### Push Notification Copy (Days 1–7 retention window)
+```
+Day 1 (same time as signup): "Day 1 is waiting. Don't let it slip."
+Day 2 (if no task done):     "Your streak starts today. Not tomorrow."
+Day 3:                       "3 days in. Most people quit here. You're not most people."
+Day 7:                       "7 days. You're 3.6x more likely to finish now. Keep going."
+```
+
+---
+
+## SECTION 8 — CODE QUALITY RULES
+
+### POST-CODE DOUBLE-CHECK — MANDATORY AFTER EVERY FILE CHANGE
+After writing or modifying any file, immediately verify:
+1. No hardcoded hex values introduced (run hex grep check)
+2. No `any` types introduced
+3. No silent catch blocks introduced
+4. No fake/mock data introduced
+5. No GRIT (single-I) spelling introduced
+6. Imports resolve correctly (no broken import paths)
+7. Component uses DS_COLORS tokens, not raw values
+8. If screen file: background uses DS_COLORS.BG_PAGE
+9. If card component: uses DS_COLORS.BG_CARD + DS_SHADOWS.card
+10. React Query key includes userId if auth-required
+
+### CONSOLIDATION RULE — MANDATORY AFTER EVERY PROMPT
+After completing all tasks in a prompt:
+1. Remove any duplicate code introduced (check for duplicate functions, duplicate imports, duplicate style definitions)
+2. Remove any commented-out code that is no longer needed
+3. Remove any console.log statements added for debugging (unless they are error logs)
+4. Consolidate any repeated style patterns into shared StyleSheet entries
+5. Ensure no file exceeds 500 lines — if it does, flag it for splitting
+6. Verify all new components follow the existing naming conventions
+7. Check that no two files define the same component or utility function
+
+### No Silent Catch Blocks — ZERO TOLERANCE
+Never write:
+```typescript
+} catch (e) {}
+} catch (e) { console.log(e) }
+```
+Always write:
+```typescript
+} catch (error) {
+  console.error('[ComponentName] operationName failed:', error);
+  setError(error instanceof Error ? error.message : 'Something went wrong');
+}
+```
+
+### No Fake or Mock Data — ZERO TOLERANCE
+- No hardcoded user arrays
+- No pravatar.cc photos
+- No STARTER_CHALLENGES arrays in frontend code
+- No placeholder names (hasan_k, sarah_m, omar_z, etc.)
+- All data comes from Supabase or tRPC
+- Empty states use proper empty state UI (see Empty State Rules)
+
+### Error Handling Pattern
+- Never use Alert.alert for errors — use inline error messages
+- Network errors: show retry button
+- Auth errors: show specific message
+- Backend errors: surface the actual error message, never "Something went wrong"
+- Loading states: always handle isLoading with skeleton or spinner
+- Error states: always handle isError with message + retry
+
+### TypeScript Rules
+- No `any` types
+- All API response types must match backend/types/db.ts
+- When adding columns to Supabase → update backend/types/db.ts immediately
+- Use proper generic types for React Query hooks
+
+### React Query Rules
+- Query keys must include userId
+- Queries requiring auth: `enabled: !!user?.id && !isGuest`
+- Always handle isLoading, isError, and empty array states
+- Invalidate relevant queries after mutations
+- Use optimistic updates for task completion (feels instant)
+
+---
+
+## SECTION 9 — FILE STRUCTURE
+
+```
+app/                         ← Expo Router screens
+  (tabs)/
+    index.tsx                ← Home screen
+    discover.tsx             ← Discover screen
+    create.tsx               ← Create challenge
+    movement.tsx             ← Leaderboard + activity feed
+    profile.tsx              ← User profile
+  challenge/
+    [id].tsx                 ← Pre-join challenge detail
+    active/
+      [activeChallengeId].tsx ← Post-join active challenge
+  onboarding/                ← Onboarding flow screens
+  create-profile.tsx
+  edit-profile.tsx
+
+src/                         ← Reusable components
+  components/                ← UI components (Typography, Card, etc.)
+
+lib/                         ← Utilities and config
+  design-system.ts           ← ONLY file allowed to have raw hex values
+  trpc.ts                    ← tRPC client
+  trpc-paths.ts              ← tRPC route constants (use these, not raw strings)
+  supabase.ts                ← Supabase client
+  routes.ts                  ← Route constants (use these, not raw strings)
+
+theme/
+  griit-design-tokens.ts     ← Token relay (imports from lib/design-system.ts only)
+
+backend/
+  trpc/routes/               ← tRPC route handlers
+  types/db.ts                ← Database types (keep in sync with Supabase schema)
+```
+
+### File Location Rules
+- New screens → app/ following expo-router conventions
+- New components → src/
+- New utilities → lib/
+- Never create screens inside src/
+- Never create components inside app/
+- Never hardcode route strings — use lib/routes.ts constants
+
+---
+
+## SECTION 10 — WINDOWS POWERSHELL COMMANDS
+
+Never use bash or grep. Always use PowerShell:
+
+```powershell
+# Search files for text
+Get-ChildItem -Recurse -Filter "*.tsx" app/ | Select-String "searchterm" | Select-Object -First 20
+
+# Read a file
+Get-Content "path\to\file.ts"
+
+# Read specific line range
+Get-Content "path\to\file.ts" | Select-Object -Skip 100 -First 50
+
+# Check if file exists
+Test-Path "app\challenge\active\[activeChallengeId].tsx"
+
+# Find files by name pattern
+Get-ChildItem -Recurse -Filter "*.tsx" app/ | Where-Object { $_.Name -like "*challenge*" }
+
+# Search for hex values (quality check)
+Get-ChildItem -Recurse -Filter "*.tsx" app/, src/ | Select-String "'#[0-9A-Fa-f]{3,8}'" | Select-Object -First 20
+```
+
+---
+
+## SECTION 11 — V2 ROADMAP (DO NOT BUILD YET)
+
+These are confirmed future features. Do not build any of these:
+- Dark mode
+- Whoop API heart rate verification
+- Apple Health / Google Fit integration
+- Location-based gym check-in (CHECKIN task type)
+- Screen Time API (phone usage challenges)
+- Verified creator badge
+- Teams feature
+- Social proof photo sharing / viral loop
+- Push notification infrastructure (scaffold only)
+
+---
+
+## SECTION 12 — DO NOT TOUCH LIST
+
+Unless explicitly instructed in the prompt:
+- Do NOT modify lib/design-system.ts structure
+- Do NOT modify RLS policies in Supabase
+- Do NOT add new npm packages without listing them in the completion report
+- Do NOT delete any route files
+- Do NOT merge the pre-join and active challenge screens
+- Do NOT remove RevenueCat scaffolding
+- Do NOT eject from Expo managed workflow
+- Do NOT change the database trigger that creates profiles on signup
+- Do NOT change the visibility uppercase enforcement in the backend
+
+---
+
+## SECTION 13 — PRE-COMMIT CHECKLIST
+
+Run through every item before writing the completion report:
+
+```
+□ GRIIT spelling — no single-I "GRIT" in user-facing strings
+□ No hardcoded hex values outside lib/design-system.ts
+□ No fake/mock data or placeholder users
+□ No silent catch blocks — all errors logged and surfaced
+□ No Object.assign in lib/design-system.ts
+□ No `any` TypeScript types
+□ No console.log debug statements left in code
+□ No duplicate functions or components introduced
+□ No commented-out dead code left behind
+□ All new screens use DS_COLORS.BG_PAGE (#F5F5F5) as background
+□ All cards use DS_COLORS.BG_CARD (#FFFFFF) + DS_SHADOWS.card
+□ All challenge headers use deep category colors (not black, not warm brown)
+□ Eyebrow labels use live data (not "STANDARD")
+□ Difficulty badges are filled colored pills
+□ Streak number is prominent on home screen (not buried in stats)
+□ Empty states have invitations to action (not blank screens)
+□ React Query keys include userId
+□ If backend files changed: railway up --service grit-backend was run
+□ If Supabase schema changed: backend/types/db.ts was updated
+□ If Supabase schema changed: NOTIFY pgrst, 'reload schema' was run
+□ Git commit message uses prefix: fix:, feat:, refactor:, style:, chore:
+□ Git push to main completed
+```
+
+---
+
+## SECTION 14 — COMPLETION REPORT FORMAT
+
+Every prompt MUST end with this exact format AFTER all checklist items pass:
+
+```
+## Completion Report
+
+| Task | File(s) changed | Status |
+|------|----------------|--------|
+| 1    | description     | ✅     |
+| N    | Git commit      | ✅     |
+
+### Quality checks passed
+- [ ] GRIIT spelling: 0 violations
+- [ ] Hardcoded hex: 0 violations
+- [ ] Silent catches: 0 violations
+- [ ] Fake data: 0 violations
+- [ ] Duplicate code removed: ✅
+- [ ] Debug logs removed: ✅
+
+### Additional notes
+- New npm packages added: (list or "none")
+- Supabase schema changes: (describe or "none")
+- Backend redeployed: (yes/no)
+- Files flagged for future splitting: (list or "none")
+```
+
+Only write the completion report after every checklist item above is verified.
+A completion report written before the checklist is a false completion report.

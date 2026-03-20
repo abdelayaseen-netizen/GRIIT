@@ -23,6 +23,10 @@ export const ONBOARDING_COLORS = {
   border: '#E8E4DD',
   borderActive: '#2D3A2E',
   commitmentButtonBg: '#2D2D2D',
+
+  /** Progress dots & disabled fills */
+  DISABLED_BG: '#E8E4DD',
+  WHITE: '#FFFFFF',
 } as const;
 
 export const ONBOARDING_TYPOGRAPHY = {

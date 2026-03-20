@@ -135,7 +135,7 @@ export default function JournalTaskScreen() {
     if (!draftLoaded) return;
     draftTimerRef.current = setInterval(() => {
       const draft = JSON.stringify({ entryText, mood, energy, bodyState });
-      AsyncStorage.setItem(draftKey, draft).catch((err) => {
+      AsyncStorage.setItem(draftKey, draft).catch(() => {
         // error swallowed — handle in UI
       });
     }, 3000);

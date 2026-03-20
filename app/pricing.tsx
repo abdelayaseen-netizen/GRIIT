@@ -47,7 +47,7 @@ const FEATURES = [
   { icon: Unlock, label: "Unlimited Active Challenges", desc: "No cap on how many you can run at once" },
   { icon: Snowflake, label: "Streak Freeze", desc: "Protect your streak. 2 freezes per month included." },
   { icon: Shield, label: "Last Stand", desc: "One final chance to save a broken streak" },
-  { icon: PenLine, label: "Custom Challenges", desc: "Build challenges from scratch with custom tasks" },
+  { icon: PenLine, label: "Custom Challenges", desc: "Build challenges from scratch with custom goals" },
   { icon: BarChart3, label: "Discipline Analytics", desc: "Weekly trends, detailed stats, and progress insights" },
   { icon: Crown, label: "Premium Badge", desc: "Stand out on leaderboards and profiles" },
 ];
@@ -93,7 +93,8 @@ export default function PricingScreen() {
         const monthly = current.availablePackages.find(
           (p) => p.identifier === "$rc_monthly" || String(p.product?.title ?? "").toLowerCase().includes("month")
         );
-        setSelectedPackage(annual ?? monthly ?? current.availablePackages[0]);
+        const first = current.availablePackages[0];
+        setSelectedPackage(annual ?? monthly ?? first ?? null);
       }
     } catch {
       setOfferingError(true);

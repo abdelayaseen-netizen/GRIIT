@@ -10,9 +10,9 @@ import {
   Pressable,
 } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
-import { Shield } from "lucide-react-native";
+import { ShieldCheck } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS, GRIIT_COLORS } from "@/lib/design-system";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -20,18 +20,15 @@ export type JoinCelebrationModalProps = {
   visible: boolean;
   onDismiss: () => void;
   challengeName: string;
-  durationDays: number;
 };
 
 export default function JoinCelebrationModal({
   visible,
   onDismiss,
   challengeName,
-  durationDays,
 }: JoinCelebrationModalProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
-  const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dismissed = useRef(false);
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
@@ -39,10 +36,6 @@ export default function JoinCelebrationModal({
   const runDismiss = useCallback(() => {
     if (dismissed.current) return;
     dismissed.current = true;
-    if (autoDismissTimer.current) {
-      clearTimeout(autoDismissTimer.current);
-      autoDismissTimer.current = null;
-    }
     Animated.parallel([
       Animated.timing(opacity, { toValue: 0, duration: 240, useNativeDriver: true }),
       Animated.timing(scale, { toValue: 0.94, duration: 240, useNativeDriver: true }),
@@ -73,17 +66,8 @@ export default function JoinCelebrationModal({
       Animated.timing(opacity, { toValue: 1, duration: 320, useNativeDriver: true }),
     ]).start();
 
-    autoDismissTimer.current = setTimeout(() => {
-      runDismiss();
-    }, 6000);
-
-    return () => {
-      if (autoDismissTimer.current) {
-        clearTimeout(autoDismissTimer.current);
-        autoDismissTimer.current = null;
-      }
-    };
-  }, [visible, opacity, scale, runDismiss]);
+    return undefined;
+  }, [visible, opacity, scale]);
 
   const handleLetsGo = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -96,7 +80,7 @@ export default function JoinCelebrationModal({
 
   if (!visible) return null;
 
-  const subline = `${challengeName.trim() || "Challenge"} · ${durationDays} day${durationDays === 1 ? "" : "s"}`;
+  const name = challengeName.trim() || "Challenge";
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={handleBackdropDismiss}>
@@ -122,10 +106,9 @@ export default function JoinCelebrationModal({
         >
           <Pressable onPress={(e) => e.stopPropagation()}>
             <View style={styles.inner} accessibilityRole="summary">
-              <Shield size={64} color={DS_COLORS.accent} strokeWidth={2} />
-              <Text style={styles.headline}>You&apos;re built different.</Text>
-              <Text style={styles.subline}>{subline}</Text>
-              <Text style={styles.secondary}>Day 1 starts now. Don&apos;t break the chain.</Text>
+              <ShieldCheck size={64} color={DS_COLORS.accent} strokeWidth={2} />
+              <Text style={styles.headline}>You&apos;re in!</Text>
+              <Text style={styles.subline}>Day 1 of {name} starts now.</Text>
               <TouchableOpacity
                 style={styles.cta}
                 onPress={handleLetsGo}
@@ -171,29 +154,21 @@ const styles = StyleSheet.create({
   },
   headline: {
     ...DS_TYPOGRAPHY.pageTitle,
-    fontSize: 26,
     color: DS_COLORS.WHITE,
     textAlign: "center",
     marginTop: DS_SPACING.xl,
   },
   subline: {
-    ...DS_TYPOGRAPHY.body,
+    ...DS_TYPOGRAPHY.bodySmall,
     color: DS_COLORS.TEXT_MUTED,
     textAlign: "center",
     marginTop: DS_SPACING.md,
   },
-  secondary: {
-    ...DS_TYPOGRAPHY.secondary,
-    color: DS_COLORS.TEXT_MUTED,
-    textAlign: "center",
-    marginTop: DS_SPACING.lg,
-    lineHeight: 22,
-  },
   cta: {
     marginTop: DS_SPACING.xxl,
     alignSelf: "stretch",
-    backgroundColor: DS_COLORS.accent,
-    borderRadius: 28,
+    backgroundColor: GRIIT_COLORS.primary,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: DS_SPACING.lg,
     alignItems: "center",
     minHeight: 56,

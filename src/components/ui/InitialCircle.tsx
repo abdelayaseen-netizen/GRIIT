@@ -13,7 +13,8 @@ const INITIAL_CIRCLE_COLORS = [
 
 function getInitialColor(username: string): string {
   const code = (username || "?").charCodeAt(0) ?? 0;
-  return INITIAL_CIRCLE_COLORS[code % INITIAL_CIRCLE_COLORS.length];
+  const idx = code % INITIAL_CIRCLE_COLORS.length;
+  return INITIAL_CIRCLE_COLORS[idx] ?? DS_COLORS.AVATAR_COLOR_1;
 }
 
 export function InitialCircle({ username, size = 44 }: { username: string; size?: number }) {

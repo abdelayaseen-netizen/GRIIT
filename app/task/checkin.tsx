@@ -146,8 +146,9 @@ export default function CheckinTaskScreen() {
     if (Platform.OS === "web") {
       setHasPermission(true);
       setLocationStatus("inside");
-      if (allowedLocations.length > 0) {
-        setMatchedLocation(allowedLocations[0]);
+      const firstLoc = allowedLocations[0];
+      if (firstLoc) {
+        setMatchedLocation(firstLoc);
       }
       return;
     }
@@ -259,7 +260,9 @@ export default function CheckinTaskScreen() {
     }
 
     const now = new Date();
-    const [hours, minutes] = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":").map(Number);
+    const timeSeg = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":");
+    const hours = Number(timeSeg[0]) || 0;
+    const minutes = Number(timeSeg[1]) || 0;
     const graceSeconds = timeWindowPolicy.allowGraceSeconds ?? 30;
     const windowMinutes = timeWindowPolicy.startWindowMinutes ?? 10;
 
@@ -376,7 +379,9 @@ export default function CheckinTaskScreen() {
 
   const getTimeWindowDisplay = () => {
     if (!timeWindowPolicy?.enabled) return "Anytime";
-    const [hours, minutes] = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":").map(Number);
+    const timeSeg = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":");
+    const hours = Number(timeSeg[0]) || 0;
+    const minutes = Number(timeSeg[1]) || 0;
     const endMinutes = minutes + (timeWindowPolicy.startWindowMinutes || 10);
     const endHours = hours + Math.floor(endMinutes / 60);
     const endMins = endMinutes % 60;

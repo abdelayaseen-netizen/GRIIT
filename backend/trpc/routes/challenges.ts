@@ -114,7 +114,13 @@ export const challengesRouter = createTRPCRouter({
 
       const search = input?.search?.trim();
       if (search) query = query.ilike("title", `%${search}%`);
-      if (input?.category && input.category !== "all") query = query.eq("category", input.category);
+      if (input?.category && input.category !== "all") {
+        if (input.category === "team") {
+          query = query.in("participation_type", ["duo", "team"]);
+        } else {
+          query = query.eq("category", input.category);
+        }
+      }
 
       const { data, error, count } = await query;
       requireNoError(error, "Failed to load featured challenges.");
@@ -193,8 +199,8 @@ export const challengesRouter = createTRPCRouter({
       const isTeam = participationType === "team" || participationType === "shared_goal";
 
       if (isTeam && runStatus === "active" && participationType === "team") {
-        const today = new Date().toISOString().split("T")[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+        const today = new Date().toISOString().slice(0, 10);
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
         await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: yesterday });
         await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: today });
       }
@@ -223,7 +229,7 @@ export const challengesRouter = createTRPCRouter({
         const taskRows = (data.challenge_tasks ?? []) as ChallengeTaskRowRaw[];
         const requiredTaskIds = new Set(taskRows.filter((t) => isTaskRequired(t)).map((t) => t.id));
         const tasksTotal = requiredTaskIds.size;
-        const today = new Date().toISOString().split("T")[0];
+        const today = new Date().toISOString().slice(0, 10);
         let statusByUserId: Map<string, { tasks_completed: number; secured_today: boolean }> = new Map();
 
         if (participationType === "team" && memberRows.length > 0 && tasksTotal > 0) {
@@ -403,12 +409,12 @@ export const challengesRouter = createTRPCRouter({
 
       logger.debug({ challengeId: input.challengeId }, "[JOIN-BACKEND] Calling joinChallengeDirect");
       const activeChallenge = await joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId);
-      const { data: ch } = await ctx.supabase.from("challenges").select("name").eq("id", input.challengeId).single();
+      const { data: ch } = await ctx.supabase.from("challenges").select("title").eq("id", input.challengeId).single();
       await ctx.supabase.from("activity_events").insert({
         user_id: ctx.userId,
         event_type: "joined_challenge",
         challenge_id: input.challengeId,
-        metadata: { challenge_name: (ch as { name?: string })?.name ?? "Challenge" },
+        metadata: { challenge_name: (ch as { title?: string })?.title ?? "Challenge" },
       });
       logger.info({ activeChallengeId: activeChallenge.id }, "[JOIN-BACKEND] Join SUCCESS");
       return activeChallenge;
@@ -636,6 +642,9 @@ export const challengesRouter = createTRPCRouter({
 
       for (let i = 0; i < input.tasks.length; i++) {
         const task = input.tasks[i];
+        if (!task) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Task ${i + 1}: missing` });
+        }
         if (!task.title.trim()) {
           throw new TRPCError({ code: "BAD_REQUEST", message: `Task ${i + 1}: Title is required` });
         }

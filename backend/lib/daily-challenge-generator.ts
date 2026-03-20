@@ -13,8 +13,16 @@ export function pickTemplateForDate(date: Date): (typeof DAILY_CHALLENGE_TEMPLAT
   const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
   let n = 0;
   for (let i = 0; i < dayKey.length; i++) n = (n * 31 + dayKey.charCodeAt(i)) >>> 0;
-  const index = n % DAILY_CHALLENGE_TEMPLATES.length;
-  return DAILY_CHALLENGE_TEMPLATES[index];
+  const len = DAILY_CHALLENGE_TEMPLATES.length;
+  if (len === 0) {
+    throw new Error("DAILY_CHALLENGE_TEMPLATES is empty");
+  }
+  const index = n % len;
+  const first = DAILY_CHALLENGE_TEMPLATES[0];
+  if (!first) {
+    throw new Error("DAILY_CHALLENGE_TEMPLATES is empty");
+  }
+  return DAILY_CHALLENGE_TEMPLATES[index] ?? first;
 }
 
 /** Create one daily (24h) challenge for the given date. Idempotent per day: check for existing before insert. */

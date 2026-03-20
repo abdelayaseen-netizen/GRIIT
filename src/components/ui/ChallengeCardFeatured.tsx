@@ -3,9 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Calendar, ListTodo, Users } from "lucide-react-native";
 import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
 
+const DIFF_STYLES_DEFAULT = { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT };
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
   Easy: { bg: DS_COLORS.GREEN_BG, text: DS_COLORS.ACCENT_GREEN },
-  Medium: { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT },
+  Medium: DIFF_STYLES_DEFAULT,
   Hard: { bg: DS_COLORS.ACCENT_TINT, text: DS_COLORS.ACCENT_PRIMARY },
   Extreme: { bg: DS_COLORS.DIFFICULTY_EXTREME_BG, text: DS_COLORS.DIFFICULTY_EXTREME_TEXT },
 };
@@ -62,7 +63,7 @@ function ChallengeCardFeaturedInner(props: {
     is24h,
   } = props;
   const stripeColor = props.stripeColor ?? getStripeColorByCategory(category);
-  const diff = DIFF_STYLES[difficulty] ?? DIFF_STYLES.Medium;
+  const diff = DIFF_STYLES[difficulty] ?? DIFF_STYLES_DEFAULT;
   const formatCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n));
   const eyebrowLabel =
     isFeatured ? "🏆 FEATURED" :
@@ -107,7 +108,7 @@ function ChallengeCardFeaturedInner(props: {
             <Text style={s.metaText}>{durationLabel}</Text>
             <Text style={s.metaDot}>·</Text>
             <ListTodo size={14} color={DS_COLORS.TEXT_MUTED} />
-            <Text style={s.metaText}>{taskCount} tasks</Text>
+            <Text style={s.metaText}>{taskCount} goals</Text>
             {(participantsCount ?? 0) > 0 && (
               <>
                 <Text style={s.metaDot}>·</Text>
