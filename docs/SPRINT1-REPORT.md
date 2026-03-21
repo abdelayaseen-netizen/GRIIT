@@ -5,7 +5,7 @@
 **Commits:**
 
 - `5a968e0` — feat: Sprint 1 trust & polish (cache, DS tokens, InlineError, a11y)
-- Latest on `main`: `docs: Sprint 1 report with before/after metrics` (run `git log -1 --oneline` after pull for SHA)
+- `3f2867a` — docs: Sprint 1 report with before/after metrics
 
 ## Verification commands (run from repo root)
 
