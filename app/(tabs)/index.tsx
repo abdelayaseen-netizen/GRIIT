@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -19,6 +19,8 @@ import WeekStrip from "@/components/home/WeekStrip";
 import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeed from "@/components/home/LiveFeed";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorRetry } from "@/components/ErrorRetry";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 
@@ -207,15 +209,33 @@ export default function HomeScreen() {
 
         <DailyQuote />
 
-        <GoalCard
-          challengeName={challengeName}
-          goals={goals}
-          currentDay={currentDay}
-          durationDays={durationDays}
-          onPressGoal={onPressGoal}
-          onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
-          isError={homeQuery.isError}
-        />
+        {homeQuery.isPending && !homeQuery.data ? (
+          <View style={{ paddingVertical: DS_SPACING.xxl, alignItems: "center" }}>
+            <ActivityIndicator size="large" color={DS_COLORS.ACCENT} />
+          </View>
+        ) : homeQuery.isError ? (
+          <ErrorRetry message="Couldn't load your dashboard" onRetry={() => void homeQuery.refetch()} />
+        ) : (homeQuery.data?.activeList.length ?? 0) === 0 ? (
+          <EmptyState
+            icon={Target}
+            title="No active challenges"
+            subtitle="Find a challenge that pushes your limits"
+            action={{
+              label: "Browse challenges",
+              onPress: () => router.push(ROUTES.TABS_DISCOVER as never),
+            }}
+          />
+        ) : (
+          <GoalCard
+            challengeName={challengeName}
+            goals={goals}
+            currentDay={currentDay}
+            durationDays={durationDays}
+            onPressGoal={onPressGoal}
+            onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+            isError={homeQuery.isError}
+          />
+        )}
 
         <WeekStrip
           securedDateKeys={securedKeys}

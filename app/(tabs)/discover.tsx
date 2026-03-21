@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Search } from "lucide-react-native";
@@ -11,6 +11,8 @@ import { DS_COLORS } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorRetry } from "@/components/ErrorRetry";
 import { ROUTES } from "@/lib/routes";
 import { useDebounce } from "@/hooks/useDebounce";
 import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
@@ -162,77 +164,122 @@ export default function DiscoverScreen() {
             </ScrollView>
           </View>
 
-          <View style={styles.v3SectionPad}><HeroFeaturedCard challenge={hero ? { id: hero.id, title: hero.title ?? "Challenge", description: hero.short_hook ?? hero.description, duration_days: hero.duration_days, participants_count: hero.participants_count } : null} onPress={openChallenge} /></View>
+          {featuredQuery.isError ? (
+            <ErrorRetry message="Couldn't load challenges" onRetry={() => void featuredQuery.refetch()} />
+          ) : featuredQuery.isPending && !featuredQuery.data ? (
+            <View style={{ paddingVertical: 48, alignItems: "center" }}>
+              <ActivityIndicator size="large" color={DS_COLORS.ACCENT_PRIMARY} />
+            </View>
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={Search}
+              title="No challenges found"
+              subtitle={
+                debouncedQuery.trim()
+                  ? "Try a different search or check back later"
+                  : "Try another category or check back later"
+              }
+              action={
+                debouncedQuery.trim()
+                  ? { label: "Clear search", onPress: () => setQuery("") }
+                  : undefined
+              }
+            />
+          ) : (
+            <>
+              <View style={styles.v3SectionPad}>
+                <HeroFeaturedCard
+                  challenge={
+                    hero
+                      ? {
+                          id: hero.id,
+                          title: hero.title ?? "Challenge",
+                          description: hero.short_hook ?? hero.description,
+                          duration_days: hero.duration_days,
+                          participants_count: hero.participants_count,
+                        }
+                      : null
+                  }
+                  onPress={openChallenge}
+                />
+              </View>
 
-          <View style={styles.v3SectionHeader}><Text style={styles.v3SectionTitle}>Expires tonight</Text><View style={styles.v3Dot} /></View>
-          <FlatList
-            horizontal
-            data={daily}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.v3FlatPad}
-            ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
-            renderItem={({ item }) => (
-              <DailyCard
-                challenge={{
-                  id: item.id,
-                  title: item.title ?? "Challenge",
-                  description: item.short_hook ?? item.description,
-                  difficulty: item.difficulty,
-                  participants_count: item.participants_count,
-                }}
-                onPress={openChallenge}
+              <View style={styles.v3SectionHeader}>
+                <Text style={styles.v3SectionTitle}>Expires tonight</Text>
+                <View style={styles.v3Dot} />
+              </View>
+              <FlatList
+                horizontal
+                data={daily}
+                keyExtractor={(item) => item.id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.v3FlatPad}
+                ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
+                renderItem={({ item }) => (
+                  <DailyCard
+                    challenge={{
+                      id: item.id,
+                      title: item.title ?? "Challenge",
+                      description: item.short_hook ?? item.description,
+                      difficulty: item.difficulty,
+                      participants_count: item.participants_count,
+                    }}
+                    onPress={openChallenge}
+                  />
+                )}
               />
-            )}
-          />
 
-          <View style={styles.v3SectionHeaderSolo}><Text style={styles.v3SectionTitle}>Bring your people</Text></View>
-          <View style={styles.v3ListPad}>
-            {team.map((c) => (
-              <TeamChallengeCard
-                key={c.id}
-                challenge={{
-                  id: c.id,
-                  title: c.title ?? "Team Challenge",
-                  description: c.short_hook ?? c.description,
-                  difficulty: c.difficulty,
-                  duration_days: c.duration_days,
-                  team_size: c.team_size,
-                  participants_count: c.participants_count,
-                }}
-                onPress={openChallenge}
-              />
-            ))}
-          </View>
+              <View style={styles.v3SectionHeaderSolo}>
+                <Text style={styles.v3SectionTitle}>Bring your people</Text>
+              </View>
+              <View style={styles.v3ListPad}>
+                {team.map((c) => (
+                  <TeamChallengeCard
+                    key={c.id}
+                    challenge={{
+                      id: c.id,
+                      title: c.title ?? "Team Challenge",
+                      description: c.short_hook ?? c.description,
+                      difficulty: c.difficulty,
+                      duration_days: c.duration_days,
+                      team_size: c.team_size,
+                      participants_count: c.participants_count,
+                    }}
+                    onPress={openChallenge}
+                  />
+                ))}
+              </View>
 
-          <View style={styles.v3SectionHeaderBetween}>
-            <Text style={styles.v3SectionTitle}>Challenges for you</Text>
-            <TouchableOpacity
-              onPress={() => setActiveCategory("all")}
-              accessibilityLabel="Show all challenge categories"
-              accessibilityRole="button"
-            >
-              <Text style={styles.v3SeeAll}>See all</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.v3PopularWrap}>
-            {popular.map((c, i) => (
-              <PopularChallengeRow
-                key={c.id}
-                challenge={{
-                  id: c.id,
-                  title: c.title ?? "Challenge",
-                  difficulty: c.difficulty,
-                  duration_days: c.duration_days,
-                  participants_count: c.participants_count,
-                }}
-                index={i}
-                isLast={i === popular.length - 1}
-                onPress={openChallenge}
-              />
-            ))}
-          </View>
-          <View style={{ height: 24 }} />
+              <View style={styles.v3SectionHeaderBetween}>
+                <Text style={styles.v3SectionTitle}>Challenges for you</Text>
+                <TouchableOpacity
+                  onPress={() => setActiveCategory("all")}
+                  accessibilityLabel="Show all challenge categories"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.v3SeeAll}>See all</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.v3PopularWrap}>
+                {popular.map((c, i) => (
+                  <PopularChallengeRow
+                    key={c.id}
+                    challenge={{
+                      id: c.id,
+                      title: c.title ?? "Challenge",
+                      difficulty: c.difficulty,
+                      duration_days: c.duration_days,
+                      participants_count: c.participants_count,
+                    }}
+                    index={i}
+                    isLast={i === popular.length - 1}
+                    onPress={openChallenge}
+                  />
+                ))}
+              </View>
+              <View style={{ height: 24 }} />
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </ErrorBoundary>
