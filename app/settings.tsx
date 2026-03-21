@@ -31,6 +31,8 @@ import { restorePurchases } from "@/lib/subscription";
 import { useApp } from "@/contexts/AppContext";
 import { ROUTES } from "@/lib/routes";
 import { cancelLapsedUserReminders } from "@/lib/notifications";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 
 const REMINDER_PRESETS = [
   { label: "6:00 AM", value: "06:00" },
@@ -133,6 +135,8 @@ export default function SettingsScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
+  const { error: deleteAccountError, showError: showDeleteAccountError, clearError: clearDeleteAccountError } =
+    useInlineError();
   const { refetchAll, isPremium, refreshPremiumStatus } = useApp();
 
   const loadReminderSettings = useCallback(async () => {
@@ -553,6 +557,7 @@ export default function SettingsScreen() {
           />
           <View style={styles.deleteModalCenter}>
             <View style={[styles.card, styles.deleteModalCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+              <InlineError message={deleteAccountError} onDismiss={clearDeleteAccountError} />
               <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
               <TextInput
                 style={[styles.deleteConfirmInput, { color: DS_COLORS.textPrimary, borderColor: DS_COLORS.border }]}
@@ -585,7 +590,7 @@ export default function SettingsScreen() {
                     setDeleteConfirmValue("");
                     router.replace(ROUTES.AUTH_LOGIN as never);
                   } catch {
-                    Alert.alert("Error", "Failed to delete account. Please try again.");
+                    showDeleteAccountError("Failed to delete account. Please try again.");
                   } finally {
                     setDeleteAccountLoading(false);
                   }

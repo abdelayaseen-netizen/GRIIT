@@ -3,8 +3,8 @@
  * Left border stripe 3px, cardRadius 16, cardShadow. Uses design system tokens.
  */
 
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import {
   Flame,
   Trophy,
@@ -12,10 +12,11 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS } from "@/lib/design-system";
+import { InlineError } from "@/components/InlineError";
 
-function respectChasePlaceholder() {
+function respectChasePlaceholder(setComingSoon: (msg: string) => void) {
   if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  Alert.alert("Coming Soon", "Respect & Chase will be available in a future update!");
+  setComingSoon("Respect & Chase will be available in a future update.");
 }
 
 const STRIPE_WIDTH = 3 as const;
@@ -54,10 +55,17 @@ function AvatarPlaceholder({ size = 40 }: { size?: number }) {
 }
 
 const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps) {
+  const [comingSoon, setComingSoon] = useState<string | null>(null);
+
   if (data.type === "secured_day") {
     return (
       <View style={[styles.card, { backgroundColor: DS_COLORS.BG_CARD, borderLeftWidth: STRIPE_WIDTH, borderLeftColor: DS_COLORS.ACCENT_PRIMARY }]}>
         <View style={styles.cardInner}>
+          <InlineError
+            message={comingSoon}
+            variant="warning"
+            onDismiss={() => setComingSoon(null)}
+          />
           <View style={styles.row1}>
             <AvatarPlaceholder size={44} />
             <View style={styles.body}>
@@ -81,7 +89,7 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
           <View style={styles.pillRow}>
             <TouchableOpacity
               style={[styles.pillBtn, { backgroundColor: DS_COLORS.BG_CARD_TINTED, borderColor: DS_COLORS.BORDER_CARD }]}
-              onPress={data.onRespect ?? respectChasePlaceholder}
+              onPress={data.onRespect ?? (() => respectChasePlaceholder(setComingSoon))}
               activeOpacity={0.8}
               accessibilityLabel="Send respect"
               accessibilityRole="button"
@@ -90,7 +98,7 @@ const LiveFeedCardInner = function LiveFeedCardInner({ data }: LiveFeedCardProps
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.pillBtn, { backgroundColor: DS_COLORS.BG_CARD_TINTED, borderColor: DS_COLORS.BORDER_CARD }]}
-              onPress={data.onChase ?? respectChasePlaceholder}
+              onPress={data.onChase ?? (() => respectChasePlaceholder(setComingSoon))}
               activeOpacity={0.8}
               accessibilityLabel="Chase this user"
               accessibilityRole="button"

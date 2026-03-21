@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   Animated,
   KeyboardAvoidingView,
   Platform,
@@ -469,10 +468,8 @@ export default function CreateScreen() {
         }
         const newChallengeId = challenge?.id ?? (challenge as { data?: { id?: string }; challenge?: { id?: string } })?.data?.id ?? (challenge as { challenge?: { id?: string } })?.challenge?.id;
         if (!newChallengeId) {
-          setSubmitStatus('error');
-          Alert.alert("Create succeeded", "Challenge was created. Opening Discover.", [
-            { text: "OK", onPress: () => router.replace(ROUTES.TABS_DISCOVER as never) },
-          ]);
+          setSubmitStatus('idle');
+          router.replace(ROUTES.TABS_DISCOVER as never);
           return;
         }
         const successParams: Record<string, string> = {
@@ -497,11 +494,6 @@ export default function CreateScreen() {
         } catch (storageErr) {
           console.error("[Create] AsyncStorage create count failed:", storageErr);
         }
-        Alert.alert(
-          "Challenge Created! 🎉",
-          "Your challenge is now live.",
-          [{ text: "View Challenge", onPress: () => router.replace(`/challenge/${newChallengeId}` as never) }]
-        );
         router.replace(`/challenge/${newChallengeId}` as never);
         setTitle("");
         setDescription("");

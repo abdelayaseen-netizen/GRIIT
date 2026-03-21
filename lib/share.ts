@@ -1,4 +1,5 @@
-import { Share, Platform, Alert, Linking } from "react-native";
+import { Share, Platform, Linking } from "react-native";
+import * as Haptics from "expo-haptics";
 import * as Sharing from "expo-sharing";
 import {
   challengeDeepLink,
@@ -16,11 +17,13 @@ async function shareOrCopy(message: string, title?: string): Promise<void> {
         await navigator.share({ title: title ?? "GRIIT", text: message });
       } else {
         await navigator.clipboard.writeText(message);
-        Alert.alert("Copied!", "Share link copied to clipboard.");
+        if (Platform.OS !== "web") {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
       }
     } catch (e) {
-      if ((e as Error)?.name !== "AbortError") {
-        Alert.alert("Copied!", "Share link copied to clipboard.");
+      if ((e as Error)?.name !== "AbortError" && Platform.OS !== "web") {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     }
     return;

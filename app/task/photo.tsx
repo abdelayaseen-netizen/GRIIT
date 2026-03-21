@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Camera, Check, ImagePlus } from "lucide-react-native";
@@ -21,7 +21,7 @@ const PICKER_OPTIONS = {
 export default function PhotoTaskScreen() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { activeChallenge, completeTask, computeProgress } = useApp();
+  const { activeChallenge, completeTask } = useApp();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -98,20 +98,15 @@ export default function PhotoTaskScreen() {
       }
       setUploading(false);
 
-      const result = await completeTask({
+      await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
         proofUrl,
       });
-      if (result?.firstTaskOfDay && computeProgress.totalRequired > 1) {
-        Alert.alert("Great start!", `${computeProgress.totalRequired - 1} more to secure today.`, [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-      } else {
-        Alert.alert("Success!", "Photo proof submitted", [
-          { text: "OK", onPress: () => router.back() },
-        ]);
+      if (Platform.OS !== "web") {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      router.back();
     } catch (error: unknown) {
       showError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {

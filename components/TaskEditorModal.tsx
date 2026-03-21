@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -46,6 +45,8 @@ import {
   computeWindowSummary,
   validateTimeEnforcement,
 } from "@/lib/time-enforcement";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 
 type TaskType = "journal" | "timer" | "photo" | "run" | "simple" | "checkin";
 type TrackingMode = "distance" | "time";
@@ -173,6 +174,7 @@ export default function TaskEditorModal({
   onSave,
   onCancel,
 }: Props) {
+  const { error, showError, clearError } = useInlineError();
   const [title, setTitle] = useState("");
   const [taskType, setTaskType] = useState<TaskType | null>(null);
 
@@ -422,7 +424,7 @@ export default function TaskEditorModal({
 
   const handleSave = useCallback(() => {
     if (!canSave()) {
-      Alert.alert("Missing Info", "Please fill in all required fields");
+      showError("Please fill in all required fields.");
       return;
     }
 
@@ -565,6 +567,7 @@ export default function TaskEditorModal({
     stravaMinDistanceM,
     stravaMinMovingTimeS,
     onSave,
+    showError,
   ]);
 
   const getPreviewMeta = (): string => {
@@ -1085,6 +1088,8 @@ export default function TaskEditorModal({
           accessibilityCancelLabel="Cancel editing task"
           accessibilityRightLabel="Save task"
         />
+
+        <InlineError message={error} onDismiss={clearError} />
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}

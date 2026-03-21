@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, AppState, AppStateStatus, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, AppState, AppStateStatus, Image, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Play, Pause, Check, Camera, ImagePlus } from "lucide-react-native";
@@ -23,7 +23,7 @@ const PICKER_OPTIONS = { allowsEditing: true, aspect: [4, 3] as [number, number]
 export default function TimerTaskScreen() {
   const router = useRouter();
   const { taskId, requirePhotoProof: requirePhotoProofParam } = useLocalSearchParams<{ taskId: string; requirePhotoProof?: string }>();
-  const { activeChallenge, completeTask, computeProgress } = useApp();
+  const { activeChallenge, completeTask } = useApp();
   const requirePhotoProof = requirePhotoProofParam === "true";
   const [seconds, setSeconds] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -188,22 +188,17 @@ export default function TimerTaskScreen() {
         setUploading(false);
       }
 
-      const result = await completeTask({
+      await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
         value: Math.floor(seconds / 60),
         proofUrl,
       });
 
-      if (result?.firstTaskOfDay && computeProgress.totalRequired > 1) {
-        Alert.alert("Great start!", `${computeProgress.totalRequired - 1} more to secure today.`, [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-      } else {
-        Alert.alert("Success!", `Timer completed: ${Math.floor(seconds / 60)} minutes`, [
-          { text: "OK", onPress: () => router.back() },
-        ]);
+      if (Platform.OS !== "web") {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      router.back();
     } catch (error: unknown) {
       showError(error instanceof Error ? error.message : "Something went wrong");
     } finally {

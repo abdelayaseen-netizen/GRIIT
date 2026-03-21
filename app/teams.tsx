@@ -1,10 +1,11 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, Stack } from "expo-router";
 import { ChevronLeft, Users } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { InlineError } from "@/components/InlineError";
 
 /**
  * Teams screen — Design DNA empty state.
@@ -12,6 +13,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-sy
  */
 export default function TeamsScreen() {
   const router = useRouter();
+  const [comingSoonMessage, setComingSoonMessage] = useState<string | null>(null);
 
   const handleBack = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -30,6 +32,11 @@ export default function TeamsScreen() {
           <View style={styles.headerRight} />
         </View>
         <View style={styles.content}>
+          <InlineError
+            message={comingSoonMessage}
+            variant="warning"
+            onDismiss={() => setComingSoonMessage(null)}
+          />
           <View style={[styles.iconWrap, { backgroundColor: DS_COLORS.accentLight }]}>
             <Users size={48} color={DS_COLORS.accent} />
           </View>
@@ -42,7 +49,7 @@ export default function TeamsScreen() {
             style={[styles.primaryBtn, { backgroundColor: DS_COLORS.commitmentButtonBg, opacity: 0.5 }]}
             onPress={() => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              Alert.alert("Coming Soon", "Team creation will be available in a future update. Stay tuned!");
+              setComingSoonMessage("Team creation will be available in a future update.");
             }}
             activeOpacity={0.85}
             accessibilityLabel="Create a team"
@@ -56,7 +63,7 @@ export default function TeamsScreen() {
             style={[styles.secondaryBtn, { borderColor: DS_COLORS.border, backgroundColor: DS_COLORS.surface, opacity: 0.5 }]}
             onPress={() => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              Alert.alert("Coming Soon", "Joining teams with a code will be available in a future update.");
+              setComingSoonMessage("Joining teams with a code will be available in a future update.");
             }}
             activeOpacity={0.85}
             accessibilityLabel="Join with code"

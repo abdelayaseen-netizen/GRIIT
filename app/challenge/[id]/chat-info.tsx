@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -28,10 +28,12 @@ import { DS_COLORS } from "@/lib/design-system";
 import { InitialCircle } from "@/src/components/ui";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { InlineError } from "@/components/InlineError";
 
 export default function ChallengeChatInfoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const [reportThanks, setReportThanks] = useState<string | null>(null);
   const {
     challenges,
     getChallengeRoom,
@@ -84,7 +86,7 @@ export default function ChallengeChatInfoScreen() {
         {
           text: "Submit",
           onPress: () => {
-            Alert.alert("Thanks", "We’ve received your report and will look into it.");
+            setReportThanks("We've received your report and will look into it.");
           },
         },
       ]
@@ -117,6 +119,12 @@ export default function ChallengeChatInfoScreen() {
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <InlineError
+          message={reportThanks}
+          variant="success"
+          onDismiss={() => setReportThanks(null)}
+          autoDismissMs={4000}
+        />
         <View style={styles.challengeHeader}>
           <View style={[styles.challengeIcon, { backgroundColor: challenge.themeColor || DS_COLORS.accent }]}>
             <Text style={styles.challengeIconText}>

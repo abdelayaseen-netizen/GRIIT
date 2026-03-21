@@ -19,6 +19,8 @@ import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 
 type ListData = {
   accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[];
@@ -28,6 +30,7 @@ type ListData = {
 
 export default function AccountabilityScreen() {
   const router = useRouter();
+  const { error, showError, clearError } = useInlineError();
   const [data, setData] = useState<ListData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,7 +81,7 @@ export default function AccountabilityScreen() {
                 await trpcMutate("accountability.remove", { partnerId });
                 await load();
               } catch (e: unknown) {
-                Alert.alert("Error", e instanceof Error ? e.message : "Could not remove.");
+                showError(e instanceof Error ? e.message : "Could not remove.");
               } finally {
                 setActingId(null);
               }
@@ -87,7 +90,7 @@ export default function AccountabilityScreen() {
         ]
       );
     },
-    [load]
+    [load, showError]
   );
 
   const handleRespond = useCallback(
@@ -97,12 +100,12 @@ export default function AccountabilityScreen() {
         await trpcMutate(TRPC.accountability.respond, { inviteId, action });
         await load();
       } catch (e: unknown) {
-        Alert.alert("Error", e instanceof Error ? e.message : "Could not update invite.");
+        showError(e instanceof Error ? e.message : "Could not update invite.");
       } finally {
         setActingId(null);
       }
     },
-    [load]
+    [load, showError]
   );
 
   const handleCancelOutgoing = useCallback(
@@ -112,7 +115,7 @@ export default function AccountabilityScreen() {
         await trpcMutate("accountability.remove", { partnerId });
         await load();
       } catch (e: unknown) {
-        Alert.alert("Error", e instanceof Error ? e.message : "Could not cancel invite.");
+        showError(e instanceof Error ? e.message : "Could not cancel invite.");
       } finally {
         setActingId(null);
       }
@@ -155,6 +158,7 @@ export default function AccountabilityScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        <InlineError message={error} onDismiss={clearError} />
         <View style={styles.countRow}>
           <Text style={styles.countText}>{acceptedCount}/3 partners</Text>
         </View>

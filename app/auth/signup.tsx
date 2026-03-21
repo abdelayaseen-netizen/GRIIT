@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -28,6 +27,8 @@ import {
   DS_SHADOWS,
 } from "@/lib/design-system";
 import { GRIITWordmark } from "@/src/components/ui";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
@@ -50,6 +51,7 @@ function isValidEmail(s: string): boolean {
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { error, showError, clearError } = useInlineError();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -140,7 +142,7 @@ export default function SignupScreen() {
 
       if (signUpError) {
         const msg = mapAuthError(signUpError);
-        Alert.alert("Signup Failed", msg);
+        showError(msg);
         setLoading(false);
         isSubmittingRef.current = false;
         return;
@@ -155,7 +157,7 @@ export default function SignupScreen() {
         if (signInError) {
           setLoading(false);
           isSubmittingRef.current = false;
-          Alert.alert("Signup Failed", mapAuthError(signInError));
+          showError(mapAuthError(signInError));
           return;
         }
         session = signInData.session;
@@ -164,7 +166,7 @@ export default function SignupScreen() {
       if (!session) {
         setLoading(false);
         isSubmittingRef.current = false;
-        Alert.alert("Something went wrong", "Please try again or check your email.");
+        showError("Please try again or check your email.");
         return;
       }
 
@@ -172,7 +174,7 @@ export default function SignupScreen() {
       if (!userId) {
         setLoading(false);
         isSubmittingRef.current = false;
-        Alert.alert("Something went wrong", "Please try again.");
+        showError("Please try again.");
         return;
       }
 
@@ -196,8 +198,7 @@ export default function SignupScreen() {
       track({ name: "signup_completed" });
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
-      // error swallowed — handle in UI
-      Alert.alert("Something went wrong", "Please try again.");
+      showError("Please try again.");
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -229,6 +230,7 @@ export default function SignupScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
+          <InlineError message={error} onDismiss={clearError} />
           <View style={styles.logoArea}>
             <GRIITWordmark subtitle="Build Discipline Daily" compact />
           </View>

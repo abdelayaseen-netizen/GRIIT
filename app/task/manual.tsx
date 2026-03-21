@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { CircleCheck } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -19,7 +20,7 @@ export default function ManualTaskScreen() {
     taskName?: string;
     taskDescription?: string;
   }>();
-  const { activeChallenge, completeTask, computeProgress } = useApp();
+  const { activeChallenge, completeTask } = useApp();
   const [loading, setLoading] = useState(false);
   const { error, showError, clearError } = useInlineError();
 
@@ -33,17 +34,14 @@ export default function ManualTaskScreen() {
     }
     setLoading(true);
     try {
-      const result = await completeTask({
+      await completeTask({
         activeChallengeId: activeChallenge.id,
         taskId,
       });
-      if (result?.firstTaskOfDay && computeProgress.totalRequired > 1) {
-        Alert.alert("Great start!", `${computeProgress.totalRequired - 1} more to secure today.`, [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-      } else {
-        router.back();
+      if (Platform.OS !== "web") {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      router.back();
     } catch (err: unknown) {
       showError(err instanceof Error ? err.message : "Couldn't save. Tap to retry.");
     } finally {

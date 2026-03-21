@@ -13,7 +13,6 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -30,6 +29,8 @@ import { track } from "@/lib/analytics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS, DS_BORDERS } from "@/lib/design-system";
 import { GRIITWordmark } from "@/src/components/ui";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 const TOTAL_STEPS = 4;
 
 const GOAL_OPTIONS: { id: string; label: string; emoji: string }[] = [
@@ -69,6 +70,7 @@ type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { error, showError, clearError } = useInlineError();
   const [step, setStep] = useState(1);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [disciplineLevel, setDisciplineLevel] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export default function WelcomeScreen() {
       });
 
       if (signUpError) {
-        Alert.alert("Signup Failed", mapAuthError(signUpError));
+        showError(mapAuthError(signUpError));
         setLoading(false);
         isSubmittingRef.current = false;
         return;
@@ -175,7 +177,7 @@ export default function WelcomeScreen() {
         if (signInError) {
           setLoading(false);
           isSubmittingRef.current = false;
-          Alert.alert("Signup Failed", mapAuthError(signInError));
+          showError(mapAuthError(signInError));
           return;
         }
         session = signInData.session;
@@ -184,13 +186,13 @@ export default function WelcomeScreen() {
       if (!session) {
         setLoading(false);
         isSubmittingRef.current = false;
-        Alert.alert("Something went wrong", "Please try again or check your email.");
+        showError("Please try again or check your email.");
         return;
       }
 
       const userId = data.user?.id ?? session.user?.id;
       if (!userId) {
-        Alert.alert("Something went wrong", "Please try again.");
+        showError("Please try again.");
         setLoading(false);
         isSubmittingRef.current = false;
         return;
@@ -215,8 +217,7 @@ export default function WelcomeScreen() {
       track({ name: "signup_completed" });
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
-      Alert.alert("Something went wrong", "Please try again.");
-      // error swallowed — handle in UI
+      showError("Please try again.");
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -390,6 +391,8 @@ export default function WelcomeScreen() {
         >
           <Text style={s.stepTitle}>Lock in your commitment</Text>
           <Text style={s.stepSubtitle}>Create your GRIIT account to start your first challenge.</Text>
+
+          <InlineError message={error} onDismiss={clearError} />
 
           <Text style={s.label}>Display Name</Text>
           <TextInput

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   Platform,
   AppState,
   ScrollView,
@@ -28,6 +27,8 @@ import { checkinStyles as styles } from "@/styles/checkin-styles";
 import Celebration from "@/components/Celebration";
 import { useCelebration } from "@/hooks/useCelebration";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
 type TimeStatus = "too_early" | "window_open" | "too_late";
@@ -44,6 +45,7 @@ export default function CheckinTaskScreen() {
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
   const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();
+  const { error, showError, clearError } = useInlineError();
 
   const task = currentChallenge?.tasks.find((t: { id: string }) => t.id === taskId);
   const taskState = taskId ? getTaskStateForTemplate(taskId) : null;
@@ -103,11 +105,7 @@ export default function CheckinTaskScreen() {
                 setBackgroundViolation(true);
                 stopSession();
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                Alert.alert(
-                  "Check-in Failed",
-                  "You left the app for too long during your session.",
-                  [{ text: "OK" }]
-                );
+                showError("You left the app for too long during your session.");
               }
               return newTotal;
             });
@@ -126,8 +124,8 @@ export default function CheckinTaskScreen() {
       clearInterval(interval);
       subscription.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only setup; checkPermissions/updateTimeStatus would cause unnecessary re-runs if in deps
-  }, [sessionActive]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- checkPermissions/updateTimeStatus would cause unnecessary re-runs if in deps
+  }, [sessionActive, showError]);
 
   useEffect(() => {
     if (hasPermission && !sessionActive) {
@@ -159,10 +157,7 @@ export default function CheckinTaskScreen() {
 
     if (!granted) {
       setLocationStatus("no_permission");
-      Alert.alert(
-        "Location Required",
-        "Location permission is required to verify your check-in."
-      );
+      showError("Location permission is required to verify your check-in.");
     }
   };
 
@@ -241,11 +236,7 @@ export default function CheckinTaskScreen() {
             setBackgroundViolation(true);
             stopSession();
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            Alert.alert(
-              "Check-in Failed",
-              "You left the required location during your session.",
-              [{ text: "OK" }]
-            );
+            showError("You left the required location during your session.");
           }
           return newVal;
         });
@@ -312,10 +303,7 @@ export default function CheckinTaskScreen() {
     if (!canFinish) {
       if (elapsedSeconds < minSessionSeconds) {
         const remaining = minSessionSeconds - elapsedSeconds;
-        Alert.alert(
-          "Session Too Short",
-          `Complete ${Math.ceil(remaining / 60)} more minute(s) to verify.`
-        );
+        showError(`Complete ${Math.ceil(remaining / 60)} more minute(s) to verify.`);
       }
       return;
     }
@@ -372,7 +360,7 @@ export default function CheckinTaskScreen() {
           router.back();
         }, 1000);
       } else {
-        Alert.alert("Verification Failed", result.failureReason || "Unknown error");
+        showError(result.failureReason || "Verification failed.");
       }
     }
   };
@@ -435,6 +423,7 @@ export default function CheckinTaskScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>{task?.title || "Check-in"}</Text>
         <Text style={styles.subtitle}>Location + time verified</Text>
+        <InlineError message={error} onDismiss={clearError} />
 
         <View style={styles.requirementBanner}>
           <Shield size={18} color={DS_COLORS.white} />

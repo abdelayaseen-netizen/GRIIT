@@ -7,7 +7,6 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Platform,
   KeyboardAvoidingView,
 } from "react-native";
@@ -19,6 +18,8 @@ import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 
 type SearchHit = { user_id: string; username: string; display_name: string };
 
@@ -27,6 +28,7 @@ const DEBOUNCE_MS = 400;
 export default function AddAccountabilityPartnerScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ from?: string }>();
+  const { error, showError, clearError } = useInlineError();
   const [query, setQuery] = useState<string>("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState<boolean>(false);
@@ -67,14 +69,16 @@ export default function AddAccountabilityPartnerScreen() {
       setInvitingId(partnerId);
       try {
         await trpcMutate(TRPC.accountability.invite, { partnerId });
-        Alert.alert("Invite sent", "They'll see your request in their Accountability Circle.");
+        if (Platform.OS !== "web") {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
         if (params.from === "onboarding" || params.from === "day1") {
           router.replace((params.from === "onboarding" ? ROUTES.ONBOARDING_STEP4 : ROUTES.TABS) as never);
         } else {
           router.back();
         }
       } catch (e: unknown) {
-        Alert.alert("Error", e instanceof Error ? e.message : "Could not send invite.");
+        showError(e instanceof Error ? e.message : "Could not send invite.");
       } finally {
         setInvitingId(null);
       }
@@ -133,6 +137,8 @@ export default function AddAccountabilityPartnerScreen() {
           <Text style={styles.headerTitle}>Add Partner</Text>
           <View style={styles.headerSpacer} />
         </View>
+
+        <InlineError message={error} onDismiss={clearError} />
 
         <View style={styles.inputWrap}>
           <TextInput
