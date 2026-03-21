@@ -17,12 +17,14 @@ import { ShareCard } from "@/components/ShareCard";
 import { shareProgressImage, shareChallengeComplete } from "@/lib/share";
 import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
-import { track } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
 
 export default function ChallengeCompleteScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const challengeIdParam =
+    typeof params.challengeId === "string" ? params.challengeId : undefined;
   const challengeName = (params.challengeName as string) ?? "Challenge";
   const totalDays = parseInt((params.totalDays as string) ?? "0", 10);
   const streakCount = parseInt((params.streakCount as string) ?? "0", 10);
@@ -39,7 +41,8 @@ export default function ChallengeCompleteScreen() {
       challenge_name: challengeName,
       duration: totalDays,
     });
-  }, [challengeName, totalDays]);
+    trackEvent("challenge_completed", { challenge_id: challengeIdParam, days: totalDays });
+  }, [challengeName, totalDays, challengeIdParam]);
 
   useEffect(() => {
     if (totalDaysSecured > 0) {

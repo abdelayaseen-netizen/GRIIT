@@ -9,6 +9,7 @@ import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { useInlineError } from "@/hooks/useInlineError";
+import { trackEvent } from "@/lib/analytics";
 import { InlineError } from "@/components/InlineError";
 
 const PICKER_OPTIONS = {
@@ -97,6 +98,11 @@ export default function PhotoTaskScreen() {
         proofUrl = result.url;
       }
       setUploading(false);
+
+      const challengeId = (activeChallenge as { challenge_id?: string }).challenge_id;
+      if (challengeId) {
+        trackEvent("proof_uploaded", { challenge_id: challengeId });
+      }
 
       await completeTask({
         activeChallengeId: activeChallenge.id,

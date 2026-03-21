@@ -23,6 +23,7 @@ import { YourStats } from "@/components/community/YourStats";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { trackEvent } from "@/lib/analytics";
 
 interface FeedEventItem {
   id: string;
@@ -67,9 +68,17 @@ function mapFeedItem(event: FeedEventItem): LiveActivityItem {
 
 function FriendStreakCard({ username }: { username: string }) {
   const onShare = useCallback(async () => {
-    await Share.share({
-      message: `Join me on GRIIT! Let's start a friend streak and hold each other accountable. Download GRIIT and add me: @${username}`,
-    });
+    trackEvent("share_tapped", { content_type: "friend_streak" });
+    try {
+      const result = await Share.share({
+        message: `Join me on GRIIT! Let's start a friend streak and hold each other accountable. Download GRIIT and add me: @${username}`,
+      });
+      if (result.action === Share.sharedAction) {
+        trackEvent("invite_sent", { content_type: "friend_streak" });
+      }
+    } catch {
+      /* user dismissed share sheet */
+    }
   }, [username]);
 
   return (

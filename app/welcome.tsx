@@ -25,7 +25,7 @@ import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { trpcQuery } from "@/lib/trpc";
 import { mapAuthError } from "@/lib/auth-helpers";
-import { track } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS, DS_BORDERS } from "@/lib/design-system";
 import { GRIITWordmark } from "@/src/components/ui";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
@@ -114,6 +114,14 @@ export default function WelcomeScreen() {
     }
   }, []);
 
+  const onboardingStartedRef = useRef(false);
+  useEffect(() => {
+    if (step === 1 && !onboardingStartedRef.current) {
+      onboardingStartedRef.current = true;
+      trackEvent("onboarding_started");
+    }
+  }, [step]);
+
   useEffect(() => {
     const t = setTimeout(() => checkUsername(username), 500);
     return () => clearTimeout(t);
@@ -131,8 +139,14 @@ export default function WelcomeScreen() {
 
   const goNext = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (step === 2 && selectedGoals.length > 0) {
+      trackEvent("onboarding_goal_selected", { goal: selectedGoals.join(",") });
+    }
+    if (step === 3 && disciplineLevel) {
+      trackEvent("onboarding_discipline_selected", { level: disciplineLevel });
+    }
     if (step < TOTAL_STEPS) setStep((s) => s + 1);
-  }, [step]);
+  }, [step, selectedGoals, disciplineLevel]);
 
   const goBack = useCallback(() => {
     if (step > 1) setStep((s) => s - 1);

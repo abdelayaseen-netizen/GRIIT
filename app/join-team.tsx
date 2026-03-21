@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useJoinTeam } from "@/hooks/useTeams";
 import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
+import { trackEvent } from "@/lib/analytics";
 
 const CODE_LEN = 8;
 
@@ -26,7 +27,8 @@ export default function JoinTeamScreen() {
       return;
     }
     joinTeam.mutate(normalized, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        trackEvent("team_joined", { team_id: data.teamId });
         router.back();
         router.replace("/(tabs)/teams" as never);
       },

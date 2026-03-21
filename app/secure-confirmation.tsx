@@ -18,7 +18,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import { shareDaySecured, shareChallengeComplete } from "@/lib/share";
 import { requestReviewIfAppropriate } from "@/lib/request-review";
 import { ROUTES } from "@/lib/routes";
-import { track } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 
@@ -116,6 +116,10 @@ export default function SecureConfirmationScreen() {
 
     if (isCompletion) {
       track({ name: "challenge_completed", challenge_name: challengeName, duration: totalNum });
+      trackEvent("challenge_completed", {
+        challenge_id: challengeId ?? "",
+        days: totalNum,
+      });
     }
 
     // In-app review: after 7th day secured or challenge completion (throttled to once per 30 days)

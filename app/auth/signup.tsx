@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
-import { track } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { trpcQuery } from "@/lib/trpc";
 import {
@@ -72,6 +72,10 @@ export default function SignupScreen() {
   const usernameRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    trackEvent("signup_started");
+  }, []);
 
   const normalizedUsername = username.replace(/^@+/, "").trim().toLowerCase();
   const usernameValid =

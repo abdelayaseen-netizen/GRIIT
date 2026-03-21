@@ -74,6 +74,12 @@ export type UserProperties = {
 
 import { getPostHog, resetPostHog } from "./posthog";
 
+/** PostHog sends only in production unless `EXPO_PUBLIC_POSTHOG_ENABLE_DEV=true`. */
+function shouldSendPostHog(): boolean {
+  if (!__DEV__) return true;
+  return (process.env.EXPO_PUBLIC_POSTHOG_ENABLE_DEV ?? "").trim() === "true";
+}
+
 let _handler: ((e: AnalyticsEvent) => void) | null = null;
 let _identify: ((userId: string, props?: UserProperties) => void) | null = null;
 
@@ -87,6 +93,7 @@ export function setIdentify(identify: (userId: string, props?: UserProperties) =
 
 export function identify(userId: string, props?: UserProperties) {
   _identify?.(userId, props);
+  if (!shouldSendPostHog()) return;
   const ph = getPostHog();
   if (ph) {
     try {
@@ -100,12 +107,36 @@ export function identify(userId: string, props?: UserProperties) {
   }
 }
 
+/** @deprecated Prefer `resetAnalytics` (Sprint 4 naming). */
 export function reset() {
   resetPostHog();
 }
 
+export const resetAnalytics = reset;
+
+type FunnelProps = Record<string, string | number | boolean | undefined>;
+
+/** String-key funnel events (exact PostHog event names). Fire-and-forget. */
+export function trackEvent(event: string, properties?: FunnelProps): void {
+  try {
+    if (__DEV__) {
+      console.log(`[Analytics] ${event}`, properties ?? {});
+    }
+    if (!shouldSendPostHog()) return;
+    const ph = getPostHog();
+    ph?.capture(event, properties);
+  } catch (error) {
+    if (__DEV__) {
+      console.warn(`[Analytics] Failed to track ${event}:`, error);
+    }
+  }
+}
+
+export const identifyUser = identify;
+
 export function track(event: AnalyticsEvent) {
   _handler?.(event);
+  if (!shouldSendPostHog()) return;
   const ph = getPostHog();
   if (ph) {
     try {

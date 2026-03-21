@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Crown, User, LogOut, FileText } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
@@ -33,6 +32,7 @@ import { ROUTES } from "@/lib/routes";
 import { cancelLapsedUserReminders } from "@/lib/notifications";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 
 const REMINDER_PRESETS = [
   { label: "6:00 AM", value: "06:00" },
@@ -119,7 +119,6 @@ const visibilityStyles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const [dailyReminder, setDailyReminder] = useState(true);
@@ -516,7 +515,7 @@ export default function SettingsScreen() {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               await cancelLapsedUserReminders();
               await supabase.auth.signOut();
-              queryClient.clear();
+              runClientSignOutCleanup();
               const { clearOnboardingStorage } = await import("@/store/onboardingStore");
               await clearOnboardingStorage();
               router.replace(ROUTES.AUTH as never);
@@ -583,7 +582,7 @@ export default function SettingsScreen() {
                     await trpcMutate(TRPC.profiles.deleteAccount);
                     await cancelLapsedUserReminders();
                     await supabase.auth.signOut();
-                    queryClient.clear();
+                    runClientSignOutCleanup();
                     const { clearOnboardingStorage } = await import("@/store/onboardingStore");
                     await clearOnboardingStorage();
                     setShowDeleteModal(false);

@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useCreateTeam } from "@/hooks/useTeams";
 import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
+import { trackEvent } from "@/lib/analytics";
 
 const MAX_NAME_LEN = 30;
 
@@ -26,7 +27,8 @@ export default function CreateTeamScreen() {
       return;
     }
     createTeam.mutate(trimmed, {
-      onSuccess: () => {
+      onSuccess: (team) => {
+        trackEvent("team_created", { team_id: team.id });
         router.back();
         router.replace("/(tabs)/teams" as never);
       },

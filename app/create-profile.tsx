@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { DS_COLORS } from "@/lib/design-system";
+import { trackEvent } from "@/lib/analytics";
 
 const PADDING_H = 20;
 
@@ -127,6 +128,7 @@ export default function CreateProfileScreen() {
         return;
       }
 
+      trackEvent("profile_created");
       router.replace("/(tabs)" as never);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong.");

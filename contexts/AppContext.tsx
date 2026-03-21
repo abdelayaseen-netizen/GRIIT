@@ -18,7 +18,8 @@ import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
-import { identify, reset as resetAnalytics } from '@/lib/analytics';
+import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
+import { setSentryUser } from '@/lib/sentry';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 import { showGoalCelebration } from '@/store/celebrationStore';
 
@@ -362,6 +363,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isPremium,
       tier,
     });
+    setSentryUser(user.id, user.email ?? undefined);
   }, [user?.id, user?.email, profile, fallbackProfile, profileFetched, isPremium, stats]);
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
@@ -428,6 +430,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         void fetchActiveChallenge();
         void fetchStats();
         showGoalCelebration(5);
+        const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
+        const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? 'unknown';
+        const cid = (activeChallenge as ActiveChallengeFromApi | null)?.challenge_id;
+        if (cid) {
+          trackEvent('task_completed', { challenge_id: cid, task_type: String(taskType) });
+        }
         return { firstTaskOfDay, completionId: data?.id };
       })
       .catch(() => {
@@ -457,6 +465,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       void fetchActiveChallenge();
       void fetchStats();
+      const streakN = result?.newStreakCount;
+      if (typeof streakN === 'number' && [7, 14, 30, 75].includes(streakN)) {
+        trackEvent('streak_milestone', { days: streakN });
+      }
       if (Platform.OS !== 'web') {
         const preferred = (stats as StatsFromApi)?.preferredSecureTime ?? '20:00';
         const tomorrow = new Date();

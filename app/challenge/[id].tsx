@@ -52,7 +52,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import TeamStatusHeader from "@/components/challenge/TeamStatusHeader";
 import TeamMemberList, { type TeamMemberForList } from "@/components/challenge/TeamMemberList";
 import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
-import { track } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { useLeaveChallenge } from "@/lib/mutations";
 import { formatTRPCError } from "@/lib/api";
 import { ROUTES } from "@/lib/routes";
@@ -508,6 +508,26 @@ export default function ChallengeDetailScreen() {
   const { error, showError, clearError } = useInlineError();
   const referrerLabel = ref ? "Invited by a friend" : null;
 
+  const sourceParam =
+    typeof params.source === "string"
+      ? params.source
+      : Array.isArray(params.source)
+        ? params.source[0]
+        : undefined;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) return;
+      const source: "discover" | "home" | "deeplink" =
+        sourceParam === "home" || sourceParam === "discover" || sourceParam === "deeplink"
+          ? sourceParam
+          : ref
+            ? "deeplink"
+            : "discover";
+      trackEvent("challenge_viewed", { challenge_id: id, source });
+    }, [id, ref, sourceParam])
+  );
+
   useEffect(() => {
     if (!ref || !currentUserId || !id) return;
     trpcMutate(TRPC.referrals.recordOpen, { referrerUserId: ref, challengeId: id }).catch(() => {});
@@ -643,6 +663,8 @@ export default function ChallengeDetailScreen() {
       await queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       setShowCommitmentModal(false);
       myActiveListQuery.refetch();
+      trackEvent("challenge_joined", { challenge_id: id });
+      track({ name: "challenge_joined", challenge_id: id });
       setShowJoinCelebration(true);
     } catch (err: unknown) {
       const { title, message } = formatTRPCError(err);
@@ -997,6 +1019,10 @@ export default function ChallengeDetailScreen() {
                         text: "Share",
                         onPress: () => {
                           if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          trackEvent("share_tapped", {
+                            content_type: "challenge",
+                            challenge_id: id ?? undefined,
+                          });
                           import("@/lib/share").then(({ shareChallenge }) =>
                             shareChallenge(
                               {
@@ -1013,6 +1039,11 @@ export default function ChallengeDetailScreen() {
                       {
                         text: "Invite friends",
                         onPress: () => {
+                          trackEvent("invite_sent", {
+                            content_type: "challenge",
+                            challenge_id: id ?? undefined,
+                            source: "challenge_menu",
+                          });
                           import("@/lib/share").then(({ inviteToChallenge }) =>
                             inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
                           ).catch(() => {});
@@ -1086,6 +1117,11 @@ export default function ChallengeDetailScreen() {
                         }
                       }}
                       onInvite={() => {
+                        trackEvent("invite_sent", {
+                          content_type: "challenge",
+                          challenge_id: id ?? undefined,
+                          source: "team_status",
+                        });
                         import("@/lib/share").then(({ inviteToChallenge }) =>
                           inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
                         ).catch(() => {});
@@ -1338,6 +1374,11 @@ export default function ChallengeDetailScreen() {
               style={s.inviteLink}
               onPress={() => {
                 track({ name: "invite_shared", challengeId: id ?? undefined, source: "challenge_detail" });
+                trackEvent("invite_sent", {
+                  content_type: "challenge",
+                  challenge_id: id ?? undefined,
+                  source: "challenge_detail_cta",
+                });
                 import("@/lib/share").then(({ inviteToChallenge }) =>
                   inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
                 ).catch(() => {});

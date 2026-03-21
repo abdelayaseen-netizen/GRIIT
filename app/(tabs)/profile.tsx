@@ -2,13 +2,15 @@ import React, { useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Share, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { trackEvent } from "@/lib/analytics";
+import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 import { supabase } from "@/lib/supabase";
 import { cancelLapsedUserReminders } from "@/lib/notifications";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -39,7 +41,6 @@ function formatJoinDate(value?: string | null): string {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const { profile, profileLoading, profileMissing, isError, stats, refetchAll } = useApp();
@@ -89,6 +90,7 @@ export default function ProfileScreen() {
   }, [activeListQuery.data]);
 
   const handleShare = useCallback(async () => {
+    trackEvent("share_tapped", { content_type: "profile" });
     const rank = stats?.tier ?? "Starter";
     const shareText = `Check out my GRIIT profile!\n\n🔥 ${streak} day streak\n⚡ ${points} discipline points\n🎯 ${rank} rank\n\nDownload GRIIT and start building discipline.`;
     await Share.share({ message: shareText });
@@ -103,14 +105,14 @@ export default function ProfileScreen() {
         onPress: async () => {
           await cancelLapsedUserReminders();
           await supabase.auth.signOut();
-          queryClient.clear();
+          runClientSignOutCleanup();
           const { clearOnboardingStorage } = await import("@/store/onboardingStore");
           await clearOnboardingStorage();
           router.replace(ROUTES.AUTH as never);
         },
       },
     ]);
-  }, [router, queryClient]);
+  }, [router]);
 
   if (isGuest) {
     return (

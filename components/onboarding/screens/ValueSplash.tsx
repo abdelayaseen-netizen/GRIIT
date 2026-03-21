@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
-import { track } from '@/lib/analytics';
+import { trackEvent } from '@/lib/analytics';
 
 interface ValueSplashProps {
   onContinue: () => void;
@@ -20,6 +20,10 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
   const fadeStat = useRef(new Animated.Value(0)).current;
   const fadeButton = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    trackEvent('onboarding_started');
+  }, []);
 
   useEffect(() => {
     Animated.sequence([
@@ -77,7 +81,7 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
       <Animated.View style={[styles.ctaContainer, { opacity: fadeButton }]}>
         <Pressable
           style={styles.primaryButton}
-          onPress={() => { track({ name: 'onboarding_started' }); onContinue(); }}
+          onPress={() => onContinue()}
           accessibilityLabel="Continue onboarding"
           accessibilityRole="button"
         >

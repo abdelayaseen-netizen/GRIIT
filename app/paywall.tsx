@@ -1,7 +1,7 @@
 /**
  * Premium Paywall Screen — GRIIT Pro subscription with plan selection.
  */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,10 +12,11 @@ import {
   Linking,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { X, Flame, Zap, BarChart2, Users } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
-import { purchasePro, restorePurchases } from "@/lib/revenue-cat";
+import { purchasePro, restorePurchases, getOfferings } from "@/lib/revenue-cat";
+import { trackEvent } from "@/lib/analytics";
 import { useProStatus } from "@/hooks/useProStatus";
 
 const PRICING_PLANS = [
@@ -59,6 +60,7 @@ const VALUE_PROPS = [
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ source?: string }>();
   const insets = useSafeAreaInsets();
   const { refetch: refetchPro } = useProStatus();
 
@@ -68,36 +70,54 @@ export default function PaywallScreen() {
 
   const activePlan = PRICING_PLANS.find((p) => p.id === selectedPlan)!;
 
+  useEffect(() => {
+    const source = typeof params.source === "string" ? params.source : "app";
+    trackEvent("paywall_viewed", { source });
+    void getOfferings();
+  }, [params.source]);
+
   const handlePurchase = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const result = await purchasePro();
       if (result.success) {
+        trackEvent("purchase_completed", {
+          plan: selectedPlan,
+          price: result.price ?? activePlan.price,
+        });
         await refetchPro();
         router.replace("/(tabs)" as never);
       } else {
-        setError(result.error ?? "Purchase failed. Please try again.");
+        const msg = result.error ?? "Purchase failed. Please try again.";
+        if (!msg.toLowerCase().includes("cancel")) {
+          trackEvent("purchase_failed", { error: msg });
+        }
+        setError(msg);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Purchase failed. Please try again.";
+      trackEvent("purchase_failed", { error: message });
       setError(message);
     } finally {
       setIsLoading(false);
     }
-  }, [router, refetchPro]);
+  }, [router, refetchPro, selectedPlan, activePlan.price]);
 
   const handleRestore = useCallback(async () => {
     setError(null);
     try {
       const result = await restorePurchases();
       if (result.success) {
+        trackEvent("purchase_completed", { source: "restore" });
         await refetchPro();
         router.replace("/(tabs)" as never);
       } else {
+        trackEvent("purchase_failed", { error: "no_purchases_to_restore" });
         setError("No purchases to restore.");
       }
     } catch {
+      trackEvent("purchase_failed", { error: "restore_exception" });
       setError("Restore failed. Please try again.");
     }
   }, [router, refetchPro]);
@@ -160,7 +180,10 @@ export default function PaywallScreen() {
                   styles.planCard,
                   isSelected && styles.planCardSelected,
                 ]}
-                onPress={() => setSelectedPlan(plan.id)}
+                onPress={() => {
+                  setSelectedPlan(plan.id);
+                  trackEvent("paywall_plan_selected", { plan: plan.id });
+                }}
                 activeOpacity={0.85}
                 accessibilityLabel={`Select ${plan.label} plan`}
                 accessibilityRole="button"

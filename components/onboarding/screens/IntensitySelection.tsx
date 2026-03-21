@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S, INTENSITY_OPTIONS } from '@/constants/onboarding-theme';
 import { useOnboardingStore } from '@/store/onboardingStore';
+import { trackEvent } from '@/lib/analytics';
 
 interface IntensitySelectionProps {
   onContinue: () => void;
@@ -48,7 +49,12 @@ export default function IntensitySelection({ onContinue }: IntensitySelectionPro
       <View style={styles.ctaContainer}>
         <Pressable
           style={[styles.primaryButton, !intensityLevel && styles.primaryButtonDisabled]}
-          onPress={onContinue}
+          onPress={() => {
+            if (intensityLevel) {
+              trackEvent('onboarding_discipline_selected', { level: intensityLevel });
+            }
+            onContinue();
+          }}
           disabled={!intensityLevel}
         >
           <Text style={[styles.primaryButtonText, !intensityLevel && styles.primaryButtonTextDisabled]}>
