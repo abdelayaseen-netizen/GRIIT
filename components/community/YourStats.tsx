@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 function StatRow({
   label,
@@ -50,14 +51,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.DISCOVER_INK,
     paddingHorizontal: 24,
     marginTop: 18,
     marginBottom: 10,
   },
   card: {
     marginHorizontal: 24,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.WHITE,
     borderRadius: 16,
     padding: 16,
   },
@@ -69,18 +70,18 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderBottomWidth: 0.5,
-    borderBottomColor: "#F5F2EB",
+    borderBottomColor: DS_COLORS.DISCOVER_DIVIDER,
   },
   label: {
     fontSize: 13,
-    color: "#888",
+    color: DS_COLORS.buttonDisabledText,
   },
   value: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.DISCOVER_INK,
   },
   valueMuted: {
-    color: "#999",
+    color: DS_COLORS.TEXT_MUTED,
   },
 });

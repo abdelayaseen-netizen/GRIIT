@@ -276,6 +276,80 @@ export const DS_COLORS = {
   DISCOVER_CORAL: '#E8593C',
   DISCOVER_BLUE: '#5B7FD4',
   DISCOVER_GREEN: '#4CAF50',
+  /** Discover titles, list headings — was hardcoded #1A1A1A */
+  DISCOVER_INK: '#1A1A1A',
+  /** Row dividers / subtle separators — was #F5F2EB */
+  DISCOVER_DIVIDER: '#F5F2EB',
+  /** Secondary meta text — was #BBB */
+  DISCOVER_META_SILVER: '#BBBBBB',
+  /** Muted labels (search, descriptions) — was #777 */
+  DISCOVER_LABEL_MUTED: '#777777',
+  /** Hero featured card & CTA dark panels — was #1A1410 */
+  DISCOVER_HERO_DARK_BG: '#1A1410',
+  /** Difficulty pill tints (Popular/Daily/Team cards) */
+  DISCOVER_DIFF_TINT_EASY: '#F0FAF2',
+  DISCOVER_DIFF_TINT_HARD: '#FFF5F0',
+  DISCOVER_DIFF_TINT_MED: '#F0F4FF',
+  /** Category stripe backgrounds (Popular row rotation) */
+  DISCOVER_STRIPE_WARM: '#3A1A10',
+  DISCOVER_STRIPE_COOL: '#1A2940',
+  DISCOVER_STRIPE_GREEN: '#1B3A1B',
+  DISCOVER_STRIPE_PURPLE: '#2A1A3A',
+  DISCOVER_STRIPE_AMBER: '#3A2A10',
+  DISCOVER_ACCENT_PURPLE: '#9C27B0',
+  DISCOVER_ACCENT_ORANGE: '#FF9800',
+  /** Team challenge card — duo vs solo icon treatments */
+  TEAM_CARD_ICON_BG_DUO: '#E8F5E9',
+  TEAM_CARD_ICON_BG_SOLO: '#FFF3ED',
+  TEAM_CARD_ICON_GREEN: '#2E7D32',
+  TEAM_CARD_ICON_CORAL: '#D4532A',
+  /** Trophy / soft surfaces */
+  TROPHY_ICON_WRAP_BG: '#F9F6F1',
+  /** Progress bars (profile, next unlock) — was #F0EDE6 */
+  PROGRESS_TRACK_WARM: '#F0EDE6',
+  /** Next-unlock promo surface — was #FFFBF7 */
+  NEXT_UNLOCK_SURFACE: '#FFFBF7',
+  NEXT_UNLOCK_ICON_BOX: '#FFF3ED',
+  /** Settings-style labels — was #444 */
+  LIST_LABEL_GRAY: '#444444',
+  /** Chevron / inactive icons — was #CCC */
+  CHEVRON_MUTED: '#CCCCCC',
+  /** Filter chip inactive — was #555555 */
+  FILTER_LABEL_MUTED: '#555555',
+  /** Community header action — was #555 */
+  COMMUNITY_ACTION_GRAY: '#555555',
+  /** Discover v3 borders — was #E0DCD4 */
+  DISCOVER_BORDER_SOFT: '#E0DCD4',
+  /** Discover v3 secondary label — was #777 (same as DISCOVER_LABEL_MUTED; alias for readability) */
+  DISCOVER_V3_LABEL: '#777777',
+  /** Discover v3 inline search border — matches default BORDER */
+  DISCOVER_V3_SEARCH_BORDER: '#E8E5DF',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ONBOARDING (migrated from constants/onboarding-theme.ts)
+  // ═══════════════════════════════════════════════════════════════════════════
+  ONBOARDING_BG_PAGE: '#F5F1EB',
+  ONBOARDING_BG_SECONDARY: '#FAF8F5',
+  ONBOARDING_ACCENT_LIGHT: '#FFF7ED',
+  ONBOARDING_TEXT_SECONDARY: '#7A7A6D',
+  ONBOARDING_TEXT_TERTIARY: '#B0ACA3',
+  ONBOARDING_SUCCESS: '#2D7A4F',
+  ONBOARDING_WARNING: '#E8A230',
+  ONBOARDING_BORDER: '#E8E4DD',
+  ONBOARDING_COMMITMENT_BTN: '#2D2D2D',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DARK THEME FOUNDATION (lib/theme-palettes DARK_THEME — reserved; app is light-first)
+  // ═══════════════════════════════════════════════════════════════════════════
+  DARK_BG_PAGE: '#1A1A1A',
+  DARK_BG_CARD: '#2D2D2D',
+  DARK_TEXT_PRIMARY: '#F0EDE6',
+  DARK_TEXT_SECONDARY: '#B0ADA8',
+  DARK_TEXT_TERTIARY: '#888884',
+  DARK_TEXT_MUTED: '#6B6B68',
+  DARK_BORDER: '#3D3D3D',
+  DARK_PILL_SURFACE: '#3D3D3D',
+  DARK_STREAK_PLATINUM: '#B0ADA8',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CREATE FLOW COLORS
@@ -425,9 +499,9 @@ export const DS_COLORS = {
   difficultyMediumBg: '#FFF8E8',
 } as const;
 
-/** Brand primary for special moments (e.g. join celebration CTA). */
+/** Brand primary for special moments (e.g. join celebration CTA). Alias of DISCOVER_CORAL. */
 export const GRIIT_COLORS = {
-  primary: "#E8593C",
+  primary: DS_COLORS.DISCOVER_CORAL,
 } as const;
 
 export const DS_TYPOGRAPHY = {

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Shield, Trophy } from "lucide-react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 const STREAK_MILESTONES = [
   { days: 3, name: "3-Day Streak badge", icon: "Flame" },
@@ -27,10 +28,14 @@ export default function NextUnlock({ currentStreak }: { currentStreak: number })
         <Text style={s.away}>{`${away} days away`}</Text>
       </View>
       <View style={s.row}>
-        <View style={s.iconBox}><Icon size={18} color="#E8593C" /></View>
+        <View style={s.iconBox}>
+          <Icon size={18} color={DS_COLORS.DISCOVER_CORAL} />
+        </View>
         <View style={s.mid}>
           <Text style={s.title}>{next.name}</Text>
-          <View style={s.barBg}><View style={[s.barFill, { width: `${progress}%` }]} /></View>
+          <View style={s.barBg}>
+            <View style={[s.barFill, { width: `${progress}%` }]} />
+          </View>
         </View>
       </View>
     </View>
@@ -38,14 +43,34 @@ export default function NextUnlock({ currentStreak }: { currentStreak: number })
 }
 
 const s = StyleSheet.create({
-  wrap: { marginTop: 12, marginHorizontal: 24, backgroundColor: "#FFFBF7", borderRadius: 16, padding: 14, borderLeftWidth: 3, borderLeftColor: "#E8593C" },
+  wrap: {
+    marginTop: 12,
+    marginHorizontal: 24,
+    backgroundColor: DS_COLORS.NEXT_UNLOCK_SURFACE,
+    borderRadius: 16,
+    padding: 14,
+    borderLeftWidth: 3,
+    borderLeftColor: DS_COLORS.DISCOVER_CORAL,
+  },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  head: { fontSize: 13, fontWeight: "700", color: "#1A1A1A" },
-  away: { fontSize: 10, color: "#E8593C", fontWeight: "600" },
+  head: { fontSize: 13, fontWeight: "700", color: DS_COLORS.DISCOVER_INK },
+  away: { fontSize: 10, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600" },
   row: { marginTop: 10, flexDirection: "row", alignItems: "center", gap: 10 },
-  iconBox: { width: 40, height: 40, backgroundColor: "#FFF3ED", borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  iconBox: {
+    width: 40,
+    height: 40,
+    backgroundColor: DS_COLORS.NEXT_UNLOCK_ICON_BOX,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   mid: { flex: 1 },
-  title: { fontSize: 14, fontWeight: "700", color: "#1A1A1A", marginBottom: 6 },
-  barBg: { height: 4, backgroundColor: "#F0EDE6", borderRadius: 2, overflow: "hidden" },
-  barFill: { height: 4, backgroundColor: "#E8593C", borderRadius: 2 },
+  title: { fontSize: 14, fontWeight: "700", color: DS_COLORS.DISCOVER_INK, marginBottom: 6 },
+  barBg: {
+    height: 4,
+    backgroundColor: DS_COLORS.PROGRESS_TRACK_WARM,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  barFill: { height: 4, backgroundColor: DS_COLORS.DISCOVER_CORAL, borderRadius: 2 },
 });

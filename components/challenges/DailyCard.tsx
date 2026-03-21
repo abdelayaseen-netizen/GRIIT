@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { WifiOff, Clock, Zap, Droplets, VolumeX, Smartphone, Heart, BookOpen } from "lucide-react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 const DAILY_COPY: Record<string, string> = {
   "No Social Media": "Can you go 24 hours?",
@@ -25,12 +26,12 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; color?: string 
 };
 
 const DIFFICULTY_THEMES: Record<string, { accent: string; tint: string; label: string }> = {
-  easy: { accent: "#4CAF50", tint: "#F0FAF2", label: "EASY" },
-  medium: { accent: "#5B7FD4", tint: "#F0F4FF", label: "MED" },
-  hard: { accent: "#E8593C", tint: "#FFF5F0", label: "HARD" },
-  extreme: { accent: "#E8593C", tint: "#FFF5F0", label: "HARD" },
+  easy: { accent: DS_COLORS.DISCOVER_GREEN, tint: DS_COLORS.DISCOVER_DIFF_TINT_EASY, label: "EASY" },
+  medium: { accent: DS_COLORS.DISCOVER_BLUE, tint: DS_COLORS.DISCOVER_DIFF_TINT_MED, label: "MED" },
+  hard: { accent: DS_COLORS.DISCOVER_CORAL, tint: DS_COLORS.DISCOVER_DIFF_TINT_HARD, label: "HARD" },
+  extreme: { accent: DS_COLORS.DISCOVER_CORAL, tint: DS_COLORS.DISCOVER_DIFF_TINT_HARD, label: "HARD" },
 };
-const DEFAULT_THEME = { accent: "#5B7FD4", tint: "#F0F4FF", label: "MED" };
+const DEFAULT_THEME = { accent: DS_COLORS.DISCOVER_BLUE, tint: DS_COLORS.DISCOVER_DIFF_TINT_MED, label: "MED" };
 
 export type DailyChallengeCardData = {
   id: string;
@@ -59,7 +60,9 @@ export function DailyCard({
       <View style={[s.stripe, { backgroundColor: theme.accent }]} />
       <View style={[s.tintBg, { backgroundColor: theme.tint }]} />
       <View style={s.topRow}>
-        <View style={[s.iconBox, { backgroundColor: theme.accent }]}><IconComp size={12} color="#fff" /></View>
+        <View style={[s.iconBox, { backgroundColor: theme.accent }]}>
+          <IconComp size={12} color={DS_COLORS.WHITE} />
+        </View>
         <Text style={[s.diff, { color: theme.accent, backgroundColor: theme.tint }]}>{theme.label}</Text>
       </View>
       <Text style={s.title}>{challenge.title}</Text>
@@ -73,15 +76,22 @@ export function DailyCard({
 }
 
 const s = StyleSheet.create({
-  card: { width: 154, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 14, backgroundColor: "#fff", overflow: "hidden" },
+  card: {
+    width: 154,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    backgroundColor: DS_COLORS.WHITE,
+    overflow: "hidden",
+  },
   stripe: { position: "absolute", top: 0, left: 0, bottom: 0, width: 3 },
   tintBg: { position: "absolute", right: 0, bottom: 0, width: 100, height: 80, borderRadius: 16, opacity: 0.5 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   iconBox: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   diff: { fontSize: 10, fontWeight: "700", letterSpacing: 0.3, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7 },
-  title: { fontSize: 15, lineHeight: 18, fontWeight: "700", color: "#1A1A1A" },
-  subtitle: { marginTop: 6, fontSize: 11, lineHeight: 15, color: "#999" },
+  title: { fontSize: 15, lineHeight: 18, fontWeight: "700", color: DS_COLORS.DISCOVER_INK },
+  subtitle: { marginTop: 6, fontSize: 11, lineHeight: 15, color: DS_COLORS.TEXT_MUTED },
   bottom: { marginTop: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  meta: { fontSize: 10, color: "#BBB" },
+  meta: { fontSize: 10, color: DS_COLORS.DISCOVER_META_SILVER },
   go: { fontSize: 12, fontWeight: "700" },
 });

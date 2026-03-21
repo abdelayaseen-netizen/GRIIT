@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 export type CommunityFilter = "global" | "friends" | "team";
 
@@ -52,12 +53,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.DISCOVER_INK,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 12,
-    color: "#999",
+    color: DS_COLORS.TEXT_MUTED,
     marginTop: 3,
   },
   pillRow: {
@@ -71,20 +72,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   pillActive: {
-    backgroundColor: "#1A1A1A",
+    backgroundColor: DS_COLORS.DISCOVER_INK,
   },
   pillInactive: {
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.WHITE,
   },
   pillText: {
     fontSize: 12,
   },
   pillTextActive: {
-    color: "#fff",
+    color: DS_COLORS.WHITE,
     fontWeight: "600",
   },
   pillTextInactive: {
-    color: "#555",
+    color: DS_COLORS.COMMUNITY_ACTION_GRAY,
     fontWeight: "500",
   },
 });

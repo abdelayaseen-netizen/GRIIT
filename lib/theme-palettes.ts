@@ -73,20 +73,20 @@ export const LIGHT_THEME: ThemeColors = {
   },
 };
 
-/** Dark mode color tokens. Used by ThemeContext when system preference is dark. Foundation only; screens can adopt gradually. */
+/** Dark mode color tokens. Reserved for future use; app ships light-only via ThemeProvider. */
 export const DARK_THEME: ThemeColors = {
-  background: "#1A1A1A",
-  card: "#2D2D2D",
+  background: DS_COLORS.DARK_BG_PAGE,
+  card: DS_COLORS.DARK_BG_CARD,
   text: {
-    primary: "#F0EDE6",
-    secondary: "#B0ADA8",
-    tertiary: "#888884",
-    muted: "#6B6B68",
+    primary: DS_COLORS.DARK_TEXT_PRIMARY,
+    secondary: DS_COLORS.DARK_TEXT_SECONDARY,
+    tertiary: DS_COLORS.DARK_TEXT_TERTIARY,
+    muted: DS_COLORS.DARK_TEXT_MUTED,
   },
   accent: DS_COLORS.accent,
   accentLight: "rgba(224, 123, 74, 0.2)",
   accentTint: "rgba(224, 123, 74, 0.15)",
-  border: "#3D3D3D",
+  border: DS_COLORS.DARK_BORDER,
   success: DS_COLORS.success,
   successLight: "rgba(47, 122, 82, 0.25)",
   warning: DS_COLORS.warning,
@@ -95,7 +95,7 @@ export const DARK_THEME: ThemeColors = {
   dangerLight: "rgba(200, 60, 50, 0.2)",
   shadow: "rgba(0, 0, 0, 0.3)",
   shadowMedium: "rgba(0, 0, 0, 0.5)",
-  pill: "#3D3D3D",
+  pill: DS_COLORS.DARK_PILL_SURFACE,
   category: {
     fitness: DS_COLORS.accent,
     mind: DS_COLORS.purpleStripe,
@@ -106,7 +106,7 @@ export const DARK_THEME: ThemeColors = {
     fire: DS_COLORS.accent,
     shield: DS_COLORS.success,
     gold: DS_COLORS.warning,
-    platinum: "#B0ADA8",
+    platinum: DS_COLORS.DARK_STREAK_PLATINUM,
   },
   milestone: {
     bronze: DS_COLORS.milestoneBronze,

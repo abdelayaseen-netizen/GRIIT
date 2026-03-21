@@ -148,7 +148,7 @@ export default function DiscoverScreen() {
                 accessibilityLabel={searchOpen ? "Close search" : "Open search"}
                 accessibilityRole="button"
               >
-                <Search size={15} color="#888" />
+                <Search size={15} color={DS_COLORS.buttonDisabledText} />
               </TouchableOpacity>
             </View>
             <Text style={styles.v3Subtitle}>What are you willing to commit to?</Text>

@@ -19,13 +19,13 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.DISCOVER_INK,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: "#999999",
+    color: DS_COLORS.TEXT_MUTED,
     marginTop: 4,
   },
   searchIconBtn: {
@@ -36,7 +36,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: DS_COLORS.WHITE,
     borderWidth: 0.5,
-    borderColor: "#E0DCD4",
+    borderColor: DS_COLORS.DISCOVER_BORDER_SOFT,
   },
   searchRow: {
     paddingHorizontal: 20,
@@ -662,21 +662,21 @@ export const styles = StyleSheet.create({
   v3Title: {
     fontSize: 22,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.DISCOVER_INK,
     letterSpacing: -0.5,
   },
   v3Subtitle: {
     marginTop: 3,
     fontSize: 12,
-    color: "#999",
+    color: DS_COLORS.TEXT_MUTED,
   },
   v3SearchBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.WHITE,
     borderWidth: 0.5,
-    borderColor: "#E0DCD4",
+    borderColor: DS_COLORS.DISCOVER_BORDER_SOFT,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -688,21 +688,21 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.WHITE,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 0.5,
-    borderColor: "#E8E5DF",
+    borderColor: DS_COLORS.DISCOVER_V3_SEARCH_BORDER,
   },
   v3SearchLabel: {
     fontSize: 12,
-    color: "#777",
+    color: DS_COLORS.DISCOVER_V3_LABEL,
   },
   v3SearchClear: {
     fontSize: 12,
     fontWeight: "600" as const,
-    color: "#E8593C",
+    color: DS_COLORS.DISCOVER_CORAL,
   },
   v3PillsWrap: {
     paddingTop: 14,
@@ -737,14 +737,14 @@ export const styles = StyleSheet.create({
   v3SectionTitle: {
     fontSize: 15,
     fontWeight: "700" as const,
-    color: "#1A1A1A",
+    color: DS_COLORS.DISCOVER_INK,
   },
   v3Dot: {
     marginLeft: 8,
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
   },
   v3FlatPad: {
     paddingHorizontal: 24,
@@ -755,11 +755,11 @@ export const styles = StyleSheet.create({
   v3SeeAll: {
     fontSize: 12,
     fontWeight: "600" as const,
-    color: "#E8593C",
+    color: DS_COLORS.DISCOVER_CORAL,
   },
   v3PopularWrap: {
     marginHorizontal: 24,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.WHITE,
     borderRadius: 16,
     overflow: "hidden",
   },

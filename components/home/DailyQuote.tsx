@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { getDailyQuote } from "@/lib/quotes";
+import { DS_COLORS } from "@/lib/design-system";
 
 export default function DailyQuote() {
   return (
@@ -15,13 +16,13 @@ const s = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 12,
     borderLeftWidth: 2,
-    borderLeftColor: "#E8593C",
+    borderLeftColor: DS_COLORS.DISCOVER_CORAL,
     paddingLeft: 12,
     marginLeft: 24,
   },
   text: {
     fontSize: 13,
-    color: "#888",
+    color: DS_COLORS.buttonDisabledText,
     fontStyle: "italic",
     lineHeight: 18,
   },

@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 type Props = {
   streak: number;
@@ -29,7 +30,7 @@ export default function StatsRow({ streak, best, active, done }: Props) {
 
 const s = StyleSheet.create({
   row: { flexDirection: "row", gap: 8, paddingHorizontal: 24, marginTop: 20 },
-  card: { flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 14, alignItems: "center" },
-  value: { fontSize: 22, fontWeight: "700", color: "#1A1A1A" },
-  label: { marginTop: 3, fontSize: 10, color: "#999", textTransform: "uppercase", letterSpacing: 0.5 },
+  card: { flex: 1, backgroundColor: DS_COLORS.WHITE, borderRadius: 14, padding: 14, alignItems: "center" },
+  value: { fontSize: 22, fontWeight: "700", color: DS_COLORS.DISCOVER_INK },
+  label: { marginTop: 3, fontSize: 10, color: DS_COLORS.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 0.5 },
 });

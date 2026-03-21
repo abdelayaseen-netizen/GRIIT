@@ -1,16 +1,31 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { BookOpen, Zap, Bell, Flame, Target } from "lucide-react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 const ICONS = [BookOpen, Zap, Bell, Flame, Target];
-const BG = ["#3A1A10", "#1A2940", "#1B3A1B", "#2A1A3A", "#3A2A10"];
-const FG = ["#E8593C", "#5B7FD4", "#4CAF50", "#9C27B0", "#FF9800"];
+const BG = [
+  DS_COLORS.DISCOVER_STRIPE_WARM,
+  DS_COLORS.DISCOVER_STRIPE_COOL,
+  DS_COLORS.DISCOVER_STRIPE_GREEN,
+  DS_COLORS.DISCOVER_STRIPE_PURPLE,
+  DS_COLORS.DISCOVER_STRIPE_AMBER,
+];
+const FG = [
+  DS_COLORS.DISCOVER_CORAL,
+  DS_COLORS.DISCOVER_BLUE,
+  DS_COLORS.DISCOVER_GREEN,
+  DS_COLORS.DISCOVER_ACCENT_PURPLE,
+  DS_COLORS.DISCOVER_ACCENT_ORANGE,
+];
 
 function difficultyTheme(d?: string) {
   const key = (d ?? "medium").toLowerCase();
-  if (key === "easy") return { accent: "#4CAF50", tint: "#F0FAF2", label: "Easy" };
-  if (key === "hard" || key === "extreme") return { accent: "#E8593C", tint: "#FFF5F0", label: "Hard" };
-  return { accent: "#5B7FD4", tint: "#F0F4FF", label: "Med" };
+  if (key === "easy")
+    return { accent: DS_COLORS.DISCOVER_GREEN, tint: DS_COLORS.DISCOVER_DIFF_TINT_EASY, label: "Easy" };
+  if (key === "hard" || key === "extreme")
+    return { accent: DS_COLORS.DISCOVER_CORAL, tint: DS_COLORS.DISCOVER_DIFF_TINT_HARD, label: "Hard" };
+  return { accent: DS_COLORS.DISCOVER_BLUE, tint: DS_COLORS.DISCOVER_DIFF_TINT_MED, label: "Med" };
 }
 
 export type PopularChallengeData = {
@@ -42,7 +57,9 @@ export function PopularChallengeRow({
   const members = challenge.participants_count ?? 0;
   return (
     <View style={[s.row, !isLast && s.divider]}>
-      <View style={[s.iconBox, { backgroundColor: bg }]}><IconComp size={16} color={fg} /></View>
+      <View style={[s.iconBox, { backgroundColor: bg }]}>
+        <IconComp size={16} color={fg} />
+      </View>
       <View style={s.mid}>
         <Text style={s.title}>{challenge.title}</Text>
         <View style={s.metaRow}>
@@ -60,13 +77,13 @@ export function PopularChallengeRow({
 
 const s = StyleSheet.create({
   row: { paddingVertical: 14, paddingHorizontal: 16, gap: 12, flexDirection: "row", alignItems: "center" },
-  divider: { borderBottomWidth: 0.5, borderBottomColor: "#F5F2EB" },
+  divider: { borderBottomWidth: 0.5, borderBottomColor: DS_COLORS.DISCOVER_DIVIDER },
   iconBox: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   mid: { flex: 1 },
-  title: { fontSize: 14, fontWeight: "600", color: "#1A1A1A" },
+  title: { fontSize: 14, fontWeight: "600", color: DS_COLORS.DISCOVER_INK },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
   diff: { fontSize: 10, fontWeight: "600", borderRadius: 6, paddingVertical: 1, paddingHorizontal: 6 },
-  meta: { fontSize: 11, color: "#BBB" },
-  join: { borderRadius: 20, backgroundColor: "#E8593C", paddingVertical: 6, paddingHorizontal: 14 },
-  joinText: { fontSize: 11, fontWeight: "700", color: "#fff" },
+  meta: { fontSize: 11, color: DS_COLORS.DISCOVER_META_SILVER },
+  join: { borderRadius: 20, backgroundColor: DS_COLORS.DISCOVER_CORAL, paddingVertical: 6, paddingHorizontal: 14 },
+  joinText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.WHITE },
 });

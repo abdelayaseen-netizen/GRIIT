@@ -46,7 +46,7 @@ const s = StyleSheet.create({
   text: {
     fontSize: 12,
     fontWeight: "500" as const,
-    color: "#555555",
+    color: DS_COLORS.FILTER_LABEL_MUTED,
   },
   textActive: {
     color: DS_COLORS.WHITE,

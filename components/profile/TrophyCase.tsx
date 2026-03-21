@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Flame, Shield, Award, Target, Flag, Trophy } from "lucide-react-native";
+import { DS_COLORS } from "@/lib/design-system";
 
 type Snapshot = {
   streak: number;
@@ -49,12 +50,17 @@ export default function TrophyCase(props: Snapshot) {
           const current = b.getCurrent(props);
           const pct = Math.max(2, Math.min(100, Math.round((current / b.target) * 100)));
           const Icon = iconFor(b.icon);
+          const iconColor = pct >= 50 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.DISCOVER_META_SILVER;
           return (
             <View key={b.id} style={s.card}>
-              <View style={s.iconWrap}><Icon size={16} color={pct >= 50 ? "#E8593C" : "#BBB"} /></View>
+              <View style={s.iconWrap}>
+                <Icon size={16} color={iconColor} />
+              </View>
               <Text style={s.name}>{b.name}</Text>
               <Text style={s.progress}>{`${Math.min(current, b.target)}/${b.target} ${b.unit}`}</Text>
-              <View style={s.track}><View style={[s.fill, { width: `${pct}%` }]} /></View>
+              <View style={s.track}>
+                <View style={[s.fill, { width: `${pct}%` }]} />
+              </View>
             </View>
           );
         })}
@@ -65,12 +71,33 @@ export default function TrophyCase(props: Snapshot) {
 
 const s = StyleSheet.create({
   wrap: { marginTop: 20 },
-  header: { fontSize: 13, fontWeight: "700", color: "#1A1A1A", paddingHorizontal: 24, marginBottom: 10 },
+  header: { fontSize: 13, fontWeight: "700", color: DS_COLORS.DISCOVER_INK, paddingHorizontal: 24, marginBottom: 10 },
   row: { paddingHorizontal: 24, paddingRight: 32 },
-  card: { width: 100, backgroundColor: "#fff", borderRadius: 14, padding: 12, marginRight: 8, alignItems: "center" },
-  iconWrap: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F9F6F1", alignItems: "center", justifyContent: "center" },
-  name: { marginTop: 8, fontSize: 11, fontWeight: "600", color: "#1A1A1A", textAlign: "center" },
-  progress: { marginTop: 2, fontSize: 10, color: "#999" },
-  track: { width: "100%", marginTop: 6, height: 3, backgroundColor: "#F0EDE6", borderRadius: 2, overflow: "hidden" },
-  fill: { height: 3, backgroundColor: "#E8593C" },
+  card: {
+    width: 100,
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: 14,
+    padding: 12,
+    marginRight: 8,
+    alignItems: "center",
+  },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: DS_COLORS.TROPHY_ICON_WRAP_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  name: { marginTop: 8, fontSize: 11, fontWeight: "600", color: DS_COLORS.DISCOVER_INK, textAlign: "center" },
+  progress: { marginTop: 2, fontSize: 10, color: DS_COLORS.TEXT_MUTED },
+  track: {
+    width: "100%",
+    marginTop: 6,
+    height: 3,
+    backgroundColor: DS_COLORS.PROGRESS_TRACK_WARM,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  fill: { height: 3, backgroundColor: DS_COLORS.DISCOVER_CORAL },
 });
