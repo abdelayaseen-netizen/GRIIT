@@ -1,7 +1,7 @@
 # GRIIT Full-Stack Scorecard
 
 **Date:** March 21, 2026  
-**Commit:** `e3a5bbd7874aecd06df3d23328a1a61aeb1b0b85`
+**Commit:** `4bc58b0` (docs add; codebase audited at parent `e3a5bbd`)
 
 ## Summary
 
