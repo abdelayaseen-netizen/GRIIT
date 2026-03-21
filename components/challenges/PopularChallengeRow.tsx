@@ -26,11 +26,13 @@ export function PopularChallengeRow({
   index,
   isLast,
   onPress,
+  onPressIn,
 }: {
   challenge: PopularChallengeData;
   index: number;
   isLast: boolean;
   onPress: (id: string) => void;
+  onPressIn?: () => void;
 }) {
   const IconComp = ICONS[index % ICONS.length] ?? Target;
   const bg = BG[index % BG.length] ?? BG[0];
@@ -49,7 +51,7 @@ export function PopularChallengeRow({
           <Text style={s.meta}>{members} in</Text>
         </View>
       </View>
-      <TouchableOpacity style={s.join} onPress={() => onPress(challenge.id)} activeOpacity={0.86}>
+      <TouchableOpacity style={s.join} onPressIn={onPressIn} onPress={() => onPress(challenge.id)} activeOpacity={0.86}>
         <Text style={s.joinText}>Join</Text>
       </TouchableOpacity>
     </View>

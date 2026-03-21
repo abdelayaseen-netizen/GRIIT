@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Search } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS } from "@/lib/design-system";
@@ -19,6 +19,7 @@ import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
 import { DailyCard } from "@/components/challenges/DailyCard";
 import { TeamChallengeCard } from "@/components/challenges/TeamChallengeCard";
 import { PopularChallengeRow } from "@/components/challenges/PopularChallengeRow";
+import { prefetchChallengeById } from "@/lib/prefetch-queries";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "team";
 
@@ -82,6 +83,7 @@ function searchMatch(c: ApiChallenge, q: string): boolean {
 
 export default function DiscoverScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -121,6 +123,13 @@ export default function DiscoverScreen() {
     if (typeof Haptics.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push(ROUTES.CHALLENGE_ID(id) as never);
   }, [router]);
+
+  const prefetchChallengeDetail = useCallback(
+    (challengeId: string) => {
+      void prefetchChallengeById(queryClient, challengeId);
+    },
+    [queryClient]
+  );
 
   return (
     <ErrorBoundary>
@@ -201,6 +210,7 @@ export default function DiscoverScreen() {
                       : null
                   }
                   onPress={openChallenge}
+                  onPressIn={hero ? () => prefetchChallengeDetail(hero.id) : undefined}
                 />
               </View>
 
@@ -225,6 +235,7 @@ export default function DiscoverScreen() {
                       participants_count: item.participants_count,
                     }}
                     onPress={openChallenge}
+                    onPressIn={() => prefetchChallengeDetail(item.id)}
                   />
                 )}
               />
@@ -246,6 +257,7 @@ export default function DiscoverScreen() {
                       participants_count: c.participants_count,
                     }}
                     onPress={openChallenge}
+                    onPressIn={() => prefetchChallengeDetail(c.id)}
                   />
                 ))}
               </View>
@@ -274,6 +286,7 @@ export default function DiscoverScreen() {
                     index={i}
                     isLast={i === popular.length - 1}
                     onPress={openChallenge}
+                    onPressIn={() => prefetchChallengeDetail(c.id)}
                   />
                 ))}
               </View>

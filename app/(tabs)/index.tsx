@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { Flame, Zap, Target } from "lucide-react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
+import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -73,6 +74,7 @@ function deriveRank(stats: StatsFromApi | null | undefined): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const { stats, refetchAll } = useApp();
@@ -233,6 +235,9 @@ export default function HomeScreen() {
             durationDays={durationDays}
             onPressGoal={onPressGoal}
             onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+            onPressInActiveChallenge={() => {
+              if (firstActive?.id) void prefetchActiveChallengeById(queryClient, firstActive.id);
+            }}
             isError={homeQuery.isError}
           />
         )}

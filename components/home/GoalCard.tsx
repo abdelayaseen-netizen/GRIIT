@@ -12,6 +12,7 @@ export default function GoalCard({
   durationDays,
   onPressGoal,
   onPressFindChallenge,
+  onPressInActiveChallenge,
   isError,
 }: {
   challengeName?: string;
@@ -20,6 +21,7 @@ export default function GoalCard({
   durationDays?: number;
   onPressGoal: (goalId: string) => void;
   onPressFindChallenge: () => void;
+  onPressInActiveChallenge?: () => void;
   isError?: boolean;
 }) {
   useEffect(() => {
@@ -89,6 +91,7 @@ export default function GoalCard({
             <Pressable
               key={g.id}
               style={({ pressed }) => [s.todoRow, pressed && s.todoRowPressed]}
+              onPressIn={onPressInActiveChallenge}
               onPress={() => onPressGoal(g.id)}
               accessibilityRole="button"
               accessibilityLabel={`Start goal: ${g.title}`}

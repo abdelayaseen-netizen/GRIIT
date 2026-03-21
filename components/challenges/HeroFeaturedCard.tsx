@@ -21,9 +21,11 @@ type HeroChallenge = {
 export function HeroFeaturedCard({
   challenge,
   onPress,
+  onPressIn,
 }: {
   challenge: HeroChallenge | null;
   onPress: (id: string) => void;
+  onPressIn?: () => void;
 }) {
   if (!challenge) return null;
   const duration = challenge.duration_days ?? 7;
@@ -53,7 +55,7 @@ export function HeroFeaturedCard({
           </View>
           <Text style={s.socialText}>{joinedToday} people joined today</Text>
         </View>
-        <TouchableOpacity style={s.cta} onPress={() => onPress(challenge.id)} activeOpacity={0.85}>
+        <TouchableOpacity style={s.cta} onPressIn={onPressIn} onPress={() => onPress(challenge.id)} activeOpacity={0.85}>
           <Text style={s.ctaText}>Start this challenge</Text>
         </TouchableOpacity>
       </View>

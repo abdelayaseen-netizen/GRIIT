@@ -30,7 +30,15 @@ function difficultyTheme(d?: string) {
   return { accent: "#5B7FD4", tint: "#F0F4FF", label: "MED" };
 }
 
-export function TeamChallengeCard({ challenge, onPress }: { challenge: TeamChallengeCardData; onPress: (id: string) => void }) {
+export function TeamChallengeCard({
+  challenge,
+  onPress,
+  onPressIn,
+}: {
+  challenge: TeamChallengeCardData;
+  onPress: (id: string) => void;
+  onPressIn?: () => void;
+}) {
   const size = challenge.team_size ?? 2;
   const isDuo = size <= 2;
   const iconBg = isDuo ? "#E8F5E9" : "#FFF3ED";
@@ -42,7 +50,7 @@ export function TeamChallengeCard({ challenge, onPress }: { challenge: TeamChall
   const teamsActive = Math.max(1, Math.floor((challenge.participants_count ?? 0) / Math.max(size, 1)));
   const cta = isDuo ? "Find a partner ›" : "Build a squad ›";
   return (
-    <TouchableOpacity style={s.card} activeOpacity={0.86} onPress={() => onPress(challenge.id)}>
+    <TouchableOpacity style={s.card} activeOpacity={0.86} onPressIn={onPressIn} onPress={() => onPress(challenge.id)}>
       <View style={s.topRow}>
         <View style={s.leftRow}>
           <View style={[s.iconBox, { backgroundColor: iconBg }]}><Users size={18} color={iconColor} /></View>

@@ -40,14 +40,22 @@ export type DailyChallengeCardData = {
   participants_count?: number;
 };
 
-export function DailyCard({ challenge, onPress }: { challenge: DailyChallengeCardData; onPress: (id: string) => void }) {
+export function DailyCard({
+  challenge,
+  onPress,
+  onPressIn,
+}: {
+  challenge: DailyChallengeCardData;
+  onPress: (id: string) => void;
+  onPressIn?: () => void;
+}) {
   const d = (challenge.difficulty ?? "medium").toLowerCase();
   const theme = DIFFICULTY_THEMES[d] ?? DEFAULT_THEME;
   const IconComp = ICONS[challenge.title] ?? Zap;
   const subtitle = DAILY_COPY[challenge.title] ?? (challenge.description ?? "").slice(0, 30);
   const count = challenge.participants_count ?? 0;
   return (
-    <TouchableOpacity style={s.card} activeOpacity={0.85} onPress={() => onPress(challenge.id)}>
+    <TouchableOpacity style={s.card} activeOpacity={0.85} onPressIn={onPressIn} onPress={() => onPress(challenge.id)}>
       <View style={[s.stripe, { backgroundColor: theme.accent }]} />
       <View style={[s.tintBg, { backgroundColor: theme.tint }]} />
       <View style={s.topRow}>
