@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
-import { Check, Target } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { Check, Flame, Target } from "lucide-react-native";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 
 type Goal = { id: string; title: string; completed: boolean };
 
@@ -24,21 +24,49 @@ export default function GoalCard({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  useEffect(() => {
+    if (isError) {
+      console.error("[GoalCard] Home goals query failed; showing browse challenges empty state.");
+    }
+  }, [isError]);
+
   if (!challengeName) {
     return (
       <View style={s.wrap}>
         <Text style={s.sectionTitle}>Today&apos;s goals</Text>
         <View style={s.empty}>
-          <Text style={s.emptyText}>
-            {isError ? "Couldn't load your goals right now." : "Your goals will appear here once you join a challenge."}
-          </Text>
-          <TouchableOpacity
-            onPress={isError ? onRetry : onPressFindChallenge}
-            accessibilityRole="button"
-            accessibilityLabel={isError ? "Try loading goals again" : "Find a challenge"}
-          >
-            <Text style={s.emptyLink}>{isError ? "Try again" : "Find a challenge →"}</Text>
-          </TouchableOpacity>
+          <Flame size={40} color={GRIIT_COLORS.primary} />
+          {isError ? (
+            <>
+              <Text style={s.emptyTitle}>Couldn&apos;t load your goals</Text>
+              <Text style={s.emptySubtitle}>Check your connection and try again.</Text>
+              {onRetry ? (
+                <TouchableOpacity
+                  style={s.emptyCta}
+                  onPress={onRetry}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retry loading goals"
+                  activeOpacity={0.85}
+                >
+                  <Text style={s.emptyCtaText}>Try again</Text>
+                </TouchableOpacity>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <Text style={s.emptyTitle}>Your first challenge is waiting</Text>
+              <Text style={s.emptySubtitle}>Pick one. Show up. That&apos;s all it takes.</Text>
+              <TouchableOpacity
+                style={s.emptyCta}
+                onPress={onPressFindChallenge}
+                accessibilityRole="button"
+                accessibilityLabel="Browse challenges"
+                activeOpacity={0.85}
+              >
+                <Text style={s.emptyCtaText}>Browse challenges →</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     );
@@ -184,6 +212,32 @@ const s = StyleSheet.create({
     padding: DS_SPACING.lg,
     alignItems: "center",
   },
-  emptyText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, textAlign: "center" },
-  emptyLink: { marginTop: 10, fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
+  emptyTitle: {
+    marginTop: DS_SPACING.md,
+    fontSize: DS_TYPOGRAPHY.SIZE_MD,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    marginTop: DS_SPACING.sm,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  emptyCta: {
+    marginTop: DS_SPACING.lg,
+    alignSelf: "stretch",
+    backgroundColor: GRIIT_COLORS.primary,
+    paddingVertical: 14,
+    paddingHorizontal: DS_SPACING.lg,
+    borderRadius: 28,
+    alignItems: "center",
+  },
+  emptyCtaText: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_ON_DARK,
+  },
 });

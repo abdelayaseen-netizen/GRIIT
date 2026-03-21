@@ -18,6 +18,7 @@ import RankProgress from "@/components/profile/RankProgress";
 import TrophyCase from "@/components/profile/TrophyCase";
 import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
 import ProfileActions from "@/components/profile/ProfileActions";
+import { DS_COLORS } from "@/lib/design-system";
 
 type ActiveRow = {
   id: string;
@@ -175,10 +176,10 @@ export default function ProfileScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F5F5" },
+  container: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
   scroll: { paddingBottom: 24 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },
-  loading: { fontSize: 14, color: "#666" },
-  guestTitle: { fontSize: 18, fontWeight: "700", color: "#1A1A1A", textAlign: "center" },
-  guestSub: { marginTop: 8, fontSize: 13, color: "#999", textAlign: "center" },
+  loading: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY },
+  guestTitle: { fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, textAlign: "center" },
+  guestSub: { marginTop: 8, fontSize: 13, color: DS_COLORS.TEXT_MUTED, textAlign: "center" },
 });
