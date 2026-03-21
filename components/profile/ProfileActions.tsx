@@ -10,14 +10,24 @@ type Props = {
 export default function ProfileActions({ onPressSettings, onPressSignOut }: Props) {
   return (
     <View style={s.card}>
-      <Pressable style={[s.row, s.rowBorder]} onPress={onPressSettings}>
+      <Pressable
+        style={[s.row, s.rowBorder]}
+        onPress={onPressSettings}
+        accessibilityLabel="Open settings"
+        accessibilityRole="button"
+      >
         <View style={s.left}>
           <Settings size={16} color="#888" />
           <Text style={s.label}>Settings</Text>
         </View>
         <ChevronRight size={14} color="#CCC" />
       </Pressable>
-      <Pressable style={s.row} onPress={onPressSignOut}>
+      <Pressable
+        style={s.row}
+        onPress={onPressSignOut}
+        accessibilityLabel="Sign out"
+        accessibilityRole="button"
+      >
         <View style={s.left}>
           <LogOut size={16} color="#888" />
           <Text style={s.signOut}>Sign out</Text>

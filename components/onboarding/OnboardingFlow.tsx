@@ -62,7 +62,12 @@ export default function OnboardingFlow() {
       {(showProgressDots || showBackButton) && (
         <View style={styles.topBar}>
           {showBackButton ? (
-            <Pressable style={styles.backButton} onPress={prevStep}>
+            <Pressable
+              style={styles.backButton}
+              onPress={prevStep}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+            >
               <Text style={styles.backButtonText}>←</Text>
             </Pressable>
           ) : (

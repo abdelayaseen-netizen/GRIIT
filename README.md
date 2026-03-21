@@ -1,4 +1,4 @@
-# GRIT — Challenge Tracker
+# GRIIT — Challenge Tracker
 
 A standalone **iOS app** (and Android/web) for tracking daily challenges, streaks, and task completion. Built with **Expo** and **React Native**, with a **Node/Hono + tRPC** backend and **Supabase** for auth and database.
 
@@ -51,7 +51,7 @@ Full details: [SETUP.md](./SETUP.md).
 
 ## iOS app (production)
 
-To ship **GRIT as an iOS app**:
+To ship **GRIIT as an iOS app**:
 
 1. **Backend**  
    Deploy the Node backend so the app can talk to it in production.

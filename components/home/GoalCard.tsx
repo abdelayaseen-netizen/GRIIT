@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
 import { Check, Target } from "lucide-react-native";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 type Goal = { id: string; title: string; completed: boolean };
 
@@ -31,7 +32,11 @@ export default function GoalCard({
           <Text style={s.emptyText}>
             {isError ? "Couldn't load your goals right now." : "Your goals will appear here once you join a challenge."}
           </Text>
-          <TouchableOpacity onPress={isError ? onRetry : onPressFindChallenge}>
+          <TouchableOpacity
+            onPress={isError ? onRetry : onPressFindChallenge}
+            accessibilityRole="button"
+            accessibilityLabel={isError ? "Try loading goals again" : "Find a challenge"}
+          >
             <Text style={s.emptyLink}>{isError ? "Try again" : "Find a challenge →"}</Text>
           </TouchableOpacity>
         </View>
@@ -53,10 +58,14 @@ export default function GoalCard({
       </View>
       <View style={s.card}>
         <View style={s.challengeRow}>
-          <View style={s.iconBox}><Target size={16} color="#2E7D32" /></View>
+          <View style={s.iconBox}>
+            <Target size={16} color={DS_COLORS.GREEN} />
+          </View>
           <View style={s.challengeMid}>
             <Text style={s.challengeName}>{challengeName}</Text>
-            <View style={s.progressBg}><View style={[s.progressFill, { width: `${Math.max(2, progress)}%` }]} /></View>
+            <View style={s.progressBg}>
+              <View style={[s.progressFill, { width: `${Math.max(2, progress)}%` }]} />
+            </View>
           </View>
           <Text style={s.count}>{`${completed}/${total}`}</Text>
         </View>
@@ -64,7 +73,9 @@ export default function GoalCard({
         {rows.map((g) =>
           g.completed ? (
             <View key={g.id} style={s.doneRow}>
-              <View style={s.doneCircle}><Check size={12} color="#fff" /></View>
+              <View style={s.doneCircle}>
+                <Check size={12} color={DS_COLORS.TEXT_ON_DARK} />
+              </View>
               <Text style={s.doneText}>{g.title}</Text>
               <Text style={s.doneRight}>Done</Text>
             </View>
@@ -73,6 +84,8 @@ export default function GoalCard({
               key={g.id}
               style={({ pressed }) => [s.todoRow, pressed && s.todoRowPressed]}
               onPress={() => onPressGoal(g.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`Start goal: ${g.title}`}
             >
               <View style={s.todoCircle} />
               <Text style={s.todoText}>{g.title}</Text>
@@ -86,28 +99,91 @@ export default function GoalCard({
 }
 
 const s = StyleSheet.create({
-  wrap: { paddingHorizontal: 24, paddingTop: 14 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12, alignItems: "center" },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#1A1A1A" },
-  dayText: { fontSize: 11, fontWeight: "600", color: "#E8593C" },
-  card: { backgroundColor: "#fff", borderRadius: 16, padding: 14, borderLeftWidth: 3, borderLeftColor: "#4CAF50" },
-  challengeRow: { flexDirection: "row", gap: 10, marginBottom: 12, alignItems: "center" },
-  iconBox: { width: 34, height: 34, backgroundColor: "#E8F5E9", borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  wrap: { paddingHorizontal: DS_SPACING.xl, paddingTop: 14 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: DS_SPACING.md, alignItems: "center" },
+  sectionTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  dayText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
+  card: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.card,
+    padding: 14,
+    borderLeftWidth: 3,
+    borderLeftColor: DS_COLORS.DISCOVER_GREEN,
+  },
+  challengeRow: { flexDirection: "row", gap: 10, marginBottom: DS_SPACING.md, alignItems: "center" },
+  iconBox: {
+    width: 34,
+    height: 34,
+    backgroundColor: DS_COLORS.GREEN_BG,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   challengeMid: { flex: 1 },
-  challengeName: { fontSize: 14, fontWeight: "600", color: "#1A1A1A", marginBottom: 6 },
-  progressBg: { height: 3, backgroundColor: "#F0EDE6", borderRadius: 2, overflow: "hidden" },
-  progressFill: { height: 3, backgroundColor: "#4CAF50", borderRadius: 2 },
-  count: { fontSize: 12, fontWeight: "700", color: "#E8593C" },
-  doneRow: { backgroundColor: "#F0FAF2", borderWidth: 1, borderColor: "#C8E6C9", borderRadius: 10, padding: 10, marginBottom: 6, flexDirection: "row", alignItems: "center", gap: 8 },
-  todoRow: { backgroundColor: "#F9F6F1", borderRadius: 10, padding: 10, marginBottom: 6, flexDirection: "row", alignItems: "center", gap: 8 },
-  todoRowPressed: { backgroundColor: "#FFF3ED" },
-  doneCircle: { width: 18, height: 18, borderRadius: 9, backgroundColor: "#4CAF50", alignItems: "center", justifyContent: "center" },
-  todoCircle: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: "#D9D5CC" },
-  doneText: { flex: 1, fontSize: 13, color: "#2E7D32", textDecorationLine: "line-through", opacity: 0.6 },
-  todoText: { flex: 1, fontSize: 13, color: "#444" },
-  doneRight: { fontSize: 10, fontWeight: "600", color: "#4CAF50" },
-  todoRight: { fontSize: 11, fontWeight: "600", color: "#E8593C" },
-  empty: { backgroundColor: "#fff", borderRadius: 16, padding: 16, alignItems: "center" },
-  emptyText: { fontSize: 13, color: "#999", textAlign: "center" },
-  emptyLink: { marginTop: 10, fontSize: 13, fontWeight: "600", color: "#E8593C" },
+  challengeName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: 6,
+  },
+  progressBg: {
+    height: 3,
+    backgroundColor: DS_COLORS.CARD_ALT_BG,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressFill: { height: 3, backgroundColor: DS_COLORS.DISCOVER_GREEN, borderRadius: 2 },
+  count: { fontSize: 12, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  doneRow: {
+    backgroundColor: DS_COLORS.GREEN_BG,
+    borderWidth: 1,
+    borderColor: DS_COLORS.COMPLETED_BORDER,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.sm,
+  },
+  todoRow: {
+    backgroundColor: DS_COLORS.chipFill,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.sm,
+  },
+  todoRowPressed: { backgroundColor: DS_COLORS.ACCENT_TINT },
+  doneCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: DS_COLORS.DISCOVER_GREEN,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  todoCircle: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: DS_COLORS.BORDER },
+  doneText: {
+    flex: 1,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.DIFFICULTY_EASY_TEXT,
+    textDecorationLine: "line-through",
+    opacity: 0.6,
+  },
+  todoText: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.grayDarker },
+  doneRight: { fontSize: 10, fontWeight: "600", color: DS_COLORS.DISCOVER_GREEN },
+  todoRight: { fontSize: 11, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
+  empty: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.lg,
+    alignItems: "center",
+  },
+  emptyText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, textAlign: "center" },
+  emptyLink: { marginTop: 10, fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
 });

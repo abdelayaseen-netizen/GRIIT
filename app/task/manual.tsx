@@ -5,6 +5,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { CircleCheck } from "lucide-react-native";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 /**
  * Manual / simple task completion: user taps "Mark as Complete" with no proof.
@@ -19,13 +21,14 @@ export default function ManualTaskScreen() {
   }>();
   const { activeChallenge, completeTask, computeProgress } = useApp();
   const [loading, setLoading] = useState(false);
+  const { error, showError, clearError } = useInlineError();
 
   const title = taskName?.trim() || "Task";
   const description = taskDescription?.trim() || "Did you complete this task?";
 
   const handleMarkComplete = async () => {
     if (!activeChallenge?.id || !taskId) {
-      Alert.alert("Error", "No active challenge or task found.");
+      showError("No active challenge or task found.");
       return;
     }
     setLoading(true);
@@ -42,7 +45,7 @@ export default function ManualTaskScreen() {
         router.back();
       }
     } catch (err: unknown) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Couldn't save. Tap to retry.");
+      showError(err instanceof Error ? err.message : "Couldn't save. Tap to retry.");
     } finally {
       setLoading(false);
     }
@@ -51,6 +54,7 @@ export default function ManualTaskScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.content}>
+        <InlineError message={error} onDismiss={clearError} />
         <View style={styles.iconWrap}>
           <CircleCheck size={56} color={DS_COLORS.success} strokeWidth={1.5} />
         </View>

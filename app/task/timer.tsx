@@ -10,6 +10,8 @@ import { DS_COLORS } from "@/lib/design-system";
 import type { ChallengeTaskFromApi } from "@/types";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 /** Active challenge as returned by getActive (nested challenges.challenge_tasks in API shape). */
 interface ActiveChallengeWithTasks {
@@ -33,6 +35,7 @@ export default function TimerTaskScreen() {
   const [strictResetMessage, setStrictResetMessage] = useState<string | null>(null);
   const resetInProgressRef = useRef<boolean>(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { error, showError, clearError } = useInlineError();
 
   const ac = activeChallenge as ActiveChallengeWithTasks | null | undefined;
   const tasks: ChallengeTaskFromApi[] = ac?.challenges?.challenge_tasks ?? [];
@@ -111,7 +114,7 @@ export default function TimerTaskScreen() {
   const handleTakePhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Camera permission is required for photo proof");
+      showError("Camera permission is required for photo proof");
       return;
     }
     const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
@@ -121,12 +124,12 @@ export default function TimerTaskScreen() {
       setPhotoBase64(a.base64 ?? null);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-  }, []);
+  }, [showError]);
 
   const handlePickFromGallery = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Gallery access is required for photo proof");
+      showError("Gallery access is required for photo proof");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({ ...PICKER_OPTIONS, mediaTypes: ["images"] });
@@ -136,24 +139,24 @@ export default function TimerTaskScreen() {
       setPhotoBase64(a.base64 ?? null);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-  }, []);
+  }, [showError]);
 
   const handleSubmit = async () => {
     if (seconds < 60) {
-      Alert.alert("Timer Too Short", "Please run the timer for at least 1 minute");
+      showError("Please run the timer for at least 1 minute");
       return;
     }
     if (requirePhotoProof && !photoUri) {
-      Alert.alert("Photo required", "This task requires photo proof. Take or upload a photo before completing.");
+      showError("This task requires photo proof. Take or upload a photo before completing.");
       return;
     }
 
     if (!activeChallenge) {
-      Alert.alert("Error", "No active challenge found");
+      showError("No active challenge found");
       return;
     }
     if (!taskId) {
-      Alert.alert("Error", "Task not found");
+      showError("Task not found");
       return;
     }
 
@@ -169,7 +172,7 @@ export default function TimerTaskScreen() {
           const contentType = photoUri?.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
           const result = await uploadProofImageFromBase64(photoBase64, contentType);
           if ("error" in result) {
-            Alert.alert("Upload failed", result.error);
+            showError(result.error);
             return;
           }
           proofUrl = result.url;
@@ -177,7 +180,7 @@ export default function TimerTaskScreen() {
           const { uploadProofImageFromUri } = await import("@/lib/uploadProofImage");
           const res = await uploadProofImageFromUri(photoUri);
           if ("error" in res) {
-            Alert.alert("Upload failed", res.error);
+            showError(res.error);
             return;
           }
           proofUrl = res.url;
@@ -202,7 +205,7 @@ export default function TimerTaskScreen() {
         ]);
       }
     } catch (error: unknown) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong");
+      showError(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);
       setUploading(false);
@@ -212,6 +215,7 @@ export default function TimerTaskScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>
+        <InlineError message={error} onDismiss={clearError} />
         <View style={styles.timerContainer}>
           <Text style={styles.timerText}>{formatSecondsToMMSS(seconds)}</Text>
           <Text style={styles.timerLabel}>{isRunning ? 'Running...' : 'Paused'}</Text>

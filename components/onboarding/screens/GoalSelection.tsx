@@ -27,6 +27,9 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
               key={goal.id}
               style={[styles.goalCard, isSelected && styles.goalCardSelected]}
               onPress={() => toggleGoal(goal.id)}
+              accessibilityLabel={goal.title}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
             >
               <Text style={styles.goalEmoji}>{goal.emoji}</Text>
               <View style={styles.goalTextContainer}>
@@ -50,6 +53,9 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
           style={[styles.primaryButton, selectedGoals.length === 0 && styles.primaryButtonDisabled]}
           onPress={() => { track({ name: 'onboarding_goals_selected', goals: selectedGoals }); onContinue(); }}
           disabled={selectedGoals.length === 0}
+          accessibilityLabel="Continue to next step"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: selectedGoals.length === 0 }}
         >
           <Text style={[styles.primaryButtonText, selectedGoals.length === 0 && styles.primaryButtonTextDisabled]}>
             Continue

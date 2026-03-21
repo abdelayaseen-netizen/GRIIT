@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Crown, User, LogOut, FileText } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
@@ -116,6 +117,7 @@ const visibilityStyles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const [dailyReminder, setDailyReminder] = useState(true);
@@ -510,6 +512,7 @@ export default function SettingsScreen() {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               await cancelLapsedUserReminders();
               await supabase.auth.signOut();
+              queryClient.clear();
               const { clearOnboardingStorage } = await import("@/store/onboardingStore");
               await clearOnboardingStorage();
               router.replace(ROUTES.AUTH as never);
@@ -541,7 +544,13 @@ export default function SettingsScreen() {
 
         {/* Delete account confirmation modal */}
         <Modal visible={showDeleteModal} transparent animationType="fade">
-          <TouchableOpacity style={styles.deleteModalBackdrop} activeOpacity={1} onPress={() => !deleteAccountLoading && setShowDeleteModal(false)} />
+          <TouchableOpacity
+            style={styles.deleteModalBackdrop}
+            activeOpacity={1}
+            onPress={() => !deleteAccountLoading && setShowDeleteModal(false)}
+            accessibilityLabel="Dismiss delete account dialog"
+            accessibilityRole="button"
+          />
           <View style={styles.deleteModalCenter}>
             <View style={[styles.card, styles.deleteModalCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
               <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
@@ -554,6 +563,8 @@ export default function SettingsScreen() {
                 autoCapitalize="characters"
                 autoCorrect={false}
                 editable={!deleteAccountLoading}
+                accessibilityLabel="Type DELETE to confirm account deletion"
+                accessibilityRole="text"
               />
               <TouchableOpacity
                 style={[
@@ -567,6 +578,7 @@ export default function SettingsScreen() {
                     await trpcMutate(TRPC.profiles.deleteAccount);
                     await cancelLapsedUserReminders();
                     await supabase.auth.signOut();
+                    queryClient.clear();
                     const { clearOnboardingStorage } = await import("@/store/onboardingStore");
                     await clearOnboardingStorage();
                     setShowDeleteModal(false);
@@ -580,6 +592,9 @@ export default function SettingsScreen() {
                 }}
                 disabled={deleteConfirmValue !== "DELETE" || deleteAccountLoading}
                 activeOpacity={0.85}
+                accessibilityLabel="Permanently delete my account"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: deleteConfirmValue !== "DELETE" || deleteAccountLoading }}
               >
                 {deleteAccountLoading ? (
                   <ActivityIndicator size="small" color={DS_COLORS.white} />
@@ -591,6 +606,9 @@ export default function SettingsScreen() {
                 style={[styles.deleteCancelBtn, { borderColor: DS_COLORS.border }]}
                 onPress={() => { setShowDeleteModal(false); setDeleteConfirmValue(""); }}
                 disabled={deleteAccountLoading}
+                accessibilityLabel="Cancel account deletion"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: deleteAccountLoading }}
               >
                 <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Cancel</Text>
               </TouchableOpacity>

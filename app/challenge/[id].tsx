@@ -73,6 +73,8 @@ import {
 } from "@/lib/design-system";
 import { InitialCircle } from "@/src/components/ui";
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 /** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
@@ -501,6 +503,7 @@ export default function ChallengeDetailScreen() {
   const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
   const [commitmentUnderstood, setCommitmentUnderstood] = useState(false);
   const insets = useSafeAreaInsets();
+  const { error, showError, clearError } = useInlineError();
   const referrerLabel = ref ? "Invited by a friend" : null;
 
   useEffect(() => {
@@ -620,7 +623,7 @@ export default function ChallengeDetailScreen() {
       return;
     }
     if (!canJoinChallenge(count).allowed) {
-      Alert.alert("Challenge limit reached", "You've reached the maximum number of active challenges.");
+      showError("You've reached the maximum number of active challenges.");
       return;
     }
     setCommitmentJoining(true);
@@ -640,13 +643,12 @@ export default function ChallengeDetailScreen() {
       myActiveListQuery.refetch();
       setShowJoinCelebration(true);
     } catch (err: unknown) {
-      // error swallowed — handle in UI
       const { title, message } = formatTRPCError(err);
-      Alert.alert(title, message);
+      showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
     } finally {
       setCommitmentJoining(false);
     }
-  }, [id, commitmentJoining, user?.id, refetchAll, router, queryClient, myActiveListQuery]);
+  }, [id, commitmentJoining, user?.id, refetchAll, router, queryClient, myActiveListQuery, showError]);
 
   const onJoinCelebrationDismiss = useCallback(() => {
     setShowJoinCelebration(false);
@@ -681,10 +683,7 @@ export default function ChallengeDetailScreen() {
 
     if (task.type === "checkin") {
       if (!FLAGS.LOCATION_CHECKIN_ENABLED) {
-        Alert.alert(
-          "Coming soon",
-          "Location check-in verification is not available yet. Use another task type for now."
-        );
+        showError("Location check-in verification is not available yet. Use another task type for now.");
         return;
       }
       router.push({ pathname: ROUTES.TASK_CHECKIN, params: { taskId: task.id } } as never);
@@ -721,7 +720,7 @@ export default function ChallengeDetailScreen() {
         taskConfig: JSON.stringify(taskConfig),
       },
     } as never);
-  }, [router, activeChallenge?.id]);
+  }, [router, activeChallenge?.id, showError]);
 
   const allTasks = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
   const todayTasksWithCompletion = useMemo(() => {
@@ -754,12 +753,8 @@ export default function ChallengeDetailScreen() {
       return;
     }
     if (allTasks.length === 0) return;
-    Alert.alert(
-      "All goals complete",
-      "Secure your day to lock it in. You can secure from Home, or stay here.",
-      [{ text: "OK" }]
-    );
-  }, [isJoined, id, activeChallengeId, router, firstIncompleteTask, allTasks.length, handleMissionStart]);
+    showError("All goals complete. Secure your day to lock it in. You can secure from Home, or stay here.");
+  }, [isJoined, id, activeChallengeId, router, firstIncompleteTask, allTasks.length, handleMissionStart, showError]);
   const hasStravaTasks = allTasks.some((t) => (t as { verification_method?: string }).verification_method === "strava_activity");
 
   useEffect(() => {
@@ -805,13 +800,13 @@ export default function ChallengeDetailScreen() {
               router.replace(ROUTES.TABS_DISCOVER as never);
             } catch (e: unknown) {
               const { title, message } = formatTRPCError(e);
-              Alert.alert(title, message);
+              showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
             }
           },
         },
       ]
     );
-  }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router]);
+  }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router, showError]);
 
   const difficulty = (challenge?.difficulty || "medium") as string;
 
@@ -976,6 +971,7 @@ export default function ChallengeDetailScreen() {
             />
           }
         >
+          <InlineError message={error} onDismiss={clearError} />
           {/* HERO: green for 24h, orange gradient otherwise */}
           <LinearGradient colors={headerGradientColors} style={[s.heroHeader, isDaily && s.heroHeader24h]}>
             <SafeAreaView edges={["top"]} style={s.heroSafeArea}>
@@ -1088,7 +1084,7 @@ export default function ChallengeDetailScreen() {
                           await trpcMutate(TRPC.challenges.startTeamChallenge, { challengeId: id });
                           queryClient.invalidateQueries({ queryKey: ["challenge", id] });
                         } catch (e: unknown) {
-                          Alert.alert("Error", (e as Error)?.message ?? "Could not start challenge.");
+                          showError((e as Error)?.message ?? "Could not start challenge.");
                         }
                       }}
                       onInvite={() => {
@@ -1228,7 +1224,7 @@ export default function ChallengeDetailScreen() {
                           });
                           await refetchTodayCheckins();
                         } catch {
-                          Alert.alert("Verification failed", "No matching Strava activity found for today.");
+                          showError("No matching Strava activity found for today.");
                         } finally {
                           setStravaVerifyPending(null);
                         }
@@ -1442,6 +1438,9 @@ export default function ChallengeDetailScreen() {
               onPress={handleCommitmentConfirm}
               disabled={commitmentJoining || !commitmentUnderstood}
               activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Confirm commitment"
+              accessibilityState={{ disabled: commitmentJoining || !commitmentUnderstood }}
             >
               {commitmentJoining ? (
                 <ActivityIndicator color={DS_COLORS.white} />

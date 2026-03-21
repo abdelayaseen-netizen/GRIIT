@@ -290,6 +290,9 @@ export default function WelcomeScreen() {
                 style={[s.goalCard, selected && s.goalCardSelected]}
                 onPress={() => toggleGoal(g.id)}
                 activeOpacity={0.8}
+                accessibilityLabel={g.label}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
               >
                 {selected && (
                   <View style={s.checkBadge}>

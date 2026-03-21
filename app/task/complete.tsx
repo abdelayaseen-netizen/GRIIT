@@ -9,7 +9,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Image,
   TextInput,
@@ -39,6 +38,8 @@ import {
   DS_SHADOWS,
   DS_MEASURES,
 } from "@/lib/design-system";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 export type TaskCompleteConfig = {
   require_photo?: boolean;
@@ -99,6 +100,7 @@ export default function TaskCompleteScreen() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const { error, showError, clearError } = useInlineError();
 
   const requiredSeconds = (config.min_duration_minutes ?? 0) * 60;
   const isCountdown = config.timer_direction === "countdown";
@@ -130,7 +132,7 @@ export default function TaskCompleteScreen() {
   const handleTakePhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Camera access needed", "Allow camera access to submit photo proof.");
+      showError("Allow camera access to submit photo proof.");
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -146,23 +148,23 @@ export default function TaskCompleteScreen() {
       const contentType = asset.uri.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
       const upload = await uploadProofImageFromBase64(asset.base64 ?? "", contentType);
       if ("error" in upload) {
-        Alert.alert("Upload failed", upload.error);
+        showError(upload.error);
         setPhotoUri(null);
       } else {
         setPhotoUrl(upload.url);
       }
     } catch {
-      Alert.alert("Upload failed", "Please try again.");
+      showError("Upload failed. Please try again.");
       setPhotoUri(null);
     } finally {
       setPhotoUploading(false);
     }
-  }, []);
+  }, [showError]);
 
   const handlePickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Gallery access needed", "Allow gallery access to choose a photo.");
+      showError("Allow gallery access to choose a photo.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -179,32 +181,32 @@ export default function TaskCompleteScreen() {
       const contentType = asset.uri.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
       const upload = await uploadProofImageFromBase64(asset.base64 ?? "", contentType);
       if ("error" in upload) {
-        Alert.alert("Upload failed", upload.error);
+        showError(upload.error);
         setPhotoUri(null);
       } else {
         setPhotoUrl(upload.url);
       }
     } catch {
-      Alert.alert("Upload failed", "Please try again.");
+      showError("Upload failed. Please try again.");
       setPhotoUri(null);
     } finally {
       setPhotoUploading(false);
     }
-  }, []);
+  }, [showError]);
 
   const handleCheckLocation = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Location needed", "Allow location access to verify you are at the required location.");
+      showError("Allow location access to verify you are at the required location.");
       return;
     }
     try {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
     } catch {
-      Alert.alert("Error", "Could not get your location. Please try again.");
+      showError("Could not get your location. Please try again.");
     }
-  }, []);
+  }, [showError]);
 
   const wordCount = useMemo(() => journalText.trim().split(/\s+/).filter(Boolean).length, [journalText]);
   const minWords = config.min_words ?? 0;
@@ -252,11 +254,11 @@ export default function TaskCompleteScreen() {
       setCompletionId(id ?? null);
       setSubmitted(true);
     } catch (err: unknown) {
-      Alert.alert("Could not complete", err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [activeChallengeId, taskId, canSubmit, completeTask, taskType, journalText, timerSeconds, photoUrl, heartRateData, userLocation, isHardMode]);
+  }, [activeChallengeId, taskId, canSubmit, completeTask, taskType, journalText, timerSeconds, photoUrl, heartRateData, userLocation, isHardMode, showError]);
 
   const handleShare = useCallback(async () => {
     setShareLoading(true);
@@ -346,6 +348,7 @@ export default function TaskCompleteScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
       <Stack.Screen options={{ title: taskName, headerBackVisible: true }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+        <InlineError message={error} onDismiss={clearError} />
         <Text style={styles.title}>{taskName}</Text>
         {params.taskDescription ? <Text style={styles.subtitle}>{params.taskDescription}</Text> : null}
 
@@ -469,7 +472,7 @@ export default function TaskCompleteScreen() {
                   onPress={() => {
                     const avg = parseInt(heartRateManual.trim(), 10);
                     if (Number.isNaN(avg) || avg < 0) {
-                      Alert.alert("Invalid", "Enter a valid heart rate (e.g. 120)");
+                      showError("Enter a valid heart rate (e.g. 120)");
                       return;
                     }
                     setHeartRateData({ avg, peak: avg + Math.floor(avg * 0.1) });

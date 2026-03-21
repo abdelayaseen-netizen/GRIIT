@@ -243,13 +243,27 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
         {!showEmailForm ? (
           <>
             {Platform.OS === 'ios' && appleAuthAvailable && (
-              <Pressable style={styles.socialButton} onPress={handleAppleSignUp} disabled={loading}>
+              <Pressable
+                style={styles.socialButton}
+                onPress={handleAppleSignUp}
+                disabled={loading}
+                accessibilityLabel="Continue with Apple"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loading }}
+              >
                 <Text style={styles.socialIcon}>🍎</Text>
                 <Text style={styles.socialButtonText}>Continue with Apple</Text>
               </Pressable>
             )}
 
-            <Pressable style={styles.socialButton} onPress={handleGoogleSignUp} disabled={loading}>
+            <Pressable
+              style={styles.socialButton}
+              onPress={handleGoogleSignUp}
+              disabled={loading}
+              accessibilityLabel="Continue with Google"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading }}
+            >
               <Text style={styles.socialIcon}>G</Text>
               <Text style={styles.socialButtonText}>Continue with Google</Text>
             </Pressable>
@@ -260,7 +274,12 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
               <View style={styles.dividerLine} />
             </View>
 
-            <Pressable style={styles.emailButton} onPress={() => { setShowEmailForm(true); setError(''); }}>
+            <Pressable
+              style={styles.emailButton}
+              onPress={() => { setShowEmailForm(true); setError(''); }}
+              accessibilityLabel="Sign up with email"
+              accessibilityRole="button"
+            >
               <Text style={styles.emailButtonText}>Sign up with email</Text>
             </Pressable>
           </>
@@ -275,6 +294,8 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              accessibilityLabel="Email"
+              accessibilityRole="text"
             />
             <TextInput
               style={styles.input}
@@ -283,6 +304,8 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
               value={password}
               onChangeText={(t) => { setPassword(t); setError(''); }}
               secureTextEntry
+              accessibilityLabel="Password"
+              accessibilityRole="text"
             />
             <TextInput
               style={styles.input}
@@ -292,6 +315,8 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
               onChangeText={(t) => { setUsername(sanitizeUsername(t)); setError(''); }}
               autoCapitalize="none"
               autoCorrect={false}
+              accessibilityLabel="Username"
+              accessibilityRole="text"
             />
             <TextInput
               style={styles.input}
@@ -299,15 +324,28 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
               placeholderTextColor={C.textTertiary}
               value={displayName}
               onChangeText={(t) => { setDisplayName(t); setError(''); }}
+              accessibilityLabel="Display name"
+              accessibilityRole="text"
             />
-            <Pressable style={styles.primaryButton} onPress={handleEmailSignUp} disabled={loading}>
+            <Pressable
+              style={styles.primaryButton}
+              onPress={handleEmailSignUp}
+              disabled={loading}
+              accessibilityLabel="Create account"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading }}
+            >
               {loading ? (
                 <ActivityIndicator color={C.WHITE} />
               ) : (
                 <Text style={styles.primaryButtonText}>Create account</Text>
               )}
             </Pressable>
-            <Pressable onPress={() => { setShowEmailForm(false); setError(''); }}>
+            <Pressable
+              onPress={() => { setShowEmailForm(false); setError(''); }}
+              accessibilityLabel="Back to other sign up options"
+              accessibilityRole="button"
+            >
               <Text style={styles.backToSocial}>← Back to other options</Text>
             </Pressable>
           </>

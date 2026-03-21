@@ -70,6 +70,8 @@ import {
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PremiumPaywallModal } from "@/components/PremiumPaywallModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 type TaskType = "journal" | "timer" | "run" | "simple" | "checkin" | "photo";
 type TrackingMode = "distance" | "time";
@@ -321,6 +323,7 @@ export default function CreateScreen() {
   const [showPaywallAfterCreate, setShowPaywallAfterCreate] = useState(false);
   const paywallThenNavigateRef = useRef<{ params: Record<string, string> } | null>(null);
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { error, showError, clearError } = useInlineError();
 
   const clearWatchdog = useCallback(() => {
     if (watchdogRef.current) {
@@ -398,32 +401,32 @@ export default function CreateScreen() {
     }
     const validation = validateTasks();
     if (!validation.valid) {
-      Alert.alert("Invalid goal", validation.error || "Please fix goal configuration");
+      showError(validation.error || "Please fix goal configuration");
       return;
     }
     if (!title.trim()) {
-      Alert.alert("Missing Title", "Please enter a challenge title");
+      showError("Please enter a challenge title");
       return;
     }
     if (participationType !== "shared_goal" && getDuration() <= 0) {
-      Alert.alert("Invalid Duration", "Please select a valid duration");
+      showError("Please select a valid duration");
       return;
     }
     if (participationType === "shared_goal") {
       const target = parseInt(sharedGoalTarget, 10);
       if (!sharedGoalUnit.trim() || !Number.isFinite(target) || target <= 0) {
-        Alert.alert("Invalid Goal", "Enter a positive target and unit (e.g. 100 miles)");
+        showError("Enter a positive target and unit (e.g. 100 miles)");
         return;
       }
       if (deadlineType === "hard" && deadlineDate.trim()) {
         const today = new Date().toISOString().slice(0, 10);
         if (deadlineDate.trim() < today) {
-          Alert.alert("Invalid Deadline", "Hard deadline must be in the future");
+          showError("Hard deadline must be in the future");
           return;
         }
       }
     } else if (tasks.length === 0) {
-      Alert.alert("No goals", "Add at least one goal to your challenge");
+      showError("Add at least one goal to your challenge");
       return;
     }
     setSubmitStatus('submitting');
@@ -534,20 +537,17 @@ export default function CreateScreen() {
           setRecoveryMessage('Cannot reach server. The backend may be starting up.');
           setShowRecoveryModal(true);
         } else {
-          const title = errorInfo.title || "Couldn't create challenge";
           let message = errorInfo.message || "Something went wrong. Please check your input and try again.";
           if (typeof message === "string" && (message.startsWith("{") || message.startsWith("["))) {
             message = "Something went wrong. Please check your input and try again.";
           }
-          Alert.alert(title, message, [
-            { text: "OK", style: "cancel" as const },
-          ]);
+          showError(message);
         }
       })
       .finally(() => {
         createMutationPendingRef.current = false;
       });
-  }, [submitStatus, title, description, challengeType, durationDays, customDuration, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, participationType, teamSize, sharedGoalTarget, sharedGoalUnit, deadlineType, deadlineDate, isTeamOrShared, startWatchdog, clearWatchdog, getDuration, validateTasks, router, isGuest, showGate]);
+  }, [submitStatus, title, description, challengeType, durationDays, customDuration, categories, tasks, liveDate, replayPolicy, requireSameRules, showReplayLabel, visibility, participationType, teamSize, sharedGoalTarget, sharedGoalUnit, deadlineType, deadlineDate, isTeamOrShared, startWatchdog, clearWatchdog, getDuration, validateTasks, router, isGuest, showGate, showError]);
 
   const handleRetryFromModal = useCallback(async () => {
     setShowRecoveryModal(false);
@@ -579,11 +579,11 @@ export default function CreateScreen() {
 
   const handleNext = () => {
     if (step === 1 && !canProceedStep1) {
-      Alert.alert("Missing Info", "Please add a title and duration");
+      showError("Please add a title and duration");
       return;
     }
     if (step === 2 && !canProceedStep2) {
-      Alert.alert("Add goals", "Add at least one daily goal");
+      showError("Add at least one daily goal");
       return;
     }
     animateStep("next");
@@ -1222,6 +1222,7 @@ export default function CreateScreen() {
         </View>
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <InlineError message={error} onDismiss={clearError} />
           {step === 1 && renderStep1()}
           {step === 2 && renderStep2()}
           {step === 3 && renderStep3()}

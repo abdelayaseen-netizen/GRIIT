@@ -130,7 +130,13 @@ export default function DiscoverScreen() {
           <View style={styles.v3Header}>
             <View style={styles.v3HeaderRow}>
               <Text style={styles.v3Title}>Discover</Text>
-              <TouchableOpacity style={styles.v3SearchBtn} onPress={() => setSearchOpen((v) => !v)} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={styles.v3SearchBtn}
+                onPress={() => setSearchOpen((v) => !v)}
+                activeOpacity={0.8}
+                accessibilityLabel={searchOpen ? "Close search" : "Open search"}
+                accessibilityRole="button"
+              >
                 <Search size={15} color="#888" />
               </TouchableOpacity>
             </View>
@@ -141,7 +147,9 @@ export default function DiscoverScreen() {
             <View style={styles.v3SearchInlineWrap}>
               <View style={styles.v3SearchInline}>
                 <Text style={styles.v3SearchLabel}>Search: </Text>
-                <TouchableOpacity onPress={() => setQuery("")}><Text style={styles.v3SearchClear}>Clear</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => setQuery("")} accessibilityLabel="Clear search" accessibilityRole="button">
+                  <Text style={styles.v3SearchClear}>Clear</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ) : null}
@@ -199,7 +207,13 @@ export default function DiscoverScreen() {
 
           <View style={styles.v3SectionHeaderBetween}>
             <Text style={styles.v3SectionTitle}>Challenges for you</Text>
-            <TouchableOpacity onPress={() => setActiveCategory("all")}><Text style={styles.v3SeeAll}>See all</Text></TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setActiveCategory("all")}
+              accessibilityLabel="Show all challenge categories"
+              accessibilityRole="button"
+            >
+              <Text style={styles.v3SeeAll}>See all</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.v3PopularWrap}>
             {popular.map((c, i) => (

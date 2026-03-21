@@ -75,7 +75,12 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
       </View>
 
       <Animated.View style={[styles.ctaContainer, { opacity: fadeButton }]}>
-        <Pressable style={styles.primaryButton} onPress={() => { track({ name: 'onboarding_started' }); onContinue(); }}>
+        <Pressable
+          style={styles.primaryButton}
+          onPress={() => { track({ name: 'onboarding_started' }); onContinue(); }}
+          accessibilityLabel="Continue onboarding"
+          accessibilityRole="button"
+        >
           <Text style={styles.primaryButtonText}>Continue &gt;</Text>
         </Pressable>
         <Text style={styles.footerText}>

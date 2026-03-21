@@ -19,6 +19,7 @@ import { CommunityHeader, type CommunityFilter } from "@/components/community/Co
 import { Leaderboard, type CommunityLeaderboardEntry } from "@/components/community/Leaderboard";
 import { LiveActivity, type LiveActivityItem } from "@/components/community/LiveActivity";
 import { YourStats } from "@/components/community/YourStats";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 interface FeedEventItem {
   id: string;
@@ -77,7 +78,7 @@ function FriendStreakCard({ username }: { username: string }) {
       accessibilityLabel="Start a friend streak"
     >
       <View style={styles.friendIconBox}>
-        <Users size={16} color="#E8593C" />
+        <Users size={16} color={DS_COLORS.DISCOVER_CORAL} />
       </View>
       <View style={styles.friendBody}>
         <Text style={styles.friendTitle}>Start a friend streak</Text>
@@ -85,7 +86,7 @@ function FriendStreakCard({ username }: { username: string }) {
           Invite a friend. Both check in daily. Don&apos;t break the chain.
         </Text>
       </View>
-      <ChevronRight size={14} color="#CCC" />
+      <ChevronRight size={14} color={DS_COLORS.TAB_INACTIVE} />
     </TouchableOpacity>
   );
 }
@@ -169,7 +170,7 @@ export default function CommunityScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor="#E8593C" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={DS_COLORS.ACCENT} />
         }
       >
         <CommunityHeader selectedFilter={filter} onSelectFilter={setFilter} />
@@ -191,7 +192,7 @@ export default function CommunityScreen() {
           activeChallenges={activeChallengesQuery.data ?? 0}
         />
 
-        <FriendStreakCard username={(currentUser?.name ?? "grit-user").replace(/\s+/g, ".").toLowerCase()} />
+        <FriendStreakCard username={(currentUser?.name ?? "griit-user").replace(/\s+/g, ".").toLowerCase()} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -200,25 +201,25 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#FAF8F5",
+    backgroundColor: DS_COLORS.FALLBACK_BG,
   },
   content: {
     paddingBottom: 40,
   },
   friendCard: {
-    marginHorizontal: 24,
-    backgroundColor: "#F9F6F1",
-    borderRadius: 16,
-    padding: 16,
+    marginHorizontal: DS_SPACING.xl,
+    backgroundColor: DS_COLORS.chipFill,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.lg,
     marginTop: 18,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: DS_SPACING.md,
   },
   friendIconBox: {
     width: 36,
     height: 36,
-    backgroundColor: "#fff",
+    backgroundColor: DS_COLORS.WHITE,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
@@ -227,13 +228,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   friendTitle: {
-    fontSize: 13,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.TEXT_PRIMARY,
   },
   friendSubtitle: {
-    fontSize: 11,
-    color: "#999",
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    color: DS_COLORS.TEXT_MUTED,
     marginTop: 2,
     lineHeight: 15,
   },

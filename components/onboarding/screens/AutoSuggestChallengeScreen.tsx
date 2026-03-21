@@ -116,6 +116,9 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
             style={[styles.primaryButton, joiningId !== null && styles.primaryButtonDisabled]}
             onPress={() => handleJoin(suggested.id)}
             disabled={joiningId !== null}
+            accessibilityLabel={`Join suggested challenge: ${suggested.title ?? "Challenge"}`}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: joiningId !== null }}
           >
             {joiningId === suggested.id ? (
               <ActivityIndicator color={C.WHITE} />
@@ -127,14 +130,24 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
       ) : (
         <View style={styles.empty}>
           <Text style={styles.emptyText}>No starter challenges right now.</Text>
-          <Pressable style={styles.secondaryButton} onPress={handleBrowseMore}>
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={handleBrowseMore}
+            accessibilityLabel="Browse challenges"
+            accessibilityRole="button"
+          >
             <Text style={styles.secondaryButtonText}>Browse challenges</Text>
           </Pressable>
         </View>
       )}
 
       {suggested && (
-        <Pressable style={styles.browseLink} onPress={handleBrowseMore}>
+        <Pressable
+          style={styles.browseLink}
+          onPress={handleBrowseMore}
+          accessibilityLabel="Browse more challenges"
+          accessibilityRole="link"
+        >
           <Text style={styles.browseLinkText}>Browse more challenges →</Text>
         </Pressable>
       )}
@@ -142,7 +155,12 @@ export default function AutoSuggestChallengeScreen({ onJoinComplete, onBrowseMor
       {error ? (
         <View style={styles.errorBlock}>
           <Text style={styles.errorText}>{error}</Text>
-          <Pressable style={styles.skipButton} onPress={handleBrowseMore}>
+          <Pressable
+            style={styles.skipButton}
+            onPress={handleBrowseMore}
+            accessibilityLabel="Continue without joining suggested challenge"
+            accessibilityRole="button"
+          >
             <Text style={styles.skipButtonText}>Continue anyway</Text>
           </Pressable>
         </View>

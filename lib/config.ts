@@ -13,6 +13,7 @@ export { DEEP_LINK_BASE_URL };
 const APP_STORE_SEARCH_FALLBACK = "https://apps.apple.com/us/search?term=GRIIT";
 
 /** Play Store URL; use env override if package changes. */
+// NOTE: Bundle ID uses "grit" (single I) for App Store continuity. Brand name is GRIIT (double I).
 const PLAY_STORE_PACKAGE = (typeof process !== "undefined" && (process.env as Record<string, string | undefined>)?.EXPO_PUBLIC_PLAY_STORE_PACKAGE) || "app.grit.challenge_tracker";
 
 /** App Store / Play Store URLs for share flows. Set EXPO_PUBLIC_APPLE_APP_ID when live. */

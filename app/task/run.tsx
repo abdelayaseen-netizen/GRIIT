@@ -34,6 +34,8 @@ import { RunMode } from "@/types";
 import { styles } from "@/styles/run-styles";
 import Celebration from "@/components/Celebration";
 import { useCelebration } from "@/hooks/useCelebration";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 interface GpsPoint {
   lat: number;
@@ -48,6 +50,7 @@ export default function RunTaskScreen() {
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
   const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();
+  const { error, showError, clearError } = useInlineError();
   
   const task = currentChallenge?.tasks.find((t: { id: string }) => t.id === taskId);
   const taskState = taskId ? getTaskStateForTemplate(taskId) : null;
@@ -105,11 +108,7 @@ export default function RunTaskScreen() {
           timerRef.current = null;
         }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        Alert.alert(
-          "Timer Failed",
-          "You left the app during the timer session. This counts as a violation.",
-          [{ text: "OK" }]
-        );
+        showError("You left the app during the timer session. This counts as a violation.");
       }
       appStateRef.current = nextAppState;
     };
@@ -121,7 +120,7 @@ export default function RunTaskScreen() {
       if (locationSubscription.current) locationSubscription.current.remove();
       subscription.remove();
     };
-  }, [runMode, timerRunning]);
+  }, [runMode, timerRunning, showError]);
 
   const checkPermissions = async () => {
     if (Platform.OS === "web") {
@@ -133,10 +132,7 @@ export default function RunTaskScreen() {
     setHasPermission(status === "granted");
     
     if (status !== "granted") {
-      Alert.alert(
-        "Location Required",
-        "GPS tracking requires location permission to verify your run."
-      );
+      showError("GPS tracking requires location permission to verify your run.");
     }
   };
 
@@ -274,10 +270,7 @@ export default function RunTaskScreen() {
 
   const startTreadmillTimer = () => {
     if (backgroundViolation) {
-      Alert.alert(
-        "Session Failed",
-        "You already violated the timer session by leaving the app. Reset to try again."
-      );
+      showError("You already violated the timer session by leaving the app. Reset to try again.");
       return;
     }
 
@@ -306,10 +299,9 @@ export default function RunTaskScreen() {
     if (timerSeconds >= minTimerSeconds && !backgroundViolation) {
       setTreadmillStep("proof");
     } else if (backgroundViolation) {
-      Alert.alert("Timer Failed", "Session was interrupted. Reset to try again.");
+      showError("Session was interrupted. Reset to try again.");
     } else {
-      Alert.alert(
-        "Timer Too Short",
+      showError(
         `You need at least ${Math.floor(minTimerSeconds / 60)} minutes. You completed ${Math.floor(timerSeconds / 60)} minutes.`
       );
     }
@@ -319,7 +311,7 @@ export default function RunTaskScreen() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Camera permission is needed to capture proof.");
+      showError("Camera permission is needed to capture proof.");
       return;
     }
 
@@ -339,12 +331,12 @@ export default function RunTaskScreen() {
   const handleVerifyGps = async () => {
     if (!isGpsComplete) {
       const remaining = (minDistanceMiles - distanceMiles).toFixed(2);
-      Alert.alert("Distance Not Met", `Complete ${remaining} more miles to verify.`);
+      showError(`Complete ${remaining} more miles to verify.`);
       return;
     }
 
     if (isTracking) {
-      Alert.alert("Stop Tracking", "Stop tracking before verifying.");
+      showError("Stop tracking before verifying.");
       return;
     }
 
@@ -364,32 +356,29 @@ export default function RunTaskScreen() {
           router.back();
         }, 1000);
       } else {
-        Alert.alert("Verification Failed", result.failureReason || "Unknown error");
+        showError(result.failureReason || "Verification failed.");
       }
     }
   };
 
   const handleVerifyTreadmill = async () => {
     if (!isTreadmillTimerComplete) {
-      Alert.alert("Timer Incomplete", "Complete the timer session first.");
+      showError("Complete the timer session first.");
       return;
     }
 
     if (backgroundViolation) {
-      Alert.alert("Session Invalid", "Timer was interrupted. Reset to try again.");
+      showError("Timer was interrupted. Reset to try again.");
       return;
     }
 
     if (!proofUri) {
-      Alert.alert("Proof Required", "Capture photo proof of your treadmill screen.");
+      showError("Capture photo proof of your treadmill screen.");
       return;
     }
 
     if (!isTreadmillDistanceValid) {
-      Alert.alert(
-        "Distance Not Met",
-        `Enter at least ${minDistanceMiles} mile${minDistanceMiles !== 1 ? "s" : ""}.`
-      );
+      showError(`Enter at least ${minDistanceMiles} mile${minDistanceMiles !== 1 ? "s" : ""}.`);
       return;
     }
 
@@ -416,7 +405,7 @@ export default function RunTaskScreen() {
           router.back();
         }, 1000);
       } else {
-        Alert.alert("Verification Failed", result.failureReason || "Unknown error");
+        showError(result.failureReason || "Verification failed.");
       }
     }
   };
@@ -454,6 +443,7 @@ export default function RunTaskScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <InlineError message={error} onDismiss={clearError} />
           <Text style={styles.title}>{task?.title || "Run"}</Text>
           <Text style={styles.subtitle}>
             {runMode === "outdoor_gps" ? "GPS tracked distance" : "Timer + photo proof"}

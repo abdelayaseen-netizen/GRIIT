@@ -198,6 +198,7 @@ export default function LoginScreen() {
             onSubmitEditing={() => passwordRef.current?.focus()}
             editable={!loading}
             accessibilityLabel="Email"
+            accessibilityRole="text"
           />
 
           <View style={[styles.passwordWrap, { borderColor: inputBorder("password") }]}>
@@ -215,6 +216,7 @@ export default function LoginScreen() {
               onSubmitEditing={() => canSubmit && handleSignIn()}
               editable={!loading}
               accessibilityLabel="Password"
+              accessibilityRole="text"
             />
             <TouchableOpacity
               onPress={() => setShowPassword((p) => !p)}

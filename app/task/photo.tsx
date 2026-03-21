@@ -8,6 +8,8 @@ import * as ImagePicker from "expo-image-picker";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 const PICKER_OPTIONS = {
   allowsEditing: true,
@@ -24,11 +26,12 @@ export default function PhotoTaskScreen() {
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [uploading, setUploading] = useState<boolean>(false);
+  const { error, showError, clearError } = useInlineError();
 
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Camera permission is required to take photos");
+      showError("Camera permission is required to take photos");
       return;
     }
     const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
@@ -43,7 +46,7 @@ export default function PhotoTaskScreen() {
   const handlePickFromGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Gallery access is required to upload a photo");
+      showError("Gallery access is required to upload a photo");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -60,15 +63,15 @@ export default function PhotoTaskScreen() {
 
   const handleSubmit = async () => {
     if (!photoUri) {
-      Alert.alert("Error", "Please take or upload a photo first");
+      showError("Please take or upload a photo first");
       return;
     }
     if (!activeChallenge) {
-      Alert.alert("Error", "No active challenge found");
+      showError("No active challenge found");
       return;
     }
     if (!taskId) {
-      Alert.alert("Error", "Task not found");
+      showError("Task not found");
       return;
     }
 
@@ -80,7 +83,7 @@ export default function PhotoTaskScreen() {
         const contentType = photoUri.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
         const result = await uploadProofImageFromBase64(photoBase64, contentType);
         if ("error" in result) {
-          Alert.alert("Upload failed", result.error);
+          showError(result.error);
           return;
         }
         proofUrl = result.url;
@@ -88,7 +91,7 @@ export default function PhotoTaskScreen() {
         const { uploadProofImageFromUri } = await import("@/lib/uploadProofImage");
         const result = await uploadProofImageFromUri(photoUri);
         if ("error" in result) {
-          Alert.alert("Upload failed", result.error);
+          showError(result.error);
           return;
         }
         proofUrl = result.url;
@@ -110,7 +113,7 @@ export default function PhotoTaskScreen() {
         ]);
       }
     } catch (error: unknown) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      showError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
       setUploading(false);
@@ -120,6 +123,7 @@ export default function PhotoTaskScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>
+        <InlineError message={error} onDismiss={clearError} />
         {photoUri ? (
           <View style={styles.previewContainer}>
             <Image source={{ uri: photoUri }} style={styles.preview} />

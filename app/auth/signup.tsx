@@ -254,6 +254,8 @@ export default function SignupScreen() {
               returnKeyType="next"
               onSubmitEditing={() => usernameRef.current?.focus()}
               editable={!loading}
+              accessibilityLabel="Display name"
+              accessibilityRole="text"
             />
             {touched.displayName && displayNameInvalid && (
               <Text style={styles.inlineError}>Name must be at least 2 characters</Text>
@@ -277,6 +279,8 @@ export default function SignupScreen() {
               returnKeyType="next"
               onSubmitEditing={() => emailRef.current?.focus()}
               editable={!loading}
+              accessibilityLabel="Username"
+              accessibilityRole="text"
             />
             {username.length > 0 && (
               <View style={styles.usernameHint}>
@@ -314,6 +318,8 @@ export default function SignupScreen() {
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()}
               editable={!loading}
+              accessibilityLabel="Email"
+              accessibilityRole="text"
             />
             {touched.email && emailInvalid && (
               <Text style={styles.inlineError}>Enter a valid email address</Text>
@@ -335,10 +341,14 @@ export default function SignupScreen() {
                 returnKeyType="go"
                 onSubmitEditing={() => canSubmit && handleSignup()}
                 editable={!loading}
+                accessibilityLabel="Password"
+                accessibilityRole="text"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword((p) => !p)}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
                   <EyeOff size={22} color={DS_COLORS.textSecondary} />
@@ -388,6 +398,9 @@ export default function SignupScreen() {
               disabled={!canSubmit}
               activeOpacity={0.8}
               testID="signup-button"
+              accessibilityLabel="Create account"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canSubmit }}
             >
               {loading ? (
                 <ActivityIndicator color={DS_COLORS.white} size="small" />
@@ -401,6 +414,9 @@ export default function SignupScreen() {
               <TouchableOpacity
                 onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)}
                 disabled={loading}
+                accessibilityLabel="Log in"
+                accessibilityRole="link"
+                accessibilityState={{ disabled: loading }}
               >
                 <Text style={styles.footerLink}>Log in</Text>
               </TouchableOpacity>
@@ -408,11 +424,19 @@ export default function SignupScreen() {
 
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", marginTop: 8 }}>
               <Text style={styles.termsText}>By creating an account you agree to our </Text>
-              <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
+              <TouchableOpacity
+                onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}
+                accessibilityLabel="Terms of Service"
+                accessibilityRole="link"
+              >
                 <Text style={[styles.termsText, styles.termsLink]}>Terms of Service</Text>
               </TouchableOpacity>
               <Text style={styles.termsText}> and </Text>
-              <TouchableOpacity onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
+              <TouchableOpacity
+                onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}
+                accessibilityLabel="Privacy Policy"
+                accessibilityRole="link"
+              >
                 <Text style={[styles.termsText, styles.termsLink]}>Privacy Policy</Text>
               </TouchableOpacity>
               <Text style={styles.termsText}>.</Text>

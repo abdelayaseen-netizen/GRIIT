@@ -17,6 +17,7 @@ import WeekStrip from "@/components/home/WeekStrip";
 import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeed from "@/components/home/LiveFeed";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 type TaskRow = { id: string; title?: string; type?: string; required?: boolean };
 type ActiveRow = {
@@ -142,7 +143,13 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={s.container}>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={homeQuery.isRefetching} onRefresh={refresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={homeQuery.isRefetching}
+            onRefresh={refresh}
+            tintColor={DS_COLORS.ACCENT}
+          />
+        }
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
@@ -152,8 +159,14 @@ export default function HomeScreen() {
             <Text style={s.word}>GRIIT</Text>
           </View>
           <View style={s.pills}>
-            <View style={[s.pill, streak > 0 && s.pillWarm]}><Flame size={13} color="#E8593C" /><Text style={s.pillText}>{streak}</Text></View>
-            <View style={[s.pill, points > 0 && s.pillPurple]}><Zap size={13} color="#5B7FD4" /><Text style={s.pillText}>{points}</Text></View>
+            <View style={[s.pill, streak > 0 && s.pillWarm]}>
+              <Flame size={13} color={DS_COLORS.DISCOVER_CORAL} />
+              <Text style={s.pillText}>{streak}</Text>
+            </View>
+            <View style={[s.pill, points > 0 && s.pillPurple]}>
+              <Zap size={13} color={DS_COLORS.DISCOVER_BLUE} />
+              <Text style={s.pillText}>{points}</Text>
+            </View>
           </View>
         </View>
 
@@ -175,17 +188,23 @@ export default function HomeScreen() {
 
         <View style={s.statsRow}>
           <View style={s.stat}>
-            <View style={[s.statIconWrap, { backgroundColor: "#FFF3ED" }]}><Flame size={16} color="#E8593C" /></View>
+            <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
+              <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
+            </View>
             <Text style={s.statValue}>{streak}</Text>
             <Text style={s.statLabel}>streak</Text>
           </View>
           <View style={s.stat}>
-            <View style={[s.statIconWrap, { backgroundColor: "#EDE8FF" }]}><Zap size={16} color="#7C5FD4" /></View>
+            <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
+              <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
+            </View>
             <Text style={s.statValue}>{points}</Text>
             <Text style={s.statLabel}>points</Text>
           </View>
           <View style={s.stat}>
-            <View style={[s.statIconWrap, { backgroundColor: "#E8F5E9" }]}><Target size={16} color="#2E7D32" /></View>
+            <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
+              <Target size={16} color={DS_COLORS.GREEN} />
+            </View>
             <Text style={s.rankValue}>{rank}</Text>
             <Text style={s.statLabel}>rank</Text>
           </View>
@@ -199,20 +218,68 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F5F5" },
-  headerRow: { paddingHorizontal: 24, paddingTop: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  header: { paddingHorizontal: 24, paddingTop: 12 },
-  greeting: { fontSize: 13, color: "#999" },
-  word: { marginTop: 2, fontSize: 20, fontWeight: "700", color: "#1A1A1A", letterSpacing: -0.3 },
+  container: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  headerRow: {
+    paddingHorizontal: DS_SPACING.xl,
+    paddingTop: DS_SPACING.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  header: { paddingHorizontal: DS_SPACING.xl, paddingTop: DS_SPACING.md },
+  greeting: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED },
+  word: {
+    marginTop: 2,
+    fontSize: DS_TYPOGRAPHY.SIZE_LG,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+    letterSpacing: -0.3,
+  },
   pills: { flexDirection: "row", gap: 6 },
-  pill: { backgroundColor: "#fff", paddingVertical: 5, paddingHorizontal: 10, borderRadius: 16, flexDirection: "row", alignItems: "center", gap: 5 },
-  pillWarm: { backgroundColor: "#FFF3ED" },
-  pillPurple: { backgroundColor: "#EDE8FF" },
-  pillText: { fontSize: 12, fontWeight: "700", color: "#1A1A1A" },
-  statsRow: { marginTop: 12, marginHorizontal: 24, flexDirection: "row", gap: 8 },
-  stat: { flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 12, alignItems: "center" },
-  statIconWrap: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", marginBottom: 8 },
-  statValue: { fontSize: 20, fontWeight: "700", color: "#1A1A1A" },
-  rankValue: { fontSize: 14, fontWeight: "700", color: "#1A1A1A", marginTop: 3 },
-  statLabel: { marginTop: 2, fontSize: 10, color: "#999", textTransform: "uppercase", letterSpacing: 0.5 },
+  pill: {
+    backgroundColor: DS_COLORS.WHITE,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: DS_SPACING.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  pillWarm: { backgroundColor: DS_COLORS.ACCENT_TINT },
+  pillPurple: { backgroundColor: DS_COLORS.purpleTintWarm },
+  pillText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  statsRow: { marginTop: DS_SPACING.md, marginHorizontal: DS_SPACING.xl, flexDirection: "row", gap: DS_SPACING.sm },
+  stat: {
+    flex: 1,
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: 14,
+    padding: DS_SPACING.md,
+    alignItems: "center",
+  },
+  statIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: DS_SPACING.sm,
+  },
+  statValue: {
+    fontSize: DS_TYPOGRAPHY.SIZE_XL,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  rankValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginTop: 3,
+  },
+  statLabel: {
+    marginTop: 2,
+    fontSize: 10,
+    color: DS_COLORS.TEXT_MUTED,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
 });

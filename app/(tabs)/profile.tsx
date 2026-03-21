@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Share } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -35,6 +35,7 @@ function formatJoinDate(value?: string | null): string {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const { profile, profileLoading, profileMissing, isError, stats, refetchAll } = useApp();
@@ -98,13 +99,14 @@ export default function ProfileScreen() {
         onPress: async () => {
           await cancelLapsedUserReminders();
           await supabase.auth.signOut();
+          queryClient.clear();
           const { clearOnboardingStorage } = await import("@/store/onboardingStore");
           await clearOnboardingStorage();
           router.replace(ROUTES.AUTH as never);
         },
       },
     ]);
-  }, [router]);
+  }, [router, queryClient]);
 
   if (isGuest) {
     return (

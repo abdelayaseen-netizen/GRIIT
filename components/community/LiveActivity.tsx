@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Flame } from "lucide-react-native";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 export interface LiveActivityItem {
   id: string;
@@ -14,10 +15,16 @@ export interface LiveActivityItem {
   createdAt: string;
 }
 
-const AVATAR_COLORS = ["#E8593C", "#5B7FD4", "#4CAF50", "#FF9800", "#9C27B0"];
+const AVATAR_COLORS = [
+  DS_COLORS.DISCOVER_CORAL,
+  DS_COLORS.DISCOVER_BLUE,
+  DS_COLORS.DISCOVER_GREEN,
+  DS_COLORS.WARNING,
+  DS_COLORS.CATEGORY_MIND,
+] as const;
 
 function avatarColorByIndex(index: number): string {
-  return AVATAR_COLORS[index % AVATAR_COLORS.length] ?? "#E8593C";
+  return AVATAR_COLORS[index % AVATAR_COLORS.length] ?? DS_COLORS.DISCOVER_CORAL;
 }
 
 function buildLine(item: LiveActivityItem): string {
@@ -76,7 +83,7 @@ export function LiveActivity({ items }: { items: LiveActivityItem[] }) {
                   accessibilityRole="button"
                   accessibilityLabel={`Give kudos to ${seed}`}
                 >
-                  <Flame size={12} color={isLiked ? "#E8593C" : "#D9D5CC"} />
+                  <Flame size={12} color={isLiked ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.BORDER} />
                 </TouchableOpacity>
               </View>
             );
@@ -89,7 +96,7 @@ export function LiveActivity({ items }: { items: LiveActivityItem[] }) {
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    paddingHorizontal: 24,
+    paddingHorizontal: DS_SPACING.xl,
     marginTop: 18,
     marginBottom: 10,
     flexDirection: "row",
@@ -99,27 +106,27 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: DS_SPACING.sm,
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: DS_COLORS.TEXT_PRIMARY,
   },
   headerRight: {
-    fontSize: 11,
-    color: "#999",
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    color: DS_COLORS.TEXT_MUTED,
   },
   card: {
-    marginHorizontal: 24,
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    marginHorizontal: DS_SPACING.xl,
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.card,
     overflow: "hidden",
   },
   row: {
@@ -130,7 +137,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderBottomWidth: 0.5,
-    borderBottomColor: "#F5F2EB",
+    borderBottomColor: DS_COLORS.chipFill,
   },
   avatar: {
     width: 32,
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarInitial: {
-    color: "#fff",
+    color: DS_COLORS.TEXT_ON_DARK,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -148,30 +155,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   line: {
-    fontSize: 13,
-    color: "#1A1A1A",
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_PRIMARY,
     fontWeight: "600",
   },
   time: {
     fontSize: 10,
-    color: "#BBB",
+    color: DS_COLORS.grayMuted,
     marginTop: 2,
   },
   kudosBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F9F6F1",
+    backgroundColor: DS_COLORS.chipFill,
     alignItems: "center",
     justifyContent: "center",
   },
   kudosBtnLiked: {
-    backgroundColor: "#FFF3ED",
+    backgroundColor: DS_COLORS.ACCENT_TINT,
   },
   emptyText: {
     fontSize: 12,
-    color: "#999",
+    color: DS_COLORS.TEXT_MUTED,
     textAlign: "center",
-    padding: 24,
+    padding: DS_SPACING.xl,
   },
 });

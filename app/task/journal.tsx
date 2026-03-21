@@ -36,6 +36,8 @@ import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
 import type { MoodLevel, BodyState, JournalCategory } from "@/types";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 const JOURNAL_CATEGORY_LABELS: Record<JournalCategory, string> = {
   self_reflection: "Self-reflection",
@@ -107,6 +109,7 @@ export default function JournalTaskScreen() {
   const successScale = useRef(new Animated.Value(0)).current;
   const confettiOpacity = useRef(new Animated.Value(0)).current;
   const draftTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { error, showError, clearError } = useInlineError();
 
   const draftKey = `${DRAFT_KEY_PREFIX}${taskId || "default"}`;
 
@@ -166,7 +169,7 @@ export default function JournalTaskScreen() {
   const handleTakePhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Camera permission is required to add photo proof");
+      showError("Camera permission is required to add photo proof");
       return;
     }
     const result = await ImagePicker.launchCameraAsync(pickerOptions);
@@ -177,12 +180,12 @@ export default function JournalTaskScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- pickerOptions is a stable config object; adding would recreate callback every render
-  }, []);
+  }, [showError]);
 
   const handlePickFromGallery = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Gallery access is required to add photo proof");
+      showError("Gallery access is required to add photo proof");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({ ...pickerOptions, mediaTypes: ["images"] });
@@ -193,7 +196,7 @@ export default function JournalTaskScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- pickerOptions is a stable config object; adding would recreate callback every render
-  }, []);
+  }, [showError]);
 
   const handleSubmit = async () => {
     if (!isValid()) {
@@ -203,16 +206,16 @@ export default function JournalTaskScreen() {
       if (shouldCaptureEnergy && energy === null) issues.push("Rate your energy");
       if (shouldCaptureBody && bodyState === null) issues.push("Select body state");
       if (requirePhotoProof && !photoUri) issues.push("Add photo proof (required)");
-      Alert.alert("Almost there", issues.join("\n"));
+      showError(issues.join("\n"));
       return;
     }
 
     if (!activeChallenge) {
-      Alert.alert("Error", "No active challenge found");
+      showError("No active challenge found");
       return;
     }
     if (!taskId) {
-      Alert.alert("Error", "Task not found");
+      showError("Task not found");
       return;
     }
 
@@ -225,7 +228,7 @@ export default function JournalTaskScreen() {
           const contentType = photoUri?.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
           const result = await uploadProofImageFromBase64(photoBase64, contentType);
           if ("error" in result) {
-            Alert.alert("Upload failed", result.error);
+            showError(result.error);
             return;
           }
           proofUrl = result.url;
@@ -233,7 +236,7 @@ export default function JournalTaskScreen() {
           const { uploadProofImageFromUri } = await import("@/lib/uploadProofImage");
           const result = await uploadProofImageFromUri(photoUri);
           if ("error" in result) {
-            Alert.alert("Upload failed", result.error);
+            showError(result.error);
             return;
           }
           proofUrl = result.url;
@@ -260,7 +263,7 @@ export default function JournalTaskScreen() {
         Animated.timing(confettiOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]).start();
     } catch (error: unknown) {
-      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong");
+      showError(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);
       setUploading(false);
@@ -344,6 +347,7 @@ export default function JournalTaskScreen() {
             <View style={s.headerRight} />
           </View>
 
+          <InlineError message={error} onDismiss={clearError} />
           <KeyboardAvoidingView
             style={s.flex}
             behavior={Platform.OS === "ios" ? "padding" : undefined}
