@@ -40,10 +40,14 @@ function buildLine(item: LiveActivityItem): string {
   return `${who} made progress in ${challenge}`;
 }
 
-export function LiveActivity({ items }: { items: LiveActivityItem[] }) {
+export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem[]; currentUserId?: string | null }) {
   const [liked, setLiked] = useState<Record<string, boolean>>({});
 
   const prepared = useMemo(() => items.slice(0, 15), [items]);
+  const onlySelf =
+    !!currentUserId &&
+    prepared.length > 0 &&
+    prepared.every((it) => it.userId === currentUserId);
 
   return (
     <View>
@@ -89,6 +93,9 @@ export function LiveActivity({ items }: { items: LiveActivityItem[] }) {
             );
           })
         )}
+        {onlySelf ? (
+          <Text style={styles.onlySelfHint}>Invite a friend to see this board light up.</Text>
+        ) : null}
       </View>
     </View>
   );
@@ -180,5 +187,13 @@ const styles = StyleSheet.create({
     color: DS_COLORS.TEXT_MUTED,
     textAlign: "center",
     padding: DS_SPACING.xl,
+  },
+  onlySelfHint: {
+    fontSize: 13,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    marginTop: 8,
+    paddingHorizontal: DS_SPACING.lg,
+    paddingBottom: DS_SPACING.md,
   },
 });

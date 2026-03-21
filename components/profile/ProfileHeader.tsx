@@ -50,7 +50,9 @@ export default function ProfileHeader({
       </Pressable>
       <Text style={styles.fullName}>{displayName}</Text>
       <Text style={styles.username}>@{username || "user"}</Text>
-      <Text style={[styles.bio, !bio?.trim() && styles.bioPlaceholder]}>{bio?.trim() ? bio : "Tap edit to add a bio"}</Text>
+      <Text style={[styles.bio, !bio?.trim() && styles.bioPlaceholder]}>
+        {bio?.trim() ? bio : "Add a bio to let people know who you are"}
+      </Text>
       <View style={styles.pills}>
         <View style={styles.pill}>
           <View style={[styles.rankDot, { backgroundColor: rankDot }]} />

@@ -13,7 +13,6 @@ export default function GoalCard({
   onPressGoal,
   onPressFindChallenge,
   isError,
-  onRetry,
 }: {
   challengeName?: string;
   goals: Goal[];
@@ -22,7 +21,6 @@ export default function GoalCard({
   onPressGoal: (goalId: string) => void;
   onPressFindChallenge: () => void;
   isError?: boolean;
-  onRetry?: () => void;
 }) {
   useEffect(() => {
     if (isError) {
@@ -36,37 +34,17 @@ export default function GoalCard({
         <Text style={s.sectionTitle}>Today&apos;s goals</Text>
         <View style={s.empty}>
           <Flame size={40} color={GRIIT_COLORS.primary} />
-          {isError ? (
-            <>
-              <Text style={s.emptyTitle}>Couldn&apos;t load your goals</Text>
-              <Text style={s.emptySubtitle}>Check your connection and try again.</Text>
-              {onRetry ? (
-                <TouchableOpacity
-                  style={s.emptyCta}
-                  onPress={onRetry}
-                  accessibilityRole="button"
-                  accessibilityLabel="Retry loading goals"
-                  activeOpacity={0.85}
-                >
-                  <Text style={s.emptyCtaText}>Try again</Text>
-                </TouchableOpacity>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <Text style={s.emptyTitle}>Your first challenge is waiting</Text>
-              <Text style={s.emptySubtitle}>Pick one. Show up. That&apos;s all it takes.</Text>
-              <TouchableOpacity
-                style={s.emptyCta}
-                onPress={onPressFindChallenge}
-                accessibilityRole="button"
-                accessibilityLabel="Browse challenges"
-                activeOpacity={0.85}
-              >
-                <Text style={s.emptyCtaText}>Browse challenges →</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          <Text style={s.emptyTitle}>Your first challenge is waiting</Text>
+          <Text style={s.emptySubtitle}>Pick one. Show up. That&apos;s all it takes.</Text>
+          <TouchableOpacity
+            style={s.emptyCta}
+            onPress={onPressFindChallenge}
+            accessibilityRole="button"
+            accessibilityLabel="Browse challenges"
+            activeOpacity={0.85}
+          >
+            <Text style={s.emptyCtaText}>Browse challenges →</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );

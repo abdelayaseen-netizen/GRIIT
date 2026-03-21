@@ -249,7 +249,6 @@ export default function TaskCompleteScreen() {
         location_longitude: userLocation?.lng,
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
       });
-      if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       const id = result && typeof result === "object" && "completionId" in result ? (result as { completionId?: string }).completionId : undefined;
       setCompletionId(id ?? null);
       setSubmitted(true);

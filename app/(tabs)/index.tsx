@@ -1,7 +1,9 @@
 import React, { useMemo, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { Flame, Zap, Target } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
@@ -18,6 +20,9 @@ import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeed from "@/components/home/LiveFeed";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { useCelebrationStore } from "@/store/celebrationStore";
+
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
 type TaskRow = { id: string; title?: string; type?: string; required?: boolean };
 type ActiveRow = {
@@ -117,6 +122,36 @@ export default function HomeScreen() {
   const activeCount = homeQuery.data?.activeList.length ?? 0;
   const points = activeCount > 0 ? Math.max(7, basePoints) : basePoints;
   const rank = deriveRank(stats ?? null);
+  const securedKeys = homeQuery.data?.securedDateKeys ?? [];
+  const hasEverSecured = securedKeys.length > 0 || (stats?.totalDaysSecured ?? 0) > 0;
+  const statsAllZero = streak === 0 && points === 0;
+  const showStatDash = statsAllZero;
+
+  const showCelebration = useCelebrationStore((s) => s.show);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isGuest || !user?.id) return;
+      let cancelled = false;
+      const run = async () => {
+        const n = stats?.activeStreak ?? 0;
+        if (!STREAK_MILESTONES.some((m) => m === n)) return;
+        const key = `griit_milestone_${n}`;
+        const shown = await AsyncStorage.getItem(key);
+        if (cancelled || shown) return;
+        await AsyncStorage.setItem(key, "true");
+        showCelebration({
+          title: `${n}-day streak!`,
+          subtitle: "You're building something real.",
+          type: "streak",
+        });
+      };
+      void run();
+      return () => {
+        cancelled = true;
+      };
+    }, [isGuest, user?.id, stats?.activeStreak, showCelebration])
+  );
 
   const refresh = useCallback(async () => {
     await Promise.all([homeQuery.refetch(), refetchAll()]);
@@ -161,11 +196,11 @@ export default function HomeScreen() {
           <View style={s.pills}>
             <View style={[s.pill, streak > 0 && s.pillWarm]}>
               <Flame size={13} color={DS_COLORS.DISCOVER_CORAL} />
-              <Text style={s.pillText}>{streak}</Text>
+              <Text style={s.pillText}>{showStatDash ? "—" : String(streak)}</Text>
             </View>
             <View style={[s.pill, points > 0 && s.pillPurple]}>
               <Zap size={13} color={DS_COLORS.DISCOVER_BLUE} />
-              <Text style={s.pillText}>{points}</Text>
+              <Text style={s.pillText}>{showStatDash ? "—" : String(points)}</Text>
             </View>
           </View>
         </View>
@@ -180,10 +215,14 @@ export default function HomeScreen() {
           onPressGoal={onPressGoal}
           onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
           isError={homeQuery.isError}
-          onRetry={() => homeQuery.refetch()}
         />
 
-        <WeekStrip securedDateKeys={homeQuery.data?.securedDateKeys ?? []} currentStreak={streak} freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0} />
+        <WeekStrip
+          securedDateKeys={securedKeys}
+          currentStreak={streak}
+          freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0}
+          hasEverSecured={hasEverSecured}
+        />
         <NextUnlock currentStreak={streak} />
 
         <View style={s.statsRow}>
@@ -191,14 +230,14 @@ export default function HomeScreen() {
             <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
               <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
             </View>
-            <Text style={s.statValue}>{streak}</Text>
+            <Text style={s.statValue}>{showStatDash ? "—" : streak}</Text>
             <Text style={s.statLabel}>streak</Text>
           </View>
           <View style={s.stat}>
             <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
               <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
             </View>
-            <Text style={s.statValue}>{points}</Text>
+            <Text style={s.statValue}>{showStatDash ? "—" : points}</Text>
             <Text style={s.statLabel}>points</Text>
           </View>
           <View style={s.stat}>

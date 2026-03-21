@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Check, Shield, X } from "lucide-react-native";
+import { Check, Flame, Shield, X } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 const LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -14,10 +14,12 @@ export default function WeekStrip({
   securedDateKeys,
   currentStreak,
   freezeCount,
+  hasEverSecured,
 }: {
   securedDateKeys: string[];
   currentStreak: number;
   freezeCount: number;
+  hasEverSecured: boolean;
 }) {
   const now = new Date();
   const todayIndex = mondayFirstDayIndex(now);
@@ -34,6 +36,17 @@ export default function WeekStrip({
     return out;
   }, [now]);
   const set = useMemo(() => new Set(securedDateKeys), [securedDateKeys]);
+
+  if (!hasEverSecured) {
+    return (
+      <View style={s.bannerWrap}>
+        <View style={s.firstGoalBanner}>
+          <Flame size={16} color={DS_COLORS.STREAK_ICON} />
+          <Text style={s.firstGoalText}>Complete your first goal to start your streak</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={s.wrap}>
@@ -81,6 +94,26 @@ export default function WeekStrip({
 }
 
 const s = StyleSheet.create({
+  bannerWrap: {
+    marginTop: DS_SPACING.md,
+    marginHorizontal: DS_SPACING.xl,
+  },
+  firstGoalBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    borderRadius: 16,
+    padding: 16,
+  },
+  firstGoalText: {
+    flex: 1,
+    fontSize: 14,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    fontWeight: "500",
+  },
   wrap: {
     marginTop: DS_SPACING.md,
     marginHorizontal: DS_SPACING.xl,

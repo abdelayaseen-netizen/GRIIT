@@ -20,6 +20,7 @@ import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
 import { identify, reset as resetAnalytics } from '@/lib/analytics';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
+import { showGoalCelebration } from '@/store/celebrationStore';
 
 type AppContextValue = {
   profile: ProfileFromApi | null;
@@ -426,6 +427,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
         void fetchActiveChallenge();
         void fetchStats();
+        showGoalCelebration(5);
         return { firstTaskOfDay, completionId: data?.id };
       })
       .catch(() => {

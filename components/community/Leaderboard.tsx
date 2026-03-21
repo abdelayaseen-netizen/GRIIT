@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Crosshair } from "lucide-react-native";
+import { Target } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 export interface CommunityLeaderboardEntry {
@@ -58,10 +58,10 @@ export function Leaderboard({
       {!hasData ? (
         <View style={styles.emptyWrap}>
           <View style={styles.emptyIconWrap}>
-            <Crosshair size={22} color={DS_COLORS.DISCOVER_CORAL} />
+            <Target size={22} color={DS_COLORS.DISCOVER_CORAL} />
           </View>
-          <Text style={styles.emptyTitle}>The board is wide open.</Text>
-          <Text style={styles.emptySubtitle}>Every goal you complete earns points.</Text>
+          <Text style={styles.emptyTitle}>Unclaimed territory.</Text>
+          <Text style={styles.emptySubtitle}>Complete your first goal to plant your flag.</Text>
           <TouchableOpacity
             style={styles.emptyCta}
             onPress={onStartEarning}
@@ -102,25 +102,27 @@ export function Leaderboard({
         </View>
       )}
 
-      <View style={[styles.youRowWrap, hasData ? styles.youRowWrapWithDivider : null]}>
-        {currentUserRank != null ? (
-          <View style={styles.youRow}>
-            <Text style={[styles.rank, styles.youRank]}>{currentUserRank}.</Text>
-            <View style={[styles.avatar, { backgroundColor: avatarColorForName(currentUserName) }]}>
-              <Text style={styles.avatarInitial}>{currentUserName.charAt(0).toUpperCase()}</Text>
+      {!(currentUserRank == null && currentUserPoints === 0) ? (
+        <View style={[styles.youRowWrap, hasData ? styles.youRowWrapWithDivider : null]}>
+          {currentUserRank != null ? (
+            <View style={styles.youRow}>
+              <Text style={[styles.rank, styles.youRank]}>{currentUserRank}.</Text>
+              <View style={[styles.avatar, { backgroundColor: avatarColorForName(currentUserName) }]}>
+                <Text style={styles.avatarInitial}>{currentUserName.charAt(0).toUpperCase()}</Text>
+              </View>
+              <Text style={styles.username} numberOfLines={1}>
+                {currentUserName}
+              </Text>
+              <Text style={styles.points}>{currentUserPoints} pts</Text>
             </View>
-            <Text style={styles.username} numberOfLines={1}>
-              {currentUserName}
-            </Text>
-            <Text style={styles.points}>{currentUserPoints} pts</Text>
-          </View>
-        ) : (
-          <View style={styles.youUnrankedWrap}>
-            <Text style={styles.youUnranked}>You: unranked</Text>
-            <Text style={styles.youHint}>Complete 1 goal to enter the board</Text>
-          </View>
-        )}
-      </View>
+          ) : (
+            <View style={styles.youUnrankedWrap}>
+              <Text style={styles.youUnranked}>You: unranked</Text>
+              <Text style={styles.youHint}>Complete 1 goal to enter the board</Text>
+            </View>
+          )}
+        </View>
+      ) : null}
     </View>
   );
 }

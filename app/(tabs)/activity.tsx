@@ -183,7 +183,7 @@ export default function CommunityScreen() {
           onStartEarning={() => router.push("/(tabs)/discover")}
         />
 
-        <LiveActivity items={feedItems} />
+        <LiveActivity items={feedItems} currentUserId={currentUser?.id ?? null} />
 
         <YourStats
           goalsSecuredToday={leaderboardQuery.data?.totalSecuredToday ?? 0}

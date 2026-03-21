@@ -70,6 +70,7 @@ import {
   DS_TYPOGRAPHY,
   DS_BORDERS,
   DS_MEASURES,
+  GRIIT_COLORS,
 } from "@/lib/design-system";
 import { InitialCircle } from "@/src/components/ui";
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
@@ -916,12 +917,12 @@ export default function ChallengeDetailScreen() {
   const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   const ctaLabels: { join: string; active: string } = CTA_LABELS[difficulty] ?? CTA_LABELS_DEFAULT;
   const ctaLabel = isDaily
-    ? expired ? "Expired" : "Accept Challenge"
+    ? expired ? "Expired" : "Commit to This Challenge"
     : isJoined ? ctaLabels.active : ctaLabels.join;
   const joinDisabled = isPending || (isDaily && expired);
 
   const headerGradientColors = [headerColor, headerColor] as const;
-  const ctaBgColor = isDaily && !expired ? DS_COLORS.HEADER_GRADIENT_DAILY_START : DS_COLORS.accent;
+  const ctaBgColor = isJoined ? DS_COLORS.accent : GRIIT_COLORS.primary;
   const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
@@ -2202,9 +2203,9 @@ const s = StyleSheet.create({
   ctaButton: {
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 56,
-    paddingVertical: 18,
-    borderRadius: 14,
+    minHeight: 52,
+    paddingVertical: 14,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.accent,
     width: Platform.OS === "web" ? 400 : undefined,
     alignSelf: "stretch" as const,
@@ -2227,9 +2228,9 @@ const s = StyleSheet.create({
     color: DS_COLORS.accent,
   },
   ctaMicro: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "400" as const,
-    color: DS_COLORS.textMuted,
+    color: DS_COLORS.textSecondary,
     marginTop: DS_SPACING.sm,
     textAlign: "center",
   },
