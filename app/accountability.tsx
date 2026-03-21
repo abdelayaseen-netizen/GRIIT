@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-import { ChevronLeft, UserPlus, UserMinus, Check, X } from "lucide-react-native";
+import { ChevronLeft, UserPlus, UserMinus, Check, X, Users } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { sharedStyles } from "@/src/theme";
 import { DS_COLORS } from "@/lib/design-system";
@@ -21,6 +21,8 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorRetry } from "@/components/ErrorRetry";
 
 type ListData = {
   accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[];
@@ -35,13 +37,15 @@ export default function AccountabilityScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     try {
+      setLoadError(false);
       const result = await trpcQuery(TRPC.accountability.listMine) as ListData;
       setData(result ?? { accepted: [], incomingPending: [], outgoingPending: [] });
     } catch {
-      setData({ accepted: [], incomingPending: [], outgoingPending: [] });
+      setLoadError(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -120,7 +124,7 @@ export default function AccountabilityScreen() {
         setActingId(null);
       }
     },
-    [load]
+    [load, showError]
   );
 
   if (loading && !data) {
@@ -162,6 +166,25 @@ export default function AccountabilityScreen() {
         <View style={styles.countRow}>
           <Text style={styles.countText}>{acceptedCount}/3 partners</Text>
         </View>
+
+        {loadError ? (
+          <ErrorRetry message="Couldn't load partners" onRetry={() => void load()} />
+        ) : null}
+
+        {list.accepted.length === 0 &&
+        list.incomingPending.length === 0 &&
+        list.outgoingPending.length === 0 &&
+        !loadError ? (
+          <EmptyState
+            icon={Users}
+            title="No accountability partners"
+            subtitle="Pair up with someone to stay on track"
+            action={{
+              label: "Find a partner",
+              onPress: () => router.push("/accountability/add" as never),
+            }}
+          />
+        ) : null}
 
         {list.accepted.length > 0 && (
           <View style={styles.section}>

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Share } from "react-native";
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Share, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +18,10 @@ import RankProgress from "@/components/profile/RankProgress";
 import TrophyCase from "@/components/profile/TrophyCase";
 import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
 import ProfileActions from "@/components/profile/ProfileActions";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorRetry } from "@/components/ErrorRetry";
 import { DS_COLORS } from "@/lib/design-system";
+import { User } from "lucide-react-native";
 
 type ActiveRow = {
   id: string;
@@ -123,7 +126,9 @@ export default function ProfileScreen() {
   if ((profileLoading && !profile) || (!profile && !isError)) {
     return (
       <SafeAreaView style={s.container} edges={["top"]}>
-        <View style={s.center}><Text style={s.loading}>Loading profile...</Text></View>
+        <View style={s.center}>
+          <ActivityIndicator size="large" color={DS_COLORS.ACCENT} accessibilityLabel="Loading profile" />
+        </View>
       </SafeAreaView>
     );
   }
@@ -131,7 +136,16 @@ export default function ProfileScreen() {
   if ((isError || profileMissing) && !profile) {
     return (
       <SafeAreaView style={s.container} edges={["top"]}>
-        <View style={s.center}><Text style={s.loading}>Couldn't load your profile right now.</Text></View>
+        <View style={[s.center, { paddingHorizontal: 24 }]}>
+          <ErrorRetry
+            message="Couldn't load profile"
+            onRetry={() => {
+              void refetchAll();
+              void activeListQuery.refetch();
+              void securedDatesQuery.refetch();
+            }}
+          />
+        </View>
       </SafeAreaView>
     );
   }
@@ -156,6 +170,14 @@ export default function ProfileScreen() {
         />
 
         <StatsRow streak={streak} best={best} active={active} done={done} />
+
+        {done === 0 && activeItems.length === 0 ? (
+          <EmptyState
+            icon={User}
+            title="Your journey starts here"
+            subtitle="Complete challenges to build your stats"
+          />
+        ) : null}
 
         <ActiveChallengeCard
           items={activeItems}

@@ -27,6 +27,8 @@ import { getTodayDateKey } from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
+import { ErrorRetry } from "@/components/ErrorRetry";
+import { EmptyState } from "@/components/EmptyState";
 
 type TaskRow = {
   id: string;
@@ -213,13 +215,24 @@ export default function ActiveChallengeDetailScreen() {
     );
   }
 
-  if (error || !activeChallenge) {
+  if (error) {
+    return (
+      <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[s.centerWrap, { paddingHorizontal: 24 }]}>
+          <ErrorRetry message="Couldn't load challenge progress" onRetry={() => void refetch()} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!activeChallenge) {
     return (
       <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.centerWrap}>
           <Text style={s.notFoundText}>Challenge not found</Text>
-          <TouchableOpacity onPress={() => refetch()} style={s.retryBtn}>
+          <TouchableOpacity onPress={() => refetch()} style={s.retryBtn} accessibilityLabel="Retry loading challenge" accessibilityRole="button">
             <Text style={s.retryBtnText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -300,6 +313,15 @@ export default function ActiveChallengeDetailScreen() {
 
           {/* Today's Goals */}
           <Text style={s.sectionTitle}>Today&apos;s Goals</Text>
+          {tasks.length === 0 ? (
+            <View style={{ marginBottom: 12 }}>
+              <EmptyState
+                icon={CheckCircle}
+                title="No tasks completed yet"
+                subtitle="Start checking off today's tasks"
+              />
+            </View>
+          ) : (
           <View style={[s.card, s.missionCard]}>
             {tasks.map((task) => {
               const isCompleted = completedTaskIds.has(task.id);
@@ -343,6 +365,7 @@ export default function ActiveChallengeDetailScreen() {
               );
             })}
           </View>
+          )}
 
           {/* Rules */}
           {challenge?.rules && Array.isArray(challenge.rules) && challenge.rules.length > 0 && (

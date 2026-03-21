@@ -76,6 +76,7 @@ import { InitialCircle } from "@/src/components/ui";
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { ErrorRetry } from "@/components/ErrorRetry";
 
 /** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
@@ -878,13 +879,9 @@ export default function ChallengeDetailScreen() {
     return (
       <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={s.emptyWrap}>
-          <Text style={s.emptyText}>Couldn&apos;t load challenge</Text>
-          <Text style={[s.emptySubtext, { color: themeColors.text.secondary }]}>Check your connection and try again.</Text>
-          <TouchableOpacity onPress={() => challengeQuery.refetch()} style={s.emptyBtn} accessibilityLabel="Retry loading challenge" accessibilityRole="button">
-            <Text style={s.emptyBtnText}>Retry</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 8 }]} accessibilityLabel="Go back" accessibilityRole="button">
+        <View style={[s.emptyWrap, { flex: 1, justifyContent: "center" }]}>
+          <ErrorRetry message="Couldn't load this challenge" onRetry={() => void challengeQuery.refetch()} />
+          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: DS_SPACING.lg }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>

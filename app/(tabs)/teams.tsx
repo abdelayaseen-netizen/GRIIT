@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -22,6 +23,8 @@ import { InitialCircle } from "@/src/components/ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorRetry } from "@/components/ErrorRetry";
 
 export default function TeamsTabScreen() {
   const router = useRouter();
@@ -85,10 +88,26 @@ export default function TeamsTabScreen() {
   if (teamsQuery.isLoading && !teamsQuery.data) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+        <View style={{ paddingTop: 24, alignItems: "center" }}>
+          <ActivityIndicator size="large" color={DS_COLORS.ACCENT_PRIMARY} accessibilityLabel="Loading teams" />
+        </View>
         <View style={styles.skeletonHeader} />
         <View style={styles.skeletonCard} />
         <View style={styles.skeletonCard} />
         <View style={styles.skeletonCard} />
+      </SafeAreaView>
+    );
+  }
+
+  if (teamsQuery.isError && !myTeam?.team) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]}
+          refreshControl={<RefreshControl refreshing={teamsQuery.isRefetching} onRefresh={onRefresh} tintColor={DS_COLORS.ACCENT_PRIMARY} />}
+        >
+          <ErrorRetry message="Couldn't load teams" onRetry={() => void teamsQuery.refetch()} />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -101,6 +120,15 @@ export default function TeamsTabScreen() {
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={teamsQuery.isRefetching} onRefresh={onRefresh} tintColor={DS_COLORS.ACCENT_PRIMARY} />}
         >
+          <EmptyState
+            icon={Users}
+            title="No teams yet"
+            subtitle="Create or join a team to challenge together"
+            action={{
+              label: "Create a team",
+              onPress: handleCreatePress,
+            }}
+          />
           <Text style={styles.heading}>Find your squad</Text>
           <Text style={styles.subtext}>Accountability partners increase your success rate by 2×</Text>
           <View style={styles.cardsRow}>

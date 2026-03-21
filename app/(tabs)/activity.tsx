@@ -7,10 +7,11 @@ import {
   TouchableOpacity,
   RefreshControl,
   Share,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { Users, ChevronRight } from "lucide-react-native";
+import { Users, ChevronRight, Activity } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useApp } from "@/contexts/AppContext";
 import { trpcQuery } from "@/lib/trpc";
@@ -19,6 +20,8 @@ import { CommunityHeader, type CommunityFilter } from "@/components/community/Co
 import { Leaderboard, type CommunityLeaderboardEntry } from "@/components/community/Leaderboard";
 import { LiveActivity, type LiveActivityItem } from "@/components/community/LiveActivity";
 import { YourStats } from "@/components/community/YourStats";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorRetry } from "@/components/ErrorRetry";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 interface FeedEventItem {
@@ -183,7 +186,25 @@ export default function CommunityScreen() {
           onStartEarning={() => router.push("/(tabs)/discover")}
         />
 
-        <LiveActivity items={feedItems} currentUserId={currentUser?.id ?? null} />
+        {feedQuery.isError ? (
+          <ErrorRetry message="Couldn't load activity" onRetry={() => void feedQuery.refetch()} />
+        ) : currentUser?.id && feedQuery.isPending && !feedQuery.data ? (
+          <View style={{ paddingVertical: DS_SPACING.xxl, alignItems: "center" }}>
+            <ActivityIndicator size="large" color={DS_COLORS.ACCENT} />
+          </View>
+        ) : currentUser?.id && !feedQuery.isError && feedItems.length === 0 && !feedQuery.isPending ? (
+          <EmptyState
+            icon={Activity}
+            title="No activity yet"
+            subtitle="Complete tasks to see your progress here"
+            action={{
+              label: "Go to challenges",
+              onPress: () => router.push("/(tabs)" as never),
+            }}
+          />
+        ) : (
+          <LiveActivity items={feedItems} currentUserId={currentUser?.id ?? null} />
+        )}
 
         <YourStats
           goalsSecuredToday={leaderboardQuery.data?.totalSecuredToday ?? 0}
