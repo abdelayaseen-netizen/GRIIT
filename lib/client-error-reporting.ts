@@ -1,16 +1,15 @@
 /**
  * Client-side error reporting for ErrorBoundary and unhandled errors.
  * When EXPO_PUBLIC_ERROR_REPORT_URL is set, POSTs error payload (fire-and-forget).
- * Optional: integrate Sentry via Sentry.captureException when @sentry/react-native is installed.
+ * Also forwards to Sentry via `lib/sentry.ts` when DSN is configured.
  */
+
+import { captureError } from "@/lib/sentry";
 
 const REPORT_URL = (process.env.EXPO_PUBLIC_ERROR_REPORT_URL ?? "").trim();
 
 export function reportClientError(error: Error, componentStack?: string | null): void {
-  if (__DEV__) {
-    return;
-  }
-  if (REPORT_URL) {
+  if (!__DEV__ && REPORT_URL) {
     const payload = {
       message: error.message,
       name: error.name,
@@ -24,8 +23,5 @@ export function reportClientError(error: Error, componentStack?: string | null):
       body: JSON.stringify(payload),
     }).catch(() => {});
   }
-  const g = globalThis as unknown as { Sentry?: { captureException: (e: Error, c?: unknown) => void } };
-  if (typeof g.Sentry?.captureException === "function") {
-    g.Sentry.captureException(error, { extra: { componentStack } });
-  }
+  captureError(error, componentStack ? { componentStack } : undefined);
 }

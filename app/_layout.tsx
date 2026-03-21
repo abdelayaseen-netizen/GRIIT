@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments, Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, StatusBar, Text, Pressable } from "react-native";
@@ -23,6 +24,9 @@ import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { configureRevenueCat } from "@/lib/revenue-cat";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { initSentry } from "@/lib/sentry";
+
+initSentry();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -348,7 +352,7 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     Inter_500Medium,
     Inter_600SemiBold,
@@ -392,6 +396,8 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+export default Sentry.wrap(RootLayout);
 
 function ThemeAwareStatusBar() {
   return <StatusBar barStyle="dark-content" backgroundColor="transparent" />;
