@@ -158,32 +158,60 @@ function AuthRedirector() {
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inTabs = first === "(tabs)";
-    const inChallenge = first === "challenge";
 
+    const AUTHENTICATED_SEGMENTS = new Set([
+      "(tabs)",
+      "challenge",
+      "settings",
+      "edit-profile",
+      "task",
+      "paywall",
+      "pricing",
+      "accountability",
+      "legal",
+      "create",
+      "create-team",
+      "join-team",
+      "profile",
+      "invite",
+    ]);
+    const inAllowedSegment = AUTHENTICATED_SEGMENTS.has(first);
+
+    // 1. No profile yet → send to create-profile (unless already there or in onboarding)
     if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
       router.replace(ROUTES.CREATE_PROFILE as never);
       return;
     }
 
-    // Only redirect TO tabs when not already in tabs — don't redirect when viewing challenge detail (or we'd dump user to Home)
-    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inTabs && !inChallenge) {
+    // 2. Has profile but stuck on auth or create-profile → send to tabs
+    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile)) {
       router.replace(ROUTES.TABS as never);
       return;
     }
 
-    if (user && hasProfile && onboardingCompleted === true && !onboardingCompleteFromStore && !inOnboarding && !inTabs && !inChallenge) {
-      router.replace(ROUTES.TABS as never);
-      return;
-    }
-
+    // 3. Onboarding complete in store but still on onboarding screen → send to tabs
     if (user && hasProfile && onboardingCompleteFromStore && inOnboarding) {
       router.replace(ROUTES.TABS as never);
       return;
     }
 
-    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile) && !inTabs) {
+    // DB says onboarding done but local store not synced — nudge to tabs unless on an allowed screen
+    if (
+      user &&
+      hasProfile &&
+      onboardingCompleted === true &&
+      !onboardingCompleteFromStore &&
+      !inOnboarding &&
+      !inAllowedSegment
+    ) {
       router.replace(ROUTES.TABS as never);
+      return;
+    }
+
+    // 4. Onboarding NOT complete and NOT on an allowed authenticated screen
+    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inAllowedSegment) {
+      router.replace(ROUTES.TABS as never);
+      return;
     }
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, onboardingCompleteFromStore, router]);
 
@@ -219,8 +247,14 @@ function RootLayoutNav() {
   }, []);
 
   const firstSegment = typeof segments[0] === "string" ? segments[0] : "";
-  const inOnboarding = firstSegment === "onboarding";
-  const inChallenge = firstSegment === "challenge";
+  const ONBOARDING_EXEMPT = new Set([
+    "onboarding",
+    "challenge",
+    "task",
+    "settings",
+    "edit-profile",
+    "legal",
+  ]);
   if (checkingOnboarding) {
     return (
       <View style={layoutStyles.centeredFill}>
@@ -228,7 +262,7 @@ function RootLayoutNav() {
       </View>
     );
   }
-  if (needsOnboarding && !inOnboarding && !inChallenge) {
+  if (needsOnboarding && !ONBOARDING_EXEMPT.has(firstSegment)) {
     return <Redirect href="/onboarding" />;
   }
 
