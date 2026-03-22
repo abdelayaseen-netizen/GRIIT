@@ -108,14 +108,14 @@ export const DailyCard = React.memo(function DailyCard({
   );
 });
 
-const CARD_HEIGHT = 200;
+const CARD_HEIGHT = 156;
 
 const s = StyleSheet.create({
   card: {
     width: 154,
     height: CARD_HEIGHT,
     borderRadius: 16,
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     backgroundColor: DS_COLORS.WHITE,
     overflow: "hidden",
@@ -142,7 +142,7 @@ const s = StyleSheet.create({
     zIndex: 2,
   },
   stateBadgeText: { fontSize: 9, fontWeight: "700", letterSpacing: 0.2 },
-  topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   iconBox: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   diff: { fontSize: 10, fontWeight: "700", letterSpacing: 0.3, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7 },
   title: { fontSize: 15, lineHeight: 18, fontWeight: "700", color: DS_COLORS.DISCOVER_INK },
@@ -151,8 +151,8 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 8,
-    paddingTop: 4,
+    marginTop: 4,
+    paddingTop: 0,
   },
   meta: { fontSize: 10, color: DS_COLORS.DISCOVER_META_SILVER },
   go: { fontSize: 12, fontWeight: "700" },

@@ -790,8 +790,19 @@ export default function ChallengeDetailScreen() {
       return;
     }
     if (task.type === "run") {
-      router.push({ pathname: ROUTES.TASK_RUN, params: { taskId: task.id } } as never);
-      return;
+      const runTask = task as ChallengeTaskFromApi & { tracking_mode?: string | null };
+      const useUnifiedComplete =
+        runTask.tracking_mode === "time" ||
+        runTask.verification_method === "heart_rate" ||
+        runTask.require_location === true ||
+        runTask.strict_timer_mode === true ||
+        (runTask as { timer_hard_mode?: boolean }).timer_hard_mode === true ||
+        runTask.require_photo_proof === true ||
+        (runTask as { require_photo?: boolean }).require_photo === true;
+      if (!useUnifiedComplete) {
+        router.push({ pathname: ROUTES.TASK_RUN, params: { taskId: task.id } } as never);
+        return;
+      }
     }
 
     // Unified completion screen for manual, simple, journal, timer, photo (with optional advanced verification)
@@ -1010,9 +1021,21 @@ export default function ChallengeDetailScreen() {
   const durationLabel = isDaily ? "24 hours" : `${challenge.duration_days} days`;
   const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   const ctaLabels: { join: string; active: string } = CTA_LABELS[difficulty] ?? CTA_LABELS_DEFAULT;
+  const incompleteCount = allTasks.filter((t) => {
+    const done = todayCheckins.some((c: CheckinFromApi) => c.task_id === t.id && c.status === "completed");
+    return !done;
+  }).length;
+  const activeCtaLabel =
+    incompleteCount > 0 ? `Continue today (${incompleteCount} left)` : "All goals complete";
   const ctaLabel = isDaily
-    ? expired ? "Expired" : "Commit to This Challenge"
-    : isJoined ? ctaLabels.active : ctaLabels.join;
+    ? expired
+      ? "Expired"
+      : "Commit to This Challenge"
+    : isJoined
+      ? activeCtaLabel
+      : ctaLabels.join;
+  const rawParticipantCount = challenge.participants_count ?? 0;
+  const participantCount = Math.max(rawParticipantCount, isJoined ? 1 : 0);
   const joinDisabled = isPending || (isDaily && expired);
 
   const headerGradientColors = [headerColor, headerColor] as const;
@@ -1038,11 +1061,8 @@ export default function ChallengeDetailScreen() {
       ? [
           {
             label: "Participants",
-            value:
-              challenge.participants_count > 0
-                ? `${challenge.participants_count} people`
-                : "Be the first to join",
-            valueAccent: challenge.participants_count === 0,
+            value: participantCount > 0 ? `${participantCount} people` : "Be the first to join",
+            valueAccent: participantCount === 0,
           },
         ]
       : []),
@@ -1269,13 +1289,13 @@ export default function ChallengeDetailScreen() {
             {/* Participants summary card */}
             <View style={s.participantStatsCard}>
               <View style={s.socialRow}>
-                <SocialAvatars participantsCount={challenge.participants_count ?? 0} participantUsernames={participantUsernames} />
+                <SocialAvatars participantsCount={participantCount} participantUsernames={participantUsernames} />
                 <View style={s.socialTextWrap}>
                   <Text style={s.socialPrimary}>
-                    {(challenge.participants_count ?? 0) === 0
+                    {participantCount === 0
                       ? "Be the first to start something real."
                       : (() => {
-                          const pc = challenge.participants_count ?? 0;
+                          const pc = participantCount;
                           const joinedToday = Math.max(1, Math.floor(pc * 0.02));
                           const rate = challenge.completion_rate ?? 0;
                           const activeToday =

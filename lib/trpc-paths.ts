@@ -98,6 +98,8 @@ export const TRPC = {
   },
   feed: {
     list: 'feed.list',
+    react: 'feed.react',
+    comment: 'feed.comment',
   },
   teams: {
     createTeam: 'teams.createTeam',

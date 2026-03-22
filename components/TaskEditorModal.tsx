@@ -118,7 +118,13 @@ export interface TaskEditorTask {
   /** Timer: must stay on timer screen for full duration */
   strictTimerMode?: boolean;
   verificationMethod?: string;
-  verificationRuleJson?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
+  verificationRuleJson?: {
+    sport?: string;
+    min_distance_m?: number;
+    min_moving_time_s?: number;
+    min_avg_bpm?: number;
+    workout_type?: string;
+  } | null;
 }
 
 interface Props {

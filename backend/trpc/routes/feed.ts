@@ -67,4 +67,49 @@ export const feedRouter = createTRPCRouter({
         nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null,
       };
     }),
+
+  react: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        reaction: z.enum(["fire", "respect", "discipline"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { error } = await ctx.supabase
+        .from("feed_reactions")
+        .upsert(
+          {
+            user_id: ctx.userId,
+            event_id: input.eventId,
+            reaction: input.reaction,
+          },
+          { onConflict: "user_id,event_id" }
+        )
+        .select()
+        .single();
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to react." });
+      }
+      return { success: true as const };
+    }),
+
+  comment: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        text: z.string().min(1).max(200),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { error } = await ctx.supabase.from("feed_comments").insert({
+        user_id: ctx.userId,
+        event_id: input.eventId,
+        text: input.text.trim(),
+      });
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to comment." });
+      }
+      return { success: true as const };
+    }),
 });

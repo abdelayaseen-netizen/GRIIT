@@ -9,6 +9,7 @@ import { shouldEarnLastStand, newAvailableAfterEarn } from "../../lib/last-stand
 import { getTodayDateKey } from "../../lib/date-utils";
 import type { StreakRow, DaySecureRow, ActiveChallengeWithTasks, PgError } from "../../types/db";
 import {
+  type ChallengeTaskConfig,
   type ChallengeTaskRowRaw,
   getTaskVerification,
   isTaskRequired,
@@ -71,6 +72,8 @@ export const checkinsRouter = createTRPCRouter({
         .single();
 
       const task = taskRow as TaskRowWithVerification | null;
+      const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
+      const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
       const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
       const taskType = task?.task_type ?? "manual";
 
@@ -83,9 +86,12 @@ export const checkinsRouter = createTRPCRouter({
         });
       }
 
-      const requireHeartRate = task?.require_heart_rate === true;
+      const requireHeartRate =
+        task?.require_heart_rate === true || cfg.verification_method === "heart_rate";
       if (requireHeartRate) {
-        const threshold = task?.heart_rate_threshold ?? 100;
+        const threshold =
+          (typeof task?.heart_rate_threshold === "number" ? task.heart_rate_threshold : null) ??
+          (typeof ruleFromCfg?.min_avg_bpm === "number" ? ruleFromCfg.min_avg_bpm : 100);
         const avg = input.heart_rate_avg ?? 0;
         if (!avg || avg < threshold) {
           throw new TRPCError({
@@ -95,11 +101,17 @@ export const checkinsRouter = createTRPCRouter({
         }
       }
 
-      const requireLocation = task?.require_location === true;
+      const requireLocation = task?.require_location === true || cfg.require_location === true;
       if (requireLocation) {
-        const tLat = task?.location_latitude;
-        const tLon = task?.location_longitude;
-        const radius = task?.location_radius_meters ?? 200;
+        const tLat =
+          task?.location_latitude ??
+          (typeof cfg.location_latitude === "number" ? cfg.location_latitude : undefined);
+        const tLon =
+          task?.location_longitude ??
+          (typeof cfg.location_longitude === "number" ? cfg.location_longitude : undefined);
+        const radius =
+          task?.location_radius_meters ??
+          (typeof cfg.location_radius_meters === "number" ? cfg.location_radius_meters : 200);
         if (tLat == null || tLon == null) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "This task has invalid location configuration." });
         }
@@ -110,13 +122,19 @@ export const checkinsRouter = createTRPCRouter({
         if (distance > radius) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `You need to be within ${radius}m of ${task?.location_name ?? "the required location"}. You are ${Math.round(distance)}m away.`,
+            message: `You need to be within ${radius}m of ${task?.location_name ?? cfg.location_name ?? "the required location"}. You are ${Math.round(distance)}m away.`,
           });
         }
       }
 
-      const timerHardMode = task?.timer_hard_mode === true;
-      const minDurationMinutes = task?.min_duration_minutes ?? durationMinutes;
+      const timerHardMode =
+        task?.timer_hard_mode === true || cfg.strict_timer_mode === true || cfg.timer_hard_mode === true;
+      const minDurationMinutes =
+        task?.min_duration_minutes ??
+        durationMinutes ??
+        (taskType === "run" && cfg.tracking_mode === "time" && typeof cfg.duration_minutes === "number"
+          ? cfg.duration_minutes
+          : null);
       if (timerHardMode && minDurationMinutes != null && minDurationMinutes > 0) {
         const requiredSeconds = minDurationMinutes * 60;
         const onScreen = input.timer_seconds_on_screen ?? 0;
@@ -150,8 +168,9 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const isTimer = taskType === "timer";
+      const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const requiredMinutes = minDurationMinutes ?? durationMinutes;
-      if (isTimer && requiredMinutes > 0) {
+      if ((isTimer || isRunTimed) && requiredMinutes > 0) {
         const completedMinutes = input.value ?? 0;
         if (completedMinutes < requiredMinutes) {
           throw new TRPCError({
@@ -162,32 +181,52 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const proofUrl = photoUrl || input.proofUrl?.trim() || null;
+
+      const payload: Record<string, unknown> = {
+        user_id: ctx.userId,
+        active_challenge_id: input.activeChallengeId,
+        task_id: input.taskId,
+        date_key: dateKey,
+        status: "completed",
+      };
+
+      if (input.value != null) payload.value = input.value;
+      if (input.noteText != null) payload.note_text = input.noteText;
+      if (proofUrl != null) payload.proof_url = proofUrl;
+
+      if (proofUrl) payload.completion_image_url = proofUrl;
+      if (photoUrl) payload.photo_url = photoUrl;
+      if (input.heart_rate_avg != null) payload.heart_rate_avg = input.heart_rate_avg;
+      if (input.heart_rate_peak != null) payload.heart_rate_peak = input.heart_rate_peak;
+      if (input.location_latitude != null) payload.location_latitude = input.location_latitude;
+      if (input.location_longitude != null) payload.location_longitude = input.location_longitude;
+      if (input.timer_seconds_on_screen != null) payload.timer_seconds_on_screen = input.timer_seconds_on_screen;
+
       const { data, error } = await ctx.supabase
         .from("check_ins")
-        .upsert(
-          {
-            user_id: ctx.userId,
-            active_challenge_id: input.activeChallengeId,
-            task_id: input.taskId,
-            date_key: dateKey,
-            status: "completed",
-            value: input.value ?? null,
-            note_text: input.noteText ?? null,
-            proof_url: proofUrl ?? null,
-            completion_image_url: proofUrl ?? null,
-            photo_url: photoUrl ?? null,
-            heart_rate_avg: input.heart_rate_avg ?? null,
-            heart_rate_peak: input.heart_rate_peak ?? null,
-            location_latitude: input.location_latitude ?? null,
-            location_longitude: input.location_longitude ?? null,
-            timer_seconds_on_screen: input.timer_seconds_on_screen ?? null,
-          },
-          { onConflict: "active_challenge_id,task_id,date_key" }
-        )
+        .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
         .select()
         .single();
 
-      requireNoError(error, "Failed to save check-in.");
+      if (error) {
+        const { logger } = await import("../../lib/logger");
+        const errObj = error as { code?: string; message?: string; details?: string; hint?: string };
+        logger.error(
+          {
+            supabaseError: error,
+            code: errObj.code,
+            message: errObj.message,
+            details: errObj.details,
+            hint: errObj.hint,
+            payload,
+          },
+          "[checkins.complete] check_ins upsert FAILED"
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Check-in save failed: ${error.message || "unknown"} (code: ${errObj.code || "?"})`,
+        });
+      }
 
       const { data: allTasks } = await ctx.supabase
         .from('challenge_tasks')

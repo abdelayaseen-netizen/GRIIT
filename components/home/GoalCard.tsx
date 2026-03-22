@@ -1,7 +1,33 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
-import { Check, Flame, Target } from "lucide-react-native";
+import {
+  Check,
+  Flame,
+  Target,
+  Clock,
+  BookOpen,
+  Activity,
+  Camera,
+  MapPin,
+} from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+
+function taskTypeIcon(type?: string): React.ReactNode {
+  switch (type) {
+    case "timer":
+      return <Clock size={12} color={DS_COLORS.DISCOVER_BLUE} />;
+    case "journal":
+      return <BookOpen size={12} color={DS_COLORS.CATEGORY_MIND} />;
+    case "run":
+      return <Activity size={12} color={DS_COLORS.DISCOVER_GREEN} />;
+    case "photo":
+      return <Camera size={12} color={DS_COLORS.WARNING} />;
+    case "checkin":
+      return <MapPin size={12} color={DS_COLORS.DISCOVER_CORAL} />;
+    default:
+      return <Check size={12} color={DS_COLORS.TEXT_MUTED} />;
+  }
+}
 
 type Goal = { id: string; title: string; completed: boolean; taskType?: string; taskConfig?: string };
 
@@ -13,6 +39,8 @@ export default function GoalCard({
   onPressGoal,
   onPressFindChallenge,
   onPressInActiveChallenge,
+  onLongPressChallenge,
+  onPressChallengeName,
   isError,
 }: {
   challengeName?: string;
@@ -22,6 +50,8 @@ export default function GoalCard({
   onPressGoal: (goalId: string) => void;
   onPressFindChallenge: () => void;
   onPressInActiveChallenge?: () => void;
+  onLongPressChallenge?: () => void;
+  onPressChallengeName?: () => void;
   isError?: boolean;
 }) {
   useEffect(() => {
@@ -51,8 +81,7 @@ export default function GoalCard({
     );
   }
 
-  const synthetic: Goal = { id: "__commit__", title: "You committed to this challenge", completed: true };
-  const rows = [synthetic, ...goals];
+  const rows = goals;
   const completed = rows.filter((g) => g.completed).length;
   const total = rows.length;
   const progress = total > 0 ? (completed / total) * 100 : 0;
@@ -60,12 +89,26 @@ export default function GoalCard({
   return (
     <View style={s.wrap}>
       <View style={s.card}>
-        <View style={s.challengeRow}>
+        <Pressable
+          onLongPress={onLongPressChallenge}
+          delayLongPress={500}
+          style={s.challengeRow}
+          accessibilityLabel={`${challengeName} options`}
+          accessibilityHint="Long press for challenge options"
+        >
           <View style={s.iconBox}>
             <Target size={16} color={DS_COLORS.GREEN} />
           </View>
           <View style={s.challengeMid}>
-            <Text style={s.challengeName}>{challengeName}</Text>
+            <TouchableOpacity
+              onPress={onPressChallengeName}
+              activeOpacity={0.7}
+              disabled={!onPressChallengeName}
+              accessibilityRole="button"
+              accessibilityLabel={`View ${challengeName} challenge details`}
+            >
+              <Text style={s.challengeName}>{challengeName}</Text>
+            </TouchableOpacity>
             <View style={s.progressBg}>
               <View style={[s.progressFill, { width: `${Math.max(2, progress)}%` }]} />
             </View>
@@ -74,7 +117,7 @@ export default function GoalCard({
             <Text style={s.dayText}>{`Day ${currentDay ?? 1} of ${durationDays ?? 1}`}</Text>
             <Text style={s.count}>{`${completed}/${total}`}</Text>
           </View>
-        </View>
+        </Pressable>
 
         {rows.map((g) =>
           g.completed ? (
@@ -94,9 +137,11 @@ export default function GoalCard({
               accessibilityRole="button"
               accessibilityLabel={`Start goal: ${g.title}`}
             >
-              <View style={s.todoCircle} />
+              <View style={s.todoCircle}>{taskTypeIcon(g.taskType)}</View>
               <Text style={s.todoText}>{g.title}</Text>
-              <Text style={s.todoRight}>Start</Text>
+              <View style={s.startPill}>
+                <Text style={s.startPillText}>Start</Text>
+              </View>
             </Pressable>
           )
         )}
@@ -169,7 +214,15 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  todoCircle: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: DS_COLORS.BORDER },
+  todoCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: DS_COLORS.BORDER,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   doneText: {
     flex: 1,
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
@@ -179,7 +232,17 @@ const s = StyleSheet.create({
   },
   todoText: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.grayDarker },
   doneRight: { fontSize: 10, fontWeight: "600", color: DS_COLORS.DISCOVER_GREEN },
-  todoRight: { fontSize: 11, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
+  startPill: {
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  startPillText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: DS_COLORS.DISCOVER_CORAL,
+  },
   empty: {
     backgroundColor: DS_COLORS.WHITE,
     borderRadius: DS_RADIUS.card,

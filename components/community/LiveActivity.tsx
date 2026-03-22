@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useMemo, useState, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { Flame } from "lucide-react-native";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 
 export interface LiveActivityItem {
   id: string;
@@ -14,6 +16,8 @@ export interface LiveActivityItem {
   dayNumber?: number | null;
   createdAt: string;
 }
+
+type FeedReactionKey = "fire" | "respect" | "discipline";
 
 const AVATAR_COLORS = [
   DS_COLORS.DISCOVER_CORAL,
@@ -40,8 +44,46 @@ function buildLine(item: LiveActivityItem): string {
   return `${who} made progress in ${challenge}`;
 }
 
+const REACTION_OPTIONS = [
+  { key: "fire" as const, emoji: "🔥", label: "Let's go" },
+  { key: "respect" as const, emoji: "💪", label: "Respect" },
+  { key: "discipline" as const, emoji: "🫡", label: "Discipline" },
+];
+
 export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem[]; currentUserId?: string | null }) {
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedReactions, setSelectedReactions] = useState<Record<string, FeedReactionKey>>({});
+  const [commentingId, setCommentingId] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState("");
+
+  const handleReact = useCallback(async (eventId: string, reaction: FeedReactionKey) => {
+    setSelectedReactions((prev) => ({ ...prev, [eventId]: reaction }));
+    setExpandedId(null);
+    try {
+      await trpcMutate(TRPC.feed.react, { eventId, reaction });
+    } catch (err) {
+      console.error("[LiveActivity] react failed:", err);
+      setSelectedReactions((prev) => {
+        const next = { ...prev };
+        delete next[eventId];
+        return next;
+      });
+    }
+  }, []);
+
+  const handleComment = useCallback(
+    async (eventId: string) => {
+      if (!commentText.trim()) return;
+      try {
+        await trpcMutate(TRPC.feed.comment, { eventId, text: commentText.trim() });
+        setCommentText("");
+        setCommentingId(null);
+      } catch (err) {
+        console.error("[LiveActivity] comment failed:", err);
+      }
+    },
+    [commentText]
+  );
 
   const prepared = useMemo(() => items.slice(0, 15), [items]);
   const onlySelf =
@@ -67,28 +109,83 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
         ) : (
           prepared.map((item, index) => {
             const seed = item.displayName || item.username || item.userId || "?";
-            const isLiked = !!liked[item.id];
             const isLast = index === prepared.length - 1;
+            const isCommenting = commentingId === item.id;
+            const picked = selectedReactions[item.id];
             return (
-              <View key={item.id} style={[styles.row, !isLast && styles.rowDivider]}>
-                <View style={[styles.avatar, { backgroundColor: avatarColorByIndex(index) }]}>
-                  <Text style={styles.avatarInitial}>{seed.charAt(0).toUpperCase()}</Text>
+              <View key={item.id}>
+                <View style={[styles.row, !isLast && !isCommenting && styles.rowDivider]}>
+                  <View style={[styles.avatar, { backgroundColor: avatarColorByIndex(index) }]}>
+                    <Text style={styles.avatarInitial}>{seed.charAt(0).toUpperCase()}</Text>
+                  </View>
+
+                  <View style={styles.body}>
+                    <Text style={styles.line}>{buildLine(item)}</Text>
+                    <Text style={styles.time}>{formatTimeAgoCompact(item.createdAt)}</Text>
+                  </View>
+
+                  <View style={styles.reactionArea}>
+                    {expandedId === item.id ? (
+                      <View style={styles.reactionPicker}>
+                        {REACTION_OPTIONS.map((r) => (
+                          <TouchableOpacity
+                            key={r.key}
+                            style={[styles.reactionChip, picked === r.key && styles.reactionChipActive]}
+                            onPress={() => void handleReact(item.id, r.key)}
+                            accessibilityLabel={r.label}
+                          >
+                            <Text style={styles.reactionEmoji}>{r.emoji}</Text>
+                          </TouchableOpacity>
+                        ))}
+                        <TouchableOpacity
+                          style={styles.commentChip}
+                          onPress={() => {
+                            setCommentingId(item.id);
+                            setExpandedId(null);
+                          }}
+                          accessibilityLabel="Write a comment"
+                        >
+                          <Text style={styles.commentChipText}>...</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={[styles.kudosBtn, !!picked && styles.kudosBtnLiked]}
+                        onPress={() => setExpandedId(item.id)}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`React to ${seed}'s activity`}
+                      >
+                        {picked ? (
+                          <Text style={{ fontSize: 12 }}>
+                            {picked === "fire" ? "🔥" : picked === "respect" ? "💪" : "🫡"}
+                          </Text>
+                        ) : (
+                          <Flame size={12} color={DS_COLORS.BORDER} />
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
 
-                <View style={styles.body}>
-                  <Text style={styles.line}>{buildLine(item)}</Text>
-                  <Text style={styles.time}>{formatTimeAgoCompact(item.createdAt)}</Text>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.kudosBtn, isLiked && styles.kudosBtnLiked]}
-                  onPress={() => setLiked((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
-                  activeOpacity={0.8}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Give kudos to ${seed}`}
-                >
-                  <Flame size={12} color={isLiked ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.BORDER} />
-                </TouchableOpacity>
+                {isCommenting ? (
+                  <View style={[styles.commentRow, !isLast && styles.rowDivider]}>
+                    <TextInput
+                      style={styles.commentInput}
+                      placeholder="Nice work..."
+                      placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                      value={commentText}
+                      onChangeText={setCommentText}
+                      maxLength={200}
+                      autoFocus
+                      onSubmitEditing={() => void handleComment(item.id)}
+                      returnKeyType="send"
+                    />
+                    <TouchableOpacity style={styles.sendBtn} onPress={() => void handleComment(item.id)}>
+                      <Text style={styles.sendBtnText}>Send</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
               </View>
             );
           })
@@ -171,6 +268,59 @@ const styles = StyleSheet.create({
     color: DS_COLORS.grayMuted,
     marginTop: 2,
   },
+  reactionArea: { alignItems: "flex-end", minWidth: 36 },
+  reactionPicker: {
+    flexDirection: "row",
+    gap: 4,
+    backgroundColor: DS_COLORS.chipFill,
+    borderRadius: 16,
+    padding: 4,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    maxWidth: 200,
+  },
+  reactionChip: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reactionChipActive: { backgroundColor: DS_COLORS.ACCENT_TINT },
+  reactionEmoji: { fontSize: 14 },
+  commentChip: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: DS_COLORS.WHITE,
+  },
+  commentChipText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  commentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    paddingTop: 4,
+  },
+  commentInput: {
+    flex: 1,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: DS_COLORS.chipFill,
+    paddingHorizontal: 14,
+    fontSize: 13,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  sendBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    backgroundColor: GRIIT_COLORS.primary,
+  },
+  sendBtnText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
   kudosBtn: {
     width: 28,
     height: 28,

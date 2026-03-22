@@ -143,9 +143,12 @@ function TaskCompleteScreenInner() {
     return () => clearTimeout(timer);
   }, []);
 
-  const requiredSeconds = (config.min_duration_minutes ?? 0) * 60;
+  const minDurMinutes = config.min_duration_minutes ?? 0;
+  const requiredSeconds = minDurMinutes * 60;
   const isCountdown = config.timer_direction === "countdown";
   const isHardMode = config.timer_hard_mode === true;
+  const isRunTimed = taskTypeRaw === "run" && minDurMinutes > 0;
+  const showWorkoutTimer = taskTypeRaw === "timer" || (isRunTimed && isHardMode);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -168,14 +171,19 @@ function TaskCompleteScreenInner() {
     return () => sub.remove();
   }, [isHardMode]);
 
-  /** Timer auto-starts when opening a timer task (user already tapped Start on Home). */
+  /** Timer auto-starts when opening a timer task or a hard-mode timed run/workout. */
   useEffect(() => {
-    if (taskTypeRaw === "timer" && requiredSeconds > 0 && !isTimerRunning && timerSeconds === 0) {
+    if (
+      showWorkoutTimer &&
+      requiredSeconds > 0 &&
+      !isTimerRunning &&
+      timerSeconds === 0
+    ) {
       setIsTimerRunning(true);
       if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-style start; avoid re-firing on pause
-  }, [taskTypeRaw, requiredSeconds]);
+  }, [showWorkoutTimer, requiredSeconds]);
 
   const handleTakePhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -291,8 +299,13 @@ function TaskCompleteScreenInner() {
   const runKm = parseFloat(runDistance.replace(",", "."));
   const runMin = parseInt(runDuration.trim(), 10);
   const runOk =
-    taskTypeRaw !== "run" ||
-    (!Number.isNaN(runKm) && runKm > 0 && !Number.isNaN(runMin) && runMin > 0);
+    taskTypeRaw !== "run"
+      ? true
+      : isRunTimed && isHardMode
+        ? timerOk && hardModeOk
+        : isRunTimed && !isHardMode
+          ? !Number.isNaN(runMin) && runMin >= minDurMinutes
+          : !Number.isNaN(runKm) && runKm > 0 && !Number.isNaN(runMin) && runMin > 0;
 
   const isPureManual =
     (taskTypeRaw === "manual" || taskTypeRaw === "simple") &&
@@ -320,6 +333,7 @@ function TaskCompleteScreenInner() {
     config.require_heart_rate,
     config.require_location,
     runOk,
+    timerSeconds,
   ]);
 
   const handleSubmit = useCallback(async () => {
@@ -340,7 +354,9 @@ function TaskCompleteScreenInner() {
           taskTypeRaw === "timer"
             ? Math.floor(timerSeconds / 60)
             : taskTypeRaw === "run"
-              ? runMin
+              ? isRunTimed && isHardMode
+                ? Math.floor(timerSeconds / 60)
+                : runMin
               : undefined,
         proofUrl: photoUrl ?? undefined,
         photo_url: photoUrl ?? undefined,
@@ -376,6 +392,9 @@ function TaskCompleteScreenInner() {
     runDistance,
     runDuration,
     runMin,
+    isRunTimed,
+    isHardMode,
+    timerSeconds,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -574,8 +593,8 @@ function TaskCompleteScreenInner() {
           </View>
         )}
 
-        {/* Timer */}
-        {taskTypeRaw === "timer" && requiredSeconds > 0 && (
+        {/* Timer (timer tasks, or timed run/workout with strict on-screen mode) */}
+        {showWorkoutTimer && requiredSeconds > 0 && (
           <View style={styles.card}>
             {isHardMode && (
               <View style={styles.hardModeBadge}>
@@ -619,7 +638,13 @@ function TaskCompleteScreenInner() {
         {taskTypeRaw === "run" && (
           <View style={styles.card}>
             <Text style={styles.sectionLabel}>Log your run</Text>
-            <Text style={styles.hintSmall}>Distance and duration are required. Photo proof if your challenge requires it.</Text>
+            <Text style={styles.hintSmall}>
+              {isRunTimed && isHardMode
+                ? "Optional: add distance below. Duration is tracked by the timer above."
+                : isRunTimed && !isHardMode
+                  ? `Log at least ${minDurMinutes} minutes (duration required). Distance optional unless your challenge expects it.`
+                  : "Distance and duration are required. Photo proof if your challenge requires it."}
+            </Text>
             <TextInput
               style={styles.textField}
               placeholder="Distance (km)"

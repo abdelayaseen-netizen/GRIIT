@@ -41,18 +41,33 @@ type WizardTaskType =
   | "workout"
   | "counter";
 
-const TYPE_GRID: { id: WizardTaskType; label: string; Icon: React.ComponentType<{ size: number; color: string }> }[] = [
-  { id: "journal", label: "Journal", Icon: BookOpen },
-  { id: "timer", label: "Timer", Icon: Timer },
-  { id: "photo", label: "Photo", Icon: Camera },
-  { id: "run", label: "Run", Icon: Footprints },
-  { id: "simple", label: "Simple", Icon: CheckCircle },
-  { id: "checkin", label: "Check-in", Icon: MapPin },
-  { id: "water", label: "Water", Icon: Droplets },
-  { id: "reading", label: "Reading", Icon: BookOpenText },
-  { id: "workout", label: "Workout", Icon: Dumbbell },
-  { id: "counter", label: "Counter", Icon: Hash },
-];
+const TYPE_CATEGORIES = [
+  {
+    title: "Physical",
+    types: [
+      { id: "workout" as const, label: "Workout", Icon: Dumbbell, hint: "Gym, calisthenics, yoga" },
+      { id: "run" as const, label: "Run", Icon: Footprints, hint: "Track distance or time" },
+      { id: "timer" as const, label: "Timer", Icon: Timer, hint: "Timed activity" },
+      { id: "water" as const, label: "Water", Icon: Droplets, hint: "Daily hydration" },
+    ],
+  },
+  {
+    title: "Mental",
+    types: [
+      { id: "journal" as const, label: "Journal", Icon: BookOpen, hint: "Write & reflect" },
+      { id: "reading" as const, label: "Reading", Icon: BookOpenText, hint: "Track pages" },
+    ],
+  },
+  {
+    title: "Verification",
+    types: [
+      { id: "photo" as const, label: "Photo", Icon: Camera, hint: "Photo proof required" },
+      { id: "checkin" as const, label: "Check-in", Icon: MapPin, hint: "Location verified" },
+      { id: "counter" as const, label: "Counter", Icon: Hash, hint: "Count anything" },
+      { id: "simple" as const, label: "Simple", Icon: CheckCircle, hint: "Honor-based tap" },
+    ],
+  },
+] as const;
 
 function newId(): string {
   return `task-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -67,6 +82,8 @@ function parsePositiveFloat(raw: string, fallback: number): number {
   const n = parseFloat(raw.replace(/,/g, "."));
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
+
+type WorkoutTypeUI = "general" | "cardio" | "strength" | "hiit" | "yoga";
 
 type BuildOpts = {
   timerMins: number;
@@ -92,6 +109,10 @@ type BuildOpts = {
   journalPromptText: string;
   captureMoodJournal: boolean;
   locationStampPhoto: boolean;
+  requireHeartRate: boolean;
+  heartRateThreshold: number;
+  workoutType: WorkoutTypeUI;
+  timedWorkout: boolean;
 };
 
 function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, opts: BuildOpts): TaskEditorTask | null {
@@ -208,9 +229,17 @@ function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, op
         trackingMode: "time",
         targetValue: opts.workoutMins,
         unit: "minutes",
+        mustCompleteInSession: opts.timedWorkout,
+        strictTimerMode: opts.timedWorkout,
         requirePhotoProof: reqPhoto(opts.requirePhotoWorkout),
         locationName: opts.requireLocationWorkout ? (opts.locationNameWorkout.trim() || "Workout location") : undefined,
         radiusMeters: opts.requireLocationWorkout ? 150 : undefined,
+        verificationMethod: opts.requireHeartRate ? "heart_rate" : opts.timedWorkout ? "timer" : "manual",
+        verificationRuleJson: opts.requireHeartRate
+          ? { min_avg_bpm: opts.heartRateThreshold, workout_type: opts.workoutType }
+          : opts.workoutType !== "general"
+            ? { workout_type: opts.workoutType }
+            : null,
       };
     case "counter":
       return {
@@ -257,6 +286,10 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const [requirePhotoWorkout, setRequirePhotoWorkout] = useState(false);
   const [requireLocationWorkout, setRequireLocationWorkout] = useState(false);
   const [locationNameWorkout, setLocationNameWorkout] = useState("");
+  const [requireHeartRate, setRequireHeartRate] = useState(false);
+  const [heartRateThreshold, setHeartRateThreshold] = useState("120");
+  const [workoutType, setWorkoutType] = useState<WorkoutTypeUI>("general");
+  const [timedWorkout, setTimedWorkout] = useState(true);
   const [minWordsJournal, setMinWordsJournal] = useState("");
   const [journalPromptText, setJournalPromptText] = useState("");
   const [captureMoodJournal, setCaptureMoodJournal] = useState(false);
@@ -288,6 +321,10 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       setRequirePhotoWorkout(false);
       setRequireLocationWorkout(false);
       setLocationNameWorkout("");
+      setRequireHeartRate(false);
+      setHeartRateThreshold("120");
+      setWorkoutType("general");
+      setTimedWorkout(true);
       setMinWordsJournal("");
       setJournalPromptText("");
       setCaptureMoodJournal(false);
@@ -308,6 +345,10 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     setRequirePhotoWorkout(false);
     setRequireLocationWorkout(false);
     setLocationNameWorkout("");
+    setRequireHeartRate(false);
+    setHeartRateThreshold("120");
+    setWorkoutType("general");
+    setTimedWorkout(true);
     setCaptureMoodJournal(false);
     setLocationStampPhoto(false);
   }, [kind]);
@@ -339,6 +380,10 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       journalPromptText,
       captureMoodJournal,
       locationStampPhoto,
+      requireHeartRate,
+      heartRateThreshold: parsePositiveInt(heartRateThreshold, 120),
+      workoutType,
+      timedWorkout,
     };
   }, [
     timerMins,
@@ -364,6 +409,10 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     journalPromptText,
     captureMoodJournal,
     locationStampPhoto,
+    requireHeartRate,
+    heartRateThreshold,
+    workoutType,
+    timedWorkout,
   ]);
 
   const canAdd = useMemo(() => {
@@ -631,7 +680,24 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       case "workout":
         return (
           <View style={s.configBlock}>
-            <Text style={s.label}>Duration (minutes)</Text>
+            <Text style={s.label}>Workout type</Text>
+            <View style={s.segRow}>
+              {(["general", "cardio", "strength", "hiit", "yoga"] as const).map((wt) => (
+                <TouchableOpacity
+                  key={wt}
+                  style={[s.seg, workoutType === wt && s.segOn]}
+                  onPress={() => setWorkoutType(wt)}
+                  accessibilityRole="button"
+                  accessibilityLabel={wt === "hiit" ? "HIIT" : wt}
+                >
+                  <Text style={[s.segTxt, workoutType === wt && s.segTxtOn]}>
+                    {wt === "hiit" ? "HIIT" : wt.charAt(0).toUpperCase() + wt.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[s.label, s.labelSp]}>Minimum duration (minutes)</Text>
             <TextInput
               style={s.input}
               placeholder="e.g. 45"
@@ -641,6 +707,37 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setWorkoutMins}
               accessibilityLabel="Workout duration in minutes"
             />
+
+            {row("Timer must run full duration", timedWorkout, setTimedWorkout, "Enforce timer during workout")}
+            {timedWorkout ? (
+              <Text style={s.hint}>User must keep the timer running on-screen for the full duration to complete this task.</Text>
+            ) : null}
+
+            {row("Require elevated heart rate", requireHeartRate, setRequireHeartRate, "Require heart rate verification")}
+            {requireHeartRate ? (
+              <>
+                <Text style={[s.label, { marginTop: 8 }]}>Minimum average BPM</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="e.g. 120"
+                  placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                  keyboardType="number-pad"
+                  value={heartRateThreshold}
+                  onChangeText={setHeartRateThreshold}
+                  accessibilityLabel="Minimum average heart rate"
+                />
+                <Text style={s.hint}>
+                  {workoutType === "cardio" || workoutType === "hiit"
+                    ? "Recommended: 130-160 BPM for cardio/HIIT"
+                    : workoutType === "strength"
+                      ? "Recommended: 100-130 BPM for strength training"
+                      : workoutType === "yoga"
+                        ? "Recommended: 80-110 BPM for yoga"
+                        : "Recommended: 110-140 BPM for general workouts"}
+                </Text>
+              </>
+            ) : null}
+
             {row("Require photo proof", requirePhotoWorkout, setRequirePhotoWorkout, "Require photo proof for workout")}
             {row("Location check-in", requireLocationWorkout, setRequireLocationWorkout, "Location check-in for workout")}
             {requireLocationWorkout ? (
@@ -689,25 +786,31 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             onChangeText={setName}
           />
           <Text style={[s.label, { marginTop: DS_SPACING.lg }]}>Task type</Text>
-          <View style={s.grid}>
-            {TYPE_GRID.map((cell) => {
-              const sel = kind === cell.id;
-              const Icon = cell.Icon;
-              return (
-                <TouchableOpacity
-                  key={cell.id}
-                  style={[s.typeCell, sel ? s.typeCellSel : s.typeCellUnsel]}
-                  onPress={() => setKind(cell.id)}
-                  activeOpacity={0.85}
-                >
-                  <Icon size={22} color={sel ? CREATE_SELECTION.text : DS_COLORS.TEXT_SECONDARY} />
-                  <Text style={[s.typeLabel, sel && { color: CREATE_SELECTION.text }]} numberOfLines={2}>
-                    {cell.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          {TYPE_CATEGORIES.map((cat) => (
+            <View key={cat.title} style={s.typeCategorySection}>
+              <Text style={s.typeCategoryTitle}>{cat.title}</Text>
+              <View style={s.typeCategoryRow}>
+                {cat.types.map((t) => {
+                  const sel = kind === t.id;
+                  const Icon = t.Icon;
+                  return (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={[s.typeChip, sel && s.typeChipSel]}
+                      onPress={() => setKind(t.id)}
+                      activeOpacity={0.8}
+                      accessibilityLabel={`${t.label}: ${t.hint}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: sel }}
+                    >
+                      <Icon size={18} color={sel ? GRIIT_COLORS.primary : DS_COLORS.TEXT_SECONDARY} />
+                      <Text style={[s.typeChipLabel, sel && s.typeChipLabelSel]}>{t.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
           {configBlock}
           {kind !== "simple" && (
             <View style={s.timeSection}>
@@ -788,55 +891,70 @@ const s = StyleSheet.create({
   label: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY, marginBottom: 8 },
   labelSp: { marginTop: DS_SPACING.md },
   input: {
-    backgroundColor: DS_COLORS.surface,
-    borderWidth: 1.5,
+    backgroundColor: DS_COLORS.WHITE,
+    borderWidth: 1,
     borderColor: DS_COLORS.border,
-    borderRadius: DS_RADIUS.MD,
+    borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 15,
     color: DS_COLORS.TEXT_PRIMARY,
   },
-  grid: {
+  typeCategorySection: {
+    marginTop: 12,
+  },
+  typeCategoryTitle: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_MUTED,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  typeCategoryRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 8,
   },
-  typeCell: {
-    width: "18%",
-    minWidth: 56,
-    aspectRatio: 1,
-    maxHeight: 72,
-    backgroundColor: DS_COLORS.surface,
-    borderWidth: 2,
-    borderRadius: 8,
+  typeChip: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 4,
-  },
-  typeCellUnsel: {
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
     borderColor: "transparent",
   },
-  typeCellSel: {
-    borderColor: CREATE_SELECTION.border,
+  typeChipSel: {
+    borderColor: GRIIT_COLORS.primary,
     backgroundColor: CREATE_SELECTION.background,
   },
-  typeLabel: {
-    fontSize: 9,
+  typeChipLabel: {
+    fontSize: 13,
     fontWeight: "600",
     color: DS_COLORS.TEXT_SECONDARY,
-    textAlign: "center",
-    marginTop: 4,
+  },
+  typeChipLabelSel: {
+    color: GRIIT_COLORS.primary,
   },
   configBlock: {
     marginTop: DS_SPACING.lg,
     gap: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.card,
+    padding: 16,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.border,
   },
   toggleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: DS_SPACING.sm,
+    paddingVertical: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: DS_COLORS.chipFill,
   },
   toggleLabel: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
@@ -861,12 +979,13 @@ const s = StyleSheet.create({
   },
   segRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginTop: 8,
   },
   seg: {
-    flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: DS_RADIUS.MD,
     borderWidth: 2,
     borderColor: "transparent",
@@ -877,7 +996,7 @@ const s = StyleSheet.create({
     borderColor: CREATE_SELECTION.border,
     backgroundColor: CREATE_SELECTION.background,
   },
-  segTxt: { fontSize: 13, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
+  segTxt: { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
   segTxtOn: { color: CREATE_SELECTION.text },
   footer: {
     paddingHorizontal: DS_SPACING.lg,

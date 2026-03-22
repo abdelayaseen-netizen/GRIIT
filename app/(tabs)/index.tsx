@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { trpcQuery } from "@/lib/trpc";
+import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import type { TodayCheckinForUser, StatsFromApi, ChallengeTaskFromApi } from "@/types";
@@ -320,6 +320,7 @@ export default function HomeScreen() {
                 goals={group.goals}
                 currentDay={group.currentDay}
                 durationDays={group.durationDays}
+                onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
                 onPressGoal={(goalId: string) => {
                   const goal = group.goals.find((gl) => gl.id === goalId);
                   if (!goal) return;
@@ -337,6 +338,44 @@ export default function HomeScreen() {
                 onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
                 onPressInActiveChallenge={() => {
                   void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
+                }}
+                onLongPressChallenge={() => {
+                  Alert.alert("Challenge options", group.challengeName, [
+                    {
+                      text: "View challenge",
+                      onPress: () => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never),
+                    },
+                    {
+                      text: "Leave challenge",
+                      style: "destructive",
+                      onPress: () => {
+                        Alert.alert(
+                          "Leave challenge?",
+                          "You'll lose your progress. This can't be undone.",
+                          [
+                            { text: "Cancel", style: "cancel" },
+                            {
+                              text: "Leave",
+                              style: "destructive",
+                              onPress: async () => {
+                                try {
+                                  await trpcMutate(TRPC.challenges.leave, { challengeId: group.challengeId });
+                                  void homeQuery.refetch();
+                                  void refetchAll();
+                                } catch (err) {
+                                  console.error("[Home] leave challenge failed:", err);
+                                  const msg =
+                                    err instanceof Error ? err.message : "Could not leave this challenge. Try again.";
+                                  Alert.alert("Leave failed", msg);
+                                }
+                              },
+                            },
+                          ]
+                        );
+                      },
+                    },
+                    { text: "Cancel", style: "cancel" },
+                  ]);
                 }}
                 isError={homeQuery.isError}
               />

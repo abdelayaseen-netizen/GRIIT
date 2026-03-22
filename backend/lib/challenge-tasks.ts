@@ -14,10 +14,17 @@ export interface VerificationRuleStrava {
 export interface ChallengeTaskConfig {
   required?: boolean;
   duration_minutes?: number;
+  tracking_mode?: string;
   min_words?: number;
   photo_required?: boolean;
   require_photo_proof?: boolean;
   strict_timer_mode?: boolean;
+  timer_hard_mode?: boolean;
+  require_location?: boolean;
+  location_name?: string;
+  location_latitude?: number;
+  location_longitude?: number;
+  location_radius_meters?: number;
   verification_method?: string;
   verification_rule_json?: VerificationRuleStrava | Record<string, unknown>;
   [key: string]: unknown;
@@ -66,6 +73,7 @@ export interface ChallengeTaskApiShape {
   require_photo?: boolean;
   timer_direction?: string | null;
   timer_hard_mode?: boolean;
+  tracking_mode?: string | null;
   require_heart_rate?: boolean;
   heart_rate_threshold?: number | null;
   require_location?: boolean;
@@ -83,6 +91,9 @@ export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Ch
   const config = row.config ?? {};
   const r = row as TaskRowWithVerification;
   const type = row.task_type ?? "manual";
+  const ruleJson = config.verification_rule_json as { min_avg_bpm?: number } | undefined;
+  const hrFromConfig = config.verification_method === "heart_rate";
+  const locFromConfig = config.require_location === true;
   return {
     id: row.id,
     title: row.title ?? null,
@@ -98,15 +109,28 @@ export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Ch
     order_index: row.order_index ?? null,
     require_photo: r.require_photo ?? config.require_photo_proof ?? false,
     timer_direction: r.timer_direction ?? "countdown",
-    timer_hard_mode: r.timer_hard_mode ?? config.strict_timer_mode ?? false,
-    require_heart_rate: r.require_heart_rate ?? false,
-    heart_rate_threshold: r.heart_rate_threshold ?? 100,
-    require_location: r.require_location ?? false,
-    location_name: r.location_name ?? null,
-    location_latitude: r.location_latitude ?? null,
-    location_longitude: r.location_longitude ?? null,
-    location_radius_meters: r.location_radius_meters ?? 200,
-    min_duration_minutes: r.min_duration_minutes ?? null,
+    timer_hard_mode: r.timer_hard_mode ?? config.strict_timer_mode ?? config.timer_hard_mode ?? false,
+    tracking_mode: typeof config.tracking_mode === "string" ? config.tracking_mode : null,
+    require_heart_rate: r.require_heart_rate === true || hrFromConfig,
+    heart_rate_threshold:
+      r.heart_rate_threshold ??
+      (typeof ruleJson?.min_avg_bpm === "number" ? ruleJson.min_avg_bpm : 100),
+    require_location: r.require_location === true || locFromConfig,
+    location_name: r.location_name ?? (typeof config.location_name === "string" ? config.location_name : null),
+    location_latitude:
+      r.location_latitude ??
+      (typeof config.location_latitude === "number" ? config.location_latitude : null),
+    location_longitude:
+      r.location_longitude ??
+      (typeof config.location_longitude === "number" ? config.location_longitude : null),
+    location_radius_meters:
+      r.location_radius_meters ??
+      (typeof config.location_radius_meters === "number" ? config.location_radius_meters : 200),
+    min_duration_minutes:
+      r.min_duration_minutes ??
+      (type === "run" && config.tracking_mode === "time" && typeof config.duration_minutes === "number"
+        ? config.duration_minutes
+        : null),
   };
 }
 
@@ -227,6 +251,9 @@ export function buildTaskConfigFromInput(task: {
     config.require_photo_proof = true;
   }
   if (type === "timer" && task.strictTimerMode === true) {
+    config.strict_timer_mode = true;
+  }
+  if (rawType === "workout" && task.strictTimerMode === true) {
     config.strict_timer_mode = true;
   }
   if (task.verificationMethod) {
