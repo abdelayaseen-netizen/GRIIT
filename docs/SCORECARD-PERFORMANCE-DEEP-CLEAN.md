@@ -1,7 +1,7 @@
 # GRIIT Scorecard — Post Deep Clean
 
 **Generated:** 2026-03-22  
-**Commit:** 6930f48c2be664bd9b7c97487d0edd0fc13faadd (pre-commit workspace; run `git rev-parse HEAD` after committing for the final hash)
+**Commit:** 10eebee1236ff11426de0d50aa36635b183df170
 
 ## Codebase Metrics
 
