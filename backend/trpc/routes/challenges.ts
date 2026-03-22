@@ -688,7 +688,10 @@ export const challengesRouter = createTRPCRouter({
         }
       }
 
-      const isTeamOrShared = input.participationType === "team" || input.participationType === "shared_goal";
+      const isTeamOrShared =
+        input.participationType === "team" ||
+        input.participationType === "shared_goal" ||
+        input.participationType === "duo";
       const runStatus = isTeamOrShared ? "waiting" : null;
       const isOneDay = input.type === "one_day";
       const insertPayload: Record<string, unknown> = {

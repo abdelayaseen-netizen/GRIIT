@@ -15,6 +15,8 @@ export const ROUTES = {
   TABS_HOME: "/(tabs)",
   TABS_DISCOVER: "/(tabs)/discover",
   TABS_CREATE: "/(tabs)/create",
+  /** Full-screen challenge creation wizard (hides tab bar). */
+  CREATE_WIZARD: "/create",
   TABS_PROFILE: "/(tabs)/profile",
   TABS_ACTIVITY: "/(tabs)/activity",
   TABS_SETTINGS: "/settings",

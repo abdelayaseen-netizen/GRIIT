@@ -259,6 +259,14 @@ function RootLayoutNav() {
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="create"
+        options={{
+          headerShown: false,
+          presentation: "fullScreenModal",
+          animation: "slide_from_bottom",
+        }}
+      />
       <Stack.Screen name="edit-profile" options={{ headerShown: false, presentation: "modal" }} />
       <Stack.Screen name="success" options={{ headerShown: false, presentation: "modal" }} />
       <Stack.Screen 

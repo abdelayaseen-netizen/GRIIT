@@ -60,7 +60,7 @@ export interface CreateTaskDraft {
   verificationRuleJson?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
 }
 
-export type ParticipationTypeUI = "solo" | "team" | "shared_goal";
+export type ParticipationTypeUI = "solo" | "duo" | "team" | "shared_goal";
 export type DeadlineTypeUI = "none" | "soft" | "hard";
 
 export interface CreateChallengeDraft {
@@ -173,7 +173,12 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
     showReplayLabel: draft.showReplayLabel,
     visibility: visibility === "PUBLIC" || visibility === "PRIVATE" ? visibility : "FRIENDS",
     participationType: partType,
-    teamSize: partType === "team" || partType === "shared_goal" ? (draft.teamSize ?? 2) : 1,
+    teamSize:
+      partType === "duo"
+        ? 2
+        : partType === "team" || partType === "shared_goal"
+          ? (draft.teamSize ?? 10)
+          : 1,
     tasks: draft.tasks.map((task) => ({
       title: task.title,
       type: task.type,
