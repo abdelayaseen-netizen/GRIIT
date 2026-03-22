@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   BookOpen,
+  BookOpenText,
   Timer,
   Camera,
   Footprints,
@@ -21,6 +22,9 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
+  Droplets,
+  Dumbbell,
+  Hash,
 } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import {
@@ -48,7 +52,17 @@ import {
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 
-type TaskType = "journal" | "timer" | "photo" | "run" | "simple" | "checkin";
+type TaskType =
+  | "journal"
+  | "timer"
+  | "photo"
+  | "run"
+  | "simple"
+  | "checkin"
+  | "water"
+  | "reading"
+  | "counter"
+  | "workout";
 type TrackingMode = "distance" | "time";
 type DistanceUnit = "miles" | "km" | "meters";
 
@@ -68,7 +82,7 @@ export interface TaskEditorTask {
   required: boolean;
   minWords?: number;
   targetValue?: number;
-  unit?: DistanceUnit | "minutes";
+  unit?: DistanceUnit | "minutes" | "glasses" | "pages";
   trackingMode?: TrackingMode;
   photoRequired?: boolean;
   locationName?: string;
@@ -138,6 +152,10 @@ const TASK_TYPE_STYLES: Record<TaskType, { color: string; selectedBg: string }> 
   run: { color: DS_COLORS.taskEmerald, selectedBg: DS_COLORS.runGreenBg },
   simple: { color: DS_COLORS.grayMedium, selectedBg: DS_COLORS.chipGrayBg },
   checkin: { color: DS_COLORS.checkinBlue, selectedBg: DS_COLORS.checkinBlueBg },
+  water: { color: DS_COLORS.checkinBlue, selectedBg: DS_COLORS.checkinBlueBg },
+  reading: { color: DS_COLORS.journalPurpleVivid, selectedBg: DS_COLORS.journalPurpleLight },
+  counter: { color: DS_COLORS.grayMedium, selectedBg: DS_COLORS.chipGrayBg },
+  workout: { color: DS_COLORS.taskEmerald, selectedBg: DS_COLORS.runGreenBg },
 };
 
 const TASK_TYPES: {
@@ -166,6 +184,10 @@ const TASK_TYPE_MAP: Record<
   run: { icon: Footprints, label: "Run / Workout", color: TASK_TYPE_STYLES.run.color },
   simple: { icon: CheckCircle, label: "Basic", color: TASK_TYPE_STYLES.simple.color },
   checkin: { icon: MapPin, label: "Location Check-in", color: TASK_TYPE_STYLES.checkin.color },
+  water: { icon: Droplets, label: "Water", color: TASK_TYPE_STYLES.water.color },
+  reading: { icon: BookOpenText, label: "Reading", color: TASK_TYPE_STYLES.reading.color },
+  counter: { icon: Hash, label: "Counter", color: TASK_TYPE_STYLES.counter.color },
+  workout: { icon: Dumbbell, label: "Workout", color: TASK_TYPE_STYLES.workout.color },
 };
 
 export default function TaskEditorModal({

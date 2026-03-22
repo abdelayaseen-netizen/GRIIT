@@ -152,7 +152,9 @@ export function getTaskVerification(row: ChallengeTaskRowRaw | null | undefined)
 
 /** Map UI task type to DB task_type (e.g. simple/photo -> manual). */
 export function toTaskType(type: string): string {
-  return type === "simple" || type === "photo" ? "manual" : type;
+  if (type === "simple" || type === "photo") return "manual";
+  if (type === "workout") return "run";
+  return type;
 }
 
 /** Build config object for a task from create-flow input. */
@@ -168,15 +170,41 @@ export function buildTaskConfigFromInput(task: {
   verificationRuleJson?: VerificationRuleStrava | Record<string, unknown> | null;
   [key: string]: unknown;
 }): ChallengeTaskConfig {
-  const type = task.type ?? "manual";
+  const rawType = task.type ?? "manual";
+  const type = rawType === "workout" ? "run" : rawType;
   const config: ChallengeTaskConfig = {
     required: task.required ?? true,
   };
   if (type === "journal") {
     config.min_words = typeof task.minWords === "number" ? task.minWords : 20;
   }
-  if ((type === "timer" || type === "run") && task.durationMinutes != null) {
+  if (type === "timer" && task.durationMinutes != null) {
     config.duration_minutes = task.durationMinutes;
+  }
+  if (type === "run") {
+    if (typeof task.trackingMode === "string") {
+      config.tracking_mode = task.trackingMode;
+    }
+    if (task.targetValue != null && typeof task.targetValue === "number") {
+      if (task.trackingMode === "time") {
+        config.duration_minutes = task.targetValue;
+      } else {
+        config.target_value = task.targetValue;
+      }
+    }
+    if (typeof task.unit === "string") {
+      config.unit = task.unit;
+    }
+  }
+  if (type === "water" && task.targetValue != null && typeof task.targetValue === "number") {
+    config.target_value = task.targetValue;
+    config.target_kind = "glasses";
+  }
+  if (type === "reading" && task.targetValue != null && typeof task.targetValue === "number") {
+    config.target_pages = task.targetValue;
+  }
+  if (type === "counter" && task.targetValue != null && typeof task.targetValue === "number") {
+    config.target_count = task.targetValue;
   }
   if (task.photoRequired === true || task.requirePhotoProof === true || type === "photo") {
     config.photo_required = true;
@@ -223,6 +251,9 @@ export function buildTaskInsertPayload(
     strictTimerMode: task.strictTimerMode,
     verificationMethod: task.verificationMethod,
     verificationRuleJson: task.verificationRuleJson,
+    targetValue: task.targetValue,
+    trackingMode: task.trackingMode,
+    unit: task.unit,
   });
   return {
     challenge_id: challengeId,

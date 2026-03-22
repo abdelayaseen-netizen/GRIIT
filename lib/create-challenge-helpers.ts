@@ -142,6 +142,21 @@ export function validateDraftTasks(
           return { valid: false, error: `Task "${task.title}" needs radius` };
         }
         break;
+      case "water":
+        if (!task.targetValue || task.targetValue <= 0) {
+          return { valid: false, error: `Task "${task.title}" needs a target (glasses)` };
+        }
+        break;
+      case "reading":
+        if (!task.targetValue || task.targetValue <= 0) {
+          return { valid: false, error: `Task "${task.title}" needs target pages` };
+        }
+        break;
+      case "counter":
+        if (!task.targetValue || task.targetValue <= 0) {
+          return { valid: false, error: `Task "${task.title}" needs a target count` };
+        }
+        break;
     }
   }
   return { valid: true };

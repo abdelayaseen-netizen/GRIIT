@@ -646,6 +646,40 @@ export const challengesRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "At least one task is required" });
       }
 
+      const { data: existingProfile, error: profileLookupError } = await ctx.supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      if (profileLookupError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ err: profileLookupError, userId: ctx.userId }, "[challenges.create] Profile lookup failed");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: profileLookupError.message || "Could not verify your profile.",
+        });
+      }
+      if (!existingProfile) {
+        const username = `user_${ctx.userId.slice(0, 8)}`;
+        const { error: profileUpsertError } = await ctx.supabase.from("profiles").upsert(
+          {
+            user_id: ctx.userId,
+            username,
+            display_name: "User",
+            onboarding_completed: false,
+          },
+          { onConflict: "user_id" }
+        );
+        if (profileUpsertError) {
+          const { logger } = await import("../../lib/logger");
+          logger.error({ err: profileUpsertError, userId: ctx.userId }, "[challenges.create] Profile create failed");
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: profileUpsertError.message || "Could not create your profile. Try again.",
+          });
+        }
+      }
+
       for (let i = 0; i < input.tasks.length; i++) {
         const task = input.tasks[i];
         if (!task) {
@@ -683,6 +717,21 @@ export const challengesRouter = createTRPCRouter({
             }
             if (!task.radiusMeters || task.radiusMeters <= 0) {
               throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Radius is required` });
+            }
+            break;
+          case 'water':
+            if (!task.targetValue || task.targetValue <= 0) {
+              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target is required` });
+            }
+            break;
+          case 'reading':
+            if (!task.targetValue || task.targetValue <= 0) {
+              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target pages is required` });
+            }
+            break;
+          case 'counter':
+            if (!task.targetValue || task.targetValue <= 0) {
+              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target count is required` });
             }
             break;
         }

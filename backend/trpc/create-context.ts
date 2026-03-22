@@ -35,8 +35,8 @@ export const createContext = async (opts: { req: Request }) => {
           userId = user.id;
           supabase = createUserSupabase(token);
         }
-      } catch {
-        // Auth verification failed — proceed without user (no log to avoid leaking token presence)
+      } catch (err) {
+        console.error("[createContext] auth.getUser failed", err);
       }
     }
   }
