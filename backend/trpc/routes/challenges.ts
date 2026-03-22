@@ -13,6 +13,37 @@ import {
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { joinChallengeDirect } from "../../lib/join-challenge";
 
+/** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
+async function autoJoinCreatorAfterCreate(
+  supabase: Parameters<typeof joinChallengeDirect>[0],
+  userId: string,
+  challengeId: string,
+  challengeName: string,
+  warnMessage: string
+): Promise<Awaited<ReturnType<typeof joinChallengeDirect>> | null> {
+  let activeChallenge: Awaited<ReturnType<typeof joinChallengeDirect>> | null = null;
+  try {
+    activeChallenge = await joinChallengeDirect(supabase, userId, challengeId);
+  } catch (joinErr: unknown) {
+    const { logger } = await import("../../lib/logger");
+    logger.warn({ err: joinErr, challengeId }, warnMessage);
+  }
+  if (activeChallenge) {
+    await supabase
+      .from("activity_events")
+      .insert({
+        user_id: userId,
+        event_type: "joined_challenge",
+        challenge_id: challengeId,
+        metadata: { challenge_name: challengeName },
+      })
+      .then(({ error: evtErr }) => {
+        if (evtErr) console.error("[challenges.create] joined_challenge event insert failed:", evtErr.message);
+      });
+  }
+  return activeChallenge;
+}
+
 /** Ensure 24h challenges have ends_at for frontend countdown (derive from live_date if missing). */
 function with24hEndsAt<T extends { duration_type?: string; ends_at?: string | null; live_date?: string | null }>(row: T): T {
   if (row.duration_type !== "24h") return row;
@@ -817,7 +848,14 @@ export const challengesRouter = createTRPCRouter({
       }
 
       if (input.tasks.length === 0) {
-        return { ...challenge, tasks: [] };
+        const activeChallenge = await autoJoinCreatorAfterCreate(
+          ctx.supabase,
+          ctx.userId,
+          challenge.id,
+          input.title,
+          "[challenges.create] Auto-join (no tasks) failed — non-fatal"
+        );
+        return { ...challenge, tasks: [], activeChallenge };
       }
 
       const tasksToInsert = input.tasks.map((task, i) =>
@@ -863,9 +901,18 @@ export const challengesRouter = createTRPCRouter({
         });
       }
 
+      const activeChallenge = await autoJoinCreatorAfterCreate(
+        ctx.supabase,
+        ctx.userId,
+        challenge.id,
+        input.title,
+        "[challenges.create] Auto-join failed — non-fatal"
+      );
+
       return {
         ...challenge,
         tasks: mapTaskRowsToApi((tasksRaw ?? []) as ChallengeTaskRowRaw[]),
+        activeChallenge,
       };
     }),
 });

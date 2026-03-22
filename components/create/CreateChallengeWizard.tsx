@@ -47,6 +47,7 @@ import type { TaskEditorTask } from "@/components/TaskEditorModal";
 import NewTaskModal from "@/components/create/NewTaskModal";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DRAFT_KEY = "griit_challenge_draft";
 
@@ -72,6 +73,7 @@ export default function CreateChallengeWizard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const isGuest = useIsGuest();
+  const { user } = useAuth();
   const { showGate } = useAuthGate();
   const celebrationVisible = useCelebrationStore((s) => s.visible);
   const pendingNavId = useRef<string | null>(null);
@@ -358,6 +360,10 @@ export default function CreateChallengeWizard() {
     try {
       const challenge = (await trpcMutate(TRPC.challenges.create, payload)) as { id?: string };
       await AsyncStorage.removeItem(DRAFT_KEY);
+      const { queryClient } = await import("@/lib/query-client");
+      void queryClient.invalidateQueries({ queryKey: ["home"] });
+      void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
+      void queryClient.invalidateQueries({ queryKey: ["discover"] });
       const newId = challenge?.id;
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -386,6 +392,7 @@ export default function CreateChallengeWizard() {
     }
   }, [
     isGuest,
+    user?.id,
     showGate,
     applyPhotoPolicyToTasks,
     tasks,
