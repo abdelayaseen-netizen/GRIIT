@@ -4,6 +4,8 @@
 **Total screens:** 35  
 **Total interactive elements:** 150+
 
+> **Sprint 6 note:** This document is a snapshot. Screens **`app/success.tsx`**, **`app/secure-confirmation.tsx`**, and root **`app/teams.tsx`** were removed in Sprint 6 Phase 1. Completion and celebration flows use other routes (e.g. **`challenge/complete`**, tabs). Use **`lib/routes.ts`** and **`app/_layout.tsx`** as the source of truth for current stacks.
+
 ---
 
 ## TABLE OF CONTENTS

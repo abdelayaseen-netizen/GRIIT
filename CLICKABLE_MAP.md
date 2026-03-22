@@ -3,6 +3,8 @@
 **Audit date:** Post Phase 1 + Phase 2 fixes  
 **Scope:** Every tap/click/press in `app/` and `components/` — traced to exact destination.
 
+> **Sprint 6 note:** This map is a historical audit. Routes **`/success`**, **`/secure-confirmation`**, and standalone **`/teams`** were removed in Sprint 6 Phase 1 (dead code). Prefer **`/(tabs)`**, **`challenge/complete`**, and **Teams tab** `/(tabs)/teams` when reconciling with the current app.
+
 ---
 
 ## PAGE: Home
