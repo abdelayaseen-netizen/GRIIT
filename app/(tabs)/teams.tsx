@@ -88,7 +88,7 @@ export default function TeamsTabScreen() {
   if (teamsQuery.isLoading && !teamsQuery.data) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top"]}>
-        <View style={{ paddingTop: 24, alignItems: "center" }}>
+        <View style={styles.loadingCenter}>
           <ActivityIndicator size="large" color={DS_COLORS.ACCENT_PRIMARY} accessibilityLabel="Loading teams" />
         </View>
         <View style={styles.skeletonHeader} />
@@ -139,7 +139,7 @@ export default function TeamsTabScreen() {
               accessibilityRole="button"
               accessibilityLabel="Create a team"
             >
-              <Users size={28} color={DS_COLORS.ACCENT_PRIMARY} style={{ marginBottom: 8 }} />
+              <Users size={28} color={DS_COLORS.ACCENT_PRIMARY} style={styles.cardIcon} />
               <Text style={styles.cardTitle}>Create a team</Text>
               <Text style={styles.cardSub}>You become owner, enter team name</Text>
             </TouchableOpacity>
@@ -150,7 +150,7 @@ export default function TeamsTabScreen() {
               accessibilityRole="button"
               accessibilityLabel="Join a team"
             >
-              <Users size={28} color={DS_COLORS.ACCENT_PRIMARY} style={{ marginBottom: 8 }} />
+              <Users size={28} color={DS_COLORS.ACCENT_PRIMARY} style={styles.cardIcon} />
               <Text style={styles.cardTitle}>Join a team</Text>
               <Text style={styles.cardSub}>Enter 8-character invite code</Text>
             </TouchableOpacity>
@@ -286,4 +286,6 @@ const styles = StyleSheet.create({
   feedTask: { color: DS_COLORS.textSecondary },
   feedTime: { color: DS_COLORS.textMuted },
   feedEmpty: { fontSize: 14, color: DS_COLORS.textMuted },
+  loadingCenter: { paddingTop: 24, alignItems: "center" },
+  cardIcon: { marginBottom: 8 },
 });

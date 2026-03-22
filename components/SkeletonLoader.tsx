@@ -42,20 +42,12 @@ export function Skeleton({ width = "100%", height = 16, borderRadius = 8, style 
 /** Compact skeleton for Home "Today's Goals" block only. */
 export function TodaysMissionsSkeleton() {
   return (
-    <View style={{ paddingHorizontal: 20, marginBottom: DS_SPACING.lg }}>
-      <Skeleton width={180} height={18} borderRadius={6} style={{ marginBottom: DS_SPACING.md }} />
-      <View
-        style={{
-          backgroundColor: DS_COLORS.BG_CARD,
-          borderRadius: DS_RADIUS.card,
-          padding: DS_SPACING.cardPadding,
-          borderWidth: 1,
-          borderColor: DS_COLORS.BORDER,
-        }}
-      >
-        <Skeleton width="70%" height={16} borderRadius={4} style={{ marginBottom: DS_SPACING.sm }} />
-        <Skeleton width={100} height={14} borderRadius={4} style={{ marginBottom: DS_SPACING.lg }} />
-        <Skeleton width="100%" height={44} borderRadius={8} style={{ marginBottom: DS_SPACING.sm }} />
+    <View style={skeletonStyles.todaysMissionsOuter}>
+      <Skeleton width={180} height={18} borderRadius={6} style={skeletonStyles.todaysTitleSkel} />
+      <View style={skeletonStyles.todaysCard}>
+        <Skeleton width="70%" height={16} borderRadius={4} style={skeletonStyles.todaysLine1} />
+        <Skeleton width={100} height={14} borderRadius={4} style={skeletonStyles.todaysLine2} />
+        <Skeleton width="100%" height={44} borderRadius={8} style={skeletonStyles.todaysBtnGap} />
         <Skeleton width="100%" height={44} borderRadius={8} />
       </View>
     </View>
@@ -67,13 +59,13 @@ export function HomeScreenSkeleton() {
     <View style={skeletonStyles.container}>
       <View style={skeletonStyles.headerCenter}>
         <Skeleton width={80} height={32} borderRadius={4} />
-        <Skeleton width={160} height={14} borderRadius={4} style={{ marginTop: 6 }} />
+        <Skeleton width={160} height={14} borderRadius={4} style={skeletonStyles.homeSkelMarginTop6} />
       </View>
 
       <View style={skeletonStyles.streakCard}>
         <Skeleton width={48} height={48} borderRadius={24} />
-        <Skeleton width={120} height={28} borderRadius={6} style={{ marginTop: 10 }} />
-        <Skeleton width={80} height={12} borderRadius={4} style={{ marginTop: 6 }} />
+        <Skeleton width={120} height={28} borderRadius={6} style={skeletonStyles.homeSkelMarginTop10} />
+        <Skeleton width={80} height={12} borderRadius={4} style={skeletonStyles.homeSkelMarginTop6} />
       </View>
 
       <View style={skeletonStyles.calendarRow}>
@@ -84,17 +76,33 @@ export function HomeScreenSkeleton() {
 
       <View style={skeletonStyles.challengeCard}>
         <Skeleton width="60%" height={18} borderRadius={4} />
-        <Skeleton width="40%" height={14} borderRadius={4} style={{ marginTop: 12 }} />
-        <Skeleton width="100%" height={8} borderRadius={4} style={{ marginTop: 12 }} />
-        <Skeleton width="30%" height={12} borderRadius={4} style={{ marginTop: 12 }} />
+        <Skeleton width="40%" height={14} borderRadius={4} style={skeletonStyles.homeSkelMarginTop12} />
+        <Skeleton width="100%" height={8} borderRadius={4} style={skeletonStyles.homeSkelMarginTop12} />
+        <Skeleton width="30%" height={12} borderRadius={4} style={skeletonStyles.homeSkelMarginTop12} />
       </View>
 
-      <Skeleton width="100%" height={52} borderRadius={12} style={{ marginTop: 16 }} />
+      <Skeleton width="100%" height={52} borderRadius={12} style={skeletonStyles.homeSkelMarginTop16} />
     </View>
   );
 }
 
 const skeletonStyles = StyleSheet.create({
+  todaysMissionsOuter: { paddingHorizontal: 20, marginBottom: DS_SPACING.lg },
+  todaysTitleSkel: { marginBottom: DS_SPACING.md },
+  todaysCard: {
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.cardPadding,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+  },
+  todaysLine1: { marginBottom: DS_SPACING.sm },
+  todaysLine2: { marginBottom: DS_SPACING.lg },
+  todaysBtnGap: { marginBottom: DS_SPACING.sm },
+  homeSkelMarginTop6: { marginTop: 6 },
+  homeSkelMarginTop10: { marginTop: 10 },
+  homeSkelMarginTop12: { marginTop: 12 },
+  homeSkelMarginTop16: { marginTop: 16 },
   container: {
     padding: 20,
   },

@@ -1453,7 +1453,7 @@ export default function ChallengeDetailScreen() {
               </View>
             </View>
             <View style={[s.commitmentWarning, { backgroundColor: DS_COLORS.dangerLight }]}>
-              <AlertTriangle size={14} color={DS_COLORS.danger} style={{ marginRight: 8 }} />
+              <AlertTriangle size={14} color={DS_COLORS.danger} style={s.warningIconInline} />
               <Text style={[s.commitmentWarningText, { color: DS_COLORS.danger }]}>One missed day resets progress to Day 1.</Text>
             </View>
             <TouchableOpacity
@@ -1516,6 +1516,7 @@ const s = StyleSheet.create({
     backgroundColor: DS_COLORS.background,
   },
   flex: { flex: 1 },
+  warningIconInline: { marginRight: 8 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 160 },
   scrollContentGrow: { flexGrow: 1 },

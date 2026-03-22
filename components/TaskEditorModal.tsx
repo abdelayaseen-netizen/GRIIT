@@ -670,7 +670,7 @@ export default function TaskEditorModal({
           {journalPrompt.trim().length > 0 && journalPrompt.trim().length < 20 && (
             <Text style={s.errorText}>Min 20 characters</Text>
           )}
-          <View style={{ flex: 1 }} />
+          <View style={s.flexSpacer} />
           <Text style={[s.hintText, journalPrompt.length > 220 && { color: tokenColors.accentRed }]}>
             {journalPrompt.length}/240
           </Text>
@@ -1092,7 +1092,7 @@ export default function TaskEditorModal({
         <InlineError message={error} onDismiss={clearError} />
 
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          style={s.flexFill}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           keyboardVerticalOffset={0}
         >
@@ -1207,7 +1207,7 @@ export default function TaskEditorModal({
 
             {renderPreview()}
 
-            <View style={{ height: 48 }} />
+            <View style={s.scrollBottomPad} />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -1218,6 +1218,9 @@ export default function TaskEditorModal({
 const STRAVA_SPORTS = ["Run", "Ride", "Walk"] as const;
 
 const s = StyleSheet.create({
+  flexFill: { flex: 1 },
+  flexSpacer: { flex: 1 },
+  scrollBottomPad: { height: 48 },
   typeGrid: {
     flexDirection: "row",
     flexWrap: "wrap",

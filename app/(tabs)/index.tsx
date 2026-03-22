@@ -212,7 +212,7 @@ export default function HomeScreen() {
         <DailyQuote />
 
         {homeQuery.isPending && !homeQuery.data ? (
-          <View style={{ paddingVertical: DS_SPACING.xxl, alignItems: "center" }}>
+          <View style={s.loadingWrap}>
             <ActivityIndicator size="large" color={DS_COLORS.ACCENT} />
           </View>
         ) : homeQuery.isError ? (
@@ -346,4 +346,5 @@ const s = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
+  loadingWrap: { paddingVertical: DS_SPACING.xxl, alignItems: "center" },
 });

@@ -3,13 +3,13 @@ import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View, StatusBar, Text, Pressable } from "react-native";
+import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
-import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthGateProvider } from "@/contexts/AuthGateContext";
@@ -43,17 +43,9 @@ const PROFILE_CHECK_TIMEOUT_MS = 2500;
 const SPLASH_MAX_MS = 1800;
 
 function AuthRedirectorLoading() {
-  const { colors } = useTheme();
   return (
-    <View style={{
-      position: "absolute",
-      inset: 0,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: colors.background,
-      zIndex: 999,
-    }}>
-      <ActivityIndicator size="large" color={colors.accent} />
+    <View style={layoutStyles.authLoadingOverlay}>
+      <ActivityIndicator size="large" color={DS_COLORS.accent} />
     </View>
   );
 }
@@ -231,7 +223,7 @@ function RootLayoutNav() {
   const inChallenge = firstSegment === "challenge";
   if (checkingOnboarding) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: DS_COLORS?.background ?? DS_COLORS.FALLBACK_BG }}>
+      <View style={layoutStyles.centeredFill}>
         <ActivityIndicator size="large" color={DS_COLORS?.accent ?? DS_COLORS.ACCENT_PRIMARY} />
       </View>
     );
@@ -241,15 +233,15 @@ function RootLayoutNav() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={layoutStyles.flex1}>
       {sessionExpiredMessage ? (
         <Pressable
-          style={{ backgroundColor: DS_COLORS.errorText, paddingVertical: 12, paddingHorizontal: 16, alignItems: "center" }}
+          style={layoutStyles.sessionExpiredBanner}
           onPress={() => setSessionExpiredMessage(null)}
           accessibilityRole="button"
           accessibilityLabel="Dismiss session expired message"
         >
-          <Text style={{ color: DS_COLORS.white, fontSize: 14 }}>{sessionExpiredMessage}</Text>
+          <Text style={layoutStyles.sessionExpiredText}>{sessionExpiredMessage}</Text>
         </Pressable>
       ) : null}
       <OfflineBanner />
@@ -374,7 +366,7 @@ function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={layoutStyles.flex1}>
           <ThemeProvider>
             <AuthProvider>
               <SessionExpiredContext.Provider value={{ message: sessionExpiredMessage, setMessage: setSessionExpiredMessage }}>
@@ -397,6 +389,31 @@ function RootLayout() {
 }
 
 export default Sentry.wrap(RootLayout);
+
+const layoutStyles = StyleSheet.create({
+  authLoadingOverlay: {
+    position: "absolute",
+    inset: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: DS_COLORS.background,
+    zIndex: 999,
+  },
+  centeredFill: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: DS_COLORS?.background ?? DS_COLORS.FALLBACK_BG,
+  },
+  flex1: { flex: 1 },
+  sessionExpiredBanner: {
+    backgroundColor: DS_COLORS.errorText,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  sessionExpiredText: { color: DS_COLORS.white, fontSize: 14 },
+});
 
 function ThemeAwareStatusBar() {
   return <StatusBar barStyle="dark-content" backgroundColor="transparent" />;

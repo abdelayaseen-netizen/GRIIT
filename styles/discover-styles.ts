@@ -763,4 +763,10 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
   },
+  v3LoadingWrap: {
+    paddingVertical: 48,
+    alignItems: "center",
+  },
+  v3HListSep: { width: 10 },
+  v3ScrollBottomSpacer: { height: 24 },
 });

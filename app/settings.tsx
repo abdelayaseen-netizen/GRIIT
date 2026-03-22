@@ -299,7 +299,7 @@ export default function SettingsScreen() {
             >
               <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>{user.email ?? "Signed in"}</Text>
               <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>Tap to edit profile</Text>
-              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ position: "absolute", right: 16, top: 18, transform: [{ rotate: "-90deg" }] }} />
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={styles.chevronDisclosure} />
             </TouchableOpacity>
           </View>
         )}
@@ -358,7 +358,7 @@ export default function SettingsScreen() {
                 <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
                 <View style={styles.toggleTextWrap}>
                   <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Reminder time</Text>
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                  <View style={styles.reminderPillsRow}>
                     {REMINDER_PRESETS.map((p) => (
                       <TouchableOpacity
                         key={p.value}
@@ -465,7 +465,7 @@ export default function SettingsScreen() {
                   {isPremium ? "Manage your subscription" : "Unlimited challenges, premium badge & more."}
                 </Text>
               </View>
-              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: "-90deg" }] }} />
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={styles.chevronInline} />
             </View>
           </TouchableOpacity>
           {!isGuest && Platform.OS !== "web" && (
@@ -639,7 +639,7 @@ export default function SettingsScreen() {
           >
             <View style={styles.toggleRow}>
               <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Privacy Policy</Text>
-              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: "-90deg" }] }} />
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={styles.chevronInline} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -651,7 +651,7 @@ export default function SettingsScreen() {
           >
             <View style={styles.toggleRow}>
               <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Terms of Service</Text>
-              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={{ transform: [{ rotate: "-90deg" }] }} />
+              <ChevronLeft size={20} color={DS_COLORS.textMuted} style={styles.chevronInline} />
             </View>
           </TouchableOpacity>
         </View>
@@ -874,4 +874,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bottomSpacer: { height: DS_SPACING.xxxl },
+  chevronDisclosure: { position: "absolute", right: 16, top: 18, transform: [{ rotate: "-90deg" }] },
+  chevronInline: { transform: [{ rotate: "-90deg" }] },
+  reminderPillsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
 });

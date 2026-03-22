@@ -442,7 +442,7 @@ export default function CreateChallengeWizard() {
           <Text style={styles.cancel}>Cancel</Text>
         </TouchableOpacity>
         <Text style={styles.topTitle}>Create challenge</Text>
-        <View style={{ width: 56 }} />
+        <View style={styles.topBarSpacer} />
       </View>
       {stepper}
 
@@ -759,7 +759,7 @@ export default function CreateChallengeWizard() {
                     onPress={() => setVisibility(row.v)}
                   >
                     <Icon size={20} color={sel ? CREATE_SELECTION.text : DS_COLORS.TEXT_SECONDARY} />
-                    <View style={{ flex: 1, marginLeft: 10 }}>
+                    <View style={styles.visTextCol}>
                       <Text style={styles.visTitle}>{row.label}</Text>
                       <Text style={styles.visDesc}>{row.desc}</Text>
                     </View>
@@ -767,7 +767,7 @@ export default function CreateChallengeWizard() {
                 );
               })}
               {who === "duo" && (
-                <View style={{ marginTop: 16 }}>
+                <View style={styles.inviteSection}>
                   <Text style={styles.fieldLabel}>Invite your partner</Text>
                   <TextInput
                     style={styles.input}
@@ -783,7 +783,7 @@ export default function CreateChallengeWizard() {
                 </View>
               )}
               {who === "squad" && (
-                <View style={{ marginTop: 16 }}>
+                <View style={styles.inviteSection}>
                   <Text style={styles.fieldLabel}>Invite your squad</Text>
                   <TouchableOpacity style={styles.outlineBtn} onPress={() => void Share.share({ message: "Join my squad challenge on GRIIT!" })}>
                     <Text style={styles.outlineBtnTxt}>Share invite link</Text>
@@ -1082,4 +1082,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   launchTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 16, fontWeight: "500" },
+  topBarSpacer: { width: 56 },
+  visTextCol: { flex: 1, marginLeft: 10 },
+  inviteSection: { marginTop: 16 },
 });
