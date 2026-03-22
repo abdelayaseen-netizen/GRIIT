@@ -1,7 +1,7 @@
 # GRIIT Final Scorecard (Post–Sprint 6)
 
 **Date:** 2026-03-22  
-**Commit:** `6b523ee`
+**Commit:** Sprint 6 documentation batch on `main` (2026-03-22). For exact SHA: `git log -1 --oneline -- docs/SCORECARD-FINAL.md`.
 
 ## Summary
 
