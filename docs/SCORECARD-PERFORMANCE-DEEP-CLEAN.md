@@ -1,7 +1,7 @@
 # GRIIT Scorecard — Post Deep Clean
 
 **Generated:** 2026-03-22  
-**Commit:** 10eebee1236ff11426de0d50aa36635b183df170
+**Commit:** 38eef2b (latest on `main` after scorecard hash update; primary change set: 10eebee)
 
 ## Codebase Metrics
 
