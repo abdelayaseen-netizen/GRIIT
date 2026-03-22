@@ -107,6 +107,12 @@ function TaskCompleteScreenInner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const { error, showError, clearError } = useInlineError();
+  const [paramsReady, setParamsReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setParamsReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const requiredSeconds = (config.min_duration_minutes ?? 0) * 60;
   const isCountdown = config.timer_direction === "countdown";
@@ -298,6 +304,16 @@ function TaskCompleteScreenInner() {
   }, [completionId, profile, challenge, activeChallenge, stats, userLocation, photoUri, photoUrl]);
 
   if (!taskId.trim() || !activeChallengeId.trim()) {
+    if (!paramsReady) {
+      return (
+        <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
+          <Stack.Screen options={{ title: "Loading…", headerBackVisible: true }} />
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <ActivityIndicator size="large" color={DS_COLORS.ACCENT} accessibilityLabel="Loading task" />
+          </View>
+        </SafeAreaView>
+      );
+    }
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ title: "Task", headerBackVisible: true }} />

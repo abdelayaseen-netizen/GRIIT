@@ -277,7 +277,7 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Run Task",
-          presentation: "modal"
+          presentation: "card"
         }} 
       />
       <Stack.Screen 
@@ -285,7 +285,7 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Journal Entry",
-          presentation: "modal"
+          presentation: "card"
         }} 
       />
       <Stack.Screen 
@@ -293,7 +293,7 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Timer Task",
-          presentation: "modal"
+          presentation: "card"
         }} 
       />
       <Stack.Screen 
@@ -301,7 +301,7 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Photo Verification",
-          presentation: "modal"
+          presentation: "card"
         }} 
       />
       <Stack.Screen 
@@ -309,7 +309,7 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Complete Task",
-          presentation: "modal"
+          presentation: "card"
         }} 
       />
       <Stack.Screen 
@@ -317,7 +317,7 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Complete Task",
-          presentation: "modal"
+          presentation: "card"
         }} 
       />
       <Stack.Screen 
@@ -325,7 +325,7 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Location Check-in",
-          presentation: "modal"
+          presentation: "card"
         }} 
       />
       <Stack.Screen 
