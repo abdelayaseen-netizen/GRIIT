@@ -15,7 +15,7 @@ function getNextMilestone(currentStreak: number) {
   return STREAK_MILESTONES.find((m) => m.days > currentStreak) ?? STREAK_MILESTONES[STREAK_MILESTONES.length - 1];
 }
 
-export default function NextUnlock({ currentStreak }: { currentStreak: number }) {
+export default React.memo(function NextUnlock({ currentStreak }: { currentStreak: number }) {
   const next = getNextMilestone(currentStreak);
   if (!next) return null;
   const away = Math.max(0, next.days - currentStreak);
@@ -40,7 +40,7 @@ export default function NextUnlock({ currentStreak }: { currentStreak: number })
       </View>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   wrap: {

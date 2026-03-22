@@ -119,9 +119,6 @@ type FunnelProps = Record<string, string | number | boolean | undefined>;
 /** String-key funnel events (exact PostHog event names). Fire-and-forget. */
 export function trackEvent(event: string, properties?: FunnelProps): void {
   try {
-    if (__DEV__) {
-      console.log(`[Analytics] ${event}`, properties ?? {});
-    }
     if (!shouldSendPostHog()) return;
     const ph = getPostHog();
     ph?.capture(event, properties);

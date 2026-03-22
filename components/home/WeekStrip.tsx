@@ -10,7 +10,7 @@ function mondayFirstDayIndex(date: Date): number {
   return js === 0 ? 6 : js - 1;
 }
 
-export default function WeekStrip({
+export default React.memo(function WeekStrip({
   securedDateKeys,
   currentStreak,
   freezeCount,
@@ -91,7 +91,7 @@ export default function WeekStrip({
       </Text>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   bannerWrap: {

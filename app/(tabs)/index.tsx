@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator, Alert } from "react-native";
+import { InlineError } from "@/components/InlineError";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -104,11 +105,13 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const { stats, refetchAll } = useApp();
+  const [leaveChallengeError, setLeaveChallengeError] = React.useState<string | null>(null);
 
   const homeQuery = useQuery({
     queryKey: ["home", "v2", user?.id ?? ""],
     enabled: !isGuest && !!user?.id,
     staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<HomeData> => {
       const settled = await Promise.allSettled([
         trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
@@ -270,6 +273,9 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
+        {leaveChallengeError ? (
+          <InlineError message={leaveChallengeError} onDismiss={() => setLeaveChallengeError(null)} />
+        ) : null}
         <View style={s.headerRow}>
           <View>
             <Text style={s.greeting}>{getGreeting()}</Text>
@@ -340,6 +346,7 @@ export default function HomeScreen() {
                   void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
                 }}
                 onLongPressChallenge={() => {
+                  setLeaveChallengeError(null);
                   Alert.alert("Challenge options", group.challengeName, [
                     {
                       text: "View challenge",
@@ -366,7 +373,7 @@ export default function HomeScreen() {
                                   console.error("[Home] leave challenge failed:", err);
                                   const msg =
                                     err instanceof Error ? err.message : "Could not leave this challenge. Try again.";
-                                  Alert.alert("Leave failed", msg);
+                                  setLeaveChallengeError(msg);
                                 }
                               },
                             },

@@ -48,6 +48,8 @@ import NewTaskModal from "@/components/create/NewTaskModal";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 const DRAFT_KEY = "griit_challenge_draft";
 
@@ -102,6 +104,7 @@ export default function CreateChallengeWizard() {
   const [duoInvite, setDuoInvite] = useState("");
   const [resumeBanner, setResumeBanner] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { error: wizardError, showError: showWizardError, clearError: clearWizardError } = useInlineError();
 
   const { participation, teamSize } = whoToParticipation(who);
   const duration = getDurationFromDraft(challengeType, durationDays, customDur);
@@ -326,17 +329,18 @@ export default function CreateChallengeWizard() {
       showGate("create");
       return;
     }
+    clearWizardError();
     const list = applyPhotoPolicyToTasks(tasks);
     const draftTasks = list as unknown as CreateChallengeDraft["tasks"];
     const v = validateDraftTasks(draftTasks, participation);
     if (!v.valid) {
-      Alert.alert("Check tasks", v.error ?? "Fix tasks and try again.");
+      showWizardError(v.error ?? "Fix tasks and try again.");
       return;
     }
     const liveDate =
       challengeType === "one_day" ? new Date().toISOString().slice(0, 10) : "";
     if (!canProceedStep1(title, duration, challengeType, liveDate, participation)) {
-      Alert.alert("Missing fields", "Add a title and duration.");
+      showWizardError("Add a title and duration.");
       return;
     }
     setSubmitting(true);
@@ -386,7 +390,7 @@ export default function CreateChallengeWizard() {
         router.replace(ROUTES.TABS_DISCOVER as never);
       }
     } catch (e: unknown) {
-      Alert.alert("Could not create", e instanceof Error ? e.message : "Try again.");
+      showWizardError(e instanceof Error ? e.message : "Try again.");
     } finally {
       setSubmitting(false);
     }
@@ -406,6 +410,8 @@ export default function CreateChallengeWizard() {
     teamSize,
     who,
     router,
+    clearWizardError,
+    showWizardError,
   ]);
 
   const estTasks: EstimateTaskInput[] = tasks.map((t) => ({
@@ -451,6 +457,7 @@ export default function CreateChallengeWizard() {
         <Text style={styles.topTitle}>Create challenge</Text>
         <View style={styles.topBarSpacer} />
       </View>
+      {wizardError ? <InlineError message={wizardError} onDismiss={clearWizardError} /> : null}
       {stepper}
 
       <Animated.View

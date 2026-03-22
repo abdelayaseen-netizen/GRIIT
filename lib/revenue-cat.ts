@@ -42,7 +42,7 @@ export function configureRevenueCat(appUserId: string | null): void {
   });
   
   if (!apiKey || apiKey.startsWith("REVENUECAT_") || apiKey.length < 10) {
-    if (__DEV__) console.log("[RevenueCat] Skipping configuration — no valid API key");
+    if (__DEV__) console.warn("[RevenueCat] Skipping configuration — no valid API key");
     return;
   }
   
@@ -51,7 +51,7 @@ export function configureRevenueCat(appUserId: string | null): void {
     if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     configured = true;
   } catch (e) {
-    if (__DEV__) console.log("[RevenueCat] Configuration failed:", e);
+    if (__DEV__) console.warn("[RevenueCat] Configuration failed:", e);
   }
 }
 

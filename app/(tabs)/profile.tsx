@@ -51,6 +51,7 @@ export default function ProfileScreen() {
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
+    placeholderData: (previousData) => previousData,
   });
 
   const securedDatesQuery = useQuery({
@@ -58,6 +59,7 @@ export default function ProfileScreen() {
     queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
     staleTime: 5 * 60 * 1000,
     enabled: !isGuest && !!user?.id,
+    placeholderData: (previousData) => previousData,
   });
 
   const refreshing = activeListQuery.isRefetching || securedDatesQuery.isRefetching;

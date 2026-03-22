@@ -9,7 +9,7 @@ type Props = {
   done: number;
 };
 
-export default function StatsRow({ streak, best, active, done }: Props) {
+export default React.memo(function StatsRow({ streak, best, active, done }: Props) {
   const items = [
     { label: "streak", value: streak },
     { label: "best", value: best },
@@ -26,7 +26,7 @@ export default function StatsRow({ streak, best, active, done }: Props) {
       ))}
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   row: { flexDirection: "row", gap: 8, paddingHorizontal: 24, marginTop: 20 },

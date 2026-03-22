@@ -19,7 +19,7 @@ type Props = {
   onPressBrowse: () => void;
 };
 
-export default function ActiveChallengeCard({ items, isLoading, onPressItem, onPressBrowse }: Props) {
+export default React.memo(function ActiveChallengeCard({ items, isLoading, onPressItem, onPressBrowse }: Props) {
   const hasMany = items.length > 1;
   return (
     <View style={s.wrap}>
@@ -64,7 +64,7 @@ export default function ActiveChallengeCard({ items, isLoading, onPressItem, onP
       )}
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   wrap: { marginTop: 20 },

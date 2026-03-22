@@ -3,13 +3,13 @@ import { View, Text, StyleSheet } from "react-native";
 import { getDailyQuote } from "@/lib/quotes";
 import { DS_COLORS } from "@/lib/design-system";
 
-export default function DailyQuote() {
+export default React.memo(function DailyQuote() {
   return (
     <View style={s.wrap}>
       <Text style={s.text}>{`"${getDailyQuote()}"`}</Text>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   wrap: {

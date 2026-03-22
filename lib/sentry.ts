@@ -5,7 +5,7 @@ const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 export function initSentry(): void {
   if (!SENTRY_DSN) {
     if (__DEV__) {
-      console.log("[Sentry] No DSN configured, skipping init");
+      console.warn("[Sentry] No DSN configured, skipping init");
     }
     return;
   }
@@ -19,7 +19,7 @@ export function initSentry(): void {
     attachStacktrace: true,
     beforeSend(event) {
       if (__DEV__) {
-        console.log("[Sentry] Would send event:", event.event_id);
+        console.warn("[Sentry] Would send event:", event.event_id);
         return null;
       }
       return event;

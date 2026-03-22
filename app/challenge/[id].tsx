@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -13,7 +12,6 @@ import {
   Modal,
   StatusBar,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -30,8 +28,6 @@ import {
   CircleCheck,
   AlertTriangle,
   Shield,
-  ChevronLeft,
-  MoreHorizontal,
   Clock,
   Users,
   Lock,
@@ -67,16 +63,18 @@ import {
   DS_COLORS,
   DS_SPACING,
   DS_RADIUS,
-  DS_TYPOGRAPHY,
   DS_BORDERS,
-  DS_MEASURES,
   GRIIT_COLORS,
 } from "@/lib/design-system";
-import { InitialCircle } from "@/src/components/ui";
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ErrorRetry } from "@/components/ErrorRetry";
+import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
+import { ChallengeHero } from "@/components/challenge/ChallengeHero";
+import { ChallengeStats } from "@/components/challenge/ChallengeStats";
+import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
+import { ChallengeTodayGoals } from "@/components/challenge/ChallengeTodayGoals";
 
 /** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
@@ -257,19 +255,6 @@ function CountdownTimer({ endsAt, theme }: { endsAt: string; theme: DifficultyTh
   );
 }
 
-function InfoChip({ label, theme: _theme, dark }: { label: string; theme: DifficultyTheme; dark?: boolean }) {
-  return (
-    <View
-      style={[
-        s.infoChip,
-        { borderColor: "rgba(255,255,255,0.35)", backgroundColor: dark ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.18)" },
-      ]}
-    >
-      <Text style={s.infoChipText}>{label}</Text>
-    </View>
-  );
-}
-
 function RequirementChips({
   task,
 }: {
@@ -311,20 +296,6 @@ function RequirementChips({
           <Text style={s.reqChipText}>{words}+ words</Text>
         </View>
       ) : null}
-    </View>
-  );
-}
-
-function SocialAvatars({ participantsCount, participantUsernames }: { participantsCount: number; participantUsernames?: string[] }) {
-  const showAvatars = participantsCount > 0 && participantUsernames && participantUsernames.length > 0;
-  if (!showAvatars) return null;
-  return (
-    <View style={s.avatarStack}>
-      {(participantUsernames ?? []).slice(0, 5).map((username, i) => (
-        <View key={username + i} style={[s.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 5 - i }]}>
-          <InitialCircle username={username} size={32} />
-        </View>
-      ))}
     </View>
   );
 }
@@ -1087,105 +1058,62 @@ export default function ChallengeDetailScreen() {
           }
         >
           <InlineError message={error} onDismiss={clearError} />
-          {/* HERO: green for 24h, orange gradient otherwise */}
-          <LinearGradient colors={headerGradientColors} style={[s.heroHeader, isDaily && s.heroHeader24h]}>
-            <SafeAreaView edges={["top"]} style={s.heroSafeArea}>
-              <View style={s.topNav}>
-                <TouchableOpacity
-                  style={[s.backPill, isDaily && s.backPill24h]}
-                  onPress={() => router.back()}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  accessible
-                  accessibilityLabel="Go back"
-                  accessibilityRole="button"
-                >
-                  <ChevronLeft size={24} color={DS_COLORS.white} />
-                </TouchableOpacity>
-                <Text style={[s.topNavTitle, isDaily && s.topNavTitle24h]}>Challenge</Text>
-                <TouchableOpacity
-                  style={[s.morePill, isDaily && s.backPill24h]}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  onPress={() => {
-                    Alert.alert("Challenge", undefined, [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Share",
-                        onPress: () => {
-                          if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          trackEvent("share_tapped", {
-                            content_type: "challenge",
-                            challenge_id: id ?? undefined,
-                          });
-                          import("@/lib/share").then(({ shareChallenge }) =>
-                            shareChallenge(
-                              {
-                                name: challenge.title,
-                                duration: challenge.duration_days ?? 0,
-                                id: id ?? "",
-                                tasksPerDay: challenge.tasks?.length,
-                              },
-                              currentUserId
-                            )
-                          ).catch((e) => console.error("[ChallengeDetail] shareChallenge failed:", e));
+          <ChallengeHero
+            headerGradientColors={headerGradientColors}
+            isDaily={isDaily}
+            isJoined={isJoined}
+            challenge={challenge}
+            durationLabel={durationLabel}
+            userStreak={userStreak}
+            userCurrentDay={userCurrentDay}
+            difficulty={difficulty}
+            difficultyLabel={difficultyLabel}
+            difficultyPillStyle={difficultyPillStyle}
+            visibilityLabel={visibilityLabel}
+            visibilityIcon={visibilityIcon}
+            eyebrowLabel={eyebrowLabel}
+            referrerLabel={referrerLabel}
+            onBack={() => router.back()}
+            onMoreMenu={() => {
+              Alert.alert("Challenge", undefined, [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Share",
+                  onPress: () => {
+                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    trackEvent("share_tapped", {
+                      content_type: "challenge",
+                      challenge_id: id ?? undefined,
+                    });
+                    import("@/lib/share").then(({ shareChallenge }) =>
+                      shareChallenge(
+                        {
+                          name: challenge.title,
+                          duration: challenge.duration_days ?? 0,
+                          id: id ?? "",
+                          tasksPerDay: challenge.tasks?.length,
                         },
-                      },
-                      {
-                        text: "Invite friends",
-                        onPress: () => {
-                          trackEvent("invite_sent", {
-                            content_type: "challenge",
-                            challenge_id: id ?? undefined,
-                            source: "challenge_menu",
-                          });
-                          import("@/lib/share").then(({ inviteToChallenge }) =>
-                            inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                          ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge failed:", e));
-                        },
-                      },
-                    ], { cancelable: true });
-                  }}
-                  accessible
-                  accessibilityLabel="Challenge options"
-                  accessibilityRole="button"
-                >
-                  <MoreHorizontal size={20} color={DS_COLORS.white} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={s.heroContent}>
-                {eyebrowLabel != null && (
-                  <View style={s.dailyLabel}>
-                    <Text style={s.dailyLabelText}>{eyebrowLabel}</Text>
-                  </View>
-                )}
-                <Text style={s.heroTitle}>{challenge.title}</Text>
-                <Text style={s.heroTagline} numberOfLines={2}>{challenge.short_hook || challenge.description}</Text>
-                {referrerLabel ? <Text style={s.referrerLabel}>{referrerLabel}</Text> : null}
-                <View style={s.chipRow}>
-                  <InfoChip label={durationLabel} theme={theme} dark />
-                  {isJoined && !isDaily && (
-                    <>
-                      <InfoChip label={`${userStreak}-day streak`} theme={theme} dark />
-                      <InfoChip label={`Day ${userCurrentDay} / ${challenge.duration_days}`} theme={theme} dark />
-                    </>
-                  )}
-                  <View style={[s.difficultyPill, { backgroundColor: difficultyPillStyle.bg }]}>
-                    <Text style={[s.difficultyPillText, { color: difficultyPillStyle.text }]}>
-                      {difficulty === "hard" || difficulty === "extreme" ? `${difficultyLabel} Mode` : difficultyLabel}
-                    </Text>
-                  </View>
-                  {visibilityLabel && (
-                    <View style={[s.infoChip, s.visibilityChip, { borderColor: "rgba(255,255,255,0.35)", backgroundColor: "rgba(255,255,255,0.15)" }]}>
-                      {visibilityIcon}
-                      <Text style={s.infoChipText}>{visibilityLabel}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </SafeAreaView>
-          </LinearGradient>
+                        currentUserId
+                      )
+                    ).catch((e) => console.error("[ChallengeDetail] shareChallenge failed:", e));
+                  },
+                },
+                {
+                  text: "Invite friends",
+                  onPress: () => {
+                    trackEvent("invite_sent", {
+                      content_type: "challenge",
+                      challenge_id: id ?? undefined,
+                      source: "challenge_menu",
+                    });
+                    import("@/lib/share").then(({ inviteToChallenge }) =>
+                      inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
+                    ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge failed:", e));
+                  },
+                },
+              ], { cancelable: true });
+            }}
+          />
 
           {/* BODY: warm background, large radius cards, premium spacing */}
           <View style={[s.body, isDaily && { gap: DS_SPACING.sm }]}>
@@ -1286,51 +1214,18 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Participants summary card */}
-            <View style={s.participantStatsCard}>
-              <View style={s.socialRow}>
-                <SocialAvatars participantsCount={participantCount} participantUsernames={participantUsernames} />
-                <View style={s.socialTextWrap}>
-                  <Text style={s.socialPrimary}>
-                    {participantCount === 0
-                      ? "Be the first to start something real."
-                      : (() => {
-                          const pc = participantCount;
-                          const joinedToday = Math.max(1, Math.floor(pc * 0.02));
-                          const rate = challenge.completion_rate ?? 0;
-                          const activeToday =
-                            (challenge.active_today_count ?? 0) > 0
-                              ? ` · ${formatCount(challenge.active_today_count ?? 0)} active today`
-                              : "";
-                          return `${formatCount(pc)} in this challenge${activeToday} · about ${joinedToday} joined today · ${rate}% completion rate`;
-                        })()}
-                  </Text>
-                </View>
-              </View>
-            </View>
+            <ChallengeLeaderboard
+              challenge={challenge}
+              participantCount={participantCount}
+              participantUsernames={participantUsernames}
+              formatCount={formatCount}
+            />
 
-            {/* Stats row: secured today % | completion rate % (spec 3.3) */}
-            <View style={s.statsRowCard}>
-              <View style={s.statsRowCol}>
-                <Text style={s.statsRowValue}>
-                  {challenge.participants_count
-                    ? Math.round(((challenge.active_today_count ?? 0) / Math.max(1, challenge.participants_count)) * 100)
-                    : 0}%
-                </Text>
-                <Text style={s.statsRowLabel}>secured today</Text>
-              </View>
-              <View style={s.statsRowDivider} />
-              <View style={s.statsRowCol}>
-                <Text style={s.statsRowValue}>{challenge.completion_rate ?? 0}%</Text>
-                <Text style={s.statsRowLabel}>completion rate</Text>
-              </View>
-            </View>
+            <ChallengeStats challenge={challenge} />
 
             {/* Today's Goals (hidden when team failed or shared-goal-only) */}
             {!(isTeamChallenge && runStatus === "failed") && (
-            <View style={s.missionsSection}>
-              <Text style={s.sectionTitle}>Today&apos;s Goals</Text>
-              <View style={s.missionsCard}>
+            <ChallengeTodayGoals>
                 {allTasks.map((task, index) => {
                   const checkin = todayCheckins.find((c: CheckinFromApi) => c.task_id === task.id);
                   const isCompleted =
@@ -1372,8 +1267,7 @@ export default function ChallengeDetailScreen() {
                     />
                   );
                 })}
-              </View>
-            </View>
+            </ChallengeTodayGoals>
             )}
 
             {/* Rules */}
@@ -1617,974 +1511,4 @@ export default function ChallengeDetailScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: DS_COLORS.background,
-  },
-  flex: { flex: 1 },
-  warningIconInline: { marginRight: 8 },
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: DS_SPACING.lg },
 
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: DS_COLORS.background,
-  },
-  skeletonHeader: {
-    height: 260,
-    backgroundColor: DS_COLORS.borderAlt,
-  },
-  skeletonBody: {
-    padding: DS_SPACING.cardPadding,
-  },
-  skeletonChipRow: {
-    flexDirection: "row",
-    gap: DS_SPACING.sm,
-    marginBottom: DS_SPACING.xxl,
-    marginTop: DS_SPACING.lg,
-  },
-  skeletonChip: {
-    width: 80,
-    height: 32,
-    borderRadius: DS_RADIUS.chip,
-    backgroundColor: DS_COLORS.surfaceMuted,
-  },
-  skeletonBlock: {
-    height: 80,
-    borderRadius: DS_RADIUS.cardAlt,
-    backgroundColor: DS_COLORS.surfaceMuted,
-    marginBottom: DS_SPACING.xl,
-  },
-  skeletonMission: {
-    height: 64,
-    borderRadius: DS_RADIUS.cardAlt,
-    backgroundColor: DS_COLORS.surfaceMuted,
-    marginBottom: DS_SPACING.md,
-  },
-
-  emptyWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: DS_SPACING.xxxl,
-  },
-  emptyText: {
-    fontSize: DS_TYPOGRAPHY.body.fontSize,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textSecondary,
-    marginBottom: DS_SPACING.lg,
-  },
-  emptySubtext: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    marginBottom: DS_SPACING.lg,
-    textAlign: "center",
-    color: DS_COLORS.textSecondary,
-  },
-  emptyBtn: {
-    paddingHorizontal: DS_SPACING.xxl,
-    paddingVertical: DS_SPACING.md,
-    backgroundColor: DS_COLORS.accent,
-    borderRadius: DS_RADIUS.button,
-  },
-  emptyBtnText: {
-    fontSize: DS_TYPOGRAPHY.buttonSmall.fontSize,
-    fontWeight: "600" as const,
-    color: DS_COLORS.white,
-  },
-
-  heroHeader: {
-    minHeight: 280,
-    paddingBottom: DS_SPACING.xxl + DS_SPACING.lg,
-    borderBottomLeftRadius: DS_RADIUS.card,
-    borderBottomRightRadius: DS_RADIUS.card,
-  },
-  heroHeader24h: {
-    backgroundColor: DS_COLORS.challenge24hHeaderBg,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  heroSafeArea: {
-    paddingHorizontal: 20,
-  },
-  topNav: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: DS_SPACING.sm,
-    marginBottom: DS_SPACING.xxl,
-  },
-  backPill: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backPill24h: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  topNavTitle: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600" as const,
-    color: DS_COLORS.white,
-    letterSpacing: 0.5,
-  },
-  topNavTitle24h: {
-    fontSize: 15,
-    fontWeight: "400" as const,
-  },
-  morePill: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroContent: {
-    paddingTop: DS_SPACING.xs,
-  },
-  heroEyebrow: {
-    fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
-    fontWeight: DS_TYPOGRAPHY.eyebrow.fontWeight,
-    letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,
-    color: "rgba(255,255,255,0.85)",
-    marginBottom: DS_SPACING.sm,
-  },
-  dailyLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginBottom: DS_SPACING.sm,
-  },
-  dailyLabelText: {
-    fontSize: 11,
-    fontWeight: "600" as const,
-    color: "rgba(255,255,255,0.9)",
-    letterSpacing: 1.5,
-    textTransform: "uppercase" as const,
-  },
-  heroTitle: {
-    fontSize: 30,
-    fontWeight: "800" as const,
-    color: DS_COLORS.white,
-    letterSpacing: -0.5,
-    lineHeight: 36,
-    marginBottom: DS_SPACING.sm,
-  },
-  heroTagline: {
-    fontSize: 16,
-    fontWeight: "400" as const,
-    color: "rgba(255,255,255,0.8)",
-    lineHeight: 22,
-    marginBottom: DS_SPACING.lg,
-  },
-  referrerLabel: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "500" as const,
-    color: "rgba(255,255,255,0.85)",
-    marginBottom: DS_SPACING.sm,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: DS_SPACING.sm,
-  },
-  visibilityChip: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 5,
-  },
-  difficultyPill: {
-    paddingHorizontal: DS_SPACING.md,
-    paddingVertical: DS_SPACING.sm,
-    borderRadius: 100,
-  },
-  difficultyPillText: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600" as const,
-  },
-  infoChip: {
-    paddingHorizontal: DS_SPACING.md,
-    paddingVertical: DS_SPACING.sm,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  infoChipText: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600" as const,
-    color: DS_COLORS.white,
-    letterSpacing: 0.1,
-  },
-  body: {
-    backgroundColor: DS_COLORS.background,
-    borderTopLeftRadius: DS_RADIUS.card,
-    borderTopRightRadius: DS_RADIUS.card,
-    marginTop: -DS_RADIUS.card * 0.5,
-    paddingTop: DS_SPACING.xxl,
-    paddingHorizontal: 20,
-    paddingBottom: DS_SPACING.lg,
-    borderWidth: 0,
-    shadowColor: DS_COLORS.shadowBlack,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-
-  countdownCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: DS_COLORS.white,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    marginBottom: DS_SPACING.lg,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-  },
-  countdownLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_SPACING.sm,
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  countdownLabel: {
-    fontSize: 15,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textPrimary,
-  },
-  countdownValue: {
-    fontSize: 24,
-    fontWeight: "700" as const,
-    fontVariant: ["tabular-nums"] as const,
-    letterSpacing: 0.5,
-  },
-
-  expiredBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: DS_COLORS.dangerSoft,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  expiredText: {
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: DS_COLORS.dangerDark,
-  },
-
-  progressSimpleCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  progressSimpleText: {
-    fontSize: 13,
-  },
-  progressSection: {
-    marginBottom: DS_SPACING.xl,
-  },
-  progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: DS_SPACING.sm,
-  },
-  sectionLabel: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600" as const,
-    color: DS_COLORS.textPrimary,
-  },
-  progressValue: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "700" as const,
-    color: DS_COLORS.textPrimary,
-    fontVariant: ["tabular-nums"] as const,
-  },
-  progressBarBg: {
-    height: DS_MEASURES.progressBarHeight,
-    borderRadius: DS_RADIUS.input / 2,
-    overflow: "hidden" as const,
-    marginBottom: DS_SPACING.sm,
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  streakAlert: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginBottom: 6,
-  },
-  streakAlertText: {
-    fontSize: 13,
-    fontWeight: "500" as const,
-  },
-  failAlert: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginTop: 4,
-  },
-  failAlertText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: DS_COLORS.dangerDark,
-  },
-  failCtaWrap: {
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
-  },
-  failCtaText: {
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textSecondary,
-    marginBottom: 12,
-  },
-  failCtaBtn: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  failCtaBtnText: {
-    fontSize: 15,
-    fontWeight: "600" as const,
-    color: DS_COLORS.white,
-  },
-
-  participantStatsCard: {
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
-    padding: DS_SPACING.cardPadding,
-    marginBottom: DS_SPACING.lg,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-  },
-  statsRowCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: DS_COLORS.surfaceMuted,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: DS_SPACING.lg,
-    borderWidth: 0,
-  },
-  statsRowCol: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statsRowValue: {
-    fontSize: 24,
-    fontWeight: "700" as const,
-    color: DS_COLORS.accent,
-    marginBottom: DS_SPACING.xs,
-  },
-  statsRowLabel: {
-    fontSize: 13,
-    fontWeight: "400" as const,
-    color: DS_COLORS.textSecondary,
-  },
-  statsRowDivider: {
-    width: 1,
-    alignSelf: "stretch",
-    backgroundColor: DS_COLORS.border,
-    marginVertical: DS_SPACING.xs,
-  },
-  progressStatsCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
-    padding: DS_SPACING.cardPadding,
-    marginBottom: DS_SPACING.lg,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-  },
-  progressStatItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  progressStatValue: {
-    fontSize: 24,
-    fontWeight: "800" as const,
-    color: DS_COLORS.accent,
-    marginBottom: DS_SPACING.xs,
-  },
-  progressStatLabel: {
-    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    fontWeight: DS_TYPOGRAPHY.statLabel.fontWeight,
-    color: DS_COLORS.textSecondary,
-  },
-  progressStatDivider: {
-    width: 1,
-    alignSelf: "stretch",
-    backgroundColor: DS_COLORS.border,
-    marginVertical: DS_SPACING.xs,
-  },
-  socialRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_SPACING.lg,
-  },
-  avatarStack: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  stackAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: DS_COLORS.white,
-  },
-  socialTextWrap: {
-    flex: 1,
-  },
-  socialPrimary: {
-    fontSize: 15,
-    fontWeight: "700" as const,
-    color: DS_COLORS.textPrimary,
-    letterSpacing: -0.1,
-  },
-  socialSecondary: {
-    fontSize: 13,
-    fontWeight: "400" as const,
-    color: DS_COLORS.textSecondary,
-    marginTop: DS_SPACING.xs,
-  },
-
-  statItem: {
-    flex: 1,
-    backgroundColor: DS_COLORS.surfaceMuted,
-    borderRadius: DS_RADIUS.cardAlt,
-    paddingVertical: DS_SPACING.lg,
-    paddingHorizontal: DS_SPACING.cardPadding,
-    alignItems: "center",
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-  },
-  statNumber: {
-    fontSize: DS_TYPOGRAPHY.statValue.fontSize,
-    fontWeight: "800" as const,
-    letterSpacing: -0.5,
-    marginBottom: DS_SPACING.xs,
-  },
-  statLabel: {
-    fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textSecondary,
-    textAlign: "center" as const,
-  },
-
-  missionsSection: {
-    marginBottom: DS_SPACING.xxl,
-  },
-  sectionTitle: {
-    fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
-    fontWeight: DS_TYPOGRAPHY.sectionTitle.fontWeight,
-    color: DS_COLORS.textPrimary,
-    letterSpacing: DS_TYPOGRAPHY.sectionTitle.letterSpacing,
-    marginBottom: DS_SPACING.md,
-  },
-  missionsCard: {
-    backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
-    overflow: "hidden" as const,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-  },
-  missionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: DS_SPACING.cardPadding,
-    paddingVertical: DS_SPACING.lg,
-    gap: DS_SPACING.lg,
-    minHeight: 72,
-  },
-  missionRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: DS_COLORS.border,
-  },
-  missionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  missionContent: {
-    flex: 1,
-  },
-  missionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  journalPill: {
-    backgroundColor: DS_COLORS.avatarPurple,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  journalPillText: {
-    fontSize: 10,
-    fontWeight: "600" as const,
-    color: DS_COLORS.avatarPurpleText,
-  },
-  timePill: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 3,
-    backgroundColor: "rgba(14,165,233,0.10)",
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  timePillText: {
-    fontSize: 10,
-    fontWeight: "600" as const,
-    color: DS_COLORS.linkBlue,
-  },
-  proBadge: {
-    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  proBadgeText: {
-    fontSize: 10,
-    fontWeight: "700" as const,
-    color: DS_COLORS.WHITE,
-  },
-  missionTitle: {
-    fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
-    fontWeight: "600" as const,
-    color: DS_COLORS.textPrimary,
-    letterSpacing: -0.1,
-  },
-  missionTitleDone: {
-    color: DS_COLORS.textSecondary,
-    textDecorationLine: "line-through" as const,
-  },
-  missionMeta: {
-    fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "400" as const,
-    color: DS_COLORS.textSecondary,
-    marginTop: DS_SPACING.xs,
-  },
-  missionMetaActive: {
-    color: DS_COLORS.emeraldDark,
-    fontWeight: "500" as const,
-  },
-  missionMetaMissed: {
-    color: DS_COLORS.dangerMid,
-    fontWeight: "500" as const,
-  },
-  reqChipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-    marginTop: DS_SPACING.xs,
-    maxWidth: "78%" as const,
-  },
-  reqChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: DS_COLORS.CARD_ALT_BG,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  reqChipText: {
-    fontSize: 10,
-    color: DS_COLORS.TEXT_MUTED,
-  },
-  startAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  startActionText: {
-    fontSize: 14,
-    fontWeight: "600" as const,
-  },
-  completedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: DS_COLORS.successSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  completedBadgeText: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    color: DS_COLORS.success,
-  },
-
-  rulesSection: {
-    marginBottom: DS_SPACING.xxl,
-  },
-  rulesCard: {
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.cardAlt,
-    overflow: "hidden" as const,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-  },
-  ruleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: DS_SPACING.cardPadding,
-    paddingVertical: DS_SPACING.lg,
-    gap: DS_SPACING.md,
-  },
-  ruleRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: DS_COLORS.border,
-  },
-  ruleBullet: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: DS_COLORS.successSoft,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ruleBulletOrange: {
-    backgroundColor: DS_COLORS.accentLight,
-  },
-  ruleBulletWarning: {
-    backgroundColor: DS_COLORS.dangerSoft,
-  },
-  ruleText: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textPrimary,
-    flex: 1,
-    lineHeight: DS_TYPOGRAPHY.bodySmall.lineHeight,
-  },
-  ruleTextWarning: {
-    color: DS_COLORS.danger,
-    fontWeight: "600" as const,
-  },
-  aboutSection: {
-    marginBottom: DS_SPACING.lg,
-  },
-  aboutText: {
-    fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "400" as const,
-    color: DS_COLORS.textSecondary,
-    lineHeight: 24,
-    letterSpacing: -0.1,
-  },
-  aboutDetailsCard: {
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: DS_RADIUS.card,
-    padding: DS_SPACING.BASE,
-    marginTop: DS_SPACING.BASE,
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-  },
-  aboutDetailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    gap: DS_SPACING.md,
-  },
-  aboutDetailRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.borderAlt,
-  },
-  aboutDetailLabel: {
-    width: 120,
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textSecondary,
-  },
-  aboutDetailValue: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "600" as const,
-    color: DS_COLORS.textPrimary,
-    textAlign: "right" as const,
-  },
-
-  leaveBtn: {
-    alignItems: "center",
-    paddingVertical: DS_SPACING.md,
-    marginBottom: DS_SPACING.sm,
-  },
-  leaveBtnText: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "500" as const,
-    color: DS_COLORS.danger,
-    opacity: 0.9,
-  },
-
-  stickyFooter: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: DS_SPACING.screenHorizontal,
-    paddingTop: DS_SPACING.lg,
-    backgroundColor: DS_COLORS.surface,
-    borderTopWidth: 1,
-    borderTopColor: DS_COLORS.border,
-    alignItems: "center",
-  },
-  ctaButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 52,
-    paddingVertical: 14,
-    borderRadius: DS_RADIUS.joinCta,
-    backgroundColor: DS_COLORS.accent,
-    width: Platform.OS === "web" ? 400 : undefined,
-    alignSelf: "stretch" as const,
-    minWidth: 280,
-  },
-  ctaText: {
-    fontSize: 17,
-    fontWeight: "700" as const,
-    color: DS_COLORS.white,
-  },
-  inviteLink: {
-    marginTop: DS_SPACING.sm,
-    paddingVertical: DS_SPACING.sm,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  inviteLinkText: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600" as const,
-    color: DS_COLORS.accent,
-  },
-  ctaMicro: {
-    fontSize: 13,
-    fontWeight: "400" as const,
-    color: DS_COLORS.textSecondary,
-    marginTop: DS_SPACING.sm,
-    textAlign: "center",
-  },
-  disabledCta: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: DS_SPACING.lg,
-    borderRadius: DS_RADIUS.button,
-    backgroundColor: DS_COLORS.chipFill,
-    alignSelf: "stretch" as const,
-  },
-  disabledCtaText: {
-    fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "600" as const,
-    color: DS_COLORS.textMuted,
-  },
-
-  commitmentOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  commitmentCenter: {
-    flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
-  commitmentCard: {
-    backgroundColor: DS_COLORS.BG_PRIMARY,
-    borderRadius: 24,
-    padding: 24,
-    width: "100%",
-    maxWidth: 360,
-    alignItems: "center",
-    borderWidth: 0,
-  },
-  commitmentClose: {
-    position: "absolute",
-    top: DS_SPACING.lg,
-    right: DS_SPACING.lg,
-    zIndex: 1,
-    padding: DS_SPACING.xs,
-  },
-  commitmentCloseText: {
-    fontSize: 20,
-    color: DS_COLORS.textMuted,
-    fontWeight: "600",
-  },
-  commitmentShieldWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: DS_COLORS.GRAY_CARD_BG,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: DS_SPACING.sm,
-  },
-  commitmentTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: DS_COLORS.textPrimary,
-    textAlign: "center",
-    marginTop: DS_SPACING.xl,
-    paddingHorizontal: DS_SPACING.sm,
-  },
-  commitmentDetails: {
-    width: "100%",
-    marginTop: DS_SPACING.xl,
-    backgroundColor: DS_COLORS.BG_PRIMARY,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-  },
-  commitmentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: DS_SPACING.lg,
-  },
-  commitmentRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: DS_COLORS.border,
-  },
-  commitmentCheckCard: {
-    width: "100%",
-    marginTop: DS_SPACING.xl,
-    backgroundColor: DS_COLORS.surfaceSubtle,
-    borderRadius: 12,
-    padding: DS_SPACING.cardPadding,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-  },
-  commitmentCheckCardTitle: {
-    fontSize: 11,
-    fontWeight: "700" as const,
-    color: DS_COLORS.textMuted,
-    letterSpacing: 1,
-    marginBottom: DS_SPACING.md,
-    textTransform: "uppercase" as const,
-  },
-  commitmentCheckCardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: DS_SPACING.sm,
-  },
-  commitmentCheckCardLabel: {
-    fontSize: 14,
-    color: DS_COLORS.textSecondary,
-  },
-  commitmentCheckCardValue: {
-    fontSize: 14,
-    fontWeight: "500" as const,
-    color: DS_COLORS.textPrimary,
-  },
-  commitmentLabel: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    color: DS_COLORS.textMuted,
-  },
-  commitmentValue: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600",
-    color: DS_COLORS.textPrimary,
-    textAlign: "right",
-    flex: 1,
-    marginLeft: DS_SPACING.lg,
-  },
-  commitmentWarning: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: DS_COLORS.ERROR_BG,
-    borderRadius: 12,
-    padding: DS_SPACING.lg,
-    marginTop: DS_SPACING.xl,
-    width: "100%",
-  },
-  commitmentWarningText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS.ERROR_RED,
-    flex: 1,
-  },
-  commitmentCheckRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    marginTop: DS_SPACING.lg,
-    gap: 12,
-  },
-  commitmentCheckbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: DS_COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  commitmentCheckboxChecked: {
-    backgroundColor: DS_COLORS.DARK_GREEN_HEADER,
-    borderColor: DS_COLORS.DARK_GREEN_HEADER,
-  },
-  commitmentCheckLabel: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: DS_COLORS.textPrimary,
-    flex: 1,
-  },
-  commitmentConfirmBtn: {
-    backgroundColor: DS_COLORS.PRESSED_ORANGE,
-    borderRadius: 12,
-    paddingVertical: 16,
-    minHeight: 50,
-    alignItems: "center",
-    width: "100%",
-    marginTop: DS_SPACING.xl,
-  },
-  commitmentConfirmDisabled: {
-    backgroundColor: DS_COLORS.accent,
-    opacity: 0.5,
-  },
-  commitmentConfirmText: {
-    fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "700",
-    color: DS_COLORS.white,
-  },
-  commitmentCancelBtn: {
-    marginTop: DS_SPACING.lg,
-    paddingVertical: DS_SPACING.sm,
-  },
-  commitmentCancelText: {
-    fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    color: DS_COLORS.textMuted,
-  },
-});

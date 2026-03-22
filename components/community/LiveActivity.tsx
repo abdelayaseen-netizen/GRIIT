@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList } from "react-native";
 import { Flame } from "lucide-react-native";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
@@ -107,88 +107,96 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
             No activity yet. Join a challenge to see the community in action.
           </Text>
         ) : (
-          prepared.map((item, index) => {
-            const seed = item.displayName || item.username || item.userId || "?";
-            const isLast = index === prepared.length - 1;
-            const isCommenting = commentingId === item.id;
-            const picked = selectedReactions[item.id];
-            return (
-              <View key={item.id}>
-                <View style={[styles.row, !isLast && !isCommenting && styles.rowDivider]}>
-                  <View style={[styles.avatar, { backgroundColor: avatarColorByIndex(index) }]}>
-                    <Text style={styles.avatarInitial}>{seed.charAt(0).toUpperCase()}</Text>
-                  </View>
+          <FlatList
+            data={prepared}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            renderItem={({ item, index }) => {
+              const seed = item.displayName || item.username || item.userId || "?";
+              const isLast = index === prepared.length - 1;
+              const isCommenting = commentingId === item.id;
+              const picked = selectedReactions[item.id];
+              return (
+                <View>
+                  <View style={[styles.row, !isLast && !isCommenting && styles.rowDivider]}>
+                    <View style={[styles.avatar, { backgroundColor: avatarColorByIndex(index) }]}>
+                      <Text style={styles.avatarInitial}>{seed.charAt(0).toUpperCase()}</Text>
+                    </View>
 
-                  <View style={styles.body}>
-                    <Text style={styles.line}>{buildLine(item)}</Text>
-                    <Text style={styles.time}>{formatTimeAgoCompact(item.createdAt)}</Text>
-                  </View>
+                    <View style={styles.body}>
+                      <Text style={styles.line}>{buildLine(item)}</Text>
+                      <Text style={styles.time}>{formatTimeAgoCompact(item.createdAt)}</Text>
+                    </View>
 
-                  <View style={styles.reactionArea}>
-                    {expandedId === item.id ? (
-                      <View style={styles.reactionPicker}>
-                        {REACTION_OPTIONS.map((r) => (
+                    <View style={styles.reactionArea}>
+                      {expandedId === item.id ? (
+                        <View style={styles.reactionPicker}>
+                          {REACTION_OPTIONS.map((r) => (
+                            <TouchableOpacity
+                              key={r.key}
+                              style={[styles.reactionChip, picked === r.key && styles.reactionChipActive]}
+                              onPress={() => void handleReact(item.id, r.key)}
+                              accessibilityLabel={r.label}
+                            >
+                              <Text style={styles.reactionEmoji}>{r.emoji}</Text>
+                            </TouchableOpacity>
+                          ))}
                           <TouchableOpacity
-                            key={r.key}
-                            style={[styles.reactionChip, picked === r.key && styles.reactionChipActive]}
-                            onPress={() => void handleReact(item.id, r.key)}
-                            accessibilityLabel={r.label}
+                            style={styles.commentChip}
+                            onPress={() => {
+                              setCommentingId(item.id);
+                              setExpandedId(null);
+                            }}
+                            accessibilityLabel="Write a comment"
                           >
-                            <Text style={styles.reactionEmoji}>{r.emoji}</Text>
+                            <Text style={styles.commentChipText}>...</Text>
                           </TouchableOpacity>
-                        ))}
+                        </View>
+                      ) : (
                         <TouchableOpacity
-                          style={styles.commentChip}
-                          onPress={() => {
-                            setCommentingId(item.id);
-                            setExpandedId(null);
-                          }}
-                          accessibilityLabel="Write a comment"
+                          style={[styles.kudosBtn, !!picked && styles.kudosBtnLiked]}
+                          onPress={() => setExpandedId(item.id)}
+                          activeOpacity={0.8}
+                          accessibilityRole="button"
+                          accessibilityLabel={`React to ${seed}'s activity`}
                         >
-                          <Text style={styles.commentChipText}>...</Text>
+                          {picked ? (
+                            <Text style={{ fontSize: 12 }}>
+                              {picked === "fire" ? "🔥" : picked === "respect" ? "💪" : "🫡"}
+                            </Text>
+                          ) : (
+                            <Flame size={12} color={DS_COLORS.BORDER} />
+                          )}
                         </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        style={[styles.kudosBtn, !!picked && styles.kudosBtnLiked]}
-                        onPress={() => setExpandedId(item.id)}
-                        activeOpacity={0.8}
-                        accessibilityRole="button"
-                        accessibilityLabel={`React to ${seed}'s activity`}
-                      >
-                        {picked ? (
-                          <Text style={{ fontSize: 12 }}>
-                            {picked === "fire" ? "🔥" : picked === "respect" ? "💪" : "🫡"}
-                          </Text>
-                        ) : (
-                          <Flame size={12} color={DS_COLORS.BORDER} />
-                        )}
-                      </TouchableOpacity>
-                    )}
+                      )}
+                    </View>
                   </View>
-                </View>
 
-                {isCommenting ? (
-                  <View style={[styles.commentRow, !isLast && styles.rowDivider]}>
-                    <TextInput
-                      style={styles.commentInput}
-                      placeholder="Nice work..."
-                      placeholderTextColor={DS_COLORS.TEXT_MUTED}
-                      value={commentText}
-                      onChangeText={setCommentText}
-                      maxLength={200}
-                      autoFocus
-                      onSubmitEditing={() => void handleComment(item.id)}
-                      returnKeyType="send"
-                    />
-                    <TouchableOpacity style={styles.sendBtn} onPress={() => void handleComment(item.id)}>
-                      <Text style={styles.sendBtnText}>Send</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-              </View>
-            );
-          })
+                  {isCommenting ? (
+                    <View style={[styles.commentRow, !isLast && styles.rowDivider]}>
+                      <TextInput
+                        style={styles.commentInput}
+                        placeholder="Nice work..."
+                        placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                        value={commentText}
+                        onChangeText={setCommentText}
+                        maxLength={200}
+                        autoFocus
+                        onSubmitEditing={() => void handleComment(item.id)}
+                        returnKeyType="send"
+                      />
+                      <TouchableOpacity style={styles.sendBtn} onPress={() => void handleComment(item.id)}>
+                        <Text style={styles.sendBtnText}>Send</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            }}
+          />
         )}
         {onlySelf ? (
           <Text style={styles.onlySelfHint}>Invite a friend to see this board light up.</Text>

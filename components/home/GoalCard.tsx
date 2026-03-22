@@ -31,7 +31,7 @@ function taskTypeIcon(type?: string): React.ReactNode {
 
 type Goal = { id: string; title: string; completed: boolean; taskType?: string; taskConfig?: string };
 
-export default function GoalCard({
+export default React.memo(function GoalCard({
   challengeName,
   goals,
   currentDay,
@@ -148,7 +148,7 @@ export default function GoalCard({
       </View>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   wrap: { paddingHorizontal: DS_SPACING.xl, paddingTop: 0, marginBottom: DS_SPACING.md },
