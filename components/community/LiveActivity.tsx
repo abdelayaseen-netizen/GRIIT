@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList } from "react-native";
+import { Image } from "expo-image";
 import { Flame } from "lucide-react-native";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
@@ -15,6 +16,16 @@ export interface LiveActivityItem {
   challengeName?: string | null;
   dayNumber?: number | null;
   createdAt: string;
+  metadata?: {
+    has_photo?: boolean;
+    photo_url?: string | null;
+    verification_method?: string | null;
+    is_hard_mode?: boolean;
+    heart_rate_verified?: boolean;
+    location_verified?: boolean;
+    task_name?: string | null;
+    task_type?: string | null;
+  };
 }
 
 type FeedReactionKey = "fire" | "respect" | "discipline";
@@ -37,12 +48,42 @@ function buildLine(item: LiveActivityItem): string {
 
   if (item.eventType === "joined_challenge") return `${who} joined ${challenge}`;
   if (item.eventType === "completed_challenge") return `${who} completed ${challenge}`;
+  if (item.eventType === "task_completed") {
+    const taskName = item.metadata?.task_name ?? "a task";
+    return `${who} completed ${taskName} in ${challenge}`;
+  }
   if (item.eventType === "secured_day") {
     if (item.dayNumber != null) return `${who} completed Day ${item.dayNumber} of ${challenge}`;
     return `${who} secured a day in ${challenge}`;
   }
   return `${who} made progress in ${challenge}`;
 }
+
+function VerificationBadges({ item }: { item: LiveActivityItem }) {
+  const m = item.metadata;
+  if (!m) return null;
+  const badges: { label: string; color: string; bg: string }[] = [];
+  if (m.is_hard_mode) badges.push({ label: "Hard mode", color: "#A32D2D", bg: "#FCEBEB" });
+  if (m.heart_rate_verified) badges.push({ label: "HR verified", color: "#854F0B", bg: "#FAEEDA" });
+  if (m.location_verified) badges.push({ label: "Location", color: "#0F6E56", bg: "#E1F5EE" });
+  if (m.has_photo) badges.push({ label: "Photo proof", color: "#185FA5", bg: "#E6F1FB" });
+  if (badges.length === 0) return null;
+  return (
+    <View style={badgeStyles.wrap}>
+      {badges.map((b) => (
+        <View key={b.label} style={[badgeStyles.pill, { backgroundColor: b.bg }]}>
+          <Text style={[badgeStyles.pillText, { color: b.color }]}>{b.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const badgeStyles = StyleSheet.create({
+  wrap: { flexDirection: "row", gap: 4, marginTop: 4, flexWrap: "wrap" },
+  pill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  pillText: { fontSize: 9, fontWeight: "700" },
+});
 
 const REACTION_OPTIONS = [
   { key: "fire" as const, emoji: "🔥", label: "Let's go" },
@@ -129,6 +170,14 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
                     <View style={styles.body}>
                       <Text style={styles.line}>{buildLine(item)}</Text>
                       <Text style={styles.time}>{formatTimeAgoCompact(item.createdAt)}</Text>
+                      <VerificationBadges item={item} />
+                      {item.eventType === "task_completed" && item.metadata?.has_photo && item.metadata?.photo_url ? (
+                        <Image
+                          source={{ uri: item.metadata.photo_url }}
+                          style={styles.feedPhoto}
+                          contentFit="cover"
+                        />
+                      ) : null}
                     </View>
 
                     <View style={styles.reactionArea}>
@@ -275,6 +324,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: DS_COLORS.grayMuted,
     marginTop: 2,
+  },
+  feedPhoto: {
+    width: "100%",
+    height: 160,
+    borderRadius: 10,
+    marginTop: 8,
+    backgroundColor: DS_COLORS.chipFill,
   },
   reactionArea: { alignItems: "flex-end", minWidth: 36 },
   reactionPicker: {

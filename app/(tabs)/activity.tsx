@@ -54,6 +54,7 @@ function mapLeaderboardEntry(entry: {
 
 function mapFeedItem(event: FeedEventItem): LiveActivityItem {
   const metadata = event.metadata || {};
+  const m = metadata as Record<string, unknown>;
   return {
     id: event.id,
     userId: event.user_id,
@@ -63,6 +64,16 @@ function mapFeedItem(event: FeedEventItem): LiveActivityItem {
     challengeName: (metadata.challenge_name as string | undefined) || null,
     dayNumber: (metadata.day_number as number | undefined) ?? null,
     createdAt: event.created_at,
+    metadata: {
+      has_photo: Boolean(m.has_photo),
+      photo_url: (m.photo_url as string | null | undefined) ?? null,
+      verification_method: (m.verification_method as string | null | undefined) ?? null,
+      is_hard_mode: Boolean(m.is_hard_mode),
+      heart_rate_verified: Boolean(m.heart_rate_verified),
+      location_verified: Boolean(m.location_verified),
+      task_name: (m.task_name as string | null | undefined) ?? null,
+      task_type: (m.task_type as string | null | undefined) ?? null,
+    },
   };
 }
 

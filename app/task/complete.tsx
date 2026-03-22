@@ -46,6 +46,32 @@ import { InlineError } from "@/components/InlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
 
+const JOURNAL_PROMPTS = [
+  "What did you learn about yourself today?",
+  "What was the hardest part of today and how did you push through?",
+  "Write about one win and one loss from today.",
+  "How did your body feel today? Energy, soreness, recovery.",
+  "Describe your emotions before vs after completing this.",
+  "What would you tell yourself from 30 days ago?",
+  "What's one thing you're grateful for right now?",
+  "What distraction did you resist today?",
+  "How did discipline show up in your life today?",
+  "Write a letter to your future self about this moment.",
+  "What habit is getting easier? What's still hard?",
+  "Who did you impact today and how?",
+  "What would you do differently if you could redo today?",
+  "Describe a moment today when you chose the hard thing.",
+  "What's one truth you've been avoiding?",
+];
+
+function getDailyPrompt(taskId: string, journalPrompt?: string): string {
+  if (journalPrompt && journalPrompt.trim()) return journalPrompt;
+  const dateKey = new Date().toISOString().slice(0, 10);
+  const seed = (dateKey + taskId).split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const idx = seed % JOURNAL_PROMPTS.length;
+  return JOURNAL_PROMPTS[idx] ?? JOURNAL_PROMPTS[0] ?? "";
+}
+
 export type TaskCompleteConfig = {
   require_photo?: boolean;
   min_duration_minutes?: number;
@@ -59,6 +85,7 @@ export type TaskCompleteConfig = {
   location_latitude?: number;
   location_longitude?: number;
   location_radius_meters?: number;
+  journal_prompt?: string;
 };
 
 function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {
@@ -148,7 +175,10 @@ function TaskCompleteScreenInner() {
   const isCountdown = config.timer_direction === "countdown";
   const isHardMode = config.timer_hard_mode === true;
   const isRunTimed = taskTypeRaw === "run" && minDurMinutes > 0;
-  const showWorkoutTimer = taskTypeRaw === "timer" || (isRunTimed && isHardMode);
+  const showWorkoutTimer =
+    taskTypeRaw === "timer" ||
+    (taskTypeRaw === "workout" && minDurMinutes > 0) ||
+    (taskTypeRaw === "run" && isRunTimed && isHardMode);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -281,6 +311,10 @@ function TaskCompleteScreenInner() {
 
   const wordCount = useMemo(() => journalText.trim().split(/\s+/).filter(Boolean).length, [journalText]);
   const minWords = config.min_words ?? 0;
+  const journalPrompt = useMemo(
+    () => getDailyPrompt(taskId, (config as TaskCompleteConfig).journal_prompt),
+    [taskId, config]
+  );
   const journalOk = minWords === 0 || wordCount >= minWords;
   const timerOk = requiredSeconds === 0 || timerSeconds >= requiredSeconds;
   const hardModeOk = !isHardMode || requiredSeconds === 0 || onScreenSecondsRef.current >= requiredSeconds;
@@ -315,7 +349,10 @@ function TaskCompleteScreenInner() {
 
   const canSubmit = useMemo(() => {
     if (taskTypeRaw === "journal" && !journalOk) return false;
-    if (taskTypeRaw === "timer" && (!timerOk || !hardModeOk)) return false;
+    if (showWorkoutTimer && requiredSeconds > 0) {
+      if (!timerOk) return false;
+      if (isHardMode && !hardModeOk) return false;
+    }
     if (needsPhotoProof && !photoOk) return false;
     if (config.require_heart_rate && !heartRateOk) return false;
     if (config.require_location && !locationOk) return false;
@@ -324,8 +361,11 @@ function TaskCompleteScreenInner() {
   }, [
     taskTypeRaw,
     journalOk,
+    showWorkoutTimer,
+    requiredSeconds,
     timerOk,
     hardModeOk,
+    isHardMode,
     photoOk,
     heartRateOk,
     locationOk,
@@ -351,7 +391,7 @@ function TaskCompleteScreenInner() {
         taskId,
         noteText: noteTextOut,
         value:
-          taskTypeRaw === "timer"
+          taskTypeRaw === "timer" || taskTypeRaw === "workout"
             ? Math.floor(timerSeconds / 60)
             : taskTypeRaw === "run"
               ? isRunTimed && isHardMode
@@ -573,9 +613,10 @@ function TaskCompleteScreenInner() {
         {taskTypeRaw === "journal" && (
           <View style={styles.card}>
             <Text style={styles.sectionLabel}>Journal</Text>
+            <Text style={styles.journalPromptText}>{journalPrompt}</Text>
             <TextInput
               style={styles.journalInput}
-              placeholder="Write your thoughts..."
+              placeholder="Start writing..."
               placeholderTextColor={DS_COLORS.inputPlaceholder}
               value={journalText}
               onChangeText={handleJournalChange}
@@ -586,9 +627,22 @@ function TaskCompleteScreenInner() {
               spellCheck
             />
             {minWords > 0 && (
-              <Text style={[styles.wordCount, wordCount >= minWords && { color: DS_COLORS.GREEN }]}>
-                {wordCount} / {minWords} words
-              </Text>
+              <View style={styles.wordCountRow}>
+                <View style={styles.wordRing}>
+                  <View
+                    style={[
+                      styles.wordRingFill,
+                      {
+                        width: `${Math.min(100, (wordCount / minWords) * 100)}%`,
+                        backgroundColor: wordCount >= minWords ? DS_COLORS.GREEN : GRIIT_COLORS.primary,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.wordCountText, wordCount >= minWords && { color: DS_COLORS.GREEN }]}>
+                  {wordCount} / {minWords} words
+                </Text>
+              </View>
             )}
           </View>
         )}
@@ -596,6 +650,11 @@ function TaskCompleteScreenInner() {
         {/* Timer (timer tasks, or timed run/workout with strict on-screen mode) */}
         {showWorkoutTimer && requiredSeconds > 0 && (
           <View style={styles.card}>
+            {taskTypeRaw === "workout" && (
+              <Text style={styles.sectionLabel}>
+                {config.require_heart_rate ? "Workout — heart rate verified" : "Workout — timed"}
+              </Text>
+            )}
             {isHardMode && (
               <View style={styles.hardModeBadge}>
                 <Lock size={14} color={GRIIT_COLORS.primary} />
@@ -635,7 +694,7 @@ function TaskCompleteScreenInner() {
         )}
 
         {/* Run — manual entry + Strava placeholder */}
-        {taskTypeRaw === "run" && (
+        {taskTypeRaw === "run" && !showWorkoutTimer && (
           <View style={styles.card}>
             <Text style={styles.sectionLabel}>Log your run</Text>
             <Text style={styles.hintSmall}>
@@ -852,6 +911,14 @@ const styles = StyleSheet.create({
     borderColor: DS_COLORS.BORDER,
   },
   sectionLabel: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: DS_SPACING.sm },
+  journalPromptText: {
+    fontSize: 15,
+    fontWeight: "500",
+    fontStyle: "italic",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: 12,
+    lineHeight: 22,
+  },
   hintSmall: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginBottom: DS_SPACING.md },
   warnSmall: { fontSize: 12, color: DS_COLORS.danger, textAlign: "center", marginTop: DS_SPACING.sm },
   manualPress: { alignItems: "center", paddingVertical: DS_SPACING.xl },
@@ -867,15 +934,22 @@ const styles = StyleSheet.create({
   },
   manualHint: { marginTop: DS_SPACING.lg, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
   journalInput: {
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.BORDER,
-    borderRadius: DS_RADIUS.input,
-    padding: DS_SPACING.lg,
-    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    backgroundColor: DS_COLORS.WHITE,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+    borderRadius: 14,
+    padding: 16,
+    paddingTop: 14,
+    fontSize: 15,
     color: DS_COLORS.TEXT_PRIMARY,
-    minHeight: 220,
+    minHeight: 200,
     textAlignVertical: "top",
+    lineHeight: 22,
   },
+  wordCountRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
+  wordRing: { flex: 1, height: 4, backgroundColor: DS_COLORS.chipFill, borderRadius: 2, overflow: "hidden" },
+  wordRingFill: { height: "100%", borderRadius: 2 },
+  wordCountText: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, minWidth: 80, textAlign: "right" },
   wordCount: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: DS_SPACING.sm },
   hardModeBadge: {
     flexDirection: "row",

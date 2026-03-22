@@ -1,5 +1,14 @@
 import React, { useMemo, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import { InlineError } from "@/components/InlineError";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,6 +25,7 @@ import { ROUTES } from "@/lib/routes";
 import type { TodayCheckinForUser, StatsFromApi, ChallengeTaskFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
 import GoalCard from "@/components/home/GoalCard";
+import PointsExplainer from "@/components/home/PointsExplainer";
 import WeekStrip from "@/components/home/WeekStrip";
 import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeed from "@/components/home/LiveFeed";
@@ -82,6 +92,7 @@ function buildTaskConfigParam(task: ChallengeTaskFromApi | undefined): string {
       location_latitude: t.location_latitude,
       location_longitude: t.location_longitude,
       location_radius_meters: t.location_radius_meters,
+      journal_prompt: typeof t.journal_prompt === "string" ? t.journal_prompt : undefined,
     });
   } catch (err) {
     console.error("[Home] buildTaskConfigParam failed:", err);
@@ -106,6 +117,7 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll } = useApp();
   const [leaveChallengeError, setLeaveChallengeError] = React.useState<string | null>(null);
+  const [showPointsExplainer, setShowPointsExplainer] = React.useState(false);
 
   const homeQuery = useQuery({
     queryKey: ["home", "v2", user?.id ?? ""],
@@ -286,10 +298,15 @@ export default function HomeScreen() {
               <Flame size={13} color={DS_COLORS.DISCOVER_CORAL} />
               <Text style={s.pillText}>{showStatDash ? "—" : String(streak)}</Text>
             </View>
-            <View style={[s.pill, points > 0 && s.pillPurple]}>
+            <TouchableOpacity
+              style={[s.pill, points > 0 && s.pillPurple]}
+              onPress={() => setShowPointsExplainer(true)}
+              activeOpacity={0.7}
+              accessibilityLabel={`${points} discipline points. Tap to learn more.`}
+            >
               <Zap size={13} color={DS_COLORS.DISCOVER_BLUE} />
               <Text style={s.pillText}>{showStatDash ? "—" : String(points)}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -319,9 +336,10 @@ export default function HomeScreen() {
                 {challengeGroups.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining
               </Text>
             </View>
-            {challengeGroups.map((group) => (
+            {challengeGroups.map((group, index) => (
               <GoalCard
                 key={group.activeChallengeId}
+                defaultExpanded={index === 0}
                 challengeName={group.challengeName}
                 goals={group.goals}
                 currentDay={group.currentDay}
@@ -425,6 +443,12 @@ export default function HomeScreen() {
         <LiveFeed items={homeQuery.data?.feedItems ?? []} />
         <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
       </ScrollView>
+      <PointsExplainer
+        visible={showPointsExplainer}
+        onClose={() => setShowPointsExplainer(false)}
+        currentPoints={points}
+        currentRank={rank}
+      />
     </SafeAreaView>
   );
 }

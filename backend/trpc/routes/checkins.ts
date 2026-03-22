@@ -67,7 +67,7 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: taskRow } = await ctx.supabase
         .from("challenge_tasks")
-        .select("id, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes")
+        .select("id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes")
         .eq("id", input.taskId)
         .single();
 
@@ -169,8 +169,9 @@ export const checkinsRouter = createTRPCRouter({
 
       const isTimer = taskType === "timer";
       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
+      const isWorkoutTimed = taskType === "workout" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const requiredMinutes = minDurationMinutes ?? durationMinutes;
-      if ((isTimer || isRunTimed) && requiredMinutes > 0) {
+      if ((isTimer || isRunTimed || isWorkoutTimed) && requiredMinutes > 0) {
         const completedMinutes = input.value ?? 0;
         if (completedMinutes < requiredMinutes) {
           throw new TRPCError({
@@ -226,6 +227,38 @@ export const checkinsRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: `Check-in save failed: ${error.message || "unknown"} (code: ${errObj.code || "?"})`,
         });
+      }
+
+      const { data: chForEvent } = await ctx.supabase.from("challenges").select("title").eq("id", challenge_id).maybeSingle();
+      const challengeTitleForFeed = (chForEvent as { title?: string } | null)?.title ?? "Challenge";
+      const taskTitle = (task as { title?: string })?.title ?? "Task";
+      const cfgVm = cfg as { verification_method?: string };
+      const hrThreshold =
+        (typeof task?.heart_rate_threshold === "number" ? task.heart_rate_threshold : null) ??
+        (typeof ruleFromCfg?.min_avg_bpm === "number" ? ruleFromCfg.min_avg_bpm : 100);
+      const heartRateVerified = !!(input.heart_rate_avg && input.heart_rate_avg >= hrThreshold);
+      const verificationMethod =
+        cfgVm.verification_method ??
+        (taskType === "photo" || requirePhoto ? "photo" : taskType === "timer" ? "timer" : "manual");
+
+      const { error: taskCompletedEventError } = await ctx.supabase.from("activity_events").insert({
+        user_id: ctx.userId,
+        event_type: "task_completed",
+        challenge_id,
+        metadata: {
+          task_name: taskTitle,
+          task_type: taskType,
+          challenge_name: challengeTitleForFeed,
+          has_photo: !!proofUrl,
+          photo_url: proofUrl ?? null,
+          verification_method: verificationMethod,
+          is_hard_mode: timerHardMode,
+          heart_rate_verified: requireHeartRate ? heartRateVerified : false,
+          location_verified: !!(input.location_latitude != null && input.location_longitude != null && requireLocation),
+        },
+      });
+      if (taskCompletedEventError) {
+        console.error("[checkins.complete] task_completed event failed:", taskCompletedEventError);
       }
 
       const { data: allTasks } = await ctx.supabase

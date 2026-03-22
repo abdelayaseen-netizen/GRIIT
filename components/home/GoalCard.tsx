@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
 import {
   Check,
@@ -9,6 +9,7 @@ import {
   Activity,
   Camera,
   MapPin,
+  ChevronDown,
 } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 
@@ -24,6 +25,8 @@ function taskTypeIcon(type?: string): React.ReactNode {
       return <Camera size={12} color={DS_COLORS.WARNING} />;
     case "checkin":
       return <MapPin size={12} color={DS_COLORS.DISCOVER_CORAL} />;
+    case "workout":
+      return <Activity size={12} color={DS_COLORS.DISCOVER_GREEN} />;
     default:
       return <Check size={12} color={DS_COLORS.TEXT_MUTED} />;
   }
@@ -42,6 +45,7 @@ export default React.memo(function GoalCard({
   onLongPressChallenge,
   onPressChallengeName,
   isError,
+  defaultExpanded = true,
 }: {
   challengeName?: string;
   goals: Goal[];
@@ -53,7 +57,9 @@ export default React.memo(function GoalCard({
   onLongPressChallenge?: () => void;
   onPressChallengeName?: () => void;
   isError?: boolean;
+  defaultExpanded?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   useEffect(() => {
     if (isError) {
       console.error("[GoalCard] Home goals query failed; showing browse challenges empty state.");
@@ -90,11 +96,12 @@ export default React.memo(function GoalCard({
     <View style={s.wrap}>
       <View style={s.card}>
         <Pressable
+          onPress={() => setExpanded((e) => !e)}
           onLongPress={onLongPressChallenge}
           delayLongPress={500}
           style={s.challengeRow}
-          accessibilityLabel={`${challengeName} options`}
-          accessibilityHint="Long press for challenge options"
+          accessibilityLabel={`${challengeName} — ${expanded ? "collapse" : "expand"}`}
+          accessibilityHint="Tap to expand or collapse. Long press for options."
         >
           <View style={s.iconBox}>
             <Target size={16} color={DS_COLORS.GREEN} />
@@ -116,10 +123,16 @@ export default React.memo(function GoalCard({
           <View style={s.challengeRight}>
             <Text style={s.dayText}>{`Day ${currentDay ?? 1} of ${durationDays ?? 1}`}</Text>
             <Text style={s.count}>{`${completed}/${total}`}</Text>
+            <ChevronDown
+              size={14}
+              color={DS_COLORS.TEXT_MUTED}
+              style={{ transform: [{ rotate: expanded ? "180deg" : "0deg" }] }}
+            />
           </View>
         </Pressable>
 
-        {rows.map((g) =>
+        {expanded &&
+          rows.map((g) =>
           g.completed ? (
             <View key={g.id} style={s.doneRow}>
               <View style={s.doneCircle}>
