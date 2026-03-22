@@ -27,7 +27,7 @@ import {
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS, GRIIT_COLORS } from "@/lib/design-system";
 import { CREATE_SELECTION } from "@/lib/create-selection";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
-import type { JournalCategory } from "@/types";
+import type { JournalCategory, ScheduleType } from "@/types";
 
 type WizardTaskType =
   | "journal"
@@ -261,6 +261,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const [journalPromptText, setJournalPromptText] = useState("");
   const [captureMoodJournal, setCaptureMoodJournal] = useState(false);
   const [locationStampPhoto, setLocationStampPhoto] = useState(false);
+  const [timeEnforcementEnabled, setTimeEnforcementEnabled] = useState(false);
+  const [anchorTime, setAnchorTime] = useState("06:00");
+  const [windowMinutes, setWindowMinutes] = useState("60");
 
   useEffect(() => {
     if (!visible) {
@@ -289,6 +292,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       setJournalPromptText("");
       setCaptureMoodJournal(false);
       setLocationStampPhoto(false);
+      setTimeEnforcementEnabled(false);
+      setAnchorTime("06:00");
+      setWindowMinutes("60");
     }
   }, [visible]);
 
@@ -405,9 +411,20 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     const opts = buildOpts();
     const task = buildTask(name, kind, !!hardModeGlobal, opts);
     if (!task) return;
-    onAdd({ ...task, wizardType: kind });
+    const teEnabled = kind !== "simple" && timeEnforcementEnabled;
+    const windowEnd = teEnabled ? parseInt(windowMinutes, 10) || 60 : null;
+    const anchor = anchorTime.trim() || "06:00";
+    onAdd({
+      ...task,
+      wizardType: kind,
+      timeEnforcementEnabled: teEnabled,
+      scheduleType: (teEnabled ? "DAILY" : "NONE") as ScheduleType,
+      anchorTimeLocal: teEnabled ? anchor : null,
+      windowStartOffsetMin: teEnabled ? 0 : null,
+      windowEndOffsetMin: teEnabled ? windowEnd : null,
+    } as TaskEditorTask);
     onClose();
-  }, [name, kind, hardModeGlobal, buildOpts, onAdd, onClose]);
+  }, [name, kind, hardModeGlobal, buildOpts, onAdd, onClose, timeEnforcementEnabled, anchorTime, windowMinutes]);
 
   const configBlock = (() => {
     const row = (label: string, value: boolean, onValue: (v: boolean) => void, a11y: string) => (
@@ -692,6 +709,50 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             })}
           </View>
           {configBlock}
+          {kind !== "simple" && (
+            <View style={s.timeSection}>
+              <View style={[s.toggleRow, s.timeToggleRow]}>
+                <Text style={s.toggleLabel}>Set a time window</Text>
+                <Switch
+                  value={timeEnforcementEnabled}
+                  onValueChange={setTimeEnforcementEnabled}
+                  trackColor={{ false: DS_COLORS.BORDER, true: GRIIT_COLORS.primary }}
+                />
+              </View>
+              {timeEnforcementEnabled && (
+                <View style={s.timeFields}>
+                  <Text style={s.hint}>Task must be started within this window</Text>
+                  <View style={s.timeRow}>
+                    <View style={s.timeField}>
+                      <Text style={s.sublabel}>Start time</Text>
+                      <TextInput
+                        style={s.input}
+                        value={anchorTime}
+                        onChangeText={setAnchorTime}
+                        placeholder="06:00"
+                        placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                        keyboardType="numbers-and-punctuation"
+                      />
+                    </View>
+                    <View style={s.timeField}>
+                      <Text style={s.sublabel}>Window (minutes)</Text>
+                      <TextInput
+                        style={s.input}
+                        value={windowMinutes}
+                        onChangeText={setWindowMinutes}
+                        placeholder="60"
+                        placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                        keyboardType="number-pad"
+                      />
+                    </View>
+                  </View>
+                  <Text style={s.hint}>
+                    e.g. 6:00 AM with 60 min window means task must start between 6:00–7:00 AM
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </ScrollView>
         <View style={[s.footer, { paddingBottom: insets.bottom + 12 }]}>
           <TouchableOpacity
@@ -833,4 +894,11 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   ctaText: { fontSize: DS_TYPOGRAPHY.SIZE_BASE, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
+  timeSection: { marginTop: DS_SPACING.lg },
+  timeToggleRow: { marginBottom: 8 },
+  timeFields: { marginTop: 8 },
+  timeRow: { flexDirection: "row", gap: 12 },
+  timeField: { flex: 1 },
+  sublabel: { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 4 },
+  hint: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 4, marginBottom: 8 },
 });

@@ -164,23 +164,26 @@ export const checkinsRouter = createTRPCRouter({
       const proofUrl = photoUrl || input.proofUrl?.trim() || null;
       const { data, error } = await ctx.supabase
         .from("check_ins")
-        .upsert({
-          user_id: ctx.userId,
-          active_challenge_id: input.activeChallengeId,
-          task_id: input.taskId,
-          date_key: dateKey,
-          status: "completed",
-          value: input.value,
-          note_text: input.noteText,
-          proof_url: proofUrl,
-          completion_image_url: proofUrl,
-          photo_url: photoUrl || undefined,
-          heart_rate_avg: input.heart_rate_avg,
-          heart_rate_peak: input.heart_rate_peak,
-          location_latitude: input.location_latitude,
-          location_longitude: input.location_longitude,
-          timer_seconds_on_screen: input.timer_seconds_on_screen,
-        })
+        .upsert(
+          {
+            user_id: ctx.userId,
+            active_challenge_id: input.activeChallengeId,
+            task_id: input.taskId,
+            date_key: dateKey,
+            status: "completed",
+            value: input.value ?? null,
+            note_text: input.noteText ?? null,
+            proof_url: proofUrl ?? null,
+            completion_image_url: proofUrl ?? null,
+            photo_url: photoUrl ?? null,
+            heart_rate_avg: input.heart_rate_avg ?? null,
+            heart_rate_peak: input.heart_rate_peak ?? null,
+            location_latitude: input.location_latitude ?? null,
+            location_longitude: input.location_longitude ?? null,
+            timer_seconds_on_screen: input.timer_seconds_on_screen ?? null,
+          },
+          { onConflict: "active_challenge_id,task_id,date_key" }
+        )
         .select()
         .single();
 

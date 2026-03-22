@@ -1,6 +1,6 @@
 /**
- * Unified task completion screen. Renders verification UI by task type and config:
- * manual, journal, timer (countdown/countup, hard mode), optional photo, heart rate, location.
+ * Unified task completion screen — one primary interaction per task type,
+ * verification add-ons, and a clear success state.
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
@@ -16,6 +16,8 @@ import {
   AppStateStatus,
   StyleSheet,
   Platform,
+  Animated,
+  Pressable,
 } from "react-native";
 import ViewShot from "react-native-view-shot";
 import { ProofShareCard } from "@/components/ShareCard";
@@ -24,7 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { Camera, Lock, CheckCircle, XCircle, MapPin } from "lucide-react-native";
+import { Camera, Lock, CheckCircle, XCircle, MapPin, Check } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { haversineDistance } from "@/lib/geo";
@@ -37,10 +39,12 @@ import {
   DS_BORDERS,
   DS_SHADOWS,
   DS_MEASURES,
+  GRIIT_COLORS,
 } from "@/lib/design-system";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ROUTES } from "@/lib/routes";
 
 export type TaskCompleteConfig = {
   require_photo?: boolean;
@@ -72,6 +76,14 @@ function firstString(v: string | string[] | undefined): string {
   return typeof v === "string" ? v : v[0] ?? "";
 }
 
+function goBackOrHome(router: ReturnType<typeof useRouter>) {
+  if (router.canGoBack()) {
+    router.back();
+  } else {
+    router.replace(ROUTES.TABS_HOME as never);
+  }
+}
+
 function TaskCompleteScreenInner() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -81,6 +93,9 @@ function TaskCompleteScreenInner() {
     taskName?: string;
     taskDescription?: string;
     taskConfig?: string;
+    challengeName?: string;
+    currentDay?: string;
+    durationDays?: string;
   }>();
   const { activeChallenge, completeTask, challenge, profile, stats } = useApp();
   const shareRef = useRef<ViewShot | null>(null);
@@ -91,13 +106,21 @@ function TaskCompleteScreenInner() {
 
   const taskId = firstString(params.taskId) || "";
   const activeChallengeId = firstString(params.activeChallengeId) || activeChallenge?.id || "";
-  const taskType = (firstString(params.taskType) || "manual") as string;
+  const taskTypeRaw = (firstString(params.taskType) || "manual").toLowerCase();
   const taskName = (firstString(params.taskName) || "Task").trim() || "Task";
   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
+
+  const headerChallengeName =
+    firstString(params.challengeName).trim() ||
+    (challenge as { title?: string })?.title ||
+    "Challenge";
+  const headerCurrentDay = Math.max(1, parseInt(firstString(params.currentDay) || "1", 10) || 1);
+  const headerDurationDays = Math.max(1, parseInt(firstString(params.durationDays) || "14", 10) || 14);
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [journalText, setJournalText] = useState("");
+  const lastJournalLenRef = useRef(0);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const onScreenSecondsRef = useRef(0);
@@ -108,6 +131,12 @@ function TaskCompleteScreenInner() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const { error, showError, clearError } = useInlineError();
   const [paramsReady, setParamsReady] = useState(false);
+  const manualScale = useRef(new Animated.Value(1)).current;
+  const runDistanceKm = useRef("");
+  const runDurationMin = useRef("");
+  const [runDistance, setRunDistance] = useState("");
+  const [runDuration, setRunDuration] = useState("");
+  const manualSubmitScheduled = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setParamsReady(true), 100);
@@ -118,7 +147,6 @@ function TaskCompleteScreenInner() {
   const isCountdown = config.timer_direction === "countdown";
   const isHardMode = config.timer_hard_mode === true;
 
-  // Timer tick
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (isTimerRunning) {
@@ -132,7 +160,6 @@ function TaskCompleteScreenInner() {
     };
   }, [isTimerRunning, isHardMode]);
 
-  // Hard mode: pause when app goes background
   useEffect(() => {
     if (!isHardMode) return;
     const sub = AppState.addEventListener("change", (state: AppStateStatus) => {
@@ -140,6 +167,15 @@ function TaskCompleteScreenInner() {
     });
     return () => sub.remove();
   }, [isHardMode]);
+
+  /** Timer auto-starts when opening a timer task (user already tapped Start on Home). */
+  useEffect(() => {
+    if (taskTypeRaw === "timer" && requiredSeconds > 0 && !isTimerRunning && timerSeconds === 0) {
+      setIsTimerRunning(true);
+      if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-style start; avoid re-firing on pause
+  }, [taskTypeRaw, requiredSeconds]);
 
   const handleTakePhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -223,12 +259,26 @@ function TaskCompleteScreenInner() {
     }
   }, [showError]);
 
+  const handleJournalChange = useCallback(
+    (text: string) => {
+      if (text.length - lastJournalLenRef.current > 5 && lastJournalLenRef.current > 0) {
+        showError("Write your own thoughts — pasting is not allowed.");
+        return;
+      }
+      lastJournalLenRef.current = text.length;
+      setJournalText(text);
+    },
+    [showError]
+  );
+
   const wordCount = useMemo(() => journalText.trim().split(/\s+/).filter(Boolean).length, [journalText]);
   const minWords = config.min_words ?? 0;
   const journalOk = minWords === 0 || wordCount >= minWords;
   const timerOk = requiredSeconds === 0 || timerSeconds >= requiredSeconds;
   const hardModeOk = !isHardMode || requiredSeconds === 0 || onScreenSecondsRef.current >= requiredSeconds;
-  const photoOk = !config.require_photo || !!(photoUrl || photoUri);
+  const needsPhotoProof = config.require_photo === true || taskTypeRaw === "photo";
+  /** Submit only after upload returns a URL (not just local uri). */
+  const photoOk = !needsPhotoProof || !!photoUrl;
   const threshold = config.heart_rate_threshold ?? 100;
   const heartRateOk = !config.require_heart_rate || (heartRateData !== null && heartRateData.avg >= threshold);
   const distance = useMemo(() => {
@@ -238,24 +288,60 @@ function TaskCompleteScreenInner() {
   const radius = config.location_radius_meters ?? 200;
   const locationOk = !config.require_location || (distance !== null && distance <= radius);
 
+  const runKm = parseFloat(runDistance.replace(",", "."));
+  const runMin = parseInt(runDuration.trim(), 10);
+  const runOk =
+    taskTypeRaw !== "run" ||
+    (!Number.isNaN(runKm) && runKm > 0 && !Number.isNaN(runMin) && runMin > 0);
+
+  const isPureManual =
+    (taskTypeRaw === "manual" || taskTypeRaw === "simple") &&
+    !config.require_photo &&
+    !config.require_heart_rate &&
+    !config.require_location;
+
   const canSubmit = useMemo(() => {
-    if (taskType === "journal" && !journalOk) return false;
-    if (taskType === "timer" && (!timerOk || !hardModeOk)) return false;
-    if (config.require_photo && !photoOk) return false;
+    if (taskTypeRaw === "journal" && !journalOk) return false;
+    if (taskTypeRaw === "timer" && (!timerOk || !hardModeOk)) return false;
+    if (needsPhotoProof && !photoOk) return false;
     if (config.require_heart_rate && !heartRateOk) return false;
     if (config.require_location && !locationOk) return false;
+    if (taskTypeRaw === "run" && !runOk) return false;
     return true;
-  }, [taskType, journalOk, timerOk, hardModeOk, photoOk, heartRateOk, locationOk, config]);
+  }, [
+    taskTypeRaw,
+    journalOk,
+    timerOk,
+    hardModeOk,
+    photoOk,
+    heartRateOk,
+    locationOk,
+    needsPhotoProof,
+    config.require_heart_rate,
+    config.require_location,
+    runOk,
+  ]);
 
   const handleSubmit = useCallback(async () => {
     if (!activeChallengeId || !taskId || !canSubmit) return;
     setIsSubmitting(true);
     try {
+      let noteTextOut: string | undefined;
+      if (taskTypeRaw === "run") {
+        noteTextOut = `Run: ${runDistance.trim()} km in ${runDuration.trim()} min`;
+      } else if (taskTypeRaw === "journal") {
+        noteTextOut = journalText.trim();
+      }
       const result = await completeTask({
         activeChallengeId,
         taskId,
-        noteText: taskType === "journal" ? journalText.trim() : undefined,
-        value: taskType === "timer" ? Math.floor(timerSeconds / 60) : undefined,
+        noteText: noteTextOut,
+        value:
+          taskTypeRaw === "timer"
+            ? Math.floor(timerSeconds / 60)
+            : taskTypeRaw === "run"
+              ? runMin
+              : undefined,
         proofUrl: photoUrl ?? undefined,
         photo_url: photoUrl ?? undefined,
         heart_rate_avg: heartRateData?.avg,
@@ -267,20 +353,51 @@ function TaskCompleteScreenInner() {
       const id = result && typeof result === "object" && "completionId" in result ? (result as { completionId?: string }).completionId : undefined;
       setCompletionId(id ?? null);
       setSubmitted(true);
+      if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err: unknown) {
       console.error("[TaskComplete] completeTask failed:", err);
       showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [activeChallengeId, taskId, canSubmit, completeTask, taskType, journalText, timerSeconds, photoUrl, heartRateData, userLocation, isHardMode, showError]);
+  }, [
+    activeChallengeId,
+    taskId,
+    canSubmit,
+    completeTask,
+    taskTypeRaw,
+    journalText,
+    timerSeconds,
+    photoUrl,
+    heartRateData,
+    userLocation,
+    isHardMode,
+    showError,
+    runDistance,
+    runDuration,
+    runMin,
+  ]);
+
+  const runManualComplete = useCallback(() => {
+    if (manualSubmitScheduled.current || isSubmitting) return;
+    manualSubmitScheduled.current = true;
+    Animated.sequence([
+      Animated.timing(manualScale, { toValue: 0.94, duration: 80, useNativeDriver: true }),
+      Animated.timing(manualScale, { toValue: 1, duration: 180, useNativeDriver: true }),
+    ]).start();
+    if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setTimeout(() => {
+      void handleSubmit();
+      manualSubmitScheduled.current = false;
+    }, 300);
+  }, [handleSubmit, isSubmitting, manualScale]);
 
   const handleShare = useCallback(async () => {
     setShareLoading(true);
     try {
       const username = (profile as { username?: string })?.username ?? "GRIIT User";
-      const challengeName = (challenge as { title?: string })?.title ?? "Challenge";
-      const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? 1;
+      const challengeName = headerChallengeName;
+      const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? headerCurrentDay;
       const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
       const gpsCoords = userLocation
         ? `${userLocation.lat.toFixed(4)}° N, ${userLocation.lng.toFixed(4)}° W`
@@ -301,32 +418,39 @@ function TaskCompleteScreenInner() {
     } finally {
       setShareLoading(false);
     }
-  }, [completionId, profile, challenge, activeChallenge, stats, userLocation, photoUri, photoUrl]);
+  }, [completionId, profile, activeChallenge, stats, userLocation, photoUri, photoUrl, headerChallengeName, headerCurrentDay]);
+
+  const timerDisplay =
+    isCountdown && requiredSeconds > 0
+      ? `${String(Math.floor(Math.max(0, requiredSeconds - timerSeconds) / 60)).padStart(2, "0")}:${String(Math.max(0, requiredSeconds - timerSeconds) % 60).padStart(2, "0")}`
+      : `${String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:${String(timerSeconds % 60).padStart(2, "0")}`;
+
+  const progressFrac = requiredSeconds > 0 ? Math.min(1, timerSeconds / requiredSeconds) : 0;
 
   if (!taskId.trim() || !activeChallengeId.trim()) {
     if (!paramsReady) {
       return (
-        <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
           <Stack.Screen options={{ title: "Loading…", headerBackVisible: true }} />
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator size="large" color={DS_COLORS.ACCENT} accessibilityLabel="Loading task" />
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={GRIIT_COLORS.primary} accessibilityLabel="Loading task" />
           </View>
         </SafeAreaView>
       );
     }
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
         <Stack.Screen options={{ title: "Task", headerBackVisible: true }} />
         <View style={{ padding: DS_SPACING.xl }}>
-          <Text style={styles.title}>Couldn&apos;t open this task</Text>
-          <Text style={styles.subtitle}>Go back and tap Start again from Home.</Text>
+          <Text style={styles.screenTitle}>Couldn&apos;t open this task</Text>
+          <Text style={styles.muted}>Go back and tap Start again from Home.</Text>
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: DS_COLORS.ACCENT_PRIMARY, marginTop: DS_SPACING.lg }]}
-            onPress={() => router.back()}
+            style={[styles.primaryBtn, { marginTop: DS_SPACING.lg }]}
+            onPress={() => goBackOrHome(router)}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.submitButtonText}>Go back</Text>
+            <Text style={styles.primaryBtnText}>Go back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -335,14 +459,14 @@ function TaskCompleteScreenInner() {
 
   if (submitted) {
     const username = (profile as { username?: string })?.username ?? "GRIIT User";
-    const challengeName = (challenge as { title?: string })?.title ?? "Challenge";
-    const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? 1;
+    const challengeName = headerChallengeName;
+    const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? headerCurrentDay;
     const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
     const gpsCoords = userLocation
       ? `${userLocation.lat.toFixed(4)}° N, ${userLocation.lng.toFixed(4)}° W`
       : null;
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
         <Stack.Screen options={{ title: taskName, headerBackVisible: true }} />
         <View style={{ opacity: 0, position: "absolute", left: -9999, pointerEvents: "none" }}>
           <ViewShot
@@ -361,64 +485,89 @@ function TaskCompleteScreenInner() {
             />
           </ViewShot>
         </View>
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Task complete</Text>
-          <Text style={styles.subtitle}>Nice work.</Text>
+        <View style={styles.successWrap}>
+          <View style={styles.successIconCircle}>
+            <Check size={48} color={DS_COLORS.WHITE} strokeWidth={3} />
+          </View>
+          <Text style={styles.successTitle}>Task secured</Text>
+          <Text style={styles.mutedCenter}>Keep going.</Text>
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }]}
-            onPress={handleShare}
+            style={[styles.primaryBtn, { marginTop: DS_SPACING.xxl }]}
+            onPress={() => void handleShare()}
             disabled={shareLoading}
           >
             {shareLoading ? (
               <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
             ) : sharedFeedback ? (
-              <Text style={styles.submitButtonText}>Shared! ✓</Text>
+              <Text style={styles.primaryBtnText}>Shared! ✓</Text>
             ) : (
-              <Text style={styles.submitButtonText}>Share your proof</Text>
+              <Text style={styles.primaryBtnText}>Share your proof</Text>
             )}
           </TouchableOpacity>
-          <Text style={[styles.sectionHint, { textAlign: "center", marginTop: 8 }]}>Show the world you showed up</Text>
-          <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: DS_COLORS.border, marginTop: 24 }]}
-            onPress={() => router.back()}
-          >
-            <Text style={[styles.submitButtonText, { color: DS_COLORS.textPrimary }]}>Done</Text>
+          <TouchableOpacity style={[styles.secondaryBtn, { marginTop: DS_SPACING.md }]} onPress={() => goBackOrHome(router)}>
+            <Text style={styles.secondaryBtnText}>Done</Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
       <Stack.Screen options={{ title: taskName, headerBackVisible: true }} />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <InlineError message={error} onDismiss={clearError} />
-        <Text style={styles.title}>{taskName}</Text>
-        {firstString(params.taskDescription) ? <Text style={styles.subtitle}>{firstString(params.taskDescription)}</Text> : null}
 
-        {/* Manual: just confirmation */}
-        {(taskType === "manual" || taskType === "simple") && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Tap Complete when done. Honor-based.</Text>
+        <Text style={styles.screenTitle}>{taskName}</Text>
+        <Text style={styles.headerSubtitle}>
+          {headerChallengeName} · Day {headerCurrentDay} of {headerDurationDays}
+        </Text>
+        {firstString(params.taskDescription) ? <Text style={styles.muted}>{firstString(params.taskDescription)}</Text> : null}
+
+        {/* Manual / simple — honor tap */}
+        {(taskTypeRaw === "manual" || taskTypeRaw === "simple") && (
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>Honor-based verification</Text>
+            <Pressable
+              onPress={() => {
+                if (!isPureManual || !canSubmit) return;
+                runManualComplete();
+              }}
+              disabled={!isPureManual || !canSubmit || isSubmitting}
+              style={styles.manualPress}
+            >
+              <Animated.View style={[styles.manualCircle, { transform: [{ scale: manualScale }] }]}>
+                <Check
+                  size={56}
+                  color={DS_COLORS.DISCOVER_GREEN}
+                  strokeWidth={2.5}
+                  style={{ opacity: isSubmitting ? 0.4 : 1 }}
+                />
+              </Animated.View>
+              <Text style={styles.manualHint}>Tap to mark complete</Text>
+              <Text style={styles.hintSmall}>Your word is your proof.</Text>
+            </Pressable>
           </View>
         )}
 
         {/* Journal */}
-        {taskType === "journal" && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Journal entry</Text>
+        {taskTypeRaw === "journal" && (
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>Journal</Text>
             <TextInput
               style={styles.journalInput}
               placeholder="Write your thoughts..."
               placeholderTextColor={DS_COLORS.inputPlaceholder}
               value={journalText}
-              onChangeText={setJournalText}
+              onChangeText={handleJournalChange}
               multiline
-              numberOfLines={6}
+              numberOfLines={10}
+              contextMenuHidden
+              autoCorrect
+              spellCheck
             />
             {minWords > 0 && (
-              <Text style={[styles.wordCount, wordCount >= minWords && { color: DS_COLORS.success }]}>
+              <Text style={[styles.wordCount, wordCount >= minWords && { color: DS_COLORS.GREEN }]}>
                 {wordCount} / {minWords} words
               </Text>
             )}
@@ -426,189 +575,222 @@ function TaskCompleteScreenInner() {
         )}
 
         {/* Timer */}
-        {taskType === "timer" && requiredSeconds > 0 && (
-          <View style={styles.section}>
+        {taskTypeRaw === "timer" && requiredSeconds > 0 && (
+          <View style={styles.card}>
             {isHardMode && (
               <View style={styles.hardModeBadge}>
-                <Lock size={14} color={DS_COLORS.accent} />
-                <Text style={styles.hardModeText}>Hard Mode — stay on this screen</Text>
+                <Lock size={14} color={GRIIT_COLORS.primary} />
+                <Text style={styles.hardModeText}>Hard mode — stay on this screen</Text>
               </View>
             )}
-            <Text style={styles.timerDisplay}>
-              {isCountdown
-                ? `${String(Math.floor(Math.max(0, requiredSeconds - timerSeconds) / 60)).padStart(2, "0")}:${String(Math.max(0, requiredSeconds - timerSeconds) % 60).padStart(2, "0")}`
-                : `${String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:${String(timerSeconds % 60).padStart(2, "0")}`}
-            </Text>
+            <Text style={styles.timerDisplay}>{timerDisplay}</Text>
             <View style={styles.progressBar}>
               <View
                 style={[
                   styles.progressFill,
                   {
-                    width: `${Math.min(1, timerSeconds / requiredSeconds) * 100}%`,
-                    backgroundColor: timerSeconds >= requiredSeconds ? DS_COLORS.success : DS_COLORS.accent,
+                    width: `${progressFrac * 100}%`,
+                    backgroundColor: timerSeconds >= requiredSeconds ? DS_COLORS.GREEN : GRIIT_COLORS.primary,
                   },
                 ]}
               />
             </View>
-            <Text style={styles.timerHint}>
-              {isCountdown ? "counting down" : "counting up"} · {config.min_duration_minutes} min required
+            <Text style={styles.hintSmall}>
+              {isCountdown ? "Counting down" : "Counting up"} · {config.min_duration_minutes ?? 0} min required
             </Text>
-            <View style={styles.timerButtons}>
-              {!isTimerRunning ? (
-                <TouchableOpacity
-                  style={[styles.btnPrimary, DS_SHADOWS.button]}
-                  onPress={() => {
-                    setIsTimerRunning(true);
-                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  }}
-                >
-                  <Text style={styles.btnPrimaryText}>{timerSeconds > 0 ? "Resume" : "Start"}</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={styles.btnSecondary}
-                  onPress={() => setIsTimerRunning(false)}
-                >
-                  <Text style={styles.btnSecondaryText}>Pause</Text>
-                </TouchableOpacity>
-              )}
+            <View style={styles.timerRow}>
+              <TouchableOpacity
+                style={styles.secondaryBtnSmall}
+                onPress={() => {
+                  setIsTimerRunning((r) => !r);
+                  if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+              >
+                <Text style={styles.secondaryBtnText}>{isTimerRunning ? "Pause" : "Resume"}</Text>
+              </TouchableOpacity>
             </View>
             {isHardMode && isTimerRunning && (
-              <Text style={styles.hardModeWarning}>Leaving this screen will pause your timer.</Text>
+              <Text style={styles.warnSmall}>Leaving this screen will pause your timer.</Text>
             )}
           </View>
         )}
 
-        {/* Heart rate (manual entry fallback) */}
+        {/* Run — manual entry + Strava placeholder */}
+        {taskTypeRaw === "run" && (
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>Log your run</Text>
+            <Text style={styles.hintSmall}>Distance and duration are required. Photo proof if your challenge requires it.</Text>
+            <TextInput
+              style={styles.textField}
+              placeholder="Distance (km)"
+              placeholderTextColor={DS_COLORS.inputPlaceholder}
+              keyboardType="decimal-pad"
+              value={runDistance}
+              onChangeText={(t) => {
+                setRunDistance(t);
+                runDistanceKm.current = t;
+              }}
+            />
+            <TextInput
+              style={styles.textField}
+              placeholder="Duration (minutes)"
+              placeholderTextColor={DS_COLORS.inputPlaceholder}
+              keyboardType="number-pad"
+              value={runDuration}
+              onChangeText={(t) => {
+                setRunDuration(t);
+                runDurationMin.current = t;
+              }}
+            />
+            <TouchableOpacity
+              style={styles.stravaBtn}
+              onPress={() => router.push(ROUTES.SETTINGS as never)}
+              accessibilityRole="button"
+              accessibilityLabel="Open settings for integrations"
+            >
+              <Text style={styles.stravaBtnText}>Connect Strava (Settings)</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Heart rate */}
         {config.require_heart_rate && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Heart rate verification</Text>
-            <Text style={styles.sectionHint}>Minimum {threshold} BPM average required</Text>
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>Heart rate</Text>
+            <Text style={styles.hintSmall}>Minimum {threshold} BPM average</Text>
             {heartRateData ? (
-              <View style={styles.card}>
-                <View style={styles.heartRateRow}>
-                  <View style={styles.heartRateCol}>
-                    <Text style={[styles.heartRateValue, { color: heartRateData.avg >= threshold ? DS_COLORS.success : DS_COLORS.danger }]}>
+              <View style={styles.hrBox}>
+                <View style={styles.hrRow}>
+                  <View>
+                    <Text style={[styles.hrValue, { color: heartRateData.avg >= threshold ? DS_COLORS.GREEN : DS_COLORS.danger }]}>
                       {heartRateData.avg}
                     </Text>
-                    <Text style={styles.heartRateLabel}>avg BPM</Text>
+                    <Text style={styles.hintSmall}>avg BPM</Text>
                   </View>
-                  <View style={styles.heartRateCol}>
-                    <Text style={[styles.heartRateValue, { color: DS_COLORS.accent }]}>{heartRateData.peak}</Text>
-                    <Text style={styles.heartRateLabel}>peak BPM</Text>
+                  <View>
+                    <Text style={[styles.hrValue, { color: GRIIT_COLORS.primary }]}>{heartRateData.peak}</Text>
+                    <Text style={styles.hintSmall}>peak BPM</Text>
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => setHeartRateData(null)} style={styles.retakeLink}>
-                  <Text style={styles.retakeLinkText}>Change</Text>
+                <TouchableOpacity onPress={() => setHeartRateData(null)}>
+                  <Text style={styles.link}>Change</Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.card}>
+              <>
                 <TextInput
-                  style={styles.heartRateInput}
-                  placeholder="Enter average BPM (e.g. 120)"
+                  style={styles.textField}
+                  placeholder="Average BPM (e.g. 120)"
                   placeholderTextColor={DS_COLORS.inputPlaceholder}
                   value={heartRateManual}
                   onChangeText={setHeartRateManual}
                   keyboardType="number-pad"
                 />
                 <TouchableOpacity
-                  style={styles.btnPrimary}
+                  style={styles.primaryBtn}
                   onPress={() => {
                     const avg = parseInt(heartRateManual.trim(), 10);
                     if (Number.isNaN(avg) || avg < 0) {
-                      showError("Enter a valid heart rate (e.g. 120)");
+                      showError("Enter a valid heart rate.");
                       return;
                     }
                     setHeartRateData({ avg, peak: avg + Math.floor(avg * 0.1) });
                     setHeartRateManual("");
                   }}
                 >
-                  <Text style={styles.btnPrimaryText}>Use this heart rate</Text>
+                  <Text style={styles.primaryBtnText}>Save heart rate</Text>
                 </TouchableOpacity>
-                <Text style={styles.sectionHint}>From your watch or tracker</Text>
-              </View>
+              </>
             )}
           </View>
         )}
 
         {/* Location */}
         {config.require_location && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Location verification</Text>
-            <Text style={styles.sectionHint}>You must be at: {config.location_name ?? "the required location"}</Text>
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>Location</Text>
+            <Text style={styles.hintSmall}>Must be at: {config.location_name ?? "the pinned location"}</Text>
             {userLocation ? (
-              <View style={styles.card}>
+              <View style={styles.locBox}>
                 {distance !== null && distance <= radius ? (
                   <>
-                    <CheckCircle size={28} color={DS_COLORS.success} />
-                    <Text style={[styles.locationStatus, { color: DS_COLORS.success }]}>Location verified</Text>
+                    <CheckCircle size={28} color={DS_COLORS.GREEN} />
+                    <Text style={[styles.locStatus, { color: DS_COLORS.GREEN }]}>Verified</Text>
                   </>
                 ) : (
                   <>
                     <XCircle size={28} color={DS_COLORS.danger} />
-                    <Text style={[styles.locationStatus, { color: DS_COLORS.danger }]}>
-                      Too far away ({distance != null ? Math.round(distance) : "?"}m)
+                    <Text style={[styles.locStatus, { color: DS_COLORS.danger }]}>
+                      Too far ({distance != null ? Math.round(distance) : "?"}m / {radius}m)
                     </Text>
-                    <Text style={styles.sectionHint}>Must be within {radius}m</Text>
                   </>
                 )}
-                <TouchableOpacity onPress={() => setUserLocation(null)} style={styles.retakeLink}>
-                  <Text style={styles.retakeLinkText}>Check again</Text>
+                <TouchableOpacity onPress={() => setUserLocation(null)}>
+                  <Text style={styles.link}>Check again</Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity style={[styles.card, styles.cardButton]} onPress={handleCheckLocation}>
-                <MapPin size={28} color={DS_COLORS.accent} />
-                <Text style={styles.cardButtonText}>Verify location</Text>
+              <TouchableOpacity style={styles.locCta} onPress={handleCheckLocation}>
+                <MapPin size={24} color={GRIIT_COLORS.primary} />
+                <Text style={styles.locCtaText}>Verify my location</Text>
               </TouchableOpacity>
             )}
           </View>
         )}
 
-        {/* Photo (on any task when require_photo) */}
-        {config.require_photo && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Photo proof required</Text>
+        {/* Photo proof (required add-on or photo task) */}
+        {needsPhotoProof && (
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>{taskTypeRaw === "photo" ? "Photo task" : "Photo proof"}</Text>
             {photoUri ? (
               <View>
                 <Image source={{ uri: photoUri }} style={styles.photoPreview} />
-                <TouchableOpacity onPress={() => { setPhotoUri(null); setPhotoUrl(null); }} style={styles.retakeLink}>
-                  <Text style={[styles.retakeLinkText, { color: DS_COLORS.accent }]}>Retake</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setPhotoUri(null);
+                    setPhotoUrl(null);
+                  }}
+                >
+                  <Text style={styles.link}>Retake</Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.photoPlaceholder}>
-                <TouchableOpacity style={styles.photoPlaceholderInner} onPress={handleTakePhoto} disabled={photoUploading}>
-                  {photoUploading ? <ActivityIndicator color={DS_COLORS.accent} /> : <Camera size={32} color={DS_COLORS.textMuted} />}
-                  <Text style={styles.photoPlaceholderText}>{photoUploading ? "Uploading…" : "Tap to take photo"}</Text>
+              <View>
+                <TouchableOpacity style={styles.photoBig} onPress={handleTakePhoto} disabled={photoUploading}>
+                  {photoUploading ? (
+                    <ActivityIndicator color={GRIIT_COLORS.primary} />
+                  ) : (
+                    <>
+                      <Camera size={40} color={DS_COLORS.TEXT_MUTED} />
+                      <Text style={styles.photoBigText}>Take photo</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.galleryLink} onPress={handlePickImage} disabled={photoUploading}>
-                  <Text style={styles.galleryLinkText}>Choose from gallery</Text>
+                  <Text style={styles.link}>Choose from gallery</Text>
                 </TouchableOpacity>
               </View>
             )}
+            {photoUrl ? <Text style={styles.hintSmall}>Uploaded ✓</Text> : null}
           </View>
         )}
 
-        {/* Submit */}
-        <View style={styles.submitSection}>
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              DS_SHADOWS.button,
-              (!canSubmit || isSubmitting) && styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={!canSubmit || isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={DS_COLORS.white} size="small" />
-            ) : (
-              <Text style={styles.submitButtonText}>{isSubmitting ? "Submitting…" : "Complete task"}</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Submit — hidden for pure manual/simple when ready (circle tap submits) */}
+        {!(isPureManual && canSubmit) && (
+          <View style={styles.submitSection}>
+            <TouchableOpacity
+              style={[styles.primaryBtn, (!canSubmit || isSubmitting) && styles.primaryBtnDisabled]}
+              onPress={() => void handleSubmit()}
+              disabled={!canSubmit || isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
+              ) : (
+                <Text style={styles.primaryBtnText}>Complete task</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -624,78 +806,154 @@ export default function TaskCompleteScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   scroll: { flex: 1 },
   scrollContent: { padding: DS_SPACING.cardPadding, paddingBottom: DS_SPACING.section },
-  title: { fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize, fontWeight: "700", color: DS_COLORS.textPrimary, marginBottom: DS_SPACING.sm },
-  subtitle: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, color: DS_COLORS.textSecondary, marginBottom: DS_SPACING.xl },
-  section: { marginTop: DS_SPACING.xxl },
-  sectionLabel: { fontSize: DS_TYPOGRAPHY.body.fontSize, fontWeight: "700", color: DS_COLORS.textPrimary, marginBottom: DS_SPACING.xs },
-  sectionHint: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textMuted, marginBottom: DS_SPACING.md },
+  screenTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_LG,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: DS_SPACING.xs,
+  },
+  headerSubtitle: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, marginBottom: DS_SPACING.md },
+  muted: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, marginBottom: DS_SPACING.md },
+  mutedCenter: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, textAlign: "center", marginTop: DS_SPACING.sm },
+  card: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.lg,
+    marginTop: DS_SPACING.lg,
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.BORDER,
+  },
+  sectionLabel: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: DS_SPACING.sm },
+  hintSmall: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginBottom: DS_SPACING.md },
+  warnSmall: { fontSize: 12, color: DS_COLORS.danger, textAlign: "center", marginTop: DS_SPACING.sm },
+  manualPress: { alignItems: "center", paddingVertical: DS_SPACING.xl },
+  manualCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: DS_COLORS.DISCOVER_GREEN,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: DS_COLORS.GREEN_BG,
+  },
+  manualHint: { marginTop: DS_SPACING.lg, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
   journalInput: {
     borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_COLORS.BORDER,
     borderRadius: DS_RADIUS.input,
     padding: DS_SPACING.lg,
-    fontSize: DS_TYPOGRAPHY.body.fontSize,
-    color: DS_COLORS.textPrimary,
-    minHeight: 160,
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    color: DS_COLORS.TEXT_PRIMARY,
+    minHeight: 220,
     textAlignVertical: "top",
   },
-  wordCount: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textMuted, marginTop: DS_SPACING.sm },
+  wordCount: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: DS_SPACING.sm },
   hardModeBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: DS_COLORS.accentSoft,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
     paddingHorizontal: DS_SPACING.md,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: DS_RADIUS.input / 2,
-    marginBottom: DS_SPACING.lg,
-  },
-  hardModeText: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.accent, fontWeight: "600" },
-  timerDisplay: { fontSize: 56, fontWeight: "800", color: DS_COLORS.textPrimary, fontVariant: ["tabular-nums"] },
-  progressBar: { height: DS_MEASURES.progressBarHeight, backgroundColor: DS_COLORS.border, borderRadius: 3, marginTop: DS_SPACING.xl, overflow: "hidden" },
-  progressFill: { height: "100%", borderRadius: 3 },
-  timerHint: { fontSize: DS_TYPOGRAPHY.metadata.fontSize, color: DS_COLORS.textMuted, marginTop: DS_SPACING.sm },
-  timerButtons: { flexDirection: "row", gap: DS_SPACING.lg, marginTop: DS_SPACING.xxl },
-  hardModeWarning: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.danger, marginTop: DS_SPACING.md, textAlign: "center" },
-  btnPrimary: { backgroundColor: DS_COLORS.accent, borderRadius: DS_RADIUS.buttonPill, paddingVertical: DS_SPACING.lg, paddingHorizontal: DS_SPACING.xxxl, alignItems: "center" },
-  btnPrimaryText: { color: DS_COLORS.white, fontSize: DS_TYPOGRAPHY.button.fontSize, fontWeight: "700" },
-  btnSecondary: { backgroundColor: DS_COLORS.textMuted, borderRadius: DS_RADIUS.buttonPill, paddingVertical: DS_SPACING.lg, paddingHorizontal: DS_SPACING.xxxl, alignItems: "center" },
-  btnSecondaryText: { color: DS_COLORS.white, fontSize: DS_TYPOGRAPHY.button.fontSize, fontWeight: "700" },
-  card: { backgroundColor: DS_COLORS.surface, borderRadius: DS_RADIUS.cardAlt, padding: DS_SPACING.cardPadding, ...DS_SHADOWS.card, alignItems: "center", borderWidth: DS_BORDERS.width, borderColor: DS_COLORS.border },
-  cardButton: { flexDirection: "column", gap: DS_SPACING.sm },
-  cardButtonText: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600", color: DS_COLORS.textPrimary },
-  heartRateRow: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
-  heartRateCol: { alignItems: "center" },
-  heartRateValue: { fontSize: DS_TYPOGRAPHY.statValue.fontSize, fontWeight: "800" },
-  heartRateLabel: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.textMuted },
-  heartRateInput: {
-    borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
-    borderRadius: DS_RADIUS.input,
-    padding: DS_SPACING.lg,
-    fontSize: 18,
-    color: DS_COLORS.textPrimary,
     marginBottom: DS_SPACING.md,
-    width: "100%",
   },
-  retakeLink: { marginTop: DS_SPACING.md },
-  retakeLinkText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
-  locationStatus: { fontSize: DS_TYPOGRAPHY.bodySmall.fontSize, fontWeight: "600", marginTop: DS_SPACING.sm },
-  photoPreview: { width: "100%", height: 200, borderRadius: DS_RADIUS.cardAlt, backgroundColor: DS_COLORS.surfaceMuted },
-  photoPlaceholder: { borderWidth: 2, borderStyle: "dashed", borderColor: DS_COLORS.border, borderRadius: DS_RADIUS.cardAlt, height: 160, alignItems: "center", justifyContent: "center" },
-  photoPlaceholderInner: { alignItems: "center" },
-  photoPlaceholderText: { color: DS_COLORS.textMuted, fontSize: DS_TYPOGRAPHY.secondary.fontSize, marginTop: DS_SPACING.sm },
-  galleryLink: { marginTop: DS_SPACING.md },
-  galleryLinkText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
-  submitSection: { marginTop: DS_SPACING.xxxl, paddingBottom: DS_SPACING.xxl },
-  submitButton: {
-    backgroundColor: DS_COLORS.accent,
-    borderRadius: DS_RADIUS.buttonPill,
+  hardModeText: { fontSize: 12, color: GRIIT_COLORS.primary, fontWeight: "600" },
+  timerDisplay: {
+    fontSize: 56,
+    fontWeight: "800",
+    color: DS_COLORS.TEXT_PRIMARY,
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
+  },
+  progressBar: {
+    height: DS_MEASURES.progressBarHeight,
+    backgroundColor: DS_COLORS.BORDER,
+    borderRadius: 3,
+    marginTop: DS_SPACING.lg,
+    overflow: "hidden",
+  },
+  progressFill: { height: "100%", borderRadius: 3 },
+  timerRow: { flexDirection: "row", justifyContent: "center", marginTop: DS_SPACING.lg },
+  secondaryBtnSmall: {
+    paddingVertical: DS_SPACING.md,
+    paddingHorizontal: DS_SPACING.xxl,
+    borderRadius: 28,
+    backgroundColor: DS_COLORS.chipFill,
+  },
+  stravaBtn: {
+    marginTop: DS_SPACING.md,
+    paddingVertical: DS_SPACING.sm,
+    alignItems: "center",
+  },
+  stravaBtnText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: "600", color: DS_COLORS.TEXT_MUTED },
+  hrBox: { alignItems: "center", gap: DS_SPACING.sm },
+  hrRow: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
+  hrValue: { fontSize: 28, fontWeight: "800", textAlign: "center" },
+  locBox: { alignItems: "center", gap: DS_SPACING.sm },
+  locStatus: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: "600" },
+  locCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: DS_SPACING.sm,
+    padding: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.card,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+  },
+  locCtaText: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  photoPreview: { width: "100%", height: 200, borderRadius: DS_RADIUS.card, backgroundColor: DS_COLORS.BG_CARD_TINTED },
+  photoBig: {
+    minHeight: 160,
+    borderRadius: DS_RADIUS.card,
+    borderWidth: 2,
+    borderColor: DS_COLORS.BORDER,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+  },
+  photoBigText: { marginTop: DS_SPACING.sm, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
+  galleryLink: { marginTop: DS_SPACING.md, alignItems: "center" },
+  link: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: "600", color: GRIIT_COLORS.primary, marginTop: DS_SPACING.sm },
+  textField: {
+    borderWidth: DS_BORDERS.width,
+    borderColor: DS_COLORS.BORDER,
+    borderRadius: DS_RADIUS.input,
+    padding: DS_SPACING.md,
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: DS_SPACING.sm,
+  },
+  submitSection: { marginTop: DS_SPACING.xxl, paddingBottom: DS_SPACING.xxl },
+  primaryBtn: {
+    backgroundColor: GRIIT_COLORS.primary,
+    borderRadius: 28,
+    paddingVertical: DS_SPACING.lg,
+    alignItems: "center",
+    ...DS_SHADOWS.button,
+  },
+  primaryBtnDisabled: { opacity: 0.4 },
+  primaryBtnText: { color: DS_COLORS.WHITE, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: "700" },
+  secondaryBtn: {
+    backgroundColor: DS_COLORS.BORDER,
+    borderRadius: 28,
     paddingVertical: DS_SPACING.lg,
     alignItems: "center",
   },
-  submitButtonDisabled: { opacity: 0.5 },
-  submitButtonText: { color: DS_COLORS.white, fontSize: DS_TYPOGRAPHY.button.fontSize, fontWeight: "700" },
+  secondaryBtnText: { color: DS_COLORS.TEXT_PRIMARY, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: "600" },
+  successWrap: { flex: 1, padding: DS_SPACING.xl, justifyContent: "center", alignItems: "center" },
+  successIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: DS_COLORS.GREEN,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: DS_SPACING.xl,
+  },
+  successTitle: { fontSize: 20, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
 });

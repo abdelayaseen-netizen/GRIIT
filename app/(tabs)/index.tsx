@@ -148,21 +148,43 @@ export default function HomeScreen() {
     },
   });
 
-  const firstActive = homeQuery.data?.activeList[0];
-  const challengeName = firstActive?.challenges?.title;
-  const currentDay = firstActive?.current_day ?? 1;
-  const durationDays = firstActive?.challenges?.duration_days ?? 14;
+  type ChallengeGoalGroup = {
+    activeChallengeId: string;
+    challengeId: string;
+    challengeName: string;
+    currentDay: number;
+    durationDays: number;
+    goals: { id: string; title: string; completed: boolean; taskType: string; taskConfig: string }[];
+  };
 
-  const goals = useMemo(() => {
-    const tasks = firstActive?.challenges?.challenge_tasks ?? [];
-    const required = tasks.filter((t) => t.required !== false);
-    const doneSet = new Set(
-      (homeQuery.data?.todayCheckins ?? [])
-        .filter((c) => c.active_challenge_id === firstActive?.id && c.status === "completed")
-        .map((c) => c.task_id)
-    );
-    return required.map((t) => ({ id: t.id, title: t.title ?? t.type ?? "Goal", completed: doneSet.has(t.id) }));
-  }, [firstActive, homeQuery.data?.todayCheckins]);
+  const challengeGroups: ChallengeGoalGroup[] = useMemo(() => {
+    const activeList = homeQuery.data?.activeList ?? [];
+    const checkins = homeQuery.data?.todayCheckins ?? [];
+
+    return activeList.map((ac: ActiveRow) => {
+      const tasks = ac.challenges?.challenge_tasks ?? [];
+      const required = tasks.filter((t) => t.required !== false);
+      const doneSet = new Set(
+        checkins
+          .filter((c) => c.active_challenge_id === ac.id && c.status === "completed")
+          .map((c) => c.task_id)
+      );
+      return {
+        activeChallengeId: ac.id,
+        challengeId: ac.challenge_id,
+        challengeName: ac.challenges?.title ?? "Challenge",
+        currentDay: ac.current_day ?? 1,
+        durationDays: ac.challenges?.duration_days ?? 14,
+        goals: required.map((t) => ({
+          id: t.id,
+          title: t.title ?? t.type ?? "Goal",
+          completed: doneSet.has(t.id),
+          taskType: String(t.type ?? "manual").toLowerCase(),
+          taskConfig: buildTaskConfigParam(t as ChallengeTaskFromApi),
+        })),
+      };
+    });
+  }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
 
   const streak = stats?.activeStreak ?? 0;
   const basePoints = (stats?.totalDaysSecured ?? 0) * 5;
@@ -205,17 +227,21 @@ export default function HomeScreen() {
   }, [homeQuery, refetchAll]);
 
   const onPressGoal = useCallback(
-    (goalId: string) => {
-      if (!firstActive?.id || goalId === "__commit__") return;
-      const tasks = firstActive?.challenges?.challenge_tasks ?? [];
-      const task = tasks.find((t) => t.id === goalId) as ChallengeTaskFromApi | undefined;
-      const taskType = String(task?.type ?? "manual").toLowerCase();
-      const taskName = (task?.title ?? "Task").trim() || "Task";
-      const taskConfig = buildTaskConfigParam(task);
-      const url = `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(goalId)}&activeChallengeId=${encodeURIComponent(firstActive.id)}&taskType=${encodeURIComponent(taskType)}&taskName=${encodeURIComponent(taskName)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(taskConfig)}`;
+    (
+      goalId: string,
+      activeChallengeId: string,
+      taskType: string,
+      taskName: string,
+      taskConfig: string,
+      challengeTitle: string,
+      currentDay: number,
+      durationDays: number
+    ) => {
+      if (goalId === "__commit__") return;
+      const url = `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(goalId)}&activeChallengeId=${encodeURIComponent(activeChallengeId)}&taskType=${encodeURIComponent(taskType)}&taskName=${encodeURIComponent(taskName)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(taskConfig)}&challengeName=${encodeURIComponent(challengeTitle)}&currentDay=${String(currentDay)}&durationDays=${String(durationDays)}`;
       router.push(url as never);
     },
-    [firstActive, router]
+    [router]
   );
 
   if (isGuest) {
@@ -269,7 +295,7 @@ export default function HomeScreen() {
           </View>
         ) : homeQuery.isError ? (
           <ErrorRetry message="Couldn't load your dashboard" onRetry={() => void homeQuery.refetch()} />
-        ) : (homeQuery.data?.activeList.length ?? 0) === 0 ? (
+        ) : challengeGroups.length === 0 ? (
           <EmptyState
             icon={Target}
             title="No active challenges"
@@ -280,18 +306,42 @@ export default function HomeScreen() {
             }}
           />
         ) : (
-          <GoalCard
-            challengeName={challengeName}
-            goals={goals}
-            currentDay={currentDay}
-            durationDays={durationDays}
-            onPressGoal={onPressGoal}
-            onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
-            onPressInActiveChallenge={() => {
-              if (firstActive?.id) void prefetchActiveChallengeById(queryClient, firstActive.id);
-            }}
-            isError={homeQuery.isError}
-          />
+          <View style={s.goalsSection}>
+            <View style={s.goalsSectionHeader}>
+              <Text style={s.goalsSectionTitle}>Today&apos;s goals</Text>
+              <Text style={s.goalsSectionCount}>
+                {challengeGroups.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining
+              </Text>
+            </View>
+            {challengeGroups.map((group) => (
+              <GoalCard
+                key={group.activeChallengeId}
+                challengeName={group.challengeName}
+                goals={group.goals}
+                currentDay={group.currentDay}
+                durationDays={group.durationDays}
+                onPressGoal={(goalId: string) => {
+                  const goal = group.goals.find((gl) => gl.id === goalId);
+                  if (!goal) return;
+                  onPressGoal(
+                    goalId,
+                    group.activeChallengeId,
+                    goal.taskType,
+                    goal.title,
+                    goal.taskConfig,
+                    group.challengeName,
+                    group.currentDay,
+                    group.durationDays
+                  );
+                }}
+                onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+                onPressInActiveChallenge={() => {
+                  void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
+                }}
+                isError={homeQuery.isError}
+              />
+            ))}
+          </View>
         )}
 
         <WeekStrip
@@ -399,4 +449,22 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
   },
   loadingWrap: { paddingVertical: DS_SPACING.xxl, alignItems: "center" },
+  goalsSection: { paddingTop: 14 },
+  goalsSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: DS_SPACING.xl,
+    marginBottom: DS_SPACING.sm,
+  },
+  goalsSectionTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  goalsSectionCount: {
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    fontWeight: "600",
+    color: DS_COLORS.DISCOVER_CORAL,
+  },
 });

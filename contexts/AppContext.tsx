@@ -438,9 +438,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         return { firstTaskOfDay, completionId: data?.id };
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         setTodayCheckins(previousCheckins);
-        throw new Error("Couldn't save. Tap to retry.");
+        const msg = err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
+        console.error("[AppContext] completeTask failed:", msg, err);
+        throw new Error(msg);
       });
   }, [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats]);
 

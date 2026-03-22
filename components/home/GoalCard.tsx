@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-nativ
 import { Check, Flame, Target } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 
-type Goal = { id: string; title: string; completed: boolean };
+type Goal = { id: string; title: string; completed: boolean; taskType?: string; taskConfig?: string };
 
 export default function GoalCard({
   challengeName,
@@ -33,7 +33,6 @@ export default function GoalCard({
   if (!challengeName) {
     return (
       <View style={s.wrap}>
-        <Text style={s.sectionTitle}>Today&apos;s goals</Text>
         <View style={s.empty}>
           <Flame size={40} color={GRIIT_COLORS.primary} />
           <Text style={s.emptyTitle}>Your first challenge is waiting</Text>
@@ -60,10 +59,6 @@ export default function GoalCard({
 
   return (
     <View style={s.wrap}>
-      <View style={s.headerRow}>
-        <Text style={s.sectionTitle}>Today&apos;s goals</Text>
-        <Text style={s.dayText}>{`Day ${currentDay ?? 1} of ${durationDays ?? 1}`}</Text>
-      </View>
       <View style={s.card}>
         <View style={s.challengeRow}>
           <View style={s.iconBox}>
@@ -75,7 +70,10 @@ export default function GoalCard({
               <View style={[s.progressFill, { width: `${Math.max(2, progress)}%` }]} />
             </View>
           </View>
-          <Text style={s.count}>{`${completed}/${total}`}</Text>
+          <View style={s.challengeRight}>
+            <Text style={s.dayText}>{`Day ${currentDay ?? 1} of ${durationDays ?? 1}`}</Text>
+            <Text style={s.count}>{`${completed}/${total}`}</Text>
+          </View>
         </View>
 
         {rows.map((g) =>
@@ -108,13 +106,8 @@ export default function GoalCard({
 }
 
 const s = StyleSheet.create({
-  wrap: { paddingHorizontal: DS_SPACING.xl, paddingTop: 14 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: DS_SPACING.md, alignItems: "center" },
-  sectionTitle: {
-    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: "700",
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
+  wrap: { paddingHorizontal: DS_SPACING.xl, paddingTop: 0, marginBottom: DS_SPACING.md },
+  challengeRight: { alignItems: "flex-end", justifyContent: "center", gap: 4 },
   dayText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
   card: {
     backgroundColor: DS_COLORS.WHITE,

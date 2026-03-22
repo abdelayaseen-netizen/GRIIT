@@ -526,6 +526,16 @@ export default function ChallengeDetailScreen() {
     if (!id || !Array.isArray(list)) return false;
     return list.some((r) => (r as { challenge_id?: string }).challenge_id === id);
   }, [activeChallenge?.challenge_id, id, myActiveListQuery.data]);
+
+  /** Active row for *this* challenge detail screen (not the global first active from AppContext). */
+  const activeChallengeId = useMemo(() => {
+    if (id && activeChallenge?.challenge_id === id) return activeChallenge.id;
+    const list = myActiveListQuery.data;
+    if (!id || !Array.isArray(list)) return undefined;
+    const match = list.find((r) => (r as { challenge_id?: string }).challenge_id === id) as { id?: string } | undefined;
+    return match?.id;
+  }, [id, activeChallenge?.challenge_id, activeChallenge?.id, myActiveListQuery.data]);
+
   const activeCount = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
   const joinLimit = canJoinChallenge(activeCount);
   const currentUserId = user?.id ?? undefined;
@@ -803,14 +813,14 @@ export default function ChallengeDetailScreen() {
       pathname: ROUTES.TASK_COMPLETE,
       params: {
         taskId: task.id,
-        activeChallengeId: activeChallenge?.id ?? "",
+        activeChallengeId: activeChallengeId ?? "",
         taskType: task.type,
         taskName: task.title ?? "",
         taskDescription: (task as { description?: string }).description ?? "",
         taskConfig: JSON.stringify(taskConfig),
       },
     } as never);
-  }, [router, activeChallenge?.id, showError]);
+  }, [router, activeChallengeId, showError]);
 
   const allTasks = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
   const todayTasksWithCompletion = useMemo(() => {
@@ -830,7 +840,6 @@ export default function ChallengeDetailScreen() {
   const isThisActiveChallenge = !!(
     activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
   );
-  const activeChallengeId = activeChallenge?.id as string | undefined;
 
   const handleContinueToday = useCallback(() => {
     if (!isJoined || !id) return;

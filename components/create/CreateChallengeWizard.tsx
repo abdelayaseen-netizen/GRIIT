@@ -699,25 +699,29 @@ export default function CreateChallengeWizard() {
                 </View>
               </View>
               {catError ? <Text style={styles.errText}>Pick at least one category</Text> : null}
-              <Text style={[styles.fieldLabel, { marginTop: 16 }]}>
-                Team rules <Text style={styles.light}>(for duo/squad)</Text>
-              </Text>
-              <View style={styles.typeRow}>
-                <TouchableOpacity
-                  style={[styles.typeCard, teamRules === "all" && styles.typeCardSel]}
-                  onPress={() => setTeamRules("all")}
-                >
-                  <Text style={styles.typeCardTitle}>Everyone does all</Text>
-                  <Text style={styles.typeCardSub}>Each person completes every task individually.</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.typeCard, teamRules === "shared" && styles.typeCardSel]}
-                  onPress={() => setTeamRules("shared")}
-                >
-                  <Text style={styles.typeCardTitle}>Shared progress</Text>
-                  <Text style={styles.typeCardSub}>Team splits numeric targets across members.</Text>
-                </TouchableOpacity>
-              </View>
+              {who !== "solo" && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 16 }]}>
+                    Team rules <Text style={styles.light}>(for duo/squad)</Text>
+                  </Text>
+                  <View style={styles.typeRow}>
+                    <TouchableOpacity
+                      style={[styles.typeCard, teamRules === "all" && styles.typeCardSel]}
+                      onPress={() => setTeamRules("all")}
+                    >
+                      <Text style={styles.typeCardTitle}>Everyone does all</Text>
+                      <Text style={styles.typeCardSub}>Each person completes every task individually.</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.typeCard, teamRules === "shared" && styles.typeCardSel]}
+                      onPress={() => setTeamRules("shared")}
+                    >
+                      <Text style={styles.typeCardTitle}>Shared progress</Text>
+                      <Text style={styles.typeCardSub}>Team splits numeric targets across members.</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
             </>
           )}
 
