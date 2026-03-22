@@ -268,7 +268,6 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen name="edit-profile" options={{ headerShown: false, presentation: "modal" }} />
-      <Stack.Screen name="success" options={{ headerShown: false, presentation: "modal" }} />
       <Stack.Screen 
         name="challenge/[id]" 
         options={{ 
@@ -278,7 +277,6 @@ function RootLayoutNav() {
       />
       <Stack.Screen name="invite/[code]" options={{ headerShown: false }} />
       <Stack.Screen name="paywall" options={{ headerShown: false }} />
-      <Stack.Screen name="teams" options={{ headerShown: false }} />
       <Stack.Screen name="create-team" options={{ title: "Create team", presentation: "modal" }} />
       <Stack.Screen name="join-team" options={{ title: "Join team", presentation: "modal" }} />
       <Stack.Screen name="profile/[username]" options={{ headerShown: false }} />
@@ -335,13 +333,6 @@ function RootLayoutNav() {
         options={{ 
           headerShown: true,
           title: "Location Check-in",
-          presentation: "modal"
-        }} 
-      />
-      <Stack.Screen 
-        name="secure-confirmation" 
-        options={{ 
-          headerShown: false,
           presentation: "modal"
         }} 
       />

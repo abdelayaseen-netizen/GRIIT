@@ -25,7 +25,6 @@ export const ROUTES = {
   ACCOUNTABILITY: "/accountability",
   ACCOUNTABILITY_ADD: "/accountability/add",
   ACCOUNTABILITY_ADD_DAY1: "/accountability/add?from=day1",
-  SUCCESS: "/success",
   CHALLENGE_ID: (id: string) => `/challenge/${id}` as const,
   /** Active challenge detail (post-join); use activeChallengeId from active_challenges.id */
   CHALLENGE_ACTIVE: (activeChallengeId: string) => `/challenge/active/${activeChallengeId}` as const,
@@ -38,10 +37,8 @@ export const ROUTES = {
   TASK_CHECKIN: "/task/checkin",
   TASK_RUN: "/task/run",
   TASK_TIMER: "/task/timer",
-  SECURE_CONFIRMATION: "/secure-confirmation",
   CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
   CHALLENGE_COMPLETE: "/challenge/complete",
-  TEAMS: "/teams",
   PRICING: "/pricing",
   PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",
