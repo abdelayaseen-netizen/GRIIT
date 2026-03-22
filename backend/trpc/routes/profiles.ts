@@ -100,6 +100,7 @@ export const profilesRouter = createTRPCRouter({
 
   /** Validates subscription with RevenueCat and writes to profiles. Client must not write subscription fields. */
   validateSubscription: protectedProcedure
+    .input(z.object({}))
     .mutation(async ({ ctx }): Promise<{ subscription_status: SubscriptionStatus; subscription_expiry: string | null }> => {
       const apiKey = process.env.REVENUECAT_API_KEY?.trim();
       const appUserId = ctx.userId;
@@ -531,6 +532,7 @@ export const profilesRouter = createTRPCRouter({
 
   /** Delete account: clears profile data; when SUPABASE_SERVICE_ROLE_KEY is set, also deletes auth user. Client must sign out after. */
   deleteAccount: protectedProcedure
+    .input(z.object({}))
     .mutation(async ({ ctx }) => {
       const { error: profileError } = await ctx.supabase
         .from("profiles")

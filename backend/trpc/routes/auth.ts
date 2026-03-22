@@ -43,6 +43,7 @@ export const authRouter = createTRPCRouter({
     }),
 
   signOut: protectedProcedure
+    .input(z.object({}))
     .mutation(async ({ ctx }) => {
       const { error } = await ctx.supabase.auth.signOut();
       if (error) {

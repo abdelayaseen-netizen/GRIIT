@@ -56,9 +56,7 @@ export async function trpcMutate<T = any>(
   const fullUrl = `${url}/${path}`;
   const authHeaders = await getAuthHeaders();
 
-  const body = input !== undefined
-    ? JSON.stringify(serialize(input))
-    : undefined;
+  const body = JSON.stringify(serialize(input ?? {}));
 
   const response = await fetchWithRetry(fullUrl, {
     method: "POST",

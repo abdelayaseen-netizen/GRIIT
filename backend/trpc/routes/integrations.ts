@@ -152,18 +152,20 @@ export const integrationsRouter = createTRPCRouter({
   }),
 
   /** Disconnect Strava. */
-  disconnectStrava: protectedProcedure.mutation(async ({ ctx }) => {
-    const { error } = await ctx.supabase
-      .from("connected_accounts")
-      .delete()
-      .eq("user_id", ctx.userId)
-      .eq("provider", PROVIDER_STRAVA);
+  disconnectStrava: protectedProcedure
+    .input(z.object({}))
+    .mutation(async ({ ctx }) => {
+      const { error } = await ctx.supabase
+        .from("connected_accounts")
+        .delete()
+        .eq("user_id", ctx.userId)
+        .eq("provider", PROVIDER_STRAVA);
 
-    if (error) {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to disconnect" });
-    }
-    return { ok: true };
-  }),
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to disconnect" });
+      }
+      return { ok: true };
+    }),
 
   /** Verify a Strava-verified task for today: fetch activities and match rule, upsert check_in if match. */
   verifyStravaTask: protectedProcedure
