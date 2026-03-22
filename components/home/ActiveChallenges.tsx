@@ -73,7 +73,8 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
           setActiveList(Array.isArray(list) ? list : []);
           setTodayCheckins(Array.isArray(checkins) ? checkins : []);
         }
-      } catch {
+      } catch (err) {
+        console.error("[ActiveChallenges] load failed:", err);
         if (!cancelled) setActiveList([]);
       } finally {
         if (!cancelled) setIsLoading(false);

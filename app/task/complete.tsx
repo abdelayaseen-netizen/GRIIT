@@ -158,7 +158,8 @@ export default function TaskCompleteScreen() {
       } else {
         setPhotoUrl(upload.url);
       }
-    } catch {
+    } catch (err) {
+      console.error("[TaskComplete] camera upload failed:", err);
       showError("Upload failed. Please try again.");
       setPhotoUri(null);
     } finally {
@@ -191,7 +192,8 @@ export default function TaskCompleteScreen() {
       } else {
         setPhotoUrl(upload.url);
       }
-    } catch {
+    } catch (err) {
+      console.error("[TaskComplete] gallery upload failed:", err);
       showError("Upload failed. Please try again.");
       setPhotoUri(null);
     } finally {
@@ -208,7 +210,8 @@ export default function TaskCompleteScreen() {
     try {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
-    } catch {
+    } catch (err) {
+      console.error("[TaskComplete] getCurrentPosition failed:", err);
       showError("Could not get your location. Please try again.");
     }
   }, [showError]);
@@ -258,6 +261,7 @@ export default function TaskCompleteScreen() {
       setCompletionId(id ?? null);
       setSubmitted(true);
     } catch (err: unknown) {
+      console.error("[TaskComplete] completeTask failed:", err);
       showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);

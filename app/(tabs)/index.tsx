@@ -12,7 +12,7 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import type { TodayCheckinForUser, StatsFromApi } from "@/types";
+import type { TodayCheckinForUser, StatsFromApi, ChallengeTaskFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
 import GoalCard from "@/components/home/GoalCard";
 import WeekStrip from "@/components/home/WeekStrip";
@@ -31,6 +31,8 @@ type TaskRow = { id: string; title?: string; type?: string; required?: boolean }
 type ActiveRow = {
   id: string;
   challenge_id: string;
+  /** API may expose `current_day` (DB) or `current_day_index` (mapped). */
+  current_day?: number;
   current_day_index?: number;
   challenges?: {
     id?: string;
@@ -60,6 +62,31 @@ function toAge(iso: string): string {
   const h = Math.floor(mins / 60);
   if (h < 24) return `${h}h`;
   return `${Math.floor(h / 24)}d`;
+}
+
+/** JSON for `app/task/complete` — matches TaskCompleteConfig fields from mapped challenge_tasks. */
+function buildTaskConfigParam(task: ChallengeTaskFromApi | undefined): string {
+  if (!task) return "{}";
+  try {
+    const t = task as Record<string, unknown>;
+    return JSON.stringify({
+      require_photo: t.require_photo ?? t.require_photo_proof,
+      min_duration_minutes: t.min_duration_minutes ?? t.duration_minutes,
+      min_words: t.min_words,
+      timer_direction: t.timer_direction,
+      timer_hard_mode: t.timer_hard_mode ?? t.strict_timer_mode,
+      require_heart_rate: t.require_heart_rate,
+      heart_rate_threshold: t.heart_rate_threshold,
+      require_location: t.require_location,
+      location_name: t.location_name,
+      location_latitude: t.location_latitude,
+      location_longitude: t.location_longitude,
+      location_radius_meters: t.location_radius_meters,
+    });
+  } catch (err) {
+    console.error("[Home] buildTaskConfigParam failed:", err);
+    return "{}";
+  }
 }
 
 function deriveRank(stats: StatsFromApi | null | undefined): string {
@@ -124,7 +151,7 @@ export default function HomeScreen() {
 
   const firstActive = homeQuery.data?.activeList[0];
   const challengeName = firstActive?.challenges?.title;
-  const currentDay = firstActive?.current_day_index ?? 1;
+  const currentDay = firstActive?.current_day_index ?? firstActive?.current_day ?? 1;
   const durationDays = firstActive?.challenges?.duration_days ?? 14;
 
   const goals = useMemo(() => {
@@ -182,18 +209,21 @@ export default function HomeScreen() {
     (goalId: string) => {
       if (!firstActive?.id || goalId === "__commit__") return;
       const tasks = firstActive?.challenges?.challenge_tasks ?? [];
-      const task = tasks.find((t) => t.id === goalId);
+      const task = tasks.find((t) => t.id === goalId) as ChallengeTaskFromApi | undefined;
       const taskType = String(task?.type ?? "manual").toLowerCase();
-      const taskName = task?.title ?? "Task";
-      const q = new URLSearchParams({
-        taskId: goalId,
-        activeChallengeId: firstActive.id,
-        taskType,
-        taskName,
-        taskDescription: "",
-        taskConfig: "{}",
-      }).toString();
-      router.push(`${ROUTES.TASK_COMPLETE}?${q}` as never);
+      const taskName = (task?.title ?? "Task").trim() || "Task";
+      const taskConfig = buildTaskConfigParam(task);
+      router.push({
+        pathname: ROUTES.TASK_COMPLETE,
+        params: {
+          taskId: goalId,
+          activeChallengeId: firstActive.id,
+          taskType,
+          taskName,
+          taskDescription: "",
+          taskConfig,
+        },
+      } as never);
     },
     [firstActive, router]
   );

@@ -241,20 +241,30 @@ export const checkinsRouter = createTRPCRouter({
         .from('active_challenges')
         .select('id')
         .eq('user_id', ctx.userId)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .limit(50);
       requireNoError(acErr, "Failed to load active challenges.");
       const acIds = (acList ?? []).map((r: { id: string }) => r.id);
       if (acIds.length === 0) return [];
-      const { data, error } = await ctx.supabase
-        .from('check_ins')
-        .select('id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, external_activity_id, verification_status, created_at')
-        .in('active_challenge_id', acIds)
-        .eq('date_key', dateKey);
-      if (error) {
-        console.error("[getTodayCheckinsForUser] Supabase error:", JSON.stringify(error));
+      // Per active_challenge_id: avoids PostgREST `.in()` + RLS edge cases; minimal columns work on any migrated DB.
+      const rows = await Promise.all(
+        acIds.map((acId) =>
+          ctx.supabase
+            .from('check_ins')
+            .select('id, active_challenge_id, task_id, date_key, status')
+            .eq('active_challenge_id', acId)
+            .eq('date_key', dateKey)
+        )
+      );
+      const merged: NonNullable<(typeof rows)[0]['data']> = [];
+      for (const { data, error } of rows) {
+        if (error) {
+          console.error("[getTodayCheckinsForUser] Supabase error:", JSON.stringify(error));
+          requireNoError(error, "Failed to load today check-ins.");
+        }
+        if (data?.length) merged.push(...data);
       }
-      requireNoError(error, "Failed to load today check-ins.");
-      return data ?? [];
+      return merged;
     }),
 
   secureDay: protectedProcedure
