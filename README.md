@@ -10,6 +10,8 @@ A standalone **iOS app** (and Android/web) for tracking daily challenges, streak
 
 No Rork or other third‑party app platform required. Run and build everything yourself.
 
+**Architecture:** For stack overview, folder map, env vars, and pointers to tRPC/RLS docs, see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
 ## Prerequisites
 
 - **Node.js** 18+
