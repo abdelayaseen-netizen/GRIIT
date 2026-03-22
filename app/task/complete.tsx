@@ -66,6 +66,11 @@ function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {
   }
 }
 
+function firstString(v: string | string[] | undefined): string {
+  if (v == null) return "";
+  return typeof v === "string" ? v : v[0] ?? "";
+}
+
 export default function TaskCompleteScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -83,11 +88,11 @@ export default function TaskCompleteScreen() {
   const [shareLoading, setShareLoading] = useState(false);
   const [sharedFeedback, setSharedFeedback] = useState(false);
 
-  const taskId = params.taskId ?? "";
-  const activeChallengeId = params.activeChallengeId ?? activeChallenge?.id ?? "";
-  const taskType = (params.taskType ?? "manual") as string;
-  const taskName = params.taskName?.trim() ?? "Task";
-  const config = useMemo(() => parseConfig(params.taskConfig), [params.taskConfig]);
+  const taskId = firstString(params.taskId) || "";
+  const activeChallengeId = firstString(params.activeChallengeId) || activeChallenge?.id || "";
+  const taskType = (firstString(params.taskType) || "manual") as string;
+  const taskName = (firstString(params.taskName) || "Task").trim() || "Task";
+  const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -287,6 +292,26 @@ export default function TaskCompleteScreen() {
     }
   }, [completionId, profile, challenge, activeChallenge, stats, userLocation, photoUri, photoUrl]);
 
+  if (!taskId.trim() || !activeChallengeId.trim()) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
+        <Stack.Screen options={{ title: "Task", headerBackVisible: true }} />
+        <View style={{ padding: DS_SPACING.xl }}>
+          <Text style={styles.title}>Couldn&apos;t open this task</Text>
+          <Text style={styles.subtitle}>Go back and tap Start again from Home.</Text>
+          <TouchableOpacity
+            style={[styles.submitButton, { backgroundColor: DS_COLORS.ACCENT_PRIMARY, marginTop: DS_SPACING.lg }]}
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Text style={styles.submitButtonText}>Go back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (submitted) {
     const username = (profile as { username?: string })?.username ?? "GRIIT User";
     const challengeName = (challenge as { title?: string })?.title ?? "Challenge";
@@ -349,7 +374,7 @@ export default function TaskCompleteScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         <InlineError message={error} onDismiss={clearError} />
         <Text style={styles.title}>{taskName}</Text>
-        {params.taskDescription ? <Text style={styles.subtitle}>{params.taskDescription}</Text> : null}
+        {firstString(params.taskDescription) ? <Text style={styles.subtitle}>{firstString(params.taskDescription)}</Text> : null}
 
         {/* Manual: just confirmation */}
         {(taskType === "manual" || taskType === "simple") && (

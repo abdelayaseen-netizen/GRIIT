@@ -78,36 +78,55 @@ export const DailyCard = React.memo(function DailyCard({
           <Text style={[s.stateBadgeText, { color: DS_COLORS.GREEN, marginLeft: 4 }]}>Done</Text>
         </View>
       ) : null}
-      <View style={s.topRow}>
-        <View style={[s.iconBox, { backgroundColor: theme.accent }]}>
-          <IconComp size={12} color={DS_COLORS.WHITE} />
+      <View style={s.cardInner}>
+        <View style={s.mainBlock}>
+          <View style={s.topRow}>
+            <View style={[s.iconBox, { backgroundColor: theme.accent }]}>
+              <IconComp size={12} color={DS_COLORS.WHITE} />
+            </View>
+            <Text style={[s.diff, { color: theme.accent, backgroundColor: theme.tint }]}>{theme.label}</Text>
+          </View>
+          <Text style={s.title} numberOfLines={2}>
+            {challenge.title}
+          </Text>
+          <Text style={s.subtitle} numberOfLines={2}>
+            {subtitle}
+          </Text>
         </View>
-        <Text style={[s.diff, { color: theme.accent, backgroundColor: theme.tint }]}>{theme.label}</Text>
-      </View>
-      <Text style={s.title}>{challenge.title}</Text>
-      <Text style={s.subtitle}>{subtitle}</Text>
-      <View style={s.bottom}>
-        <Text style={s.meta}>{count > 0 ? `${count} doing it` : "New"}</Text>
-        {participationState === "available" ? (
-          <Text style={[s.go, { color: theme.accent }]}>Go ›</Text>
-        ) : participationState === "active" ? (
-          <Text style={[s.go, { color: DS_COLORS.ACCENT_PRIMARY }]}>Continue ›</Text>
-        ) : (
-          <Text style={[s.go, { color: DS_COLORS.TEXT_MUTED }]}>View ›</Text>
-        )}
+        <View style={s.bottom}>
+          <Text style={s.meta}>{count > 0 ? `${count} doing it` : "New"}</Text>
+          {participationState === "available" ? (
+            <Text style={[s.go, { color: theme.accent }]}>Go ›</Text>
+          ) : participationState === "active" ? (
+            <Text style={[s.go, { color: DS_COLORS.ACCENT_PRIMARY }]}>Continue ›</Text>
+          ) : (
+            <Text style={[s.go, { color: DS_COLORS.TEXT_MUTED }]}>View ›</Text>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
 });
 
+const CARD_HEIGHT = 200;
+
 const s = StyleSheet.create({
   card: {
     width: 154,
+    height: CARD_HEIGHT,
     borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     backgroundColor: DS_COLORS.WHITE,
     overflow: "hidden",
+  },
+  cardInner: {
+    flex: 1,
+    marginLeft: 5,
+    justifyContent: "space-between",
+  },
+  mainBlock: {
+    flexShrink: 1,
   },
   cardDimmed: { opacity: 0.88 },
   stripe: { position: "absolute", top: 0, left: 0, bottom: 0, width: 3 },
@@ -123,12 +142,18 @@ const s = StyleSheet.create({
     zIndex: 2,
   },
   stateBadgeText: { fontSize: 9, fontWeight: "700", letterSpacing: 0.2 },
-  topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   iconBox: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   diff: { fontSize: 10, fontWeight: "700", letterSpacing: 0.3, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7 },
   title: { fontSize: 15, lineHeight: 18, fontWeight: "700", color: DS_COLORS.DISCOVER_INK },
-  subtitle: { marginTop: 6, fontSize: 11, lineHeight: 15, color: DS_COLORS.TEXT_MUTED },
-  bottom: { marginTop: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  subtitle: { marginTop: 4, fontSize: 11, lineHeight: 15, color: DS_COLORS.TEXT_MUTED },
+  bottom: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+    paddingTop: 4,
+  },
   meta: { fontSize: 10, color: DS_COLORS.DISCOVER_META_SILVER },
   go: { fontSize: 12, fontWeight: "700" },
 });

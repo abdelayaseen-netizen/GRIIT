@@ -250,6 +250,9 @@ export const checkinsRouter = createTRPCRouter({
         .select('id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, external_activity_id, verification_status, created_at')
         .in('active_challenge_id', acIds)
         .eq('date_key', dateKey);
+      if (error) {
+        console.error("[getTodayCheckinsForUser] Supabase error:", JSON.stringify(error));
+      }
       requireNoError(error, "Failed to load today check-ins.");
       return data ?? [];
     }),

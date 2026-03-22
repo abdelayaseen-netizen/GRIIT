@@ -184,17 +184,16 @@ export default function HomeScreen() {
       const tasks = firstActive?.challenges?.challenge_tasks ?? [];
       const task = tasks.find((t) => t.id === goalId);
       const taskType = String(task?.type ?? "manual").toLowerCase();
-      router.push({
-        pathname: ROUTES.TASK_COMPLETE,
-        params: {
-          taskId: goalId,
-          activeChallengeId: firstActive.id,
-          taskType,
-          taskName: task?.title ?? "",
-          taskDescription: "",
-          taskConfig: "{}",
-        },
-      } as never);
+      const taskName = task?.title ?? "Task";
+      const q = new URLSearchParams({
+        taskId: goalId,
+        activeChallengeId: firstActive.id,
+        taskType,
+        taskName,
+        taskDescription: "",
+        taskConfig: "{}",
+      }).toString();
+      router.push(`${ROUTES.TASK_COMPLETE}?${q}` as never);
     },
     [firstActive, router]
   );
