@@ -637,7 +637,8 @@ export default function ChallengeDetailScreen() {
 
   const userCurrentDay = useMemo(() => {
     if (!isJoined) return 0;
-    return (activeChallenge as ActiveChallengeFromApi | null)?.current_day_index ?? 1;
+    const ac = activeChallenge as ActiveChallengeFromApi | null;
+    return ac?.current_day ?? ac?.current_day_index ?? 1;
   }, [isJoined, activeChallenge]);
 
   const userStreak = useMemo(() => {
@@ -684,6 +685,7 @@ export default function ChallengeDetailScreen() {
       track({ name: "challenge_joined", challenge_id: id });
       setShowJoinCelebration(true);
     } catch (err: unknown) {
+      console.error("[ChallengeDetail] join failed:", err);
       const { title, message } = formatTRPCError(err);
       showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
     } finally {
@@ -693,8 +695,10 @@ export default function ChallengeDetailScreen() {
 
   const onJoinCelebrationDismiss = useCallback(() => {
     setShowJoinCelebration(false);
+    // Drop cached home payload so the tab cannot briefly show pre-join empty goals after replace().
+    queryClient.removeQueries({ queryKey: ["home"] });
     router.replace(ROUTES.TABS_HOME as never);
-  }, [router]);
+  }, [router, queryClient]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();

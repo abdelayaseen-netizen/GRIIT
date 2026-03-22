@@ -31,9 +31,8 @@ type TaskRow = { id: string; title?: string; type?: string; required?: boolean }
 type ActiveRow = {
   id: string;
   challenge_id: string;
-  /** API may expose `current_day` (DB) or `current_day_index` (mapped). */
+  /** `listMyActive` selects `active_challenges.*` — DB column is `current_day`. */
   current_day?: number;
-  current_day_index?: number;
   challenges?: {
     id?: string;
     title?: string;
@@ -151,7 +150,7 @@ export default function HomeScreen() {
 
   const firstActive = homeQuery.data?.activeList[0];
   const challengeName = firstActive?.challenges?.title;
-  const currentDay = firstActive?.current_day_index ?? firstActive?.current_day ?? 1;
+  const currentDay = firstActive?.current_day ?? 1;
   const durationDays = firstActive?.challenges?.duration_days ?? 14;
 
   const goals = useMemo(() => {
