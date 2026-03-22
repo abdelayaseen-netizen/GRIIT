@@ -212,17 +212,15 @@ export default function HomeScreen() {
       const taskType = String(task?.type ?? "manual").toLowerCase();
       const taskName = (task?.title ?? "Task").trim() || "Task";
       const taskConfig = buildTaskConfigParam(task);
-      router.push({
-        pathname: ROUTES.TASK_COMPLETE,
-        params: {
-          taskId: goalId,
-          activeChallengeId: firstActive.id,
-          taskType,
-          taskName,
-          taskDescription: "",
-          taskConfig,
-        },
-      } as never);
+      const q = new URLSearchParams({
+        taskId: goalId,
+        activeChallengeId: firstActive.id,
+        taskType,
+        taskName,
+        taskDescription: "",
+        taskConfig,
+      }).toString();
+      router.push(`${ROUTES.TASK_COMPLETE}?${q}` as never);
     },
     [firstActive, router]
   );

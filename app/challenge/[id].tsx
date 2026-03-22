@@ -716,21 +716,24 @@ export default function ChallengeDetailScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await trpcMutate(TRPC.challenges.join, { challengeId: id });
-      try {
-        await trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id });
-      } catch (refErr) {
+
+      void trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id }).catch((refErr: unknown) => {
         console.error("[ChallengeDetail] markJoinedChallenge failed:", refErr);
-      }
-      await refetchAll();
-      await queryClient.invalidateQueries({ queryKey: ["home"] });
-      await queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
-      await queryClient.invalidateQueries({ queryKey: ["discover"] });
-      await queryClient.invalidateQueries({ queryKey: ["challenge", id] });
+      });
+
       setShowCommitmentModal(false);
-      myActiveListQuery.refetch();
+      setShowJoinCelebration(true);
       trackEvent("challenge_joined", { challenge_id: id });
       track({ name: "challenge_joined", challenge_id: id });
-      setShowJoinCelebration(true);
+
+      void refetchAll().catch((e: unknown) => {
+        console.error("[ChallengeDetail] refetchAll after join failed:", e);
+      });
+      void queryClient.invalidateQueries({ queryKey: ["home"] });
+      void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
+      void queryClient.invalidateQueries({ queryKey: ["discover"] });
+      void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
+      void myActiveListQuery.refetch();
     } catch (err: unknown) {
       console.error("[ChallengeDetail] join failed:", err);
       const { title, message } = formatTRPCError(err);
