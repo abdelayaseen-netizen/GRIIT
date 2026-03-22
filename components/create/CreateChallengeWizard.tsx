@@ -159,8 +159,8 @@ export default function CreateChallengeWizard() {
       try {
         const raw = await AsyncStorage.getItem(DRAFT_KEY);
         if (raw) setResumeBanner(true);
-      } catch {
-        /* ignore */
+      } catch (e) {
+        console.error("[CreateChallengeWizard] draft read failed:", e);
       }
     })();
   }, []);

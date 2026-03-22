@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Switch,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -67,35 +68,51 @@ function parsePositiveFloat(raw: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-function buildTask(
-  name: string,
-  t: WizardTaskType,
-  hardPhoto: boolean,
-  opts: {
-    timerMins: number;
-    waterGlasses: number;
-    readingPages: number;
-    counterTarget: number;
-    runTracking: "distance" | "time";
-    runTarget: number;
-    runUnitDist: "miles" | "km";
-  }
-): TaskEditorTask | null {
+type BuildOpts = {
+  timerMins: number;
+  waterGlasses: number;
+  readingPages: number;
+  counterTarget: number;
+  counterUnit: string;
+  runTracking: "distance" | "time";
+  runTarget: number;
+  runUnitDist: "miles" | "km";
+  workoutMins: number;
+  requirePhotoTimer: boolean;
+  hardModeTimer: boolean;
+  requirePhotoCounter: boolean;
+  timedReading: boolean;
+  readingSessionMins: number;
+  gpsRun: boolean;
+  requirePhotoRun: boolean;
+  requirePhotoWorkout: boolean;
+  requireLocationWorkout: boolean;
+  locationNameWorkout: string;
+  minWordsJournal: number;
+  journalPromptText: string;
+  captureMoodJournal: boolean;
+  locationStampPhoto: boolean;
+};
+
+function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, opts: BuildOpts): TaskEditorTask | null {
   const title = name.trim();
   if (!title) return null;
-  const reqPhoto = hardPhoto;
+  const reqPhoto = (extra: boolean) => hardPhotoGlobal || extra;
   switch (t) {
-    case "journal":
+    case "journal": {
+      const minW = opts.minWordsJournal > 0 ? opts.minWordsJournal : 20;
       return {
         id: newId(),
         title,
         type: "journal",
         required: true,
         journalType: ["self_reflection"] as JournalCategory[],
-        journalPrompt: "Write at least 20 characters reflecting on your day.",
-        minWords: 20,
-        requirePhotoProof: reqPhoto,
+        journalPrompt: opts.journalPromptText.trim() || "Write at least 20 characters reflecting on your day.",
+        minWords: minW,
+        requirePhotoProof: reqPhoto(false),
+        captureMood: opts.captureMoodJournal,
       };
+    }
     case "timer":
       return {
         id: newId(),
@@ -104,7 +121,8 @@ function buildTask(
         required: true,
         durationMinutes: opts.timerMins,
         mustCompleteInSession: true,
-        requirePhotoProof: reqPhoto,
+        requirePhotoProof: reqPhoto(opts.requirePhotoTimer),
+        strictTimerMode: opts.hardModeTimer,
       };
     case "photo":
       return {
@@ -114,6 +132,7 @@ function buildTask(
         required: true,
         requirePhotoProof: true,
         photoRequired: true,
+        verificationMethod: opts.locationStampPhoto ? "location_stamp" : undefined,
       };
     case "run":
       if (opts.runTracking === "distance") {
@@ -125,7 +144,8 @@ function buildTask(
           trackingMode: "distance",
           targetValue: opts.runTarget,
           unit: opts.runUnitDist,
-          requirePhotoProof: reqPhoto,
+          requirePhotoProof: reqPhoto(opts.requirePhotoRun),
+          verificationMethod: opts.gpsRun ? "gps" : undefined,
         };
       }
       return {
@@ -136,7 +156,8 @@ function buildTask(
         trackingMode: "time",
         targetValue: opts.runTarget,
         unit: "minutes",
-        requirePhotoProof: reqPhoto,
+        requirePhotoProof: reqPhoto(opts.requirePhotoRun),
+        verificationMethod: opts.gpsRun ? "gps" : undefined,
       };
     case "simple":
       return {
@@ -144,7 +165,7 @@ function buildTask(
         title,
         type: "simple",
         required: true,
-        requirePhotoProof: reqPhoto,
+        requirePhotoProof: reqPhoto(false),
       };
     case "checkin":
       return {
@@ -154,7 +175,7 @@ function buildTask(
         required: true,
         locationName: "Home base",
         radiusMeters: 150,
-        requirePhotoProof: reqPhoto,
+        requirePhotoProof: reqPhoto(false),
       };
     case "water":
       return {
@@ -164,7 +185,7 @@ function buildTask(
         required: true,
         targetValue: opts.waterGlasses,
         unit: "glasses",
-        requirePhotoProof: reqPhoto,
+        requirePhotoProof: reqPhoto(false),
       };
     case "reading":
       return {
@@ -174,18 +195,22 @@ function buildTask(
         required: true,
         targetValue: opts.readingPages,
         unit: "pages",
-        requirePhotoProof: reqPhoto,
+        requirePhotoProof: reqPhoto(false),
+        durationMinutes: opts.timedReading ? opts.readingSessionMins : undefined,
       };
     case "workout":
       return {
         id: newId(),
         title,
-        type: "run",
+        type: "workout",
         required: true,
+        durationMinutes: opts.workoutMins,
         trackingMode: "time",
-        targetValue: opts.runTarget,
+        targetValue: opts.workoutMins,
         unit: "minutes",
-        requirePhotoProof: reqPhoto,
+        requirePhotoProof: reqPhoto(opts.requirePhotoWorkout),
+        locationName: opts.requireLocationWorkout ? (opts.locationNameWorkout.trim() || "Workout location") : undefined,
+        radiusMeters: opts.requireLocationWorkout ? 150 : undefined,
       };
     case "counter":
       return {
@@ -194,7 +219,8 @@ function buildTask(
         type: "counter",
         required: true,
         targetValue: opts.counterTarget,
-        requirePhotoProof: reqPhoto,
+        unit: (opts.counterUnit.trim() || "reps") as TaskEditorTask["unit"],
+        requirePhotoProof: reqPhoto(opts.requirePhotoCounter),
       };
     default:
       return null;
@@ -216,10 +242,25 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const [waterGlasses, setWaterGlasses] = useState("8");
   const [readingPages, setReadingPages] = useState("10");
   const [counterTarget, setCounterTarget] = useState("100");
+  const [counterUnit, setCounterUnit] = useState("reps");
   const [runTracking, setRunTracking] = useState<"distance" | "time">("distance");
   const [runTarget, setRunTarget] = useState("3");
   const [runUnitDist, setRunUnitDist] = useState<"miles" | "km">("miles");
   const [workoutMins, setWorkoutMins] = useState("45");
+  const [requirePhotoTimer, setRequirePhotoTimer] = useState(false);
+  const [hardModeTimer, setHardModeTimer] = useState(false);
+  const [requirePhotoCounter, setRequirePhotoCounter] = useState(false);
+  const [timedReading, setTimedReading] = useState(false);
+  const [readingSessionMins, setReadingSessionMins] = useState("30");
+  const [gpsRun, setGpsRun] = useState(false);
+  const [requirePhotoRun, setRequirePhotoRun] = useState(false);
+  const [requirePhotoWorkout, setRequirePhotoWorkout] = useState(false);
+  const [requireLocationWorkout, setRequireLocationWorkout] = useState(false);
+  const [locationNameWorkout, setLocationNameWorkout] = useState("");
+  const [minWordsJournal, setMinWordsJournal] = useState("");
+  const [journalPromptText, setJournalPromptText] = useState("");
+  const [captureMoodJournal, setCaptureMoodJournal] = useState(false);
+  const [locationStampPhoto, setLocationStampPhoto] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -229,12 +270,95 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       setWaterGlasses("8");
       setReadingPages("10");
       setCounterTarget("100");
+      setCounterUnit("reps");
       setRunTracking("distance");
       setRunTarget("3");
       setRunUnitDist("miles");
       setWorkoutMins("45");
+      setRequirePhotoTimer(false);
+      setHardModeTimer(false);
+      setRequirePhotoCounter(false);
+      setTimedReading(false);
+      setReadingSessionMins("30");
+      setGpsRun(false);
+      setRequirePhotoRun(false);
+      setRequirePhotoWorkout(false);
+      setRequireLocationWorkout(false);
+      setLocationNameWorkout("");
+      setMinWordsJournal("");
+      setJournalPromptText("");
+      setCaptureMoodJournal(false);
+      setLocationStampPhoto(false);
     }
   }, [visible]);
+
+  useEffect(() => {
+    setRequirePhotoTimer(false);
+    setHardModeTimer(false);
+    setRequirePhotoCounter(false);
+    setTimedReading(false);
+    setGpsRun(false);
+    setRequirePhotoRun(false);
+    setRequirePhotoWorkout(false);
+    setRequireLocationWorkout(false);
+    setLocationNameWorkout("");
+    setCaptureMoodJournal(false);
+    setLocationStampPhoto(false);
+  }, [kind]);
+
+  const buildOpts = useCallback((): BuildOpts => {
+    const runT =
+      runTracking === "distance" ? parsePositiveFloat(runTarget, 3) : parsePositiveInt(runTarget, 30);
+    return {
+      timerMins: parsePositiveInt(timerMins, 30),
+      waterGlasses: parsePositiveInt(waterGlasses, 8),
+      readingPages: parsePositiveInt(readingPages, 10),
+      counterTarget: parsePositiveInt(counterTarget, 100),
+      counterUnit,
+      runTracking,
+      runTarget: runT,
+      runUnitDist,
+      workoutMins: parsePositiveInt(workoutMins, 45),
+      requirePhotoTimer,
+      hardModeTimer,
+      requirePhotoCounter,
+      timedReading,
+      readingSessionMins: parsePositiveInt(readingSessionMins, 30),
+      gpsRun,
+      requirePhotoRun,
+      requirePhotoWorkout,
+      requireLocationWorkout,
+      locationNameWorkout,
+      minWordsJournal: parsePositiveInt(minWordsJournal, 0),
+      journalPromptText,
+      captureMoodJournal,
+      locationStampPhoto,
+    };
+  }, [
+    timerMins,
+    waterGlasses,
+    readingPages,
+    counterTarget,
+    counterUnit,
+    runTracking,
+    runTarget,
+    runUnitDist,
+    workoutMins,
+    requirePhotoTimer,
+    hardModeTimer,
+    requirePhotoCounter,
+    timedReading,
+    readingSessionMins,
+    gpsRun,
+    requirePhotoRun,
+    requirePhotoWorkout,
+    requireLocationWorkout,
+    locationNameWorkout,
+    minWordsJournal,
+    journalPromptText,
+    captureMoodJournal,
+    locationStampPhoto,
+  ]);
 
   const canAdd = useMemo(() => {
     if (!name.trim()) return false;
@@ -244,7 +368,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       case "water":
         return parsePositiveInt(waterGlasses, 0) > 0;
       case "reading":
-        return parsePositiveInt(readingPages, 0) > 0;
+        if (parsePositiveInt(readingPages, 0) <= 0) return false;
+        if (timedReading && parsePositiveInt(readingSessionMins, 0) <= 0) return false;
+        return true;
       case "counter":
         return parsePositiveInt(counterTarget, 0) > 0;
       case "run":
@@ -253,51 +379,70 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
         }
         return parsePositiveInt(runTarget, 0) > 0;
       case "workout":
-        return parsePositiveInt(workoutMins, 0) > 0;
+        if (parsePositiveInt(workoutMins, 0) <= 0) return false;
+        if (requireLocationWorkout && !locationNameWorkout.trim()) return false;
+        return true;
       default:
         return true;
     }
-  }, [name, kind, timerMins, waterGlasses, readingPages, counterTarget, runTracking, runTarget, workoutMins]);
-
-  const handleAdd = useCallback(() => {
-    const opts = {
-      timerMins: parsePositiveInt(timerMins, 30),
-      waterGlasses: parsePositiveInt(waterGlasses, 8),
-      readingPages: parsePositiveInt(readingPages, 10),
-      counterTarget: parsePositiveInt(counterTarget, 100),
-      runTracking,
-      runTarget:
-        runTracking === "distance"
-          ? parsePositiveFloat(runTarget, 3)
-          : parsePositiveInt(runTarget, 30),
-      runUnitDist,
-    };
-    const workoutOpts = { ...opts, runTarget: parsePositiveInt(workoutMins, 45), runTracking: "time" as const };
-    const task =
-      kind === "workout"
-        ? buildTask(name, "workout", !!hardModeGlobal, workoutOpts)
-        : buildTask(name, kind, !!hardModeGlobal, opts);
-    if (!task) return;
-    onAdd({ ...task, wizardType: kind });
-    onClose();
   }, [
     name,
     kind,
-    hardModeGlobal,
-    onAdd,
-    onClose,
     timerMins,
     waterGlasses,
     readingPages,
     counterTarget,
     runTracking,
     runTarget,
-    runUnitDist,
     workoutMins,
+    timedReading,
+    readingSessionMins,
+    requireLocationWorkout,
+    locationNameWorkout,
   ]);
 
+  const handleAdd = useCallback(() => {
+    const opts = buildOpts();
+    const task = buildTask(name, kind, !!hardModeGlobal, opts);
+    if (!task) return;
+    onAdd({ ...task, wizardType: kind });
+    onClose();
+  }, [name, kind, hardModeGlobal, buildOpts, onAdd, onClose]);
+
   const configBlock = (() => {
+    const row = (label: string, value: boolean, onValue: (v: boolean) => void, a11y: string) => (
+      <View style={s.toggleRow}>
+        <Text style={s.toggleLabel}>{label}</Text>
+        <Switch value={value} onValueChange={onValue} accessibilityLabel={a11y} />
+      </View>
+    );
     switch (kind) {
+      case "journal":
+        return (
+          <View style={s.configBlock}>
+            <Text style={s.label}>Minimum word count</Text>
+            <TextInput
+              style={s.input}
+              placeholder="e.g. 50 (optional)"
+              placeholderTextColor={DS_COLORS.TEXT_MUTED}
+              keyboardType="number-pad"
+              value={minWordsJournal}
+              onChangeText={setMinWordsJournal}
+              accessibilityLabel="Minimum word count for journal"
+            />
+            <Text style={[s.label, s.labelSp]}>Prompt (optional)</Text>
+            <TextInput
+              style={[s.input, s.inputTall]}
+              placeholder="e.g. What are you grateful for today?"
+              placeholderTextColor={DS_COLORS.TEXT_MUTED}
+              value={journalPromptText}
+              onChangeText={setJournalPromptText}
+              multiline
+              accessibilityLabel="Journal prompt"
+            />
+            {row("Capture mood", captureMoodJournal, setCaptureMoodJournal, "Capture mood toggle")}
+          </View>
+        );
       case "timer":
         return (
           <View style={s.configBlock}>
@@ -309,13 +454,16 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               keyboardType="number-pad"
               value={timerMins}
               onChangeText={setTimerMins}
+              accessibilityLabel="Timer duration in minutes"
             />
+            {row("Require photo proof", requirePhotoTimer, setRequirePhotoTimer, "Require photo proof")}
+            {row("Hard mode (stay on screen)", hardModeTimer, setHardModeTimer, "Hard mode timer")}
           </View>
         );
       case "water":
         return (
           <View style={s.configBlock}>
-            <Text style={s.label}>Target (glasses)</Text>
+            <Text style={s.label}>Daily target (glasses)</Text>
             <TextInput
               style={s.input}
               placeholder="e.g. 8"
@@ -323,6 +471,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               keyboardType="number-pad"
               value={waterGlasses}
               onChangeText={setWaterGlasses}
+              accessibilityLabel="Water target in glasses"
             />
           </View>
         );
@@ -337,7 +486,23 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               keyboardType="number-pad"
               value={readingPages}
               onChangeText={setReadingPages}
+              accessibilityLabel="Reading target pages"
             />
+            {row("Timed reading session", timedReading, setTimedReading, "Timed reading session")}
+            {timedReading ? (
+              <>
+                <Text style={[s.label, s.labelSp]}>Session length (minutes)</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="e.g. 30"
+                  placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                  keyboardType="number-pad"
+                  value={readingSessionMins}
+                  onChangeText={setReadingSessionMins}
+                  accessibilityLabel="Reading session length in minutes"
+                />
+              </>
+            ) : null}
           </View>
         );
       case "counter":
@@ -351,7 +516,28 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               keyboardType="number-pad"
               value={counterTarget}
               onChangeText={setCounterTarget}
+              accessibilityLabel="Target count"
             />
+            <Text style={[s.label, s.labelSp]}>Unit</Text>
+            <TextInput
+              style={s.input}
+              placeholder="e.g. pushups, glasses"
+              placeholderTextColor={DS_COLORS.TEXT_MUTED}
+              value={counterUnit}
+              onChangeText={setCounterUnit}
+              accessibilityLabel="Unit of measurement"
+            />
+            {row("Require photo proof", requirePhotoCounter, setRequirePhotoCounter, "Require photo proof for counter")}
+          </View>
+        );
+      case "photo":
+        return (
+          <View style={s.configBlock}>
+            <View style={s.infoRow}>
+              <Camera size={16} color={DS_COLORS.TEXT_SECONDARY} />
+              <Text style={s.infoText}>Photo proof is always required for this type</Text>
+            </View>
+            {row("Add location stamp", locationStampPhoto, setLocationStampPhoto, "Add location stamp to photo")}
           </View>
         );
       case "run":
@@ -362,19 +548,23 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               <TouchableOpacity
                 style={[s.seg, runTracking === "distance" && s.segOn]}
                 onPress={() => setRunTracking("distance")}
+                accessibilityRole="button"
+                accessibilityLabel="Track by distance"
               >
                 <Text style={[s.segTxt, runTracking === "distance" && s.segTxtOn]}>Distance</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[s.seg, runTracking === "time" && s.segOn]}
                 onPress={() => setRunTracking("time")}
+                accessibilityRole="button"
+                accessibilityLabel="Track by time"
               >
                 <Text style={[s.segTxt, runTracking === "time" && s.segTxtOn]}>Time</Text>
               </TouchableOpacity>
             </View>
             {runTracking === "distance" ? (
               <>
-                <Text style={[s.label, s.labelSp]}>Distance</Text>
+                <Text style={[s.label, s.labelSp]}>Target distance</Text>
                 <TextInput
                   style={s.input}
                   placeholder="e.g. 3"
@@ -382,17 +572,22 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   keyboardType="decimal-pad"
                   value={runTarget}
                   onChangeText={setRunTarget}
+                  accessibilityLabel="Target distance"
                 />
                 <View style={s.segRow}>
                   <TouchableOpacity
                     style={[s.seg, runUnitDist === "miles" && s.segOn]}
                     onPress={() => setRunUnitDist("miles")}
+                    accessibilityRole="button"
+                    accessibilityLabel="Miles"
                   >
                     <Text style={[s.segTxt, runUnitDist === "miles" && s.segTxtOn]}>Miles</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[s.seg, runUnitDist === "km" && s.segOn]}
                     onPress={() => setRunUnitDist("km")}
+                    accessibilityRole="button"
+                    accessibilityLabel="Kilometers"
                   >
                     <Text style={[s.segTxt, runUnitDist === "km" && s.segTxtOn]}>Km</Text>
                   </TouchableOpacity>
@@ -408,9 +603,12 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   keyboardType="number-pad"
                   value={runTarget}
                   onChangeText={setRunTarget}
+                  accessibilityLabel="Run duration in minutes"
                 />
               </>
             )}
+            {row("GPS tracking", gpsRun, setGpsRun, "GPS tracking")}
+            {row("Require photo proof", requirePhotoRun, setRequirePhotoRun, "Require photo proof for run")}
           </View>
         );
       case "workout":
@@ -424,7 +622,23 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               keyboardType="number-pad"
               value={workoutMins}
               onChangeText={setWorkoutMins}
+              accessibilityLabel="Workout duration in minutes"
             />
+            {row("Require photo proof", requirePhotoWorkout, setRequirePhotoWorkout, "Require photo proof for workout")}
+            {row("Location check-in", requireLocationWorkout, setRequireLocationWorkout, "Location check-in for workout")}
+            {requireLocationWorkout ? (
+              <>
+                <Text style={[s.label, s.labelSp]}>Location name</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="e.g. Planet Fitness"
+                  placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                  value={locationNameWorkout}
+                  onChangeText={setLocationNameWorkout}
+                  accessibilityLabel="Workout location name"
+                />
+              </>
+            ) : null}
           </View>
         );
       default:
@@ -446,7 +660,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
         </View>
         <ScrollView
           style={s.scroll}
-          contentContainerStyle={[s.body, { paddingBottom: DS_SPACING.md }]}
+          contentContainerStyle={[s.body, { flexGrow: 1, paddingBottom: DS_SPACING.lg }]}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={s.label}>Task name</Text>
@@ -555,6 +769,34 @@ const s = StyleSheet.create({
   },
   configBlock: {
     marginTop: DS_SPACING.lg,
+    gap: DS_SPACING.sm,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: DS_SPACING.sm,
+  },
+  toggleLabel: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_PRIMARY,
+    flex: 1,
+    paddingRight: DS_SPACING.md,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.sm,
+    marginBottom: DS_SPACING.sm,
+  },
+  infoText: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_SECONDARY,
+    flex: 1,
+  },
+  inputTall: {
+    minHeight: 80,
+    textAlignVertical: "top",
   },
   segRow: {
     flexDirection: "row",

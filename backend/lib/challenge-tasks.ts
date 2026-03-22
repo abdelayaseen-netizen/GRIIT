@@ -168,6 +168,10 @@ export function buildTaskConfigFromInput(task: {
   strictTimerMode?: boolean;
   verificationMethod?: string | null;
   verificationRuleJson?: VerificationRuleStrava | Record<string, unknown> | null;
+  journalPrompt?: string | null;
+  captureMood?: boolean;
+  locationName?: string | null;
+  radiusMeters?: number | null;
   [key: string]: unknown;
 }): ChallengeTaskConfig {
   const rawType = task.type ?? "manual";
@@ -177,6 +181,12 @@ export function buildTaskConfigFromInput(task: {
   };
   if (type === "journal") {
     config.min_words = typeof task.minWords === "number" ? task.minWords : 20;
+    if (typeof task.journalPrompt === "string" && task.journalPrompt.trim()) {
+      config.journal_prompt = task.journalPrompt.trim();
+    }
+    if (task.captureMood === true) {
+      config.capture_mood = true;
+    }
   }
   if (type === "timer" && task.durationMinutes != null) {
     config.duration_minutes = task.durationMinutes;
@@ -203,8 +213,14 @@ export function buildTaskConfigFromInput(task: {
   if (type === "reading" && task.targetValue != null && typeof task.targetValue === "number") {
     config.target_pages = task.targetValue;
   }
+  if (type === "reading" && task.durationMinutes != null && typeof task.durationMinutes === "number" && task.durationMinutes > 0) {
+    config.reading_session_minutes = task.durationMinutes;
+  }
   if (type === "counter" && task.targetValue != null && typeof task.targetValue === "number") {
     config.target_count = task.targetValue;
+  }
+  if (type === "counter" && typeof task.unit === "string" && task.unit.trim()) {
+    config.unit_label = task.unit.trim();
   }
   if (task.photoRequired === true || task.requirePhotoProof === true || type === "photo") {
     config.photo_required = true;
@@ -218,6 +234,17 @@ export function buildTaskConfigFromInput(task: {
   }
   if (task.verificationRuleJson && typeof task.verificationRuleJson === "object") {
     config.verification_rule_json = task.verificationRuleJson as VerificationRuleStrava;
+  }
+  if (
+    (rawType === "workout" || type === "checkin") &&
+    typeof task.locationName === "string" &&
+    task.locationName.trim()
+  ) {
+    config.require_location = true;
+    config.location_name = task.locationName.trim();
+  }
+  if (task.radiusMeters != null && typeof task.radiusMeters === "number" && task.radiusMeters > 0) {
+    config.location_radius_meters = task.radiusMeters;
   }
   return config;
 }
@@ -241,6 +268,7 @@ export function buildTaskInsertPayload(
   orderIndex: number
 ): { challenge_id: string; title: string; task_type: string; order_index: number; config: ChallengeTaskConfig } {
   const task_type = toTaskType(task.type ?? "manual");
+  const t = task as Record<string, unknown>;
   const config = buildTaskConfigFromInput({
     type: task.type,
     required: task.required,
@@ -251,9 +279,13 @@ export function buildTaskInsertPayload(
     strictTimerMode: task.strictTimerMode,
     verificationMethod: task.verificationMethod,
     verificationRuleJson: task.verificationRuleJson,
-    targetValue: task.targetValue,
-    trackingMode: task.trackingMode,
-    unit: task.unit,
+    targetValue: t.targetValue,
+    trackingMode: t.trackingMode,
+    unit: t.unit,
+    journalPrompt: typeof t.journalPrompt === "string" ? t.journalPrompt : undefined,
+    captureMood: t.captureMood === true,
+    locationName: typeof t.locationName === "string" ? t.locationName : undefined,
+    radiusMeters: typeof t.radiusMeters === "number" ? t.radiusMeters : undefined,
   });
   return {
     challenge_id: challengeId,

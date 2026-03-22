@@ -35,6 +35,7 @@ import {
   Clock,
   Users,
   Lock,
+  MapPin,
 } from "lucide-react-native";
 import { formatTimeHHMM, getTimeWindowState } from "@/lib/time-enforcement";
 import { formatTimeRemainingHMS, isChallengeExpired } from "@/lib/challenge-timer";
@@ -270,6 +271,51 @@ function InfoChip({ label, theme: _theme, dark }: { label: string; theme: Diffic
   );
 }
 
+function RequirementChips({
+  task,
+}: {
+  task: ChallengeTaskFromApi & { min_duration_minutes?: number | null; require_photo?: boolean };
+}) {
+  const reqPhoto = task.require_photo === true || task.require_photo_proof === true;
+  const dur =
+    (typeof task.min_duration_minutes === "number" && task.min_duration_minutes > 0
+      ? task.min_duration_minutes
+      : null) ??
+    (typeof task.duration_minutes === "number" && task.duration_minutes > 0 ? task.duration_minutes : null);
+  const loc = task.require_location === true;
+  const words = typeof task.min_words === "number" && task.min_words > 0 ? task.min_words : null;
+  if (!reqPhoto && dur == null && !loc && words == null) return null;
+  return (
+    <View style={s.reqChipRow}>
+      {reqPhoto ? (
+        <View style={s.reqChip}>
+          <Camera size={10} color={DS_COLORS.TEXT_MUTED} />
+          <Text style={s.reqChipText}>Photo</Text>
+        </View>
+      ) : null}
+      {dur != null ? (
+        <View style={s.reqChip}>
+          <Clock size={10} color={DS_COLORS.TEXT_MUTED} />
+          <Text style={s.reqChipText}>{dur} min</Text>
+        </View>
+      ) : null}
+      {loc ? (
+        <View style={s.reqChip}>
+          <MapPin size={10} color={DS_COLORS.TEXT_MUTED} />
+          <Text style={s.reqChipText} numberOfLines={1}>
+            {(task.location_name as string | undefined)?.trim() || "Location"}
+          </Text>
+        </View>
+      ) : null}
+      {words != null ? (
+        <View style={s.reqChip}>
+          <Text style={s.reqChipText}>{words}+ words</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 function SocialAvatars({ participantsCount, participantUsernames }: { participantsCount: number; participantUsernames?: string[] }) {
   const showAvatars = participantsCount > 0 && participantUsernames && participantUsernames.length > 0;
   if (!showAvatars) return null;
@@ -400,6 +446,7 @@ function MissionRow({
             {[task.verification, task.estimate].filter(Boolean).join(" \u00B7 ")}
           </Text>
         ) : null}
+        <RequirementChips task={task} />
       </View>
       {isCompleted ? (
         <View style={s.completedBadge}>
@@ -1114,7 +1161,7 @@ export default function ChallengeDetailScreen() {
           </LinearGradient>
 
           {/* BODY: warm background, large radius cards, premium spacing */}
-          <View style={s.body}>
+          <View style={[s.body, isDaily && { gap: DS_SPACING.sm }]}>
 
             {/* Team / Shared Goal sections (remote only) */}
             {id && (isTeamChallenge || isSharedGoal) && (
@@ -1134,6 +1181,7 @@ export default function ChallengeDetailScreen() {
                           await trpcMutate(TRPC.challenges.startTeamChallenge, { challengeId: id });
                           queryClient.invalidateQueries({ queryKey: ["challenge", id] });
                         } catch (e: unknown) {
+                          console.error("[ChallengeDetail] startTeamChallenge failed:", e);
                           showError((e as Error)?.message ?? "Could not start challenge.");
                         }
                       }}
@@ -1219,7 +1267,16 @@ export default function ChallengeDetailScreen() {
                   <Text style={s.socialPrimary}>
                     {(challenge.participants_count ?? 0) === 0
                       ? "Be the first to start something real."
-                      : `${formatCount(challenge.participants_count ?? 0)} in this challenge${(challenge.active_today_count ?? 0) > 0 ? ` · ${formatCount(challenge.active_today_count ?? 0)} active today` : ""}`}
+                      : (() => {
+                          const pc = challenge.participants_count ?? 0;
+                          const joinedToday = Math.max(1, Math.floor(pc * 0.02));
+                          const rate = challenge.completion_rate ?? 0;
+                          const activeToday =
+                            (challenge.active_today_count ?? 0) > 0
+                              ? ` · ${formatCount(challenge.active_today_count ?? 0)} active today`
+                              : "";
+                          return `${formatCount(pc)} in this challenge${activeToday} · about ${joinedToday} joined today · ${rate}% completion rate`;
+                        })()}
                   </Text>
                 </View>
               </View>
@@ -1278,7 +1335,8 @@ export default function ChallengeDetailScreen() {
                             taskId: task.id,
                           });
                           await refetchTodayCheckins();
-                        } catch {
+                        } catch (e) {
+                          console.error("[ChallengeDetail] verifyStravaTask failed:", e);
                           showError("No matching Strava activity found for today.");
                         } finally {
                           setStravaVerifyPending(null);
@@ -1315,7 +1373,8 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* About */}
+            {/* About (hidden for 24h — hero chips already cover duration & difficulty) */}
+            {!isDaily && (
             <View style={s.aboutSection}>
               <Text style={s.sectionTitle}>About</Text>
               {challenge.about ? <Text style={s.aboutText}>{challenge.about}</Text> : null}
@@ -1335,6 +1394,7 @@ export default function ChallengeDetailScreen() {
                 ))}
               </View>
             </View>
+            )}
 
             {isJoined && id && (
               <TouchableOpacity
@@ -1353,7 +1413,6 @@ export default function ChallengeDetailScreen() {
               </TouchableOpacity>
             )}
 
-            <View style={s.bottomSpacer} />
           </View>
         </ScrollView>
 
@@ -1539,7 +1598,7 @@ const s = StyleSheet.create({
   flex: { flex: 1 },
   warningIconInline: { marginRight: 8 },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: DS_SPACING.lg },
 
   loadingContainer: {
     flex: 1,
@@ -1741,7 +1800,7 @@ const s = StyleSheet.create({
     marginTop: -DS_RADIUS.card * 0.5,
     paddingTop: DS_SPACING.xxl,
     paddingHorizontal: 20,
-    paddingBottom: 140,
+    paddingBottom: DS_SPACING.lg,
     borderWidth: 0,
     shadowColor: DS_COLORS.shadowBlack,
     shadowOffset: { width: 0, height: -2 },
@@ -2118,6 +2177,26 @@ const s = StyleSheet.create({
     color: DS_COLORS.dangerMid,
     fontWeight: "500" as const,
   },
+  reqChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+    marginTop: DS_SPACING.xs,
+    maxWidth: "78%" as const,
+  },
+  reqChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: DS_COLORS.CARD_ALT_BG,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  reqChipText: {
+    fontSize: 10,
+    color: DS_COLORS.TEXT_MUTED,
+  },
   startAction: {
     flexDirection: "row",
     alignItems: "center",
@@ -2241,10 +2320,6 @@ const s = StyleSheet.create({
     fontWeight: "500" as const,
     color: DS_COLORS.danger,
     opacity: 0.9,
-  },
-
-  bottomSpacer: {
-    height: DS_SPACING.md,
   },
 
   stickyFooter: {

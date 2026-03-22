@@ -115,6 +115,8 @@ export interface TaskEditorTask {
   timezoneMode?: TimezoneMode;
   challengeTimezone?: string | null;
   requirePhotoProof?: boolean;
+  /** Timer: must stay on timer screen for full duration */
+  strictTimerMode?: boolean;
   verificationMethod?: string;
   verificationRuleJson?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
 }
