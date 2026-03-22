@@ -1,10 +1,9 @@
 import React from "react";
-import { Redirect } from "expo-router";
-import { ROUTES } from "@/lib/routes";
+import CreateChallengeWizard from "@/components/create/CreateChallengeWizard";
 
 /**
- * Create tab opens the full-screen modal wizard (tab bar hidden).
+ * Create tab: render wizard in-tab so navigation always works (modal /redirect was unreliable).
  */
-export default function CreateTabEntry() {
-  return <Redirect href={ROUTES.CREATE_WIZARD} />;
+export default function CreateTabScreen() {
+  return <CreateChallengeWizard />;
 }

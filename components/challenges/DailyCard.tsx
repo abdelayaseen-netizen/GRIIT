@@ -68,7 +68,6 @@ export const DailyCard = React.memo(function DailyCard({
       onPress={() => onPress(challenge.id)}
     >
       <View style={[s.stripe, { backgroundColor: theme.accent }]} />
-      <View style={[s.tintBg, { backgroundColor: theme.tint }]} />
       {participationState === "active" ? (
         <View style={[s.stateBadge, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
           <Text style={[s.stateBadgeText, { color: DS_COLORS.ACCENT_PRIMARY }]}>In progress</Text>
@@ -112,7 +111,6 @@ const s = StyleSheet.create({
   },
   cardDimmed: { opacity: 0.88 },
   stripe: { position: "absolute", top: 0, left: 0, bottom: 0, width: 3 },
-  tintBg: { position: "absolute", right: -4, bottom: -4, width: 88, height: 72, borderRadius: 12, opacity: 0.22 },
   stateBadge: {
     position: "absolute",
     top: 10,

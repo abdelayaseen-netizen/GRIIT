@@ -440,7 +440,11 @@ export const profilesRouter = createTRPCRouter({
         .order("date_key", { ascending: false });
 
       if (error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load secured dates." });
+        console.error("[getSecuredDateKeys] Supabase error:", JSON.stringify(error));
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message || "Failed to load secured dates.",
+        });
       }
       return (data ?? []).map((r: { date_key: string }) => r.date_key);
     }),

@@ -231,7 +231,7 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: DS_COLORS.FALLBACK_BG,
+    backgroundColor: DS_COLORS.background,
   },
   content: {
     paddingBottom: 40,

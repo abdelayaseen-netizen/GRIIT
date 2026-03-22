@@ -486,10 +486,6 @@ export default function ChallengeDetailScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
-  }, [fadeAnim]);
-
   const queryClient = useQueryClient();
   const challengeQuery = useQuery({
     queryKey: ["challenge", id],
@@ -624,7 +620,20 @@ export default function ChallengeDetailScreen() {
     return () => clearInterval(interval);
   }, [isDaily, challenge?.ends_at]);
 
-  const isLoading = remoteLoading;
+  const waitingForMembership =
+    !!challenge &&
+    !!user &&
+    !!id &&
+    activeChallenge?.challenge_id !== id &&
+    !myActiveListQuery.isFetched;
+
+  const isLoading = remoteLoading || waitingForMembership;
+
+  useEffect(() => {
+    if (isLoading) return;
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+  }, [isLoading, fadeAnim]);
 
   const userCurrentDay = useMemo(() => {
     if (!isJoined) return 0;

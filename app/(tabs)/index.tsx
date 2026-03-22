@@ -49,8 +49,8 @@ type HomeData = {
 
 function getGreeting(): string {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
+  if (h >= 5 && h < 12) return "Good morning";
+  if (h >= 12 && h < 17) return "Good afternoon";
   return "Good evening";
 }
 
@@ -178,10 +178,26 @@ export default function HomeScreen() {
     await Promise.all([homeQuery.refetch(), refetchAll()]);
   }, [homeQuery, refetchAll]);
 
-  const onPressGoal = useCallback(() => {
-    if (!firstActive?.id) return;
-    router.push(ROUTES.CHALLENGE_ACTIVE(firstActive.id) as never);
-  }, [firstActive?.id, router]);
+  const onPressGoal = useCallback(
+    (goalId: string) => {
+      if (!firstActive?.id || goalId === "__commit__") return;
+      const tasks = firstActive?.challenges?.challenge_tasks ?? [];
+      const task = tasks.find((t) => t.id === goalId);
+      const taskType = String(task?.type ?? "manual").toLowerCase();
+      router.push({
+        pathname: ROUTES.TASK_COMPLETE,
+        params: {
+          taskId: goalId,
+          activeChallengeId: firstActive.id,
+          taskType,
+          taskName: task?.title ?? "",
+          taskDescription: "",
+          taskConfig: "{}",
+        },
+      } as never);
+    },
+    [firstActive, router]
+  );
 
   if (isGuest) {
     return (
