@@ -84,12 +84,29 @@ export default function HomeScreen() {
     enabled: !isGuest && !!user?.id,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<HomeData> => {
-      const [activeRaw, checkinsRaw, securedRaw, feedRaw] = await Promise.all([
+      const settled = await Promise.allSettled([
         trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
         trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
         trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
         trpcQuery(TRPC.feed.list, { limit: 5 }) as Promise<{ items?: { id: string; event_type: string; username?: string; display_name?: string; metadata?: Record<string, unknown>; created_at: string }[] }>,
       ]);
+
+      const activeRaw =
+        settled[0].status === "fulfilled"
+          ? settled[0].value
+          : (console.error("[Home] listMyActive failed:", settled[0].reason), []);
+      const checkinsRaw =
+        settled[1].status === "fulfilled"
+          ? settled[1].value
+          : (console.error("[Home] getTodayCheckinsForUser failed:", settled[1].reason), []);
+      const securedRaw =
+        settled[2].status === "fulfilled"
+          ? settled[2].value
+          : (console.error("[Home] getSecuredDateKeys failed:", settled[2].reason), []);
+      const feedRaw =
+        settled[3].status === "fulfilled"
+          ? settled[3].value
+          : (console.error("[Home] feed.list failed:", settled[3].reason), { items: [] as { id: string; event_type: string; username?: string; display_name?: string; metadata?: Record<string, unknown>; created_at: string }[] });
 
       const activeList = (Array.isArray(activeRaw) ? activeRaw : []) as ActiveRow[];
       const todayCheckins = Array.isArray(checkinsRaw) ? checkinsRaw : [];

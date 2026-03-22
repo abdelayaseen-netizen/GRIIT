@@ -4,9 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Search } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsGuest } from "@/contexts/AuthGateContext";
 import { DS_COLORS } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
@@ -16,7 +18,7 @@ import { ErrorRetry } from "@/components/ErrorRetry";
 import { ROUTES } from "@/lib/routes";
 import { useDebounce } from "@/hooks/useDebounce";
 import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
-import { DailyCard } from "@/components/challenges/DailyCard";
+import { DailyCard, type DailyParticipationState } from "@/components/challenges/DailyCard";
 import { TeamChallengeCard } from "@/components/challenges/TeamChallengeCard";
 import { PopularChallengeRow } from "@/components/challenges/PopularChallengeRow";
 import { prefetchChallengeById } from "@/lib/prefetch-queries";
@@ -81,9 +83,21 @@ function searchMatch(c: ApiChallenge, q: string): boolean {
   return (c.title ?? "").toLowerCase().includes(s) || (c.description ?? "").toLowerCase().includes(s) || (c.short_hook ?? "").toLowerCase().includes(s);
 }
 
+function getDailyParticipationState(
+  challengeId: string,
+  activeIds: Set<string>,
+  completedIds: Set<string>
+): DailyParticipationState {
+  if (activeIds.has(challengeId)) return "active";
+  if (completedIds.has(challengeId)) return "completed";
+  return "available";
+}
+
 export default function DiscoverScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isGuest = useIsGuest();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -103,6 +117,29 @@ export default function DiscoverScreen() {
     initialPageParam: undefined as string | undefined,
     staleTime: 5 * 60 * 1000,
   });
+
+  const myActiveForDiscover = useQuery({
+    queryKey: ["discover", "myActive", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<{ challenge_id?: string }[]>,
+    enabled: !isGuest && !!user?.id,
+    staleTime: 60 * 1000,
+  });
+  const myCompletedForDiscover = useQuery({
+    queryKey: ["discover", "completed", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.profiles.getCompletedChallenges) as Promise<{ challengeId: string }[]>,
+    enabled: !isGuest && !!user?.id,
+    staleTime: 60 * 1000,
+  });
+  const activeChallengeIds = useMemo(() => {
+    const rows = myActiveForDiscover.data;
+    if (!Array.isArray(rows)) return new Set<string>();
+    return new Set(rows.map((r) => r.challenge_id).filter((cid): cid is string => typeof cid === "string" && cid.length > 0));
+  }, [myActiveForDiscover.data]);
+  const completedChallengeIds = useMemo(() => {
+    const rows = myCompletedForDiscover.data;
+    if (!Array.isArray(rows)) return new Set<string>();
+    return new Set(rows.map((r) => r.challengeId).filter((cid): cid is string => typeof cid === "string" && cid.length > 0));
+  }, [myCompletedForDiscover.data]);
 
   const all = useMemo(() => (featuredQuery.data?.pages.flatMap((p) => p.items) ?? []).filter((c) => (c.visibility ?? "public").toLowerCase() === "public"), [featuredQuery.data?.pages]);
   const filtered = useMemo(() => all.filter((c) => categoryMatch(c, activeCategory)).filter((c) => searchMatch(c, debouncedQuery)), [all, activeCategory, debouncedQuery]);
@@ -215,7 +252,7 @@ export default function DiscoverScreen() {
               </View>
 
               <View style={styles.v3SectionHeader}>
-                <Text style={styles.v3SectionTitle}>Expires tonight</Text>
+                <Text style={styles.v3SectionTitle}>24-Hour Challenges</Text>
                 <View style={styles.v3Dot} />
               </View>
               <FlatList
@@ -238,6 +275,7 @@ export default function DiscoverScreen() {
                       difficulty: item.difficulty,
                       participants_count: item.participants_count,
                     }}
+                    participationState={getDailyParticipationState(item.id, activeChallengeIds, completedChallengeIds)}
                     onPress={openChallenge}
                     onPressIn={() => prefetchChallengeDetail(item.id)}
                   />

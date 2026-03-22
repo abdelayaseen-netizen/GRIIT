@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { WifiOff, Clock, Zap, Droplets, VolumeX, Smartphone, Heart, BookOpen } from "lucide-react-native";
+import { WifiOff, Clock, Zap, Droplets, VolumeX, Smartphone, Heart, BookOpen, Check } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 
 const DAILY_COPY: Record<string, string> = {
@@ -41,24 +41,44 @@ export type DailyChallengeCardData = {
   participants_count?: number;
 };
 
+export type DailyParticipationState = "available" | "active" | "completed";
+
 export const DailyCard = React.memo(function DailyCard({
   challenge,
   onPress,
   onPressIn,
+  participationState = "available",
 }: {
   challenge: DailyChallengeCardData;
   onPress: (id: string) => void;
   onPressIn?: () => void;
+  participationState?: DailyParticipationState;
 }) {
   const d = (challenge.difficulty ?? "medium").toLowerCase();
   const theme = DIFFICULTY_THEMES[d] ?? DEFAULT_THEME;
   const IconComp = ICONS[challenge.title] ?? Zap;
   const subtitle = DAILY_COPY[challenge.title] ?? (challenge.description ?? "").slice(0, 30);
   const count = challenge.participants_count ?? 0;
+  const dimmed = participationState === "completed";
   return (
-    <TouchableOpacity style={s.card} activeOpacity={0.85} onPressIn={onPressIn} onPress={() => onPress(challenge.id)}>
+    <TouchableOpacity
+      style={[s.card, dimmed && s.cardDimmed]}
+      activeOpacity={0.85}
+      onPressIn={onPressIn}
+      onPress={() => onPress(challenge.id)}
+    >
       <View style={[s.stripe, { backgroundColor: theme.accent }]} />
       <View style={[s.tintBg, { backgroundColor: theme.tint }]} />
+      {participationState === "active" ? (
+        <View style={[s.stateBadge, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
+          <Text style={[s.stateBadgeText, { color: DS_COLORS.ACCENT_PRIMARY }]}>In progress</Text>
+        </View>
+      ) : participationState === "completed" ? (
+        <View style={[s.stateBadge, { backgroundColor: DS_COLORS.GREEN_BG }]}>
+          <Check size={11} color={DS_COLORS.GREEN} />
+          <Text style={[s.stateBadgeText, { color: DS_COLORS.GREEN, marginLeft: 4 }]}>Done</Text>
+        </View>
+      ) : null}
       <View style={s.topRow}>
         <View style={[s.iconBox, { backgroundColor: theme.accent }]}>
           <IconComp size={12} color={DS_COLORS.WHITE} />
@@ -69,7 +89,13 @@ export const DailyCard = React.memo(function DailyCard({
       <Text style={s.subtitle}>{subtitle}</Text>
       <View style={s.bottom}>
         <Text style={s.meta}>{count > 0 ? `${count} doing it` : "New"}</Text>
-        <Text style={[s.go, { color: theme.accent }]}>Go ›</Text>
+        {participationState === "available" ? (
+          <Text style={[s.go, { color: theme.accent }]}>Go ›</Text>
+        ) : participationState === "active" ? (
+          <Text style={[s.go, { color: DS_COLORS.ACCENT_PRIMARY }]}>Continue ›</Text>
+        ) : (
+          <Text style={[s.go, { color: DS_COLORS.TEXT_MUTED }]}>View ›</Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -84,8 +110,21 @@ const s = StyleSheet.create({
     backgroundColor: DS_COLORS.WHITE,
     overflow: "hidden",
   },
+  cardDimmed: { opacity: 0.88 },
   stripe: { position: "absolute", top: 0, left: 0, bottom: 0, width: 3 },
-  tintBg: { position: "absolute", right: 0, bottom: 0, width: 100, height: 80, borderRadius: 16, opacity: 0.5 },
+  tintBg: { position: "absolute", right: -4, bottom: -4, width: 88, height: 72, borderRadius: 12, opacity: 0.22 },
+  stateBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 8,
+    zIndex: 2,
+  },
+  stateBadgeText: { fontSize: 9, fontWeight: "700", letterSpacing: 0.2 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   iconBox: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   diff: { fontSize: 10, fontWeight: "700", letterSpacing: 0.3, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7 },

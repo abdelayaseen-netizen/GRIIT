@@ -466,15 +466,20 @@ export default function ChallengeDetailScreen() {
   const { user } = useAuth();
   const { showGate } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
-  const isJoined = activeChallenge?.challenge_id === id;
   const { isPro } = useProStatus();
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
-    enabled: !!user && !isJoined,
+    enabled: !!user && !!id,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+  const isJoined = useMemo(() => {
+    if (id && activeChallenge?.challenge_id === id) return true;
+    const list = myActiveListQuery.data;
+    if (!id || !Array.isArray(list)) return false;
+    return list.some((r) => (r as { challenge_id?: string }).challenge_id === id);
+  }, [activeChallenge?.challenge_id, id, myActiveListQuery.data]);
   const activeCount = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
   const joinLimit = canJoinChallenge(activeCount);
   const currentUserId = user?.id ?? undefined;
@@ -530,7 +535,9 @@ export default function ChallengeDetailScreen() {
 
   useEffect(() => {
     if (!ref || !currentUserId || !id) return;
-    trpcMutate(TRPC.referrals.recordOpen, { referrerUserId: ref, challengeId: id }).catch(() => {});
+    trpcMutate(TRPC.referrals.recordOpen, { referrerUserId: ref, challengeId: id }).catch((e) => {
+      console.error("[ChallengeDetail] recordOpen failed:", e);
+    });
   }, [ref, currentUserId, id]);
 
   const challenge = useMemo(() => {
@@ -658,8 +665,9 @@ export default function ChallengeDetailScreen() {
         console.error("[ChallengeDetail] markJoinedChallenge failed:", refErr);
       }
       await refetchAll();
-      await queryClient.invalidateQueries({ queryKey: ["home", "activeList"] });
+      await queryClient.invalidateQueries({ queryKey: ["home"] });
       await queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
+      await queryClient.invalidateQueries({ queryKey: ["discover"] });
       await queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       setShowCommitmentModal(false);
       myActiveListQuery.refetch();
@@ -980,7 +988,7 @@ export default function ChallengeDetailScreen() {
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
         <ScrollView
           style={s.scroll}
-          contentContainerStyle={[s.scrollContent, s.scrollContentGrow]}
+          contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={true}
           refreshControl={
@@ -1033,7 +1041,7 @@ export default function ChallengeDetailScreen() {
                               },
                               currentUserId
                             )
-                          ).catch(() => {});
+                          ).catch((e) => console.error("[ChallengeDetail] shareChallenge failed:", e));
                         },
                       },
                       {
@@ -1046,7 +1054,7 @@ export default function ChallengeDetailScreen() {
                           });
                           import("@/lib/share").then(({ inviteToChallenge }) =>
                             inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                          ).catch(() => {});
+                          ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge failed:", e));
                         },
                       },
                     ], { cancelable: true });
@@ -1124,7 +1132,7 @@ export default function ChallengeDetailScreen() {
                         });
                         import("@/lib/share").then(({ inviteToChallenge }) =>
                           inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                        ).catch(() => {});
+                        ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge (team) failed:", e));
                       }}
                     />
                     <TeamMemberList
@@ -1381,7 +1389,7 @@ export default function ChallengeDetailScreen() {
                 });
                 import("@/lib/share").then(({ inviteToChallenge }) =>
                   inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                ).catch(() => {});
+                ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge (cta) failed:", e));
               }}
               activeOpacity={0.7}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -1518,8 +1526,7 @@ const s = StyleSheet.create({
   flex: { flex: 1 },
   warningIconInline: { marginRight: 8 },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 160 },
-  scrollContentGrow: { flexGrow: 1 },
+  scrollContent: { paddingBottom: 100 },
 
   loadingContainer: {
     flex: 1,
