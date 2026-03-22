@@ -40,6 +40,7 @@ import {
 } from "@/lib/design-system";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export type TaskCompleteConfig = {
   require_photo?: boolean;
@@ -71,7 +72,7 @@ function firstString(v: string | string[] | undefined): string {
   return typeof v === "string" ? v : v[0] ?? "";
 }
 
-export default function TaskCompleteScreen() {
+function TaskCompleteScreenInner() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     taskId: string;
@@ -594,6 +595,14 @@ export default function TaskCompleteScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+export default function TaskCompleteScreen() {
+  return (
+    <ErrorBoundary>
+      <TaskCompleteScreenInner />
+    </ErrorBoundary>
   );
 }
 

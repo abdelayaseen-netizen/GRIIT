@@ -10,7 +10,8 @@ export const GATES = {
 } as const;
 
 export const FREE_TIER = {
-  MAX_FREE_ACTIVE_CHALLENGES: 1,
+  /** Aligned with `FREE_LIMITS.MAX_ACTIVE_CHALLENGES` in feature-flags (single source of truth for counts is premium.ts). */
+  MAX_FREE_ACTIVE_CHALLENGES: 3,
   GPS_VERIFICATION: false,
   LEADERBOARD_ACCESS: false,
   TEAMS_ACCESS: false,

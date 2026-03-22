@@ -45,7 +45,6 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProStatus } from "@/hooks/useProStatus";
-import { FREE_TIER } from "@/lib/feature-gates";
 import { canJoinChallenge } from "@/lib/premium";
 import { FLAGS } from "@/lib/feature-flags";
 import { useAuthGate } from "@/contexts/AuthGateContext";
@@ -703,13 +702,9 @@ export default function ChallengeDetailScreen() {
   const handleCommitmentConfirm = useCallback(async () => {
     if (!id || commitmentJoining) return;
     const count = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
-    const isPro = await (await import("@/lib/revenue-cat")).isProUser();
-    if (count >= FREE_TIER.MAX_FREE_ACTIVE_CHALLENGES && !isPro) {
+    const joinGate = canJoinChallenge(count);
+    if (!joinGate.allowed) {
       router.push("/paywall" as never);
-      return;
-    }
-    if (!canJoinChallenge(count).allowed) {
-      showError("You've reached the maximum number of active challenges.");
       return;
     }
     setCommitmentJoining(true);
