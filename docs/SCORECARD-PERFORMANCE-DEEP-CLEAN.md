@@ -1,7 +1,7 @@
 # GRIIT Scorecard — Post Deep Clean
 
 **Generated:** 2026-03-22  
-**Commit:** 0d45e69
+**Commit:** fbeeee6
 
 ## Codebase Metrics
 
