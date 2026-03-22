@@ -6,10 +6,10 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
-  Image,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import {
@@ -169,7 +169,12 @@ export default function ChallengeChatScreen() {
       <View style={[styles.messageRow, isOwnMessage && styles.messageRowOwn]}>
         {!isOwnMessage && (
           msg.senderAvatarUrl ? (
-            <Image source={{ uri: msg.senderAvatarUrl }} style={styles.avatar} />
+            <Image
+              source={{ uri: msg.senderAvatarUrl }}
+              style={styles.avatar}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+            />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
               <Text style={styles.avatarPlaceholderText}>{msg.senderName?.charAt(0)?.toUpperCase() ?? "?"}</Text>
@@ -182,7 +187,12 @@ export default function ChallengeChatScreen() {
           )}
 
           {isProof && msg.mediaUrl && (
-            <Image source={{ uri: msg.mediaUrl }} style={styles.proofImage} />
+            <Image
+              source={{ uri: msg.mediaUrl }}
+              style={styles.proofImage}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+            />
           )}
 
           {msg.text && (

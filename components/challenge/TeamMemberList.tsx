@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { Check, Clock, XCircle } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
@@ -58,7 +59,12 @@ function MemberRow({ member, isCurrentUser, runStatus }: { member: TeamMemberFor
     <View style={[styles.row, { borderBottomColor: colors.border }]}>
       <View style={styles.avatarWrap}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          <Image
+            source={{ uri: avatarUrl }}
+            style={styles.avatar}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+          />
         ) : (
           <View style={[styles.avatarPlaceholder, { backgroundColor: colors.pill }]}>
             <Text style={[styles.avatarLetter, { color: colors.text.secondary }]}>{name.charAt(0).toUpperCase()}</Text>

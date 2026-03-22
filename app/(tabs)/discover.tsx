@@ -176,7 +176,7 @@ export default function DiscoverScreen() {
           {featuredQuery.isError ? (
             <ErrorRetry message="Couldn't load challenges" onRetry={() => void featuredQuery.refetch()} />
           ) : featuredQuery.isPending && !featuredQuery.data ? (
-            <View style={{ paddingVertical: 48, alignItems: "center" }}>
+            <View style={styles.v3LoadingWrap}>
               <ActivityIndicator size="large" color={DS_COLORS.ACCENT_PRIMARY} />
             </View>
           ) : filtered.length === 0 ? (
@@ -224,7 +224,11 @@ export default function DiscoverScreen() {
                 keyExtractor={(item) => item.id}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.v3FlatPad}
-                ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
+                initialNumToRender={8}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                removeClippedSubviews
+                ItemSeparatorComponent={() => <View style={styles.v3HListSep} />}
                 renderItem={({ item }) => (
                   <DailyCard
                     challenge={{
@@ -290,7 +294,7 @@ export default function DiscoverScreen() {
                   />
                 ))}
               </View>
-              <View style={{ height: 24 }} />
+              <View style={styles.v3ScrollBottomSpacer} />
             </>
           )}
         </ScrollView>

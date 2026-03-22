@@ -41,7 +41,7 @@ export type DailyChallengeCardData = {
   participants_count?: number;
 };
 
-export function DailyCard({
+export const DailyCard = React.memo(function DailyCard({
   challenge,
   onPress,
   onPressIn,
@@ -73,7 +73,7 @@ export function DailyCard({
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const s = StyleSheet.create({
   card: {
