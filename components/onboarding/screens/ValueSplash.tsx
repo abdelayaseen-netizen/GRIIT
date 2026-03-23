@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,18 @@ import {
   Animated,
   StatusBar,
   Pressable,
-} from 'react-native';
-import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
-import { trackEvent } from '@/lib/analytics';
+  ScrollView,
+} from "react-native";
+import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/constants/onboarding-theme";
+import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
+import { GRIITWordmark } from "@/src/components/ui/GRIITWordmark";
+import { track } from "@/lib/analytics";
 
 interface ValueSplashProps {
   onContinue: () => void;
 }
+
+const HERO_TITLE_SIZE = 34;
 
 export default function ValueSplash({ onContinue }: ValueSplashProps) {
   const fadeTitle = useRef(new Animated.Value(0)).current;
@@ -22,7 +27,7 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
   const slideUp = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
-    trackEvent('onboarding_started');
+    track({ name: "onboarding_started" });
   }, []);
 
   useEffect(() => {
@@ -35,123 +40,145 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
       Animated.timing(fadeStat, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.timing(fadeButton, { toValue: 1, duration: 400, useNativeDriver: true }),
     ]).start();
-  }, []);
+  }, [fadeButton, fadeStat, fadeSubtitle, fadeTitle, slideUp]);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.darkHero}>
+          <Animated.View style={{ opacity: fadeTitle }}>
+            <GRIITWordmark color={C.coral} subtitle="" compact />
+          </Animated.View>
+          <Animated.Text style={[styles.heroTitle, { opacity: fadeTitle }]}>
+            Discipline is not optional.
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              styles.heroSubtitle,
+              { opacity: fadeSubtitle, transform: [{ translateY: slideUp }] },
+            ]}
+          >
+            Proof beats intention. Show up daily — we handle the structure.
+          </Animated.Text>
+        </View>
 
-      <Animated.View style={[styles.brandContainer, { opacity: fadeTitle }]}>
-        <Text style={styles.brandMark}>G R I I T</Text>
-      </Animated.View>
+        <View style={styles.cream}>
+          <Animated.View style={[styles.statsCard, { opacity: fadeStat }]}>
+            <View style={styles.statCol}>
+              <Text style={styles.statNum}>10+</Text>
+              <Text style={styles.statLbl}>TASK TYPES</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statCol}>
+              <Text style={styles.statNum}>5</Text>
+              <Text style={styles.statLbl}>VERIFY MODES</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statCol}>
+              <Text style={styles.statNum}>0</Text>
+              <Text style={styles.statLbl}>EXCUSES</Text>
+            </View>
+          </Animated.View>
 
-      <View style={styles.heroSection}>
-        <Animated.Text style={[styles.heroTitle, { opacity: fadeTitle }]}>
-          Discipline is{'\n'}not optional.
-        </Animated.Text>
-
-        <Animated.Text
-          style={[
-            styles.heroSubtitle,
-            { opacity: fadeSubtitle, transform: [{ translateY: slideUp }] },
-          ]}
-        >
-          Join structured challenges. Build unbreakable habits.{'\n'}
-          Prove it with real accountability.
-        </Animated.Text>
-
-        <Animated.View style={[styles.statRow, { opacity: fadeStat }]}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>75</Text>
-            <Text style={styles.statLabel}>Day challenges</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>24/7</Text>
-            <Text style={styles.statLabel}>Accountability</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
-            <Text style={styles.statLabel}>Excuses</Text>
-          </View>
-        </Animated.View>
-      </View>
-
-      <Animated.View style={[styles.ctaContainer, { opacity: fadeButton }]}>
-        <Pressable
-          style={styles.primaryButton}
-          onPress={() => onContinue()}
-          accessibilityLabel="Continue onboarding"
-          accessibilityRole="button"
-        >
-          <Text style={styles.primaryButtonText}>Continue &gt;</Text>
-        </Pressable>
-        <Text style={styles.footerText}>
-          Takes 60 seconds · No credit card needed
-        </Text>
-      </Animated.View>
+          <Animated.View style={[styles.ctaBlock, { opacity: fadeButton }]}>
+            <Pressable
+              style={styles.primaryButton}
+              onPress={() => onContinue()}
+              accessibilityLabel="Continue onboarding"
+              accessibilityRole="button"
+            >
+              <Text style={styles.primaryButtonText}>I&apos;m ready</Text>
+            </Pressable>
+            <Text style={styles.footerText}>60 seconds to set up. Free to start.</Text>
+          </Animated.View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.background,
+  root: { flex: 1, backgroundColor: C.background },
+  scroll: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
+  darkHero: {
+    backgroundColor: C.darkHero,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     paddingHorizontal: S.screenPadding,
-    justifyContent: 'space-between',
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: 24,
+    paddingBottom: 28,
   },
-  brandContainer: { alignItems: 'flex-start' },
-  brandMark: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: C.textPrimary,
-    letterSpacing: 6,
-  },
-  heroSection: { flex: 1, justifyContent: 'center' },
   heroTitle: {
-    fontSize: T.heroSize,
-    fontWeight: T.heroWeight,
-    color: C.textPrimary,
-    lineHeight: T.heroLineHeight,
-    letterSpacing: T.heroLetterSpacing,
-    marginBottom: 16,
+    marginTop: 20,
+    fontSize: HERO_TITLE_SIZE,
+    fontWeight: "800",
+    color: C.WHITE,
+    letterSpacing: -1,
+    lineHeight: HERO_TITLE_SIZE * 1.15,
   },
   heroSubtitle: {
-    fontSize: T.bodySize,
-    lineHeight: T.bodyLineHeight,
-    color: C.textSecondary,
-    marginBottom: 40,
+    marginTop: 12,
+    fontSize: 13,
+    lineHeight: 20,
+    color: C.heroSubtitleOnDark,
   },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: S.cardRadius,
-    padding: 20,
-    borderWidth: 0.5,
+  cream: {
+    flex: 1,
+    paddingHorizontal: S.screenPadding,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  statsCard: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    backgroundColor: C.WHITE,
+    borderRadius: DS_RADIUS.card,
+    padding: 16,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: C.border,
   },
-  statItem: { flex: 1, alignItems: 'center' },
-  statNumber: { fontSize: 24, fontWeight: '800', color: C.accent, marginBottom: 4 },
-  statLabel: {
-    fontSize: T.captionSize,
+  statCol: { flex: 1, alignItems: "center", justifyContent: "center" },
+  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: C.border, marginVertical: 4 },
+  statNum: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: C.coral,
+    letterSpacing: -0.5,
+  },
+  statLbl: {
+    marginTop: 6,
+    fontSize: 9,
+    fontWeight: "600",
     color: C.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    textAlign: "center",
   },
-  statDivider: { width: 1, height: 36, backgroundColor: C.border },
-  ctaContainer: { gap: 16 },
+  ctaBlock: { marginTop: 28, gap: 12 },
   primaryButton: {
-    backgroundColor: C.accent,
-    height: S.buttonHeight,
-    borderRadius: S.buttonRadius,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: C.darkCta,
+    height: DS_MEASURES.CTA_HEIGHT,
+    borderRadius: DS_RADIUS.button,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  primaryButtonText: { fontSize: T.subheadingSize, fontWeight: '700', color: C.textOnAccent },
-  footerText: { fontSize: T.captionSize, color: C.textTertiary, textAlign: 'center' },
+  primaryButtonText: {
+    fontSize: 17,
+    fontWeight: "700",
+    lineHeight: 22,
+    color: C.WHITE,
+  },
+  footerText: {
+    fontSize: 11,
+    color: C.textTertiary,
+    textAlign: "center",
+    lineHeight: 16,
+  },
 });

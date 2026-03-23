@@ -1,85 +1,55 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  View, Text, StyleSheet, Pressable, TextInput,
-  ActivityIndicator, KeyboardAvoidingView, Platform,
-} from 'react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S } from '@/constants/onboarding-theme';
-import { supabase } from '@/lib/supabase';
-import { track } from '@/lib/analytics';
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { useRouter } from "expo-router";
+import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/constants/onboarding-theme";
+import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
+import { ROUTES } from "@/lib/routes";
+import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/analytics";
+import { useOnboardingStore } from "@/store/onboardingStore";
 
 interface SignUpScreenProps {
-  onAuthSuccess: (userId: string, username: string) => void;
+  onAuthSuccess: (userId: string) => void;
 }
 
 export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const router = useRouter();
+  const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
 
   useEffect(() => {
-    if (Platform.OS === 'ios') {
-      AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
+    if (Platform.OS === "ios") {
+      void AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
     }
   }, []);
 
-  const sanitizeUsername = (text: string) => text.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
-
-  const createProfileAndContinue = async (userId: string) => {
-    const cleanUsername = sanitizeUsername(username);
-    if (cleanUsername.length < 3) {
-      setError('Username must be at least 3 characters');
-      return;
-    }
-    if (!displayName.trim()) {
-      setError('Please enter your name');
-      return;
-    }
-    const { selectedGoals, intensityLevel } = await import('@/store/onboardingStore').then((m) => m.useOnboardingStore.getState());
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert(
-        {
-          user_id: userId,
-          username: cleanUsername,
-          display_name: displayName.trim(),
-          goals: selectedGoals,
-          intensity_level: intensityLevel,
-          onboarding_completed: false,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
-    if (profileError) {
-      if (profileError.message?.includes('unique') || profileError.message?.includes('username')) {
-        setError('Username taken. Try another one.');
-        return;
-      }
-      setError(profileError.message || 'Could not save profile.');
-      return;
-    }
-    track({ name: 'onboarding_signup_completed' });
-    track({ name: 'signup_completed', method: 'email' });
-    onAuthSuccess(userId, cleanUsername);
-  };
-
   const handleEmailSignUp = async () => {
     if (!email.trim() || !password.trim()) {
-      setError('Please fill in all fields');
+      setError("Please fill in email and password");
       return;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -89,20 +59,22 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
 
       if (signUpError) {
         if (
-          signUpError.message.includes('already registered') ||
-          signUpError.message.includes('already been registered') ||
-          signUpError.message.includes('User already registered')
+          signUpError.message.includes("already registered") ||
+          signUpError.message.includes("already been registered") ||
+          signUpError.message.includes("User already registered")
         ) {
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: email.trim(),
             password,
           });
           if (signInError) {
-            setError('Account exists but wrong password. Try again.');
+            setError("Account exists but wrong password. Try again.");
             return;
           }
           if (signInData.session?.user) {
-            await createProfileAndContinue(signInData.session.user.id);
+            setProfileSetupHints({ email: email.trim() });
+            track({ name: "signup_completed", method: "email" });
+            onAuthSuccess(signInData.session.user.id);
             return;
           }
         }
@@ -111,7 +83,9 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
       }
 
       if (signUpData.session?.user) {
-        await createProfileAndContinue(signUpData.session.user.id);
+        setProfileSetupHints({ email: email.trim() });
+        track({ name: "signup_completed", method: "email" });
+        onAuthSuccess(signUpData.session.user.id);
         return;
       }
 
@@ -121,37 +95,32 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
           password,
         });
         if (signInError) {
-          await createProfileAndContinue(signUpData.user.id);
+          setProfileSetupHints({ email: email.trim() });
+          onAuthSuccess(signUpData.user.id);
           return;
         }
         if (signInData.session?.user) {
-          await createProfileAndContinue(signInData.session.user.id);
+          setProfileSetupHints({ email: email.trim() });
+          track({ name: "signup_completed", method: "email" });
+          onAuthSuccess(signInData.session.user.id);
           return;
         }
       }
 
-      setError('Sign up succeeded but could not create session. Try again.');
+      setError("Sign up succeeded but could not create session. Try again.");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.');
+      setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    // Google OAuth in React Native requires extra setup:
-    // 1. expo-auth-session or expo-web-browser
-    // 2. Google OAuth configured in Supabase dashboard
-    // For MVP, show a friendly message and use email
-    setError('Google sign in coming soon. Use email for now.');
-  };
-
   const handleAppleSignUp = useCallback(async () => {
-    if (Platform.OS !== 'ios' || !appleAuthAvailable) {
-      setError('Apple Sign-In is available on iOS. Use email for now.');
+    if (Platform.OS !== "ios" || !appleAuthAvailable) {
+      setError("Apple Sign-In is available on iOS. Use email for now.");
       return;
     }
-    setError('');
+    setError("");
     setLoading(true);
     try {
       const credential = await AppleAuthentication.signInAsync({
@@ -161,11 +130,11 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
         ],
       });
       if (!credential.identityToken) {
-        setError('Apple Sign-In did not return a token.');
+        setError("Apple Sign-In did not return a token.");
         return;
       }
       const { data, error: idError } = await supabase.auth.signInWithIdToken({
-        provider: 'apple',
+        provider: "apple",
         token: credential.identityToken,
       });
       if (idError) {
@@ -174,215 +143,171 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
       }
       const user = data?.user;
       if (!user?.id) {
-        setError('Sign in failed. Please try again.');
+        setError("Sign in failed. Please try again.");
         return;
       }
       const displayNameFromApple = credential.fullName
-        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ').trim()
-        : 'User';
-      const fallbackUsername = 'user_' + user.id.slice(0, 8);
-      const { selectedGoals, intensityLevel } = await import('@/store/onboardingStore').then((m) => m.useOnboardingStore.getState());
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert(
-          {
-            user_id: user.id,
-            username: fallbackUsername,
-            display_name: displayNameFromApple || 'User',
-            goals: selectedGoals,
-            intensity_level: intensityLevel,
-            onboarding_completed: false,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id' }
-        );
-      if (profileError) {
-        if (profileError.message?.includes('unique') || profileError.message?.includes('username')) {
-          const altUsername = 'user_' + user.id.slice(0, 12);
-          const { error: retryErr } = await supabase.from('profiles').upsert(
-            { user_id: user.id, username: altUsername, display_name: displayNameFromApple || 'User', goals: selectedGoals, intensity_level: intensityLevel, onboarding_completed: false, updated_at: new Date().toISOString() },
-            { onConflict: 'user_id' }
-          );
-          if (retryErr) {
-            setError(retryErr.message || 'Could not save profile.');
-            return;
-          }
-          track({ name: 'onboarding_signup_completed' });
-          track({ name: 'signup_completed', method: 'apple' });
-          onAuthSuccess(user.id, altUsername);
-          return;
-        }
-        setError(profileError.message || 'Could not save profile.');
-        return;
-      }
-      track({ name: 'onboarding_signup_completed' });
-      track({ name: 'signup_completed', method: 'apple' });
-      onAuthSuccess(user.id, fallbackUsername);
+        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(" ").trim()
+        : "";
+      setProfileSetupHints({
+        displayNameFromApple: displayNameFromApple || undefined,
+        email: credential.email ?? undefined,
+      });
+      track({ name: "signup_completed", method: "apple" });
+      onAuthSuccess(user.id);
     } catch (e: unknown) {
-      if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'ERR_REQUEST_CANCELED') {
+      if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
       }
-      setError(e instanceof Error ? e.message : 'Something went wrong.');
+      setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
-  }, [appleAuthAvailable, onAuthSuccess]);
+  }, [appleAuthAvailable, onAuthSuccess, setProfileSetupHints]);
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
     >
-      <View style={styles.header}>
-        <Text style={styles.stepLabel}>ALMOST THERE</Text>
-        <Text style={styles.title}>Create your{'\n'}account.</Text>
-        <Text style={styles.subtitle}>Save your progress. Track your streaks. Never lose a day.</Text>
-      </View>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.stepLabel}>STEP 2 OF 4</Text>
+          <Text style={styles.title}>Create your account</Text>
+          <Text style={styles.subtitle}>Save progress. Track streaks. Never lose a day.</Text>
+        </View>
 
-      <View style={styles.authContainer}>
-        {!showEmailForm ? (
-          <>
-            {Platform.OS === 'ios' && appleAuthAvailable && (
-              <Pressable
-                style={styles.socialButton}
-                onPress={handleAppleSignUp}
-                disabled={loading}
-                accessibilityLabel="Continue with Apple"
-                accessibilityRole="button"
-                accessibilityState={{ disabled: loading }}
-              >
-                <Text style={styles.socialIcon}>🍎</Text>
-                <Text style={styles.socialButtonText}>Continue with Apple</Text>
-              </Pressable>
-            )}
-
+        <View style={styles.authContainer}>
+          {Platform.OS === "ios" && appleAuthAvailable ? (
             <Pressable
-              style={styles.socialButton}
-              onPress={handleGoogleSignUp}
+              style={styles.appleButton}
+              onPress={handleAppleSignUp}
               disabled={loading}
-              accessibilityLabel="Continue with Google"
+              accessibilityLabel="Continue with Apple"
               accessibilityRole="button"
               accessibilityState={{ disabled: loading }}
             >
-              <Text style={styles.socialIcon}>G</Text>
-              <Text style={styles.socialButtonText}>Continue with Google</Text>
+              <Text style={styles.appleButtonText}>Continue with Apple</Text>
             </Pressable>
+          ) : null}
 
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or use email</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={C.textTertiary}
+            value={email}
+            onChangeText={(t) => {
+              setEmail(t);
+              setError("");
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            accessibilityLabel="Email"
+            accessibilityRole="text"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password (min 6 characters)"
+            placeholderTextColor={C.textTertiary}
+            value={password}
+            onChangeText={(t) => {
+              setPassword(t);
+              setError("");
+            }}
+            secureTextEntry
+            accessibilityLabel="Password"
+            accessibilityRole="text"
+          />
+
+          <Pressable
+            style={styles.primaryButton}
+            onPress={handleEmailSignUp}
+            disabled={loading}
+            accessibilityLabel="Create account"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading }}
+          >
+            {loading ? <ActivityIndicator color={C.WHITE} /> : <Text style={styles.primaryButtonText}>Create account</Text>}
+          </Pressable>
+
+          <View style={styles.loginRow}>
+            <Text style={styles.loginMuted}>Have an account? </Text>
             <Pressable
-              style={styles.emailButton}
-              onPress={() => { setShowEmailForm(true); setError(''); }}
-              accessibilityLabel="Sign up with email"
-              accessibilityRole="button"
+              onPress={() => router.push(ROUTES.AUTH_LOGIN as never)}
+              accessibilityRole="link"
+              accessibilityLabel="Log in"
             >
-              <Text style={styles.emailButtonText}>Sign up with email</Text>
+              <Text style={styles.loginLink}>Log in</Text>
             </Pressable>
-          </>
-        ) : (
-          <>
-            <TextInput
-              style={styles.input}
-              placeholder="Email address"
-              placeholderTextColor={C.textTertiary}
-              value={email}
-              onChangeText={(t) => { setEmail(t); setError(''); }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              accessibilityLabel="Email"
-              accessibilityRole="text"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password (min 6 characters)"
-              placeholderTextColor={C.textTertiary}
-              value={password}
-              onChangeText={(t) => { setPassword(t); setError(''); }}
-              secureTextEntry
-              accessibilityLabel="Password"
-              accessibilityRole="text"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Username (3+ characters)"
-              placeholderTextColor={C.textTertiary}
-              value={username}
-              onChangeText={(t) => { setUsername(sanitizeUsername(t)); setError(''); }}
-              autoCapitalize="none"
-              autoCorrect={false}
-              accessibilityLabel="Username"
-              accessibilityRole="text"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Display name"
-              placeholderTextColor={C.textTertiary}
-              value={displayName}
-              onChangeText={(t) => { setDisplayName(t); setError(''); }}
-              accessibilityLabel="Display name"
-              accessibilityRole="text"
-            />
-            <Pressable
-              style={styles.primaryButton}
-              onPress={handleEmailSignUp}
-              disabled={loading}
-              accessibilityLabel="Create account"
-              accessibilityRole="button"
-              accessibilityState={{ disabled: loading }}
-            >
-              {loading ? (
-                <ActivityIndicator color={C.WHITE} />
-              ) : (
-                <Text style={styles.primaryButtonText}>Create account</Text>
-              )}
-            </Pressable>
-            <Pressable
-              onPress={() => { setShowEmailForm(false); setError(''); }}
-              accessibilityLabel="Back to other sign up options"
-              accessibilityRole="button"
-            >
-              <Text style={styles.backToSocial}>← Back to other options</Text>
-            </Pressable>
-          </>
-        )}
+          </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </View>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.termsText}>
-          By continuing, you agree to GRIIT&apos;s Terms of Service and Privacy Policy
-        </Text>
-      </View>
+        <View style={styles.footer}>
+          <Text style={styles.termsText}>
+            By continuing, you agree to GRIIT&apos;s Terms of Service and Privacy Policy
+          </Text>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.background, paddingHorizontal: S.screenPadding, paddingTop: 20, paddingBottom: 40 },
-  header: { marginBottom: 36 },
-  stepLabel: { fontSize: T.captionSize, color: C.accent, fontWeight: '700', letterSpacing: 2, marginBottom: 12 },
-  title: { fontSize: T.headingSize, fontWeight: T.headingWeight, color: C.textPrimary, lineHeight: T.headingLineHeight, letterSpacing: T.headingLetterSpacing, marginBottom: 8 },
-  subtitle: { fontSize: T.smallSize, color: C.textSecondary, lineHeight: T.smallLineHeight },
-  authContainer: { flex: 1, gap: 12 },
-  socialButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: C.commitmentButtonBg, height: S.buttonHeight, borderRadius: S.buttonRadius, gap: 10 },
-  socialIcon: { fontSize: 20 },
-  socialButtonText: { fontSize: T.bodySize, fontWeight: '600', color: C.textOnAccent },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginVertical: 8 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
-  dividerText: { fontSize: T.captionSize, color: C.textTertiary },
-  emailButton: { height: S.buttonHeight, borderRadius: S.buttonRadius, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: C.border },
-  emailButtonText: { fontSize: T.bodySize, fontWeight: '600', color: C.textSecondary },
-  input: { height: 52, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 16, fontSize: T.bodySize, color: C.textPrimary, borderWidth: 1, borderColor: C.border },
-  primaryButton: { backgroundColor: C.commitmentButtonBg, height: S.buttonHeight, borderRadius: S.buttonRadius, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-  primaryButtonText: { fontSize: T.bodySize, fontWeight: '700', color: C.textOnAccent },
-  backToSocial: { fontSize: T.smallSize, color: C.textTertiary, textAlign: 'center', paddingVertical: 8 },
-  errorText: { fontSize: T.captionSize, color: C.accent, textAlign: 'center', marginTop: 8 },
-  footer: { paddingTop: 16 },
-  termsText: { fontSize: 11, color: C.textTertiary, textAlign: 'center', lineHeight: 16 },
+  container: { flex: 1, backgroundColor: C.background },
+  scroll: { paddingHorizontal: S.screenPadding, paddingTop: 20, paddingBottom: 40 },
+  header: { marginBottom: 28 },
+  stepLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
+  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
+  subtitle: { fontSize: 15, fontWeight: "500", lineHeight: 24, color: C.textSecondary },
+  authContainer: { gap: 12 },
+  appleButton: {
+    backgroundColor: C.black,
+    height: 52,
+    borderRadius: DS_RADIUS.button,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  appleButtonText: { fontSize: 17, fontWeight: "600", color: C.WHITE },
+  dividerRow: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 4 },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: C.border },
+  dividerText: { fontSize: 13, color: C.textTertiary },
+  input: {
+    height: 52,
+    backgroundColor: C.WHITE,
+    borderRadius: DS_RADIUS.input,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: C.textPrimary,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: C.border,
+  },
+  primaryButton: {
+    backgroundColor: C.darkCta,
+    height: DS_MEASURES.CTA_HEIGHT,
+    borderRadius: DS_RADIUS.button,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  primaryButtonText: { fontSize: 17, fontWeight: "700", lineHeight: 22, color: C.textOnAccent },
+  loginRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: 8 },
+  loginMuted: { fontSize: 15, color: C.textSecondary },
+  loginLink: { fontSize: 15, fontWeight: "700", color: C.coral },
+  errorText: { fontSize: 13, color: C.accent, textAlign: "center", marginTop: 8 },
+  footer: { paddingTop: 24 },
+  termsText: { fontSize: 11, color: C.textTertiary, textAlign: "center", lineHeight: 16 },
 });

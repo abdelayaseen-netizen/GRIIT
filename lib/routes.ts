@@ -8,7 +8,6 @@ export const ROUTES = {
   AUTH_SIGNUP: "/auth/signup",
   AUTH_FORGOT_PASSWORD: "/auth/forgot-password",
   CREATE_PROFILE: "/create-profile",
-  WELCOME: "/welcome",
   ONBOARDING: "/onboarding",
   ONBOARDING_STEP4: "/onboarding?step=4",
   TABS: "/(tabs)",
@@ -48,7 +47,6 @@ export const ROUTES = {
 /** Segment names for auth redirect logic (first segment of path). */
 export const SEGMENTS = {
   AUTH: "auth",
-  WELCOME: "welcome",
   CREATE_PROFILE: "create-profile",
   ONBOARDING: "onboarding",
 } as const;

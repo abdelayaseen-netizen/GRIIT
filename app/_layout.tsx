@@ -140,11 +140,10 @@ function AuthRedirector() {
 
     const first = (typeof segments[0] === "string" ? segments[0] : "") as string;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inWelcome = first === SEGMENTS.WELCOME;
     const inAuth = first === SEGMENTS.AUTH;
 
     if (!user) {
-      if (!inOnboarding && !inWelcome && !inAuth) {
+      if (!inOnboarding && !inAuth) {
         router.replace(ROUTES.ONBOARDING as never);
       }
       return;
@@ -281,7 +280,6 @@ function RootLayoutNav() {
       <OfflineBanner />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
-      <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

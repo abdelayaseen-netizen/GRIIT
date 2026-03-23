@@ -25,6 +25,17 @@ export const ONBOARDING_COLORS = {
   border: DS_COLORS.ONBOARDING_BORDER,
   borderActive: DS_COLORS.CHALLENGE_HEADER_DARK,
   commitmentButtonBg: DS_COLORS.ONBOARDING_COMMITMENT_BTN,
+  /** Primary orange — progress active dot, links, brand on dark */
+  coral: DS_COLORS.DISCOVER_CORAL,
+  darkHero: DS_COLORS.DARK_BG_PAGE,
+  darkCta: DS_COLORS.DARK_BG_CARD,
+  black: DS_COLORS.BLACK,
+  heroSubtitleOnDark: "rgba(255,255,255,0.45)",
+  badgePopularBg: "#FAECE7",
+  badgePopularText: "#993C1D",
+  badgeStarterBg: "#E1F5EE",
+  badgeStarterText: "#0F6E56",
+  metaPillBg: "#F5F1EB",
 
   DISABLED_BG: DS_COLORS.ONBOARDING_BORDER,
   WHITE: DS_COLORS.WHITE,
@@ -59,7 +70,8 @@ export const ONBOARDING_TYPOGRAPHY = {
 } as const;
 
 export const ONBOARDING_SPACING = {
-  screenPadding: DS_SPACING.XL,
+  /** Design spec: 20px horizontal screen padding */
+  screenPadding: DS_SPACING.SCREEN_H,
   sectionGap: DS_SPACING.XXL,
   cardGap: DS_SPACING.MD,
   elementGap: DS_SPACING.BASE,
@@ -101,12 +113,6 @@ export const GOAL_OPTIONS = [
     emoji: "🧊",
     title: "Cold exposure",
     subtitle: "Embrace the discomfort",
-  },
-  {
-    id: "no_excuses" as const,
-    emoji: "🔥",
-    title: "No excuses",
-    subtitle: "All of the above",
   },
 ] as const;
 

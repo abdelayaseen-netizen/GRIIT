@@ -9,28 +9,16 @@ export type OnboardingGoal =
   | 'mental_discipline'
   | 'daily_habits'
   | 'reading_learning'
-  | 'cold_exposure'
-  | 'no_excuses';
+  | 'cold_exposure';
 
 export type IntensityLevel = 'beginner' | 'intermediate' | 'extreme';
 
 const ONBOARDING_STORAGE_KEY = "griit-onboarding";
 
-const ONBOARDING_STEP_ROUTES: Record<number, string> = {
-  1: "/onboarding",
-  2: "/onboarding/identity",
-  3: "/onboarding/barrier",
-  4: "/onboarding/intensity",
-  5: "/onboarding/social",
-  6: "/onboarding/proof",
-  7: "/onboarding/challenge",
-  8: "/auth/signup",
-  9: "/onboarding/first-task",
+export type ProfileSetupHints = {
+  email?: string;
+  displayNameFromApple?: string;
 };
-
-export function getOnboardingRouteForStep(step: number): string {
-  return ONBOARDING_STEP_ROUTES[step] ?? "/onboarding";
-}
 
 export interface OnboardingState {
   motivation: string | null;
@@ -48,6 +36,8 @@ export interface OnboardingState {
   hasCompletedOnboarding: boolean;
   selectedGoals: OnboardingGoal[];
   intensityLevel: IntensityLevel | null;
+  /** Ephemeral hints for ProfileSetup (email prefix, Apple full name); not persisted. */
+  profileSetupHints: ProfileSetupHints | null;
   setMotivation: (v: string) => void;
   setPersona: (v: string) => void;
   setBarrier: (v: string) => void;
@@ -65,6 +55,7 @@ export interface OnboardingState {
   prevStep: () => void;
   toggleGoal: (goal: OnboardingGoal) => void;
   setIntensityLevel: (level: IntensityLevel) => void;
+  setProfileSetupHints: (hints: ProfileSetupHints | null) => void;
   reset: () => void;
 }
 
@@ -80,10 +71,11 @@ const initialState = {
   username: null as string | null,
   isComplete: false,
   currentStep: 0,
-  totalSteps: 4,
+  totalSteps: 5,
   hasCompletedOnboarding: false,
   selectedGoals: [] as OnboardingGoal[],
   intensityLevel: null as IntensityLevel | null,
+  profileSetupHints: null as ProfileSetupHints | null,
 };
 
 export const useOnboardingStore = create<OnboardingState>()(
@@ -117,6 +109,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         return { selectedGoals: [...s.selectedGoals, goal] };
       }),
       setIntensityLevel: (level) => set({ intensityLevel: level }),
+      setProfileSetupHints: (hints) => set({ profileSetupHints: hints }),
       reset: () => set(initialState),
     }),
     {
@@ -138,6 +131,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         selectedGoals: state.selectedGoals,
         intensityLevel: state.intensityLevel,
+        // profileSetupHints intentionally omitted from persist
       }),
     }
   )

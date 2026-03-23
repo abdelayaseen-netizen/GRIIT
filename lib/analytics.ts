@@ -33,6 +33,7 @@ export type AnalyticsEvent =
   | { name: "notification_permission_deferred_to_post_first_day" }
   | { name: "onboarding_goals_selected"; goals: string[] }
   | { name: "onboarding_signup_completed" }
+  | { name: "onboarding_profile_created" }
   | { name: "onboarding_challenge_auto_suggested"; challenge_id: string; challenge_name: string }
   | { name: "onboarding_challenge_joined"; challenge_id: string }
   | { name: "onboarding_challenge_skipped" }

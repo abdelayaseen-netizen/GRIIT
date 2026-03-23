@@ -1,46 +1,65 @@
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, SafeAreaView, Pressable, Text } from 'react-native';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ONBOARDING_COLORS as C } from '@/constants/onboarding-theme';
-import { useOnboardingStore } from '@/store/onboardingStore';
-import { STORAGE_KEYS } from '@/lib/constants/storage-keys';
+import React, { useState, useCallback, useEffect } from "react";
+import { View, StyleSheet, SafeAreaView, Pressable } from "react-native";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ChevronLeft } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
+import { ONBOARDING_COLORS as C } from "@/constants/onboarding-theme";
+import { useOnboardingStore } from "@/store/onboardingStore";
+import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { GOAL_OPTIONS } from "@/constants/onboarding-theme";
 
-import ValueSplash from './screens/ValueSplash';
-import GoalSelection from './screens/GoalSelection';
-import SignUpScreen from './screens/SignUpScreen';
-import AutoSuggestChallengeScreen from './screens/AutoSuggestChallengeScreen';
-import ProgressDots from './ProgressDots';
+import ValueSplash from "./screens/ValueSplash";
+import GoalSelection from "./screens/GoalSelection";
+import SignUpScreen from "./screens/SignUpScreen";
+import ProfileSetup from "./screens/ProfileSetup";
+import AutoSuggestChallengeScreen from "./screens/AutoSuggestChallengeScreen";
+import ProgressDots from "./ProgressDots";
 
 export default function OnboardingFlow() {
-  const { currentStep, nextStep, prevStep, completeOnboarding } = useOnboardingStore();
-  const [, setAuthUserId] = useState<string>('');
-  const [, setUsername] = useState('');
+  const { currentStep, nextStep, prevStep, completeOnboarding, setProfileSetupHints } = useOnboardingStore();
+  const [authUserId, setAuthUserId] = useState<string>("");
   const router = useRouter();
 
-  // Compressed: 0=Splash, 1=Goals, 2=SignUp+Username, 3=AutoSuggestChallenge
-  const showProgressDots = currentStep >= 1 && currentStep <= 3;
-  const showBackButton = currentStep >= 1 && currentStep <= 3;
+  useEffect(() => {
+    const validGoalIds = new Set(GOAL_OPTIONS.map((g) => g.id));
+    useOnboardingStore.setState((s) => ({
+      totalSteps: Math.max(s.totalSteps, 5),
+      selectedGoals: s.selectedGoals.filter((g) => validGoalIds.has(g)),
+    }));
+  }, []);
 
-  const handleSignUpComplete = useCallback((userId: string, usernameValue: string) => {
-    setAuthUserId(userId);
-    setUsername(usernameValue);
-    nextStep(); // Move from SignUp (2) → AutoSuggestChallenge (3)
+  const showTopBar = currentStep >= 1 && currentStep <= 4;
+
+  const handleSignUpComplete = useCallback(
+    (userId: string) => {
+      setAuthUserId(userId);
+      nextStep();
+    },
+    [nextStep]
+  );
+
+  const handleProfileComplete = useCallback(() => {
+    nextStep();
   }, [nextStep]);
 
-  const finishOnboardingAndGoTo = useCallback((path: string) => async () => {
-    const { track } = await import('@/lib/analytics');
-    track({ name: 'onboarding_completed' });
+  const finishOnboarding = useCallback(async () => {
+    const { track } = await import("@/lib/analytics");
+    track({ name: "onboarding_completed" });
     completeOnboarding();
+    setProfileSetupHints(null);
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
-    } catch (e) {
-      // error swallowed — handle in UI
+      await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
+    } catch {
+      /* storage best-effort */
     }
-    router.replace(path as never);
-  }, [completeOnboarding, router]);
+    router.replace("/(tabs)" as never);
+  }, [completeOnboarding, router, setProfileSetupHints]);
 
-  const handleStartApp = finishOnboardingAndGoTo('/(tabs)');
+  const handleBack = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    prevStep();
+  }, [prevStep]);
 
   const renderScreen = () => {
     switch (currentStep) {
@@ -51,7 +70,11 @@ export default function OnboardingFlow() {
       case 2:
         return <SignUpScreen onAuthSuccess={handleSignUpComplete} />;
       case 3:
-        return <AutoSuggestChallengeScreen onJoinComplete={handleStartApp} onBrowseMore={handleStartApp} />;
+        return <ProfileSetup userId={authUserId} onComplete={handleProfileComplete} />;
+      case 4:
+        return (
+          <AutoSuggestChallengeScreen onJoinComplete={finishOnboarding} onBrowseMore={finishOnboarding} />
+        );
       default:
         return <ValueSplash onContinue={nextStep} />;
     }
@@ -59,24 +82,21 @@ export default function OnboardingFlow() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {(showProgressDots || showBackButton) && (
+      {showTopBar ? (
         <View style={styles.topBar}>
-          {showBackButton ? (
-            <Pressable
-              style={styles.backButton}
-              onPress={prevStep}
-              accessibilityLabel="Go back"
-              accessibilityRole="button"
-            >
-              <Text style={styles.backButtonText}>←</Text>
-            </Pressable>
-          ) : (
-            <View style={styles.backButtonPlaceholder} />
-          )}
-          {showProgressDots && <ProgressDots total={4} current={currentStep} />}
+          <Pressable
+            style={styles.backButton}
+            onPress={handleBack}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+            hitSlop={8}
+          >
+            <ChevronLeft size={20} color={C.textPrimary} strokeWidth={2.5} />
+          </Pressable>
+          <ProgressDots total={4} current={currentStep - 1} />
           <View style={styles.backButtonPlaceholder} />
         </View>
-      )}
+      ) : null}
       {renderScreen()}
     </SafeAreaView>
   );
@@ -84,8 +104,20 @@ export default function OnboardingFlow() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: C.background },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 4 },
-  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  backButtonText: { fontSize: 22, color: C.textPrimary },
-  backButtonPlaceholder: { width: 40 },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 4,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: C.WHITE,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backButtonPlaceholder: { width: 36 },
 });
