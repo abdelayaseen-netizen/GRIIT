@@ -312,6 +312,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const winTasks: {
         id: string;
+        taskType?: string;
         anchorTimeLocal?: string | null;
         windowStartOffsetMin?: number | null;
         challengeName?: string;
@@ -321,18 +322,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const title = ch?.title ?? 'Challenge';
         const tasks = ch?.challenge_tasks ?? [];
         for (const t of tasks) {
+          const cfg = (t as { config?: Record<string, unknown> }).config;
+          if (cfg && cfg.timeEnforcementEnabled === false) continue;
+
+          const anchorFromCfg = typeof cfg?.anchorTimeLocal === 'string' ? cfg.anchorTimeLocal : null;
           const anchor =
-            (typeof t.anchorTimeLocal === 'string' ? t.anchorTimeLocal : null) ??
-            (typeof t.anchor_time_local === 'string' ? t.anchor_time_local : null);
+            anchorFromCfg ??
+            (typeof (t as { anchorTimeLocal?: string }).anchorTimeLocal === 'string'
+              ? (t as { anchorTimeLocal: string }).anchorTimeLocal
+              : null) ??
+            (typeof (t as { anchor_time_local?: string }).anchor_time_local === 'string'
+              ? (t as { anchor_time_local: string }).anchor_time_local
+              : null);
           if (!anchor?.trim()) continue;
+
           const w =
-            typeof t.windowStartOffsetMin === 'number'
-              ? t.windowStartOffsetMin
-              : typeof t.window_start_offset_min === 'number'
-                ? t.window_start_offset_min
+            typeof (t as { windowStartOffsetMin?: number }).windowStartOffsetMin === 'number'
+              ? (t as { windowStartOffsetMin: number }).windowStartOffsetMin
+              : typeof (t as { window_start_offset_min?: number }).window_start_offset_min === 'number'
+                ? (t as { window_start_offset_min: number }).window_start_offset_min
+              : typeof cfg?.windowStartOffsetMin === 'number'
+                ? (cfg.windowStartOffsetMin as number)
                 : 0;
+
+          const rawType = (t as { type?: string }).type;
           winTasks.push({
-            id: `${ac.id ?? 'ac'}-${String(t.id)}`,
+            id: `${ac.id ?? 'ac'}-${String((t as { id?: string }).id)}`,
+            taskType: typeof rawType === 'string' ? rawType : undefined,
             anchorTimeLocal: anchor,
             windowStartOffsetMin: w,
             challengeName: title,

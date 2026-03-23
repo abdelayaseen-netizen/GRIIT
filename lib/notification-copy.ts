@@ -13,7 +13,8 @@ export type NotifCategory =
   | "challenge_countdown"
   | "secure_reminder"
   | "streak_at_risk"
-  | "lapsed";
+  | "lapsed"
+  | "task_prep";
 
 export type NotifVars = {
   streak?: number;
@@ -82,7 +83,116 @@ const TEMPLATES: Record<NotifCategory, { title: string; body: string }[]> = {
     { title: "Still in this?", body: "You went quiet. Your challenge hasn't. Tap to get back." },
     { title: "Discipline is a choice", body: "Every day you don't show up makes it harder to come back. Start now." },
   ],
+  /** Unused by pickTemplate — prep copy uses TASK_PREP_COPY + pickTaskPrepTemplate. */
+  task_prep: [],
 };
+
+/**
+ * Task-specific prep notifications.
+ * Each task type has its own copy pool + lead time.
+ * Copy uses implementation intention framing (Gollwitzer, NYU, 1999):
+ * "When X happens, I will do Y" — telling users what to prepare
+ * increases follow-through by 2x vs generic reminders.
+ */
+export const TASK_PREP_LEAD_MINUTES: Record<string, number> = {
+  run: 30,
+  workout: 30,
+  timer: 15,
+  reading: 15,
+  journal: 10,
+  checkin: 10,
+  photo: 10,
+  water: 5,
+  counter: 10,
+  simple: 10,
+};
+
+export const TASK_PREP_COPY: Record<string, { title: string; body: string }[]> = {
+  run: [
+    { title: "Run in 30 min", body: "Lace up, hydrate, and get moving. Your {challenge} run starts soon." },
+    { title: "Time to gear up", body: "Your run window opens in 30 minutes. Lay out your kit and stretch." },
+    { title: "30 minutes to go", body: "Your morning run is approaching. Water, shoes, headphones — go." },
+    { title: "Your body is ready", body: "Run starts in 30 min. Dynamic stretch, lace up, and show up." },
+  ],
+  workout: [
+    { title: "Workout in 30 min", body: "Get your gear ready. Your {challenge} workout starts soon." },
+    { title: "Time to warm up", body: "30 minutes until your workout. Hydrate and start your warm-up." },
+    { title: "Gym time approaching", body: "Your workout window opens in 30 min. No excuses today." },
+    { title: "Iron is waiting", body: "30 min until your session. Pre-workout, playlist, let's go." },
+  ],
+  timer: [
+    { title: "Session in 15 min", body: "Your timed session starts soon. Find a focused space." },
+    { title: "15 min heads up", body: "Your {challenge} timer task is coming up. Remove distractions." },
+    { title: "Get in position", body: "Timed session in 15 minutes. Phone on silent, space cleared." },
+  ],
+  reading: [
+    { title: "Reading in 15 min", body: "Your reading session starts soon. Grab your book and find a quiet spot." },
+    { title: "15 minutes to read", body: "Your {challenge} reading window opens soon. Phone away, book out." },
+    { title: "Page time approaching", body: "Reading session in 15 min. Find your corner, settle in." },
+  ],
+  journal: [
+    { title: "Journal in 10 min", body: "Your reflection time is coming up. Find a quiet moment." },
+    { title: "Time to reflect", body: "Journal session in 10 minutes. Let your thoughts settle." },
+    { title: "Pen to paper soon", body: "Your {challenge} journal opens in 10 min. What's on your mind?" },
+  ],
+  checkin: [
+    { title: "Check-in in 10 min", body: "Your daily check-in is coming up. Tune into how you feel." },
+    { title: "Body check-in soon", body: "10 minutes until your {challenge} check-in. Notice your body." },
+    { title: "Mindful moment ahead", body: "Check-in window opens in 10 min. Pause. Breathe. Assess." },
+  ],
+  photo: [
+    { title: "Photo proof in 10 min", body: "Your photo task is coming up. Think about what to capture." },
+    { title: "Camera ready?", body: "Photo proof window opens in 10 minutes. Get your shot ready." },
+    { title: "Snap time soon", body: "Your {challenge} photo check is approaching. Make it count." },
+  ],
+  water: [
+    { title: "Hydration check", body: "Water task in 5 minutes. Fill up your bottle." },
+    { title: "Drink up soon", body: "Your hydration window opens in 5 min. Stay ahead of it." },
+  ],
+  counter: [
+    { title: "Task in 10 min", body: "Your counting task starts soon. Get ready to track." },
+    { title: "Almost time", body: "Your {challenge} task opens in 10 minutes." },
+  ],
+  simple: [
+    { title: "Task in 10 min", body: "Your daily task is coming up. Show up and check it off." },
+    { title: "Time to execute", body: "Your {challenge} task opens in 10 minutes. Simple. Do it." },
+  ],
+};
+
+export function pickTaskPrepTemplate(
+  taskType: string,
+  vars: NotifVars = {},
+  dateOverride?: string
+): { title: string; body: string } {
+  const pool = TASK_PREP_COPY[taskType] ?? TASK_PREP_COPY.simple ?? [];
+  if (pool.length === 0) return { title: "Task coming up", body: "Your next task starts soon." };
+
+  const dateKey = dateOverride ?? new Date().toISOString().slice(0, 10);
+  const seed = (dateKey + taskType + "prep").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const idx = seed % pool.length;
+  const template = pool[idx] ?? pool[0] ?? { title: "Task coming up", body: "Your next task starts soon." };
+
+  let title = template.title;
+  let body = template.body;
+
+  for (const [key, value] of Object.entries(vars)) {
+    const placeholder = `{${key}}`;
+    title = title.replaceAll(placeholder, String(value ?? ""));
+    body = body.replaceAll(placeholder, String(value ?? ""));
+  }
+
+  title = title.replace(/\{[a-zA-Z]+\}/g, "").trim();
+  body = body.replace(/\{[a-zA-Z]+\}/g, "").trim();
+
+  return { title, body };
+}
+
+/** Map API task_type (e.g. manual) to prep template keys. */
+export function normalizeTaskTypeForPrep(raw: string | undefined): string {
+  const t = (raw ?? "simple").toLowerCase();
+  if (t === "manual" || t === "checklist") return "simple";
+  return t;
+}
 
 /**
  * Pick a template for today. Uses date + category as seed for deterministic daily rotation.

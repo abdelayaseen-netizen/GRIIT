@@ -4,7 +4,13 @@
  */
 
 import * as Notifications from "expo-notifications";
-import { pickTemplate, type NotifVars } from "@/lib/notification-copy";
+import {
+  pickTemplate,
+  type NotifVars,
+  TASK_PREP_LEAD_MINUTES,
+  pickTaskPrepTemplate,
+  normalizeTaskTypeForPrep,
+} from "@/lib/notification-copy";
 
 const SECURE_REMINDER_ID = "secure-day-reminder";
 const TWO_HOURS_LEFT_ID = "secure-two-hours-left";
@@ -14,6 +20,7 @@ const MILESTONE_APPROACHING_ID = "milestone_approaching";
 
 const MORNING_MOTIVATION_ID = "morning-motivation";
 const TASK_WINDOW_PREFIX = "task-window-";
+const TASK_PREP_PREFIX = "task-prep-";
 const WEEKLY_SUMMARY_ID = "weekly-summary";
 const STREAK_CELEBRATION_ID = "streak-celebration";
 /** Reserved for friend-activity / server-triggered social pushes. */
@@ -330,12 +337,17 @@ export async function cancelMorningMotivation(): Promise<void> {
 }
 
 /**
- * Schedule notifications for tasks with time windows.
- * Fires at window start time.
+ * Schedule task-specific prep and window-open notifications.
+ *
+ * Prep fires at (window_start - lead_time) with task-type-specific copy.
+ * Lead times: run/workout 30min, timer/reading 15min, journal/checkin/photo 10min, water 5min.
+ *
+ * Window-open fires at window_start.
  */
 export async function scheduleTaskWindowAlerts(
   tasks: {
     id: string;
+    taskType?: string;
     anchorTimeLocal?: string | null;
     windowStartOffsetMin?: number | null;
     challengeName?: string;
@@ -344,33 +356,48 @@ export async function scheduleTaskWindowAlerts(
   try {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
     for (const n of scheduled) {
-      if (n.identifier.startsWith(TASK_WINDOW_PREFIX)) {
+      if (n.identifier.startsWith(TASK_WINDOW_PREFIX) || n.identifier.startsWith(TASK_PREP_PREFIX)) {
         await Notifications.cancelScheduledNotificationAsync(n.identifier);
       }
     }
 
     const now = new Date();
+
     for (const task of tasks) {
       if (!task.anchorTimeLocal) continue;
-      const parts = task.anchorTimeLocal.split(":");
-      const h = Number(parts[0]);
-      const m = Number(parts[1]);
+
+      const segments = task.anchorTimeLocal.split(":");
+      const h = Number(segments[0]);
+      const m = Number(segments[1]);
       if (!Number.isFinite(h) || !Number.isFinite(m)) continue;
 
       const startOffset = Number(task.windowStartOffsetMin ?? 0);
-      const alertTime = nextOccurrence(now, h, m);
-      alertTime.setMinutes(alertTime.getMinutes() + startOffset);
+      const windowOpenTime = nextOccurrence(now, h, m);
+      windowOpenTime.setMinutes(windowOpenTime.getMinutes() + startOffset);
 
-      if (alertTime.getTime() <= now.getTime()) continue;
+      if (windowOpenTime.getTime() <= now.getTime()) continue;
 
+      const taskType = normalizeTaskTypeForPrep(task.taskType);
+      const leadMinutes = TASK_PREP_LEAD_MINUTES[taskType] ?? 10;
       const vars: NotifVars = { challenge: task.challengeName ?? "Your challenge" };
-      const alertKey = alertTime.toISOString().slice(0, 10);
-      const { title, body } = pickTemplate("task_window", vars, alertKey);
 
+      const prepTime = new Date(windowOpenTime.getTime() - leadMinutes * 60 * 1000);
+      if (prepTime.getTime() > now.getTime()) {
+        const prepKey = prepTime.toISOString().slice(0, 10);
+        const { title, body } = pickTaskPrepTemplate(taskType, vars, prepKey);
+        await Notifications.scheduleNotificationAsync({
+          identifier: `${TASK_PREP_PREFIX}${task.id}`,
+          content: { title, body, sound: true },
+          trigger: { type: "date", date: prepTime } as Notifications.NotificationTriggerInput,
+        });
+      }
+
+      const openKey = windowOpenTime.toISOString().slice(0, 10);
+      const { title: openTitle, body: openBody } = pickTemplate("task_window", vars, openKey);
       await Notifications.scheduleNotificationAsync({
         identifier: `${TASK_WINDOW_PREFIX}${task.id}`,
-        content: { title, body, sound: true },
-        trigger: { type: "date", date: alertTime } as Notifications.NotificationTriggerInput,
+        content: { title: openTitle, body: openBody, sound: true },
+        trigger: { type: "date", date: windowOpenTime } as Notifications.NotificationTriggerInput,
       });
     }
   } catch {
