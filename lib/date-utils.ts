@@ -14,3 +14,16 @@ export function getYesterdayDateKey(): string {
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
 }
+
+/** Count how many of the last 7 local calendar days appear in `securedDateKeys` (YYYY-MM-DD). */
+export function countSecuredLast7Days(securedDateKeys: string[]): number {
+  const today = new Date();
+  let n = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const k = d.toISOString().slice(0, 10);
+    if (securedDateKeys.includes(k)) n += 1;
+  }
+  return n;
+}

@@ -29,7 +29,16 @@ import { PremiumBadge } from "@/components/PremiumBadge";
 import { restorePurchases } from "@/lib/subscription";
 import { useApp } from "@/contexts/AppContext";
 import { ROUTES } from "@/lib/routes";
-import { cancelLapsedUserReminders } from "@/lib/notifications";
+import {
+  cancelLapsedUserReminders,
+  cancelMorningMotivation,
+  scheduleMorningMotivation,
+  cancelWeeklySummary,
+  scheduleWeeklySummary,
+} from "@/lib/notifications";
+import { countSecuredLast7Days } from "@/lib/date-utils";
+import { deriveUserRank } from "@/lib/derive-user-rank";
+import type { StatsFromApi } from "@/types";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
@@ -125,6 +134,8 @@ export default function SettingsScreen() {
   const [reminderTime, setReminderTime] = useState("09:00");
   const [reminderLoading, setReminderLoading] = useState(true);
   const [lastCall, setLastCall] = useState(false);
+  const [morningKickoff, setMorningKickoff] = useState(true);
+  const [weeklySummary, setWeeklySummary] = useState(true);
   const [friendActivity, setFriendActivity] = useState(false);
   const [accountabilityCount, setAccountabilityCount] = useState(0);
   const [restoreLoading, setRestoreLoading] = useState(false);
@@ -136,7 +147,7 @@ export default function SettingsScreen() {
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
   const { error: deleteAccountError, showError: showDeleteAccountError, clearError: clearDeleteAccountError } =
     useInlineError();
-  const { refetchAll, isPremium, refreshPremiumStatus } = useApp();
+  const { refetchAll, isPremium, refreshPremiumStatus, stats, activeChallenge, currentChallenge } = useApp();
 
   const loadReminderSettings = useCallback(async () => {
     if (isGuest) {
@@ -149,10 +160,14 @@ export default function SettingsScreen() {
         enabled?: boolean;
         last_call_enabled?: boolean;
         friend_activity_enabled?: boolean;
+        morning_kickoff_enabled?: boolean;
+        weekly_summary_enabled?: boolean;
       };
       setReminderTime(data?.reminder_time ?? "09:00");
       setDailyReminder(data?.enabled !== false);
       setLastCall(data?.last_call_enabled !== false);
+      setMorningKickoff(data?.morning_kickoff_enabled !== false);
+      setWeeklySummary(data?.weekly_summary_enabled !== false);
       setFriendActivity(data?.friend_activity_enabled !== false);
     } catch {
       // ignore
@@ -405,6 +420,80 @@ export default function SettingsScreen() {
                 trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
                 thumbColor={lastCall ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
                 accessibilityLabel="Toggle last call reminder"
+                accessibilityRole="switch"
+              />
+            </View>
+            <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleTextWrap}>
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Morning Kickoff</Text>
+                <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>Motivational push each morning</Text>
+              </View>
+              <Switch
+                value={morningKickoff}
+                onValueChange={async (v) => {
+                  if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setMorningKickoff(v);
+                  if (!v) {
+                    await cancelMorningMotivation();
+                  } else if (Platform.OS !== "web") {
+                    const taskCount = currentChallenge?.tasks?.length ?? 0;
+                    const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
+                    const challengeTitle = (activeChallenge as { challenges?: { title?: string } } | null)?.challenges
+                      ?.title;
+                    await scheduleMorningMotivation({
+                      morningTime: "07:00",
+                      streakCount: (stats as StatsFromApi | null)?.activeStreak ?? 0,
+                      taskCount,
+                      currentDay,
+                      challengeName: challengeTitle,
+                    });
+                  }
+                  if (!isGuest) {
+                    await trpcMutate(TRPC.notifications.updateReminderSettings, { morning_kickoff_enabled: v }).catch(
+                      () => {}
+                    );
+                  }
+                }}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+                thumbColor={morningKickoff ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
+                accessibilityLabel="Toggle morning kickoff notification"
+                accessibilityRole="switch"
+              />
+            </View>
+            <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleTextWrap}>
+                <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Weekly Summary</Text>
+                <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>Sunday recap of your week</Text>
+              </View>
+              <Switch
+                value={weeklySummary}
+                onValueChange={async (v) => {
+                  if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setWeeklySummary(v);
+                  if (!v) {
+                    await cancelWeeklySummary();
+                  } else if (Platform.OS !== "web" && !isGuest) {
+                    const keys = (await trpcQuery(TRPC.profiles.getSecuredDateKeys).catch(() => [])) as string[];
+                    const s = stats as StatsFromApi | null;
+                    await scheduleWeeklySummary({
+                      daysSecuredThisWeek: countSecuredLast7Days(Array.isArray(keys) ? keys : []),
+                      totalDaysThisWeek: 7,
+                      points: (s?.totalDaysSecured ?? 0) * 5,
+                      rank: deriveUserRank(s),
+                      streakCount: s?.activeStreak ?? 0,
+                    });
+                  }
+                  if (!isGuest) {
+                    await trpcMutate(TRPC.notifications.updateReminderSettings, { weekly_summary_enabled: v }).catch(
+                      () => {}
+                    );
+                  }
+                }}
+                trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+                thumbColor={weeklySummary ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
+                accessibilityLabel="Toggle weekly summary notification"
                 accessibilityRole="switch"
               />
             </View>

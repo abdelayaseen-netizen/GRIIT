@@ -54,6 +54,8 @@ type TaskRowWithVerification = ChallengeTaskRowRaw & {
   location_longitude?: number | null;
   location_radius_meters?: number | null;
   min_duration_minutes?: number | null;
+  anchor_time_local?: string | null;
+  window_start_offset_min?: number | null;
 };
 
 /** API shape returned to frontend (flat fields) */
@@ -131,6 +133,10 @@ export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Ch
       (type === "run" && config.tracking_mode === "time" && typeof config.duration_minutes === "number"
         ? config.duration_minutes
         : null),
+    anchorTimeLocal: r.anchor_time_local ?? (typeof config.anchorTimeLocal === "string" ? config.anchorTimeLocal : null),
+    windowStartOffsetMin:
+      r.window_start_offset_min ??
+      (typeof config.windowStartOffsetMin === "number" ? config.windowStartOffsetMin : null),
   };
 }
 

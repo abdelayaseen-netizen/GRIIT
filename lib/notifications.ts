@@ -4,12 +4,21 @@
  */
 
 import * as Notifications from "expo-notifications";
+import { pickTemplate, type NotifVars } from "@/lib/notification-copy";
 
 const SECURE_REMINDER_ID = "secure-day-reminder";
 const TWO_HOURS_LEFT_ID = "secure-two-hours-left";
 const STREAK_AT_RISK_ID = "streak-at-risk-45min";
 const LAPSED_IDS = ["lapsed_day3", "lapsed_day7", "lapsed_day14"] as const;
 const MILESTONE_APPROACHING_ID = "milestone_approaching";
+
+const MORNING_MOTIVATION_ID = "morning-motivation";
+const TASK_WINDOW_PREFIX = "task-window-";
+const WEEKLY_SUMMARY_ID = "weekly-summary";
+const STREAK_CELEBRATION_ID = "streak-celebration";
+/** Reserved for friend-activity / server-triggered social pushes. */
+export const SOCIAL_TRIGGER_ID = "social-trigger";
+const CHALLENGE_COUNTDOWN_PREFIX = "challenge-countdown-";
 
 /** Default 8pm */
 const DEFAULT_PREFERRED_TIME = "20:00";
@@ -68,32 +77,33 @@ export async function scheduleNextSecureReminder(
     const from = afterDate ?? new Date();
     const triggerDate = nextOccurrence(from, hour, minute);
 
-    const timeStr = formatTimeForNotification(hour, minute);
-    const streakLine = streakCount != null && streakCount > 0
-      ? ` Your ${streakCount}-day streak is at risk! Complete your tasks to keep it alive.`
-      : " Complete your tasks to secure your day.";
+    const triggerDateKey = triggerDate.toISOString().slice(0, 10);
+    const vars: NotifVars = { streak: streakCount ?? 0, tasks: 0 };
+    const { title, body } = pickTemplate("secure_reminder", vars, triggerDateKey);
+
     await Notifications.cancelScheduledNotificationAsync(SECURE_REMINDER_ID);
     await Notifications.scheduleNotificationAsync({
       identifier: SECURE_REMINDER_ID,
       content: {
-        title: "Time to secure your day",
-        body: `It's ${timeStr} — time to secure your day.${streakLine}`,
+        title,
+        body,
         sound: true,
       },
       trigger: {
         type: "date",
         date: triggerDate,
-      } as import("expo-notifications").NotificationTriggerInput,
+      } as Notifications.NotificationTriggerInput,
     });
 
-      if (ENABLE_TWO_HOURS_LEFT) {
+    if (ENABLE_TWO_HOURS_LEFT) {
       const twoHoursLeft = new Date(triggerDate);
       twoHoursLeft.setHours(twoHoursLeft.getHours() + 2, 0, 0, 0);
       if (twoHoursLeft.getTime() > Date.now()) {
         await Notifications.cancelScheduledNotificationAsync(TWO_HOURS_LEFT_ID);
-        const twoHoursBody = streakCount != null && streakCount > 0
-          ? `Only 2 hours left to secure today. Don't break your ${streakCount}-day streak!`
-          : "Only 2 hours left to secure today. Don't break your streak!";
+        const twoHoursBody =
+          streakCount != null && streakCount > 0
+            ? `Only 2 hours left to secure today. Don't break your ${streakCount}-day streak!`
+            : "Only 2 hours left to secure today. Don't break your streak!";
         await Notifications.scheduleNotificationAsync({
           identifier: TWO_HOURS_LEFT_ID,
           content: {
@@ -104,7 +114,7 @@ export async function scheduleNextSecureReminder(
           trigger: {
             type: "date",
             date: twoHoursLeft,
-          } as import("expo-notifications").NotificationTriggerInput,
+          } as Notifications.NotificationTriggerInput,
         });
       }
     }
@@ -114,21 +124,25 @@ export async function scheduleNextSecureReminder(
       streakAtRisk.setHours(23, 15, 0, 0);
       if (streakAtRisk.getTime() > now.getTime()) {
         await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
+        const riskKey = streakAtRisk.toISOString().slice(0, 10);
+        const { title: riskTitle, body: riskBodyBase } = pickTemplate(
+          "streak_at_risk",
+          { streak: streakCount ?? 0 },
+          riskKey
+        );
         const lsText =
           lastStandsRemaining !== undefined && lastStandsRemaining >= 0
             ? ` You have ${lastStandsRemaining} Last Stand(s) remaining.`
             : "";
-        const riskBody = streakCount != null && streakCount > 0
-          ? `Only 45 minutes left to secure today. Don't break your ${streakCount}-day streak!${lsText}`
-          : `45 minutes left to protect your streak.${lsText}`;
+        const riskBody = `${riskBodyBase}${lsText}`;
         await Notifications.scheduleNotificationAsync({
           identifier: STREAK_AT_RISK_ID,
           content: {
-            title: "Streak at risk",
+            title: riskTitle,
             body: riskBody,
             sound: true,
           },
-          trigger: { type: "date", date: streakAtRisk } as import("expo-notifications").NotificationTriggerInput,
+          trigger: { type: "date", date: streakAtRisk } as Notifications.NotificationTriggerInput,
         });
       }
     }
@@ -184,13 +198,12 @@ export async function scheduleLapsedUserReminders(params: {
     const { track } = await import("@/lib/analytics");
 
     await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[0]);
+    const d3 = pickTemplate("lapsed", { challenge: challengeName ?? "" }, day3.toISOString().slice(0, 10));
     await Notifications.scheduleNotificationAsync({
       identifier: LAPSED_IDS[0],
       content: {
-        title: "Your streak misses you!",
-        body: challengeName
-          ? `Your ${challengeName} challenge is waiting. Tap to get back on track.`
-          : "Don't let your progress slip away. Tap to continue building discipline.",
+        title: d3.title,
+        body: d3.body,
         sound: true,
       },
       trigger: { type: "date", date: day3 } as Notifications.NotificationTriggerInput,
@@ -198,14 +211,16 @@ export async function scheduleLapsedUserReminders(params: {
     track({ name: "lapsed_notification_scheduled", day: 3 });
 
     await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[1]);
+    const d7 = pickTemplate(
+      "lapsed",
+      { challenge: challengeName ?? "", streak: streakCount },
+      day7.toISOString().slice(0, 10)
+    );
     await Notifications.scheduleNotificationAsync({
       identifier: LAPSED_IDS[1],
       content: {
-        title: "It's been a week...",
-        body:
-          streakCount > 0
-            ? `You had a ${streakCount}-day streak going. It's not too late to restart.`
-            : "Your challenges are still here. Come back and start fresh.",
+        title: d7.title,
+        body: d7.body,
         sound: true,
       },
       trigger: { type: "date", date: day7 } as Notifications.NotificationTriggerInput,
@@ -213,11 +228,12 @@ export async function scheduleLapsedUserReminders(params: {
     track({ name: "lapsed_notification_scheduled", day: 7 });
 
     await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[2]);
+    const d14 = pickTemplate("lapsed", { challenge: challengeName ?? "" }, day14.toISOString().slice(0, 10));
     await Notifications.scheduleNotificationAsync({
       identifier: LAPSED_IDS[2],
       content: {
-        title: "Ready for a fresh start?",
-        body: "It's never too late to build discipline. Tap to begin a new challenge.",
+        title: d14.title,
+        body: d14.body,
         sound: true,
       },
       trigger: { type: "date", date: day14 } as Notifications.NotificationTriggerInput,
@@ -265,6 +281,221 @@ export async function scheduleMilestoneApproachingIfNeeded(streakCount: number):
     });
     const { track } = await import("@/lib/analytics");
     track({ name: "milestone_approaching_notification_scheduled", milestone_day: nextDay });
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Schedule a morning motivation notification.
+ * Sent at user's preferred morning time (default 7 AM).
+ */
+export async function scheduleMorningMotivation(params: {
+  morningTime?: string;
+  streakCount: number;
+  taskCount: number;
+  currentDay?: number;
+  challengeName?: string;
+}): Promise<void> {
+  try {
+    const { hour, minute } = parsePreferredTime(params.morningTime ?? "07:00");
+    const tomorrow = nextOccurrence(new Date(), hour, minute);
+
+    const tomorrowDateKey = tomorrow.toISOString().slice(0, 10);
+    const vars: NotifVars = {
+      streak: params.streakCount,
+      tasks: params.taskCount,
+      day: params.currentDay,
+      challenge: params.challengeName,
+    };
+    const { title, body } = pickTemplate("morning_motivation", vars, tomorrowDateKey);
+
+    await Notifications.cancelScheduledNotificationAsync(MORNING_MOTIVATION_ID);
+    await Notifications.scheduleNotificationAsync({
+      identifier: MORNING_MOTIVATION_ID,
+      content: { title, body, sound: true },
+      trigger: { type: "date", date: tomorrow } as Notifications.NotificationTriggerInput,
+    });
+  } catch {
+    // Platform may not support
+  }
+}
+
+export async function cancelMorningMotivation(): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(MORNING_MOTIVATION_ID);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Schedule notifications for tasks with time windows.
+ * Fires at window start time.
+ */
+export async function scheduleTaskWindowAlerts(
+  tasks: {
+    id: string;
+    anchorTimeLocal?: string | null;
+    windowStartOffsetMin?: number | null;
+    challengeName?: string;
+  }[]
+): Promise<void> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    for (const n of scheduled) {
+      if (n.identifier.startsWith(TASK_WINDOW_PREFIX)) {
+        await Notifications.cancelScheduledNotificationAsync(n.identifier);
+      }
+    }
+
+    const now = new Date();
+    for (const task of tasks) {
+      if (!task.anchorTimeLocal) continue;
+      const parts = task.anchorTimeLocal.split(":");
+      const h = Number(parts[0]);
+      const m = Number(parts[1]);
+      if (!Number.isFinite(h) || !Number.isFinite(m)) continue;
+
+      const startOffset = task.windowStartOffsetMin ?? 0;
+      const alertTime = nextOccurrence(now, h, m);
+      alertTime.setMinutes(alertTime.getMinutes() + (typeof startOffset === "number" ? startOffset : 0));
+
+      if (alertTime.getTime() <= now.getTime()) continue;
+
+      const vars: NotifVars = { challenge: task.challengeName ?? "Your challenge" };
+      const alertKey = alertTime.toISOString().slice(0, 10);
+      const { title, body } = pickTemplate("task_window", vars, alertKey);
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${TASK_WINDOW_PREFIX}${task.id}`,
+        content: { title, body, sound: true },
+        trigger: { type: "date", date: alertTime } as Notifications.NotificationTriggerInput,
+      });
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Schedule weekly summary for next Sunday at 7 PM.
+ */
+export async function scheduleWeeklySummary(params: {
+  daysSecuredThisWeek: number;
+  totalDaysThisWeek: number;
+  points: number;
+  rank: string;
+  streakCount: number;
+}): Promise<void> {
+  try {
+    const now = new Date();
+    const daysUntilSunday = (7 - now.getDay()) % 7 || 7;
+    const nextSunday = new Date(now);
+    nextSunday.setDate(now.getDate() + daysUntilSunday);
+    nextSunday.setHours(19, 0, 0, 0);
+
+    if (nextSunday.getTime() <= now.getTime()) {
+      nextSunday.setDate(nextSunday.getDate() + 7);
+    }
+
+    const vars: NotifVars = {
+      secured: params.daysSecuredThisWeek,
+      totalDays: params.totalDaysThisWeek,
+      points: params.points,
+      rank: params.rank,
+      streak: params.streakCount,
+    };
+    const sundayDateKey = nextSunday.toISOString().slice(0, 10);
+    const { title, body } = pickTemplate("weekly_summary", vars, sundayDateKey);
+
+    await Notifications.cancelScheduledNotificationAsync(WEEKLY_SUMMARY_ID);
+    await Notifications.scheduleNotificationAsync({
+      identifier: WEEKLY_SUMMARY_ID,
+      content: { title, body, sound: true },
+      trigger: { type: "date", date: nextSunday } as Notifications.NotificationTriggerInput,
+    });
+  } catch {
+    // ignore
+  }
+}
+
+export async function cancelWeeklySummary(): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(WEEKLY_SUMMARY_ID);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Fire an immediate celebration notification when a streak milestone is reached.
+ */
+export async function fireStreakCelebration(streakCount: number): Promise<void> {
+  try {
+    const vars: NotifVars = { streak: streakCount };
+    const { title, body } = pickTemplate("streak_celebration", vars);
+
+    await Notifications.cancelScheduledNotificationAsync(STREAK_CELEBRATION_ID);
+    const inFiveSeconds = new Date(Date.now() + 5000);
+    await Notifications.scheduleNotificationAsync({
+      identifier: STREAK_CELEBRATION_ID,
+      content: { title, body, sound: true },
+      trigger: { type: "date", date: inFiveSeconds } as Notifications.NotificationTriggerInput,
+    });
+  } catch {
+    // ignore
+  }
+}
+
+const CELEBRATION_MILESTONES = [3, 7, 14, 21, 30, 45, 60, 75, 100, 150, 200, 365];
+
+export function isStreakCelebrationMilestone(streak: number): boolean {
+  return CELEBRATION_MILESTONES.includes(streak);
+}
+
+/**
+ * Schedule countdown notifications as a challenge nears completion.
+ */
+export async function scheduleChallengeCountdowns(
+  challenges: {
+    id: string;
+    name: string;
+    currentDay: number;
+    totalDays: number;
+  }[]
+): Promise<void> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    for (const n of scheduled) {
+      if (n.identifier.startsWith(CHALLENGE_COUNTDOWN_PREFIX)) {
+        await Notifications.cancelScheduledNotificationAsync(n.identifier);
+      }
+    }
+
+    const now = new Date();
+    for (const ch of challenges) {
+      const daysLeft = ch.totalDays - ch.currentDay;
+      if (daysLeft <= 0 || daysLeft > 5) continue;
+
+      const vars: NotifVars = {
+        daysLeft,
+        day: ch.currentDay,
+        total: ch.totalDays,
+        challenge: ch.name,
+      };
+      const tomorrow10am = new Date(now);
+      tomorrow10am.setDate(tomorrow10am.getDate() + 1);
+      tomorrow10am.setHours(10, 0, 0, 0);
+      const cdKey = tomorrow10am.toISOString().slice(0, 10);
+      const { title, body } = pickTemplate("challenge_countdown", vars, cdKey);
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${CHALLENGE_COUNTDOWN_PREFIX}${ch.id}`,
+        content: { title, body, sound: true },
+        trigger: { type: "date", date: tomorrow10am } as Notifications.NotificationTriggerInput,
+      });
+    }
   } catch {
     // ignore
   }

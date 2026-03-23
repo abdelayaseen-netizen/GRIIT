@@ -49,6 +49,8 @@ export const notificationsRouter = createTRPCRouter({
         enabled: z.boolean().optional(),
         last_call_enabled: z.boolean().optional(),
         friend_activity_enabled: z.boolean().optional(),
+        morning_kickoff_enabled: z.boolean().optional(),
+        weekly_summary_enabled: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -58,6 +60,8 @@ export const notificationsRouter = createTRPCRouter({
       if (input.enabled !== undefined) update.reminder_enabled = input.enabled;
       if (input.last_call_enabled !== undefined) update.last_call_enabled = input.last_call_enabled;
       if (input.friend_activity_enabled !== undefined) update.friend_activity_enabled = input.friend_activity_enabled;
+      if (input.morning_kickoff_enabled !== undefined) update.morning_kickoff_enabled = input.morning_kickoff_enabled;
+      if (input.weekly_summary_enabled !== undefined) update.weekly_summary_enabled = input.weekly_summary_enabled;
       if (Object.keys(update).length === 0) return { success: true };
 
       const { error } = await ctx.supabase
@@ -72,7 +76,9 @@ export const notificationsRouter = createTRPCRouter({
   getReminderSettings: protectedProcedure.query(async ({ ctx }) => {
     const { data, error } = await ctx.supabase
       .from("profiles")
-      .select("reminder_time, preferred_secure_time, reminder_enabled, reminder_timezone, last_call_enabled, friend_activity_enabled")
+      .select(
+        "reminder_time, preferred_secure_time, reminder_enabled, reminder_timezone, last_call_enabled, friend_activity_enabled, morning_kickoff_enabled, weekly_summary_enabled"
+      )
       .eq("user_id", ctx.userId)
       .single();
 
@@ -86,6 +92,8 @@ export const notificationsRouter = createTRPCRouter({
       reminder_timezone?: string | null;
       last_call_enabled?: boolean | null;
       friend_activity_enabled?: boolean | null;
+      morning_kickoff_enabled?: boolean | null;
+      weekly_summary_enabled?: boolean | null;
     } | null;
     return {
       reminder_time: row?.reminder_time ?? row?.preferred_secure_time ?? "09:00",
@@ -93,6 +101,8 @@ export const notificationsRouter = createTRPCRouter({
       timezone: row?.reminder_timezone ?? "UTC",
       last_call_enabled: row?.last_call_enabled !== false,
       friend_activity_enabled: row?.friend_activity_enabled !== false,
+      morning_kickoff_enabled: row?.morning_kickoff_enabled !== false,
+      weekly_summary_enabled: row?.weekly_summary_enabled !== false,
     };
   }),
 });
