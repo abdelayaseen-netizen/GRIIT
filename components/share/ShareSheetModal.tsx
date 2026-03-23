@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,48 +7,51 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Platform,
+  Alert,
 } from "react-native";
-import type { RefObject } from "react";
-import type ViewShot from "react-native-view-shot";
-import * as FileSystem from "expo-file-system/legacy";
+import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import * as MediaLibrary from "expo-media-library";
-import * as Haptics from "expo-haptics";
 import { X } from "lucide-react-native";
-import { GRIIT_COLORS } from "@/lib/design-system";
+import { GRIIT_COLORS, DS_COLORS } from "@/lib/design-system";
 import { shareToInstagramStory } from "@/lib/share";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import {
+  StatementCard,
+  TransparentCard,
+  ProofReceiptCard,
+  BreakdownCard,
+  CalloutCard,
+  CARD_WIDTH,
+  CARD_HEIGHT,
+  PREVIEW_SCALE,
+  SELECTED_PREVIEW_SCALE,
+} from "@/components/share/ShareCards";
 
-type CardOption = {
-  label: string;
-  ref: RefObject<ViewShot | null>;
-  available: boolean;
-};
+type ShareCardId = "statement" | "transparent" | "proof" | "breakdown" | "callout";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  shareRef: RefObject<ViewShot | null>;
-  proofCardRef: RefObject<ViewShot | null>;
-  transparentCardRef: RefObject<ViewShot | null>;
-  grindCardRef: RefObject<ViewShot | null>;
+  dayNumber: number;
+  totalDays: number;
+  challengeName: string;
+  taskName: string;
+  proofPhotoUri?: string | null;
+  rank: string;
+  tasksToday: Array<{ name: string; details: string; timestamp: string; verified?: boolean }>;
+  isAllDayComplete: boolean;
+  isChallengeComplete: boolean;
   hasPhoto: boolean;
   completionId?: string | null;
 };
 
-async function captureCard(ref: RefObject<ViewShot | null>): Promise<string | null> {
+async function captureCard(ref: React.RefObject<ViewShot | null>): Promise<string | null> {
   try {
     const current = ref.current as { capture?: () => Promise<string> } | null;
     if (!current?.capture) return null;
-    const uri = await current.capture();
-    if (!uri) return null;
-    const base = FileSystem.cacheDirectory;
-    if (!base) return null;
-    const filename = `${base}griit-share-${Date.now()}.png`;
-    await FileSystem.copyAsync({ from: uri, to: filename });
-    return filename;
+    return await current.capture();
   } catch {
     return null;
   }
@@ -57,39 +60,84 @@ async function captureCard(ref: RefObject<ViewShot | null>): Promise<string | nu
 export default function ShareSheetModal({
   visible,
   onClose,
-  shareRef,
-  proofCardRef,
-  transparentCardRef,
-  grindCardRef,
+  dayNumber,
+  totalDays,
+  challengeName,
+  taskName,
+  proofPhotoUri,
+  rank,
+  tasksToday,
+  isAllDayComplete,
+  isChallengeComplete,
   hasPhoto,
   completionId,
 }: Props) {
-  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [selectedCard, setSelectedCard] = useState<ShareCardId>("statement");
   const [sharing, setSharing] = useState(false);
-
-  const cards: CardOption[] = [
-    { label: "Statement", ref: shareRef, available: true },
-    { label: "Transparent", ref: transparentCardRef, available: true },
-    { label: "Proof", ref: proofCardRef, available: hasPhoto },
-    { label: "Breakdown", ref: grindCardRef, available: true },
-  ].filter((c) => c.available);
-
-  const selectedCard = cards[selectedIdx] ?? cards[0];
+  const viewShotRef = useRef<ViewShot | null>(null);
+  const availableCards = useMemo(() => {
+    const cards: { id: ShareCardId; label: string }[] = [
+      { id: "statement", label: "Statement" },
+      { id: "transparent", label: "Transparent" },
+    ];
+    if (hasPhoto) cards.push({ id: "proof", label: "Proof" });
+    if (isAllDayComplete) cards.push({ id: "breakdown", label: "Breakdown" });
+    if (isChallengeComplete) cards.push({ id: "callout", label: "Callout" });
+    return cards;
+  }, [hasPhoto, isAllDayComplete, isChallengeComplete]);
+  const selectedExists = availableCards.some((c) => c.id === selectedCard);
 
   useEffect(() => {
-    if (visible) setSelectedIdx(0);
+    if (visible) setSelectedCard("statement");
   }, [visible]);
 
   useEffect(() => {
-    if (selectedIdx >= cards.length) setSelectedIdx(0);
-  }, [cards.length, selectedIdx]);
+    const firstCard = availableCards[0];
+    if (!selectedExists && firstCard) setSelectedCard(firstCard.id);
+  }, [selectedExists, availableCards]);
+
+  const renderCard = useCallback(
+    (id: ShareCardId) => {
+      if (id === "statement") {
+        return <StatementCard dayNumber={dayNumber} challengeName={challengeName} calloutText="Most split by Day 3." />;
+      }
+      if (id === "transparent") {
+        return (
+          <TransparentCard
+            dayNumber={dayNumber}
+            challengeName={challengeName}
+            taskName={taskName}
+            proofPhotoUri={proofPhotoUri}
+            tasksCompleted={tasksToday.length}
+            totalTasks={Math.max(1, tasksToday.length)}
+            rank={rank}
+          />
+        );
+      }
+      if (id === "proof") {
+        return (
+          <ProofReceiptCard
+            dayNumber={dayNumber}
+            totalDays={Math.max(totalDays, dayNumber)}
+            challengeName={challengeName}
+            tasks={tasksToday}
+            rank={rank}
+          />
+        );
+      }
+      if (id === "breakdown") {
+        return <BreakdownCard dayNumber={dayNumber} challengeName={challengeName} tasks={tasksToday} rank={rank} />;
+      }
+      return <CalloutCard challengeName={challengeName} totalDays={Math.max(totalDays, dayNumber)} totalTasks={Math.max(tasksToday.length, 1) * Math.max(totalDays, dayNumber)} />;
+    },
+    [dayNumber, challengeName, taskName, proofPhotoUri, tasksToday, rank, totalDays]
+  );
 
   const handleShare = useCallback(
     async (mode: "system" | "instagram" | "save") => {
-      if (!selectedCard) return;
       setSharing(true);
       try {
-        const uri = await captureCard(selectedCard.ref);
+        const uri = await captureCard(viewShotRef);
         if (!uri) return;
 
         if (mode === "instagram") {
@@ -98,7 +146,7 @@ export default function ShareSheetModal({
           const { status } = await MediaLibrary.requestPermissionsAsync();
           if (status === "granted") {
             await MediaLibrary.saveToLibraryAsync(uri);
-            if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert("Saved", "Image saved to your camera roll.");
           }
         } else {
           const available = await Sharing.isAvailableAsync();
@@ -113,7 +161,7 @@ export default function ShareSheetModal({
         setSharing(false);
       }
     },
-    [selectedCard, completionId]
+    [completionId]
   );
 
   return (
@@ -127,31 +175,30 @@ export default function ShareSheetModal({
           <View style={{ width: 22 }} />
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ms.cardScroll}>
-          {cards.map((card, idx) => (
-            <TouchableOpacity
-              key={card.label}
-              style={[ms.cardChip, selectedIdx === idx && ms.cardChipActive]}
-              onPress={() => setSelectedIdx(idx)}
-              accessibilityLabel={`Select ${card.label} card`}
-            >
-              <Text style={[ms.cardChipText, selectedIdx === idx && ms.cardChipTextActive]}>{card.label}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ms.thumbScroll}>
+          {availableCards.map((card) => (
+            <TouchableOpacity key={card.id} style={ms.thumbWrap} onPress={() => setSelectedCard(card.id)} accessibilityLabel={`Select ${card.label} card`}>
+              <View style={[ms.thumbCard, selectedCard === card.id && ms.thumbCardActive]}>
+                <View style={{ transform: [{ scale: PREVIEW_SCALE }] }}>{renderCard(card.id)}</View>
+              </View>
+              <Text style={ms.thumbLabel}>{card.label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
         <View style={ms.preview}>
-          <Text style={ms.previewHint}>
-            {selectedCard?.label === "Transparent"
-              ? "Saves as transparent PNG — overlay on your own photo in IG Stories"
-              : `${selectedCard?.label} card — ready to share`}
-          </Text>
+          <View style={{ transform: [{ scale: SELECTED_PREVIEW_SCALE }] }}>{renderCard(selectedCard)}</View>
+        </View>
+        <View style={{ position: "absolute", left: -9999, opacity: 0 }}>
+          <ViewShot ref={viewShotRef} options={{ format: "png", width: CARD_WIDTH, height: CARD_HEIGHT }}>
+            {renderCard(selectedCard)}
+          </ViewShot>
         </View>
 
         <Text style={ms.shareToLabel}>Share to</Text>
         <View style={ms.destRow}>
           <TouchableOpacity style={ms.destBtn} onPress={() => void handleShare("instagram")} disabled={sharing}>
-            <View style={[ms.destIcon, { backgroundColor: "#E4405F" }]}>
+            <View style={[ms.destIcon, { backgroundColor: DS_COLORS.DISCOVER_CORAL }]}>
               <Text style={ms.destEmoji}>📷</Text>
             </View>
             <Text style={ms.destLabel}>IG Story</Text>
@@ -177,7 +224,7 @@ export default function ShareSheetModal({
 }
 
 const ms = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a0a0a", paddingTop: 16 },
+  container: { flex: 1, backgroundColor: DS_COLORS.SHARE_CARD_BG, paddingTop: 16 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -186,26 +233,30 @@ const ms = StyleSheet.create({
     paddingBottom: 16,
   },
   headerTitle: { fontSize: 16, fontWeight: "600", color: "rgba(255,255,255,0.9)" },
-  cardScroll: { paddingHorizontal: 20, gap: 8, paddingBottom: 16 },
-  cardChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    marginRight: 8,
+  thumbScroll: { paddingHorizontal: 20, gap: 10, paddingBottom: 12 },
+  thumbWrap: { alignItems: "center", marginRight: 10 },
+  thumbCard: {
+    width: CARD_WIDTH * PREVIEW_SCALE + 10,
+    height: CARD_HEIGHT * PREVIEW_SCALE + 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    backgroundColor: "#000",
+    opacity: 0.6,
   },
-  cardChipActive: { backgroundColor: GRIIT_COLORS.primary },
-  cardChipText: { fontSize: 13, fontWeight: "500", color: "rgba(255,255,255,0.4)" },
-  cardChipTextActive: { color: "#fff" },
+  thumbCardActive: { borderColor: GRIIT_COLORS.primary, borderWidth: 2, opacity: 1 },
+  thumbLabel: { marginTop: 6, color: DS_COLORS.WHITE, fontSize: 11 },
   preview: {
     flex: 1,
     marginHorizontal: 20,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.03)",
+    backgroundColor: "rgba(255,255,255,0.04)",
     justifyContent: "center",
     alignItems: "center",
   },
-  previewHint: { fontSize: 13, color: "rgba(255,255,255,0.3)", textAlign: "center", paddingHorizontal: 32 },
   shareToLabel: {
     fontSize: 14,
     fontWeight: "500",

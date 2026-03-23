@@ -19,8 +19,6 @@ import {
   Animated,
   Pressable,
 } from "react-native";
-import ViewShot from "react-native-view-shot";
-import { StatementCard, TransparentCard, ProofReceiptCard, GrindCard } from "@/components/share/ShareCards";
 import ShareSheetModal from "@/components/share/ShareSheetModal";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -125,12 +123,8 @@ function TaskCompleteScreenInner() {
     currentDay?: string;
     durationDays?: string;
   }>();
-  const { activeChallenge, completeTask, challenge, stats } = useApp();
+  const { activeChallenge, completeTask, challenge, stats, todayCheckins } = useApp();
   const showCelebration = useCelebrationStore((s) => s.show);
-  const shareRef = useRef<ViewShot | null>(null);
-  const proofCardRef = useRef<ViewShot | null>(null);
-  const transparentCardRef = useRef<ViewShot | null>(null);
-  const grindCardRef = useRef<ViewShot | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [completionId, setCompletionId] = useState<string | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
@@ -519,9 +513,24 @@ function TaskCompleteScreenInner() {
       (activeChallenge as { current_day_index?: number; current_day?: number })?.current_day_index ??
       (activeChallenge as { current_day?: number })?.current_day ??
       headerCurrentDay;
-    const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
     const completionTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     const celebPoints = isHardMode ? 8 : 5;
+    const challengeTasks = ((challenge as { challenge_tasks?: { id: string; title?: string }[] } | null)?.challenge_tasks ?? []);
+    const completedTaskSet = new Set(
+      (todayCheckins ?? [])
+        .filter((c) => c.status === "completed")
+        .map((c) => c.task_id)
+    );
+    const tasksToday = challengeTasks
+      .filter((t) => completedTaskSet.has(t.id) || t.id === taskId)
+      .map((t) => ({
+        name: t.title ?? "Task",
+        details: "Verified completion",
+        timestamp: completionTime,
+      }));
+    const isAllDayComplete = challengeTasks.length > 0 && challengeTasks.every((t) => completedTaskSet.has(t.id) || t.id === taskId);
+    const isChallengeComplete = headerCurrentDay >= headerDurationDays && isAllDayComplete;
+    const rank = (stats as { tier?: string } | null)?.tier ?? "Elite";
 
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.CELEB_BG }]} edges={["bottom"]}>
@@ -533,49 +542,6 @@ function TaskCompleteScreenInner() {
             headerTintColor: DS_COLORS.WHITE,
           }}
         />
-
-        <View style={{ position: "absolute", left: -9999, opacity: 0, pointerEvents: "none" }}>
-          <ViewShot ref={shareRef} options={{ format: "png", width: 1080, height: 1920 }} style={{ width: 1080, height: 1920 }}>
-            <StatementCard dayNumber={dayNumber} challengeName={challengeName} />
-          </ViewShot>
-          <ViewShot ref={proofCardRef} options={{ format: "png", width: 1080, height: 1920 }} style={{ width: 1080, height: 1920 }}>
-            <ProofReceiptCard
-              taskName={taskName}
-              dayNumber={dayNumber}
-              challengeName={challengeName}
-              streakCount={streakCount}
-              completionTime={completionTime}
-              proofPhotoUri={photoUri ?? photoUrl ?? null}
-              isHardMode={isHardMode}
-              hasHeartRate={!!heartRateData}
-            />
-          </ViewShot>
-          <ViewShot
-            ref={transparentCardRef}
-            options={{ format: "png", width: 1080, height: 1920 }}
-            style={{ width: 1080, height: 1920, backgroundColor: "transparent" }}
-          >
-            <TransparentCard
-              dayNumber={dayNumber}
-              challengeName={challengeName}
-              streakCount={streakCount}
-              completionTime={completionTime}
-              isHardMode={isHardMode}
-            />
-          </ViewShot>
-          <ViewShot ref={grindCardRef} options={{ format: "png", width: 1080, height: 1920 }} style={{ width: 1080, height: 1920 }}>
-            <GrindCard
-              taskName={taskName}
-              dayNumber={dayNumber}
-              challengeName={challengeName}
-              streakCount={streakCount}
-              completionTime={completionTime}
-              isHardMode={isHardMode}
-              hasHeartRate={!!heartRateData}
-              hasPhoto={!!(photoUri ?? photoUrl)}
-            />
-          </ViewShot>
-        </View>
 
         <View style={celebStyles.wrap}>
           <Text style={celebStyles.fireEmoji}>🔥</Text>
@@ -622,10 +588,15 @@ function TaskCompleteScreenInner() {
         <ShareSheetModal
           visible={showShareSheet}
           onClose={() => setShowShareSheet(false)}
-          shareRef={shareRef}
-          proofCardRef={proofCardRef}
-          transparentCardRef={transparentCardRef}
-          grindCardRef={grindCardRef}
+          dayNumber={dayNumber}
+          totalDays={headerDurationDays}
+          challengeName={challengeName}
+          taskName={taskName}
+          proofPhotoUri={photoUri ?? photoUrl ?? null}
+          rank={rank}
+          tasksToday={tasksToday}
+          isAllDayComplete={isAllDayComplete}
+          isChallengeComplete={isChallengeComplete}
           hasPhoto={!!(photoUri ?? photoUrl)}
           completionId={completionId}
         />

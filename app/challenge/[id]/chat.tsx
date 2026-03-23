@@ -26,7 +26,7 @@ import { ROUTES } from "@/lib/routes";
 import { DS_COLORS } from "@/lib/design-system";
 import { ChatMessage } from "@/types";
 
-const REACTION_EMOJIS = ["🔥", "💪", "🙌", "💯", "❤️"];
+const REACTION_EMOJIS = ["🔥", "⚡", "🙌", "💯", "❤️"];
 
 export default function ChallengeChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

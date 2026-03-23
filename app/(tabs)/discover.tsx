@@ -8,6 +8,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
+import { useApp } from "@/contexts/AppContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { DS_COLORS } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
@@ -97,6 +98,7 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isPremium } = useApp();
   const isGuest = useIsGuest();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -141,6 +143,10 @@ export default function DiscoverScreen() {
     if (!Array.isArray(rows)) return new Set<string>();
     return new Set(rows.map((r) => r.challengeId).filter((cid): cid is string => typeof cid === "string" && cid.length > 0));
   }, [myCompletedForDiscover.data]);
+  const activeCount = useMemo(
+    () => (Array.isArray(myActiveForDiscover.data) ? myActiveForDiscover.data.length : 0),
+    [myActiveForDiscover.data]
+  );
 
   const all = useMemo(() => (featuredQuery.data?.pages.flatMap((p) => p.items) ?? []).filter((c) => (c.visibility ?? "public").toLowerCase() === "public"), [featuredQuery.data?.pages]);
   const filtered = useMemo(() => all.filter((c) => categoryMatch(c, activeCategory)).filter((c) => searchMatch(c, debouncedQuery)), [all, activeCategory, debouncedQuery]);
@@ -190,6 +196,16 @@ export default function DiscoverScreen() {
               </TouchableOpacity>
             </View>
             <Text style={styles.v3Subtitle}>What are you willing to commit to?</Text>
+            {!isPremium ? (
+              <Text
+                style={[
+                  styles.v3Subtitle,
+                  { marginTop: 4, color: activeCount >= 3 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED },
+                ]}
+              >
+                {activeCount}/3 challenges active
+              </Text>
+            ) : null}
           </View>
 
           {searchOpen ? (

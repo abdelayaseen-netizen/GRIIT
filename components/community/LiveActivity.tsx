@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
 import { Image } from "expo-image";
 import { Flame } from "lucide-react-native";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 
@@ -26,9 +26,9 @@ export interface LiveActivityItem {
     task_name?: string | null;
     task_type?: string | null;
   };
+  reactionCount?: number;
+  reactedByMe?: boolean;
 }
-
-type FeedReactionKey = "fire" | "respect" | "discipline";
 
 const AVATAR_COLORS = [
   DS_COLORS.DISCOVER_CORAL,
@@ -89,46 +89,25 @@ const badgeStyles = StyleSheet.create({
   pillText: { fontSize: 9, fontWeight: "700" },
 });
 
-const REACTION_OPTIONS = [
-  { key: "fire" as const, emoji: "🔥", label: "Let's go" },
-  { key: "respect" as const, emoji: "💪", label: "Respect" },
-  { key: "discipline" as const, emoji: "🫡", label: "Discipline" },
-];
-
 export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem[]; currentUserId?: string | null }) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [selectedReactions, setSelectedReactions] = useState<Record<string, FeedReactionKey>>({});
-  const [commentingId, setCommentingId] = useState<string | null>(null);
-  const [commentText, setCommentText] = useState("");
+  const [selectedReactions, setSelectedReactions] = useState<Record<string, boolean>>({});
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
 
-  const handleReact = useCallback(async (eventId: string, reaction: FeedReactionKey) => {
-    setSelectedReactions((prev) => ({ ...prev, [eventId]: reaction }));
-    setExpandedId(null);
+  const handleReact = useCallback(async (eventId: string, currentlyReacted: boolean, currentCount: number) => {
+    const optimisticReacted = !currentlyReacted;
+    const optimisticCount = Math.max(0, currentCount + (optimisticReacted ? 1 : -1));
+    setSelectedReactions((prev) => ({ ...prev, [eventId]: optimisticReacted }));
+    setReactionCounts((prev) => ({ ...prev, [eventId]: optimisticCount }));
     try {
-      await trpcMutate(TRPC.feed.react, { eventId, reaction });
+      const result = await trpcMutate(TRPC.feed.react, { eventId }) as { reacted?: boolean; reactionCount?: number };
+      setSelectedReactions((prev) => ({ ...prev, [eventId]: !!result.reacted }));
+      setReactionCounts((prev) => ({ ...prev, [eventId]: Math.max(0, result.reactionCount ?? optimisticCount) }));
     } catch (err) {
       console.error("[LiveActivity] react failed:", err);
-      setSelectedReactions((prev) => {
-        const next = { ...prev };
-        delete next[eventId];
-        return next;
-      });
+      setSelectedReactions((prev) => ({ ...prev, [eventId]: currentlyReacted }));
+      setReactionCounts((prev) => ({ ...prev, [eventId]: currentCount }));
     }
   }, []);
-
-  const handleComment = useCallback(
-    async (eventId: string) => {
-      if (!commentText.trim()) return;
-      try {
-        await trpcMutate(TRPC.feed.comment, { eventId, text: commentText.trim() });
-        setCommentText("");
-        setCommentingId(null);
-      } catch (err) {
-        console.error("[LiveActivity] comment failed:", err);
-      }
-    },
-    [commentText]
-  );
 
   const prepared = useMemo(() => items.slice(0, 15), [items]);
   const onlySelf =
@@ -162,11 +141,11 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
             renderItem={({ item, index }) => {
               const seed = item.displayName || item.username || item.userId || "?";
               const isLast = index === prepared.length - 1;
-              const isCommenting = commentingId === item.id;
-              const picked = selectedReactions[item.id];
+              const reacted = selectedReactions[item.id] ?? !!item.reactedByMe;
+              const count = reactionCounts[item.id] ?? Math.max(0, item.reactionCount ?? 0);
               return (
                 <View>
-                  <View style={[styles.row, !isLast && !isCommenting && styles.rowDivider]}>
+                  <View style={[styles.row, !isLast && styles.rowDivider]}>
                     <View style={[styles.avatar, { backgroundColor: avatarColorByIndex(index) }]}>
                       <Text style={styles.avatarInitial}>{seed.charAt(0).toUpperCase()}</Text>
                     </View>
@@ -185,67 +164,18 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
                     </View>
 
                     <View style={styles.reactionArea}>
-                      {expandedId === item.id ? (
-                        <View style={styles.reactionPicker}>
-                          {REACTION_OPTIONS.map((r) => (
-                            <TouchableOpacity
-                              key={r.key}
-                              style={[styles.reactionChip, picked === r.key && styles.reactionChipActive]}
-                              onPress={() => void handleReact(item.id, r.key)}
-                              accessibilityLabel={r.label}
-                            >
-                              <Text style={styles.reactionEmoji}>{r.emoji}</Text>
-                            </TouchableOpacity>
-                          ))}
-                          <TouchableOpacity
-                            style={styles.commentChip}
-                            onPress={() => {
-                              setCommentingId(item.id);
-                              setExpandedId(null);
-                            }}
-                            accessibilityLabel="Write a comment"
-                          >
-                            <Text style={styles.commentChipText}>...</Text>
-                          </TouchableOpacity>
-                        </View>
-                      ) : (
-                        <TouchableOpacity
-                          style={[styles.kudosBtn, !!picked && styles.kudosBtnLiked]}
-                          onPress={() => setExpandedId(item.id)}
-                          activeOpacity={0.8}
-                          accessibilityRole="button"
-                          accessibilityLabel={`React to ${seed}'s activity`}
-                        >
-                          {picked ? (
-                            <Text style={{ fontSize: 12 }}>
-                              {picked === "fire" ? "🔥" : picked === "respect" ? "💪" : "🫡"}
-                            </Text>
-                          ) : (
-                            <Flame size={12} color={DS_COLORS.BORDER} />
-                          )}
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </View>
-
-                  {isCommenting ? (
-                    <View style={[styles.commentRow, !isLast && styles.rowDivider]}>
-                      <TextInput
-                        style={styles.commentInput}
-                        placeholder="Nice work..."
-                        placeholderTextColor={DS_COLORS.TEXT_MUTED}
-                        value={commentText}
-                        onChangeText={setCommentText}
-                        maxLength={200}
-                        autoFocus
-                        onSubmitEditing={() => void handleComment(item.id)}
-                        returnKeyType="send"
-                      />
-                      <TouchableOpacity style={styles.sendBtn} onPress={() => void handleComment(item.id)}>
-                        <Text style={styles.sendBtnText}>Send</Text>
+                      <TouchableOpacity
+                        style={[styles.fireBtn, reacted && styles.fireBtnActive]}
+                        onPress={() => void handleReact(item.id, reacted, count)}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Toggle fire reaction for ${seed}'s activity`}
+                      >
+                        <Flame size={12} color={reacted ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED} />
+                        <Text style={[styles.fireCount, reacted && styles.fireCountActive]}>{count}</Text>
                       </TouchableOpacity>
                     </View>
-                  ) : null}
+                  </View>
                 </View>
               );
             }}
@@ -336,70 +266,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
     backgroundColor: DS_COLORS.chipFill,
   },
-  reactionArea: { alignItems: "flex-end", minWidth: 36 },
-  reactionPicker: {
-    flexDirection: "row",
-    gap: 4,
-    backgroundColor: DS_COLORS.chipFill,
-    borderRadius: 16,
-    padding: 4,
-    flexWrap: "wrap",
-    justifyContent: "flex-end",
-    maxWidth: 200,
-  },
-  reactionChip: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  reactionChipActive: { backgroundColor: DS_COLORS.ACCENT_TINT },
-  reactionEmoji: { fontSize: 14 },
-  commentChip: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: DS_COLORS.WHITE,
-  },
-  commentChipText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
-  commentRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-    paddingTop: 4,
-  },
-  commentInput: {
-    flex: 1,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: DS_COLORS.chipFill,
-    paddingHorizontal: 14,
-    fontSize: 13,
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
-  sendBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: GRIIT_COLORS.primary,
-  },
-  sendBtnText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
-  kudosBtn: {
-    width: 28,
+  reactionArea: { alignItems: "flex-end", minWidth: 60, gap: 6 },
+  fireBtn: {
+    minWidth: 44,
     height: 28,
     borderRadius: 14,
     backgroundColor: DS_COLORS.chipFill,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    gap: 4,
+    paddingHorizontal: 8,
   },
-  kudosBtnLiked: {
-    backgroundColor: DS_COLORS.ACCENT_TINT,
-  },
+  fireBtnActive: { backgroundColor: DS_COLORS.ACCENT_TINT },
+  fireCount: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  fireCountActive: { color: DS_COLORS.DISCOVER_CORAL },
   emptyText: {
     fontSize: 12,
     color: DS_COLORS.TEXT_MUTED,

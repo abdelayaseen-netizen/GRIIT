@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
+import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from 'expo-haptics';
 import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
@@ -100,6 +101,7 @@ export function useApp() {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [autoCreateAttempted, setAutoCreateAttempted] = useState(false);
   const [autoCreateError, setAutoCreateError] = useState<string | null>(null);
   const [fallbackProfile, setFallbackProfile] = useState<Record<string, unknown> | null>(null);
@@ -565,6 +567,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
         void fetchActiveChallenge();
         void fetchStats();
+        void queryClient.invalidateQueries({ queryKey: ["home"] });
+        void queryClient.invalidateQueries({ queryKey: ["home", "v2", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["discover", "completed", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["community", "feed", user?.id] });
+        void queryClient.invalidateQueries({ queryKey: ["profile"] });
         showGoalCelebration(5);
         const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
         const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? 'unknown';
@@ -580,7 +589,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.error("[AppContext] completeTask failed:", msg, err);
         throw new Error(msg);
       });
-  }, [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats]);
+  }, [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats, queryClient, user?.id]);
 
   const secureDay = useCallback(async (): Promise<{
     newStreakCount: number;

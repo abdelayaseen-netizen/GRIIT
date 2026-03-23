@@ -46,6 +46,7 @@ export default React.memo(function GoalCard({
   onPressChallengeName,
   isError,
   defaultExpanded = true,
+  completedSection = false,
 }: {
   challengeName?: string;
   goals: Goal[];
@@ -58,6 +59,7 @@ export default React.memo(function GoalCard({
   onPressChallengeName?: () => void;
   isError?: boolean;
   defaultExpanded?: boolean;
+  completedSection?: boolean;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   useEffect(() => {
@@ -94,7 +96,7 @@ export default React.memo(function GoalCard({
 
   return (
     <View style={s.wrap}>
-      <View style={s.card}>
+      <View style={[s.card, completedSection && s.cardCompleted]}>
         <Pressable
           onPress={() => setExpanded((e) => !e)}
           onLongPress={onLongPressChallenge}
@@ -103,8 +105,8 @@ export default React.memo(function GoalCard({
           accessibilityLabel={`${challengeName} — ${expanded ? "collapse" : "expand"}`}
           accessibilityHint="Tap to expand or collapse. Long press for options."
         >
-          <View style={s.iconBox}>
-            <Target size={16} color={DS_COLORS.GREEN} />
+          <View style={[s.iconBox, completedSection && s.iconBoxCompleted]}>
+            {completedSection ? <Check size={16} color={DS_COLORS.GREEN} /> : <Target size={16} color={DS_COLORS.GREEN} />}
           </View>
           <View style={s.challengeMid}>
             <TouchableOpacity
@@ -117,12 +119,12 @@ export default React.memo(function GoalCard({
               <Text style={s.challengeName}>{challengeName}</Text>
             </TouchableOpacity>
             <View style={s.progressBg}>
-              <View style={[s.progressFill, { width: `${Math.max(2, progress)}%` }]} />
+              <View style={[s.progressFill, completedSection && s.progressFillCompleted, { width: `${Math.max(2, progress)}%` }]} />
             </View>
           </View>
           <View style={s.challengeRight}>
             <Text style={s.dayText}>{`Day ${currentDay ?? 1} of ${durationDays ?? 1}`}</Text>
-            <Text style={s.count}>{`${completed}/${total}`}</Text>
+            <Text style={[s.count, completedSection && s.countCompleted]}>{`${completed}/${total}`}</Text>
             <ChevronDown
               size={14}
               color={DS_COLORS.TEXT_MUTED}
@@ -174,6 +176,10 @@ const s = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: DS_COLORS.DISCOVER_GREEN,
   },
+  cardCompleted: {
+    opacity: 0.8,
+    borderLeftColor: DS_COLORS.GREEN,
+  },
   challengeRow: { flexDirection: "row", gap: 10, marginBottom: DS_SPACING.md, alignItems: "center" },
   iconBox: {
     width: 34,
@@ -182,6 +188,9 @@ const s = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  iconBoxCompleted: {
+    backgroundColor: DS_COLORS.GREEN_BG,
   },
   challengeMid: { flex: 1 },
   challengeName: {
@@ -197,7 +206,9 @@ const s = StyleSheet.create({
     overflow: "hidden",
   },
   progressFill: { height: 3, backgroundColor: DS_COLORS.DISCOVER_GREEN, borderRadius: 2 },
+  progressFillCompleted: { backgroundColor: DS_COLORS.GREEN },
   count: { fontSize: 12, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  countCompleted: { color: DS_COLORS.GREEN },
   doneRow: {
     backgroundColor: DS_COLORS.GREEN_BG,
     borderWidth: 1,

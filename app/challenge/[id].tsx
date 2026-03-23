@@ -713,6 +713,20 @@ export default function ChallengeDetailScreen() {
       void myActiveListQuery.refetch();
     } catch (err: unknown) {
       console.error("[ChallengeDetail] join failed:", err);
+      const msg = err instanceof Error ? err.message : "";
+      const code = (err as { data?: { code?: string } })?.data?.code;
+      if (code === "FORBIDDEN" || msg.toLowerCase().includes("up to 3 challenges")) {
+        Alert.alert(
+          "Challenge Limit Reached",
+          "Free accounts can have up to 3 active challenges. Leave a challenge to make room, or upgrade to Premium for unlimited challenges.",
+          [
+            { text: "Upgrade to Premium", onPress: () => router.push("/paywall" as never) },
+            { text: "Manage Challenges", onPress: () => router.push(ROUTES.TABS_HOME as never) },
+            { text: "Cancel", style: "cancel" },
+          ]
+        );
+        return;
+      }
       const { title, message } = formatTRPCError(err);
       showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
     } finally {

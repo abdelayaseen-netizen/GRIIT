@@ -34,6 +34,8 @@ interface FeedEventItem {
   created_at: string;
   display_name: string;
   username: string;
+  reaction_count?: number;
+  reacted_by_me?: boolean;
 }
 
 function mapLeaderboardEntry(entry: {
@@ -74,6 +76,8 @@ function mapFeedItem(event: FeedEventItem): LiveActivityItem {
       task_name: (m.task_name as string | null | undefined) ?? null,
       task_type: (m.task_type as string | null | undefined) ?? null,
     },
+    reactionCount: event.reaction_count ?? 0,
+    reactedByMe: !!event.reacted_by_me,
   };
 }
 

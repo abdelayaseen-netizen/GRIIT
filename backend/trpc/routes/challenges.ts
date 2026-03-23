@@ -356,8 +356,30 @@ export const challengesRouter = createTRPCRouter({
   join: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
+      const MAX_FREE_CHALLENGES = 3;
       const { logger } = await import("../../lib/logger");
       logger.info({ input, userId: ctx.userId }, "[JOIN-BACKEND] Join procedure called");
+      const { data: profile } = await ctx.supabase
+        .from("profiles")
+        .select("subscription_status")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const isPremium =
+        (profile as { subscription_status?: string } | null)?.subscription_status === "premium" ||
+        (profile as { subscription_status?: string } | null)?.subscription_status === "trial";
+      if (!isPremium) {
+        const { count: activeCount } = await ctx.supabase
+          .from("active_challenges")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", ctx.userId)
+          .eq("status", "active");
+        if ((activeCount ?? 0) >= MAX_FREE_CHALLENGES) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Free users can join up to 3 challenges. Upgrade to Premium for unlimited challenges.",
+          });
+        }
+      }
       const { data: existingActive } = await ctx.supabase
         .from("active_challenges")
         .select("id")
@@ -484,6 +506,11 @@ export const challengesRouter = createTRPCRouter({
         if (delErr) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
         }
+        await ctx.supabase
+          .from("profiles")
+          .update({ last_left_at: new Date().toISOString() })
+          .eq("user_id", ctx.userId)
+          .then(() => {});
         return { left: true };
       }
 

@@ -8,10 +8,11 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   MoreHorizontal,
@@ -29,6 +30,8 @@ import { DS_COLORS } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { EmptyState } from "@/components/EmptyState";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 
 type TaskRow = {
   id: string;
@@ -82,6 +85,7 @@ export default function ActiveChallengeDetailScreen() {
   const id = typeof activeChallengeId === "string" ? activeChallengeId : Array.isArray(activeChallengeId) ? activeChallengeId[0] : undefined;
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
 
   const { data: activeChallenge, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["activeChallenge", id],
@@ -128,6 +132,7 @@ export default function ActiveChallengeDetailScreen() {
   }, [activeChallenge]);
 
   const challenge = activeChallenge?.challenges;
+  const challengeId = challenge?.id ?? activeChallenge?.challenge_id ?? "";
   const tasks = useMemo(() => {
     const raw = challenge?.challenge_tasks ?? [];
     return [...raw].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
@@ -153,6 +158,31 @@ export default function ActiveChallengeDetailScreen() {
   const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
 
   const onRefresh = useCallback(() => refetch(), [refetch]);
+  const handleLeaveChallenge = useCallback(() => {
+    if (!challengeId) return;
+    Alert.alert(
+      `Leave ${challenge?.title ?? "challenge"}?`,
+      "Your progress in this challenge will be lost. You'll need to rejoin to start again.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Leave",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await trpcMutate(TRPC.challenges.leave, { challengeId });
+              await queryClient.invalidateQueries({ queryKey: ["home"] });
+              await queryClient.invalidateQueries({ queryKey: ["profile"] });
+              router.replace(ROUTES.TABS_HOME as never);
+            } catch (err) {
+              console.error("[ActiveChallengeDetail] leave failed:", err);
+              Alert.alert("Error", "Failed to leave challenge. Please try again.");
+            }
+          },
+        },
+      ]
+    );
+  }, [challengeId, challenge?.title, queryClient, router]);
 
   const handleContinueToday = useCallback(() => {
     if (!id || !activeChallenge) return;
@@ -251,7 +281,17 @@ export default function ActiveChallengeDetailScreen() {
             <ChevronLeft size={20} color={DS_COLORS.WHITE} />
           </TouchableOpacity>
           <Text style={s.headerCenterTitle}>Challenge</Text>
-          <TouchableOpacity style={s.headerCircleBtn} accessibilityLabel="More" accessibilityRole="button">
+          <TouchableOpacity
+            style={s.headerCircleBtn}
+            onPress={() =>
+              Alert.alert("Challenge options", challenge?.title ?? "Challenge", [
+                { text: "Leave Challenge", style: "destructive", onPress: handleLeaveChallenge },
+                { text: "Cancel", style: "cancel" },
+              ])
+            }
+            accessibilityLabel="More"
+            accessibilityRole="button"
+          >
             <MoreHorizontal size={20} color={DS_COLORS.WHITE} />
           </TouchableOpacity>
         </View>
@@ -387,7 +427,6 @@ export default function ActiveChallengeDetailScreen() {
           {/* About */}
           <Text style={s.sectionTitleAbout}>About</Text>
           <Text style={s.aboutText}>{challenge?.description ?? ""}</Text>
-
           {/* Day secured celebration card */}
           {allDoneToday && (
             <View style={s.celebrationCard}>

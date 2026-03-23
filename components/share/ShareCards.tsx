@@ -1,379 +1,246 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, ImageBackground } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-// ============================================================
-// CARD 1: STATEMENT — huge day number, minimal, pure identity
-// ============================================================
-export function StatementCard({
-  dayNumber,
-  challengeName,
-}: {
-  dayNumber: number;
-  challengeName: string;
-}) {
+export const CARD_WIDTH = 1080;
+export const CARD_HEIGHT = 1920;
+export const PREVIEW_SCALE = 0.18;
+export const SELECTED_PREVIEW_SCALE = 0.45;
+
+const CARD_STYLES = {
+  background: "#111111",
+  wordmarkColor: "#FFFFFF",
+  wordmarkSize: 42,
+  wordmarkWeight: "700" as const,
+  wordmarkTracking: 2,
+  accentColor: "#E8593C",
+  mutedWhite: "rgba(255,255,255,0.5)",
+  dimWhite: "rgba(255,255,255,0.7)",
+  greenAccent: "#4CAF50",
+};
+
+type TaskRow = { name: string; details: string; timestamp: string; verified?: boolean };
+
+export function StatementCard({ dayNumber, challengeName, calloutText }: { dayNumber: number; challengeName: string; calloutText: string }) {
   return (
-    <View style={s.root}>
-      <Text style={s.wordmark}>GRIIT</Text>
-      <View style={s.center}>
-        <Text style={s.bigNumber}>{dayNumber}</Text>
-        <Text style={s.daysIn}>DAYS IN</Text>
-        <View style={s.divider} />
-        <Text style={s.challengeLabel}>{challengeName}</Text>
+    <View style={[s.card, { backgroundColor: "#000000" }]}>
+      <Text style={s.wordmarkTopLeft}>GRIIT</Text>
+      <View style={s.statementCenter}>
+        <Text style={s.statementBigDay}>{dayNumber}</Text>
+        <Text style={s.statementDaysIn}>DAYS IN</Text>
+        <Text style={s.statementChallengeName}>{challengeName}</Text>
       </View>
-      <View style={s.bottom}>
-        <Text style={s.ghostText}>Most quit by Day 3.</Text>
-        <Text style={s.url}>griit.app</Text>
+      <View style={s.statementBottomLeft}>
+        <Text style={s.statementCallout}>{calloutText}</Text>
+        <View style={s.statementAccentBar} />
       </View>
     </View>
   );
 }
 
-// ============================================================
-// CARD 2: TRANSPARENT — stats overlay for user's own photo
-// ============================================================
 export function TransparentCard({
   dayNumber,
   challengeName,
-  streakCount,
-  completionTime,
-  isHardMode,
-}: {
-  dayNumber: number;
-  challengeName: string;
-  streakCount: number;
-  completionTime: string;
-  isHardMode?: boolean;
-}) {
-  return (
-    <View style={[s.root, { backgroundColor: "transparent" }]}>
-      <View style={s.transparentBottom}>
-        <View>
-          <Text style={s.tWordmark}>GRIIT</Text>
-          <Text style={s.tDay}>Day {dayNumber}</Text>
-          <Text style={s.tChallenge}>{challengeName} · Verified</Text>
-          <View style={s.tBadgeRow}>
-            {isHardMode ? (
-              <View style={s.tBadgeHard}>
-                <Text style={s.tBadgeHardText}>HARD MODE</Text>
-              </View>
-            ) : null}
-            {completionTime ? (
-              <View style={s.tBadgeTime}>
-                <Text style={s.tBadgeTimeText}>{completionTime}</Text>
-              </View>
-            ) : null}
-          </View>
-        </View>
-        <View style={s.tStreakWrap}>
-          <Text style={s.tStreakNum}>{streakCount}🔥</Text>
-          <Text style={s.tStreakLabel}>streak</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-// ============================================================
-// CARD 3: PROOF RECEIPT — photo + verified badge + stats
-// ============================================================
-export function ProofReceiptCard({
   taskName,
-  dayNumber,
-  challengeName,
-  streakCount,
-  completionTime,
   proofPhotoUri,
-  isHardMode,
-  hasHeartRate,
+  tasksCompleted,
+  totalTasks,
+  rank,
 }: {
-  taskName: string;
   dayNumber: number;
   challengeName: string;
-  streakCount: number;
-  completionTime: string;
+  taskName: string;
   proofPhotoUri?: string | null;
-  isHardMode?: boolean;
-  hasHeartRate?: boolean;
+  tasksCompleted: number;
+  totalTasks: number;
+  rank: string;
+}) {
+  const content = (
+    <>
+      <Text style={s.wordmarkTopLeft}>GRIIT</Text>
+      <View style={s.transparentBottomPanel}>
+        <Text style={s.transparentTask}>{taskName}</Text>
+        <Text style={s.transparentMeta}>Day {dayNumber} · {challengeName} · Verified</Text>
+        <View style={s.transparentStatsRow}>
+          <Text style={s.transparentDay}>{dayNumber}</Text>
+          <Text style={s.transparentStatText}>🔥</Text>
+          <Text style={s.transparentStatText}>{tasksCompleted}/{totalTasks} {rank}</Text>
+        </View>
+      </View>
+    </>
+  );
+  if (proofPhotoUri) {
+    return (
+      <ImageBackground source={{ uri: proofPhotoUri }} style={s.card} resizeMode="cover">
+        <View style={s.photoDim}>{content}</View>
+      </ImageBackground>
+    );
+  }
+  return (
+    <LinearGradient colors={["#1A1A1A", "#111111"]} style={s.card}>
+      {content}
+    </LinearGradient>
+  );
+}
+
+export function ProofReceiptCard({
+  dayNumber,
+  totalDays,
+  challengeName,
+  tasks,
+  rank,
+}: {
+  dayNumber: number;
+  totalDays: number;
+  challengeName: string;
+  tasks: TaskRow[];
+  rank: string;
 }) {
   return (
-    <View style={s.root}>
-      <View style={s.proofPhotoArea}>
-        {proofPhotoUri ? (
-          <Image source={{ uri: proofPhotoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        ) : (
-          <View style={s.proofPhotoPlaceholder}>
-            <Text style={s.proofPhotoPlaceholderText}>GRIIT</Text>
-          </View>
-        )}
+    <View style={s.card}>
+      <View style={s.receiptHeader}>
+        <Text style={s.wordmarkHeader}>GRIIT</Text>
+        <Text style={s.receiptDay}>Day {dayNumber} of {totalDays}</Text>
       </View>
-      <View style={s.proofStats}>
-        <View style={s.verifiedRow}>
-          <View style={s.verifiedDot} />
-          <Text style={s.verifiedText}>VERIFIED COMPLETION</Text>
-        </View>
-        <Text style={s.proofTaskName}>{taskName}</Text>
-        <Text style={s.proofMeta}>
-          Day {dayNumber} · {challengeName} · {completionTime}
-        </Text>
-        <View style={s.proofStatsRow}>
-          <View>
-            <Text style={s.proofStatLabel}>STREAK</Text>
-            <Text style={s.proofStatValue}>{streakCount}</Text>
+      <Text style={s.receiptSub}>All tasks secured · Proof receipt</Text>
+      <View style={s.listWrap}>
+        {tasks.map((t) => (
+          <View key={`${t.name}-${t.timestamp}`} style={s.listItem}>
+            <Text style={s.checkMark}>✓</Text>
+            <View style={s.listItemMid}>
+              <Text style={s.listName}>{t.name}</Text>
+              <Text style={s.listDetails}>{t.details}</Text>
+            </View>
+            <Text style={s.listTime}>{t.timestamp}</Text>
           </View>
-          <View>
-            <Text style={s.proofStatLabel}>STATUS</Text>
-            <Text style={[s.proofStatValue, { color: "#E8593C" }]}>{isHardMode ? "Hard" : "Done"}</Text>
-          </View>
-          <View>
-            <Text style={s.proofStatLabel}>VERIFIED</Text>
-            <Text style={[s.proofStatValue, { color: "#97C459" }]}>
-              {hasHeartRate ? "HR" : isHardMode ? "Timer" : "Yes"}
-            </Text>
-          </View>
-        </View>
-        <View style={s.proofDivider} />
-        <View style={s.proofBrandRow}>
-          <Text style={s.proofBrand}>GRIIT</Text>
-          <Text style={s.proofUrl}>griit.app</Text>
-        </View>
+        ))}
       </View>
+      <View style={s.bottomStat}>
+        <Text style={s.bottomDay}>{dayNumber}</Text>
+        <Text style={s.bottomFire}>🔥</Text>
+        <Text style={s.bottomRank}>{tasks.length}/{tasks.length} {rank}</Text>
+      </View>
+      <Text style={s.bottomChallenge}>{challengeName}</Text>
     </View>
   );
 }
 
-// ============================================================
-// CARD 4: TODAY'S GRIND — task breakdown with timestamps
-// ============================================================
-export function GrindCard({
-  taskName,
+export function BreakdownCard({
   dayNumber,
   challengeName,
-  streakCount,
-  completionTime,
-  isHardMode,
-  hasHeartRate,
-  hasPhoto,
+  tasks,
+  rank,
 }: {
-  taskName: string;
   dayNumber: number;
   challengeName: string;
-  streakCount: number;
-  completionTime: string;
-  isHardMode?: boolean;
-  hasHeartRate?: boolean;
-  hasPhoto?: boolean;
+  tasks: TaskRow[];
+  rank: string;
 }) {
-  const verificationDetail =
-    [isHardMode && "Hard mode", hasHeartRate && "HR verified", hasPhoto && "Photo proof"].filter(Boolean).join(" · ") ||
-    "Completed";
-
   return (
-    <View style={s.root}>
-      <View style={s.grindHeader}>
-        <Text style={s.grindWordmark}>GRIIT</Text>
-        <Text style={s.grindDayLabel}>
-          Day {dayNumber} of {challengeName}
-        </Text>
-      </View>
-      <Text style={s.grindTitle}>{"Today's grind"}</Text>
-      <Text style={s.grindSubtitle}>Task secured · {completionTime}</Text>
-
-      <View style={s.grindTasksWrap}>
-        <View style={s.grindTaskRow}>
-          <Text style={s.grindCheck}>✓</Text>
-          <View style={s.grindTaskInfo}>
-            <Text style={s.grindTaskName}>{taskName}</Text>
-            <Text style={s.grindTaskDetail}>{verificationDetail}</Text>
+    <View style={s.card}>
+      <Text style={s.wordmarkTopLeft}>GRIIT</Text>
+      <Text style={s.breakdownTitle}>Today&apos;s grind</Text>
+      <Text style={s.breakdownSub}>All tasks secured</Text>
+      <View style={s.listWrap}>
+        {tasks.map((t) => (
+          <View key={`${t.name}-${t.timestamp}`} style={s.listItem}>
+            <Text style={s.checkMark}>✓</Text>
+            <View style={s.listItemMid}>
+              <Text style={s.listName}>{t.name}</Text>
+              <Text style={s.listDetails}>{t.details}</Text>
+            </View>
+            <Text style={s.listTime}>{t.timestamp}</Text>
           </View>
-          <Text style={s.grindTaskTime}>{completionTime}</Text>
-        </View>
+        ))}
       </View>
-
-      <View style={s.grindBottom}>
-        <View>
-          <Text style={s.grindStreakNum}>{streakCount} 🔥</Text>
-          <Text style={s.grindStreakLabel}>DAY STREAK</Text>
-        </View>
-        <Text style={s.grindUrl}>griit.app</Text>
+      <View style={s.bottomStat}>
+        <Text style={s.bottomDay}>{dayNumber}</Text>
+        <Text style={s.bottomFire}>🔥</Text>
+        <Text style={s.bottomRank}>{tasks.length}/{tasks.length} {rank}</Text>
       </View>
+      <Text style={s.bottomChallenge}>{challengeName}</Text>
     </View>
   );
 }
 
-// ============================================================
-// CARD 5: THE CALLOUT — challenge completion, CTA to join
-// ============================================================
-export function CalloutCard({
-  challengeName,
-  totalDays,
-  totalTasks,
-}: {
-  challengeName: string;
-  totalDays: number;
-  totalTasks: number;
-}) {
+export function CalloutCard({ challengeName, totalDays, totalTasks }: { challengeName: string; totalDays: number; totalTasks: number }) {
   return (
-    <View style={s.root}>
-      <View style={s.center}>
-        <Text style={[s.wordmark, { textAlign: "center" }]}>GRIIT</Text>
+    <LinearGradient colors={["#111111", "#1A1410"]} style={s.card}>
+      <Text style={s.wordmarkTopRight}>GRIIT</Text>
+      <View style={s.calloutBody}>
         <Text style={s.calloutPre}>I JUST FINISHED</Text>
         <Text style={s.calloutChallenge}>{challengeName.toUpperCase()}</Text>
-        <View style={s.divider} />
-        <Text style={s.calloutStats}>
-          {totalDays} days. {totalTasks} tasks completed.{"\n"}Zero excuses. Zero days missed.
-        </Text>
-        <View style={s.calloutPill}>
-          <Text style={s.calloutPillText}>THINK YOU CAN DO IT?</Text>
-        </View>
+        <Text style={s.calloutStats}>{totalDays} days, {totalTasks} tasks completed.{"\n"}Zero excuses. Zero days missed.</Text>
+        <Text style={s.calloutCta}>THINK YOU CAN DO IT?</Text>
+        <View style={s.statementAccentBar} />
       </View>
-      <View style={s.bottom}>
-        <Text style={s.url}>griit.app</Text>
-      </View>
-    </View>
+    </LinearGradient>
   );
 }
 
-// ============================================================
-// STYLES — all cards render at 1080×1920 for ViewShot capture
-// ============================================================
 const s = StyleSheet.create({
-  root: { width: 1080, height: 1920, backgroundColor: "#050505", justifyContent: "center" },
-  wordmark: { position: "absolute", top: 80, left: 60, fontSize: 48, fontWeight: "800", color: "#E8593C", letterSpacing: 1 },
-  center: { alignItems: "center", justifyContent: "center", flex: 1, paddingHorizontal: 80 },
-  bottom: { position: "absolute", bottom: 60, left: 0, right: 0, alignItems: "center" },
-  divider: { width: 100, height: 4, backgroundColor: "#E8593C", marginVertical: 30, borderRadius: 2 },
-  url: { fontSize: 28, color: "rgba(255,255,255,0.12)", letterSpacing: 1 },
-  ghostText: { fontSize: 32, color: "rgba(255,255,255,0.15)", marginBottom: 20 },
-
-  bigNumber: { fontSize: 200, fontWeight: "800", color: "#fff", letterSpacing: -4 },
-  daysIn: { fontSize: 36, letterSpacing: 8, color: "rgba(255,255,255,0.3)", marginTop: 10 },
-  challengeLabel: { fontSize: 44, fontWeight: "600", color: "rgba(255,255,255,0.7)", marginTop: 10 },
-
-  transparentBottom: {
+  card: { width: CARD_WIDTH, height: CARD_HEIGHT, backgroundColor: CARD_STYLES.background },
+  wordmarkTopLeft: {
     position: "absolute",
-    bottom: 80,
-    left: 60,
-    right: 60,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    top: 72,
+    left: 56,
+    color: CARD_STYLES.wordmarkColor,
+    fontSize: CARD_STYLES.wordmarkSize,
+    fontWeight: CARD_STYLES.wordmarkWeight,
+    letterSpacing: CARD_STYLES.wordmarkTracking,
   },
-  tWordmark: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: "rgba(255,255,255,0.85)",
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-  },
-  tDay: {
-    fontSize: 80,
-    fontWeight: "800",
-    color: "#fff",
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-    marginTop: 4,
-  },
-  tChallenge: {
-    fontSize: 32,
-    color: "rgba(255,255,255,0.5)",
-    textShadowColor: "rgba(0,0,0,0.9)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-    marginTop: 4,
-  },
-  tBadgeRow: { flexDirection: "row", gap: 12, marginTop: 16 },
-  tBadgeHard: { backgroundColor: "rgba(232,89,60,0.4)", paddingHorizontal: 16, paddingVertical: 6, borderRadius: 8 },
-  tBadgeHardText: { fontSize: 24, fontWeight: "700", color: "#E8593C" },
-  tBadgeTime: { backgroundColor: "rgba(255,255,255,0.15)", paddingHorizontal: 16, paddingVertical: 6, borderRadius: 8 },
-  tBadgeTimeText: { fontSize: 24, fontWeight: "700", color: "rgba(255,255,255,0.7)" },
-  tStreakWrap: { alignItems: "flex-end" },
-  tStreakNum: {
-    fontSize: 80,
-    fontWeight: "800",
-    color: "#E8593C",
-    textShadowColor: "rgba(0,0,0,0.8)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-  },
-  tStreakLabel: {
-    fontSize: 24,
-    color: "rgba(255,255,255,0.4)",
-    textShadowColor: "rgba(0,0,0,0.8)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-  },
-
-  proofPhotoArea: { width: 1080, height: 1060, backgroundColor: "rgba(255,255,255,0.03)" },
-  proofPhotoPlaceholder: { flex: 1, alignItems: "center", justifyContent: "center" },
-  proofPhotoPlaceholderText: { fontSize: 80, fontWeight: "800", color: "rgba(255,255,255,0.04)" },
-  proofStats: { flex: 1, paddingHorizontal: 60, paddingTop: 40, justifyContent: "flex-end", paddingBottom: 60 },
-  verifiedRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
-  verifiedDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: "#97C459" },
-  verifiedText: { fontSize: 24, fontWeight: "700", color: "#97C459", letterSpacing: 1 },
-  proofTaskName: { fontSize: 48, fontWeight: "700", color: "#fff" },
-  proofMeta: { fontSize: 28, color: "rgba(255,255,255,0.35)", marginTop: 8 },
-  proofStatsRow: { flexDirection: "row", gap: 48, marginTop: 32 },
-  proofStatLabel: { fontSize: 22, color: "rgba(255,255,255,0.25)", letterSpacing: 1 },
-  proofStatValue: { fontSize: 48, fontWeight: "700", color: "#fff", marginTop: 4 },
-  proofDivider: { width: "100%", height: 1, backgroundColor: "rgba(255,255,255,0.06)", marginVertical: 24 },
-  proofBrandRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  proofBrand: { fontSize: 32, fontWeight: "800", color: "#E8593C", letterSpacing: 1 },
-  proofUrl: { fontSize: 24, color: "rgba(255,255,255,0.12)" },
-
-  grindHeader: {
+  wordmarkTopRight: {
     position: "absolute",
-    top: 80,
-    left: 60,
-    right: 60,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    top: 72,
+    right: 56,
+    color: CARD_STYLES.wordmarkColor,
+    fontSize: CARD_STYLES.wordmarkSize,
+    fontWeight: CARD_STYLES.wordmarkWeight,
+    letterSpacing: CARD_STYLES.wordmarkTracking,
   },
-  grindWordmark: { fontSize: 36, fontWeight: "800", color: "#E8593C", letterSpacing: 1 },
-  grindDayLabel: { fontSize: 28, color: "rgba(255,255,255,0.3)" },
-  grindTitle: { fontSize: 56, fontWeight: "700", color: "#fff", marginTop: 200, marginLeft: 60 },
-  grindSubtitle: { fontSize: 28, color: "rgba(255,255,255,0.3)", marginTop: 8, marginLeft: 60 },
-  grindTasksWrap: { marginTop: 60, marginHorizontal: 60, gap: 16 },
-  grindTaskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 20,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    borderRadius: 20,
-    padding: 24,
-    borderLeftWidth: 6,
-    borderLeftColor: "#97C459",
-  },
-  grindCheck: { fontSize: 36, color: "#97C459" },
-  grindTaskInfo: { flex: 1 },
-  grindTaskName: { fontSize: 32, fontWeight: "600", color: "rgba(255,255,255,0.8)" },
-  grindTaskDetail: { fontSize: 24, color: "rgba(255,255,255,0.3)", marginTop: 4 },
-  grindTaskTime: { fontSize: 24, color: "rgba(255,255,255,0.2)" },
-  grindBottom: {
+  statementCenter: { flex: 1, alignItems: "center", justifyContent: "center" },
+  statementBigDay: { fontSize: 240, color: "#FFFFFF", fontWeight: "800", lineHeight: 250 },
+  statementDaysIn: { fontSize: 36, color: CARD_STYLES.dimWhite, letterSpacing: 5, fontWeight: "500" },
+  statementChallengeName: { marginTop: 20, fontSize: 54, color: "#FFFFFF", fontWeight: "600" },
+  statementBottomLeft: { position: "absolute", left: 56, bottom: 90 },
+  statementCallout: { fontSize: 30, color: CARD_STYLES.mutedWhite, marginBottom: 20 },
+  statementAccentBar: { width: 520, height: 6, backgroundColor: CARD_STYLES.accentColor, borderRadius: 3 },
+  photoDim: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)" },
+  transparentBottomPanel: {
     position: "absolute",
-    bottom: 80,
-    left: 60,
-    right: 60,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    left: 32,
+    right: 32,
+    bottom: 40,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    padding: 28,
   },
-  grindStreakNum: { fontSize: 64, fontWeight: "700", color: "#fff" },
-  grindStreakLabel: { fontSize: 22, color: "rgba(255,255,255,0.25)", letterSpacing: 1 },
-  grindUrl: { fontSize: 24, color: "rgba(255,255,255,0.12)" },
-
-  calloutPre: { fontSize: 28, letterSpacing: 2, color: "rgba(255,255,255,0.25)", marginBottom: 10 },
-  calloutChallenge: { fontSize: 72, fontWeight: "700", color: "#fff", textAlign: "center", letterSpacing: -1 },
-  calloutStats: { fontSize: 32, color: "rgba(255,255,255,0.35)", textAlign: "center", lineHeight: 48, marginTop: 10 },
-  calloutPill: {
-    marginTop: 50,
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: "rgba(232,89,60,0.35)",
-    borderRadius: 40,
-  },
-  calloutPillText: { fontSize: 28, fontWeight: "700", color: "#E8593C", letterSpacing: 2 },
+  transparentTask: { color: "#FFFFFF", fontSize: 38, fontWeight: "700" },
+  transparentMeta: { color: CARD_STYLES.dimWhite, fontSize: 26, marginTop: 8 },
+  transparentStatsRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 18 },
+  transparentDay: { color: "#FFFFFF", fontSize: 78, fontWeight: "800" },
+  transparentStatText: { color: "#FFFFFF", fontSize: 32, fontWeight: "700" },
+  receiptHeader: { marginTop: 72, paddingHorizontal: 56, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  wordmarkHeader: { color: "#FFFFFF", fontSize: 40, fontWeight: "700", letterSpacing: 2 },
+  receiptDay: { color: CARD_STYLES.dimWhite, fontSize: 30, fontWeight: "600" },
+  receiptSub: { color: CARD_STYLES.greenAccent, fontSize: 26, marginTop: 20, marginHorizontal: 56, fontWeight: "600" },
+  listWrap: { marginTop: 36, marginHorizontal: 56, gap: 18 },
+  listItem: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.05)", padding: 20, borderRadius: 16 },
+  checkMark: { color: CARD_STYLES.greenAccent, fontSize: 32, marginRight: 14 },
+  listItemMid: { flex: 1 },
+  listName: { color: "#FFFFFF", fontSize: 31, fontWeight: "700" },
+  listDetails: { color: CARD_STYLES.dimWhite, fontSize: 22, marginTop: 4 },
+  listTime: { color: CARD_STYLES.mutedWhite, fontSize: 20, marginLeft: 12 },
+  bottomStat: { flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 12, marginTop: 44 },
+  bottomDay: { color: "#FFFFFF", fontSize: 96, fontWeight: "800", lineHeight: 100 },
+  bottomFire: { color: "#FFFFFF", fontSize: 54, marginBottom: 10 },
+  bottomRank: { color: CARD_STYLES.dimWhite, fontSize: 30, fontWeight: "600", marginBottom: 12 },
+  bottomChallenge: { color: CARD_STYLES.mutedWhite, fontSize: 24, textAlign: "center", marginTop: 12 },
+  breakdownTitle: { color: "#FFFFFF", fontSize: 78, fontWeight: "800", marginTop: 220, marginHorizontal: 56 },
+  breakdownSub: { color: CARD_STYLES.dimWhite, fontSize: 28, marginTop: 8, marginHorizontal: 56 },
+  calloutBody: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 80 },
+  calloutPre: { color: CARD_STYLES.dimWhite, fontSize: 34, fontWeight: "600", letterSpacing: 2 },
+  calloutChallenge: { color: "#FFFFFF", fontSize: 98, fontWeight: "800", textAlign: "center", marginTop: 20 },
+  calloutStats: { color: CARD_STYLES.dimWhite, fontSize: 36, textAlign: "center", lineHeight: 52, marginTop: 24 },
+  calloutCta: { color: CARD_STYLES.accentColor, fontSize: 44, fontWeight: "800", marginTop: 44, marginBottom: 22 },
 });

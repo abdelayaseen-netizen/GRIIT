@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from "react-native";
 import { InlineError } from "@/components/InlineError";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -118,6 +121,8 @@ export default function HomeScreen() {
   const { stats, refetchAll } = useApp();
   const [leaveChallengeError, setLeaveChallengeError] = React.useState<string | null>(null);
   const [showPointsExplainer, setShowPointsExplainer] = React.useState(false);
+  const [completedExpanded, setCompletedExpanded] = React.useState(true);
+  const prevCompletedCount = React.useRef(0);
 
   const homeQuery = useQuery({
     queryKey: ["home", "v2", user?.id ?? ""],
@@ -200,6 +205,27 @@ export default function HomeScreen() {
       };
     });
   }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
+  const isCompleteForToday = useCallback((group: ChallengeGoalGroup) => {
+    if (group.goals.length === 0) return false;
+    return group.goals.every((goal) => goal.completed);
+  }, []);
+  const incompleteChallenges = useMemo(
+    () => challengeGroups.filter((g) => !isCompleteForToday(g)),
+    [challengeGroups, isCompleteForToday]
+  );
+  const completedTodayChallenges = useMemo(
+    () => challengeGroups.filter((g) => isCompleteForToday(g)),
+    [challengeGroups, isCompleteForToday]
+  );
+  React.useEffect(() => {
+    if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+    if (prevCompletedCount.current !== completedTodayChallenges.length) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      prevCompletedCount.current = completedTodayChallenges.length;
+    }
+  }, [completedTodayChallenges.length]);
 
   const streak = stats?.activeStreak ?? 0;
   const basePoints = (stats?.totalDaysSecured ?? 0) * 5;
@@ -330,13 +356,19 @@ export default function HomeScreen() {
           />
         ) : (
           <View style={s.goalsSection}>
+            {incompleteChallenges.length === 0 ? (
+              <View style={s.allDoneBanner}>
+                <Text style={s.allDoneTitle}>🔥 All tasks secured for today</Text>
+                <Text style={s.allDoneSubtitle}>Come back tomorrow to continue</Text>
+              </View>
+            ) : null}
             <View style={s.goalsSectionHeader}>
               <Text style={s.goalsSectionTitle}>Today&apos;s goals</Text>
               <Text style={s.goalsSectionCount}>
-                {challengeGroups.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining
+                {incompleteChallenges.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining
               </Text>
             </View>
-            {challengeGroups.map((group, index) => (
+            {incompleteChallenges.map((group, index) => (
               <GoalCard
                 key={group.activeChallengeId}
                 defaultExpanded={index === 0}
@@ -405,6 +437,42 @@ export default function HomeScreen() {
                 isError={homeQuery.isError}
               />
             ))}
+            {completedTodayChallenges.length > 0 ? (
+              <>
+                <TouchableOpacity
+                  style={s.completedHeader}
+                  onPress={() => setCompletedExpanded((v) => !v)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Toggle completed today section"
+                >
+                  <Text style={s.completedHeaderText}>Completed today ✓</Text>
+                  <Text style={s.completedHeaderCount}>
+                    {completedExpanded ? "Hide" : "Show"} ({completedTodayChallenges.length})
+                  </Text>
+                </TouchableOpacity>
+                {completedExpanded
+                  ? completedTodayChallenges.map((group) => (
+                      <GoalCard
+                        key={`${group.activeChallengeId}-completed`}
+                        defaultExpanded={false}
+                        challengeName={group.challengeName}
+                        goals={group.goals}
+                        currentDay={group.currentDay}
+                        durationDays={group.durationDays}
+                        completedSection
+                        onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
+                        onPressGoal={() => {}}
+                        onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+                        onPressInActiveChallenge={() => {
+                          void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
+                        }}
+                        onLongPressChallenge={undefined}
+                        isError={homeQuery.isError}
+                      />
+                    ))
+                  : null}
+              </>
+            ) : null}
           </View>
         )}
 
@@ -536,5 +604,40 @@ const s = StyleSheet.create({
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
     fontWeight: "600",
     color: DS_COLORS.DISCOVER_CORAL,
+  },
+  completedHeader: {
+    marginTop: DS_SPACING.md,
+    marginBottom: DS_SPACING.xs,
+    paddingHorizontal: DS_SPACING.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  completedHeaderText: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_SECONDARY,
+  },
+  completedHeaderCount: {
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    color: DS_COLORS.TEXT_MUTED,
+    fontWeight: "600",
+  },
+  allDoneBanner: {
+    marginHorizontal: DS_SPACING.xl,
+    marginBottom: DS_SPACING.sm,
+    padding: DS_SPACING.lg,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+  },
+  allDoneTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  allDoneSubtitle: {
+    marginTop: 4,
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    color: DS_COLORS.TEXT_SECONDARY,
   },
 });

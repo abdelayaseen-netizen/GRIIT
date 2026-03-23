@@ -60,10 +60,33 @@ export const feedRouter = createTRPCRouter({
           avatar_url: profile?.avatar_url ?? null,
         };
       });
+      const eventIds = items.map((e) => e.id);
+      const reactionStats = new Map<string, { count: number; reactedByMe: boolean }>();
+      if (eventIds.length > 0) {
+        const { data: reactions } = await ctx.supabase
+          .from("feed_reactions")
+          .select("event_id, user_id")
+          .in("event_id", eventIds);
+        for (const row of (reactions ?? []) as { event_id: string; user_id: string }[]) {
+          const prev = reactionStats.get(row.event_id) ?? { count: 0, reactedByMe: false };
+          reactionStats.set(row.event_id, {
+            count: prev.count + 1,
+            reactedByMe: prev.reactedByMe || row.user_id === ctx.userId,
+          });
+        }
+      }
+      const withReactions = withProfiles.map((item) => {
+        const stat = reactionStats.get(item.id);
+        return {
+          ...item,
+          reaction_count: stat?.count ?? 0,
+          reacted_by_me: stat?.reactedByMe ?? false,
+        };
+      });
 
       const lastItem = items.length > 0 ? items[items.length - 1] : undefined;
       return {
-        items: withProfiles,
+        items: withReactions,
         nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null,
       };
     }),
@@ -72,26 +95,38 @@ export const feedRouter = createTRPCRouter({
     .input(
       z.object({
         eventId: z.string().uuid(),
-        reaction: z.enum(["fire", "respect", "discipline"]),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { error } = await ctx.supabase
+      const { data: existing } = await ctx.supabase
         .from("feed_reactions")
-        .upsert(
-          {
+        .select("id")
+        .eq("event_id", input.eventId)
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      let reacted = false;
+      if (existing?.id) {
+        const { error } = await ctx.supabase
+          .from("feed_reactions")
+          .delete()
+          .eq("id", existing.id);
+        if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to remove reaction." });
+      } else {
+        const { error } = await ctx.supabase
+          .from("feed_reactions")
+          .insert({
             user_id: ctx.userId,
             event_id: input.eventId,
-            reaction: input.reaction,
-          },
-          { onConflict: "user_id,event_id" }
-        )
-        .select()
-        .single();
-      if (error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to react." });
+            reaction: "fire",
+          });
+        if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to react." });
+        reacted = true;
       }
-      return { success: true as const };
+      const { count } = await ctx.supabase
+        .from("feed_reactions")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", input.eventId);
+      return { success: true as const, reacted, reactionCount: count ?? 0 };
     }),
 
   comment: protectedProcedure
