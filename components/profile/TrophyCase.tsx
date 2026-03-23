@@ -36,7 +36,7 @@ function iconFor(name: Badge["icon"]) {
   return Flame;
 }
 
-export default function TrophyCase(props: Snapshot) {
+export default React.memo(function TrophyCase(props: Snapshot) {
   const cards = useMemo(() => {
     const upcoming = NEXT_BADGES.filter((b) => b.getCurrent(props) < b.target);
     return upcoming.slice(0, 3);
@@ -67,7 +67,7 @@ export default function TrophyCase(props: Snapshot) {
       </ScrollView>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   wrap: { marginTop: 20 },

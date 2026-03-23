@@ -21,7 +21,7 @@ function StatRow({
   );
 }
 
-export function YourStats({
+export const YourStats = React.memo(function YourStats({
   goalsSecuredToday,
   weeklyRank,
   pointsThisWeek,
@@ -45,7 +45,7 @@ export function YourStats({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   sectionTitle: {

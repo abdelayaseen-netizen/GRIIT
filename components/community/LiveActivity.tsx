@@ -63,10 +63,14 @@ function VerificationBadges({ item }: { item: LiveActivityItem }) {
   const m = item.metadata;
   if (!m) return null;
   const badges: { label: string; color: string; bg: string }[] = [];
-  if (m.is_hard_mode) badges.push({ label: "Hard mode", color: "#A32D2D", bg: "#FCEBEB" });
-  if (m.heart_rate_verified) badges.push({ label: "HR verified", color: "#854F0B", bg: "#FAEEDA" });
-  if (m.location_verified) badges.push({ label: "Location", color: "#0F6E56", bg: "#E1F5EE" });
-  if (m.has_photo) badges.push({ label: "Photo proof", color: "#185FA5", bg: "#E6F1FB" });
+  if (m.is_hard_mode)
+    badges.push({ label: "Hard mode", color: DS_COLORS.BADGE_HARD_RED, bg: DS_COLORS.BADGE_HARD_BG });
+  if (m.heart_rate_verified)
+    badges.push({ label: "HR verified", color: DS_COLORS.BADGE_HR_AMBER, bg: DS_COLORS.BADGE_HR_BG });
+  if (m.location_verified)
+    badges.push({ label: "Location", color: DS_COLORS.BADGE_LOC_GREEN, bg: DS_COLORS.BADGE_LOC_BG });
+  if (m.has_photo)
+    badges.push({ label: "Photo proof", color: DS_COLORS.BADGE_PHOTO_BLUE, bg: DS_COLORS.BADGE_PHOTO_BG });
   if (badges.length === 0) return null;
   return (
     <View style={badgeStyles.wrap}>

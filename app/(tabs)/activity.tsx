@@ -149,6 +149,7 @@ export default function CommunityScreen() {
     initialPageParam: undefined as string | undefined,
     enabled: !!currentUser?.id,
     staleTime: 30 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const leaderboardEntries = useMemo(

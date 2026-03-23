@@ -24,7 +24,7 @@ const RANK_DOT: Record<string, string> = {
   Legend: DS_COLORS.milestoneGold,
 };
 
-export default function ProfileHeader({
+export default React.memo(function ProfileHeader({
   fullName,
   username,
   currentTier,
@@ -92,7 +92,7 @@ export default function ProfileHeader({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: { alignItems: "center", paddingVertical: DS_SPACING.xl, paddingHorizontal: DS_SPACING.xl },

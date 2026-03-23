@@ -10,7 +10,7 @@ const PILLS: Array<{ id: CommunityFilter; label: string }> = [
   { id: "team", label: "Team" },
 ];
 
-export function CommunityHeader({
+export const CommunityHeader = React.memo(function CommunityHeader({
   selectedFilter,
   onSelectFilter,
 }: {
@@ -43,7 +43,7 @@ export function CommunityHeader({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

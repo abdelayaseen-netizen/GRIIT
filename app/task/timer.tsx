@@ -1,3 +1,4 @@
+// LEGACY: consider migrating to task/complete.tsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, AppState, AppStateStatus, Image, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

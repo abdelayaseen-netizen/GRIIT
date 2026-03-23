@@ -261,17 +261,18 @@ export const checkinsRouter = createTRPCRouter({
         console.error("[checkins.complete] task_completed event failed:", taskCompletedEventError);
       }
 
-      const { data: allTasks } = await ctx.supabase
-        .from('challenge_tasks')
-        .select('id, task_type, config')
-        .eq('challenge_id', challenge_id);
-
-      const { data: completedCheckins } = await ctx.supabase
-        .from('check_ins')
-        .select('task_id')
-        .eq('active_challenge_id', input.activeChallengeId)
-        .eq('date_key', dateKey)
-        .eq('status', 'completed');
+      const [{ data: allTasks }, { data: completedCheckins }] = await Promise.all([
+        ctx.supabase
+          .from('challenge_tasks')
+          .select('id, task_type, config')
+          .eq('challenge_id', challenge_id),
+        ctx.supabase
+          .from('check_ins')
+          .select('task_id')
+          .eq('active_challenge_id', input.activeChallengeId)
+          .eq('date_key', dateKey)
+          .eq('status', 'completed'),
+      ]);
 
       const requiredTasks = (allTasks ?? []).filter((t) => isTaskRequired(t as ChallengeTaskRowRaw));
       const completedRequired = completedCheckins?.filter(c => 

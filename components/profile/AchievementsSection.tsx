@@ -20,7 +20,7 @@ export interface AchievementsSectionProps {
   loading?: boolean;
 }
 
-export default function AchievementsSection({ achievements, loading }: AchievementsSectionProps) {
+export default React.memo(function AchievementsSection({ achievements, loading }: AchievementsSectionProps) {
   const byCategory = achievements.reduce(
     (acc, a) => {
       if (!acc[a.category]) acc[a.category] = [];
@@ -93,7 +93,7 @@ export default function AchievementsSection({ achievements, loading }: Achieveme
       </ScrollView>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {

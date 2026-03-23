@@ -14,7 +14,7 @@ export interface LifetimeStatsCardProps {
 
 const ICON_CIRCLE = 36;
 
-export default function LifetimeStatsCard({
+export default React.memo(function LifetimeStatsCard({
   currentStreak = 0,
   longestStreak,
   daysSecured: _daysSecured,
@@ -50,7 +50,7 @@ export default function LifetimeStatsCard({
       })}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

@@ -11,7 +11,7 @@ export interface DisciplineScoreCardProps {
   zeroStateHint?: string;
 }
 
-export default function DisciplineScoreCard({
+export default React.memo(function DisciplineScoreCard({
   disciplineScore,
   tier,
   daysSecured,
@@ -46,7 +46,7 @@ export default function DisciplineScoreCard({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

@@ -49,7 +49,7 @@ export default function JoinTeamScreen() {
           style={styles.input}
           value={code}
           onChangeText={(t) => setCode(t.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, CODE_LEN))}
-          placeholder="XXXXXXXX"
+          placeholder="Enter invite code"
           placeholderTextColor={DS_COLORS.inputPlaceholder}
           maxLength={CODE_LEN}
           autoCapitalize="characters"

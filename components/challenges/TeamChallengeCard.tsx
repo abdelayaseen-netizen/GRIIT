@@ -33,7 +33,7 @@ function difficultyTheme(d?: string) {
   return { accent: DS_COLORS.DISCOVER_BLUE, tint: DS_COLORS.DISCOVER_DIFF_TINT_MED, label: "MED" };
 }
 
-export function TeamChallengeCard({
+export const TeamChallengeCard = React.memo(function TeamChallengeCard({
   challenge,
   onPress,
   onPressIn,
@@ -82,7 +82,7 @@ export function TeamChallengeCard({
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const s = StyleSheet.create({
   card: { backgroundColor: DS_COLORS.WHITE, borderRadius: 16, padding: 16, marginBottom: 10 },

@@ -1,3 +1,4 @@
+// LEGACY: consider migrating to task/complete.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { 
   View, 

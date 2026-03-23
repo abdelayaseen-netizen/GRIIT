@@ -519,6 +519,7 @@ export default function ChallengeDetailScreen() {
     queryFn: () => trpcQuery(TRPC.challenges.getById, { id: id! }),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
+    placeholderData: (prev) => prev,
   });
   const remoteChallenge = (challengeQuery.data as Record<string, unknown> | undefined) ?? null;
   const remoteLoading = challengeQuery.isLoading;

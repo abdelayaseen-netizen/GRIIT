@@ -125,6 +125,25 @@ export const DS_COLORS = {
   DIFFICULTY_EXTREME_TEXT: '#DC2626',
   DIFFICULTY_MEDIUM: '#F5A623',
 
+  // Celebration / share (task complete overlay)
+  CELEB_BG: '#050505',
+  CELEB_BONUS_AMBER: '#854F0B',
+  CELEB_BONUS_AMBER_BG: '#FAEEDA',
+  CELEB_BONUS_GREEN: '#0F6E56',
+  CELEB_BONUS_GREEN_BG: '#E1F5EE',
+  CELEB_BONUS_PURPLE: '#534AB7',
+  CELEB_BONUS_PURPLE_BG: '#EEEDFE',
+
+  // Verification badges (activity feed)
+  BADGE_HARD_RED: '#A32D2D',
+  BADGE_HARD_BG: '#FCEBEB',
+  BADGE_HR_AMBER: '#854F0B',
+  BADGE_HR_BG: '#FAEEDA',
+  BADGE_LOC_GREEN: '#0F6E56',
+  BADGE_LOC_BG: '#E1F5EE',
+  BADGE_PHOTO_BLUE: '#185FA5',
+  BADGE_PHOTO_BG: '#E6F1FB',
+
   // ═══════════════════════════════════════════════════════════════════════════
   // FEATURED / TIMER (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════

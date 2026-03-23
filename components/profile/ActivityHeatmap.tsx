@@ -17,7 +17,7 @@ function monthLabels() {
   return out;
 }
 
-export default function ActivityHeatmap({ securedDateKeys }: Props) {
+export default React.memo(function ActivityHeatmap({ securedDateKeys }: Props) {
   const securedSet = useMemo(() => new Set(securedDateKeys), [securedDateKeys]);
   const cells = useMemo(() => {
     const arr: number[] = [];
@@ -78,7 +78,7 @@ export default function ActivityHeatmap({ securedDateKeys }: Props) {
       </View>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   wrap: { marginTop: 20 },

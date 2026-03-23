@@ -16,7 +16,7 @@ export interface CompletedChallengesSectionProps {
   loading?: boolean;
 }
 
-export default function CompletedChallengesSection({
+export default React.memo(function CompletedChallengesSection({
   challenges,
   loading,
 }: CompletedChallengesSectionProps) {
@@ -70,7 +70,7 @@ export default function CompletedChallengesSection({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {

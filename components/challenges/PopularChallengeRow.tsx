@@ -36,7 +36,7 @@ export type PopularChallengeData = {
   participants_count?: number;
 };
 
-export function PopularChallengeRow({
+export const PopularChallengeRow = React.memo(function PopularChallengeRow({
   challenge,
   index,
   isLast,
@@ -73,7 +73,7 @@ export function PopularChallengeRow({
       </TouchableOpacity>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   row: { paddingVertical: 14, paddingHorizontal: 16, gap: 12, flexDirection: "row", alignItems: "center" },

@@ -413,7 +413,7 @@ export const challengesRouter = createTRPCRouter({
 
         const { count: memberCount } = await ctx.supabase
           .from("challenge_members")
-          .select("*", { count: "exact", head: true })
+          .select("id", { count: "exact", head: true })
           .eq("challenge_id", input.challengeId);
 
         if ((memberCount ?? 0) >= teamSize) {
@@ -439,8 +439,11 @@ export const challengesRouter = createTRPCRouter({
       }
 
       logger.debug({ challengeId: input.challengeId }, "[JOIN-BACKEND] Calling joinChallengeDirect");
-      const activeChallenge = await joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId);
-      const { data: ch } = await ctx.supabase.from("challenges").select("title").eq("id", input.challengeId).single();
+      const [activeChallenge, chResult] = await Promise.all([
+        joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId),
+        ctx.supabase.from("challenges").select("title").eq("id", input.challengeId).single(),
+      ]);
+      const { data: ch } = chResult;
       await ctx.supabase.from("activity_events").insert({
         user_id: ctx.userId,
         event_type: "joined_challenge",

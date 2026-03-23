@@ -116,6 +116,7 @@ export default function DiscoverScreen() {
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as string | undefined,
     staleTime: 5 * 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const myActiveForDiscover = useQuery({

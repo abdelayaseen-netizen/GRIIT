@@ -426,10 +426,10 @@ function TaskCompleteScreenInner() {
 
       if (Math.random() < 0.3) {
         const rewards = [
-          { label: "2x BONUS — double points!", color: "#854F0B", bg: "#FAEEDA" },
-          { label: "Streak shield earned", color: "#0F6E56", bg: "#E1F5EE" },
-          { label: "Discipline badge progress +1", color: "#534AB7", bg: "#EEEDFE" },
-          { label: "Bonus: +3 extra points", color: "#854F0B", bg: "#FAEEDA" },
+          { label: "2x BONUS — double points!", color: DS_COLORS.CELEB_BONUS_AMBER, bg: DS_COLORS.CELEB_BONUS_AMBER_BG },
+          { label: "Streak shield earned", color: DS_COLORS.CELEB_BONUS_GREEN, bg: DS_COLORS.CELEB_BONUS_GREEN_BG },
+          { label: "Discipline badge progress +1", color: DS_COLORS.CELEB_BONUS_PURPLE, bg: DS_COLORS.CELEB_BONUS_PURPLE_BG },
+          { label: "Bonus: +3 extra points", color: DS_COLORS.CELEB_BONUS_AMBER, bg: DS_COLORS.CELEB_BONUS_AMBER_BG },
         ];
         setVariableReward(rewards[Math.floor(Math.random() * rewards.length)] ?? null);
       } else {
@@ -524,13 +524,13 @@ function TaskCompleteScreenInner() {
     const celebPoints = isHardMode ? 8 : 5;
 
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: "#050505" }]} edges={["bottom"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.CELEB_BG }]} edges={["bottom"]}>
         <Stack.Screen
           options={{
             title: taskName,
             headerBackVisible: true,
-            headerStyle: { backgroundColor: "#050505" },
-            headerTintColor: "#fff",
+            headerStyle: { backgroundColor: DS_COLORS.CELEB_BG },
+            headerTintColor: DS_COLORS.WHITE,
           }}
         />
 

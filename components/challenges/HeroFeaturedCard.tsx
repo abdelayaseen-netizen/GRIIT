@@ -18,7 +18,7 @@ type HeroChallenge = {
   participants_count?: number;
 };
 
-export function HeroFeaturedCard({
+export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
   challenge,
   onPress,
   onPressIn,
@@ -61,7 +61,7 @@ export function HeroFeaturedCard({
       </View>
     </View>
   );
-}
+});
 
 const s = StyleSheet.create({
   card: { borderRadius: 20, backgroundColor: DS_COLORS.DISCOVER_HERO_DARK_BG, overflow: "hidden", marginTop: 18 },

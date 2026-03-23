@@ -32,7 +32,7 @@ function rankColor(rank: number): string {
   return DS_COLORS.TEXT_MUTED;
 }
 
-export function Leaderboard({
+export const Leaderboard = React.memo(function Leaderboard({
   entries,
   currentUserName,
   currentUserRank,
@@ -125,7 +125,7 @@ export function Leaderboard({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
