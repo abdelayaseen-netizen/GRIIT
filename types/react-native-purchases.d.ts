@@ -12,12 +12,14 @@ declare module "react-native-purchases" {
   export interface PurchasesPackage {
     packageType: string;
     identifier: string;
+    product?: { title?: string; priceString?: string; description?: string };
   }
 
   export const LOG_LEVEL: { VERBOSE: number; DEBUG: number; INFO: number; WARN: number; ERROR: number };
 
   interface PurchasesStatic {
-    configure(options: { apiKey: string; appUserID: string }): void;
+    configure(options: { apiKey: string; appUserID: string | null }): void;
+    logIn(userId: string): Promise<unknown>;
     setLogLevel(level: number): void;
     getCustomerInfo(): Promise<CustomerInfo>;
     getOfferings(): Promise<{

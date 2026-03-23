@@ -1,150 +1,111 @@
 /**
- * RevenueCat integration for GRIIT Pro subscriptions.
- * Initialize with Supabase user ID; use placeholder API keys (Yaseen will replace).
+ * RevenueCat — subscriptions (GRIIT Pro). Keys from EXPO_PUBLIC_* env only.
  */
+import Purchases, {
+  LOG_LEVEL,
+  type PurchasesPackage,
+  type CustomerInfo,
+} from "react-native-purchases";
 import { Platform } from "react-native";
-import Purchases, { LOG_LEVEL } from "react-native-purchases";
-import type { CustomerInfo } from "react-native-purchases";
 
-function rcIosKey(): string {
-  return (
-    process.env.EXPO_PUBLIC_RC_IOS_API_KEY ||
-    process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ||
-    process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY ||
-    ""
-  ).trim();
-}
-
-function rcAndroidKey(): string {
-  return (
-    process.env.EXPO_PUBLIC_RC_ANDROID_API_KEY ||
-    process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ||
-    process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY ||
-    ""
-  ).trim();
-}
+const IOS_KEY =
+  process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY?.trim() ||
+  process.env.EXPO_PUBLIC_RC_IOS_API_KEY?.trim() ||
+  process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY?.trim() ||
+  "";
+const ANDROID_KEY =
+  process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY?.trim() ||
+  process.env.EXPO_PUBLIC_RC_ANDROID_API_KEY?.trim() ||
+  process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY?.trim() ||
+  "";
 
 let configured = false;
 
-/**
- * Initialize RevenueCat with the current app user ID (Supabase user id).
- * Call once on app startup after user is known.
- * Silently fails if API keys are not configured (development mode).
- */
-export function configureRevenueCat(appUserId: string | null): void {
-  if (configured) return;
-  if (!appUserId) return;
-  
-  const apiKey = Platform.select({
-    ios: rcIosKey(),
-    android: rcAndroidKey(),
-    default: rcIosKey(),
-  });
-  
-  if (!apiKey || apiKey.startsWith("REVENUECAT_") || apiKey.length < 10) {
-    if (__DEV__) console.warn("[RevenueCat] Skipping configuration — no valid API key");
+export function initializePurchases(userId?: string): void {
+  const apiKey = Platform.OS === "ios" ? IOS_KEY : ANDROID_KEY;
+  if (!apiKey) {
+    if (__DEV__) console.warn("[RevenueCat] No API key set — paywall will not function");
     return;
   }
-  
   try {
-    Purchases.configure({ apiKey, appUserID: appUserId });
-    if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-    configured = true;
+    Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR);
+    if (!configured) {
+      Purchases.configure({ apiKey, appUserID: userId ?? null });
+      configured = true;
+    } else if (userId) {
+      void Purchases.logIn(userId).catch((e) => {
+        if (__DEV__) console.error("[RevenueCat] logIn failed:", e);
+      });
+    }
   } catch (e) {
-    if (__DEV__) console.warn("[RevenueCat] Configuration failed:", e);
+    if (__DEV__) console.error("[RevenueCat] configure failed:", e);
   }
 }
 
-export async function getCustomerInfo(): Promise<CustomerInfo | null> {
-  try {
-    const info = await Purchases.getCustomerInfo();
-    return info;
-  } catch (e) {
-    // error swallowed — handle in UI
-    return null;
-  }
-}
+/** @deprecated Use initializePurchases */
+export const configureRevenueCat = initializePurchases;
 
 export async function getOfferings() {
   try {
     const offerings = await Purchases.getOfferings();
     return offerings.current ?? null;
-  } catch (error) {
-    if (__DEV__) {
-      console.error("[RevenueCat] Failed to fetch offerings:", error);
-    }
+  } catch (e) {
+    if (__DEV__) console.error("[RevenueCat] getOfferings failed:", e);
     return null;
   }
 }
 
-export async function purchasePackage(pkg: Parameters<typeof Purchases.purchasePackage>[0]) {
+export async function purchasePackage(pkg: PurchasesPackage): Promise<{
+  success: boolean;
+  cancelled?: boolean;
+  customerInfo?: CustomerInfo;
+  error?: string;
+}> {
   try {
     const { customerInfo } = await Purchases.purchasePackage(pkg);
-    return { success: true as const, customerInfo };
+    return { success: true, customerInfo };
   } catch (e: unknown) {
     const err = e as { userCancelled?: boolean; message?: string };
-    if (err.userCancelled) {
-      return { success: false as const, cancelled: true as const };
-    }
-    return { success: false as const, error: err.message ?? String(e) };
+    if (err?.userCancelled) return { success: false, cancelled: true };
+    if (__DEV__) console.error("[RevenueCat] purchasePackage failed:", e);
+    return { success: false, error: err?.message ?? "Purchase failed. Please try again." };
   }
 }
 
-export async function checkSubscriptionStatus() {
+export async function restorePurchases(): Promise<{
+  success: boolean;
+  customerInfo?: CustomerInfo;
+  error?: string;
+}> {
+  try {
+    const customerInfo = await Purchases.restorePurchases();
+    return { success: true, customerInfo };
+  } catch (e: unknown) {
+    const err = e as { message?: string };
+    if (__DEV__) console.error("[RevenueCat] restorePurchases failed:", e);
+    return { success: false, error: err?.message ?? "No purchases found to restore." };
+  }
+}
+
+export async function checkEntitlement(entitlementId: string = "pro"): Promise<boolean> {
   try {
     const customerInfo = await Purchases.getCustomerInfo();
-    const isActive = Object.keys(customerInfo.entitlements.active).length > 0;
-    return { isActive, customerInfo };
-  } catch (error) {
-    if (__DEV__) {
-      console.error("[RevenueCat] Failed to check status:", error);
-    }
-    return { isActive: false, customerInfo: null };
-  }
-}
-
-export async function purchasePro(): Promise<{ success: boolean; error?: string; price?: string }> {
-  try {
-    const offerings = await Purchases.getOfferings();
-    const pkg =
-      offerings.current?.availablePackages?.find(
-        (p: { packageType: string; identifier: string }) =>
-          p.packageType === "MONTHLY" || p.identifier.toLowerCase().includes("monthly")
-      ) ?? offerings.current?.availablePackages?.[0];
-    if (!pkg) {
-      return { success: false, error: "No subscription package available." };
-    }
-    const price =
-      (pkg as { product?: { priceString?: string } }).product?.priceString ??
-      (pkg as { localizedPriceString?: string }).localizedPriceString;
-    const { customerInfo } = await Purchases.purchasePackage(pkg);
-    const hasPro = customerInfo?.entitlements?.active?.pro != null;
-    return { success: hasPro, price };
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : String(e);
-    if (message?.toLowerCase?.().includes("cancelled") || (e as { userCancelled?: boolean })?.userCancelled) {
-      return { success: false, error: "Purchase cancelled." };
-    }
-    return { success: false, error: message || "Purchase failed." };
-  }
-}
-
-export async function restorePurchases(): Promise<{ success: boolean }> {
-  try {
-    const info = await Purchases.restorePurchases();
-    const hasPro = info?.entitlements?.active?.pro != null;
-    return { success: hasPro };
+    return customerInfo.entitlements.active[entitlementId] !== undefined;
   } catch (e) {
-    // error swallowed — handle in UI
-    return { success: false };
+    if (__DEV__) console.error("[RevenueCat] checkEntitlement failed:", e);
+    return false;
   }
 }
 
 export async function isProUser(): Promise<boolean> {
+  return checkEntitlement("pro");
+}
+
+export async function getCustomerInfo(): Promise<CustomerInfo | null> {
   try {
-    const info = await getCustomerInfo();
-    return (info?.entitlements?.active?.pro) != null;
-  } catch {
-    return false;
+    return await Purchases.getCustomerInfo();
+  } catch (e) {
+    if (__DEV__) console.error("[RevenueCat] getCustomerInfo failed:", e);
+    return null;
   }
 }

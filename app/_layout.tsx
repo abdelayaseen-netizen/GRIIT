@@ -22,7 +22,7 @@ import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { configureRevenueCat } from "@/lib/revenue-cat";
+import { initializePurchases } from "@/lib/revenue-cat";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { initSentry } from "@/lib/sentry";
 
@@ -226,7 +226,9 @@ function RootLayoutNav() {
   const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
 
   useEffect(() => {
-    configureRevenueCat(user?.id ?? null);
+    if (user?.id) {
+      initializePurchases(user.id);
+    }
   }, [user?.id]);
   const segments = useSegments();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);

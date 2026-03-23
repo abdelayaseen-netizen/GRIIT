@@ -1,5 +1,5 @@
 /**
- * Premium Paywall Screen — GRIIT Pro subscription with plan selection.
+ * Premium Paywall Screen — GRIIT Pro subscription with RevenueCat offerings.
  */
 import React, { useState, useCallback, useEffect } from "react";
 import {
@@ -10,46 +10,16 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Pressable,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { X, Flame, Zap, BarChart2, Users } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
-import { purchasePro, restorePurchases, getOfferings } from "@/lib/revenue-cat";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { getOfferings, purchasePackage, restorePurchases } from "@/lib/revenue-cat";
+import type { PurchasesPackage } from "react-native-purchases";
 import { trackEvent } from "@/lib/analytics";
 import { useProStatus } from "@/hooks/useProStatus";
-
-const PRICING_PLANS = [
-  {
-    id: "monthly" as const,
-    label: "Monthly",
-    price: "$9.99",
-    pricePerMonth: "$9.99/mo",
-    billingNote: "Billed monthly",
-    badge: null,
-    highlight: false,
-  },
-  {
-    id: "annual" as const,
-    label: "Annual",
-    price: "$59.99",
-    pricePerMonth: "$5.00/mo",
-    billingNote: "Billed annually — save 50%",
-    badge: "BEST VALUE",
-    highlight: true,
-  },
-  {
-    id: "lifetime" as const,
-    label: "Lifetime",
-    price: "$149.99",
-    pricePerMonth: "One time",
-    billingNote: "Pay once, own forever",
-    badge: null,
-    highlight: false,
-  },
-] as const;
-
-type PlanId = (typeof PRICING_PLANS)[number]["id"];
 
 const VALUE_PROPS = [
   { icon: Flame, title: "Unlimited challenges", subtitle: "Join as many as you want" },
@@ -58,76 +28,111 @@ const VALUE_PROPS = [
   { icon: Zap, title: "Priority access", subtitle: "New challenges before anyone else" },
 ];
 
+function packageSortKey(pkg: PurchasesPackage): number {
+  const id = pkg.identifier.toLowerCase();
+  const title = (pkg.product?.title ?? "").toLowerCase();
+  if (id.includes("annual") || title.includes("annual")) return 0;
+  if (id.includes("month") || title.includes("month")) return 1;
+  if (id.includes("lifetime") || title.includes("lifetime")) return 2;
+  return 3;
+}
+
 export default function PaywallScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ source?: string }>();
   const insets = useSafeAreaInsets();
   const { refetch: refetchPro } = useProStatus();
 
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>("annual");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const activePlan = PRICING_PLANS.find((p) => p.id === selectedPlan)!;
+  const [offering, setOffering] = useState<Awaited<ReturnType<typeof getOfferings>>>(null);
+  const [loading, setLoading] = useState(true);
+  const [purchasing, setPurchasing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
 
   useEffect(() => {
     const source = typeof params.source === "string" ? params.source : "app";
     trackEvent("paywall_viewed", { source });
-    void getOfferings();
   }, [params.source]);
 
-  const handlePurchase = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await purchasePro();
+  useEffect(() => {
+    let cancelled = false;
+    getOfferings().then((o) => {
+      if (cancelled) return;
+      setOffering(o);
+      const pkgs = [...(o?.availablePackages ?? [])].sort((a, b) => packageSortKey(a) - packageSortKey(b));
+      if (pkgs.length > 0) {
+        const annual = pkgs.find(
+          (p) =>
+            p.identifier.toLowerCase().includes("annual") ||
+            (p.product?.title ?? "").toLowerCase().includes("annual")
+        );
+        setSelectedPackage(annual ?? pkgs[0] ?? null);
+      }
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handlePurchase = useCallback(
+    async (pkg: PurchasesPackage) => {
+      setPurchasing(true);
+      setErrorMessage(null);
+      const result = await purchasePackage(pkg);
+      setPurchasing(false);
       if (result.success) {
         trackEvent("purchase_completed", {
-          plan: selectedPlan,
-          price: result.price ?? activePlan.price,
+          plan: pkg.identifier,
+          price: pkg.product?.priceString ?? "",
         });
         await refetchPro();
         router.replace("/(tabs)" as never);
-      } else {
-        const msg = result.error ?? "Purchase failed. Please try again.";
-        if (!msg.toLowerCase().includes("cancel")) {
-          trackEvent("purchase_failed", { error: msg });
-        }
-        setError(msg);
+      } else if (!result.cancelled) {
+        trackEvent("purchase_failed", { error: result.error ?? "unknown" });
+        setErrorMessage(result.error ?? "Purchase failed. Please try again.");
       }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Purchase failed. Please try again.";
-      trackEvent("purchase_failed", { error: message });
-      setError(message);
-    } finally {
-      setIsLoading(false);
+    },
+    [router, refetchPro]
+  );
+
+  const handleCta = useCallback(() => {
+    if (!selectedPackage) {
+      setErrorMessage("No plan available. Try again later.");
+      return;
     }
-  }, [router, refetchPro, selectedPlan, activePlan.price]);
+    void handlePurchase(selectedPackage);
+  }, [selectedPackage, handlePurchase]);
 
   const handleRestore = useCallback(async () => {
-    setError(null);
-    try {
-      const result = await restorePurchases();
-      if (result.success) {
-        trackEvent("purchase_completed", { source: "restore" });
-        await refetchPro();
-        router.replace("/(tabs)" as never);
-      } else {
-        trackEvent("purchase_failed", { error: "no_purchases_to_restore" });
-        setError("No purchases to restore.");
-      }
-    } catch {
-      trackEvent("purchase_failed", { error: "restore_exception" });
-      setError("Restore failed. Please try again.");
+    setPurchasing(true);
+    setErrorMessage(null);
+    const result = await restorePurchases();
+    setPurchasing(false);
+    if (result.success) {
+      trackEvent("purchase_completed", { source: "restore" });
+      await refetchPro();
+      router.replace("/(tabs)" as never);
+    } else {
+      trackEvent("purchase_failed", { error: "restore" });
+      setErrorMessage(result.error ?? "No purchases found to restore.");
     }
   }, [router, refetchPro]);
 
+  const packages = [...(offering?.availablePackages ?? [])].sort((a, b) => packageSortKey(a) - packageSortKey(b));
+
+  const selectedTitle = selectedPackage?.product?.title ?? selectedPackage?.identifier ?? "Premium";
+  const selectedPrice = selectedPackage?.product?.priceString ?? "—";
+
   const cancelNote =
-    selectedPlan === "lifetime" ? "One-time purchase." : "Cancel anytime.";
+    selectedPackage &&
+    (selectedPackage.identifier.toLowerCase().includes("lifetime") ||
+      (selectedPackage.product?.title ?? "").toLowerCase().includes("lifetime"))
+      ? "One-time purchase."
+      : "Cancel anytime.";
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Close Button */}
       <TouchableOpacity
         style={styles.closeButton}
         onPress={() => router.back()}
@@ -143,7 +148,6 @@ export default function PaywallScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 160 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Section */}
         <View style={styles.heroSection}>
           <View style={styles.iconBadge}>
             <Flame size={36} color={DS_COLORS.WHITE} />
@@ -152,7 +156,6 @@ export default function PaywallScreen() {
           <Text style={styles.subheadline}>Build discipline without limits.</Text>
         </View>
 
-        {/* Value Props Card */}
         <View style={styles.valueCard}>
           {VALUE_PROPS.map((prop, index) => (
             <View key={prop.title}>
@@ -168,132 +171,124 @@ export default function PaywallScreen() {
           ))}
         </View>
 
-        {/* Plan Selector */}
         <Text style={styles.planSectionLabel}>CHOOSE YOUR PLAN</Text>
-        <View style={styles.planContainer}>
-          {PRICING_PLANS.map((plan) => {
-            const isSelected = selectedPlan === plan.id;
-            return (
-              <TouchableOpacity
-                key={plan.id}
-                style={[
-                  styles.planCard,
-                  isSelected && styles.planCardSelected,
-                ]}
-                onPress={() => {
-                  setSelectedPlan(plan.id);
-                  trackEvent("paywall_plan_selected", { plan: plan.id });
-                }}
-                activeOpacity={0.85}
-                accessibilityLabel={`Select ${plan.label} plan`}
-                accessibilityRole="button"
-              >
-                {plan.badge && (
-                  <View style={styles.planBadge}>
-                    <Text style={styles.planBadgeText}>{plan.badge}</Text>
-                  </View>
-                )}
-                <View style={styles.planRow}>
-                  {/* Radio */}
-                  <View style={[styles.radio, isSelected && styles.radioSelected]}>
-                    {isSelected && <View style={styles.radioInner} />}
-                  </View>
-                  {/* Middle */}
-                  <View style={styles.planMiddle}>
-                    <Text style={styles.planLabel}>{plan.label}</Text>
-                    <Text style={styles.planBillingNote}>{plan.billingNote}</Text>
-                  </View>
-                  {/* Right */}
-                  <View style={styles.planRight}>
-                    <Text style={styles.planPrice}>{plan.price}</Text>
-                    <Text style={styles.planPerMonth}>{plan.pricePerMonth}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
 
-        {/* Social Proof */}
+        {loading ? (
+          <View style={styles.loadingPlans}>
+            <ActivityIndicator color={GRIIT_COLORS.primary} size="large" accessibilityLabel="Loading plans" />
+          </View>
+        ) : packages.length === 0 ? (
+          <Text style={styles.noPlansText}>Subscription plans are unavailable. Check your connection or try again later.</Text>
+        ) : (
+          <View style={styles.planContainer}>
+            {packages.map((pkg) => {
+              const isSelected = selectedPackage?.identifier === pkg.identifier;
+              const title = pkg.product?.title ?? pkg.identifier;
+              const price = pkg.product?.priceString ?? "—";
+              const subtitle = pkg.product?.description?.trim() || pkg.packageType.replace(/_/g, " ");
+              return (
+                <TouchableOpacity
+                  key={pkg.identifier}
+                  style={[styles.planCard, isSelected && styles.planCardSelected]}
+                  onPress={() => {
+                    setSelectedPackage(pkg);
+                    trackEvent("paywall_plan_selected", { plan: pkg.identifier });
+                  }}
+                  activeOpacity={0.85}
+                  disabled={purchasing}
+                  accessibilityLabel={`Select ${title}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected, disabled: purchasing }}
+                >
+                  <View style={styles.planRow}>
+                    <View style={[styles.radio, isSelected && styles.radioSelected]}>
+                      {isSelected && <View style={styles.radioInner} />}
+                    </View>
+                    <View style={styles.planMiddle}>
+                      <Text style={styles.planLabel}>{title}</Text>
+                      <Text style={styles.planBillingNote} numberOfLines={2}>
+                        {subtitle}
+                      </Text>
+                    </View>
+                    <View style={styles.planRight}>
+                      <Text style={styles.planPrice}>{price}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
         <View style={styles.socialProofRow}>
           <View style={styles.avatarStack}>
-            {[DS_COLORS.AVATAR_COLOR_1, DS_COLORS.AVATAR_COLOR_2, DS_COLORS.AVATAR_COLOR_3].map(
-              (color, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.avatar,
-                    { backgroundColor: color, marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i },
-                  ]}
-                >
-                  <Text style={styles.avatarText}>{["A", "M", "J"][i]}</Text>
-                </View>
-              )
-            )}
+            {[DS_COLORS.AVATAR_COLOR_1, DS_COLORS.AVATAR_COLOR_2, DS_COLORS.AVATAR_COLOR_3].map((color, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.avatar,
+                  { backgroundColor: color, marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i },
+                ]}
+              >
+                <Text style={styles.avatarText}>{["A", "M", "J"][i]}</Text>
+              </View>
+            ))}
           </View>
           <Text style={styles.socialProofText}>Join 2,800+ people building discipline</Text>
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Bar */}
       <View style={[styles.stickyBar, { paddingBottom: insets.bottom + 12 }]}>
-        {/* Error Pill */}
-        {error && (
+        {errorMessage ? (
           <TouchableOpacity
             style={styles.errorPill}
-            onPress={() => setError(null)}
+            onPress={() => setErrorMessage(null)}
             activeOpacity={0.85}
             accessibilityLabel="Dismiss error"
             accessibilityRole="button"
           >
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText} accessibilityRole="alert">
+              {errorMessage}
+            </Text>
           </TouchableOpacity>
-        )}
+        ) : null}
 
-        {/* CTA Button */}
         <TouchableOpacity
-          style={[styles.ctaButton, isLoading && styles.ctaButtonDisabled]}
-          onPress={handlePurchase}
-          disabled={isLoading}
+          style={[styles.ctaButton, (purchasing || loading || packages.length === 0) && styles.ctaButtonDisabled]}
+          onPress={handleCta}
+          disabled={purchasing || loading || packages.length === 0}
           activeOpacity={0.85}
-          accessibilityLabel={`Purchase ${activePlan.label} plan`}
+          accessibilityLabel={`Purchase ${selectedTitle}`}
           accessibilityRole="button"
         >
-          {isLoading ? (
+          {purchasing ? (
             <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
           ) : (
             <Text style={styles.ctaButtonText}>
-              Start {activePlan.label} — {activePlan.price}
+              Start {selectedTitle} — {selectedPrice}
             </Text>
           )}
         </TouchableOpacity>
 
-        {/* Below Button Row */}
         <View style={styles.belowButtonRow}>
           <Text style={styles.cancelNote}>{cancelNote}</Text>
-          <TouchableOpacity
+          <Pressable
             onPress={handleRestore}
-            accessibilityLabel="Restore purchases"
+            disabled={purchasing}
             accessibilityRole="button"
+            accessibilityLabel="Restore previous purchases"
           >
             <Text style={styles.restoreText}>Restore purchases</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
-        {/* Legal Line */}
         <Text style={styles.legalLine}>
           By continuing you agree to our{" "}
-          <Text
-            style={styles.legalLink}
-            onPress={() => Linking.openURL("https://griit.app/terms")}
-          >
+          <Text style={styles.legalLink} onPress={() => Linking.openURL("https://griit.app/terms")}>
             Terms
           </Text>{" "}
           &{" "}
-          <Text
-            style={styles.legalLink}
-            onPress={() => Linking.openURL("https://griit.app/privacy")}
-          >
+          <Text style={styles.legalLink} onPress={() => Linking.openURL("https://griit.app/privacy")}>
             Privacy Policy
           </Text>
         </Text>
@@ -388,6 +383,19 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: 12,
   },
+  loadingPlans: {
+    minHeight: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  noPlansText: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: GRIIT_COLORS.error,
+    textAlign: "center",
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
   planContainer: {
     gap: 10,
     marginBottom: 20,
@@ -407,21 +415,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
-  },
-  planBadge: {
-    position: "absolute",
-    top: -10,
-    right: 12,
-    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
-    borderRadius: DS_RADIUS.PILL,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  planBadgeText: {
-    fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.WHITE,
-    letterSpacing: 0.5,
   },
   planRow: {
     flexDirection: "row",
@@ -467,11 +460,6 @@ const styles = StyleSheet.create({
     fontSize: DS_TYPOGRAPHY.SIZE_LG,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK,
     color: DS_COLORS.TEXT_PRIMARY,
-  },
-  planPerMonth: {
-    fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    color: DS_COLORS.TEXT_SECONDARY,
-    marginTop: 2,
   },
   socialProofRow: {
     flexDirection: "row",
