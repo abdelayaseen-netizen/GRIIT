@@ -4,7 +4,7 @@ import { createTRPCRouter, protectedProcedure } from "../create-context";
 import type { PgError } from "../../types/db";
 
 /** Map onboarding challenge id to DB challenge uuid (must match seed). */
-const STARTER_CHALLENGE_IDS: Record<string, string> = {
+const ONBOARDING_CHALLENGE_IDS: Record<string, string> = {
   "75_hard": "a1000001-4000-4000-8000-000000000001",
   cold_shower_30: "a1000001-4000-4000-8000-000000000002",
   read_10_pages: "a1000001-4000-4000-8000-000000000005",
@@ -62,7 +62,7 @@ export const userRouter = createTRPCRouter({
           notification_time_preference: notificationTimeFromTrainingTime(input.trainingTime),
           preferred_secure_time: notificationTimeFromTrainingTime(input.trainingTime),
           initial_challenge_id: input.selectedChallengeId
-            ? STARTER_CHALLENGE_IDS[input.selectedChallengeId] ?? null
+            ? ONBOARDING_CHALLENGE_IDS[input.selectedChallengeId] ?? null
             : null,
           onboarding_answers: {
             motivation: input.motivation,
@@ -89,7 +89,7 @@ export const userRouter = createTRPCRouter({
       }
 
       const challengeUuid = input.selectedChallengeId
-        ? STARTER_CHALLENGE_IDS[input.selectedChallengeId]
+        ? ONBOARDING_CHALLENGE_IDS[input.selectedChallengeId]
         : null;
 
       if (challengeUuid) {

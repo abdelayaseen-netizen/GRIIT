@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   RefreshControl,
-  ActivityIndicator,
   Alert,
   TouchableOpacity,
   LayoutAnimation,
@@ -34,7 +33,11 @@ import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeed from "@/components/home/LiveFeed";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ErrorRetry } from "@/components/ErrorRetry";
+import Card from "@/components/shared/Card";
+import LoadingState from "@/components/shared/LoadingState";
+import ErrorState from "@/components/shared/ErrorState";
+import SectionHeader from "@/components/shared/SectionHeader";
+import StatBadge from "@/components/shared/StatBadge";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
@@ -339,11 +342,9 @@ export default function HomeScreen() {
         <DailyQuote />
 
         {homeQuery.isPending && !homeQuery.data ? (
-          <View style={s.loadingWrap}>
-            <ActivityIndicator size="large" color={DS_COLORS.ACCENT} />
-          </View>
+          <LoadingState containerStyle={s.loadingWrap} />
         ) : homeQuery.isError ? (
-          <ErrorRetry message="Couldn't load your dashboard" onRetry={() => void homeQuery.refetch()} />
+          <ErrorState message="Couldn't load your dashboard" onRetry={() => void homeQuery.refetch()} />
         ) : challengeGroups.length === 0 ? (
           <EmptyState
             icon={Target}
@@ -362,12 +363,11 @@ export default function HomeScreen() {
                 <Text style={s.allDoneSubtitle}>Come back tomorrow to continue</Text>
               </View>
             ) : null}
-            <View style={s.goalsSectionHeader}>
-              <Text style={s.goalsSectionTitle}>Today&apos;s goals</Text>
-              <Text style={s.goalsSectionCount}>
-                {incompleteChallenges.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining
-              </Text>
-            </View>
+            <SectionHeader
+              title="Today&apos;s goals"
+              actionLabel={`${incompleteChallenges.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining`}
+              onPressAction={() => {}}
+            />
             {incompleteChallenges.map((group, index) => (
               <GoalCard
                 key={group.activeChallengeId}
@@ -397,42 +397,29 @@ export default function HomeScreen() {
                 }}
                 onLongPressChallenge={() => {
                   setLeaveChallengeError(null);
-                  Alert.alert("Challenge options", group.challengeName, [
-                    {
-                      text: "View challenge",
-                      onPress: () => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never),
-                    },
-                    {
-                      text: "Leave challenge",
-                      style: "destructive",
-                      onPress: () => {
-                        Alert.alert(
-                          "Leave challenge?",
-                          "You'll lose your progress. This can't be undone.",
-                          [
-                            { text: "Cancel", style: "cancel" },
-                            {
-                              text: "Leave",
-                              style: "destructive",
-                              onPress: async () => {
-                                try {
-                                  await trpcMutate(TRPC.challenges.leave, { challengeId: group.challengeId });
-                                  void homeQuery.refetch();
-                                  void refetchAll();
-                                } catch (err) {
-                                  console.error("[Home] leave challenge failed:", err);
-                                  const msg =
-                                    err instanceof Error ? err.message : "Could not leave this challenge. Try again.";
-                                  setLeaveChallengeError(msg);
-                                }
-                              },
-                            },
-                          ]
-                        );
+                  Alert.alert(
+                    "Leave challenge?",
+                    "You'll lose your progress. This can't be undone.",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Leave",
+                        style: "destructive",
+                        onPress: async () => {
+                          try {
+                            await trpcMutate(TRPC.challenges.leave, { challengeId: group.challengeId });
+                            void homeQuery.refetch();
+                            void refetchAll();
+                          } catch (err) {
+                            console.error("[Home] leave challenge failed:", err);
+                            const msg =
+                              err instanceof Error ? err.message : "Could not leave this challenge. Try again.";
+                            setLeaveChallengeError(msg);
+                          }
+                        },
                       },
-                    },
-                    { text: "Cancel", style: "cancel" },
-                  ]);
+                    ]
+                  );
                 }}
                 isError={homeQuery.isError}
               />
@@ -485,27 +472,25 @@ export default function HomeScreen() {
         <NextUnlock currentStreak={streak} />
 
         <View style={s.statsRow}>
-          <View style={s.stat}>
+          <Card padded={false} containerStyle={s.stat}>
             <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
               <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
             </View>
-            <Text style={s.statValue}>{showStatDash ? "—" : streak}</Text>
-            <Text style={s.statLabel}>streak</Text>
-          </View>
-          <View style={s.stat}>
+            <StatBadge value={showStatDash ? "—" : streak} label="streak" />
+          </Card>
+          <Card padded={false} containerStyle={s.stat}>
             <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
               <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
             </View>
-            <Text style={s.statValue}>{showStatDash ? "—" : points}</Text>
-            <Text style={s.statLabel}>points</Text>
-          </View>
-          <View style={s.stat}>
+            <StatBadge value={showStatDash ? "—" : points} label="points" />
+          </Card>
+          <Card padded={false} containerStyle={s.stat}>
             <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
               <Target size={16} color={DS_COLORS.GREEN} />
             </View>
             <Text style={s.rankValue}>{rank}</Text>
             <Text style={s.statLabel}>rank</Text>
-          </View>
+          </Card>
         </View>
 
         <LiveFeed items={homeQuery.data?.feedItems ?? []} />

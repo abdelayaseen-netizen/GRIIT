@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Switch,
   Platform,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -78,19 +77,7 @@ export default function ChallengeChatInfoScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    Alert.alert(
-      "Report an issue",
-      "Describe what’s wrong (e.g. spam, harassment, off-topic). We’ll review it shortly.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Submit",
-          onPress: () => {
-            setReportThanks("We've received your report and will look into it.");
-          },
-        },
-      ]
-    );
+    setReportThanks("We've received your report and will look into it.");
   };
 
   if (!challenge || !room) {

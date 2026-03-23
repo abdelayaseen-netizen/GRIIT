@@ -1,15 +1,16 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type ViewStyle } from "react-native";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 type Props = {
   message: string;
   onRetry?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
 };
 
-export default function ErrorState({ message, onRetry }: Props) {
+export default function ErrorState({ message, onRetry, containerStyle }: Props) {
   return (
-    <View style={s.wrap} accessibilityLabel="Error state">
+    <View style={[s.wrap, containerStyle]} accessibilityLabel="Error state">
       <Text style={s.message}>{message}</Text>
       {onRetry ? (
         <TouchableOpacity onPress={onRetry} style={s.btn} accessibilityLabel="Try again" accessibilityRole="button">

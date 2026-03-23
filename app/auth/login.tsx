@@ -17,6 +17,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { DS_COLORS } from "@/lib/design-system";
+import FormInput from "@/components/shared/FormInput";
 
 const PADDING_H = 20;
 
@@ -184,21 +185,24 @@ export default function LoginScreen() {
 
           <View style={styles.gap32} />
 
-          <TextInput
-            style={[styles.input, { borderColor: inputBorder("email") }]}
-            placeholder="Email"
-            placeholderTextColor={DS_COLORS.textMuted}
+          <FormInput
+            label="Email"
             value={email}
-            onChangeText={(t) => { setEmail(t); setFormError(""); }}
-            onFocus={() => setFocusedField("email")}
-            onBlur={() => setFocusedField(null)}
+            onChangeText={(t) => {
+              setEmail(t);
+              setFormError("");
+            }}
+            placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
             returnKeyType="next"
             onSubmitEditing={() => passwordRef.current?.focus()}
             editable={!loading}
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => setFocusedField(null)}
+            inputStyle={{ borderColor: inputBorder("email"), marginBottom: 12 }}
+            containerStyle={{ marginBottom: 0 }}
             accessibilityLabel="Email"
-            accessibilityRole="text"
           />
 
           <View style={[styles.passwordWrap, { borderColor: inputBorder("password") }]}>

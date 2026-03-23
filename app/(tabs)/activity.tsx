@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   Share,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
@@ -21,7 +20,11 @@ import { Leaderboard, type CommunityLeaderboardEntry } from "@/components/commun
 import { LiveActivity, type LiveActivityItem } from "@/components/community/LiveActivity";
 import { YourStats } from "@/components/community/YourStats";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ErrorRetry } from "@/components/ErrorRetry";
+import Card from "@/components/shared/Card";
+import LoadingState from "@/components/shared/LoadingState";
+import ErrorState from "@/components/shared/ErrorState";
+import SectionHeader from "@/components/shared/SectionHeader";
+import StatBadge from "@/components/shared/StatBadge";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { trackEvent } from "@/lib/analytics";
 
@@ -91,14 +94,14 @@ function FriendStreakCard({ username }: { username: string }) {
       if (result.action === Share.sharedAction) {
         trackEvent("invite_sent", { content_type: "friend_streak" });
       }
-    } catch {
-      /* user dismissed share sheet */
+    } catch (err) {
+      console.error("[Community] share failed:", err);
     }
   }, [username]);
 
   return (
     <TouchableOpacity
-      style={styles.friendCard}
+      style={styles.friendTouch}
       onPress={onShare}
       activeOpacity={0.8}
       accessibilityRole="button"
@@ -202,7 +205,11 @@ export default function CommunityScreen() {
         }
       >
         <CommunityHeader selectedFilter={filter} onSelectFilter={setFilter} />
+        <View style={{ paddingHorizontal: DS_SPACING.xl, marginTop: DS_SPACING.sm }}>
+          <StatBadge label="active challenges" value={activeChallengesQuery.data ?? 0} />
+        </View>
 
+        <SectionHeader title="Leaderboard" />
         <Leaderboard
           entries={leaderboardEntries}
           currentUserName={currentUserName}
@@ -211,12 +218,11 @@ export default function CommunityScreen() {
           onStartEarning={() => router.push("/(tabs)/discover")}
         />
 
+        <SectionHeader title="Live activity" />
         {feedQuery.isError ? (
-          <ErrorRetry message="Couldn't load activity" onRetry={() => void feedQuery.refetch()} />
+          <ErrorState message="Couldn't load activity" onRetry={() => void feedQuery.refetch()} />
         ) : currentUser?.id && feedQuery.isPending && !feedQuery.data ? (
-          <View style={{ paddingVertical: DS_SPACING.xxl, alignItems: "center" }}>
-            <ActivityIndicator size="large" color={DS_COLORS.ACCENT} />
-          </View>
+          <LoadingState containerStyle={{ paddingVertical: DS_SPACING.xxl }} />
         ) : currentUser?.id && !feedQuery.isError && feedItems.length === 0 && !feedQuery.isPending ? (
           <EmptyState
             icon={Activity}
@@ -238,7 +244,9 @@ export default function CommunityScreen() {
           activeChallenges={activeChallengesQuery.data ?? 0}
         />
 
-        <FriendStreakCard username={(currentUser?.name ?? "griit-user").replace(/\s+/g, ".").toLowerCase()} />
+        <Card padded={false} containerStyle={styles.friendCard}>
+          <FriendStreakCard username={(currentUser?.name ?? "griit-user").replace(/\s+/g, ".").toLowerCase()} />
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -254,10 +262,12 @@ const styles = StyleSheet.create({
   },
   friendCard: {
     marginHorizontal: DS_SPACING.xl,
+    marginTop: 18,
     backgroundColor: DS_COLORS.chipFill,
     borderRadius: DS_RADIUS.card,
+  },
+  friendTouch: {
     padding: DS_SPACING.lg,
-    marginTop: 18,
     flexDirection: "row",
     alignItems: "center",
     gap: DS_SPACING.md,

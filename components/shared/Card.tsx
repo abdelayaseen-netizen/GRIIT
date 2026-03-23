@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { DS_COLORS, DS_RADIUS, DS_SHADOWS, DS_SPACING } from "@/lib/design-system";
 
 type Props = {
@@ -7,22 +7,23 @@ type Props = {
   onPress?: () => void;
   padded?: boolean;
   accessibilityLabel?: string;
+  containerStyle?: StyleProp<ViewStyle>;
 };
 
-export default function Card({ children, onPress, padded = true, accessibilityLabel }: Props) {
+export default function Card({ children, onPress, padded = true, accessibilityLabel, containerStyle }: Props) {
   if (onPress) {
     return (
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? "Card action"}
-        style={[s.base, padded && s.padded]}
+        style={[s.base, padded && s.padded, containerStyle]}
       >
         {children}
       </Pressable>
     );
   }
-  return <View style={[s.base, padded && s.padded]}>{children}</View>;
+  return <View style={[s.base, padded && s.padded, containerStyle]}>{children}</View>;
 }
 
 const s = StyleSheet.create({

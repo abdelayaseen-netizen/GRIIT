@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Share, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Share } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +21,9 @@ import TrophyCase from "@/components/profile/TrophyCase";
 import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
 import ProfileActions from "@/components/profile/ProfileActions";
 import { EmptyState } from "@/components/EmptyState";
-import { ErrorRetry } from "@/components/ErrorRetry";
+import LoadingState from "@/components/shared/LoadingState";
+import ErrorState from "@/components/shared/ErrorState";
+import Card from "@/components/shared/Card";
 import { DS_COLORS } from "@/lib/design-system";
 import { User } from "lucide-react-native";
 
@@ -120,8 +122,10 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={s.container} edges={["top"]}>
         <View style={s.center}>
-          <Text style={s.guestTitle}>Sign in to view your profile</Text>
-          <Text style={s.guestSub}>Track streaks, rank, and activity in one place.</Text>
+          <Card containerStyle={{ width: "100%" }}>
+            <Text style={s.guestTitle}>Sign in to view your profile</Text>
+            <Text style={s.guestSub}>Track streaks, rank, and activity in one place.</Text>
+          </Card>
         </View>
       </SafeAreaView>
     );
@@ -131,7 +135,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={s.container} edges={["top"]}>
         <View style={s.center}>
-          <ActivityIndicator size="large" color={DS_COLORS.ACCENT} accessibilityLabel="Loading profile" />
+          <LoadingState message="Loading profile..." />
         </View>
       </SafeAreaView>
     );
@@ -141,7 +145,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={s.container} edges={["top"]}>
         <View style={[s.center, { paddingHorizontal: 24 }]}>
-          <ErrorRetry
+          <ErrorState
             message="Couldn't load profile"
             onRetry={() => {
               void refetchAll();

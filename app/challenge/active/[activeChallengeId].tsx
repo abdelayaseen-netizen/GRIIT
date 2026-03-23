@@ -176,7 +176,6 @@ export default function ActiveChallengeDetailScreen() {
               router.replace(ROUTES.TABS_HOME as never);
             } catch (err) {
               console.error("[ActiveChallengeDetail] leave failed:", err);
-              Alert.alert("Error", "Failed to leave challenge. Please try again.");
             }
           },
         },
@@ -283,12 +282,7 @@ export default function ActiveChallengeDetailScreen() {
           <Text style={s.headerCenterTitle}>Challenge</Text>
           <TouchableOpacity
             style={s.headerCircleBtn}
-            onPress={() =>
-              Alert.alert("Challenge options", challenge?.title ?? "Challenge", [
-                { text: "Leave Challenge", style: "destructive", onPress: handleLeaveChallenge },
-                { text: "Cancel", style: "cancel" },
-              ])
-            }
+            onPress={handleLeaveChallenge}
             accessibilityLabel="More"
             accessibilityRole="button"
           >

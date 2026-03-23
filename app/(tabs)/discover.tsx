@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Search } from "lucide-react-native";
@@ -15,7 +15,10 @@ import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ErrorRetry } from "@/components/ErrorRetry";
+import Card from "@/components/shared/Card";
+import LoadingState from "@/components/shared/LoadingState";
+import ErrorState from "@/components/shared/ErrorState";
+import SectionHeader from "@/components/shared/SectionHeader";
 import { ROUTES } from "@/lib/routes";
 import { useDebounce } from "@/hooks/useDebounce";
 import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
@@ -228,11 +231,9 @@ export default function DiscoverScreen() {
           </View>
 
           {featuredQuery.isError ? (
-            <ErrorRetry message="Couldn't load challenges" onRetry={() => void featuredQuery.refetch()} />
+            <ErrorState message="Couldn't load challenges" onRetry={() => void featuredQuery.refetch()} />
           ) : featuredQuery.isPending && !featuredQuery.data ? (
-            <View style={styles.v3LoadingWrap}>
-              <ActivityIndicator size="large" color={DS_COLORS.ACCENT_PRIMARY} />
-            </View>
+            <LoadingState containerStyle={styles.v3LoadingWrap} />
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={Search}
@@ -268,10 +269,7 @@ export default function DiscoverScreen() {
                 />
               </View>
 
-              <View style={styles.v3SectionHeader}>
-                <Text style={styles.v3SectionTitle}>24-Hour Challenges</Text>
-                <View style={styles.v3Dot} />
-              </View>
+              <SectionHeader title="24-Hour Challenges" />
               <FlatList
                 horizontal
                 data={daily}
@@ -299,9 +297,7 @@ export default function DiscoverScreen() {
                 )}
               />
 
-              <View style={styles.v3SectionHeaderSolo}>
-                <Text style={styles.v3SectionTitle}>Bring your people</Text>
-              </View>
+              <SectionHeader title="Bring your people" />
               <View style={styles.v3ListPad}>
                 {team.map((c) => (
                   <TeamChallengeCard
@@ -321,17 +317,12 @@ export default function DiscoverScreen() {
                 ))}
               </View>
 
-              <View style={styles.v3SectionHeaderBetween}>
-                <Text style={styles.v3SectionTitle}>Challenges for you</Text>
-                <TouchableOpacity
-                  onPress={() => setActiveCategory("all")}
-                  accessibilityLabel="Show all challenge categories"
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.v3SeeAll}>See all</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.v3PopularWrap}>
+              <SectionHeader
+                title="Challenges for you"
+                actionLabel="See all"
+                onPressAction={() => setActiveCategory("all")}
+              />
+              <Card padded={false} containerStyle={styles.v3PopularWrap}>
                 {popular.map((c, i) => (
                   <PopularChallengeRow
                     key={c.id}
@@ -348,7 +339,7 @@ export default function DiscoverScreen() {
                     onPressIn={() => prefetchChallengeDetail(c.id)}
                   />
                 ))}
-              </View>
+              </Card>
               <View style={styles.v3ScrollBottomSpacer} />
             </>
           )}

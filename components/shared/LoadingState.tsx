@@ -1,10 +1,16 @@
 import React from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
-export default function LoadingState({ message = "Loading..." }: { message?: string }) {
+export default function LoadingState({
+  message = "Loading...",
+  containerStyle,
+}: {
+  message?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+}) {
   return (
-    <View style={s.wrap} accessibilityLabel="Loading state">
+    <View style={[s.wrap, containerStyle]} accessibilityLabel="Loading state">
       <ActivityIndicator size="large" color={DS_COLORS.ACCENT} />
       <Text style={s.text}>{message}</Text>
     </View>

@@ -69,7 +69,9 @@ import {
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
-import { ErrorRetry } from "@/components/ErrorRetry";
+import LoadingState from "@/components/shared/LoadingState";
+import ErrorState from "@/components/shared/ErrorState";
+import Card from "@/components/shared/Card";
 import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
 import { ChallengeHero } from "@/components/challenge/ChallengeHero";
 import { ChallengeStats } from "@/components/challenge/ChallengeStats";
@@ -716,15 +718,8 @@ export default function ChallengeDetailScreen() {
       const msg = err instanceof Error ? err.message : "";
       const code = (err as { data?: { code?: string } })?.data?.code;
       if (code === "FORBIDDEN" || msg.toLowerCase().includes("up to 3 challenges")) {
-        Alert.alert(
-          "Challenge Limit Reached",
-          "Free accounts can have up to 3 active challenges. Leave a challenge to make room, or upgrade to Premium for unlimited challenges.",
-          [
-            { text: "Upgrade to Premium", onPress: () => router.push("/paywall" as never) },
-            { text: "Manage Challenges", onPress: () => router.push(ROUTES.TABS_HOME as never) },
-            { text: "Cancel", style: "cancel" },
-          ]
-        );
+        showError("Free accounts can have up to 3 active challenges. Upgrade to Premium for unlimited challenges.");
+        router.push("/paywall" as never);
         return;
       }
       const { title, message } = formatTRPCError(err);
@@ -860,7 +855,10 @@ export default function ChallengeDetailScreen() {
     }
     trpcQuery(TRPC.integrations.getStravaConnection)
       .then((conn: unknown) => setStravaConnected(!!conn))
-      .catch(() => setStravaConnected(false));
+      .catch((err) => {
+        console.error("[ChallengeDetail] getStravaConnection failed:", err);
+        setStravaConnected(false);
+      });
   }, [isThisActiveChallenge, hasStravaTasks]);
 
   useFocusEffect(
@@ -954,17 +952,7 @@ export default function ChallengeDetailScreen() {
     return (
       <View style={[s.loadingContainer, { backgroundColor: DS_COLORS.background }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={s.skeletonHeader} />
-        <View style={s.skeletonBody}>
-          <View style={s.skeletonChipRow}>
-            <View style={s.skeletonChip} />
-            <View style={s.skeletonChip} />
-            <View style={s.skeletonChip} />
-          </View>
-          <View style={s.skeletonBlock} />
-          <View style={s.skeletonMission} />
-          <View style={s.skeletonMission} />
-        </View>
+        <LoadingState message="Loading challenge..." />
       </View>
     );
   }
@@ -974,7 +962,7 @@ export default function ChallengeDetailScreen() {
       <SafeAreaView style={[s.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[s.emptyWrap, { flex: 1, justifyContent: "center" }]}>
-          <ErrorRetry message="Couldn't load this challenge" onRetry={() => void challengeQuery.refetch()} />
+          <ErrorState message="Couldn't load this challenge" onRetry={() => void challengeQuery.refetch()} />
           <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: DS_SPACING.lg }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
@@ -1090,43 +1078,24 @@ export default function ChallengeDetailScreen() {
             referrerLabel={referrerLabel}
             onBack={() => router.back()}
             onMoreMenu={() => {
-              Alert.alert("Challenge", undefined, [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Share",
-                  onPress: () => {
-                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    trackEvent("share_tapped", {
-                      content_type: "challenge",
-                      challenge_id: id ?? undefined,
-                    });
-                    import("@/lib/share").then(({ shareChallenge }) =>
-                      shareChallenge(
-                        {
-                          name: challenge.title,
-                          duration: challenge.duration_days ?? 0,
-                          id: id ?? "",
-                          tasksPerDay: challenge.tasks?.length,
-                        },
-                        currentUserId
-                      )
-                    ).catch((e) => console.error("[ChallengeDetail] shareChallenge failed:", e));
-                  },
-                },
-                {
-                  text: "Invite friends",
-                  onPress: () => {
-                    trackEvent("invite_sent", {
-                      content_type: "challenge",
-                      challenge_id: id ?? undefined,
-                      source: "challenge_menu",
-                    });
-                    import("@/lib/share").then(({ inviteToChallenge }) =>
-                      inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                    ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge failed:", e));
-                  },
-                },
-              ], { cancelable: true });
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              trackEvent("share_tapped", {
+                content_type: "challenge",
+                challenge_id: id ?? undefined,
+              });
+              import("@/lib/share")
+                .then(({ shareChallenge }) =>
+                  shareChallenge(
+                    {
+                      name: challenge.title,
+                      duration: challenge.duration_days ?? 0,
+                      id: id ?? "",
+                      tasksPerDay: challenge.tasks?.length,
+                    },
+                    currentUserId
+                  )
+                )
+                .catch((e) => console.error("[ChallengeDetail] shareChallenge failed:", e));
             }}
           />
 
@@ -1222,11 +1191,11 @@ export default function ChallengeDetailScreen() {
 
             {/* Progress (joined only; simple day line — no progress grid) */}
             {isJoined && !isDaily && !(isTeamChallenge && runStatus === "failed") && (
-              <View style={[s.progressSimpleCard, { backgroundColor: DS_COLORS.BG_CARD }]}>
+              <Card padded={false} containerStyle={[s.progressSimpleCard, { backgroundColor: DS_COLORS.BG_CARD }]}>
                 <Text style={[s.progressSimpleText, { color: DS_COLORS.TEXT_SECONDARY }]}>
                   Day {userCurrentDay} of {challenge.duration_days}
                 </Text>
-              </View>
+              </Card>
             )}
 
             <ChallengeLeaderboard

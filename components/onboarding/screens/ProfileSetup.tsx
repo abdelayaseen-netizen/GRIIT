@@ -198,7 +198,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
             style={[styles.input, styles.inputFlex]}
             value={username}
             onChangeText={(t) => setUsername(t.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20))}
-            placeholder="username"
+            placeholder="handle"
             placeholderTextColor={C.textTertiary}
             autoCapitalize="none"
             autoCorrect={false}

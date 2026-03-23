@@ -29,6 +29,7 @@ import {
 import { GRIITWordmark } from "@/src/components/ui";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import FormInput from "@/components/shared/FormInput";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
@@ -68,7 +69,6 @@ export default function SignupScreen() {
   });
   const isSubmittingRef = useRef(false);
 
-  const displayNameRef = useRef<TextInput>(null);
   const usernameRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -109,7 +109,7 @@ export default function SignupScreen() {
       );
       setUsernameStatus(result ? "taken" : "available");
     } catch (err) {
-      // error swallowed — handle in UI
+      console.error("[Signup] username check failed:", err);
       setUsernameStatus("idle");
     }
   }, []);
@@ -196,12 +196,13 @@ export default function SignupScreen() {
         );
 
       if (profileError) {
-        // error swallowed — handle in UI
+        console.error("[Signup] profile upsert failed:", profileError);
       }
 
       track({ name: "signup_completed" });
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
+      console.error("[Signup] signup failed:", err);
       showError("Please try again.");
     } finally {
       setLoading(false);
@@ -242,51 +243,51 @@ export default function SignupScreen() {
           <Text style={styles.formTitle}>Create your account</Text>
 
           <View style={styles.form}>
-            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Display Name</Text>
-            <TextInput
-              ref={displayNameRef}
-              style={[
-                styles.input,
-                { borderColor: getInputBorderColor("displayName", !displayNameInvalid), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary },
-              ]}
-              placeholder="What should we call you?"
-              placeholderTextColor={DS_COLORS.textSecondary}
+            <FormInput
+              label="Display Name"
               value={displayName}
               onChangeText={setDisplayName}
-              onFocus={() => setFocusedField("displayName")}
-              onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, displayName: true })); }}
+              placeholder="What should we call you?"
               autoCapitalize="words"
               autoCorrect={false}
               returnKeyType="next"
               onSubmitEditing={() => usernameRef.current?.focus()}
               editable={!loading}
+              onFocus={() => setFocusedField("displayName")}
+              onBlur={() => {
+                setFocusedField(null);
+                setTouched((p) => ({ ...p, displayName: true }));
+              }}
+              error={touched.displayName && displayNameInvalid ? "Name must be at least 2 characters" : undefined}
+              inputStyle={{
+                borderColor: getInputBorderColor("displayName", !displayNameInvalid),
+                backgroundColor: DS_COLORS.surface,
+                color: DS_COLORS.textPrimary,
+              }}
               accessibilityLabel="Display name"
-              accessibilityRole="text"
             />
-            {touched.displayName && displayNameInvalid && (
-              <Text style={styles.inlineError}>Name must be at least 2 characters</Text>
-            )}
 
-            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Username</Text>
-            <TextInput
-              ref={usernameRef}
-              style={[
-                styles.input,
-                { borderColor: getInputBorderColor("username", !usernameInvalid && usernameStatus !== "taken"), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary },
-              ]}
-              placeholder="@username"
-              placeholderTextColor={DS_COLORS.textSecondary}
+            <FormInput
+              label="Username"
               value={username}
               onChangeText={handleUsernameChange}
-              onFocus={() => setFocusedField("username")}
-              onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, username: true })); }}
+              placeholder="@handle"
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
               onSubmitEditing={() => emailRef.current?.focus()}
               editable={!loading}
+              onFocus={() => setFocusedField("username")}
+              onBlur={() => {
+                setFocusedField(null);
+                setTouched((p) => ({ ...p, username: true }));
+              }}
+              inputStyle={{
+                borderColor: getInputBorderColor("username", !usernameInvalid && usernameStatus !== "taken"),
+                backgroundColor: DS_COLORS.surface,
+                color: DS_COLORS.textPrimary,
+              }}
               accessibilityLabel="Username"
-              accessibilityRole="text"
             />
             {username.length > 0 && (
               <View style={styles.usernameHint}>
@@ -308,28 +309,30 @@ export default function SignupScreen() {
               <Text style={styles.inlineError}>Only lowercase letters, numbers, underscores, and periods</Text>
             )}
 
-            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Email</Text>
-            <TextInput
-              ref={emailRef}
-              style={[styles.input, { borderColor: getInputBorderColor("email", !emailInvalid), backgroundColor: DS_COLORS.surface, color: DS_COLORS.textPrimary }]}
-              placeholder="you@example.com"
-              placeholderTextColor={DS_COLORS.textSecondary}
+            <FormInput
+              label="Email"
               value={email}
               onChangeText={setEmail}
-              onFocus={() => setFocusedField("email")}
-              onBlur={() => { setFocusedField(null); setTouched((p) => ({ ...p, email: true })); }}
+              placeholder="you@example.com"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()}
               editable={!loading}
+              onFocus={() => setFocusedField("email")}
+              onBlur={() => {
+                setFocusedField(null);
+                setTouched((p) => ({ ...p, email: true }));
+              }}
+              error={touched.email && emailInvalid ? "Enter a valid email address" : undefined}
+              inputStyle={{
+                borderColor: getInputBorderColor("email", !emailInvalid),
+                backgroundColor: DS_COLORS.surface,
+                color: DS_COLORS.textPrimary,
+              }}
               accessibilityLabel="Email"
-              accessibilityRole="text"
             />
-            {touched.email && emailInvalid && (
-              <Text style={styles.inlineError}>Enter a valid email address</Text>
-            )}
 
             <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Password</Text>
             <View style={[styles.passwordRow, { borderColor: getInputBorderColor("password", !passwordInvalid), backgroundColor: DS_COLORS.surface }]}>

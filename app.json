@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "GRIIT",
-    "slug": "grit-challenge-tracker",
+    "slug": "griit-challenge-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -18,7 +18,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.grit.challenge-tracker",
+      "bundleIdentifier": "app.griit.challenge-tracker",
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
         "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
@@ -31,7 +31,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.grit.challenge_tracker",
+      "package": "app.griit.challenge_tracker",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",

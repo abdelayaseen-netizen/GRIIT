@@ -143,7 +143,7 @@ export default function AddAccountabilityPartnerScreen() {
         <View style={styles.inputWrap}>
           <TextInput
             style={styles.input}
-            placeholder="Search by username..."
+            placeholder="Search by handle..."
             placeholderTextColor={DS_COLORS.textMuted}
             value={query}
             onChangeText={onQueryChange}

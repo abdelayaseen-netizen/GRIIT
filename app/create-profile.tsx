@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { DS_COLORS } from "@/lib/design-system";
 import { trackEvent } from "@/lib/analytics";
+import FormInput from "@/components/shared/FormInput";
 
 const PADDING_H = 20;
 
@@ -82,7 +83,7 @@ export default function CreateProfileScreen() {
         if (profile?.display_name) setDisplayName(profile.display_name);
       } catch (e) {
         if (!cancelled) {
-          // error swallowed — handle in UI
+          console.error("[CreateProfile] checkProfile failed:", e);
           router.replace("/auth/login" as never);
         }
       } finally {
@@ -131,6 +132,7 @@ export default function CreateProfileScreen() {
       trackEvent("profile_created");
       router.replace("/(tabs)" as never);
     } catch (e) {
+      console.error("[CreateProfile] save failed:", e);
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setSaving(false);
@@ -161,18 +163,23 @@ export default function CreateProfileScreen() {
 
         <View style={styles.gap24} />
 
-        <TextInput
-          style={[styles.input, { borderColor: inputBorder("username") }]}
-          placeholder="your_username"
-          placeholderTextColor={DS_COLORS.textMuted}
+        <FormInput
+          label="Username"
           value={username}
-          onChangeText={(t) => { setUsername(t); setFormError(""); setUsernameError(""); }}
-          onFocus={() => setFocusedField("username")}
-          onBlur={handleUsernameBlur}
+          onChangeText={(t) => {
+            setUsername(t);
+            setFormError("");
+            setUsernameError("");
+          }}
+          placeholder="your_handle"
           autoCapitalize="none"
           returnKeyType="next"
           onSubmitEditing={() => displayNameRef.current?.focus()}
           editable={!saving}
+          onFocus={() => setFocusedField("username")}
+          onBlur={handleUsernameBlur}
+          inputStyle={{ borderColor: inputBorder("username"), marginBottom: 12 }}
+          containerStyle={{ marginBottom: 0 }}
           accessibilityLabel="Username"
         />
         <Text style={styles.hint}>Letters, numbers, and underscores only</Text>
@@ -182,35 +189,38 @@ export default function CreateProfileScreen() {
           </Text>
         ) : null}
 
-        <TextInput
-          ref={displayNameRef}
-          style={[styles.input, { borderColor: inputBorder("displayName") }]}
-          placeholder="Your Name"
-          placeholderTextColor={DS_COLORS.textMuted}
+        <FormInput
+          label="Display Name"
           value={displayName}
-          onChangeText={(t) => { setDisplayName(t); setFormError(""); }}
-          onFocus={() => setFocusedField("displayName")}
-          onBlur={() => setFocusedField(null)}
+          onChangeText={(t) => {
+            setDisplayName(t);
+            setFormError("");
+          }}
+          placeholder="Your Name"
           autoCapitalize="words"
           returnKeyType="next"
           onSubmitEditing={() => bioRef.current?.focus()}
           editable={!saving}
+          onFocus={() => setFocusedField("displayName")}
+          onBlur={() => setFocusedField(null)}
+          inputStyle={{ borderColor: inputBorder("displayName"), marginBottom: 12 }}
+          containerStyle={{ marginBottom: 0 }}
           accessibilityLabel="Display Name"
         />
 
-        <TextInput
-          ref={bioRef}
-          style={[styles.input, styles.bioInput]}
-          placeholder="Tell us about yourself..."
-          placeholderTextColor={DS_COLORS.textMuted}
+        <FormInput
+          label="Bio"
           value={bio}
           onChangeText={setBio}
-          onFocus={() => setFocusedField("bio")}
-          onBlur={() => setFocusedField(null)}
+          placeholder="Tell us about yourself..."
           multiline
           numberOfLines={3}
           textAlignVertical="top"
           editable={!saving}
+          onFocus={() => setFocusedField("bio")}
+          onBlur={() => setFocusedField(null)}
+          inputStyle={[styles.bioInput, { marginBottom: 12 }]}
+          containerStyle={{ marginBottom: 0 }}
           accessibilityLabel="Bio"
         />
 

@@ -789,7 +789,7 @@ export default function CreateChallengeWizard() {
                   <Text style={styles.fieldLabel}>Invite your partner</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter username or phone number"
+                    placeholder="Enter handle or phone number"
                     placeholderTextColor={DS_COLORS.TEXT_MUTED}
                     value={duoInvite}
                     onChangeText={setDuoInvite}
