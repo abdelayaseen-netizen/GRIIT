@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { DS_COLORS } from "@/lib/design-system";
 
 export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1920;
@@ -8,22 +9,22 @@ export const PREVIEW_SCALE = 0.18;
 export const SELECTED_PREVIEW_SCALE = 0.45;
 
 const CARD_STYLES = {
-  background: "#111111",
-  wordmarkColor: "#FFFFFF",
+  background: DS_COLORS.SHARE_CARD_BG,
+  wordmarkColor: DS_COLORS.WHITE,
   wordmarkSize: 42,
   wordmarkWeight: "700" as const,
   wordmarkTracking: 2,
-  accentColor: "#E8593C",
+  accentColor: DS_COLORS.DISCOVER_CORAL,
   mutedWhite: "rgba(255,255,255,0.5)",
   dimWhite: "rgba(255,255,255,0.7)",
-  greenAccent: "#4CAF50",
+  greenAccent: DS_COLORS.DISCOVER_GREEN,
 };
 
 type TaskRow = { name: string; details: string; timestamp: string; verified?: boolean };
 
 export function StatementCard({ dayNumber, challengeName, calloutText }: { dayNumber: number; challengeName: string; calloutText: string }) {
   return (
-    <View style={[s.card, { backgroundColor: "#000000" }]}>
+    <View style={[s.card, { backgroundColor: DS_COLORS.BLACK }]}>
       <Text style={s.wordmarkTopLeft}>GRIIT</Text>
       <View style={s.statementCenter}>
         <Text style={s.statementBigDay}>{dayNumber}</Text>
@@ -77,7 +78,7 @@ export function TransparentCard({
     );
   }
   return (
-    <LinearGradient colors={["#1A1A1A", "#111111"]} style={s.card}>
+    <LinearGradient colors={[DS_COLORS.DISCOVER_HERO_DARK_BG, DS_COLORS.SHARE_CARD_BG]} style={s.card}>
       {content}
     </LinearGradient>
   );
@@ -165,7 +166,7 @@ export function BreakdownCard({
 
 export function CalloutCard({ challengeName, totalDays, totalTasks }: { challengeName: string; totalDays: number; totalTasks: number }) {
   return (
-    <LinearGradient colors={["#111111", "#1A1410"]} style={s.card}>
+    <LinearGradient colors={[DS_COLORS.SHARE_CARD_BG, DS_COLORS.DISCOVER_HERO_DARK_BG]} style={s.card}>
       <Text style={s.wordmarkTopRight}>GRIIT</Text>
       <View style={s.calloutBody}>
         <Text style={s.calloutPre}>I JUST FINISHED</Text>
@@ -199,9 +200,9 @@ const s = StyleSheet.create({
     letterSpacing: CARD_STYLES.wordmarkTracking,
   },
   statementCenter: { flex: 1, alignItems: "center", justifyContent: "center" },
-  statementBigDay: { fontSize: 240, color: "#FFFFFF", fontWeight: "800", lineHeight: 250 },
+  statementBigDay: { fontSize: 240, color: DS_COLORS.WHITE, fontWeight: "800", lineHeight: 250 },
   statementDaysIn: { fontSize: 36, color: CARD_STYLES.dimWhite, letterSpacing: 5, fontWeight: "500" },
-  statementChallengeName: { marginTop: 20, fontSize: 54, color: "#FFFFFF", fontWeight: "600" },
+  statementChallengeName: { marginTop: 20, fontSize: 54, color: DS_COLORS.WHITE, fontWeight: "600" },
   statementBottomLeft: { position: "absolute", left: 56, bottom: 90 },
   statementCallout: { fontSize: 30, color: CARD_STYLES.mutedWhite, marginBottom: 20 },
   statementAccentBar: { width: 520, height: 6, backgroundColor: CARD_STYLES.accentColor, borderRadius: 3 },
@@ -215,32 +216,32 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.55)",
     padding: 28,
   },
-  transparentTask: { color: "#FFFFFF", fontSize: 38, fontWeight: "700" },
+  transparentTask: { color: DS_COLORS.WHITE, fontSize: 38, fontWeight: "700" },
   transparentMeta: { color: CARD_STYLES.dimWhite, fontSize: 26, marginTop: 8 },
   transparentStatsRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 18 },
-  transparentDay: { color: "#FFFFFF", fontSize: 78, fontWeight: "800" },
-  transparentStatText: { color: "#FFFFFF", fontSize: 32, fontWeight: "700" },
+  transparentDay: { color: DS_COLORS.WHITE, fontSize: 78, fontWeight: "800" },
+  transparentStatText: { color: DS_COLORS.WHITE, fontSize: 32, fontWeight: "700" },
   receiptHeader: { marginTop: 72, paddingHorizontal: 56, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  wordmarkHeader: { color: "#FFFFFF", fontSize: 40, fontWeight: "700", letterSpacing: 2 },
+  wordmarkHeader: { color: DS_COLORS.WHITE, fontSize: 40, fontWeight: "700", letterSpacing: 2 },
   receiptDay: { color: CARD_STYLES.dimWhite, fontSize: 30, fontWeight: "600" },
   receiptSub: { color: CARD_STYLES.greenAccent, fontSize: 26, marginTop: 20, marginHorizontal: 56, fontWeight: "600" },
   listWrap: { marginTop: 36, marginHorizontal: 56, gap: 18 },
   listItem: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.05)", padding: 20, borderRadius: 16 },
   checkMark: { color: CARD_STYLES.greenAccent, fontSize: 32, marginRight: 14 },
   listItemMid: { flex: 1 },
-  listName: { color: "#FFFFFF", fontSize: 31, fontWeight: "700" },
+  listName: { color: DS_COLORS.WHITE, fontSize: 31, fontWeight: "700" },
   listDetails: { color: CARD_STYLES.dimWhite, fontSize: 22, marginTop: 4 },
   listTime: { color: CARD_STYLES.mutedWhite, fontSize: 20, marginLeft: 12 },
   bottomStat: { flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 12, marginTop: 44 },
-  bottomDay: { color: "#FFFFFF", fontSize: 96, fontWeight: "800", lineHeight: 100 },
-  bottomFire: { color: "#FFFFFF", fontSize: 54, marginBottom: 10 },
+  bottomDay: { color: DS_COLORS.WHITE, fontSize: 96, fontWeight: "800", lineHeight: 100 },
+  bottomFire: { color: DS_COLORS.WHITE, fontSize: 54, marginBottom: 10 },
   bottomRank: { color: CARD_STYLES.dimWhite, fontSize: 30, fontWeight: "600", marginBottom: 12 },
   bottomChallenge: { color: CARD_STYLES.mutedWhite, fontSize: 24, textAlign: "center", marginTop: 12 },
-  breakdownTitle: { color: "#FFFFFF", fontSize: 78, fontWeight: "800", marginTop: 220, marginHorizontal: 56 },
+  breakdownTitle: { color: DS_COLORS.WHITE, fontSize: 78, fontWeight: "800", marginTop: 220, marginHorizontal: 56 },
   breakdownSub: { color: CARD_STYLES.dimWhite, fontSize: 28, marginTop: 8, marginHorizontal: 56 },
   calloutBody: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 80 },
   calloutPre: { color: CARD_STYLES.dimWhite, fontSize: 34, fontWeight: "600", letterSpacing: 2 },
-  calloutChallenge: { color: "#FFFFFF", fontSize: 98, fontWeight: "800", textAlign: "center", marginTop: 20 },
+  calloutChallenge: { color: DS_COLORS.WHITE, fontSize: 98, fontWeight: "800", textAlign: "center", marginTop: 20 },
   calloutStats: { color: CARD_STYLES.dimWhite, fontSize: 36, textAlign: "center", lineHeight: 52, marginTop: 24 },
   calloutCta: { color: CARD_STYLES.accentColor, fontSize: 44, fontWeight: "800", marginTop: 44, marginBottom: 22 },
 });

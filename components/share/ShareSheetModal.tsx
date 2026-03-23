@@ -244,7 +244,7 @@ const ms = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    backgroundColor: "#000",
+    backgroundColor: DS_COLORS.BLACK,
     opacity: 0.6,
   },
   thumbCardActive: { borderColor: GRIIT_COLORS.primary, borderWidth: 2, opacity: 1 },

@@ -33,7 +33,7 @@ import WeekStrip from "@/components/home/WeekStrip";
 import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeed from "@/components/home/LiveFeed";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";

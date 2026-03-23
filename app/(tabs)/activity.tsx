@@ -20,7 +20,7 @@ import { CommunityHeader, type CommunityFilter } from "@/components/community/Co
 import { Leaderboard, type CommunityLeaderboardEntry } from "@/components/community/Leaderboard";
 import { LiveActivity, type LiveActivityItem } from "@/components/community/LiveActivity";
 import { YourStats } from "@/components/community/YourStats";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { trackEvent } from "@/lib/analytics";

@@ -1098,7 +1098,7 @@ const celebStyles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   fireEmoji: { fontSize: 48, marginBottom: 12 },
-  title: { fontSize: 28, fontWeight: "700", color: "#fff" },
+  title: { fontSize: 28, fontWeight: "700", color: DS_COLORS.WHITE },
   subtitle: { fontSize: 14, color: "rgba(255,255,255,0.5)", marginTop: 6 },
   rewardPill: {
     marginTop: 16,
@@ -1118,7 +1118,7 @@ const celebStyles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 28,
   },
-  shareCtaText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  shareCtaText: { fontSize: 15, fontWeight: "700", color: DS_COLORS.WHITE },
   nextCta: {
     backgroundColor: "rgba(255,255,255,0.08)",
     paddingHorizontal: 28,

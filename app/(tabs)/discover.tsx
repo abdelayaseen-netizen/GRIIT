@@ -14,7 +14,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { ROUTES } from "@/lib/routes";
 import { useDebounce } from "@/hooks/useDebounce";
