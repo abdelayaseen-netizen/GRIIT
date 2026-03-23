@@ -357,9 +357,9 @@ export async function scheduleTaskWindowAlerts(
       const m = Number(parts[1]);
       if (!Number.isFinite(h) || !Number.isFinite(m)) continue;
 
-      const startOffset = task.windowStartOffsetMin ?? 0;
+      const startOffset = Number(task.windowStartOffsetMin ?? 0);
       const alertTime = nextOccurrence(now, h, m);
-      alertTime.setMinutes(alertTime.getMinutes() + (typeof startOffset === "number" ? startOffset : 0));
+      alertTime.setMinutes(alertTime.getMinutes() + startOffset);
 
       if (alertTime.getTime() <= now.getTime()) continue;
 
