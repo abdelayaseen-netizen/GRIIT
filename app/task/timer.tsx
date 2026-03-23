@@ -1,6 +1,6 @@
 // LEGACY: consider migrating to task/complete.tsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, AppState, AppStateStatus, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, AppState, AppStateStatus, Image, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Play, Pause, Check, Camera, ImagePlus } from "lucide-react-native";
@@ -13,6 +13,7 @@ import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 /** Active challenge as returned by getActive (nested challenges.challenge_tasks in API shape). */
 interface ActiveChallengeWithTasks {
@@ -34,6 +35,7 @@ export default function TimerTaskScreen() {
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [, setIntervalId] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [strictResetMessage, setStrictResetMessage] = useState<string | null>(null);
+  const [strictStartConfirmVisible, setStrictStartConfirmVisible] = useState(false);
   const resetInProgressRef = useRef<boolean>(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { error, showError, clearError } = useInlineError();
@@ -97,15 +99,7 @@ export default function TimerTaskScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } else {
       if (strictTimerMode) {
-        Alert.alert(
-          "Focus lock on",
-          "You must stay on this screen while the timer runs. Leaving the app or navigating away will reset the timer.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "I understand, start", onPress: startTimer },
-          ],
-          { cancelable: true }
-        );
+        setStrictStartConfirmVisible(true);
       } else {
         startTimer();
       }
@@ -300,6 +294,19 @@ export default function TimerTaskScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      <ConfirmDialog
+        visible={strictStartConfirmVisible}
+        title="Focus lock on"
+        message="You must stay on this screen while the timer runs. Leaving the app or navigating away will reset the timer."
+        cancelLabel="Cancel"
+        confirmLabel="I understand, start"
+        onCancel={() => setStrictStartConfirmVisible(false)}
+        onConfirm={() => {
+          setStrictStartConfirmVisible(false);
+          startTimer();
+        }}
+      />
     </SafeAreaView>
   );
 }

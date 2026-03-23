@@ -8,11 +8,12 @@ import {
   StyleSheet,
   Animated,
   Easing,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Share,
   Dimensions,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -104,6 +105,7 @@ export default function CreateChallengeWizard() {
   const [duoInvite, setDuoInvite] = useState("");
   const [resumeBanner, setResumeBanner] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [cancelDraftVisible, setCancelDraftVisible] = useState(false);
   const { error: wizardError, showError: showWizardError, clearError: clearWizardError } = useInlineError();
 
   const { participation, teamSize } = whoToParticipation(who);
@@ -269,8 +271,8 @@ export default function CreateChallengeWizard() {
   const saveDraft = useCallback(async () => {
     try {
       await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftPayload()));
-    } catch {
-      /* ignore */
+    } catch (e) {
+      if (__DEV__) console.error("[CreateChallengeWizard] save draft failed:", e);
     }
     router.back();
   }, [draftPayload, router]);
@@ -285,18 +287,7 @@ export default function CreateChallengeWizard() {
       router.back();
       return;
     }
-    Alert.alert("Save as draft?", undefined, [
-      { text: "Keep editing", style: "cancel" },
-      {
-        text: "Discard",
-        style: "destructive",
-        onPress: async () => {
-          await AsyncStorage.removeItem(DRAFT_KEY);
-          router.back();
-        },
-      },
-      { text: "Save draft", onPress: () => void saveDraft() },
-    ]);
+    setCancelDraftVisible(true);
   };
 
   const resumeDraft = useCallback(async () => {
@@ -319,8 +310,8 @@ export default function CreateChallengeWizard() {
       if (typeof d.duoInvite === "string") setDuoInvite(d.duoInvite);
       if (typeof d.step === "number") setStep(Math.min(4, Math.max(1, d.step)));
       setResumeBanner(false);
-    } catch {
-      /* ignore */
+    } catch (e) {
+      if (__DEV__) console.error("[CreateChallengeWizard] resume draft failed:", e);
     }
   }, []);
 
@@ -864,6 +855,44 @@ export default function CreateChallengeWizard() {
         hardModeGlobal={hardLocked}
         onAdd={(t) => setTasks((p) => [...p, t])}
       />
+
+      <Modal visible={cancelDraftVisible} transparent animationType="fade" onRequestClose={() => setCancelDraftVisible(false)}>
+        <Pressable style={styles.draftExitBackdrop} onPress={() => setCancelDraftVisible(false)} accessibilityLabel="Dismiss">
+          <Pressable style={styles.draftExitCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.draftExitTitle}>Save as draft?</Text>
+            <TouchableOpacity
+              style={styles.draftExitPrimary}
+              onPress={() => setCancelDraftVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Keep editing"
+            >
+              <Text style={styles.draftExitPrimaryTxt}>Keep editing</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.draftExitDanger}
+              onPress={() => {
+                setCancelDraftVisible(false);
+                void AsyncStorage.removeItem(DRAFT_KEY).then(() => router.back());
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Discard draft"
+            >
+              <Text style={styles.draftExitDangerTxt}>Discard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.draftExitSecondary}
+              onPress={() => {
+                setCancelDraftVisible(false);
+                void saveDraft();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Save draft"
+            >
+              <Text style={styles.draftExitSecondaryTxt}>Save draft</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -1103,4 +1132,50 @@ const styles = StyleSheet.create({
   topBarSpacer: { width: 56 },
   visTextCol: { flex: 1, marginLeft: 10 },
   inviteSection: { marginTop: 16 },
+  draftExitBackdrop: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    backgroundColor: DS_COLORS.modalBackdrop,
+  },
+  draftExitCard: {
+    backgroundColor: DS_COLORS.card,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
+  draftExitTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  draftExitPrimary: {
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  draftExitPrimaryTxt: { fontSize: 16, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  draftExitDanger: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: DS_COLORS.alertRedBorder,
+    backgroundColor: DS_COLORS.dangerLight,
+  },
+  draftExitDangerTxt: { fontSize: 16, fontWeight: "600", color: DS_COLORS.dangerDark },
+  draftExitSecondary: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
+  draftExitSecondaryTxt: { fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
 });

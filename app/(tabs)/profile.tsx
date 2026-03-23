@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Share } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Share } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -25,6 +25,7 @@ import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
 import { DS_COLORS } from "@/lib/design-system";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { User } from "lucide-react-native";
 
 type ActiveRow = {
@@ -43,6 +44,7 @@ function formatJoinDate(value?: string | null): string {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const [signOutConfirmVisible, setSignOutConfirmVisible] = useState(false);
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const { profile, profileLoading, profileMissing, isError, stats, refetchAll } = useApp();
@@ -100,23 +102,19 @@ export default function ProfileScreen() {
     await Share.share({ message: shareText });
   }, [stats?.tier, streak, points]);
 
-  const handleSignOut = useCallback(() => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await cancelLapsedUserReminders();
-          await supabase.auth.signOut();
-          runClientSignOutCleanup();
-          const { clearOnboardingStorage } = await import("@/store/onboardingStore");
-          await clearOnboardingStorage();
-          router.replace(ROUTES.AUTH as never);
-        },
-      },
-    ]);
+  const performSignOut = useCallback(async () => {
+    setSignOutConfirmVisible(false);
+    await cancelLapsedUserReminders();
+    await supabase.auth.signOut();
+    runClientSignOutCleanup();
+    const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+    await clearOnboardingStorage();
+    router.replace(ROUTES.AUTH as never);
   }, [router]);
+
+  const handleSignOut = useCallback(() => {
+    setSignOutConfirmVisible(true);
+  }, []);
 
   if (isGuest) {
     return (
@@ -201,6 +199,16 @@ export default function ProfileScreen() {
 
         <View style={{ height: 24 }} />
       </ScrollView>
+
+      <ConfirmDialog
+        visible={signOutConfirmVisible}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmLabel="Sign Out"
+        destructive
+        onCancel={() => setSignOutConfirmVisible(false)}
+        onConfirm={() => void performSignOut()}
+      />
     </SafeAreaView>
   );
 }

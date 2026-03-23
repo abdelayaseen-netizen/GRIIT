@@ -4,7 +4,6 @@ import {
   View, 
   Text, 
   TouchableOpacity, 
-  Alert, 
   Platform, 
   AppState,
   TextInput,
@@ -37,6 +36,7 @@ import Celebration from "@/components/Celebration";
 import { useCelebration } from "@/hooks/useCelebration";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 interface GpsPoint {
   lat: number;
@@ -61,6 +61,7 @@ export default function RunTaskScreen() {
   const minTimerSeconds = 600;
   
   const [runMode, setRunMode] = useState<RunMode>("outdoor_gps");
+  const [pendingRunMode, setPendingRunMode] = useState<RunMode | null>(null);
   const [isTracking, setIsTracking] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [distanceMiles, setDistanceMiles] = useState<number>(0);
@@ -151,20 +152,7 @@ export default function RunTaskScreen() {
 
   const handleModeChange = (mode: RunMode) => {
     if (isTracking || timerRunning) {
-      Alert.alert(
-        "Switch Mode",
-        "Switching modes will reset your current progress. Continue?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Switch",
-            onPress: () => {
-              resetAll();
-              setRunMode(mode);
-            }
-          }
-        ]
-      );
+      setPendingRunMode(mode);
     } else {
       resetAll();
       setRunMode(mode);
@@ -189,6 +177,14 @@ export default function RunTaskScreen() {
     setProofUri(null);
     setDistanceInput("");
     setDurationInput("");
+  };
+
+  const confirmModeSwitch = () => {
+    if (pendingRunMode == null) return;
+    const next = pendingRunMode;
+    setPendingRunMode(null);
+    resetAll();
+    setRunMode(next);
   };
 
   const startGpsTracking = async () => {
@@ -819,6 +815,15 @@ export default function RunTaskScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <ConfirmDialog
+        visible={pendingRunMode !== null}
+        title="Switch Mode"
+        message="Switching modes will reset your current progress. Continue?"
+        confirmLabel="Switch"
+        onCancel={() => setPendingRunMode(null)}
+        onConfirm={confirmModeSwitch}
+      />
     </SafeAreaView>
   );
 }

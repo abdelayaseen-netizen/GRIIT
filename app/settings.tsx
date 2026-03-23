@@ -9,7 +9,6 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
-  Alert,
   Modal,
   TextInput,
 } from "react-native";
@@ -618,13 +617,7 @@ export default function SettingsScreen() {
           {!isGuest && (
             <TouchableOpacity
               style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, marginTop: 10 }]}
-              onPress={() => {
-                Alert.alert(
-                  "Delete Account",
-                  "This will permanently delete your account and all data. This action cannot be undone.",
-                  [{ text: "Cancel", style: "cancel" }, { text: "Continue", onPress: () => setShowDeleteModal(true) }]
-                );
-              }}
+              onPress={() => setShowDeleteModal(true)}
               activeOpacity={0.9}
               accessibilityLabel="Delete account"
               accessibilityRole="button"

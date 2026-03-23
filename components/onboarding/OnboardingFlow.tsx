@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, StyleSheet, SafeAreaView, Pressable } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ChevronLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { ONBOARDING_COLORS as C } from "@/constants/onboarding-theme";
+import { GRIIT_COLORS } from "@/lib/design-system";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { GOAL_OPTIONS } from "@/constants/onboarding-theme";
@@ -50,8 +51,8 @@ export default function OnboardingFlow() {
     setProfileSetupHints(null);
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
-    } catch {
-      /* storage best-effort */
+    } catch (e) {
+      if (__DEV__) console.error("[OnboardingFlow] persist onboarding flag failed:", e);
     }
     router.replace("/(tabs)" as never);
   }, [completeOnboarding, router, setProfileSetupHints]);
@@ -84,16 +85,32 @@ export default function OnboardingFlow() {
     <SafeAreaView style={styles.safeArea}>
       {showTopBar ? (
         <View style={styles.topBar}>
-          <Pressable
-            style={styles.backButton}
-            onPress={handleBack}
-            accessibilityLabel="Go back"
-            accessibilityRole="button"
-            hitSlop={8}
-          >
-            <ChevronLeft size={20} color={C.textPrimary} strokeWidth={2.5} />
-          </Pressable>
-          <ProgressDots total={4} current={currentStep - 1} />
+          {currentStep > 1 ? (
+            <Pressable
+              style={styles.backButton}
+              onPress={handleBack}
+              accessibilityLabel="Go back to previous step"
+              accessibilityRole="button"
+              hitSlop={8}
+            >
+              <ChevronLeft size={24} color={GRIIT_COLORS.textSecondary} strokeWidth={2.5} />
+            </Pressable>
+          ) : (
+            <View style={styles.backButtonPlaceholder} />
+          )}
+          <View style={styles.topBarCenter}>
+            <ProgressDots total={4} current={currentStep - 1} />
+            <Text
+              style={{
+                fontSize: 12,
+                color: GRIIT_COLORS.textSecondary,
+                textAlign: "center",
+                marginTop: 4,
+              }}
+            >
+              Step {currentStep} of 4
+            </Text>
+          </View>
           <View style={styles.backButtonPlaceholder} />
         </View>
       ) : null}
@@ -106,18 +123,25 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: C.background },
   topBar: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 4,
   },
+  topBarCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
   backButton: {
-    width: 36,
-    height: 36,
+    padding: 12,
+    alignSelf: "flex-start",
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
     borderRadius: 18,
     backgroundColor: C.WHITE,
-    justifyContent: "center",
     alignItems: "center",
   },
-  backButtonPlaceholder: { width: 36 },
+  backButtonPlaceholder: { width: 44, minHeight: 44 },
 });

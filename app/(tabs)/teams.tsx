@@ -9,7 +9,6 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,6 +24,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 export default function TeamsTabScreen() {
   const router = useRouter();
@@ -32,6 +32,7 @@ export default function TeamsTabScreen() {
   const teamsQuery = useMyTeam();
   const leaveMutation = useLeaveTeam();
   const [copied, setCopied] = useState(false);
+  const [leaveTeamConfirmVisible, setLeaveTeamConfirmVisible] = useState(false);
 
   const myTeam = teamsQuery.data;
   const teamId = myTeam?.team?.id ?? null;
@@ -68,20 +69,14 @@ export default function TeamsTabScreen() {
 
   const handleLeave = useCallback(() => {
     if (!myTeam?.team?.id) return;
-    Alert.alert(
-      "Leave team?",
-      "You will need a new invite code to rejoin.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Leave",
-          style: "destructive",
-          onPress: () => {
-            leaveMutation.mutate(myTeam.team.id);
-          },
-        },
-      ]
-    );
+    setLeaveTeamConfirmVisible(true);
+  }, [myTeam?.team?.id]);
+
+  const confirmLeaveTeam = useCallback(() => {
+    const tid = myTeam?.team?.id;
+    setLeaveTeamConfirmVisible(false);
+    if (!tid) return;
+    leaveMutation.mutate(tid);
   }, [myTeam?.team?.id, leaveMutation]);
 
   // State C — Loading
@@ -232,6 +227,16 @@ export default function TeamsTabScreen() {
           )}
         </View>
       </ScrollView>
+
+      <ConfirmDialog
+        visible={leaveTeamConfirmVisible}
+        title="Leave team?"
+        message="You will need a new invite code to rejoin."
+        confirmLabel="Leave"
+        destructive
+        onCancel={() => setLeaveTeamConfirmVisible(false)}
+        onConfirm={confirmLeaveTeam}
+      />
     </SafeAreaView>
   );
 }

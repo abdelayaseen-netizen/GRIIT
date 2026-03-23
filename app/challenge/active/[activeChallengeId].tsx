@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
-  Alert,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -32,6 +31,9 @@ import { ErrorRetry } from "@/components/ErrorRetry";
 import { EmptyState } from "@/components/EmptyState";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { InlineError } from "@/components/InlineError";
+import { useInlineError } from "@/hooks/useInlineError";
 
 type TaskRow = {
   id: string;
@@ -156,32 +158,29 @@ export default function ActiveChallengeDetailScreen() {
   }, [challenge?.duration_type, challenge?.difficulty, challenge]);
   const { stats } = useApp();
   const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
+  const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
+  const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } = useInlineError();
 
   const onRefresh = useCallback(() => refetch(), [refetch]);
   const handleLeaveChallenge = useCallback(() => {
     if (!challengeId) return;
-    Alert.alert(
-      `Leave ${challenge?.title ?? "challenge"}?`,
-      "Your progress in this challenge will be lost. You'll need to rejoin to start again.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Leave",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await trpcMutate(TRPC.challenges.leave, { challengeId });
-              await queryClient.invalidateQueries({ queryKey: ["home"] });
-              await queryClient.invalidateQueries({ queryKey: ["profile"] });
-              router.replace(ROUTES.TABS_HOME as never);
-            } catch (err) {
-              console.error("[ActiveChallengeDetail] leave failed:", err);
-            }
-          },
-        },
-      ]
-    );
-  }, [challengeId, challenge?.title, queryClient, router]);
+    clearLeaveError();
+    setLeaveConfirmVisible(true);
+  }, [challengeId, clearLeaveError]);
+
+  const confirmLeaveChallenge = useCallback(async () => {
+    if (!challengeId) return;
+    setLeaveConfirmVisible(false);
+    try {
+      await trpcMutate(TRPC.challenges.leave, { challengeId });
+      await queryClient.invalidateQueries({ queryKey: ["home"] });
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      router.replace(ROUTES.TABS_HOME as never);
+    } catch (err) {
+      if (__DEV__) console.error("[ActiveChallengeDetail] leave failed:", err);
+      showLeaveError("Something went wrong. Please try again.");
+    }
+  }, [challengeId, queryClient, router, showLeaveError]);
 
   const handleContinueToday = useCallback(() => {
     if (!id || !activeChallenge) return;
@@ -310,6 +309,7 @@ export default function ActiveChallengeDetailScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor={DS_COLORS.ACCENT_PRIMARY} />}
       >
+        <InlineError message={leaveError} onDismiss={clearLeaveError} />
         <View style={s.body}>
           {/* Card A — Members */}
           <View style={s.card}>
@@ -450,6 +450,16 @@ export default function ActiveChallengeDetailScreen() {
         </TouchableOpacity>
         <Text style={s.ctaMicro}>Day resets at midnight</Text>
       </View>
+
+      <ConfirmDialog
+        visible={leaveConfirmVisible}
+        title={`Leave ${challenge?.title ?? "challenge"}?`}
+        message="Your progress in this challenge will be lost. You'll need to rejoin to start again."
+        confirmLabel="Leave"
+        destructive
+        onCancel={() => setLeaveConfirmVisible(false)}
+        onConfirm={() => void confirmLeaveChallenge()}
+      />
     </View>
   );
 }

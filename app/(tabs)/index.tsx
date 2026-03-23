@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   RefreshControl,
-  Alert,
   TouchableOpacity,
   LayoutAnimation,
   Platform,
@@ -41,6 +40,7 @@ import StatBadge from "@/components/shared/StatBadge";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -123,6 +123,7 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll } = useApp();
   const [leaveChallengeError, setLeaveChallengeError] = React.useState<string | null>(null);
+  const [leaveConfirmChallengeId, setLeaveConfirmChallengeId] = React.useState<string | null>(null);
   const [showPointsExplainer, setShowPointsExplainer] = React.useState(false);
   const [completedExpanded, setCompletedExpanded] = React.useState(true);
   const prevCompletedCount = React.useRef(0);
@@ -270,6 +271,22 @@ export default function HomeScreen() {
     await Promise.all([homeQuery.refetch(), refetchAll()]);
   }, [homeQuery, refetchAll]);
 
+  const confirmLeaveChallenge = React.useCallback(async () => {
+    const challengeId = leaveConfirmChallengeId;
+    setLeaveConfirmChallengeId(null);
+    if (!challengeId) return;
+    try {
+      await trpcMutate(TRPC.challenges.leave, { challengeId });
+      void homeQuery.refetch();
+      void refetchAll();
+    } catch (err) {
+      console.error("[Home] leave challenge failed:", err);
+      const msg =
+        err instanceof Error ? err.message : "Could not leave this challenge. Try again.";
+      setLeaveChallengeError(msg);
+    }
+  }, [leaveConfirmChallengeId, homeQuery, refetchAll]);
+
   const onPressGoal = useCallback(
     (
       goalId: string,
@@ -397,29 +414,7 @@ export default function HomeScreen() {
                 }}
                 onLongPressChallenge={() => {
                   setLeaveChallengeError(null);
-                  Alert.alert(
-                    "Leave challenge?",
-                    "You'll lose your progress. This can't be undone.",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Leave",
-                        style: "destructive",
-                        onPress: async () => {
-                          try {
-                            await trpcMutate(TRPC.challenges.leave, { challengeId: group.challengeId });
-                            void homeQuery.refetch();
-                            void refetchAll();
-                          } catch (err) {
-                            console.error("[Home] leave challenge failed:", err);
-                            const msg =
-                              err instanceof Error ? err.message : "Could not leave this challenge. Try again.";
-                            setLeaveChallengeError(msg);
-                          }
-                        },
-                      },
-                    ]
-                  );
+                  setLeaveConfirmChallengeId(group.challengeId);
                 }}
                 isError={homeQuery.isError}
               />
@@ -501,6 +496,15 @@ export default function HomeScreen() {
         onClose={() => setShowPointsExplainer(false)}
         currentPoints={points}
         currentRank={rank}
+      />
+      <ConfirmDialog
+        visible={leaveConfirmChallengeId !== null}
+        title="Leave challenge?"
+        message="You'll lose your progress. This can't be undone."
+        confirmLabel="Leave"
+        destructive
+        onCancel={() => setLeaveConfirmChallengeId(null)}
+        onConfirm={() => void confirmLeaveChallenge()}
       />
     </SafeAreaView>
   );

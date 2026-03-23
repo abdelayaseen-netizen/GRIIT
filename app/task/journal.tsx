@@ -6,13 +6,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Animated,
   Image,
+  Modal,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
@@ -105,6 +106,7 @@ export default function JournalTaskScreen() {
   const [uploading, setUploading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftExitVisible, setDraftExitVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const successScale = useRef(new Animated.Value(0)).current;
@@ -127,8 +129,8 @@ export default function JournalTaskScreen() {
           if (parsed.mood) setMood(parsed.mood);
           if (parsed.energy) setEnergy(parsed.energy);
           if (parsed.bodyState) setBodyState(parsed.bodyState);
-        } catch {
-          // Failed to parse draft — ignore
+        } catch (e) {
+          if (__DEV__) console.error("[JournalTask] parse draft failed:", e);
         }
       }
       setDraftLoaded(true);
@@ -139,8 +141,8 @@ export default function JournalTaskScreen() {
     if (!draftLoaded) return;
     draftTimerRef.current = setInterval(() => {
       const draft = JSON.stringify({ entryText, mood, energy, bodyState });
-      AsyncStorage.setItem(draftKey, draft).catch(() => {
-        // error swallowed — handle in UI
+      AsyncStorage.setItem(draftKey, draft).catch((e) => {
+        if (__DEV__) console.error("[JournalTask] save draft failed:", e);
       });
     }, 3000);
     return () => {
@@ -320,13 +322,7 @@ export default function JournalTaskScreen() {
               style={s.backBtn}
               onPress={() => {
                 if (entryText.trim().length > 0) {
-                  Alert.alert("Save draft?", "Your entry will be saved as a draft.", [
-                    { text: "Discard", style: "destructive", onPress: () => {
-                      AsyncStorage.removeItem(draftKey);
-                      router.back();
-                    }},
-                    { text: "Save & Exit", onPress: () => router.back() },
-                  ]);
+                  setDraftExitVisible(true);
                 } else {
                   router.back();
                 }
@@ -546,6 +542,46 @@ export default function JournalTaskScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Animated.View>
+
+      <Modal visible={draftExitVisible} transparent animationType="fade" onRequestClose={() => setDraftExitVisible(false)}>
+        <Pressable style={s.draftExitBackdrop} onPress={() => setDraftExitVisible(false)} accessibilityLabel="Dismiss">
+          <Pressable style={s.draftExitCard} onPress={(e) => e.stopPropagation()}>
+            <Text style={s.draftExitTitle}>Save draft?</Text>
+            <Text style={s.draftExitBody}>Your entry will be saved as a draft.</Text>
+            <TouchableOpacity
+              style={s.draftExitBtnPrimary}
+              onPress={() => setDraftExitVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Keep editing"
+            >
+              <Text style={s.draftExitBtnPrimaryText}>Keep editing</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.draftExitBtnDanger}
+              onPress={() => {
+                void AsyncStorage.removeItem(draftKey);
+                setDraftExitVisible(false);
+                router.back();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Discard draft"
+            >
+              <Text style={s.draftExitBtnDangerText}>Discard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.draftExitBtnSecondary}
+              onPress={() => {
+                setDraftExitVisible(false);
+                router.back();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Save and exit"
+            >
+              <Text style={s.draftExitBtnSecondaryText}>Save & Exit</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -558,6 +594,58 @@ const s = StyleSheet.create({
   flex: {
     flex: 1,
   },
+  draftExitBackdrop: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    backgroundColor: DS_COLORS.modalBackdrop,
+  },
+  draftExitCard: {
+    backgroundColor: DS_COLORS.card,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
+  draftExitTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: DS_COLORS.textPrimary,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  draftExitBody: {
+    fontSize: 14,
+    color: DS_COLORS.textSecondary,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  draftExitBtnPrimary: {
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  draftExitBtnPrimaryText: { fontSize: 16, fontWeight: "700", color: DS_COLORS.textPrimary },
+  draftExitBtnDanger: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: DS_COLORS.alertRedBorder,
+    backgroundColor: DS_COLORS.dangerLight,
+  },
+  draftExitBtnDangerText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.dangerDark },
+  draftExitBtnSecondary: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+  },
+  draftExitBtnSecondaryText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
 
   header: {
     flexDirection: "row",

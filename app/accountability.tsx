@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   Platform,
 } from "react-native";
@@ -23,6 +22,7 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 type ListData = {
   accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[];
@@ -38,13 +38,15 @@ export default function AccountabilityScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [removePartnerId, setRemovePartnerId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       setLoadError(false);
       const result = await trpcQuery(TRPC.accountability.listMine) as ListData;
       setData(result ?? { accepted: [], incomingPending: [], outgoingPending: [] });
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.error("[accountability] load failed:", e);
       setLoadError(true);
     } finally {
       setLoading(false);
@@ -69,33 +71,24 @@ export default function AccountabilityScreen() {
     router.back();
   };
 
-  const handleRemove = useCallback(
-    async (partnerId: string) => {
-      Alert.alert(
-        "Remove partner",
-        "Remove this person from your Accountability Circle?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Remove",
-            style: "destructive",
-            onPress: async () => {
-              setActingId(partnerId);
-              try {
-                await trpcMutate("accountability.remove", { partnerId });
-                await load();
-              } catch (e: unknown) {
-                showError(e instanceof Error ? e.message : "Could not remove.");
-              } finally {
-                setActingId(null);
-              }
-            },
-          },
-        ]
-      );
-    },
-    [load, showError]
-  );
+  const handleRemove = useCallback((partnerId: string) => {
+    setRemovePartnerId(partnerId);
+  }, []);
+
+  const confirmRemovePartner = useCallback(async () => {
+    const partnerId = removePartnerId;
+    setRemovePartnerId(null);
+    if (!partnerId) return;
+    setActingId(partnerId);
+    try {
+      await trpcMutate("accountability.remove", { partnerId });
+      await load();
+    } catch (e: unknown) {
+      showError(e instanceof Error ? e.message : "Could not remove.");
+    } finally {
+      setActingId(null);
+    }
+  }, [removePartnerId, load, showError]);
 
   const handleRespond = useCallback(
     async (inviteId: string, action: "accept" | "decline") => {
@@ -294,6 +287,16 @@ export default function AccountabilityScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      <ConfirmDialog
+        visible={removePartnerId !== null}
+        title="Remove partner"
+        message="Remove this person from your Accountability Circle?"
+        confirmLabel="Remove"
+        destructive
+        onCancel={() => setRemovePartnerId(null)}
+        onConfirm={() => void confirmRemovePartner()}
+      />
     </SafeAreaView>
   );
 }

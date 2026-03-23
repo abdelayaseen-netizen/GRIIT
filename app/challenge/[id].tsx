@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Animated,
   Platform,
   RefreshControl,
@@ -67,6 +66,7 @@ import {
   GRIIT_COLORS,
 } from "@/lib/design-system";
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import LoadingState from "@/components/shared/LoadingState";
@@ -533,6 +533,7 @@ export default function ChallengeDetailScreen() {
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
   const [showJoinCelebration, setShowJoinCelebration] = useState(false);
+  const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
   const [commitmentUnderstood, setCommitmentUnderstood] = useState(false);
   const insets = useSafeAreaInsets();
@@ -878,28 +879,21 @@ export default function ChallengeDetailScreen() {
 
   const handleLeave = useCallback(() => {
     if (!id || leavePending) return;
-    Alert.alert(
-      "Leave Challenge",
-      "Are you sure you want to leave this challenge? You will lose your progress.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Leave",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await leaveMutation.mutateAsync({ challengeId: id });
-              await refetchAll();
-              await refetchTodayCheckins();
-              router.replace(ROUTES.TABS_DISCOVER as never);
-            } catch (e: unknown) {
-              const { title, message } = formatTRPCError(e);
-              showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
-            }
-          },
-        },
-      ]
-    );
+    setLeaveConfirmVisible(true);
+  }, [id, leavePending]);
+
+  const confirmLeaveChallenge = useCallback(async () => {
+    if (!id || leavePending) return;
+    setLeaveConfirmVisible(false);
+    try {
+      await leaveMutation.mutateAsync({ challengeId: id });
+      await refetchAll();
+      await refetchTodayCheckins();
+      router.replace(ROUTES.TABS_DISCOVER as never);
+    } catch (e: unknown) {
+      const { title, message } = formatTRPCError(e);
+      showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
+    }
   }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router, showError]);
 
   const difficulty = (challenge?.difficulty || "medium") as string;
@@ -1043,7 +1037,7 @@ export default function ChallengeDetailScreen() {
   ];
 
   return (
-    <View style={[s.container, { backgroundColor: DS_COLORS.BG_PAGE }]}>
+    <View style={[s.container, { backgroundColor: GRIIT_COLORS.background }]}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
@@ -1490,6 +1484,16 @@ export default function ChallengeDetailScreen() {
         visible={showJoinCelebration}
         onDismiss={onJoinCelebrationDismiss}
         challengeName={challenge?.title ?? ""}
+      />
+
+      <ConfirmDialog
+        visible={leaveConfirmVisible}
+        title="Leave Challenge"
+        message="Are you sure you want to leave this challenge? You will lose your progress."
+        confirmLabel="Leave"
+        destructive
+        onCancel={() => setLeaveConfirmVisible(false)}
+        onConfirm={() => void confirmLeaveChallenge()}
       />
     </View>
   );

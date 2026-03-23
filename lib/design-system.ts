@@ -518,9 +518,12 @@ export const DS_COLORS = {
   difficultyMediumBg: '#FFF8E8',
 } as const;
 
-/** Brand primary for special moments (e.g. join celebration CTA). Alias of DISCOVER_CORAL. */
+/** Brand + screen tokens (challenge detail bg matches app-wide warm page). */
 export const GRIIT_COLORS = {
   primary: DS_COLORS.DISCOVER_CORAL,
+  background: DS_COLORS.TROPHY_ICON_WRAP_BG,
+  textSecondary: DS_COLORS.textSecondary,
+  error: DS_COLORS.danger,
 } as const;
 
 export const DS_TYPOGRAPHY = {

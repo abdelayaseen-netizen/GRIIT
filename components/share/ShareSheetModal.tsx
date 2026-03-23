@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
@@ -52,7 +51,8 @@ async function captureCard(ref: React.RefObject<ViewShot | null>): Promise<strin
     const current = ref.current as { capture?: () => Promise<string> } | null;
     if (!current?.capture) return null;
     return await current.capture();
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.error("[ShareSheetModal] captureCard failed:", e);
     return null;
   }
 }
@@ -74,6 +74,7 @@ export default function ShareSheetModal({
 }: Props) {
   const [selectedCard, setSelectedCard] = useState<ShareCardId>("statement");
   const [sharing, setSharing] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const viewShotRef = useRef<ViewShot | null>(null);
   const availableCards = useMemo(() => {
     const cards: { id: ShareCardId; label: string }[] = [
@@ -146,7 +147,8 @@ export default function ShareSheetModal({
           const { status } = await MediaLibrary.requestPermissionsAsync();
           if (status === "granted") {
             await MediaLibrary.saveToLibraryAsync(uri);
-            Alert.alert("Saved", "Image saved to your camera roll.");
+            setSaveMessage("Image saved to your camera roll.");
+            setTimeout(() => setSaveMessage(null), 3000);
           }
         } else {
           const available = await Sharing.isAvailableAsync();
@@ -155,7 +157,9 @@ export default function ShareSheetModal({
           }
         }
         if (completionId && mode !== "save") {
-          trpcMutate(TRPC.checkins.markAsShared, { completionId }).catch(() => {});
+          trpcMutate(TRPC.checkins.markAsShared, { completionId }).catch((e) => {
+            if (__DEV__) console.error("[ShareSheetModal] markAsShared failed:", e);
+          });
         }
       } finally {
         setSharing(false);
@@ -218,6 +222,15 @@ export default function ShareSheetModal({
         </View>
 
         {sharing ? <ActivityIndicator size="small" color={GRIIT_COLORS.primary} style={{ marginTop: 16 }} /> : null}
+        {saveMessage ? (
+          <Text
+            style={ms.saveHint}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {saveMessage}
+          </Text>
+        ) : null}
       </View>
     </Modal>
   );
@@ -270,4 +283,5 @@ const ms = StyleSheet.create({
   destIcon: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
   destEmoji: { fontSize: 20 },
   destLabel: { fontSize: 11, color: "rgba(255,255,255,0.5)" },
+  saveHint: { fontSize: 13, color: "rgba(255,255,255,0.85)", textAlign: "center", marginTop: 12, paddingHorizontal: 20 },
 });
