@@ -20,8 +20,9 @@ import {
   Pressable,
 } from "react-native";
 import ViewShot from "react-native-view-shot";
-import { ProofShareCard } from "@/components/ShareCard";
-import { shareCompletion } from "@/lib/share-completion";
+import { StatementCard, TransparentCard, ProofReceiptCard, GrindCard } from "@/components/share/ShareCards";
+import ShareSheetModal from "@/components/share/ShareSheetModal";
+import { useCelebrationStore } from "@/store/celebrationStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -124,12 +125,16 @@ function TaskCompleteScreenInner() {
     currentDay?: string;
     durationDays?: string;
   }>();
-  const { activeChallenge, completeTask, challenge, profile, stats } = useApp();
+  const { activeChallenge, completeTask, challenge, stats } = useApp();
+  const showCelebration = useCelebrationStore((s) => s.show);
   const shareRef = useRef<ViewShot | null>(null);
+  const proofCardRef = useRef<ViewShot | null>(null);
+  const transparentCardRef = useRef<ViewShot | null>(null);
+  const grindCardRef = useRef<ViewShot | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [completionId, setCompletionId] = useState<string | null>(null);
-  const [shareLoading, setShareLoading] = useState(false);
-  const [sharedFeedback, setSharedFeedback] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [variableReward, setVariableReward] = useState<{ label: string; color: string; bg: string } | null>(null);
 
   const taskId = firstString(params.taskId) || "";
   const activeChallengeId = firstString(params.activeChallengeId) || activeChallenge?.id || "";
@@ -410,6 +415,26 @@ function TaskCompleteScreenInner() {
       setCompletionId(id ?? null);
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      const celebTitle = isHardMode ? "Hard mode earned." : "Secured.";
+      const celebPoints = isHardMode ? 8 : 5;
+      showCelebration({
+        title: celebTitle,
+        subtitle: `+${celebPoints} points`,
+        type: "goal",
+      });
+
+      if (Math.random() < 0.3) {
+        const rewards = [
+          { label: "2x BONUS — double points!", color: "#854F0B", bg: "#FAEEDA" },
+          { label: "Streak shield earned", color: "#0F6E56", bg: "#E1F5EE" },
+          { label: "Discipline badge progress +1", color: "#534AB7", bg: "#EEEDFE" },
+          { label: "Bonus: +3 extra points", color: "#854F0B", bg: "#FAEEDA" },
+        ];
+        setVariableReward(rewards[Math.floor(Math.random() * rewards.length)] ?? null);
+      } else {
+        setVariableReward(null);
+      }
     } catch (err: unknown) {
       console.error("[TaskComplete] completeTask failed:", err);
       showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -433,8 +458,8 @@ function TaskCompleteScreenInner() {
     runDuration,
     runMin,
     isRunTimed,
-    isHardMode,
     timerSeconds,
+    showCelebration,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -450,34 +475,6 @@ function TaskCompleteScreenInner() {
       manualSubmitScheduled.current = false;
     }, 300);
   }, [handleSubmit, isSubmitting, manualScale]);
-
-  const handleShare = useCallback(async () => {
-    setShareLoading(true);
-    try {
-      const username = (profile as { username?: string })?.username ?? "GRIIT User";
-      const challengeName = headerChallengeName;
-      const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? headerCurrentDay;
-      const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
-      const gpsCoords = userLocation
-        ? `${userLocation.lat.toFixed(4)}° N, ${userLocation.lng.toFixed(4)}° W`
-        : null;
-      await shareCompletion({
-        ref: shareRef as React.RefObject<{ capture?: () => Promise<string> } | null>,
-        completionId: completionId ?? undefined,
-        username,
-        dayNumber,
-        challengeName,
-        proofPhotoUri: photoUri ?? photoUrl ?? null,
-        streakCount,
-        gpsCoords,
-        date: new Date().toLocaleDateString(),
-      });
-      setSharedFeedback(true);
-      setTimeout(() => setSharedFeedback(false), 2000);
-    } finally {
-      setShareLoading(false);
-    }
-  }, [completionId, profile, activeChallenge, stats, userLocation, photoUri, photoUrl, headerChallengeName, headerCurrentDay]);
 
   const timerDisplay =
     isCountdown && requiredSeconds > 0
@@ -517,56 +514,121 @@ function TaskCompleteScreenInner() {
   }
 
   if (submitted) {
-    const username = (profile as { username?: string })?.username ?? "GRIIT User";
     const challengeName = headerChallengeName;
-    const dayNumber = (activeChallenge as { current_day_index?: number })?.current_day_index ?? headerCurrentDay;
+    const dayNumber =
+      (activeChallenge as { current_day_index?: number; current_day?: number })?.current_day_index ??
+      (activeChallenge as { current_day?: number })?.current_day ??
+      headerCurrentDay;
     const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
-    const gpsCoords = userLocation
-      ? `${userLocation.lat.toFixed(4)}° N, ${userLocation.lng.toFixed(4)}° W`
-      : null;
+    const completionTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const celebPoints = isHardMode ? 8 : 5;
+
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
-        <Stack.Screen options={{ title: taskName, headerBackVisible: true }} />
-        <View style={{ opacity: 0, position: "absolute", left: -9999, pointerEvents: "none" }}>
-          <ViewShot
-            ref={shareRef}
-            options={{ format: "png", width: 1080, height: 1080 }}
-            style={{ width: 1080, height: 1080 }}
-          >
-            <ProofShareCard
-              username={username}
+      <SafeAreaView style={[styles.container, { backgroundColor: "#050505" }]} edges={["bottom"]}>
+        <Stack.Screen
+          options={{
+            title: taskName,
+            headerBackVisible: true,
+            headerStyle: { backgroundColor: "#050505" },
+            headerTintColor: "#fff",
+          }}
+        />
+
+        <View style={{ position: "absolute", left: -9999, opacity: 0, pointerEvents: "none" }}>
+          <ViewShot ref={shareRef} options={{ format: "png", width: 1080, height: 1920 }} style={{ width: 1080, height: 1920 }}>
+            <StatementCard dayNumber={dayNumber} challengeName={challengeName} />
+          </ViewShot>
+          <ViewShot ref={proofCardRef} options={{ format: "png", width: 1080, height: 1920 }} style={{ width: 1080, height: 1920 }}>
+            <ProofReceiptCard
+              taskName={taskName}
               dayNumber={dayNumber}
               challengeName={challengeName}
-              proofPhotoUri={photoUri ?? photoUrl ?? null}
               streakCount={streakCount}
-              gpsCoords={gpsCoords}
-              date={new Date().toLocaleDateString()}
+              completionTime={completionTime}
+              proofPhotoUri={photoUri ?? photoUrl ?? null}
+              isHardMode={isHardMode}
+              hasHeartRate={!!heartRateData}
+            />
+          </ViewShot>
+          <ViewShot
+            ref={transparentCardRef}
+            options={{ format: "png", width: 1080, height: 1920 }}
+            style={{ width: 1080, height: 1920, backgroundColor: "transparent" }}
+          >
+            <TransparentCard
+              dayNumber={dayNumber}
+              challengeName={challengeName}
+              streakCount={streakCount}
+              completionTime={completionTime}
+              isHardMode={isHardMode}
+            />
+          </ViewShot>
+          <ViewShot ref={grindCardRef} options={{ format: "png", width: 1080, height: 1920 }} style={{ width: 1080, height: 1920 }}>
+            <GrindCard
+              taskName={taskName}
+              dayNumber={dayNumber}
+              challengeName={challengeName}
+              streakCount={streakCount}
+              completionTime={completionTime}
+              isHardMode={isHardMode}
+              hasHeartRate={!!heartRateData}
+              hasPhoto={!!(photoUri ?? photoUrl)}
             />
           </ViewShot>
         </View>
-        <View style={styles.successWrap}>
-          <View style={styles.successIconCircle}>
-            <Check size={48} color={DS_COLORS.WHITE} strokeWidth={3} />
+
+        <View style={celebStyles.wrap}>
+          <Text style={celebStyles.fireEmoji}>🔥</Text>
+          <Text style={celebStyles.title}>Secured.</Text>
+          <Text style={celebStyles.subtitle}>
+            +{celebPoints} points · {taskName}
+          </Text>
+
+          {variableReward ? (
+            <View style={[celebStyles.rewardPill, { backgroundColor: variableReward.bg }]}>
+              <Text style={[celebStyles.rewardText, { color: variableReward.color }]}>{variableReward.label}</Text>
+            </View>
+          ) : null}
+
+          <View style={celebStyles.ctaRow}>
+            <TouchableOpacity
+              style={celebStyles.shareCta}
+              onPress={() => setShowShareSheet(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Share your completion"
+            >
+              <Text style={celebStyles.shareCtaText}>Share</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={celebStyles.nextCta}
+              onPress={() => goBackOrHome(router)}
+              accessibilityRole="button"
+              accessibilityLabel="Continue to next task"
+            >
+              <Text style={celebStyles.nextCtaText}>Next task →</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.successTitle}>Task secured</Text>
-          <Text style={styles.mutedCenter}>Keep going.</Text>
+
           <TouchableOpacity
-            style={[styles.primaryBtn, { marginTop: DS_SPACING.xxl }]}
-            onPress={() => void handleShare()}
-            disabled={shareLoading}
+            style={celebStyles.doneBtn}
+            onPress={() => goBackOrHome(router)}
+            accessibilityRole="button"
+            accessibilityLabel="Done"
           >
-            {shareLoading ? (
-              <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
-            ) : sharedFeedback ? (
-              <Text style={styles.primaryBtnText}>Shared! ✓</Text>
-            ) : (
-              <Text style={styles.primaryBtnText}>Share your proof</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.secondaryBtn, { marginTop: DS_SPACING.md }]} onPress={() => goBackOrHome(router)}>
-            <Text style={styles.secondaryBtnText}>Done</Text>
+            <Text style={celebStyles.doneBtnText}>Done</Text>
           </TouchableOpacity>
         </View>
+
+        <ShareSheetModal
+          visible={showShareSheet}
+          onClose={() => setShowShareSheet(false)}
+          shareRef={shareRef}
+          proofCardRef={proofCardRef}
+          transparentCardRef={transparentCardRef}
+          grindCardRef={grindCardRef}
+          hasPhoto={!!(photoUri ?? photoUrl)}
+          completionId={completionId}
+        />
       </SafeAreaView>
     );
   }
@@ -1055,4 +1117,44 @@ const styles = StyleSheet.create({
     marginBottom: DS_SPACING.xl,
   },
   successTitle: { fontSize: 20, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+});
+
+const celebStyles = StyleSheet.create({
+  wrap: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  fireEmoji: { fontSize: 48, marginBottom: 12 },
+  title: { fontSize: 28, fontWeight: "700", color: "#fff" },
+  subtitle: { fontSize: 14, color: "rgba(255,255,255,0.5)", marginTop: 6 },
+  rewardPill: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  rewardText: { fontSize: 13, fontWeight: "700" },
+  ctaRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 32,
+  },
+  shareCta: {
+    backgroundColor: GRIIT_COLORS.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 28,
+  },
+  shareCtaText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  nextCta: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 28,
+  },
+  nextCtaText: { fontSize: 15, fontWeight: "500", color: "rgba(255,255,255,0.6)" },
+  doneBtn: { marginTop: 20 },
+  doneBtnText: { fontSize: 14, color: "rgba(255,255,255,0.3)" },
 });
