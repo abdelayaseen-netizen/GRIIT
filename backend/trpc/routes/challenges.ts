@@ -12,6 +12,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { joinChallengeDirect } from "../../lib/join-challenge";
+import { getCached, setCached } from "../../lib/cache";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -129,6 +130,17 @@ export const challengesRouter = createTRPCRouter({
       const limit = input?.limit ?? 50;
       const offset = input?.cursor ? parseInt(input.cursor, 10) : 0;
       const safeOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
+      const noPagination = input?.cursor == null && input?.limit == null;
+      const canFeatureCache =
+        noPagination &&
+        !input?.search?.trim() &&
+        (!input?.category || input.category === "all");
+
+      const cacheKey = `challenges:featured:v1:${ctx.userId ?? "anon"}`;
+      if (canFeatureCache) {
+        const cached = await getCached<unknown>(cacheKey);
+        if (cached != null) return cached;
+      }
 
       let query = ctx.supabase
         .from("challenges")
@@ -165,7 +177,9 @@ export const challengesRouter = createTRPCRouter({
       const nextOffset = safeOffset + items.length;
       const hasMore = count != null && nextOffset < count;
       const withCursor = { items, nextCursor: hasMore ? String(nextOffset) : undefined };
-      const noPagination = input?.cursor == null && input?.limit == null;
+      if (canFeatureCache) {
+        await setCached(cacheKey, items, 60);
+      }
       return noPagination ? items : withCursor;
     }),
 
@@ -461,19 +475,25 @@ export const challengesRouter = createTRPCRouter({
       }
 
       logger.debug({ challengeId: input.challengeId }, "[JOIN-BACKEND] Calling joinChallengeDirect");
-      const [activeChallenge, chResult] = await Promise.all([
-        joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId),
-        ctx.supabase.from("challenges").select("title").eq("id", input.challengeId).single(),
-      ]);
-      const { data: ch } = chResult;
-      await ctx.supabase.from("activity_events").insert({
-        user_id: ctx.userId,
-        event_type: "joined_challenge",
-        challenge_id: input.challengeId,
-        metadata: { challenge_name: (ch as { title?: string })?.title ?? "Challenge" },
-      });
-      logger.info({ activeChallengeId: activeChallenge.id }, "[JOIN-BACKEND] Join SUCCESS");
-      return activeChallenge;
+      try {
+        const [activeChallenge, chResult] = await Promise.all([
+          joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId),
+          ctx.supabase.from("challenges").select("title").eq("id", input.challengeId).single(),
+        ]);
+        const { data: ch } = chResult;
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "joined_challenge",
+          challenge_id: input.challengeId,
+          metadata: { challenge_name: (ch as { title?: string })?.title ?? "Challenge" },
+        });
+        logger.info({ activeChallengeId: activeChallenge.id }, "[JOIN-BACKEND] Join SUCCESS");
+        return activeChallenge;
+      } catch (e) {
+        if (e instanceof TRPCError) throw e;
+        logger.error({ err: e, userId: ctx.userId }, "[JOIN-BACKEND] Join unexpected error");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred" });
+      }
     }),
 
   /** Leave a challenge: remove active_challenge (and cascade check_ins) or remove from challenge_members if team waiting. Creator cannot leave. */

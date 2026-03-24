@@ -2,6 +2,7 @@ import * as z from "zod";
 import { createTRPCRouter, publicProcedure } from "../create-context";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
 import { getTodayDateKey } from "../../lib/date-utils";
+import { getCached, setCached } from "../../lib/cache";
 
 function getWeekStartDateKey(): string {
   const d = new Date();
@@ -25,10 +26,18 @@ export const leaderboardRouter = createTRPCRouter({
       const limit = input?.limit ?? LEADERBOARD_MAX;
       const offset = input?.cursor ? parseInt(input.cursor, 10) : 0;
       const safeOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
+      const noPagination = input?.cursor == null && input?.limit == null;
 
       const todayKey = getTodayDateKey();
       const weekStartKey = getWeekStartDateKey();
       const userId = ctx.userId;
+      const weeklyCacheKey = `leaderboard:weekly:v1:${weekStartKey}:${todayKey}:${userId ?? "anon"}`;
+      const canCacheWeekly = noPagination && safeOffset === 0;
+
+      if (canCacheWeekly) {
+        const cached = await getCached<unknown>(weeklyCacheKey);
+        if (cached != null) return cached;
+      }
 
       const { data: secures } = await ctx.supabase
         .from("day_secures")
@@ -49,9 +58,10 @@ export const leaderboardRouter = createTRPCRouter({
         .slice(safeOffset, safeOffset + limit);
 
       if (sortedUserIds.length === 0) {
-        const noPagination = input?.cursor == null && input?.limit == null;
         const empty = { entries: [], currentUserRank: null, totalSecuredToday: 0 };
-        return noPagination ? empty : { ...empty, nextCursor: undefined };
+        const out = noPagination ? empty : { ...empty, nextCursor: undefined };
+        if (canCacheWeekly) await setCached(weeklyCacheKey, out, 120);
+        return out;
       }
 
       const [profilesResult, streaksResult, todaySecuresResult, respectCountsResult] = await Promise.all([
@@ -113,12 +123,13 @@ export const leaderboardRouter = createTRPCRouter({
       const hasMore = safeOffset + entries.length < allSorted.length;
       const nextCursor = hasMore ? String(safeOffset + limit) : undefined;
 
-      const noPagination = input?.cursor == null && input?.limit == null;
       const base = {
         entries,
         currentUserRank: currentUserRank && currentUserRank > 0 ? currentUserRank : null,
         totalSecuredToday,
       };
-      return noPagination ? base : { ...base, nextCursor };
+      const result = noPagination ? base : { ...base, nextCursor };
+      if (canCacheWeekly) await setCached(weeklyCacheKey, result, 120);
+      return result;
     }),
 });

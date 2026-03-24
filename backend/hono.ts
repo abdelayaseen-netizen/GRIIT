@@ -23,24 +23,38 @@ app.use(
 
 app.get("/", (c) => c.json({ status: "ok", message: "GRIIT API is running" }));
 
-const healthPayload = () => {
+async function healthJson(c: Context) {
+  const checks: Record<string, "ok" | "error"> = {};
+  try {
+    const { supabase } = await import("./lib/supabase");
+    const { error } = await supabase.from("challenges").select("id").limit(1);
+    checks.supabase = error ? "error" : "ok";
+  } catch {
+    checks.supabase = "error";
+  }
+  const allOk = Object.values(checks).every((v) => v === "ok");
   const commitSha =
     process.env.RAILWAY_GIT_COMMIT_SHA ??
     process.env.VERCEL_GIT_COMMIT_SHA ??
     process.env.GIT_COMMIT_SHA ??
     "unknown";
-  return {
-    ok: true,
-    service: "backend",
-    version: "1.0.0",
-    commitSha,
-    commit: commitSha,
-    time: new Date().toISOString(),
-  };
-};
+  return c.json(
+    {
+      status: allOk ? "ok" : "degraded",
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV ?? "development",
+      checks,
+      commitSha,
+      commit: commitSha,
+      service: "backend",
+    },
+    allOk ? 200 : 503
+  );
+}
 
-app.get("/api/health", (c) => c.json(healthPayload()));
-app.get("/health", (c) => c.json(healthPayload()));
+app.get("/api/health", healthJson);
+app.get("/health", healthJson);
 
 /** Cron: send daily morning and streak-at-risk push reminders. Call every hour with CRON_SECRET. */
 app.get("/api/cron/send-reminders", async (c) => {

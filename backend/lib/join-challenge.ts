@@ -69,7 +69,7 @@ export async function joinChallengeDirect(
     logger.error({ err: insertErr }, "[JOIN-BACKEND] Insert active_challenges error");
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: insertErr.message || "Failed to join challenge.",
+      message: "Failed to join challenge.",
     });
   }
 

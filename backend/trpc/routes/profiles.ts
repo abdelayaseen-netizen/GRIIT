@@ -67,7 +67,12 @@ export const profilesRouter = createTRPCRouter({
         .select("user_id, username, display_name, avatar_url, total_days_secured, tier")
         .eq("username", input.username.trim())
         .maybeSingle();
-      if (profileError || !profile) return null;
+      if (profileError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ error: profileError, username: input.username }, "[profiles.getPublicByUsername]");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
+      }
+      if (!profile) return null;
       const { data: streakRow } = await ctx.supabase
         .from("streaks")
         .select("active_streak_count")
@@ -440,10 +445,11 @@ export const profilesRouter = createTRPCRouter({
         .order("date_key", { ascending: false });
 
       if (error) {
-        console.error("[getSecuredDateKeys] Supabase error:", JSON.stringify(error));
+        const { logger } = await import("../../lib/logger");
+        logger.error({ error, userId: ctx.userId }, "[profiles.getSecuredDateKeys]");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error.message || "Failed to load secured dates.",
+          message: "Failed to load secured dates.",
         });
       }
       return (data ?? []).map((r: { date_key: string }) => r.date_key);

@@ -65,13 +65,26 @@ export const checkinsRouter = createTRPCRouter({
         }
       }
 
-      const { data: taskRow } = await ctx.supabase
+      const { data: taskRow, error: taskFetchError } = await ctx.supabase
         .from("challenge_tasks")
         .select("id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes")
         .eq("id", input.taskId)
         .single();
 
-      const task = taskRow as TaskRowWithVerification | null;
+      if (taskFetchError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ error: taskFetchError, userId: ctx.userId, taskId: input.taskId }, "[checkins.complete] task fetch");
+        const code = (taskFetchError as PgError).code;
+        if (code === "PGRST116") {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
+        }
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load task." });
+      }
+      if (!taskRow) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
+      }
+
+      const task = taskRow as TaskRowWithVerification;
       const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
       const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
       const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
@@ -225,7 +238,7 @@ export const checkinsRouter = createTRPCRouter({
         );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Check-in save failed: ${error.message || "unknown"} (code: ${errObj.code || "?"})`,
+          message: "Failed to save check-in.",
         });
       }
 
@@ -476,12 +489,23 @@ export const checkinsRouter = createTRPCRouter({
         .eq("id", input.activeChallengeId)
         .single();
 
-      requireNoError(acError, "Active challenge not found.");
+      if (acError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ error: acError, userId: ctx.userId, activeChallengeId: input.activeChallengeId }, "[checkins.secureDay] active challenge load");
+        const code = (acError as PgError).code;
+        if (code === "PGRST116") {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Active challenge not found" });
+        }
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenge." });
+      }
+      if (!activeChallenge) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Active challenge not found" });
+      }
 
-      const ac = activeChallenge as ActiveChallengeWithTasks | null;
+      const ac = activeChallenge as ActiveChallengeWithTasks;
       const challengeTasksRaw = ac?.challenges?.challenge_tasks as ChallengeTaskRowRaw[] | null | undefined;
       if (!Array.isArray(challengeTasksRaw)) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Challenge tasks not found." });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
       }
 
       const { data: completedCheckins } = await ctx.supabase
