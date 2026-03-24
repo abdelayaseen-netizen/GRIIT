@@ -22,6 +22,9 @@ export type TeamChallengeCardData = {
   duration_days?: number;
   team_size?: number;
   participants_count?: number;
+  challenge_type?: string;
+  active_team_member_count?: number;
+  active_team_max_members?: number;
 };
 
 function difficultyTheme(d?: string) {
@@ -52,6 +55,10 @@ export const TeamChallengeCard = React.memo(function TeamChallengeCard({
   const theme = difficultyTheme(challenge.difficulty);
   const teamsActive = Math.max(1, Math.floor((challenge.participants_count ?? 0) / Math.max(size, 1)));
   const cta = isDuo ? "Find a partner ›" : "Build a squad ›";
+  const showTeamBadge = challenge.challenge_type === "team" || challenge.challenge_type === "both" || !challenge.challenge_type;
+  const hasActiveTeam =
+    typeof challenge.active_team_member_count === "number" &&
+    typeof challenge.active_team_max_members === "number";
   return (
     <TouchableOpacity
       style={s.card}
@@ -61,6 +68,23 @@ export const TeamChallengeCard = React.memo(function TeamChallengeCard({
       accessibilityRole="button"
       accessibilityLabel={`${challenge.title}, team challenge, ${duration} days, ${challenge.participants_count ?? 0} participants. Tap to view details.`}
     >
+      {showTeamBadge ? (
+        <View style={s.teamBadge} accessibilityRole="text" accessibilityLabel={hasActiveTeam ? "Active team challenge" : "Team challenge"}>
+          {hasActiveTeam ? (
+            <>
+              <View style={s.activeDot} />
+              <Text style={s.teamBadgeText}>
+                {challenge.active_team_member_count}/{challenge.active_team_max_members}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Users size={12} color={DS_COLORS.WHITE} />
+              <Text style={s.teamBadgeText}>Team</Text>
+            </>
+          )}
+        </View>
+      ) : null}
       <View style={s.topRow}>
         <View style={s.leftRow}>
           <View style={[s.iconBox, { backgroundColor: iconBg }]}>
@@ -93,6 +117,21 @@ export const TeamChallengeCard = React.memo(function TeamChallengeCard({
 
 const s = StyleSheet.create({
   card: { backgroundColor: DS_COLORS.WHITE, borderRadius: 16, padding: 16, marginBottom: 10 },
+  teamBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+  },
+  teamBadgeText: { fontSize: 11, fontWeight: "500", color: DS_COLORS.WHITE },
+  activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: DS_COLORS.success },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   leftRow: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
   iconBox: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },

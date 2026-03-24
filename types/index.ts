@@ -64,7 +64,12 @@ export interface JournalEntry {
   createdAt: string;
 }
 
-export type ChallengeType = "standard" | "one_day";
+export type ChallengeType = "standard" | "one_day" | "solo" | "team" | "both";
+export type GoalMode = "individual" | "shared";
+export type TeamStatus = "active" | "completed" | "abandoned";
+export type TeamMemberRole = "creator" | "member";
+export type InviteType = "code" | "link" | "in_app";
+export type InviteStatus = "pending" | "accepted" | "expired" | "revoked";
 
 export type ReplayPolicy = "live_only" | "allow_replay";
 
@@ -557,6 +562,45 @@ export interface ActiveChallengeFromApi {
   current_day_index?: number;
   current_day?: number;
   challenges?: Record<string, unknown>;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  challenge_id: string;
+  creator_id: string;
+  team_code: string;
+  max_members: number;
+  goal_mode: GoalMode;
+  status: TeamStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  user_id: string;
+  role: TeamMemberRole;
+  joined_at: string;
+  display_name?: string;
+  avatar_url?: string;
+}
+
+export interface TeamInvite {
+  id: string;
+  team_id: string;
+  invited_by: string;
+  invited_user_id?: string;
+  invite_type: InviteType;
+  status: InviteStatus;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface TeamWithMembers extends Team {
+  members: TeamMember[];
+  member_count: number;
 }
 
 /** Stats as returned by stats.getForHome (tier, nextTierName, pointsToNextTier, etc.). */

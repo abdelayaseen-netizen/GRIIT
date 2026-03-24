@@ -102,6 +102,7 @@ export const TRPC = {
     getMySummary: 'feed.getMySummary',
     react: 'feed.react',
     comment: 'feed.comment',
+    getComments: 'feed.getComments',
   },
   teams: {
     createTeam: 'teams.createTeam',
@@ -109,6 +110,18 @@ export const TRPC = {
     getMyTeam: 'teams.getMyTeam',
     leaveTeam: 'teams.leaveTeam',
     getTeamFeed: 'teams.getTeamFeed',
+  },
+  team: {
+    create: 'team.create',
+    joinByCode: 'team.joinByCode',
+    joinByLink: 'team.joinByLink',
+    leave: 'team.leave',
+    kick: 'team.kick',
+    getMembers: 'team.getMembers',
+    getLeaderboard: 'team.getLeaderboard',
+    generateInviteLink: 'team.generateInviteLink',
+    getMyTeams: 'team.getMyTeams',
+    getForChallenge: 'team.getForChallenge',
   },
   achievements: {
     getForUser: 'achievements.getForUser',

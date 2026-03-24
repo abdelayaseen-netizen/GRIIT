@@ -111,6 +111,11 @@ export default function TeamMemberList({ members, currentUserId, runStatus }: Te
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Team members</Text>
+      {sorted.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <Text style={[styles.emptyText, { color: colors.text.secondary }]}>Waiting for teammates...</Text>
+        </View>
+      ) : null}
       {sorted.map((member, index) => (
         <View
           key={member.id}
@@ -134,6 +139,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     marginBottom: 12,
+  },
+  emptyWrap: {
+    paddingVertical: 16,
+    minHeight: 60,
+    justifyContent: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   rowWrap: {
     paddingVertical: 10,

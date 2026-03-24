@@ -1,99 +1,110 @@
-/**
- * Modal: join a team with 8-character invite code. Pro-gated via Teams tab.
- */
-import React, { useState } from "react";
-import { Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useJoinTeam } from "@/hooks/useTeams";
-import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
-import { trackEvent } from "@/lib/analytics";
-
-const CODE_LEN = 8;
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
+import { useAuth } from "@/contexts/AuthContext";
+import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
+import { ROUTES } from "@/lib/routes";
 
 export default function JoinTeamScreen() {
   const router = useRouter();
-  const joinTeam = useJoinTeam();
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const params = useLocalSearchParams<{ team_id?: string; invite_id?: string }>();
+  const teamId = typeof params.team_id === "string" ? params.team_id : "";
+  const inviteId = typeof params.invite_id === "string" ? params.invite_id : undefined;
+  const [status, setStatus] = useState<"idle" | "joining" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const normalized = code.trim().toUpperCase().slice(0, CODE_LEN);
-  const valid = normalized.length === CODE_LEN;
-
-  const handleJoin = () => {
-    setError(null);
-    if (!valid) {
-      setError("Enter the 8-character invite code.");
+  useEffect(() => {
+    if (!teamId) {
+      setStatus("error");
+      setErrorMessage("Invalid invite link.");
       return;
     }
-    joinTeam.mutate(normalized, {
-      onSuccess: (data) => {
-        trackEvent("team_joined", { team_id: data.teamId });
-        router.back();
-        router.replace("/(tabs)/teams" as never);
-      },
-      onError: (e: Error) => {
-        const msg = e.message ?? "";
-        if (msg.includes("not found") || msg.includes("NOT_FOUND")) setError("Team not found.");
-        else if (msg.includes("full") || msg.includes("5/5")) setError("Team is full (5/5 members).");
-        else setError(msg || "Could not join team.");
-      },
-    });
-  };
+    if (!user?.id) {
+      router.replace(ROUTES.AUTH_LOGIN as never);
+      return;
+    }
+    let active = true;
+    const run = async () => {
+      setStatus("joining");
+      try {
+        const team = await trpcMutate(TRPC.team.joinByLink, { team_id: teamId, invite_id: inviteId }) as { challenge_id: string };
+        if (!active) return;
+        router.replace(`/challenge/${team.challenge_id}` as never);
+      } catch (error) {
+        if (!active) return;
+        console.error("[JoinTeam] joinByLink failed:", error);
+        setStatus("error");
+        setErrorMessage(error instanceof Error ? error.message : "Could not join this team.");
+      }
+    };
+    void run();
+    return () => {
+      active = false;
+    };
+  }, [teamId, inviteId, user?.id, router]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["bottom"]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.keyboard}>
-        <Text style={styles.label}>Invite code</Text>
-        <TextInput
-          style={styles.input}
-          value={code}
-          onChangeText={(t) => setCode(t.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, CODE_LEN))}
-          placeholder="Enter invite code"
-          placeholderTextColor={DS_COLORS.inputPlaceholder}
-          maxLength={CODE_LEN}
-          autoCapitalize="characters"
-          autoCorrect={false}
-        />
-        {error ? <Text style={[styles.error, { color: DS_COLORS.errorText }]}>{error}</Text> : null}
-        <TouchableOpacity
-          style={[styles.btn, { backgroundColor: DS_COLORS.ACCENT_PRIMARY }, (!valid || joinTeam.isPending) && styles.btnDisabled]}
-          onPress={handleJoin}
-          disabled={!valid || joinTeam.isPending}
-          accessibilityRole="button"
-          accessibilityLabel="Join team"
-        >
-          {joinTeam.isPending ? (
-            <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
-          ) : (
-            <Text style={styles.btnText}>Join team</Text>
-          )}
-        </TouchableOpacity>
-      </KeyboardAvoidingView>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
+      {status === "joining" ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={DS_COLORS.DISCOVER_CORAL} />
+          <Text style={styles.text}>Joining team...</Text>
+        </View>
+      ) : status === "error" ? (
+        <View style={styles.center}>
+          <Text style={styles.errorTitle}>Could not join team</Text>
+          <Text style={styles.errorBody}>{errorMessage ?? "Please try again."}</Text>
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => router.replace("/team-invite" as never)}
+            accessibilityRole="button"
+            accessibilityLabel="Enter team code manually"
+          >
+            <Text style={styles.primaryBtnText}>Enter code manually</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryBtn}
+            onPress={() => router.replace(ROUTES.TABS as never)}
+            accessibilityRole="button"
+            accessibilityLabel="Go to home"
+          >
+            <Text style={styles.secondaryBtnText}>Go Home</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  keyboard: { flex: 1, padding: DS_SPACING.screenHorizontal ?? 20 },
-  label: { fontSize: 15, fontWeight: "600", color: DS_COLORS.textPrimary, marginBottom: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-    borderRadius: DS_RADIUS.input,
-    padding: DS_SPACING.lg,
-    fontSize: 18,
-    color: DS_COLORS.textPrimary,
-    letterSpacing: 2,
-    marginBottom: 16,
-  },
-  error: { fontSize: 14, marginBottom: 12 },
-  btn: {
-    paddingVertical: 16,
-    borderRadius: DS_RADIUS.button,
+  container: { flex: 1, backgroundColor: DS_COLORS.TROPHY_ICON_WRAP_BG },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: DS_SPACING.screenHorizontal },
+  text: { marginTop: 12, fontSize: 14, color: DS_COLORS.textSecondary },
+  errorTitle: { fontSize: 20, fontWeight: "700", color: DS_COLORS.challengeHeaderDark, marginBottom: 8 },
+  errorBody: { fontSize: 14, color: DS_COLORS.textSecondary, textAlign: "center", marginBottom: 16 },
+  primaryBtn: {
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    borderRadius: 28,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginBottom: 10,
+    minWidth: 220,
     alignItems: "center",
   },
-  btnDisabled: { opacity: 0.5 },
-  btnText: { fontSize: 17, fontWeight: "700", color: DS_COLORS.WHITE },
+  primaryBtnText: { color: DS_COLORS.white, fontWeight: "700", fontSize: 15 },
+  secondaryBtn: {
+    borderWidth: 1,
+    borderColor: DS_COLORS.DISABLED_BG,
+    borderRadius: DS_RADIUS.buttonPill,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    minWidth: 220,
+    alignItems: "center",
+    backgroundColor: DS_COLORS.white,
+  },
+  secondaryBtnText: { color: DS_COLORS.textSecondary, fontWeight: "600", fontSize: 14 },
 });

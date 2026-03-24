@@ -62,6 +62,7 @@ export const feedRouter = createTRPCRouter({
       });
       const eventIds = items.map((e) => e.id);
       const reactionStats = new Map<string, { count: number; reactedByMe: boolean }>();
+      const commentCounts = new Map<string, number>();
       if (eventIds.length > 0) {
         const { data: reactions } = await ctx.supabase
           .from("feed_reactions")
@@ -74,6 +75,13 @@ export const feedRouter = createTRPCRouter({
             reactedByMe: prev.reactedByMe || row.user_id === ctx.userId,
           });
         }
+        const { data: comments } = await ctx.supabase
+          .from("feed_comments")
+          .select("event_id")
+          .in("event_id", eventIds);
+        for (const row of (comments ?? []) as { event_id: string }[]) {
+          commentCounts.set(row.event_id, (commentCounts.get(row.event_id) ?? 0) + 1);
+        }
       }
       const withReactions = withProfiles.map((item) => {
         const stat = reactionStats.get(item.id);
@@ -81,6 +89,7 @@ export const feedRouter = createTRPCRouter({
           ...item,
           reaction_count: stat?.count ?? 0,
           reacted_by_me: stat?.reactedByMe ?? false,
+          comment_count: commentCounts.get(item.id) ?? 0,
         };
       });
 
@@ -241,14 +250,73 @@ export const feedRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { error } = await ctx.supabase.from("feed_comments").insert({
+      const { data: inserted, error } = await ctx.supabase.from("feed_comments").insert({
         user_id: ctx.userId,
         event_id: input.eventId,
         text: input.text.trim(),
-      });
+      }).select("id, event_id, user_id, text, created_at").single();
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to comment." });
       }
-      return { success: true as const };
+      const { data: profile } = await ctx.supabase
+        .from("profiles")
+        .select("display_name, username, avatar_url")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      return {
+        success: true as const,
+        comment: {
+          id: inserted?.id,
+          event_id: inserted?.event_id,
+          user_id: inserted?.user_id,
+          text: inserted?.text,
+          created_at: inserted?.created_at,
+          display_name: profile?.display_name ?? profile?.username ?? "You",
+          username: profile?.username ?? "you",
+          avatar_url: profile?.avatar_url ?? null,
+        },
+      };
+    }),
+
+  getComments: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        limit: z.number().min(1).max(100).default(50),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { data: comments, error } = await ctx.supabase
+        .from("feed_comments")
+        .select("id, event_id, user_id, text, created_at")
+        .eq("event_id", input.eventId)
+        .order("created_at", { ascending: true })
+        .limit(input.limit);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load comments." });
+      }
+      const userIds = [...new Set((comments ?? []).map((c: { user_id: string }) => c.user_id))];
+      const { data: profiles } = userIds.length
+        ? await ctx.supabase
+            .from("profiles")
+            .select("user_id, display_name, username, avatar_url")
+            .in("user_id", userIds)
+        : { data: [] as { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }[] };
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.user_id, p])
+      );
+      return (comments ?? []).map((row) => {
+        const profile = profileMap.get(row.user_id);
+        return {
+          id: row.id,
+          event_id: row.event_id,
+          user_id: row.user_id,
+          text: row.text,
+          created_at: row.created_at,
+          display_name: profile?.display_name ?? profile?.username ?? "Someone",
+          username: profile?.username ?? "?",
+          avatar_url: profile?.avatar_url ?? null,
+        };
+      });
     }),
 });

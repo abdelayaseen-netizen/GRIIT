@@ -10,7 +10,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, getCategoryColors } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -28,6 +28,7 @@ import { PopularChallengeRow } from "@/components/challenges/PopularChallengeRow
 import { prefetchChallengeById } from "@/lib/prefetch-queries";
 
 type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "team";
+type ChallengeFilter = "all" | "solo" | "team";
 
 type ApiChallenge = {
   id: string;
@@ -45,6 +46,7 @@ type ApiChallenge = {
   participants_count?: number;
   participation_type?: string;
   team_size?: number;
+  challenge_type?: string;
 };
 
 type GetFeaturedResponse = { items: ApiChallenge[]; nextCursor?: string | null } | ApiChallenge[];
@@ -108,6 +110,7 @@ export default function DiscoverScreen() {
   const { isPremium } = useApp();
   const isGuest = useIsGuest();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
+  const [challengeFilter, setChallengeFilter] = useState<ChallengeFilter>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 250);
@@ -156,7 +159,34 @@ export default function DiscoverScreen() {
   );
 
   const all = useMemo(() => (featuredQuery.data?.pages.flatMap((p) => p.items) ?? []).filter((c) => (c.visibility ?? "public").toLowerCase() === "public"), [featuredQuery.data?.pages]);
-  const filtered = useMemo(() => all.filter((c) => categoryMatch(c, activeCategory)).filter((c) => searchMatch(c, debouncedQuery)), [all, activeCategory, debouncedQuery]);
+  const filtered = useMemo(() => {
+    return all
+      .filter((c) => categoryMatch(c, activeCategory))
+      .filter((c) => searchMatch(c, debouncedQuery))
+      .filter((c) => {
+        const ct = String(c.challenge_type ?? "").toLowerCase();
+        if (challengeFilter === "all") return true;
+        if (challengeFilter === "solo") return ct === "solo" || ct === "both" || ct === "";
+        if (challengeFilter === "team") return ct === "team" || ct === "both" || isTeam(c);
+        return true;
+      });
+  }, [all, activeCategory, debouncedQuery, challengeFilter]);
+
+  const myTeamsQuery = useQuery({
+    queryKey: ["discover", "myTeams", user?.id],
+    queryFn: () =>
+      trpcQuery(TRPC.team.getMyTeams) as Promise<Array<{
+        id: string;
+        name: string;
+        challenge_id: string;
+        challenge_title: string;
+        member_count: number;
+        max_members: number;
+      }>>,
+    enabled: !isGuest && !!user?.id,
+    staleTime: 2 * 60 * 1000,
+  });
+  const myTeams = myTeamsQuery.data ?? [];
 
   const hero = useMemo(() => {
     const featured = filtered.find((c) => c.is_featured === true);
@@ -244,6 +274,71 @@ export default function DiscoverScreen() {
             </View>
           ) : null}
 
+          {myTeams.length > 0 ? (
+            <View style={styles.v3SectionPad}>
+              <SectionHeader title="Your teams" />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                {myTeams.slice(0, 5).map((teamItem) => {
+                  const challenge = all.find((c) => c.id === teamItem.challenge_id);
+                  const colors = getCategoryColors(challenge?.category ?? "discipline");
+                  return (
+                    <TouchableOpacity
+                      key={teamItem.id}
+                      onPress={() => openChallenge(teamItem.challenge_id)}
+                      style={{
+                        width: 160,
+                        height: 80,
+                        borderRadius: 12,
+                        padding: 10,
+                        backgroundColor: colors.header,
+                        justifyContent: "space-between",
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Your team: ${teamItem.name}, ${teamItem.member_count} of ${teamItem.max_members} members`}
+                    >
+                      <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE }}>{teamItem.name}</Text>
+                      <Text numberOfLines={1} style={{ fontSize: 11, color: colors.subtitleText }}>{teamItem.challenge_title}</Text>
+                      <Text style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+                        {teamItem.member_count}/{teamItem.max_members} members
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : null}
+
+          <View style={styles.v3PillsWrap}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.v3PillsContent}>
+              {[
+                { key: "all" as const, label: "All", a11y: "Show all challenges" },
+                { key: "solo" as const, label: "Solo", a11y: "Show solo challenges only" },
+                { key: "team" as const, label: "Team", a11y: "Show team challenges only" },
+              ].map((f) => (
+                <TouchableOpacity
+                  key={f.key}
+                  onPress={() => setChallengeFilter(f.key)}
+                  style={{
+                    height: 36,
+                    paddingHorizontal: 18,
+                    borderRadius: 20,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: challengeFilter === f.key ? 0 : 1,
+                    borderColor: DS_COLORS.DISABLED_BG,
+                    backgroundColor: challengeFilter === f.key ? DS_COLORS.challengeHeaderDark : DS_COLORS.WHITE,
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={f.a11y}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "500", color: challengeFilter === f.key ? DS_COLORS.WHITE : DS_COLORS.textSecondary }}>
+                    {f.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
           <View style={styles.v3PillsWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.v3PillsContent}>
               {CATEGORIES.map((c) => (
@@ -326,6 +421,7 @@ export default function DiscoverScreen() {
                       duration_days: c.duration_days,
                       team_size: c.team_size,
                       participants_count: c.participants_count,
+                      challenge_type: c.challenge_type,
                     }}
                     onPress={openChallenge}
                     onPressIn={() => prefetchChallengeDetail(c.id)}

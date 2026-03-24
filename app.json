@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "griit",
     "linking": {
-      "prefixes": ["griit://", "https://griit.app/"]
+      "prefixes": ["griit://", "https://griit.app/", "https://griit.fit/"]
     },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -46,7 +46,12 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "origin": "https://griit.fit"
+        }
+      ],
       "expo-font",
       "expo-web-browser",
       "expo-apple-authentication",

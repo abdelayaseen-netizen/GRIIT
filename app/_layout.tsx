@@ -171,6 +171,7 @@ function AuthRedirector() {
       "legal",
       "create",
       "create-team",
+      "team-invite",
       "join-team",
       "profile",
       "invite",
@@ -305,6 +306,7 @@ function RootLayoutNav() {
       <Stack.Screen name="invite/[code]" options={{ headerShown: false }} />
       <Stack.Screen name="paywall" options={{ headerShown: false }} />
       <Stack.Screen name="create-team" options={{ title: "Create team", presentation: "modal" }} />
+      <Stack.Screen name="team-invite" options={{ title: "Invite teammates", presentation: "modal" }} />
       <Stack.Screen name="join-team" options={{ title: "Join team", presentation: "modal" }} />
       <Stack.Screen name="profile/[username]" options={{ headerShown: false }} />
       <Stack.Screen 
