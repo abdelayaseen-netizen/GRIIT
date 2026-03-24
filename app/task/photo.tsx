@@ -12,6 +12,8 @@ import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { useInlineError } from "@/hooks/useInlineError";
 import { trackEvent } from "@/lib/analytics";
 import { InlineError } from "@/components/InlineError";
+import ProofShareCard from "@/components/ProofShareCard";
+import { captureError } from "@/lib/sentry";
 
 const PICKER_OPTIONS = {
   allowsEditing: true,
@@ -23,11 +25,12 @@ const PICKER_OPTIONS = {
 export default function PhotoTaskScreen() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { activeChallenge, completeTask } = useApp();
+  const { activeChallenge, completeTask, profile, stats, challenge } = useApp();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const { error, showError, clearError } = useInlineError();
 
   const handleTakePhoto = async () => {
@@ -113,8 +116,10 @@ export default function PhotoTaskScreen() {
       if (Platform.OS !== "web") {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      router.back();
+      setShowShareCard(true);
     } catch (error: unknown) {
+      if (__DEV__) console.error("[PhotoTask] submit failed:", error);
+      captureError(error, { screen: "task/photo", taskId });
       showError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -122,8 +127,35 @@ export default function PhotoTaskScreen() {
     }
   };
 
+  const challengeTitle =
+    (challenge as { title?: string } | null)?.title ?? "Challenge";
+  const durationDays =
+    (challenge as { duration_days?: number } | null)?.duration_days ?? 75;
+  const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
+  const username =
+    (profile as { username?: string } | null)?.username?.trim() || "user";
+  const streakCount =
+    (stats as { activeStreak?: number } | null)?.activeStreak ?? 0;
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
+      {showShareCard ? (
+        <ProofShareCard
+          userName={username}
+          challengeTitle={challengeTitle}
+          dayNumber={currentDay}
+          totalDays={durationDays}
+          streakCount={streakCount}
+          proofPhotoUri={photoUri ?? undefined}
+          onDismiss={() => {
+            setShowShareCard(false);
+            router.back();
+          }}
+          onShared={() => {
+            if (__DEV__) console.log("[ProofShare] User shared proof photo");
+          }}
+        />
+      ) : null}
       <View style={styles.content}>
         <InlineError message={error} onDismiss={clearError} />
         {photoUri ? (
@@ -205,6 +237,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: DS_COLORS.background,
+    position: "relative",
   },
   content: {
     flex: 1,

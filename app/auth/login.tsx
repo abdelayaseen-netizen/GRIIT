@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { Eye, EyeOff, ChevronLeft } from "lucide-react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
+import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import { DS_COLORS } from "@/lib/design-system";
 import FormInput from "@/components/shared/FormInput";
@@ -86,6 +87,8 @@ export default function LoginScreen() {
         router.replace("/(tabs)" as never);
       }
     } catch (e) {
+      if (__DEV__) console.error("[Login] email sign-in failed:", e);
+      captureError(e, { flow: "login_email" });
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);
@@ -138,6 +141,8 @@ export default function LoginScreen() {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
       }
+      if (__DEV__) console.error("[Login] Apple sign-in failed:", e);
+      captureError(e, { flow: "login_apple" });
       setFormError(e instanceof Error ? e.message : "Sign in failed.");
     } finally {
       setLoading(false);
@@ -150,6 +155,8 @@ export default function LoginScreen() {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
       if (error) setFormError(error.message);
     } catch (e) {
+      if (__DEV__) console.error("[Login] Google OAuth failed:", e);
+      captureError(e, { flow: "login_google_oauth" });
       setFormError(e instanceof Error ? e.message : "Sign in failed.");
     }
   }, []);

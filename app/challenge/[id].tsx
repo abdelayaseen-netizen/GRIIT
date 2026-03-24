@@ -50,6 +50,7 @@ import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track, trackEvent } from "@/lib/analytics";
 import { useLeaveChallenge } from "@/lib/mutations";
 import { formatTRPCError } from "@/lib/api";
+import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 import { setPendingChallengeId } from "@/lib/onboarding-pending";
 import type {
@@ -715,7 +716,8 @@ export default function ChallengeDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       void myActiveListQuery.refetch();
     } catch (err: unknown) {
-      console.error("[ChallengeDetail] join failed:", err);
+      if (__DEV__) console.error("[ChallengeDetail] join failed:", err);
+      captureError(err, { flow: "challenge_join", challengeId: id });
       const msg = err instanceof Error ? err.message : "";
       const code = (err as { data?: { code?: string } })?.data?.code;
       if (code === "FORBIDDEN" || msg.toLowerCase().includes("up to 3 challenges")) {

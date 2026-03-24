@@ -18,6 +18,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DS_COLORS } from "@/lib/design-system";
 import CelebrationOverlay from "@/components/shared/CelebrationOverlay";
+import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
@@ -373,6 +374,7 @@ function RootLayoutNav() {
       <Stack.Screen name="+not-found" />
     </Stack>
       <CelebrationOverlay />
+      <ProofShareOverlay />
     </View>
   );
 }

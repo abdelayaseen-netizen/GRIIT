@@ -445,6 +445,7 @@ export const checkinsRouter = createTRPCRouter({
           success: true,
           newStreakCount: row.new_streak_count,
           lastStandEarned: row.last_stand_earned,
+          challengeDay: currentDayAfter,
           challengeCompleted: challengeJustCompleted,
           ...(challengeJustCompleted && {
             challengeId: challengeId ?? undefined,
@@ -480,7 +481,18 @@ export const checkinsRouter = createTRPCRouter({
           .eq("user_id", ctx.userId)
           .single();
         const s = streak as { active_streak_count?: number } | null;
-        return { success: true, newStreakCount: s?.active_streak_count ?? 0, lastStandEarned: false };
+        const { data: acQuick } = await ctx.supabase
+          .from("active_challenges")
+          .select("current_day")
+          .eq("id", input.activeChallengeId)
+          .single();
+        const challengeDay = (acQuick as { current_day?: number } | null)?.current_day ?? 0;
+        return {
+          success: true,
+          newStreakCount: s?.active_streak_count ?? 0,
+          lastStandEarned: false,
+          challengeDay,
+        };
       }
 
       const { data: activeChallenge, error: acError } = await ctx.supabase
@@ -654,7 +666,7 @@ export const checkinsRouter = createTRPCRouter({
         });
       }
 
-      return { success: true, newStreakCount, lastStandEarned };
+      return { success: true, newStreakCount, lastStandEarned, challengeDay: newCurrentDay };
     }),
 
   markAsShared: protectedProcedure

@@ -32,6 +32,9 @@ import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
 import { setSentryUser } from '@/lib/sentry';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 import { showGoalCelebration } from '@/store/celebrationStore';
+import { useProofSharePromptStore } from '@/store/proofSharePromptStore';
+
+const MILESTONE_SHARE_DAYS = new Set([7, 14, 21, 30, 45, 60, 75]);
 
 type AppContextValue = {
   profile: ProfileFromApi | null;
@@ -62,6 +65,7 @@ type AppContextValue = {
   secureDay: () => Promise<{
     newStreakCount: number;
     lastStandEarned?: boolean;
+    challengeDay?: number;
     challengeCompleted?: boolean;
     challengeId?: string;
     challengeName?: string;
@@ -605,11 +609,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         success: boolean;
         newStreakCount: number;
         lastStandEarned?: boolean;
+        challengeDay?: number;
         challengeCompleted?: boolean;
         challengeId?: string;
         challengeName?: string;
         totalDays?: number;
       };
+      const dayN = result.challengeDay;
+      if (typeof dayN === 'number' && MILESTONE_SHARE_DAYS.has(dayN)) {
+        const prof = profile || fallbackProfile;
+        const uname = String((prof as { username?: string } | null)?.username ?? 'user').replace(/^@+/, '');
+        const nested = (activeChallenge as { challenges?: { title?: string; duration_days?: number } } | null)?.challenges;
+        useProofSharePromptStore.getState().show({
+          userName: uname,
+          challengeTitle: nested?.title ?? 'Challenge',
+          dayNumber: dayN,
+          totalDays: nested?.duration_days ?? 75,
+          streakCount: result.newStreakCount ?? 0,
+        });
+      }
       void fetchActiveChallenge();
       void fetchStats();
       const streakN = result?.newStreakCount;
@@ -640,7 +658,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {
       return undefined;
     }
-  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats]);
+  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats, profile, fallbackProfile]);
 
   const resolvedProfile = profile || fallbackProfile;
   const profileHasLoaded = (profileFetched && profile !== null) || profileError || !!fallbackProfile;

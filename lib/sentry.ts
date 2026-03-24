@@ -5,7 +5,7 @@ const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 export function initSentry(): void {
   if (!SENTRY_DSN) {
     if (__DEV__) {
-      console.warn("[Sentry] No DSN configured, skipping init");
+      console.warn("[Sentry] No DSN set — error monitoring disabled");
     }
     return;
   }
@@ -13,8 +13,9 @@ export function initSentry(): void {
   Sentry.init({
     dsn: SENTRY_DSN,
     debug: __DEV__,
-    environment: __DEV__ ? "development" : "production",
+    environment: process.env.NODE_ENV ?? (__DEV__ ? "development" : "production"),
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+    enableNativeFramesTracking: true,
     enableAutoSessionTracking: true,
     attachStacktrace: true,
     beforeSend(event) {
@@ -39,13 +40,11 @@ export function clearSentryUser(): void {
 
 export function captureError(error: unknown, context?: Record<string, unknown>): void {
   if (!SENTRY_DSN) return;
-  if (context) {
-    Sentry.setContext("extra", context);
-  }
+  const extra = context;
   if (error instanceof Error) {
-    Sentry.captureException(error);
+    Sentry.captureException(error, extra ? { extra } : undefined);
   } else {
-    Sentry.captureMessage(String(error));
+    Sentry.captureMessage(String(error), extra ? { extra } : undefined);
   }
 }
 

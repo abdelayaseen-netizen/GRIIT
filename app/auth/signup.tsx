@@ -29,6 +29,7 @@ import {
 import { GRIITWordmark } from "@/src/components/ui";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import { captureError } from "@/lib/sentry";
 import FormInput from "@/components/shared/FormInput";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
@@ -202,7 +203,8 @@ export default function SignupScreen() {
       track({ name: "signup_completed" });
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
-      console.error("[Signup] signup failed:", err);
+      if (__DEV__) console.error("[Signup] signup failed:", err);
+      captureError(err, { flow: "signup" });
       showError("Please try again.");
     } finally {
       setLoading(false);

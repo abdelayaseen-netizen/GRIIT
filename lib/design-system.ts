@@ -521,6 +521,8 @@ export const DS_COLORS = {
 /** Brand + screen tokens (challenge detail bg matches app-wide warm page). */
 export const GRIIT_COLORS = {
   primary: DS_COLORS.DISCOVER_CORAL,
+  /** Brand accent for share cards / wordmark (alias of primary CTA orange). */
+  primaryAccent: DS_COLORS.ACCENT,
   background: DS_COLORS.TROPHY_ICON_WRAP_BG,
   textSecondary: DS_COLORS.textSecondary,
   error: DS_COLORS.danger,

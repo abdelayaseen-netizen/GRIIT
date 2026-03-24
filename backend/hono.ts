@@ -96,6 +96,31 @@ app.get("/api/cron/daily-challenge", async (c) => {
   }
 });
 
+/** Cron: daily reset hook (placeholder; extend when server-side day rollover is defined). */
+app.post("/internal/daily-reset", async (c) => {
+  const secret = c.req.header("x-cron-secret");
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || secret !== cronSecret) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  try {
+    const { runDailyReset } = await import("./lib/daily-reset");
+    const { supabase } = await import("./lib/supabase");
+    const result = await runDailyReset(supabase);
+    const { logger } = await import("./lib/logger");
+    if (result.errors.length > 0) {
+      logger.error({ result }, "daily-reset completed with errors");
+      return c.json({ status: "partial", ...result }, 207);
+    }
+    logger.info({ result }, "daily-reset completed successfully");
+    return c.json({ status: "ok", ...result });
+  } catch (err) {
+    const { logger } = await import("./lib/logger");
+    logger.error({ err }, "daily-reset failed");
+    return c.json({ status: "error", error: (err as Error).message }, 500);
+  }
+});
+
 /** Strava OAuth callback: exchange code for tokens, upsert connected_accounts, redirect to app. */
 app.get("/api/auth/strava/callback", async (c) => {
   const url = new URL(c.req.url);
