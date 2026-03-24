@@ -81,7 +81,9 @@ export async function verifyStravaTaskCompletion(
 
   const { data: connRow, error: connErr } = await supabase
     .from("connected_accounts")
-    .select("*")
+    .select(
+      "id, user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scope, metadata_json, updated_at"
+    )
     .eq("user_id", userId)
     .eq("provider", PROVIDER_STRAVA)
     .maybeSingle();
