@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
@@ -72,6 +73,9 @@ export default function ShareSheetModal({
   hasPhoto,
   completionId,
 }: Props) {
+  const { width: windowWidth } = useWindowDimensions();
+  const previewEdgePad = 20;
+  const selectedPreviewScale = Math.min(SELECTED_PREVIEW_SCALE, (windowWidth - previewEdgePad * 2) / CARD_WIDTH);
   const [selectedCard, setSelectedCard] = useState<ShareCardId>("statement");
   const [sharing, setSharing] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -100,7 +104,14 @@ export default function ShareSheetModal({
   const renderCard = useCallback(
     (id: ShareCardId) => {
       if (id === "statement") {
-        return <StatementCard dayNumber={dayNumber} challengeName={challengeName} calloutText="Most split by Day 3." />;
+        return (
+          <StatementCard
+            dayNumber={dayNumber}
+            challengeName={challengeName}
+            calloutText="Most split by Day 3."
+            proofPhotoUri={proofPhotoUri}
+          />
+        );
       }
       if (id === "transparent") {
         return (
@@ -191,7 +202,7 @@ export default function ShareSheetModal({
         </ScrollView>
 
         <View style={ms.preview}>
-          <View style={{ transform: [{ scale: SELECTED_PREVIEW_SCALE }] }}>{renderCard(selectedCard)}</View>
+          <View style={{ transform: [{ scale: selectedPreviewScale }] }}>{renderCard(selectedCard)}</View>
         </View>
         <View style={{ position: "absolute", left: -9999, opacity: 0 }}>
           <ViewShot ref={viewShotRef} options={{ format: "png", width: CARD_WIDTH, height: CARD_HEIGHT }}>
@@ -249,14 +260,14 @@ const ms = StyleSheet.create({
   thumbScroll: { paddingHorizontal: 20, gap: 10, paddingBottom: 12 },
   thumbWrap: { alignItems: "center", marginRight: 10 },
   thumbCard: {
-    width: CARD_WIDTH * PREVIEW_SCALE + 10,
-    height: CARD_HEIGHT * PREVIEW_SCALE + 10,
+    width: CARD_WIDTH * PREVIEW_SCALE + 16,
+    height: CARD_HEIGHT * PREVIEW_SCALE + 16,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    overflow: "visible",
     backgroundColor: DS_COLORS.BLACK,
     opacity: 0.6,
   },
@@ -269,6 +280,7 @@ const ms = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
     justifyContent: "center",
     alignItems: "center",
+    overflow: "visible",
   },
   shareToLabel: {
     fontSize: 14,
