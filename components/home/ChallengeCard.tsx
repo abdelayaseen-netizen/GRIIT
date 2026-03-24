@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { ChevronRight, Circle, CheckCircle2, Users, Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { prefetchChallengeById } from "@/lib/prefetch-queries";
 
 export interface TodayTaskItem {
   id: string;
@@ -40,8 +42,13 @@ export default function ChallengeCard({
   sharedGoalTotal,
 }: ChallengeCardProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isTeam = participationType === "team";
   const isSharedGoal = participationType === "shared_goal";
+
+  const handlePressIn = useCallback(() => {
+    void prefetchChallengeById(queryClient, challengeId);
+  }, [challengeId, queryClient]);
 
   const handleOpen = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -102,9 +109,12 @@ export default function ChallengeCard({
       )}
       <TouchableOpacity
         style={styles.openButton}
+        onPressIn={handlePressIn}
         onPress={handleOpen}
         activeOpacity={0.85}
         testID={`open-challenge-${challengeId}`}
+        accessibilityRole="button"
+        accessibilityLabel={`Open ${challengeName} challenge`}
       >
         <Text style={styles.openButtonText}>Open Challenge</Text>
         <ChevronRight size={16} color={DS_COLORS.textMuted} />

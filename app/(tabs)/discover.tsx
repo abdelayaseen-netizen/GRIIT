@@ -178,6 +178,24 @@ export default function DiscoverScreen() {
     [queryClient]
   );
 
+  const renderDailyCard = useCallback(
+    ({ item }: { item: ApiChallenge }) => (
+      <DailyCard
+        challenge={{
+          id: item.id,
+          title: item.title ?? "Challenge",
+          description: item.short_hook ?? item.description,
+          difficulty: item.difficulty,
+          participants_count: item.participants_count,
+        }}
+        participationState={getDailyParticipationState(item.id, activeChallengeIds, completedChallengeIds)}
+        onPress={openChallenge}
+        onPressIn={() => prefetchChallengeDetail(item.id)}
+      />
+    ),
+    [openChallenge, prefetchChallengeDetail, activeChallengeIds, completedChallengeIds]
+  );
+
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.container} edges={["top"]}>
@@ -275,26 +293,14 @@ export default function DiscoverScreen() {
                 data={daily}
                 keyExtractor={(item) => item.id}
                 showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.v3FlatPad}
                 initialNumToRender={8}
                 maxToRenderPerBatch={10}
                 windowSize={5}
                 removeClippedSubviews
                 ItemSeparatorComponent={() => <View style={styles.v3HListSep} />}
-                renderItem={({ item }) => (
-                  <DailyCard
-                    challenge={{
-                      id: item.id,
-                      title: item.title ?? "Challenge",
-                      description: item.short_hook ?? item.description,
-                      difficulty: item.difficulty,
-                      participants_count: item.participants_count,
-                    }}
-                    participationState={getDailyParticipationState(item.id, activeChallengeIds, completedChallengeIds)}
-                    onPress={openChallenge}
-                    onPressIn={() => prefetchChallengeDetail(item.id)}
-                  />
-                )}
+                renderItem={renderDailyCard}
               />
 
               <SectionHeader title="Bring your people" />

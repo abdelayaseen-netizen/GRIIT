@@ -53,7 +53,14 @@ export const TeamChallengeCard = React.memo(function TeamChallengeCard({
   const teamsActive = Math.max(1, Math.floor((challenge.participants_count ?? 0) / Math.max(size, 1)));
   const cta = isDuo ? "Find a partner ›" : "Build a squad ›";
   return (
-    <TouchableOpacity style={s.card} activeOpacity={0.86} onPressIn={onPressIn} onPress={() => onPress(challenge.id)}>
+    <TouchableOpacity
+      style={s.card}
+      activeOpacity={0.86}
+      onPressIn={onPressIn}
+      onPress={() => onPress(challenge.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`${challenge.title}, team challenge, ${duration} days, ${challenge.participants_count ?? 0} participants. Tap to view details.`}
+    >
       <View style={s.topRow}>
         <View style={s.leftRow}>
           <View style={[s.iconBox, { backgroundColor: iconBg }]}>

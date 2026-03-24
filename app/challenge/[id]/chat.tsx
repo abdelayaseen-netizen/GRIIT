@@ -106,22 +106,25 @@ export default function ChallengeChatScreen() {
     setSelectedMessageId(null);
   }, [toggleMessageReaction]);
 
-  const formatTime = (dateString: string) => {
+  const formatTime = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, "0");
     const ampm = hours >= 12 ? "pm" : "am";
     const hour12 = hours % 12 || 12;
     return `${hour12}:${minutes}${ampm}`;
-  };
+  }, []);
 
-  const formatRelativeTime = (dateString: string) => {
-    const { text, isDayOrMore } = formatTimeAgo(dateString);
-    if (isDayOrMore) return formatTime(dateString);
-    return text === "now" ? "now" : `${text} ago`;
-  };
+  const formatRelativeTime = useCallback(
+    (dateString: string) => {
+      const { text, isDayOrMore } = formatTimeAgo(dateString);
+      if (isDayOrMore) return formatTime(dateString);
+      return text === "now" ? "now" : `${text} ago`;
+    },
+    [formatTime]
+  );
 
-  const renderMessage = ({ item: msg }: { item: ChatMessage }) => {
+  const renderMessage = useCallback(({ item: msg }: { item: ChatMessage }) => {
     const isOwnMessage = msg.senderId === currentUser.id;
     const isSystem = msg.type === "system";
     const isCheckin = msg.type === "checkin";
@@ -141,6 +144,8 @@ export default function ChallengeChatScreen() {
         <TouchableOpacity
           style={styles.checkinPill}
           onLongPress={() => setSelectedMessageId(msg.id)}
+          accessibilityRole="button"
+          accessibilityLabel={`${msg.senderName} check-in, day ${msg.dayIndex}. Long press for reactions.`}
         >
           <Check size={14} color={DS_COLORS.success} />
           <Text style={styles.checkinText}>
@@ -154,6 +159,8 @@ export default function ChallengeChatScreen() {
                   key={emoji}
                   style={styles.reactionItem}
                   onPress={() => handleReaction(msg.id, emoji)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`React with ${emoji}`}
                 >
                   <Text style={styles.reactionEmoji}>{emoji}</Text>
                   <Text style={styles.reactionCount}>{count}</Text>
@@ -214,6 +221,8 @@ export default function ChallengeChatScreen() {
                   key={emoji}
                   style={styles.reactionChip}
                   onPress={() => handleReaction(msg.id, emoji)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`React with ${emoji}`}
                 >
                   <Text style={styles.reactionEmoji}>{emoji}</Text>
                   <Text style={styles.reactionCount}>{count}</Text>
@@ -230,6 +239,8 @@ export default function ChallengeChatScreen() {
               }
               setSelectedMessageId(msg.id);
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Message options. Long press to add a reaction."
           />
 
           {showReactions && (
@@ -239,6 +250,8 @@ export default function ChallengeChatScreen() {
                   key={emoji}
                   style={styles.reactionPickerItem}
                   onPress={() => handleReaction(msg.id, emoji)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add reaction ${emoji}`}
                 >
                   <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
                 </TouchableOpacity>
@@ -248,7 +261,7 @@ export default function ChallengeChatScreen() {
         </View>
       </View>
     );
-  };
+  }, [currentUser, selectedMessageId, handleReaction, formatRelativeTime]);
 
   if (!FLAGS.CHAT_ENABLED) {
     return (
@@ -258,6 +271,8 @@ export default function ChallengeChatScreen() {
             style={styles.chatDisabledBack}
             onPress={() => router.back()}
             activeOpacity={0.7}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             <Text style={styles.chatDisabledBackText}>Back</Text>
@@ -299,6 +314,8 @@ export default function ChallengeChatScreen() {
             <TouchableOpacity
               style={styles.headerButton}
               onPress={() => router.push(ROUTES.CHAT_INFO(id) as never)}
+              accessibilityLabel="Chat info"
+              accessibilityRole="button"
             >
               <Info size={22} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
@@ -307,6 +324,8 @@ export default function ChallengeChatScreen() {
             <TouchableOpacity
               style={styles.headerButton}
               onPress={() => router.back()}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
             >
               <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
@@ -322,13 +341,15 @@ export default function ChallengeChatScreen() {
           style={styles.dismissOverlay}
           activeOpacity={1}
           onPress={() => setSelectedMessageId(null)}
+          accessibilityLabel="Dismiss reaction picker"
+          accessibilityRole="button"
         >
           <FlatList
             ref={flatListRef}
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
-            initialNumToRender={20}
+            initialNumToRender={8}
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews

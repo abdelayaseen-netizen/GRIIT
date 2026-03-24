@@ -348,6 +348,7 @@ export default function HomeScreen() {
               style={[s.pill, points > 0 && s.pillPurple]}
               onPress={() => setShowPointsExplainer(true)}
               activeOpacity={0.7}
+              accessibilityRole="button"
               accessibilityLabel={`${points} discipline points. Tap to learn more.`}
             >
               <Zap size={13} color={DS_COLORS.DISCOVER_BLUE} />

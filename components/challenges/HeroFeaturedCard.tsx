@@ -55,7 +55,14 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
           </View>
           <Text style={s.socialText}>{joinedToday} people joined today</Text>
         </View>
-        <TouchableOpacity style={s.cta} onPressIn={onPressIn} onPress={() => onPress(challenge.id)} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={s.cta}
+          onPressIn={onPressIn}
+          onPress={() => onPress(challenge.id)}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`Start ${challenge.title}, ${duration} day challenge`}
+        >
           <Text style={s.ctaText}>Start this challenge</Text>
         </TouchableOpacity>
       </View>

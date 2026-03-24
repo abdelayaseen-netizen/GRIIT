@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Platform } from "react-native";
 import { Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
@@ -91,6 +91,20 @@ export default function SharedGoalProgress({
   const isComplete = runStatus === "completed" || total >= target;
   const isFailed = runStatus === "failed";
 
+  const renderLogItem = useCallback(
+    ({ item }: { item: SharedGoalLogEntry }) => (
+      <View style={[styles.logRow, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.logText, { color: colors.text.primary }]}>
+          <Text style={styles.logName}>{item.display_name}</Text>
+          {" "}logged {item.amount} {item.unit}
+          {item.note ? ` — "${item.note}"` : ""}
+        </Text>
+        <Text style={[styles.logTime, { color: colors.text.tertiary }]}>{formatRelativeTime(item.logged_at)}</Text>
+      </View>
+    ),
+    [colors.border, colors.text.primary, colors.text.tertiary]
+  );
+
   const handleLogPress = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLogModalVisible(true);
@@ -159,21 +173,13 @@ export default function SharedGoalProgress({
           <FlatList
             data={recentLogs}
             keyExtractor={(item) => item.id}
-            initialNumToRender={15}
+            initialNumToRender={8}
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews
             scrollEnabled={false}
-            renderItem={({ item }) => (
-              <View style={[styles.logRow, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.logText, { color: colors.text.primary }]}>
-                  <Text style={styles.logName}>{item.display_name}</Text>
-                  {" "}logged {item.amount} {item.unit}
-                  {item.note ? ` — "${item.note}"` : ""}
-                </Text>
-                <Text style={[styles.logTime, { color: colors.text.tertiary }]}>{formatRelativeTime(item.logged_at)}</Text>
-              </View>
-            )}
+            showsVerticalScrollIndicator={false}
+            renderItem={renderLogItem}
           />
         )}
       </View>

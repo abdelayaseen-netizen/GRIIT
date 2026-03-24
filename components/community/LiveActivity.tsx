@@ -115,6 +115,51 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
     prepared.length > 0 &&
     prepared.every((it) => it.userId === currentUserId);
 
+  const renderLiveItem = useCallback(
+    ({ item, index }: { item: LiveActivityItem; index: number }) => {
+      const seed = item.displayName || item.username || item.userId || "?";
+      const isLast = index === prepared.length - 1;
+      const reacted = selectedReactions[item.id] ?? !!item.reactedByMe;
+      const count = reactionCounts[item.id] ?? Math.max(0, item.reactionCount ?? 0);
+      return (
+        <View>
+          <View style={[styles.row, !isLast && styles.rowDivider]}>
+            <View style={[styles.avatar, { backgroundColor: avatarColorByIndex(index) }]}>
+              <Text style={styles.avatarInitial}>{seed.charAt(0).toUpperCase()}</Text>
+            </View>
+
+            <View style={styles.body}>
+              <Text style={styles.line}>{buildLine(item)}</Text>
+              <Text style={styles.time}>{formatTimeAgoCompact(item.createdAt)}</Text>
+              <VerificationBadges item={item} />
+              {item.eventType === "task_completed" && item.metadata?.has_photo && item.metadata?.photo_url ? (
+                <Image
+                  source={{ uri: item.metadata.photo_url }}
+                  style={styles.feedPhoto}
+                  contentFit="cover"
+                />
+              ) : null}
+            </View>
+
+            <View style={styles.reactionArea}>
+              <TouchableOpacity
+                style={[styles.fireBtn, reacted && styles.fireBtnActive]}
+                onPress={() => void handleReact(item.id, reacted, count)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={`Toggle fire reaction for ${seed}'s activity`}
+              >
+                <Flame size={12} color={reacted ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED} />
+                <Text style={[styles.fireCount, reacted && styles.fireCountActive]}>{count}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      );
+    },
+    [prepared.length, selectedReactions, reactionCounts, handleReact]
+  );
+
   return (
     <View>
       <View style={styles.sectionHeader}>
@@ -135,50 +180,12 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
             data={prepared}
             keyExtractor={(item) => item.id}
             scrollEnabled={false}
-            initialNumToRender={10}
-            maxToRenderPerBatch={5}
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
             windowSize={5}
-            renderItem={({ item, index }) => {
-              const seed = item.displayName || item.username || item.userId || "?";
-              const isLast = index === prepared.length - 1;
-              const reacted = selectedReactions[item.id] ?? !!item.reactedByMe;
-              const count = reactionCounts[item.id] ?? Math.max(0, item.reactionCount ?? 0);
-              return (
-                <View>
-                  <View style={[styles.row, !isLast && styles.rowDivider]}>
-                    <View style={[styles.avatar, { backgroundColor: avatarColorByIndex(index) }]}>
-                      <Text style={styles.avatarInitial}>{seed.charAt(0).toUpperCase()}</Text>
-                    </View>
-
-                    <View style={styles.body}>
-                      <Text style={styles.line}>{buildLine(item)}</Text>
-                      <Text style={styles.time}>{formatTimeAgoCompact(item.createdAt)}</Text>
-                      <VerificationBadges item={item} />
-                      {item.eventType === "task_completed" && item.metadata?.has_photo && item.metadata?.photo_url ? (
-                        <Image
-                          source={{ uri: item.metadata.photo_url }}
-                          style={styles.feedPhoto}
-                          contentFit="cover"
-                        />
-                      ) : null}
-                    </View>
-
-                    <View style={styles.reactionArea}>
-                      <TouchableOpacity
-                        style={[styles.fireBtn, reacted && styles.fireBtnActive]}
-                        onPress={() => void handleReact(item.id, reacted, count)}
-                        activeOpacity={0.8}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Toggle fire reaction for ${seed}'s activity`}
-                      >
-                        <Flame size={12} color={reacted ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED} />
-                        <Text style={[styles.fireCount, reacted && styles.fireCountActive]}>{count}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              );
-            }}
+            removeClippedSubviews
+            showsVerticalScrollIndicator={false}
+            renderItem={renderLiveItem}
           />
         )}
         {onlySelf ? (

@@ -102,6 +102,7 @@ export default React.memo(function GoalCard({
           onLongPress={onLongPressChallenge}
           delayLongPress={500}
           style={s.challengeRow}
+          accessibilityRole="button"
           accessibilityLabel={`${challengeName} — ${expanded ? "collapse" : "expand"}`}
           accessibilityHint="Tap to expand or collapse. Long press for options."
         >

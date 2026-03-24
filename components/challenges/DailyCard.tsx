@@ -60,12 +60,16 @@ export const DailyCard = React.memo(function DailyCard({
   const subtitle = DAILY_COPY[challenge.title] ?? (challenge.description ?? "").slice(0, 30);
   const count = challenge.participants_count ?? 0;
   const dimmed = participationState === "completed";
+  const stateLabel =
+    participationState === "completed" ? "completed" : participationState === "active" ? "in progress" : "available";
   return (
     <TouchableOpacity
       style={[s.card, dimmed && s.cardDimmed]}
       activeOpacity={0.85}
       onPressIn={onPressIn}
       onPress={() => onPress(challenge.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`${challenge.title}, ${count} participants, ${stateLabel}. Tap to view challenge.`}
     >
       <View style={[s.stripe, { backgroundColor: theme.accent }]} />
       {participationState === "active" ? (

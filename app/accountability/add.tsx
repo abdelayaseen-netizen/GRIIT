@@ -46,7 +46,8 @@ export default function AddAccountabilityPartnerScreen() {
     try {
       const data = await trpcQuery(TRPC.profiles.search, { query: t }) as SearchHit[];
       setHits(data ?? []);
-    } catch {
+    } catch (err) {
+      if (__DEV__) console.warn("[accountability/add] search failed", err);
       setHits([]);
     } finally {
       setSearching(false);
@@ -110,6 +111,9 @@ export default function AddAccountabilityPartnerScreen() {
             onPress={() => handleInvite(item.user_id)}
             disabled={isInviting}
             style={styles.inviteBtn}
+            accessibilityRole="button"
+            accessibilityLabel={`Invite ${item.display_name || item.username} as accountability partner`}
+            accessibilityState={{ disabled: isInviting }}
           >
             {isInviting ? (
               <ActivityIndicator size="small" color={DS_COLORS.white} />
@@ -168,10 +172,11 @@ export default function AddAccountabilityPartnerScreen() {
           data={hits}
           keyExtractor={(item) => item.user_id}
           renderItem={renderItem}
-          initialNumToRender={12}
+          initialNumToRender={8}
           maxToRenderPerBatch={10}
           windowSize={5}
           removeClippedSubviews
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
         />

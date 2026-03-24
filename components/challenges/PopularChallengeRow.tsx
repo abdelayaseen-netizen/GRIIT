@@ -68,7 +68,14 @@ export const PopularChallengeRow = React.memo(function PopularChallengeRow({
           <Text style={s.meta}>{members} in</Text>
         </View>
       </View>
-      <TouchableOpacity style={s.join} onPressIn={onPressIn} onPress={() => onPress(challenge.id)} activeOpacity={0.86}>
+      <TouchableOpacity
+        style={s.join}
+        onPressIn={onPressIn}
+        onPress={() => onPress(challenge.id)}
+        activeOpacity={0.86}
+        accessibilityRole="button"
+        accessibilityLabel={`Join ${challenge.title}`}
+      >
         <Text style={s.joinText}>Join</Text>
       </TouchableOpacity>
     </View>
