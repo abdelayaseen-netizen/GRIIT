@@ -29,7 +29,7 @@ import GoalCard from "@/components/home/GoalCard";
 import PointsExplainer from "@/components/home/PointsExplainer";
 import WeekStrip from "@/components/home/WeekStrip";
 import NextUnlock from "@/components/home/NextUnlock";
-import LiveFeed from "@/components/home/LiveFeed";
+import LiveFeedSection from "@/components/LiveFeedSection";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { EmptyState } from "@/components/shared/EmptyState";
 import Card from "@/components/shared/Card";
@@ -62,7 +62,6 @@ type HomeData = {
   activeList: ActiveRow[];
   todayCheckins: TodayCheckinForUser[];
   securedDateKeys: string[];
-  feedItems: { id: string; username: string; challengeName: string; action: "joined" | "completed"; age: string }[];
 };
 
 function getGreeting(): string {
@@ -70,14 +69,6 @@ function getGreeting(): string {
   if (h >= 5 && h < 12) return "Good morning";
   if (h >= 12 && h < 17) return "Good afternoon";
   return "Good evening";
-}
-
-function toAge(iso: string): string {
-  const mins = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
-  if (mins < 60) return `${mins}m`;
-  const h = Math.floor(mins / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
 }
 
 /** JSON for `app/task/complete` — matches TaskCompleteConfig fields from mapped challenge_tasks. */
@@ -138,7 +129,6 @@ export default function HomeScreen() {
         trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
         trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
         trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
-        trpcQuery(TRPC.feed.list, { limit: 5 }) as Promise<{ items?: { id: string; event_type: string; username?: string; display_name?: string; metadata?: Record<string, unknown>; created_at: string }[] }>,
       ]);
 
       const activeRaw =
@@ -153,22 +143,10 @@ export default function HomeScreen() {
         settled[2].status === "fulfilled"
           ? settled[2].value
           : (console.error("[Home] getSecuredDateKeys failed:", settled[2].reason), []);
-      const feedRaw =
-        settled[3].status === "fulfilled"
-          ? settled[3].value
-          : (console.error("[Home] feed.list failed:", settled[3].reason), { items: [] as { id: string; event_type: string; username?: string; display_name?: string; metadata?: Record<string, unknown>; created_at: string }[] });
-
       const activeList = (Array.isArray(activeRaw) ? activeRaw : []) as ActiveRow[];
       const todayCheckins = Array.isArray(checkinsRaw) ? checkinsRaw : [];
       const securedDateKeys = Array.isArray(securedRaw) ? securedRaw : [];
-      const feedItems = (feedRaw.items ?? []).slice(0, 5).map((f) => {
-        const name = f.display_name ?? f.username ?? "user";
-        const challengeNameRaw = f.metadata?.challenge_title;
-        const challengeName = typeof challengeNameRaw === "string" && challengeNameRaw.trim() ? challengeNameRaw : "a challenge";
-        const action: "joined" | "completed" = f.event_type === "secured_day" ? "completed" : "joined";
-        return { id: f.id, username: name, challengeName, action, age: toAge(f.created_at) };
-      });
-      return { activeList, todayCheckins, securedDateKeys, feedItems };
+      return { activeList, todayCheckins, securedDateKeys };
     },
   });
 
@@ -269,7 +247,8 @@ export default function HomeScreen() {
 
   const refresh = useCallback(async () => {
     await Promise.all([homeQuery.refetch(), refetchAll()]);
-  }, [homeQuery, refetchAll]);
+    void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+  }, [homeQuery, refetchAll, queryClient]);
 
   const confirmLeaveChallenge = React.useCallback(async () => {
     const challengeId = leaveConfirmChallengeId;
@@ -489,7 +468,7 @@ export default function HomeScreen() {
           </Card>
         </View>
 
-        <LiveFeed items={homeQuery.data?.feedItems ?? []} />
+        <LiveFeedSection />
         <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
       </ScrollView>
       <PointsExplainer

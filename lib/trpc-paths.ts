@@ -23,6 +23,7 @@ export const TRPC = {
     getWeeklyTrend: 'profiles.getWeeklyTrend',
     search: 'profiles.search',
     deleteAccount: 'profiles.deleteAccount',
+    followUser: 'profiles.followUser',
   },
   challenges: {
     list: 'challenges.list',
@@ -66,6 +67,9 @@ export const TRPC = {
   },
   leaderboard: {
     getWeekly: 'leaderboard.getWeekly',
+    getFriendsBoard: 'leaderboard.getFriendsBoard',
+    getChallengeBoard: 'leaderboard.getChallengeBoard',
+    getTeamBoard: 'leaderboard.getTeamBoard',
   },
   respects: {
     give: 'respects.give',
@@ -79,6 +83,8 @@ export const TRPC = {
     registerToken: 'notifications.registerToken',
     getReminderSettings: 'notifications.getReminderSettings',
     updateReminderSettings: 'notifications.updateReminderSettings',
+    getAll: 'notifications.getAll',
+    markAllRead: 'notifications.markAllRead',
   },
   accountability: {
     listMine: 'accountability.listMine',
@@ -100,6 +106,7 @@ export const TRPC = {
     list: 'feed.list',
     listMine: 'feed.listMine',
     getMySummary: 'feed.getMySummary',
+    getLiveFeed: 'feed.getLiveFeed',
     react: 'feed.react',
     comment: 'feed.comment',
     getComments: 'feed.getComments',
