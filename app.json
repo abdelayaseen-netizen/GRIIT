@@ -51,12 +51,6 @@
       "expo-web-browser",
       "expo-apple-authentication",
       [
-        "react-native-purchases",
-        {
-          "addAdServicesFramework": true
-        }
-      ],
-      [
         "@sentry/react-native/expo",
         {
           "url": "https://sentry.io/",
