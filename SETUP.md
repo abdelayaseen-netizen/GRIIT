@@ -1,6 +1,6 @@
-# GRIT - Functional Beta Setup Guide
+# GRIIT - Functional Beta Setup Guide
 
-GRIT is now a **fully functional beta app** with real backend integration, authentication, and data persistence.
+GRIIT is now a **fully functional beta app** with real backend integration, authentication, and data persistence.
 
 ## 🎯 What's Been Implemented
 
@@ -311,6 +311,6 @@ The app is now fully functional! You can:
 
 ---
 
-**Your GRIT app is now a fully functional beta! 🎉**
+**Your GRIIT app is now a fully functional beta! 🎉**
 
 For support or questions, contact the development team.

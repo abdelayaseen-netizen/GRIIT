@@ -19,6 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.griit.challenge-tracker",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
         "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
@@ -32,6 +33,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "app.griit.challenge_tracker",
+      "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -52,6 +54,14 @@
         "react-native-purchases",
         {
           "addAdServicesFramework": true
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "griit",
+          "organization": "your-org-slug"
         }
       ]
     ],
