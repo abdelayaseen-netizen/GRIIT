@@ -16,9 +16,6 @@ export default function ProofShareOverlay() {
       streakCount={payload.streakCount}
       proofPhotoUri={payload.proofPhotoUri}
       onDismiss={dismiss}
-      onShared={() => {
-        if (__DEV__) console.log("[ProofShare] User shared milestone card");
-      }}
     />
   );
 }
