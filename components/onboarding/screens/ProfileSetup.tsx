@@ -183,6 +183,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
               source={{ uri: avatarUri ?? avatarUrl ?? "" }}
               style={styles.avatarImg}
               contentFit="cover"
+              cachePolicy="memory-disk"
             />
           ) : (
             <View style={styles.avatarPlaceholder}>

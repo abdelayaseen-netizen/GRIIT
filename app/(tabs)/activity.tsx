@@ -27,6 +27,7 @@ import SectionHeader from "@/components/shared/SectionHeader";
 import StatBadge from "@/components/shared/StatBadge";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { trackEvent } from "@/lib/analytics";
+import { captureError } from "@/lib/sentry";
 
 interface FeedEventItem {
   id: string;
@@ -95,7 +96,7 @@ function FriendStreakCard({ username }: { username: string }) {
         trackEvent("invite_sent", { content_type: "friend_streak" });
       }
     } catch (err) {
-      console.error("[Community] share failed:", err);
+      captureError(err, { context: "Community FriendStreakCard share" });
     }
   }, [username]);
 
@@ -142,7 +143,7 @@ export default function CommunityScreen() {
       };
       return result;
     },
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const feedQuery = useInfiniteQuery({
@@ -155,7 +156,7 @@ export default function CommunityScreen() {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
     enabled: !!currentUser?.id,
-    staleTime: 30 * 1000,
+    staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
 
@@ -178,7 +179,7 @@ export default function CommunityScreen() {
       return Array.isArray(result) ? result.length : 0;
     },
     enabled: !!currentUser?.id,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const isRefreshing =
@@ -210,13 +211,19 @@ export default function CommunityScreen() {
         </View>
 
         <SectionHeader title="Leaderboard" />
-        <Leaderboard
-          entries={leaderboardEntries}
-          currentUserName={currentUserName}
-          currentUserRank={leaderboardQuery.data?.currentUserRank ?? null}
-          currentUserPoints={currentUserEntry?.points ?? 0}
-          onStartEarning={() => router.push("/(tabs)/discover")}
-        />
+        {leaderboardQuery.isError ? (
+          <ErrorState message="Couldn't load leaderboard" onRetry={() => void leaderboardQuery.refetch()} />
+        ) : leaderboardQuery.isPending && !leaderboardQuery.data ? (
+          <LoadingState containerStyle={{ paddingVertical: DS_SPACING.xxl }} />
+        ) : (
+          <Leaderboard
+            entries={leaderboardEntries}
+            currentUserName={currentUserName}
+            currentUserRank={leaderboardQuery.data?.currentUserRank ?? null}
+            currentUserPoints={currentUserEntry?.points ?? 0}
+            onStartEarning={() => router.push("/(tabs)/discover")}
+          />
+        )}
 
         <SectionHeader title="Live activity" />
         {feedQuery.isError ? (

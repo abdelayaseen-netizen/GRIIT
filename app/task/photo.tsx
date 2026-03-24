@@ -1,6 +1,7 @@
 // LEGACY: consider migrating to task/complete.tsx
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Camera, Check, ImagePlus } from "lucide-react-native";
@@ -151,16 +152,18 @@ export default function PhotoTaskScreen() {
             setShowShareCard(false);
             router.back();
           }}
-          onShared={() => {
-            if (__DEV__) console.log("[ProofShare] User shared proof photo");
-          }}
         />
       ) : null}
       <View style={styles.content}>
         <InlineError message={error} onDismiss={clearError} />
         {photoUri ? (
           <View style={styles.previewContainer}>
-            <Image source={{ uri: photoUri }} style={styles.preview} />
+            <Image
+              source={{ uri: photoUri }}
+              style={styles.preview}
+              cachePolicy="memory-disk"
+              accessibilityLabel="Photo preview"
+            />
             <TouchableOpacity
               style={styles.retakeButton}
               onPress={handleTakePhoto}

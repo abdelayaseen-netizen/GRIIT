@@ -44,6 +44,7 @@ export default function ChallengeChatInfoScreen() {
     queryKey: ["chat-info", "teamMembers", id],
     queryFn: () => trpcQuery(TRPC.challenges.getTeamMembers, { challengeId: id ?? "" }) as Promise<{ profile?: { username?: string | null; display_name?: string | null } }[]>,
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   });
   const memberInitials = (teamMembersQuery.data ?? [])
     .slice(0, 5)

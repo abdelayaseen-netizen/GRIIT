@@ -137,6 +137,8 @@ export function LiveActivity({ items, currentUserId }: { items: LiveActivityItem
                   source={{ uri: item.metadata.photo_url }}
                   style={styles.feedPhoto}
                   contentFit="cover"
+                  cachePolicy="memory-disk"
+                  accessibilityLabel="Task proof photo"
                 />
               ) : null}
             </View>

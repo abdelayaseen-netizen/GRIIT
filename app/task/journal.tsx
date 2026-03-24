@@ -11,10 +11,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  Image,
   Modal,
   Pressable,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import {
@@ -485,7 +485,12 @@ export default function JournalTaskScreen() {
                   <Text style={s.checkinLabel}>Photo proof (required)</Text>
                   {photoUri ? (
                     <View style={s.photoProofPreview}>
-                      <Image source={{ uri: photoUri }} style={s.photoProofThumb} />
+                      <Image
+                        source={{ uri: photoUri }}
+                        style={s.photoProofThumb}
+                        cachePolicy="memory-disk"
+                        accessibilityLabel="Journal proof photo"
+                      />
                       <View style={s.photoProofActions}>
                         <TouchableOpacity style={s.photoProofBtn} onPress={handleTakePhoto} activeOpacity={0.8} accessibilityLabel="Retake photo" accessibilityRole="button">
                           <Camera size={18} color={DS_COLORS.textPrimary} />

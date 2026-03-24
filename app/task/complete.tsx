@@ -10,7 +10,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   TextInput,
   AppState,
   AppStateStatus,
@@ -19,6 +18,7 @@ import {
   Animated,
   Pressable,
 } from "react-native";
+import { Image } from "expo-image";
 import ShareSheetModal from "@/components/share/ShareSheetModal";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -861,7 +861,12 @@ function TaskCompleteScreenInner() {
             <Text style={styles.sectionLabel}>{taskTypeRaw === "photo" ? "Photo task" : "Photo proof"}</Text>
             {photoUri ? (
               <View>
-                <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+                <Image
+                  source={{ uri: photoUri }}
+                  style={styles.photoPreview}
+                  cachePolicy="memory-disk"
+                  accessibilityLabel="Photo proof preview"
+                />
                 <TouchableOpacity
                   onPress={() => {
                     setPhotoUri(null);

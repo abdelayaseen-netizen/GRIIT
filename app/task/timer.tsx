@@ -1,6 +1,7 @@
 // LEGACY: consider migrating to task/complete.tsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, AppState, AppStateStatus, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, AppState, AppStateStatus, Platform } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Play, Pause, Check, Camera, ImagePlus } from "lucide-react-native";
@@ -241,7 +242,12 @@ export default function TimerTaskScreen() {
             <Text style={styles.photoLabel}>Photo proof (required)</Text>
             {photoUri ? (
               <View style={styles.photoRow}>
-                <Image source={{ uri: photoUri }} style={styles.photoThumb} />
+                <Image
+                  source={{ uri: photoUri }}
+                  style={styles.photoThumb}
+                  cachePolicy="memory-disk"
+                  accessibilityLabel="Timer proof photo"
+                />
                 <View style={styles.photoActions}>
                   <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto} activeOpacity={0.8} accessibilityLabel="Take photo" accessibilityRole="button">
                     <Camera size={18} color={DS_COLORS.textPrimary} />

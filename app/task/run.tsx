@@ -1,16 +1,16 @@
 // LEGACY: consider migrating to task/complete.tsx
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Platform, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
   AppState,
   TextInput,
   ScrollView,
-  Image,
   KeyboardAvoidingView,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { 
@@ -681,7 +681,12 @@ export default function RunTaskScreen() {
 
                   {proofUri ? (
                     <View style={styles.proofPreview}>
-                      <Image source={{ uri: proofUri }} style={styles.proofImage} />
+                      <Image
+                        source={{ uri: proofUri }}
+                        style={styles.proofImage}
+                        cachePolicy="memory-disk"
+                        accessibilityLabel="Treadmill proof photo"
+                      />
                       <TouchableOpacity 
                         style={styles.retakeButton}
                         onPress={captureProof}
@@ -722,7 +727,12 @@ export default function RunTaskScreen() {
 
                   {proofUri && (
                     <View style={styles.proofThumbnail}>
-                      <Image source={{ uri: proofUri }} style={styles.thumbnailImage} />
+                      <Image
+                        source={{ uri: proofUri }}
+                        style={styles.thumbnailImage}
+                        cachePolicy="memory-disk"
+                        accessibilityLabel="Treadmill proof thumbnail"
+                      />
                       <View style={styles.proofCheck}>
                         <Check size={14} color={DS_COLORS.white} />
                       </View>

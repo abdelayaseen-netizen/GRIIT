@@ -87,6 +87,10 @@ function searchMatch(c: ApiChallenge, q: string): boolean {
   return (c.title ?? "").toLowerCase().includes(s) || (c.description ?? "").toLowerCase().includes(s) || (c.short_hook ?? "").toLowerCase().includes(s);
 }
 
+/** Matches `DailyCard` width (154) + `v3HListSep` (10). */
+const DAILY_CARD_WIDTH = 154;
+const DAILY_ROW_STRIDE = DAILY_CARD_WIDTH + 10;
+
 function getDailyParticipationState(
   challengeId: string,
   activeIds: Set<string>,
@@ -128,13 +132,13 @@ export default function DiscoverScreen() {
     queryKey: ["discover", "myActive", user?.id ?? ""],
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<{ challenge_id?: string }[]>,
     enabled: !isGuest && !!user?.id,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
   const myCompletedForDiscover = useQuery({
     queryKey: ["discover", "completed", user?.id ?? ""],
     queryFn: () => trpcQuery(TRPC.profiles.getCompletedChallenges) as Promise<{ challengeId: string }[]>,
     enabled: !isGuest && !!user?.id,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
   const activeChallengeIds = useMemo(() => {
     const rows = myActiveForDiscover.data;
@@ -292,6 +296,11 @@ export default function DiscoverScreen() {
                 horizontal
                 data={daily}
                 keyExtractor={(item) => item.id}
+                getItemLayout={(_, index) => ({
+                  length: DAILY_CARD_WIDTH,
+                  offset: DAILY_ROW_STRIDE * index,
+                  index,
+                })}
                 showsHorizontalScrollIndicator={false}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.v3FlatPad}

@@ -107,6 +107,7 @@ export default function ActiveChallengeDetailScreen() {
       return data as ActiveChallengeRow | null;
     },
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: checkins = [] } = useQuery({
@@ -122,6 +123,7 @@ export default function ActiveChallengeDetailScreen() {
       return (data ?? []) as { task_id: string; status: string }[];
     },
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const currentDay = useMemo(() => {

@@ -1,8 +1,10 @@
 import React, { useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Image } from "expo-image";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import { GRIIT_COLORS, DS_RADIUS, DS_COLORS } from "@/lib/design-system";
+import { captureError } from "@/lib/sentry";
 
 interface ProofShareCardProps {
   userName: string;
@@ -52,7 +54,7 @@ export default function ProofShareCard({
       onShared?.();
       onDismiss();
     } catch (e) {
-      if (__DEV__) console.error("[ProofShareCard] share failed:", e);
+      captureError(e, { context: "ProofShareCard share" });
       setErrorMessage("Could not share. Please try again.");
     } finally {
       setSharing(false);
@@ -75,7 +77,13 @@ export default function ProofShareCard({
             <Text style={styles.userName}>@{userName}</Text>
 
             {proofPhotoUri ? (
-              <Image source={{ uri: proofPhotoUri }} style={styles.proofThumb} accessibilityIgnoresInvertColors />
+              <Image
+                source={{ uri: proofPhotoUri }}
+                style={styles.proofThumb}
+                cachePolicy="memory-disk"
+                accessibilityLabel="Proof photo"
+                accessibilityIgnoresInvertColors
+              />
             ) : null}
 
             <View style={styles.streakRow}>
