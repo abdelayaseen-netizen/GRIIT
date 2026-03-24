@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, getCategoryColors } from "@/lib/design-system";
 
 const HERO_COPY: Record<string, string> = {
   "Daily Gratitude": "The challenge that rewires your brain. 3 things. Every morning. No excuses.",
@@ -16,6 +16,7 @@ type HeroChallenge = {
   description?: string;
   duration_days?: number;
   participants_count?: number;
+  category?: string;
 };
 
 export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
@@ -29,10 +30,11 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
 }) {
   if (!challenge) return null;
   const duration = challenge.duration_days ?? 7;
-  const joinedToday = Math.max(3, Math.floor((challenge.participants_count ?? 0) * 0.02));
+  const joinedToday = Math.max(0, Math.floor((challenge.participants_count ?? 0) * 0.02));
+  const categoryColors = getCategoryColors(challenge.category ?? "discipline");
   const copy = HERO_COPY[challenge.title] ?? challenge.description ?? "Lock in. Show up daily. Build unbreakable discipline.";
   return (
-    <View style={s.card}>
+    <View style={[s.card, { backgroundColor: categoryColors.header }]}>
       <View style={s.glowBottom} />
       <View style={s.glowTop} />
       <View style={s.content}>
@@ -46,14 +48,11 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
           </View>
         </View>
         <Text style={s.title}>{challenge.title}</Text>
-        <Text style={s.desc}>{copy}</Text>
+        <Text style={[s.desc, { color: categoryColors.subtitleText }]}>{copy}</Text>
         <View style={s.socialBar}>
-          <View style={s.avatars}>
-            <View style={[s.avatar, { backgroundColor: DS_COLORS.DISCOVER_CORAL }]}><Text style={s.avatarText}>Y</Text></View>
-            <View style={[s.avatar, s.avatarOverlap, { backgroundColor: DS_COLORS.DISCOVER_BLUE }]}><Text style={s.avatarText}>M</Text></View>
-            <View style={[s.avatar, s.avatarOverlap, { backgroundColor: DS_COLORS.DISCOVER_GREEN }]}><Text style={s.avatarText}>A</Text></View>
-          </View>
-          <Text style={s.socialText}>{joinedToday} people joined today</Text>
+          <Text style={s.socialText}>
+            {(challenge.participants_count ?? 0) === 0 ? "0 warriors · Be the first to join" : `${joinedToday} joined today`}
+          </Text>
         </View>
         <TouchableOpacity
           style={s.cta}
@@ -84,18 +83,6 @@ const s = StyleSheet.create({
   title: { fontSize: 21, fontWeight: "800", color: DS_COLORS.WHITE, lineHeight: 24, letterSpacing: -0.4 },
   desc: { marginTop: 8, fontSize: 12, lineHeight: 17, color: "rgba(255,255,255,0.45)" },
   socialBar: { marginTop: 14, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "rgba(255,255,255,0.06)", flexDirection: "row", alignItems: "center", gap: 8 },
-  avatars: { flexDirection: "row", alignItems: "center" },
-  avatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: DS_COLORS.DISCOVER_HERO_DARK_BG,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarOverlap: { marginLeft: -6 },
-  avatarText: { fontSize: 8, fontWeight: "700", color: DS_COLORS.WHITE },
   socialText: { fontSize: 11, color: "rgba(255,255,255,0.4)" },
   cta: {
     marginTop: 16,

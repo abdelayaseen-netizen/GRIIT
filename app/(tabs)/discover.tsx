@@ -283,6 +283,7 @@ export default function DiscoverScreen() {
                           description: hero.short_hook ?? hero.description,
                           duration_days: hero.duration_days,
                           participants_count: hero.participants_count,
+                          category: hero.category,
                         }
                       : null
                   }

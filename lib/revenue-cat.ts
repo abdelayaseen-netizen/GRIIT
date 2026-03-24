@@ -20,11 +20,15 @@ const ANDROID_KEY =
   "";
 
 let configured = false;
+let skippedConfigLogged = false;
 
 export function initializePurchases(userId?: string): void {
   const apiKey = Platform.OS === "ios" ? IOS_KEY : ANDROID_KEY;
   if (!apiKey) {
-    if (__DEV__) console.warn("[RevenueCat] No API key set — paywall will not function");
+    if (!skippedConfigLogged) {
+      console.warn("[RevenueCat] Skipped — no API key configured");
+      skippedConfigLogged = true;
+    }
     return;
   }
   try {
@@ -46,6 +50,7 @@ export function initializePurchases(userId?: string): void {
 export const configureRevenueCat = initializePurchases;
 
 export async function getOfferings() {
+  if (!configured) return null;
   try {
     const offerings = await Purchases.getOfferings();
     return offerings.current ?? null;
@@ -61,6 +66,9 @@ export async function purchasePackage(pkg: PurchasesPackage): Promise<{
   customerInfo?: CustomerInfo;
   error?: string;
 }> {
+  if (!configured) {
+    return { success: false, error: "Purchases unavailable right now." };
+  }
   try {
     const { customerInfo } = await Purchases.purchasePackage(pkg);
     return { success: true, customerInfo };
@@ -77,6 +85,9 @@ export async function restorePurchases(): Promise<{
   customerInfo?: CustomerInfo;
   error?: string;
 }> {
+  if (!configured) {
+    return { success: false, error: "Purchases unavailable right now." };
+  }
   try {
     const customerInfo = await Purchases.restorePurchases();
     return { success: true, customerInfo };
@@ -88,6 +99,7 @@ export async function restorePurchases(): Promise<{
 }
 
 export async function checkEntitlement(entitlementId: string = "pro"): Promise<boolean> {
+  if (!configured) return false;
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     return customerInfo.entitlements.active[entitlementId] !== undefined;
@@ -102,6 +114,7 @@ export async function isProUser(): Promise<boolean> {
 }
 
 export async function getCustomerInfo(): Promise<CustomerInfo | null> {
+  if (!configured) return null;
   try {
     return await Purchases.getCustomerInfo();
   } catch (e) {

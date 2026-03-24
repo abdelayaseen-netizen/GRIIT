@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Animated,
   Platform,
+  Share,
   RefreshControl,
   Modal,
   StatusBar,
@@ -62,9 +63,9 @@ import type {
 import {
   DS_COLORS,
   DS_SPACING,
-  DS_RADIUS,
-  DS_BORDERS,
+  DS_SHADOWS,
   GRIIT_COLORS,
+  getCategoryColors,
 } from "@/lib/design-system";
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -72,12 +73,12 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
-import Card from "@/components/shared/Card";
 import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
 import { ChallengeHero } from "@/components/challenge/ChallengeHero";
 import { ChallengeStats } from "@/components/challenge/ChallengeStats";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
 import { ChallengeTodayGoals } from "@/components/challenge/ChallengeTodayGoals";
+import { shareChallenge, inviteToChallenge } from "@/lib/share";
 
 /** GRIIT spec: orange theme (Extreme/Hard), green theme (Medium/Easy). */
 interface DifficultyTheme {
@@ -183,13 +184,6 @@ const TASK_ICONS: Record<string, React.ElementType> = {
   custom: Zap,
 };
 
-const CTA_LABELS_DEFAULT = { join: "Commit to This Challenge", active: "Continue Today" };
-const CTA_LABELS: Record<string, { join: string; active: string }> = {
-  easy: CTA_LABELS_DEFAULT,
-  medium: CTA_LABELS_DEFAULT,
-  hard: CTA_LABELS_DEFAULT,
-  extreme: CTA_LABELS_DEFAULT,
-};
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
@@ -510,8 +504,6 @@ export default function ChallengeDetailScreen() {
     return match?.id;
   }, [id, activeChallenge?.challenge_id, activeChallenge?.id, myActiveListQuery.data]);
 
-  const activeCount = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
-  const joinLimit = canJoinChallenge(activeCount);
   const currentUserId = user?.id ?? undefined;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
@@ -836,19 +828,6 @@ export default function ChallengeDetailScreen() {
     activeChallenge?.challenges?.id && challenge?.id && String(activeChallenge.challenges.id) === String(challenge.id)
   );
 
-  const handleContinueToday = useCallback(() => {
-    if (!isJoined || !id) return;
-    if (activeChallengeId) {
-      router.push(`/challenge/active/${activeChallengeId}` as never);
-      return;
-    }
-    if (firstIncompleteTask) {
-      handleMissionStart(firstIncompleteTask);
-      return;
-    }
-    if (allTasks.length === 0) return;
-    showError("All goals complete. Secure your day to lock it in. You can secure from Home, or stay here.");
-  }, [isJoined, id, activeChallengeId, router, firstIncompleteTask, allTasks.length, handleMissionStart, showError]);
   const hasStravaTasks = allTasks.some((t) => (t as { verification_method?: string }).verification_method === "strava_activity");
 
   useEffect(() => {
@@ -900,14 +879,7 @@ export default function ChallengeDetailScreen() {
 
   const difficulty = (challenge?.difficulty || "medium") as string;
 
-  const headerColor = useMemo(() => {
-    const cat = (challenge?.category ?? "").toUpperCase();
-    if (cat === "FITNESS") return DS_COLORS.HEADER_FITNESS_DEEP;
-    if (cat === "MIND") return DS_COLORS.HEADER_MIND_DEEP;
-    if (cat === "DISCIPLINE") return DS_COLORS.HEADER_DISCIPLINE_DEEP;
-    if (cat === "FAITH") return DS_COLORS.HEADER_FAITH_DEEP;
-    return DS_COLORS.HEADER_DEFAULT;
-  }, [challenge?.category]);
+  const categoryColors = useMemo(() => getCategoryColors(challenge?.category ?? "discipline"), [challenge?.category]);
 
   const eyebrowLabel = useMemo(() => {
     if (challenge?.is_featured) return "🏆 FEATURED";
@@ -990,26 +962,11 @@ export default function ChallengeDetailScreen() {
 
   const durationLabel = isDaily ? "24 hours" : `${challenge.duration_days} days`;
   const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-  const ctaLabels: { join: string; active: string } = CTA_LABELS[difficulty] ?? CTA_LABELS_DEFAULT;
-  const incompleteCount = allTasks.filter((t) => {
-    const done = todayCheckins.some((c: CheckinFromApi) => c.task_id === t.id && c.status === "completed");
-    return !done;
-  }).length;
-  const activeCtaLabel =
-    incompleteCount > 0 ? `Continue today (${incompleteCount} left)` : "All goals complete";
-  const ctaLabel = isDaily
-    ? expired
-      ? "Expired"
-      : "Commit to This Challenge"
-    : isJoined
-      ? activeCtaLabel
-      : ctaLabels.join;
   const rawParticipantCount = challenge.participants_count ?? 0;
   const participantCount = Math.max(rawParticipantCount, isJoined ? 1 : 0);
   const joinDisabled = isPending || (isDaily && expired);
 
-  const headerGradientColors = [headerColor, headerColor] as const;
-  const ctaBgColor = isJoined ? DS_COLORS.accent : GRIIT_COLORS.primary;
+  const headerGradientColors = [categoryColors.header, categoryColors.header] as const;
   const countdownTheme = isDaily ? { ...theme, accent: DS_COLORS.success } : theme;
 
   const challengeVisibility = (challenge.visibility || "public") as string;
@@ -1021,6 +978,22 @@ export default function ChallengeDetailScreen() {
     : null;
 
   const participantUsernames = (challenge as { participant_usernames?: string[] }).participant_usernames;
+  const joinedToday = Math.max(0, Math.floor(rawParticipantCount * 0.02));
+
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        message: `I'm taking on the ${challenge.title} challenge on GRIIT! ${challenge.description ?? challenge.about ?? ""}`,
+        ...(Platform.OS === "ios" ? { url: "" } : {}),
+      });
+    } catch (error) {
+      const message = (error as Error)?.message ?? "";
+      if (message !== "User did not share") {
+        console.error("[ChallengeDetail] Share failed:", error);
+        showError("Couldn't open share options right now. Please try again.");
+      }
+    }
+  }, [challenge.title, challenge.description, challenge.about, showError]);
 
   const aboutDetailRows: { label: string; value: string; valueAccent?: boolean }[] = [
     { label: "Duration", value: durationLabel },
@@ -1072,31 +1045,65 @@ export default function ChallengeDetailScreen() {
             visibilityIcon={visibilityIcon}
             eyebrowLabel={eyebrowLabel}
             referrerLabel={referrerLabel}
+            subtitleColor={categoryColors.subtitleText}
             onBack={() => router.back()}
-            onMoreMenu={() => {
+            onShare={() => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              void handleShare();
+            }}
+            onMore={() => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               trackEvent("share_tapped", {
                 content_type: "challenge",
                 challenge_id: id ?? undefined,
               });
-              import("@/lib/share")
-                .then(({ shareChallenge }) =>
-                  shareChallenge(
-                    {
-                      name: challenge.title,
-                      duration: challenge.duration_days ?? 0,
-                      id: id ?? "",
-                      tasksPerDay: challenge.tasks?.length,
-                    },
-                    currentUserId
-                  )
-                )
-                .catch((e) => console.error("[ChallengeDetail] shareChallenge failed:", e));
+              void shareChallenge(
+                {
+                  name: challenge.title,
+                  duration: challenge.duration_days ?? 0,
+                  id: id ?? "",
+                  tasksPerDay: challenge.tasks?.length,
+                },
+                currentUserId
+              ).catch((e) => {
+                console.error("[ChallengeDetail] shareChallenge failed:", e);
+                showError("Couldn't open share options right now. Please try again.");
+              });
             }}
           />
 
           {/* BODY: warm background, large radius cards, premium spacing */}
           <View style={[s.body, isDaily && { gap: DS_SPACING.sm }]}>
+            <View style={[s.socialProofCard, DS_SHADOWS.cardSubtle]}>
+              <Text style={s.socialProofTitle}>{participantCount} warriors</Text>
+              <Text style={s.socialProofSub}>{participantCount === 0 ? "Be the first to join" : `${joinedToday} joined today`}</Text>
+            </View>
+
+            {firstIncompleteTask ? (
+              <TouchableOpacity
+                style={s.todayGoalCard}
+                onPress={() => handleMissionStart(firstIncompleteTask)}
+                activeOpacity={0.86}
+                accessibilityRole="button"
+                accessibilityLabel={`Today's goal: ${firstIncompleteTask.title}. Tap to start`}
+              >
+                {isJoined ? (
+                  <Text style={s.dayCounterText}>Day {Math.max(userCurrentDay, 1)} of {challenge.duration_days}</Text>
+                ) : null}
+                <View style={s.todayGoalRow}>
+                  <View style={s.todayGoalCircle}>
+                    <View style={s.todayGoalCircleInner} />
+                  </View>
+                  <View style={s.todayGoalTextWrap}>
+                    <Text style={s.todayGoalTitle}>{firstIncompleteTask.title}</Text>
+                    <Text style={s.todayGoalSubtitle}>Tap to start and log proof</Text>
+                  </View>
+                  <View style={s.todayGoalArrowWrap}>
+                    <ChevronRight size={18} color={DS_COLORS.DISCOVER_CORAL} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ) : null}
 
             {/* Team / Shared Goal sections (remote only) */}
             {id && (isTeamChallenge || isSharedGoal) && (
@@ -1126,9 +1133,10 @@ export default function ChallengeDetailScreen() {
                           challenge_id: id ?? undefined,
                           source: "team_status",
                         });
-                        import("@/lib/share").then(({ inviteToChallenge }) =>
-                          inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                        ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge (team) failed:", e));
+                        void inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId).catch((e) => {
+                          console.error("[ChallengeDetail] inviteToChallenge (team) failed:", e);
+                          showError("Couldn't open invite options right now. Please try again.");
+                        });
                       }}
                     />
                     <TeamMemberList
@@ -1185,14 +1193,24 @@ export default function ChallengeDetailScreen() {
               </View>
             )}
 
-            {/* Progress (joined only; simple day line — no progress grid) */}
-            {isJoined && !isDaily && !(isTeamChallenge && runStatus === "failed") && (
-              <Card padded={false} containerStyle={[s.progressSimpleCard, { backgroundColor: DS_COLORS.BG_CARD }]}>
-                <Text style={[s.progressSimpleText, { color: DS_COLORS.TEXT_SECONDARY }]}>
-                  Day {userCurrentDay} of {challenge.duration_days}
-                </Text>
-              </Card>
-            )}
+            {isJoined && !isDaily && !(isTeamChallenge && runStatus === "failed") ? (
+              <View style={s.progressSectionCard} accessibilityRole="progressbar" accessibilityLabel={`Progress: ${Math.max(userCurrentDay, 1)} of ${challenge.duration_days} days completed`}>
+                <View style={s.progressTrack}>
+                  <View style={[s.progressFill, { width: `${Math.max(4, Math.min(100, (Math.max(userCurrentDay, 1) / Math.max(challenge.duration_days ?? 1, 1)) * 100))}%` }]} />
+                </View>
+                <View style={s.progressDotsRow}>
+                  <View style={[s.progressDot, userCurrentDay >= Math.ceil((challenge.duration_days ?? 1) * 0.33) && s.progressDotFilled]} />
+                  <View style={[s.progressDot, userCurrentDay >= Math.ceil((challenge.duration_days ?? 1) * 0.66) && s.progressDotFilled]} />
+                  <View style={[s.progressDot, userCurrentDay >= (challenge.duration_days ?? 1) && s.progressDotFilled]} />
+                </View>
+                <View style={s.progressLabelsRow}>
+                  <Text style={s.progressLabelStart}>Start</Text>
+                  <Text style={s.progressLabel}>Week 1</Text>
+                  <Text style={s.progressLabel}>Week 2</Text>
+                  <Text style={s.progressLabel}>Done</Text>
+                </View>
+              </View>
+            ) : null}
 
             <ChallengeLeaderboard
               challenge={challenge}
@@ -1299,83 +1317,42 @@ export default function ChallengeDetailScreen() {
 
             {isJoined && id && (
               <TouchableOpacity
-                style={[s.leaveBtn, { borderWidth: DS_BORDERS.width, borderColor: DS_COLORS.border, borderRadius: DS_RADIUS.button }]}
+                style={s.leaveBtnInFlow}
                 onPress={handleLeave}
                 disabled={leavePending}
                 activeOpacity={0.7}
-                accessibilityLabel="Leave this challenge"
+                accessibilityLabel={`Leave ${challenge.title} challenge`}
                 accessibilityRole="button"
               >
                 {leavePending ? (
                   <ActivityIndicator size="small" color={themeColors.text?.secondary} />
                 ) : (
-                  <Text style={s.leaveBtnText}>Leave Challenge</Text>
+                  <Text style={s.leaveBtnInFlowText}>Leave Challenge</Text>
                 )}
+              </TouchableOpacity>
+            )}
+            <Text style={s.ctaMicroInFlow}>
+              {isJoined ? "Your progress will not be saved" : (isDaily ? "Challenge expires at midnight" : "Day resets at midnight")}
+            </Text>
+            {!isJoined && (
+              <TouchableOpacity
+                style={s.commitCtaInFlow}
+                onPress={user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
+                onPressIn={handleCtaPressIn}
+                onPressOut={handleCtaPressOut}
+                disabled={joinDisabled}
+                activeOpacity={0.85}
+                testID="join-challenge-button"
+                accessibilityLabel={`Commit to ${challenge.title}`}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: joinDisabled }}
+              >
+                {isPending ? <ActivityIndicator color={DS_COLORS.white} /> : <Text style={s.commitCtaInFlowText}>Commit to This Challenge</Text>}
               </TouchableOpacity>
             )}
 
           </View>
         </ScrollView>
-
-        {/* STICKY CTA */}
-        <View style={[s.stickyFooter, { paddingBottom: insets.bottom + DS_SPACING.lg }]}>
-          {isDaily && expired ? (
-            <View style={s.disabledCta}>
-              <Text style={s.disabledCtaText}>Expired</Text>
-            </View>
-          ) : (
-            <Animated.View style={{ transform: [{ scale: ctaScaleAnim }], alignSelf: "stretch" }}>
-            <TouchableOpacity
-              style={[s.ctaButton, { backgroundColor: ctaBgColor }]}
-              onPress={isJoined ? handleContinueToday : user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
-              onPressIn={handleCtaPressIn}
-              onPressOut={handleCtaPressOut}
-              disabled={joinDisabled}
-              activeOpacity={0.85}
-              testID="join-challenge-button"
-              accessibilityLabel={isJoined ? "Go to challenge" : "Join this challenge"}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: joinDisabled }}
-            >
-                {isPending ? (
-                  <ActivityIndicator color={DS_COLORS.white} />
-                ) : (
-                  <Text style={s.ctaText}>{ctaLabel}</Text>
-                )}
-              </TouchableOpacity>
-            </Animated.View>
-          )}
-          {!isJoined && !joinLimit.allowed && (
-            <Text style={[s.ctaMicro, { marginTop: 8 }]}>
-              {activeCount}/{joinLimit.limit} active challenges — upgrade for unlimited
-            </Text>
-          )}
-          {isJoined && (
-            <TouchableOpacity
-              style={s.inviteLink}
-              onPress={() => {
-                track({ name: "invite_shared", challengeId: id ?? undefined, source: "challenge_detail" });
-                trackEvent("invite_sent", {
-                  content_type: "challenge",
-                  challenge_id: id ?? undefined,
-                  source: "challenge_detail_cta",
-                });
-                import("@/lib/share").then(({ inviteToChallenge }) =>
-                  inviteToChallenge({ name: challenge.title, id: id ?? "" }, currentUserId)
-                ).catch((e) => console.error("[ChallengeDetail] inviteToChallenge (cta) failed:", e));
-              }}
-              activeOpacity={0.7}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              accessibilityRole="button"
-              accessibilityLabel="Invite friends to this challenge"
-            >
-              <Text style={s.inviteLinkText}>Invite friends to this challenge</Text>
-            </TouchableOpacity>
-          )}
-          <Text style={s.ctaMicro}>
-            {isDaily ? "Challenge expires at midnight" : "Day resets at midnight"}
-          </Text>
-        </View>
       </Animated.View>
 
       {/* Commitment Confirmation Modal (GRIIT Step 4) */}

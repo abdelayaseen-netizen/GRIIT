@@ -737,6 +737,46 @@ export const DS_BORDERS = {
   colorStrong: '#111111',
 } as const;
 
+export const CHALLENGE_CATEGORY_COLORS = {
+  discipline: {
+    header: '#2B3A2E',
+    subtitleText: '#E8D5B5',
+    tagBorder: 'rgba(232,89,60,0.25)',
+  },
+  fitness: {
+    header: '#1B4D6E',
+    subtitleText: '#A8CEE4',
+    tagBorder: 'rgba(168,206,228,0.3)',
+  },
+  nutrition: {
+    header: '#5C3D2E',
+    subtitleText: '#D4B89A',
+    tagBorder: 'rgba(212,184,154,0.3)',
+  },
+  mindfulness: {
+    header: '#4A3B5C',
+    subtitleText: '#C4B5D6',
+    tagBorder: 'rgba(196,181,214,0.3)',
+  },
+  outdoor: {
+    header: '#3A4F3A',
+    subtitleText: '#A8C4A8',
+    tagBorder: 'rgba(168,196,168,0.3)',
+  },
+  productivity: {
+    header: '#5C4B32',
+    subtitleText: '#C4B08A',
+    tagBorder: 'rgba(196,176,138,0.3)',
+  },
+} as const;
+
+export const DEFAULT_CATEGORY_COLOR = CHALLENGE_CATEGORY_COLORS.discipline;
+
+export function getCategoryColors(category: string) {
+  const key = String(category ?? "").toLowerCase().trim();
+  return CHALLENGE_CATEGORY_COLORS[key as keyof typeof CHALLENGE_CATEGORY_COLORS] ?? DEFAULT_CATEGORY_COLOR;
+}
+
 // Type exports
 export type DSColors = typeof DS_COLORS;
 export type DSTypography = typeof DS_TYPOGRAPHY;

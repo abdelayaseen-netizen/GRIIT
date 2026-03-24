@@ -90,6 +90,110 @@ export const feedRouter = createTRPCRouter({
         nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null,
       };
     }),
+  listMine: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(50).default(20),
+        cursor: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from("activity_events")
+        .select("id, event_type, challenge_id, metadata, created_at")
+        .eq("user_id", ctx.userId)
+        .order("created_at", { ascending: false })
+        .limit(input.limit);
+
+      if (input.cursor) {
+        query = query.lt("created_at", input.cursor);
+      }
+
+      const { data: events, error } = await query;
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+
+      const items = (events ?? []) as {
+        id: string;
+        event_type: string;
+        challenge_id: string | null;
+        metadata?: Record<string, unknown>;
+        created_at: string;
+      }[];
+      const challengeIds = [...new Set(items.map((e) => e.challenge_id).filter((id): id is string => !!id))];
+      let challengeMap = new Map<string, { title: string; category: string | null }>();
+      if (challengeIds.length > 0) {
+        const { data: challenges } = await ctx.supabase
+          .from("challenges")
+          .select("id, title, category")
+          .in("id", challengeIds);
+        challengeMap = new Map(
+          (challenges ?? []).map((c: { id: string; title?: string | null; category?: string | null }) => [
+            c.id,
+            { title: c.title ?? "Challenge", category: c.category ?? null },
+          ])
+        );
+      }
+
+      const out = items.map((event) => {
+        const metadata = event.metadata ?? {};
+        const challenge = event.challenge_id ? challengeMap.get(event.challenge_id) : undefined;
+        const streakCount = Number((metadata as Record<string, unknown>).streak_count ?? 0);
+        const isMilestone = event.event_type === "streak_milestone";
+        const fallbackTask =
+          event.event_type === "completed_task"
+            ? "Task completed"
+            : event.event_type === "challenge_joined"
+              ? "Challenge joined"
+              : "Activity";
+        return {
+          id: event.id,
+          type: isMilestone ? "milestone" : "activity",
+          eventType: event.event_type,
+          challengeId: event.challenge_id ?? null,
+          taskName: String((metadata as Record<string, unknown>).task_name ?? fallbackTask),
+          challengeTitle: challenge?.title ?? String((metadata as Record<string, unknown>).challenge_name ?? "Challenge"),
+          challengeCategory: challenge?.category ?? String((metadata as Record<string, unknown>).challenge_category ?? "discipline"),
+          completedAt: event.created_at,
+          hasProof: Boolean((metadata as Record<string, unknown>).has_photo) || Boolean((metadata as Record<string, unknown>).photo_url),
+          proofUrl: ((metadata as Record<string, unknown>).photo_url as string | undefined) ?? undefined,
+          milestoneTitle: isMilestone ? `${Math.max(0, streakCount)}-day streak!` : null,
+          milestoneSubtitle: isMilestone ? "You've been consistent. Keep it up." : null,
+        };
+      });
+
+      const lastItem = items.length > 0 ? items[items.length - 1] : undefined;
+      return {
+        items: out,
+        nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null,
+      };
+    }),
+  getMySummary: protectedProcedure.query(async ({ ctx }) => {
+    const [completedTasksResult, streakResult, activeChallengesResult] = await Promise.all([
+      ctx.supabase
+        .from("activity_events")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", ctx.userId)
+        .eq("event_type", "completed_task"),
+      ctx.supabase
+        .from("streaks")
+        .select("active_streak_count")
+        .eq("user_id", ctx.userId)
+        .maybeSingle(),
+      ctx.supabase
+        .from("active_challenges")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", ctx.userId)
+        .eq("status", "active"),
+    ]);
+
+    return {
+      totalTasksCompleted: completedTasksResult.count ?? 0,
+      currentStreak: (streakResult.data as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
+      activeChallenges: activeChallengesResult.count ?? 0,
+    };
+  }),
 
   react: protectedProcedure
     .input(

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronLeft, MoreHorizontal } from "lucide-react-native";
+import { ChevronLeft, MoreHorizontal, Share2 } from "lucide-react-native";
 import type { ChallengeDetailFromApi } from "@/types";
 import { DS_COLORS } from "@/lib/design-system";
 import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
@@ -25,8 +25,10 @@ type Props = {
   visibilityIcon: React.ReactNode;
   eyebrowLabel: string | null;
   referrerLabel: string | null;
+  subtitleColor: string;
   onBack: () => void;
-  onMoreMenu: () => void;
+  onShare: () => void;
+  onMore: () => void;
 };
 
 export const ChallengeHero = React.memo(function ChallengeHero({
@@ -44,8 +46,10 @@ export const ChallengeHero = React.memo(function ChallengeHero({
   visibilityIcon,
   eyebrowLabel,
   referrerLabel,
+  subtitleColor,
   onBack,
-  onMoreMenu,
+  onShare,
+  onMore,
 }: Props) {
   return (
     <LinearGradient colors={headerGradientColors} style={[s.heroHeader, isDaily && s.heroHeader24h]}>
@@ -63,27 +67,46 @@ export const ChallengeHero = React.memo(function ChallengeHero({
             <ChevronLeft size={24} color={DS_COLORS.white} />
           </TouchableOpacity>
           <Text style={[s.topNavTitle, isDaily && s.topNavTitle24h]}>Challenge</Text>
-          <TouchableOpacity
-            style={[s.morePill, isDaily && s.backPill24h]}
-            activeOpacity={0.7}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            onPress={onMoreMenu}
-            accessible
-            accessibilityLabel="Challenge options"
-            accessibilityRole="button"
-          >
-            <MoreHorizontal size={20} color={DS_COLORS.white} />
-          </TouchableOpacity>
+          <View style={s.heroActions}>
+            <TouchableOpacity
+              style={[s.morePill, isDaily && s.backPill24h]}
+              activeOpacity={0.7}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={onShare}
+              accessible
+              accessibilityLabel="Share this challenge"
+              accessibilityRole="button"
+            >
+              <Share2 size={18} color={DS_COLORS.white} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.morePill, isDaily && s.backPill24h]}
+              activeOpacity={0.7}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={onMore}
+              accessible
+              accessibilityLabel="More options"
+              accessibilityRole="button"
+            >
+              <MoreHorizontal size={20} color={DS_COLORS.white} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={s.heroContent}>
+          {isJoined ? (
+            <View style={s.activeBadge}>
+              <View style={s.activeDot} />
+              <Text style={s.activeBadgeText}>ACTIVE</Text>
+            </View>
+          ) : null}
           {eyebrowLabel != null && (
             <View style={s.dailyLabel}>
               <Text style={s.dailyLabelText}>{eyebrowLabel}</Text>
             </View>
           )}
           <Text style={s.heroTitle}>{challenge.title}</Text>
-          <Text style={s.heroTagline} numberOfLines={2}>
+          <Text style={[s.heroTagline, { color: subtitleColor }]} numberOfLines={2}>
             {challenge.short_hook || challenge.description}
           </Text>
           {referrerLabel ? <Text style={s.referrerLabel}>{referrerLabel}</Text> : null}

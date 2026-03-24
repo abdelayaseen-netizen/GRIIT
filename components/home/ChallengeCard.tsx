@@ -5,7 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, getCategoryColors } from "@/lib/design-system";
 import { prefetchChallengeById } from "@/lib/prefetch-queries";
 
 export interface TodayTaskItem {
@@ -26,6 +26,7 @@ interface ChallengeCardProps {
   sharedGoalTarget?: number;
   sharedGoalUnit?: string;
   sharedGoalTotal?: number;
+  category?: string;
 }
 
 export default function ChallengeCard({
@@ -40,11 +41,13 @@ export default function ChallengeCard({
   sharedGoalTarget,
   sharedGoalUnit,
   sharedGoalTotal,
+  category,
 }: ChallengeCardProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isTeam = participationType === "team";
   const isSharedGoal = participationType === "shared_goal";
+  const categoryColors = getCategoryColors(category ?? "discipline");
 
   const handlePressIn = useCallback(() => {
     void prefetchChallengeById(queryClient, challengeId);
@@ -58,11 +61,11 @@ export default function ChallengeCard({
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: categoryColors.header }]}>
         <Text style={styles.challengeName} numberOfLines={1}>
           {challengeName}
         </Text>
-        <Text style={styles.progressBadge}>{todayTaskProgress}</Text>
+        <Text style={[styles.progressBadge, { color: categoryColors.subtitleText }]}>{todayTaskProgress}</Text>
       </View>
       {(isTeam || isSharedGoal) && (
         <View style={styles.badgeRow}>
@@ -137,11 +140,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: DS_SPACING.md,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   challengeName: {
     fontSize: DS_TYPOGRAPHY.body.fontSize + 1,
     fontWeight: "700",
-    color: DS_COLORS.textPrimary,
+    color: DS_COLORS.WHITE,
     flex: 1,
   },
   progressBadge: {

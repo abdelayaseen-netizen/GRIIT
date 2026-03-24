@@ -13,7 +13,7 @@ if (!supabaseAnonKey) {
 
 if (process.env.NODE_ENV !== 'production') {
   const urlUsed = process.env.DATABASE_URL ?? process.env.SUPABASE_DB_URL ?? 'direct connection';
-  console.log(
+  console.warn(
     '[Supabase] Using connection:',
     typeof urlUsed === 'string' && urlUsed.includes('pooler') ? 'POOLED ✓' : 'DIRECT (consider switching to pooler)'
   );
