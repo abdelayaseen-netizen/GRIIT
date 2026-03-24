@@ -540,6 +540,39 @@ export const profilesRouter = createTRPCRouter({
       return result.reverse();
     }),
 
+  followUser: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId === ctx.userId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot follow yourself." });
+      }
+      const { error } = await ctx.supabase.from("user_follows").insert({
+        follower_id: ctx.userId,
+        following_id: input.userId,
+      });
+      if (error && (error as PgError).code !== "23505") {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+
+      const { getSupabaseServer } = await import("../../lib/supabase-server");
+      const srv = getSupabaseServer();
+      if (srv) {
+        const anySrv = srv as unknown as {
+          from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
+        };
+        const { error: nErr } = await anySrv.from("in_app_notifications").insert({
+          user_id: input.userId,
+          type: "follow",
+          read: false,
+          actor_id: ctx.userId,
+          metadata: {},
+        });
+        if (nErr) console.error("[profiles.followUser] notification insert:", nErr);
+      }
+
+      return { success: true as const };
+    }),
+
   /** Delete account: clears profile data; when SUPABASE_SERVICE_ROLE_KEY is set, also deletes auth user. Client must sign out after. */
   deleteAccount: protectedProcedure
     .input(z.object({}))

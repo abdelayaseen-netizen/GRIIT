@@ -92,7 +92,7 @@ type MemberWithStats = MemberRow & {
   completion_pct: number;
 };
 
-async function getMembersWithStats(ctx: { supabase: any; userId: string }, teamId: string): Promise<MemberWithStats[]> {
+export async function getMembersWithStats(ctx: { supabase: any; userId: string }, teamId: string): Promise<MemberWithStats[]> {
   const { data: me, error: meError } = await ctx.supabase
     .from("team_members")
     .select("id")

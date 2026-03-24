@@ -2,7 +2,7 @@ import { createTRPCRouter } from "./create-context";
 /**
  * Public procedures (no auth): auth.signUp, auth.signIn, auth.getSession;
  *   challenges.list, challenges.getFeatured, challenges.getStarterPack, challenges.getById;
- *   leaderboard.getWeekly; meta.version; feed.list.
+ *   leaderboard.getWeekly; meta.version; feed.list (public read path if configured).
  * All other procedures are protected (require Authorization: Bearer <token>).
  */
 import { authRouter } from "./routes/auth";

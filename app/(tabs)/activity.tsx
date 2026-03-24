@@ -1,254 +1,903 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Flame } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { useApp } from "@/contexts/AppContext";
+import { Target } from "lucide-react-native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { DS_COLORS, DS_RADIUS, DS_SHADOWS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
+import { getAvatarColor } from "@/lib/avatar";
+import { relativeTime } from "@/lib/utils/relativeTime";
 import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
-import PostCard, { FeedPost } from "@/components/PostCard";
-import CommentSheet, { FeedComment } from "@/components/CommentSheet";
 
-type FeedEvent = {
+type MainTab = "notifications" | "leaderboard";
+type LeaderScope = "friends" | "teams" | "challenge";
+
+type NotifRow = {
   id: string;
-  challenge_id: string | null;
-  metadata?: Record<string, unknown>;
-  created_at: string;
-  display_name: string;
-  username: string;
-  avatar_url: string | null;
-  reaction_count: number;
-  reacted_by_me: boolean;
-  comment_count: number;
+  type: "respect" | "comment" | "follow" | "rank";
+  read: boolean;
+  createdAt: string;
+  actorId: string | null;
+  actorUsername: string | null;
+  actorDisplayName: string | null;
+  actorAvatarUrl: string | null;
+  metadata: Record<string, unknown>;
 };
 
-type FeedPage = { items: FeedEvent[]; nextCursor: string | null };
+type BoardEntry = {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  rank: number;
+  points: number;
+  checkInsThisWeek: number;
+  currentStreak: number;
+  progressVsLeader: number;
+  gapToAbove: number;
+};
 
-function mapPost(event: FeedEvent): FeedPost {
-  const md = event.metadata ?? {};
-  return {
-    id: event.id,
-    challenge_id: event.challenge_id,
-    challengeTitle: String(md.challenge_name ?? "Challenge"),
-    display_name: event.display_name,
-    username: event.username,
-    avatar_url: event.avatar_url,
-    created_at: event.created_at,
-    taskName: String(md.task_name ?? "Task completed"),
-    caption: typeof md.caption === "string" ? md.caption : null,
-    imageUrl: typeof md.photo_url === "string" ? md.photo_url : null,
-    reaction_count: event.reaction_count ?? 0,
-    reacted_by_me: !!event.reacted_by_me,
-    comment_count: event.comment_count ?? 0,
-  };
+function getNotifText(n: NotifRow): { bold: string; rest: string } {
+  const name = n.actorDisplayName ?? n.actorUsername ?? "Someone";
+  const challengeName = String(n.metadata.challenge_title ?? n.metadata.challenge_name ?? "challenge");
+  switch (n.type) {
+    case "respect":
+      return { bold: name, rest: ` respected your ${challengeName} check-in` };
+    case "comment":
+      return { bold: name, rest: ` commented — "${String(n.metadata.comment_text ?? "").slice(0, 80)}"` };
+    case "follow":
+      return { bold: name, rest: " started following you" };
+    case "rank":
+      return {
+        bold: "",
+        rest: `You're #${n.metadata.rank} on ${challengeName} — ${n.metadata.rankGap} pts behind #${Number(n.metadata.rank) - 1}`,
+      };
+    default:
+      return { bold: "", rest: "Notification" };
+  }
+}
+
+function rankNumColor(rank: number): string {
+  if (rank === 2) return DS_COLORS.TEXT_SECONDARY;
+  if (rank === 3) return DS_COLORS.CELEB_BONUS_AMBER;
+  if (rank >= 4) return DS_COLORS.TEXT_MUTED;
+  return DS_COLORS.TEXT_PRIMARY;
 }
 
 export default function ActivityScreen() {
   const router = useRouter();
-  const { currentUser } = useApp();
+  const { user } = useAuth();
+  const isGuest = useIsGuest();
   const queryClient = useQueryClient();
-  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [mainTab, setMainTab] = useState<MainTab>("notifications");
+  const [scope, setScope] = useState<LeaderScope>("friends");
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
 
-  const activityQuery = useInfiniteQuery({
-    queryKey: ["community", "feed", currentUser?.id],
-    queryFn: async ({ pageParam }: { pageParam?: string }) =>
-      (await trpcQuery(TRPC.feed.list, {
-        limit: 20,
-        cursor: pageParam,
-      })) as FeedPage,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    initialPageParam: undefined as string | undefined,
-    enabled: !!currentUser?.id,
-    staleTime: 5 * 60 * 1000,
-    placeholderData: (prev) => prev,
+  const notifQuery = useQuery({
+    queryKey: ["activity", "notifications", user?.id],
+    queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: NotifRow[]; earlier: NotifRow[] }>,
+    enabled: !isGuest && !!user?.id && mainTab === "notifications",
+    staleTime: 30 * 1000,
   });
 
-  const posts = useMemo(() => (activityQuery.data?.pages ?? []).flatMap((p) => p.items).map(mapPost), [activityQuery.data?.pages]);
-  const empty = !activityQuery.isPending && !activityQuery.isError && posts.length === 0;
-  const isInitialLoading = activityQuery.isPending && !activityQuery.data;
-
-  const commentsQuery = useQuery({
-    queryKey: ["community", "comments", selectedPost?.id],
-    queryFn: async () => {
-      if (!selectedPost?.id) return [] as FeedComment[];
-      return (await trpcQuery(TRPC.feed.getComments, { eventId: selectedPost.id, limit: 100 })) as FeedComment[];
-    },
-    enabled: !!selectedPost?.id,
+  const friendsBoard = useQuery({
+    queryKey: ["activity", "leaderboard", "friends", user?.id],
+    queryFn: () => trpcQuery(TRPC.leaderboard.getFriendsBoard) as Promise<{ leaderPoints: number; entries: BoardEntry[] }>,
+    enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "friends",
+    staleTime: 60 * 1000,
   });
 
-  const updatePostCache = useCallback((postId: string, updater: (post: FeedEvent) => FeedEvent) => {
-    queryClient.setQueryData(
-      ["community", "feed", currentUser?.id],
-      (oldData: { pages: FeedPage[]; pageParams: unknown[] } | undefined) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page) => ({
-            ...page,
-            items: page.items.map((it) => (it.id === postId ? updater(it) : it)),
-          })),
-        };
+  const teamBoard = useQuery({
+    queryKey: ["activity", "leaderboard", "teams", user?.id],
+    queryFn: () => trpcQuery(TRPC.leaderboard.getTeamBoard, {}) as Promise<{ teamName: string | null; entries: BoardEntry[] }>,
+    enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "teams",
+    staleTime: 60 * 1000,
+  });
+
+  const myActive = useQuery({
+    queryKey: ["activity", "myActive", user?.id],
+    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<{ challenge_id?: string; challenges?: { id?: string; title?: string } }[]>,
+    enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "challenge",
+    staleTime: 60 * 1000,
+  });
+
+  useEffect(() => {
+    const list = myActive.data;
+    if (!list?.length || selectedChallengeId) return;
+    const row = list[0];
+    if (!row) return;
+    const cid = row.challenge_id ?? row.challenges?.id;
+    if (cid) setSelectedChallengeId(cid);
+  }, [myActive.data, selectedChallengeId]);
+
+  const challengeBoard = useQuery({
+    queryKey: ["activity", "leaderboard", "challenge", selectedChallengeId, user?.id],
+    queryFn: () =>
+      trpcQuery(TRPC.leaderboard.getChallengeBoard, { challengeId: selectedChallengeId! }) as Promise<{
+        leaderPoints: number;
+        challengeTitle: string;
+        visibility: string;
+        entries: BoardEntry[];
+      }>,
+    enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "challenge" && !!selectedChallengeId,
+    staleTime: 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (mainTab !== "notifications" || !user?.id) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        await trpcMutate(TRPC.notifications.markAllRead);
+        if (!cancelled) void queryClient.invalidateQueries({ queryKey: ["activity", "notifications", user.id] });
+      } catch (e) {
+        console.error("[Activity] markAllRead", e);
       }
-    );
-  }, [queryClient, currentUser?.id]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mainTab, user?.id, queryClient]);
 
-  const onPressRespect = useCallback(async (postId: string, reacted: boolean, currentCount: number) => {
-    const optimisticCount = Math.max(0, currentCount + (reacted ? -1 : 1));
-    updatePostCache(postId, (post) => ({ ...post, reacted_by_me: !reacted, reaction_count: optimisticCount }));
-    try {
-      const result = await trpcMutate(TRPC.feed.react, { eventId: postId }) as { reacted?: boolean; reactionCount?: number };
-      updatePostCache(postId, (post) => ({
-        ...post,
-        reacted_by_me: !!result.reacted,
-        reaction_count: Math.max(0, result.reactionCount ?? optimisticCount),
-      }));
-    } catch (error) {
-      console.error("[CommunityFeed] respect toggle failed:", error);
-      updatePostCache(postId, (post) => ({ ...post, reacted_by_me: reacted, reaction_count: currentCount }));
-    }
-  }, [updatePostCache]);
+  const onRefresh = useCallback(async () => {
+    await Promise.all([
+      notifQuery.refetch(),
+      friendsBoard.refetch(),
+      teamBoard.refetch(),
+      challengeBoard.refetch(),
+      myActive.refetch(),
+    ]);
+  }, [notifQuery, friendsBoard, teamBoard, challengeBoard, myActive]);
+
+  const refreshing =
+    notifQuery.isRefetching || friendsBoard.isRefetching || teamBoard.isRefetching || challengeBoard.isRefetching;
+
+  if (isGuest || !user?.id) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <Text style={styles.screenTitle}>Activity</Text>
+        <View style={styles.guestWrap}>
+          <Text style={styles.guestText}>Sign in to see notifications and leaderboards.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <Text style={styles.headerTitle}>Community</Text>
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Text style={styles.screenTitle} accessibilityRole="header">
+          Activity
+        </Text>
 
-      {activityQuery.isError ? (
-        <ErrorState message="Couldn't load activity" onRetry={() => void activityQuery.refetch()} />
-      ) : isInitialLoading ? (
-        <LoadingState message="Loading community..." />
-      ) : empty ? (
-        <View style={styles.emptyWrap}>
-          <View style={styles.emptyCard}>
-            <Flame size={48} color={DS_COLORS.TEXT_SECONDARY} />
-            <Text style={styles.emptyTitle}>No activity yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Complete a challenge task to share with the community.
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyCta}
-              onPress={() => router.push("/(tabs)/discover" as never)}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="Browse available challenges"
-            >
-              <Text style={styles.emptyCtaText}>Browse Challenges</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.mainSwitcher}>
+          <TouchableOpacity
+            style={[styles.mainTab, mainTab === "notifications" && styles.mainTabOn]}
+            onPress={() => setMainTab("notifications")}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+          >
+            <Text style={[styles.mainTabText, mainTab === "notifications" && styles.mainTabTextOn]}>Notifications</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.mainTab, mainTab === "leaderboard" && styles.mainTabOn]}
+            onPress={() => setMainTab("leaderboard")}
+            accessibilityRole="button"
+            accessibilityLabel="Leaderboard"
+          >
+            <Text style={[styles.mainTabText, mainTab === "leaderboard" && styles.mainTabTextOn]}>Leaderboard</Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <PostCard
-              post={item}
-              onPressRespect={onPressRespect}
-              onPressComment={(post) => setSelectedPost(post)}
-            />
-          )}
-          refreshControl={<RefreshControl refreshing={activityQuery.isRefetching} onRefresh={() => void activityQuery.refetch()} />}
-          onEndReached={() => {
-            if (activityQuery.hasNextPage && !activityQuery.isFetchingNextPage) {
-              void activityQuery.fetchNextPage();
-            }
-          }}
-          onEndReachedThreshold={0.4}
-          ListFooterComponent={
-            activityQuery.isFetchingNextPage ? (
-              <View style={styles.footerLoader}>
-                <ActivityIndicator color={DS_COLORS.ACCENT} />
-              </View>
-            ) : null
-          }
-        />
-      )}
-      <CommentSheet
-        visible={!!selectedPost}
-        postTitle={selectedPost?.challengeTitle ?? "Post"}
-        comments={commentsQuery.data ?? []}
-        loading={commentsQuery.isPending}
-        submitting={commentSubmitting}
-        onClose={() => setSelectedPost(null)}
-        onSubmit={async (text) => {
-          if (!selectedPost) return;
-          setCommentSubmitting(true);
-          try {
-            const result = await trpcMutate(TRPC.feed.comment, { eventId: selectedPost.id, text }) as { comment?: FeedComment };
-            queryClient.setQueryData(
-              ["community", "comments", selectedPost.id],
-              (prev: FeedComment[] | undefined) => [...(prev ?? []), ...(result.comment ? [result.comment] : [])]
-            );
-            updatePostCache(selectedPost.id, (post) => ({ ...post, comment_count: (post.comment_count ?? 0) + 1 }));
-          } catch (error) {
-            console.error("[CommunityFeed] comment failed:", error);
-          } finally {
-            setCommentSubmitting(false);
-          }
-        }}
-      />
+
+        {mainTab === "notifications" ? (
+          <NotificationsBody query={notifQuery} userId={user.id} />
+        ) : (
+          <LeaderboardBody
+            scope={scope}
+            setScope={setScope}
+            userId={user.id}
+            friendsBoard={friendsBoard}
+            teamBoard={teamBoard}
+            challengeBoard={challengeBoard}
+            myActive={myActive}
+            selectedChallengeId={selectedChallengeId}
+            setSelectedChallengeId={setSelectedChallengeId}
+            router={router}
+          />
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
+function NotificationsBody({
+  query,
+  userId,
+}: {
+  query: ReturnType<typeof useQuery<{ unread: NotifRow[]; earlier: NotifRow[] }>>;
+  userId: string;
+}) {
+  const qc = useQueryClient();
+
+  const onFollow = useCallback(
+    async (actorId: string) => {
+      try {
+        await trpcMutate(TRPC.profiles.followUser, { userId: actorId });
+        void qc.invalidateQueries({ queryKey: ["activity", "notifications", userId] });
+      } catch (e) {
+        console.error("[Activity] follow", e);
+      }
+    },
+    [qc, userId]
+  );
+
+  if (query.isPending) return <LoadingState message="Loading notifications..." />;
+  if (query.isError) return <ErrorState message="Couldn't load notifications" onRetry={() => void query.refetch()} />;
+
+  const unread = query.data?.unread ?? [];
+  const earlier = query.data?.earlier ?? [];
+
+  return (
+    <View>
+      {unread.length > 0 ? (
+        <>
+          <Text style={styles.groupLabel}>NEW</Text>
+          {unread.map((n) => (
+            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread />
+          ))}
+        </>
+      ) : null}
+      {earlier.length > 0 ? (
+        <>
+          <Text style={styles.groupLabel}>EARLIER</Text>
+          {earlier.map((n) => (
+            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread={false} />
+          ))}
+        </>
+      ) : null}
+      {unread.length === 0 && earlier.length === 0 ? (
+        <View style={styles.emptyLb}>
+          <Text style={styles.emptyTitle}>No notifications yet</Text>
+          <Text style={styles.emptySub}>Respects, comments, and follows show up here.</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function NotificationRow({
+  n,
+  onFollow,
+  unread,
+}: {
+  n: NotifRow;
+  onFollow: (id: string) => void;
+  unread: boolean;
+}) {
+  const text = getNotifText(n);
+  const colors = n.actorId ? getAvatarColor(n.actorId) : getAvatarColor(n.id);
+  const initial = (n.actorDisplayName ?? n.actorUsername ?? "?").charAt(0).toUpperCase();
+
+  return (
+    <View style={[styles.notifRow, DS_SHADOWS.cardSubtle, unread ? styles.notifUnread : styles.notifRead]}>
+      <View style={styles.avatarWrap}>
+        <View style={[styles.notifAvatar, { backgroundColor: colors.bg }]}>
+          <Text style={[styles.notifAvatarLetter, { color: colors.letter }]}>{n.type === "rank" ? "★" : initial}</Text>
+        </View>
+        <View
+          style={[
+            styles.typeBadge,
+            { backgroundColor: n.type === "respect" ? DS_COLORS.DISCOVER_CORAL : n.type === "comment" ? DS_COLORS.CELEB_BONUS_PURPLE : DS_COLORS.DISCOVER_GREEN },
+          ]}
+        >
+          <Text style={[styles.typeBadgeText, n.type === "follow" && styles.typeBadgeFollow]}>
+            {n.type === "respect" ? "🔥" : n.type === "comment" ? "💬" : n.type === "follow" ? "+" : "★"}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.notifBody}>
+        <Text style={styles.notifMain}>
+          {text.bold ? <Text style={styles.notifBold}>{text.bold}</Text> : null}
+          {text.rest}
+        </Text>
+        <Text style={styles.notifTime}>{relativeTime(n.createdAt)}</Text>
+      </View>
+      {n.type === "follow" && n.actorId ? (
+        <TouchableOpacity
+          style={styles.followBtn}
+          onPress={() => onFollow(n.actorId!)}
+          accessibilityRole="button"
+          accessibilityLabel="Follow back"
+        >
+          <Text style={styles.followBtnText}>Follow</Text>
+        </TouchableOpacity>
+      ) : n.type === "respect" || n.type === "comment" ? (
+        <View style={styles.thumbPlaceholder}>
+          <Text style={styles.thumbEmoji}>📸</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function LeaderboardBody({
+  scope,
+  setScope,
+  userId,
+  friendsBoard,
+  teamBoard,
+  challengeBoard,
+  myActive,
+  selectedChallengeId,
+  setSelectedChallengeId,
+  router,
+}: {
+  scope: LeaderScope;
+  setScope: (s: LeaderScope) => void;
+  userId: string;
+  friendsBoard: ReturnType<typeof useQuery<{ leaderPoints: number; entries: BoardEntry[] }>>;
+  teamBoard: ReturnType<typeof useQuery<{ teamName: string | null; entries: BoardEntry[] }>>;
+  challengeBoard: ReturnType<
+    typeof useQuery<{ leaderPoints: number; challengeTitle: string; visibility: string; entries: BoardEntry[] }>
+  >;
+  myActive: ReturnType<typeof useQuery<{ challenge_id?: string; challenges?: { id?: string; title?: string } }[]>>;
+  selectedChallengeId: string | null;
+  setSelectedChallengeId: (id: string) => void;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const activeList = myActive.data ?? [];
+
+  const loading =
+    (scope === "friends" && friendsBoard.isPending) ||
+    (scope === "teams" && teamBoard.isPending) ||
+    (scope === "challenge" && (myActive.isPending || challengeBoard.isPending));
+
+  const err =
+    (scope === "friends" && friendsBoard.isError) ||
+    (scope === "teams" && teamBoard.isError) ||
+    (scope === "challenge" && challengeBoard.isError);
+
+  return (
+    <View>
+      <View style={styles.scopeSwitcher}>
+        {(["friends", "teams", "challenge"] as const).map((s) => (
+          <TouchableOpacity
+            key={s}
+            style={[styles.scopeTab, scope === s && styles.scopeTabOn]}
+            onPress={() => setScope(s)}
+            accessibilityRole="button"
+            accessibilityLabel={s === "friends" ? "Friends leaderboard" : s === "teams" ? "Teams leaderboard" : "This challenge leaderboard"}
+          >
+            <Text style={[styles.scopeTabText, scope === s && styles.scopeTabTextOn]}>
+              {s === "friends" ? "Friends" : s === "teams" ? "Teams" : "This Challenge"}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {loading ? <LoadingState message="Loading leaderboard..." /> : null}
+      {err ? (
+        <ErrorState
+          message="Couldn't load leaderboard"
+          onRetry={() => {
+            void friendsBoard.refetch();
+            void teamBoard.refetch();
+            void challengeBoard.refetch();
+          }}
+        />
+      ) : null}
+
+      {!loading && !err && scope === "friends" ? (
+        <>
+          <View style={styles.scoreNote}>
+            <Text style={styles.scoreNoteIcon}>⚡</Text>
+            <Text style={styles.scoreNoteText}>
+              <Text style={styles.scoreNoteBold}>Overall consistency</Text>
+              {" — total check-ins × streak across all active challenges this week."}
+            </Text>
+          </View>
+          <BoardList entries={friendsBoard.data?.entries ?? []} leaderPoints={friendsBoard.data?.leaderPoints ?? 1} viewerId={userId} />
+        </>
+      ) : null}
+
+      {!loading && !err && scope === "teams" ? (
+        (teamBoard.data?.entries?.length ?? 0) === 0 ? (
+          <View style={styles.teamEmpty}>
+            <Text style={styles.teamEmptyEmoji}>🛡️</Text>
+            <Text style={styles.emptyTitle}>No teams yet</Text>
+            <Text style={styles.teamEmptySub}>Join or create a team to compete together.</Text>
+            <TouchableOpacity style={styles.findTeamBtn} onPress={() => router.push("/(tabs)/discover" as never)} accessibilityRole="button">
+              <Text style={styles.findTeamBtnText}>Find a team</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            {teamBoard.data?.teamName ? <Text style={styles.teamTitle}>{teamBoard.data.teamName}</Text> : null}
+            <BoardList entries={teamBoard.data?.entries ?? []} leaderPoints={teamBoard.data?.entries?.[0]?.points ?? 1} viewerId={userId} />
+          </>
+        )
+      ) : null}
+
+      {!loading && !err && scope === "challenge" ? (
+        <>
+          {activeList.length === 0 ? (
+            <View style={styles.emptyLb}>
+              <Target size={32} color={DS_COLORS.TEXT_MUTED} />
+              <Text style={styles.emptySub}>Join a challenge to see this leaderboard.</Text>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.challengePills}>
+              {activeList.map((item, i) => {
+                const cid = item.challenge_id ?? item.challenges?.id ?? "";
+                const title = item.challenges?.title ?? "Challenge";
+                const sel = cid === selectedChallengeId;
+                return (
+                  <TouchableOpacity
+                    key={cid || String(i)}
+                    style={[styles.challengePill, sel ? styles.challengePillOn : styles.challengePillOff]}
+                    onPress={() => cid && setSelectedChallengeId(cid)}
+                  >
+                    <Text style={[styles.challengePillText, sel && styles.challengePillTextOn]} numberOfLines={1}>
+                      {title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+          {selectedChallengeId ? (
+            <View
+              style={[
+                styles.privacyPill,
+                {
+                  backgroundColor:
+                    (challengeBoard.data?.visibility ?? "public").toLowerCase() === "friends"
+                      ? DS_COLORS.DISCOVER_DIFF_TINT_MED
+                      : (challengeBoard.data?.visibility ?? "public").toLowerCase() === "private"
+                        ? DS_COLORS.DISCOVER_DIVIDER
+                        : DS_COLORS.GREEN_BG,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.privacyPillText,
+                  {
+                    color:
+                      (challengeBoard.data?.visibility ?? "public").toLowerCase() === "friends"
+                        ? DS_COLORS.DISCOVER_BLUE
+                        : (challengeBoard.data?.visibility ?? "public").toLowerCase() === "private"
+                          ? DS_COLORS.TEXT_SECONDARY
+                          : DS_COLORS.GREEN,
+                  },
+                ]}
+              >
+                {(challengeBoard.data?.visibility ?? "public").toLowerCase() === "friends"
+                  ? "👥 Friends only"
+                  : (challengeBoard.data?.visibility ?? "public").toLowerCase() === "private"
+                    ? "🔒 Private — only you can see this"
+                    : `🌐 Public · ${challengeBoard.data?.entries.length ?? 0} people in this challenge`}
+              </Text>
+            </View>
+          ) : null}
+          <View style={styles.scoreNote}>
+            <Text style={styles.scoreNoteIcon}>🔥</Text>
+            <Text style={styles.scoreNoteText}>
+              <Text style={styles.scoreNoteBold}>Ranked by consistency</Text>
+              {" — daily check-ins × streak multiplier. Everyone started this challenge so the playing field is level."}
+            </Text>
+          </View>
+          <BoardList entries={challengeBoard.data?.entries ?? []} leaderPoints={challengeBoard.data?.leaderPoints ?? 1} viewerId={userId} />
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[]; leaderPoints: number; viewerId: string }) {
+  const viewer = entries.find((e) => e.userId === viewerId);
+  if (entries.length === 0) {
+    return (
+      <View style={styles.emptyLb}>
+        <Text style={styles.emptyTitle}>No entries yet</Text>
+        <Text style={styles.emptySub}>Check in this week to climb the board.</Text>
+      </View>
+    );
+  }
+
+  const first = entries[0]!;
+  const rest = entries.slice(1).filter((e) => e.userId !== viewerId);
+
+  return (
+    <View style={{ marginBottom: 24 }}>
+      <CrownCard entry={first} />
+      {rest.map((e) => (
+        <RegularRow key={e.userId} entry={e} leaderPoints={leaderPoints} />
+      ))}
+      {viewer && !(viewer.rank === 1 && first.userId === viewerId) ? (
+        <>
+          <View style={styles.yourRankDivider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.yourRankLabel}>Your rank</Text>
+            <View style={styles.dividerLine} />
+          </View>
+          <YourRankCard entry={viewer} />
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+function CrownCard({ entry }: { entry: BoardEntry }) {
+  const colors = getAvatarColor(entry.userId);
+  const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
+  return (
+    <View style={styles.crownCard}>
+      <View style={styles.crownEyebrow}>
+        <View style={styles.crownDot} />
+        <Text style={styles.crownEyebrowText}>MOST CONSISTENT THIS WEEK</Text>
+      </View>
+      <View style={styles.crownMainRow}>
+        <Text style={styles.crownRank}>#1</Text>
+        <View style={[styles.crownAvatar, { backgroundColor: colors.bg }]}>
+          <Text style={[styles.crownAvatarLetter, { color: colors.letter }]}>{initial}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={styles.nameRow}>
+            <Text style={styles.crownName}>{entry.displayName}</Text>
+            <View style={styles.crownStreakPill}>
+              <Text style={styles.crownStreakText}>🔥 {entry.currentStreak}</Text>
+            </View>
+          </View>
+          <Text style={styles.crownSub}>{entry.checkInsThisWeek} check-ins this week</Text>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <Text style={styles.crownPts}>{entry.points}</Text>
+          <Text style={styles.crownPtsLabel}>pts</Text>
+        </View>
+      </View>
+      <View style={styles.crownActions}>
+        <TouchableOpacity style={styles.crownPrimary} accessibilityRole="button" accessibilityLabel="Respect">
+          <Text style={styles.crownPrimaryText}>🔥 Respect</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.crownSecondary} accessibilityRole="button" accessibilityLabel="Comment">
+          <Text style={styles.crownSecondaryText}>💬 Comment</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+function RegularRow({ entry, leaderPoints }: { entry: BoardEntry; leaderPoints: number }) {
+  const colors = getAvatarColor(entry.userId);
+  const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
+  const pct = leaderPoints > 0 ? Math.min(100, (entry.points / leaderPoints) * 100) : 0;
+  return (
+    <View style={[styles.regRow, DS_SHADOWS.cardSubtle]}>
+      <Text style={[styles.regRank, { color: rankNumColor(entry.rank) }]}>#{entry.rank}</Text>
+      <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.regAvatarLetter, { color: colors.letter }]}>{initial}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <View style={styles.nameRow}>
+          <Text style={styles.regName}>{entry.displayName}</Text>
+          <View style={styles.regStreakPill}>
+            <Text style={styles.regStreakText}>🔥 {entry.currentStreak}</Text>
+          </View>
+        </View>
+        <Text style={styles.regSub}>{entry.checkInsThisWeek} check-ins · score {entry.points}</Text>
+        <View style={styles.regTrack}>
+          <View style={[styles.regFill, { width: `${pct}%` }]} />
+        </View>
+      </View>
+      <View style={{ alignItems: "flex-end" }}>
+        <Text style={styles.regPts}>{entry.points}</Text>
+        <Text style={styles.regPtsLabel}>pts</Text>
+      </View>
+    </View>
+  );
+}
+
+function YourRankCard({ entry }: { entry: BoardEntry }) {
+  const colors = getAvatarColor(entry.userId);
+  const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
+  const gap = entry.gapToAbove;
+  return (
+    <View style={styles.yourCard}>
+      <Text style={styles.yourRankNum}>#{entry.rank}</Text>
+      <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.regAvatarLetter, { color: colors.letter }]}>{initial}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.yourName}>{entry.displayName}</Text>
+        <Text style={styles.yourSub}>
+          {gap > 0 ? `${gap} pts behind #${entry.rank - 1}` : "You're at the top"}
+        </Text>
+      </View>
+      <Text style={styles.yourPts}>{entry.points}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: GRIIT_COLORS.background,
+  safe: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  scrollContent: { paddingBottom: 32 },
+  screenTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+    letterSpacing: -0.5,
+    paddingHorizontal: 18,
+    paddingTop: 8,
+    marginBottom: 14,
   },
-  headerTitle: {
-    paddingHorizontal: DS_SPACING.screenHorizontal,
-    paddingTop: DS_SPACING.sm,
-    ...DS_TYPOGRAPHY.sectionTitle,
-    color: DS_COLORS.challengeHeaderDark,
+  mainSwitcher: {
+    marginHorizontal: 12,
+    marginBottom: 14,
+    backgroundColor: DS_COLORS.ONBOARDING_BORDER,
+    borderRadius: 12,
+    padding: 3,
+    flexDirection: "row",
+    gap: 3,
   },
-  listContent: {
-    paddingBottom: DS_SPACING.xl,
-    paddingHorizontal: DS_SPACING.screenHorizontal,
-    paddingTop: DS_SPACING.md,
-  },
-  emptyWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  mainTab: { flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: "center" },
+  mainTabOn: { backgroundColor: DS_COLORS.WHITE },
+  mainTabText: { fontSize: 13, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  mainTabTextOn: { color: DS_COLORS.TEXT_PRIMARY },
+  groupLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: DS_COLORS.TAB_INACTIVE,
+    letterSpacing: 1.2,
     paddingHorizontal: 16,
+    marginBottom: 8,
+    marginTop: 4,
   },
-  emptyCard: {
-    alignItems: "center",
-    maxWidth: 300,
-  },
-  emptyTitle: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: "600",
-    color: DS_COLORS.challengeHeaderDark,
-  },
-  emptySubtitle: {
-    marginTop: 8,
-    fontSize: 13,
-    color: DS_COLORS.TEXT_SECONDARY,
-    textAlign: "center",
-    maxWidth: 260,
-  },
-  emptyCta: {
-    marginTop: 14,
-    borderRadius: DS_RADIUS.joinCta,
-    backgroundColor: DS_COLORS.ACCENT,
+  notifRow: {
+    backgroundColor: DS_COLORS.WHITE,
+    marginHorizontal: 12,
+    marginBottom: 6,
+    borderRadius: 14,
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    ...DS_SHADOWS.button,
+    paddingRight: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
-  emptyCtaText: {
+  notifUnread: { borderLeftWidth: 3, borderLeftColor: DS_COLORS.DISCOVER_CORAL, paddingLeft: 10 },
+  notifRead: { paddingLeft: 13 },
+  avatarWrap: { position: "relative", flexShrink: 0, marginLeft: 4 },
+  notifAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifAvatarLetter: { fontSize: 13, fontWeight: "700" },
+  typeBadge: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.BG_PAGE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  typeBadgeText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.WHITE },
+  typeBadgeFollow: { color: DS_COLORS.WHITE, fontWeight: "700" },
+  notifBody: { flex: 1 },
+  notifMain: { fontSize: 12, color: DS_COLORS.grayDarker, lineHeight: 17 },
+  notifBold: { fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  notifTime: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 2, fontWeight: "600" },
+  followBtn: {
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    borderRadius: 99,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  followBtnText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.WHITE },
+  thumbPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: DS_COLORS.BG_DARK,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thumbEmoji: { fontSize: 16, opacity: 0.6 },
+  scopeSwitcher: {
+    marginHorizontal: 12,
+    marginBottom: 14,
+    backgroundColor: DS_COLORS.ONBOARDING_BORDER,
+    borderRadius: 12,
+    padding: 3,
+    flexDirection: "row",
+    gap: 3,
+  },
+  scopeTab: { flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: "center" },
+  scopeTabOn: { backgroundColor: DS_COLORS.WHITE },
+  scopeTabText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  scopeTabTextOn: { color: DS_COLORS.TEXT_PRIMARY },
+  scoreNote: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: 12,
+    marginHorizontal: 12,
+    marginBottom: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  scoreNoteIcon: { fontSize: 14, marginTop: 1 },
+  scoreNoteText: { flex: 1, fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 16 },
+  scoreNoteBold: { fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  crownCard: {
+    backgroundColor: DS_COLORS.TEXT_PRIMARY,
+    borderRadius: 18,
+    marginHorizontal: 12,
+    marginBottom: 8,
+    padding: 16,
+  },
+  crownEyebrow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 10 },
+  crownDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: DS_COLORS.CELEB_BONUS_AMBER },
+  crownEyebrowText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: DS_COLORS.CELEB_BONUS_AMBER,
+    letterSpacing: 1.2,
+  },
+  crownMainRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
+  crownRank: { fontSize: 22, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER, width: 28 },
+  crownAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
+  crownAvatarLetter: { fontSize: 15, fontWeight: "700" },
+  crownName: { fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE },
+  crownStreakPill: {
+    backgroundColor: "rgba(200,147,26,0.25)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 99,
+  },
+  crownStreakText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER },
+  crownSub: { fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 },
+  crownPts: { fontSize: 20, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER, lineHeight: 20 },
+  crownPtsLabel: { fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: "600" },
+  crownActions: { flexDirection: "row", gap: 8 },
+  crownPrimary: {
+    flex: 1,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    borderRadius: 99,
+    paddingVertical: 9,
+    alignItems: "center",
+  },
+  crownPrimaryText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.WHITE },
+  crownSecondary: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 99,
+    paddingVertical: 9,
+    alignItems: "center",
+  },
+  crownSecondaryText: { fontSize: 12, fontWeight: "700", color: "rgba(255,255,255,0.5)" },
+  regRow: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: 14,
+    marginHorizontal: 12,
+    marginBottom: 6,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  regRank: { width: 24, textAlign: "center", fontSize: 16, fontWeight: "700" },
+  regAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  regAvatarLetter: { fontSize: 13, fontWeight: "700" },
+  regName: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  regStreakPill: {
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 99,
+  },
+  regStreakText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  regSub: { fontSize: 10, color: DS_COLORS.TAB_INACTIVE, marginTop: 1 },
+  regTrack: {
+    height: 2,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    borderRadius: 99,
+    marginTop: 6,
+    overflow: "hidden",
+  },
+  regFill: { height: 2, backgroundColor: DS_COLORS.DISCOVER_CORAL, borderRadius: 99 },
+  regPts: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  regPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_MUTED, fontWeight: "600" },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
+  yourRankDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "rgba(0,0,0,0.08)" },
+  yourRankLabel: { fontSize: 10, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  yourCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginHorizontal: 12,
+    marginBottom: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.ACCENT_TINT_BORDER,
+  },
+  yourRankNum: { width: 24, textAlign: "center", fontSize: 13, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  yourName: { fontSize: 12, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  yourSub: { fontSize: 10, color: DS_COLORS.TEXT_SECONDARY, marginTop: 1 },
+  yourPts: { fontSize: 14, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  challengePills: { paddingHorizontal: 12, paddingBottom: 12, gap: 8 },
+  challengePill: {
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 99,
+    marginRight: 8,
+    maxWidth: 200,
+  },
+  challengePillOn: { backgroundColor: DS_COLORS.TEXT_PRIMARY },
+  challengePillOff: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.08)",
+  },
+  challengePillText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TEXT_SECONDARY },
+  challengePillTextOn: { color: DS_COLORS.WHITE },
+  privacyPill: {
+    marginHorizontal: 12,
+    marginBottom: 10,
+    alignSelf: "flex-start",
+    paddingVertical: 3,
+    paddingHorizontal: 9,
+    borderRadius: 20,
+  },
+  privacyPillText: { fontSize: 10, fontWeight: "700" },
+  teamEmpty: { paddingVertical: 40, alignItems: "center", paddingHorizontal: 24 },
+  teamEmptyEmoji: { fontSize: 36, opacity: 0.25, marginBottom: 12 },
+  teamEmptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center", lineHeight: 18 },
+  findTeamBtn: {
+    marginTop: 16,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    borderRadius: 99,
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+  },
+  findTeamBtnText: { fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE },
+  teamTitle: {
     fontSize: 14,
-    fontWeight: "600",
-    color: DS_COLORS.WHITE,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
-  footerLoader: {
-    paddingVertical: DS_SPACING.md,
-  },
+  emptyLb: { paddingVertical: 24, alignItems: "center", paddingHorizontal: 20 },
+  emptyTitle: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
+  emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
+  guestWrap: { padding: 24 },
+  guestText: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
 });

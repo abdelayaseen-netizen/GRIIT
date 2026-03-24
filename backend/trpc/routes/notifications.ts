@@ -7,6 +7,79 @@ const PUSH_TOKEN_MAX = 500;
 const DEVICE_ID_MAX = 256;
 
 export const notificationsRouter = createTRPCRouter({
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    const { data: unread, error: uErr } = await ctx.supabase
+      .from("in_app_notifications")
+      .select("id, type, read, actor_id, metadata, created_at")
+      .eq("user_id", ctx.userId)
+      .eq("read", false)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (uErr && (uErr as PgError).code !== "42P01") {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: uErr.message });
+    }
+
+    const { data: earlier, error: eErr } = await ctx.supabase
+      .from("in_app_notifications")
+      .select("id, type, read, actor_id, metadata, created_at")
+      .eq("user_id", ctx.userId)
+      .eq("read", true)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (eErr && (eErr as PgError).code !== "42P01") {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: eErr.message });
+    }
+
+    const uRows = (unread ?? []) as {
+      id: string;
+      type: string;
+      read: boolean;
+      actor_id: string | null;
+      metadata: Record<string, unknown>;
+      created_at: string;
+    }[];
+    const eRows = (earlier ?? []) as typeof uRows;
+    const actorIds = [...new Set([...uRows, ...eRows].map((r) => r.actor_id).filter(Boolean))] as string[];
+
+    const { data: actors } = actorIds.length
+      ? await ctx.supabase.from("profiles").select("user_id, username, display_name, avatar_url").in("user_id", actorIds)
+      : { data: [] as { user_id: string; username?: string; display_name?: string; avatar_url?: string | null }[] };
+
+    const actorMap = new Map((actors ?? []).map((a) => [a.user_id, a]));
+
+    const mapRow = (r: (typeof uRows)[0]) => {
+      const act = r.actor_id ? actorMap.get(r.actor_id) : null;
+      return {
+        id: r.id,
+        type: r.type as "respect" | "comment" | "follow" | "rank",
+        read: r.read,
+        createdAt: r.created_at,
+        actorId: r.actor_id,
+        actorUsername: act?.username ?? null,
+        actorDisplayName: act?.display_name ?? act?.username ?? null,
+        actorAvatarUrl: act?.avatar_url ?? null,
+        metadata: r.metadata ?? {},
+      };
+    };
+
+    return {
+      unread: uRows.map(mapRow),
+      earlier: eRows.map(mapRow),
+    };
+  }),
+
+  markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
+    const { error } = await ctx.supabase
+      .from("in_app_notifications")
+      .update({ read: true })
+      .eq("user_id", ctx.userId)
+      .eq("read", false);
+    if (error && (error as PgError).code !== "42P01") {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+    }
+    return { success: true as const };
+  }),
+
   registerToken: protectedProcedure
     .input(z.object({
       token: z.string().min(1).max(PUSH_TOKEN_MAX),
