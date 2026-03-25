@@ -70,6 +70,9 @@ export default function CommentSheet({
               data={sorted}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.listContent}
+              removeClippedSubviews
+              initialNumToRender={12}
+              maxToRenderPerBatch={8}
               renderItem={({ item }) => (
                 <View style={styles.commentRow}>
                   <Text style={styles.commentName}>{item.display_name}</Text>

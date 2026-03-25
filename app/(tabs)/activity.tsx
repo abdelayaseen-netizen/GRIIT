@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Share } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Bell, Target, Users } from "lucide-react-native";
@@ -13,6 +13,7 @@ import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
 import { getAvatarColor } from "@/lib/avatar";
 import { consistencyScore } from "@/lib/scoring";
 import { relativeTime } from "@/lib/utils/relativeTime";
+import { shareInvite } from "@/lib/share";
 import LoadingState from "@/components/shared/LoadingState";
 import { SkeletonLeaderboardRow } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
@@ -404,8 +405,8 @@ function LeaderboardBody({
 }) {
   const activeList = myActive.data ?? [];
   const friendEntries = friendsBoard.data?.entries ?? [];
-  const globalRaw = globalLeaderboard.data?.entries ?? [];
-  const globalEntries: BoardEntry[] = (() => {
+  const globalEntries: BoardEntry[] = useMemo(() => {
+    const globalRaw = globalLeaderboard.data?.entries ?? [];
     const mapped = globalRaw.map((e) => {
       const points = consistencyScore(e.securedDaysThisWeek, e.currentStreak);
       return {
@@ -427,13 +428,10 @@ function LeaderboardBody({
       progressVsLeader: leaderPts > 0 ? Math.min(100, Math.round((r.points / leaderPts) * 100)) : 0,
       gapToAbove: i > 0 ? Math.max(0, (arr[i - 1]?.points ?? 0) - r.points) : 0,
     }));
-  })();
+  }, [globalLeaderboard.data?.entries]);
   const globalLeaderPoints = globalEntries[0]?.points ?? 1;
   const handleInviteFriend = async () => {
-    await Share.share({
-      message: "Join me on GRIIT — the discipline challenge app. https://griit.fit",
-      title: "Join GRIIT",
-    });
+    await shareInvite();
   };
 
   const loading =

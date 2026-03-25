@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
-export function SkeletonProfile() {
+export const SkeletonProfile = React.memo(function SkeletonProfile() {
   return (
     <View style={styles.root} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View style={styles.avatarBlock}>
@@ -21,7 +21,7 @@ export function SkeletonProfile() {
       <SkeletonBase width="100%" height={80} borderRadius={12} style={styles.mt10} />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {

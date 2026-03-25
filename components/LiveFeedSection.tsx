@@ -445,6 +445,10 @@ export default function LiveFeedSection() {
           renderItem={renderItem}
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
           ListEmptyComponent={listEmpty}
+          removeClippedSubviews
+          initialNumToRender={5}
+          maxToRenderPerBatch={3}
+          windowSize={10}
         />
       )}
 

@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
-export function SkeletonHeroCard() {
+export const SkeletonHeroCard = React.memo(function SkeletonHeroCard() {
   return (
     <View style={styles.card}>
       <SkeletonBase width={120} height={18} borderRadius={9} />
@@ -15,7 +15,7 @@ export function SkeletonHeroCard() {
       <SkeletonBase width="100%" height={48} borderRadius={24} style={styles.mt14} />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

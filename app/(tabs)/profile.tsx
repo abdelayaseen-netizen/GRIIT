@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Share } from "react-native";
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { trackEvent } from "@/lib/analytics";
+import { sharePlainMessage } from "@/lib/share";
 import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 import { supabase } from "@/lib/supabase";
 import { cancelLapsedUserReminders } from "@/lib/notifications";
@@ -99,7 +100,7 @@ export default function ProfileScreen() {
     trackEvent("share_tapped", { content_type: "profile" });
     const rank = stats?.tier ?? "Starter";
     const shareText = `Check out my GRIIT profile!\n\n🔥 ${streak} day streak\n⚡ ${points} discipline points\n🎯 ${rank} rank\n\nDownload GRIIT and start building discipline.`;
-    await Share.share({ message: shareText });
+    await sharePlainMessage(shareText);
   }, [stats?.tier, streak, points]);
 
   const performSignOut = useCallback(async () => {

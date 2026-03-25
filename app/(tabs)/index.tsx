@@ -539,7 +539,7 @@ export default function HomeScreen() {
         streakCount={streak}
         freezesRemaining={profile?.streak_freezes_remaining ?? 1}
         onUseFreeze={() => {
-          console.log("[StreakFreeze] Freeze used");
+          if (__DEV__) console.log("[StreakFreeze] Freeze used");
           setShowFreezeModal(false);
         }}
         onLetReset={() => setShowFreezeModal(false)}

@@ -9,7 +9,7 @@ interface SkeletonBaseProps {
   style?: ViewStyle;
 }
 
-export function SkeletonBase({
+export const SkeletonBase = React.memo(function SkeletonBase({
   width = "100%",
   height,
   borderRadius = 8,
@@ -85,7 +85,7 @@ export function SkeletonBase({
       importantForAccessibility="no-hide-descendants"
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   skeleton: {

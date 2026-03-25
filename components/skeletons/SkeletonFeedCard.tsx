@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
-export function SkeletonFeedCard() {
+export const SkeletonFeedCard = React.memo(function SkeletonFeedCard() {
   return (
     <View style={[styles.card, DS_SHADOWS.cardSubtle]}>
       <View style={styles.header}>
@@ -23,7 +23,7 @@ export function SkeletonFeedCard() {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

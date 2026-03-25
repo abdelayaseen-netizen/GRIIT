@@ -1882,7 +1882,7 @@ export default function ChallengeDetailScreen() {
               });
             })
           );
-          console.log("[TimeWindow] Saved times:", times);
+          if (__DEV__) console.log("[TimeWindow] Saved times:", times);
           onTimeWindowComplete();
         }}
         onSkip={onTimeWindowComplete}

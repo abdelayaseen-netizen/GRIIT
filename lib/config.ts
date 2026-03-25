@@ -25,3 +25,9 @@ export const APP_STORE_URLS = {
   android: `https://play.google.com/store/apps/details?id=${PLAY_STORE_PACKAGE}`,
   default: DEEP_LINK_BASE_URL,
 } as const;
+
+/*
+ * Image perf: react-native-fast-image is not a dependency; the app relies on expo-image and
+ * React Native Image in places. If remote image decode shows up in profiling, evaluate FastImage
+ * or heavier caching — not done in the clean-code pass to avoid new packages.
+ */

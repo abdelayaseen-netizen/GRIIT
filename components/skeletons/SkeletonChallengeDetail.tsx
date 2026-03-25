@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
-export function SkeletonChallengeDetail() {
+export const SkeletonChallengeDetail = React.memo(function SkeletonChallengeDetail() {
   return (
     <View style={styles.root} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View style={styles.header}>
@@ -22,7 +22,7 @@ export function SkeletonChallengeDetail() {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {

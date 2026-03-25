@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
-export function SkeletonChallengeCard() {
+export const SkeletonChallengeCard = React.memo(function SkeletonChallengeCard() {
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
@@ -19,7 +19,7 @@ export function SkeletonChallengeCard() {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

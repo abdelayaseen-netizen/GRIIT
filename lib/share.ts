@@ -31,6 +31,18 @@ async function shareOrCopy(message: string, title?: string): Promise<void> {
   await Share.share({ message, title: title ?? "GRIIT" });
 }
 
+/** Invite-style share for leaderboards and similar (web + native). */
+export async function shareInvite(message?: string, title?: string): Promise<void> {
+  const text =
+    message ?? "Join me on GRIIT — the discipline challenge app. https://griit.fit";
+  await shareOrCopy(text, title ?? "Join GRIIT");
+}
+
+/** Arbitrary share text via the same path as other GRIIT shares. */
+export async function sharePlainMessage(message: string, title?: string): Promise<void> {
+  await shareOrCopy(message, title);
+}
+
 export async function shareChallenge(
   challenge: {
     name: string;

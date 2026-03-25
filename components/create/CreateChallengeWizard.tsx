@@ -10,7 +10,6 @@ import {
   Easing,
   KeyboardAvoidingView,
   Platform,
-  Share,
   Dimensions,
   Modal,
   Pressable,
@@ -44,6 +43,7 @@ import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
+import { sharePlainMessage } from "@/lib/share";
 import type { ChallengeType, ChallengeVisibility, ReplayPolicy } from "@/types";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
 import NewTaskModal from "@/components/create/NewTaskModal";
@@ -392,9 +392,7 @@ export default function CreateChallengeWizard() {
         });
         if (who === "duo") {
           setTimeout(() => {
-            void Share.share({
-              message: `Join my challenge on GRIIT: ${title.trim()}`,
-            });
+            void sharePlainMessage(`Join my challenge on GRIIT: ${title.trim()}`);
           }, 400);
         }
       } else {
@@ -891,7 +889,7 @@ export default function CreateChallengeWizard() {
                   <Text style={styles.caption}>Your partner must accept before the challenge begins.</Text>
                   <TouchableOpacity
                     style={styles.outlineBtn}
-                    onPress={() => void Share.share({ message: "Join me on GRIIT!" })}
+                    onPress={() => void sharePlainMessage("Join me on GRIIT!")}
                     accessibilityRole="button"
                     accessibilityLabel="Share duo invite link for this challenge"
                   >
@@ -904,7 +902,7 @@ export default function CreateChallengeWizard() {
                   <Text style={styles.fieldLabel}>Invite your squad</Text>
                   <TouchableOpacity
                     style={styles.outlineBtn}
-                    onPress={() => void Share.share({ message: "Join my squad challenge on GRIIT!" })}
+                    onPress={() => void sharePlainMessage("Join my squad challenge on GRIIT!")}
                     accessibilityRole="button"
                     accessibilityLabel="Share squad invite link for this challenge"
                   >
@@ -1061,7 +1059,7 @@ export default function CreateChallengeWizard() {
               });
             })
           );
-          console.log("[TimeWindow] Saved times:", times);
+          if (__DEV__) console.log("[TimeWindow] Saved times:", times);
           finishAfterTimePrompt();
         }}
         onSkip={finishAfterTimePrompt}

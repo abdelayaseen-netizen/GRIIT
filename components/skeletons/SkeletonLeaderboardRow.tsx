@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
-export function SkeletonLeaderboardRow() {
+export const SkeletonLeaderboardRow = React.memo(function SkeletonLeaderboardRow() {
   return (
     <View style={styles.row}>
       <SkeletonBase width={24} height={16} borderRadius={4} />
@@ -15,7 +15,7 @@ export function SkeletonLeaderboardRow() {
       <SkeletonBase width={36} height={16} borderRadius={4} />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

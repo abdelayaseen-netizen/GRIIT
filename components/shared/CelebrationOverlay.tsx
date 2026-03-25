@@ -9,12 +9,12 @@ import {
   Animated,
   Dimensions,
   Easing,
-  Share,
 } from "react-native";
 import { CheckCircle2, Flame, Trophy, Share2 } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 import { useCelebrationStore, type CelebrationType } from "@/store/celebrationStore";
 import { captureError } from "@/lib/sentry";
+import { sharePlainMessage } from "@/lib/share";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const PARTICLE_COUNT = 36;
@@ -64,10 +64,7 @@ export default function CelebrationOverlay() {
     const msg = shareMessage?.trim();
     if (!msg) return;
     try {
-      await Share.share({
-        message: msg,
-        title: "Join my GRIIT challenge",
-      });
+      await sharePlainMessage(msg, "Join my GRIIT challenge");
     } catch (error) {
       captureError(error, "CelebrationOverlayShare");
       console.error("[Share] Error:", error);

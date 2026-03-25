@@ -568,7 +568,6 @@ export async function scheduleChallengeCountdowns(
  */
 export async function registerForPushNotifications(): Promise<string | null> {
   if (!Device.isDevice) {
-    console.log("[Notifications] Skipping — not a physical device");
     return null;
   }
 
@@ -582,7 +581,6 @@ export async function registerForPushNotifications(): Promise<string | null> {
     }
 
     if (finalStatus !== "granted") {
-      console.log("[Notifications] Permission denied by user");
       return null;
     }
 
@@ -639,10 +637,6 @@ export async function scheduleTaskReminder(params: {
         minute,
       },
     });
-
-    console.log(
-      `[Notifications] Scheduled daily reminder at ${hour}:${String(minute).padStart(2, "0")} for ${taskName}`
-    );
   } catch (error) {
     captureError(error, "scheduleTaskReminder");
   }
@@ -674,8 +668,6 @@ export async function scheduleStreakReminder(streakCount: number): Promise<void>
         minute: 0,
       },
     });
-
-    console.log("[Notifications] 10pm streak reminder scheduled");
   } catch (error) {
     captureError(error, "scheduleStreakReminder");
   }
@@ -690,7 +682,6 @@ export async function cancelChallengeReminders(challengeId: string): Promise<voi
     const prefix = `task-${challengeId}`;
     const toCancel = scheduled.filter((n) => (n.identifier ?? "").startsWith(prefix));
     await Promise.all(toCancel.map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier!)));
-    console.log(`[Notifications] Cancelled ${toCancel.length} reminders for challenge ${challengeId}`);
   } catch (error) {
     captureError(error, "cancelChallengeReminders");
   }
@@ -702,7 +693,6 @@ export async function cancelChallengeReminders(challengeId: string): Promise<voi
 export async function cancelAllNotifications(): Promise<void> {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    console.log("[Notifications] All notifications cancelled");
   } catch (error) {
     captureError(error, "cancelAllNotifications");
   }
