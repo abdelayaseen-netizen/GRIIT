@@ -19,6 +19,7 @@ import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
+import { captureError } from "@/lib/sentry";
 import { useOnboardingStore, type IntensityLevel } from "@/store/onboardingStore";
 
 function normalizeUsername(raw: string): string {
@@ -143,6 +144,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
         track({ name: "onboarding_profile_created" });
         onComplete();
       } catch (e: unknown) {
+        captureError(e, "OnboardingProfileSetup");
         setError(e instanceof Error ? e.message : "Something went wrong.");
       } finally {
         setSaving(false);

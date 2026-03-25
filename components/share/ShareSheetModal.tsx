@@ -17,6 +17,7 @@ import { GRIIT_COLORS, DS_COLORS } from "@/lib/design-system";
 import { shareToInstagramStory } from "@/lib/share";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { captureError } from "@/lib/sentry";
 import {
   StatementCard,
   TransparentCard,
@@ -169,6 +170,7 @@ export default function ShareSheetModal({
         }
         if (completionId && mode !== "save") {
           trpcMutate(TRPC.checkins.markAsShared, { completionId }).catch((e) => {
+            captureError(e, "ShareSheetModalMarkAsShared");
             if (__DEV__) console.error("[ShareSheetModal] markAsShared failed:", e);
           });
         }

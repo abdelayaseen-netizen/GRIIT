@@ -2,6 +2,7 @@ import { serialize, deserialize } from "superjson";
 import { supabase } from "./supabase";
 import { getTrpcUrl, fetchWithRetry } from "./api";
 import { notifySessionExpired } from "./auth-expiry";
+import { captureError } from "@/lib/sentry";
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -94,7 +95,8 @@ export async function trpcMutate<T = any>(
   let json: { result?: { data?: unknown }; error?: { message?: string; data?: { code?: string } } };
   try {
     json = JSON.parse(responseText);
-  } catch {
+  } catch (e) {
+    captureError(e, "tRPCMutateInvalidJson");
     throw new Error(`tRPC mutation failed: ${path} — invalid JSON response`);
   }
 

@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, getCategoryColors } from "@/lib/design-system";
+import { captureError } from "@/lib/sentry";
 
 const MAX_NAME_LEN = 30;
 const MIN_NAME_LEN = 3;
@@ -95,6 +96,7 @@ export default function CreateTeamScreen() {
         },
       } as never);
     } catch (error) {
+      captureError(error, "CreateTeam");
       console.error("[CreateTeam] create failed:", error);
       setFormError(error instanceof Error ? error.message : "Could not create team.");
     } finally {

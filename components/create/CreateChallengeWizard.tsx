@@ -43,6 +43,7 @@ import { estimateDailyMinutes, formatEstimatedDailyLabel, type EstimateTaskInput
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { captureError } from "@/lib/sentry";
 import type { ChallengeType, ChallengeVisibility, ReplayPolicy } from "@/types";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
 import NewTaskModal from "@/components/create/NewTaskModal";
@@ -176,6 +177,7 @@ export default function CreateChallengeWizard() {
         const raw = await AsyncStorage.getItem(DRAFT_KEY);
         if (raw) setResumeBanner(true);
       } catch (e) {
+        captureError(e, "CreateChallengeWizardDraftRead");
         console.error("[CreateChallengeWizard] draft read failed:", e);
       }
     })();
@@ -286,6 +288,7 @@ export default function CreateChallengeWizard() {
     try {
       await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftPayload()));
     } catch (e) {
+      captureError(e, "CreateChallengeWizardSaveDraft");
       if (__DEV__) console.error("[CreateChallengeWizard] save draft failed:", e);
     }
     router.back();
@@ -325,6 +328,7 @@ export default function CreateChallengeWizard() {
       if (typeof d.step === "number") setStep(Math.min(4, Math.max(1, d.step)));
       setResumeBanner(false);
     } catch (e) {
+      captureError(e, "CreateChallengeWizardResumeDraft");
       if (__DEV__) console.error("[CreateChallengeWizard] resume draft failed:", e);
     }
   }, []);
@@ -397,6 +401,7 @@ export default function CreateChallengeWizard() {
         router.replace(ROUTES.TABS_DISCOVER as never);
       }
     } catch (e: unknown) {
+      captureError(e, "CreateChallengeWizardLaunch");
       showWizardError(e instanceof Error ? e.message : "Try again.");
     } finally {
       setSubmitting(false);

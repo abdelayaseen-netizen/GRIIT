@@ -16,6 +16,7 @@ import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
+import { captureError } from "@/lib/sentry";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -50,6 +51,7 @@ export default function ForgotPasswordScreen() {
       }
       setSent(true);
     } catch (e: unknown) {
+      captureError(e, "AuthForgotPassword");
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);

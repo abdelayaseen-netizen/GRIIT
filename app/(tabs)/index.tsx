@@ -23,6 +23,7 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { captureError } from "@/lib/sentry";
 import type { TodayCheckinForUser, StatsFromApi, ChallengeTaskFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
 import GoalCard from "@/components/home/GoalCard";
@@ -95,6 +96,7 @@ function buildTaskConfigParam(task: ChallengeTaskFromApi | undefined): string {
       journal_prompt: typeof t.journal_prompt === "string" ? t.journal_prompt : undefined,
     });
   } catch (err) {
+    captureError(err, "HomeBuildTaskConfigParam");
     console.error("[Home] buildTaskConfigParam failed:", err);
     return "{}";
   }
@@ -284,6 +286,7 @@ export default function HomeScreen() {
       void homeQuery.refetch();
       void refetchAll();
     } catch (err) {
+      captureError(err, "HomeLeaveChallenge");
       console.error("[Home] leave challenge failed:", err);
       const msg =
         err instanceof Error ? err.message : "Could not leave this challenge. Try again.";

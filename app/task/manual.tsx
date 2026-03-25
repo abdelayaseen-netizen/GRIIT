@@ -9,6 +9,7 @@ import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { captureError } from "@/lib/sentry";
 
 /**
  * Manual / simple task completion: user taps "Mark as Complete" with no proof.
@@ -44,6 +45,7 @@ export default function ManualTaskScreen() {
       }
       router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
     } catch (err: unknown) {
+      captureError(err, "ManualTaskComplete");
       showError(err instanceof Error ? err.message : "Couldn't save. Tap to retry.");
     } finally {
       setLoading(false);

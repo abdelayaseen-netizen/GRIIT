@@ -6,6 +6,7 @@ import ChallengeCard, { TodayTaskItem } from "./ChallengeCard";
 import EmptyChallengesCard from "./EmptyChallengesCard";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import type { TodayCheckinForUser } from "@/types";
+import { captureError } from "@/lib/sentry";
 
 interface TaskFromApi {
   id: string;
@@ -74,6 +75,7 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
           setTodayCheckins(Array.isArray(checkins) ? checkins : []);
         }
       } catch (err) {
+        captureError(err, "ActiveChallengesLoad");
         console.error("[ActiveChallenges] load failed:", err);
         if (!cancelled) setActiveList([]);
       } finally {

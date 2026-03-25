@@ -23,6 +23,7 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { captureError } from "@/lib/sentry";
 
 type ListData = {
   accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[];
@@ -46,6 +47,7 @@ export default function AccountabilityScreen() {
       const result = await trpcQuery(TRPC.accountability.listMine) as ListData;
       setData(result ?? { accepted: [], incomingPending: [], outgoingPending: [] });
     } catch (e) {
+      captureError(e, "AccountabilityLoad");
       if (__DEV__) console.error("[accountability] load failed:", e);
       setLoadError(true);
     } finally {
@@ -84,6 +86,7 @@ export default function AccountabilityScreen() {
       await trpcMutate("accountability.remove", { partnerId });
       await load();
     } catch (e: unknown) {
+      captureError(e, "AccountabilityRemovePartner");
       showError(e instanceof Error ? e.message : "Could not remove.");
     } finally {
       setActingId(null);
@@ -97,6 +100,7 @@ export default function AccountabilityScreen() {
         await trpcMutate(TRPC.accountability.respond, { inviteId, action });
         await load();
       } catch (e: unknown) {
+        captureError(e, "AccountabilityRespondInvite");
         showError(e instanceof Error ? e.message : "Could not update invite.");
       } finally {
         setActingId(null);
@@ -112,6 +116,7 @@ export default function AccountabilityScreen() {
         await trpcMutate("accountability.remove", { partnerId });
         await load();
       } catch (e: unknown) {
+        captureError(e, "AccountabilityCancelOutgoing");
         showError(e instanceof Error ? e.message : "Could not cancel invite.");
       } finally {
         setActingId(null);

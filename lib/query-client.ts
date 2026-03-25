@@ -1,9 +1,20 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
+import { captureError } from "@/lib/sentry";
 
 const STALE_TIME = 5 * 60 * 1000; // 5 min fresh
 const GC_TIME = 10 * 60 * 1000;  // 10 min cache (gcTime is the new name for cacheTime in v5)
 
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      captureError(error, "ReactQuery");
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      captureError(error, "ReactMutation");
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: STALE_TIME,

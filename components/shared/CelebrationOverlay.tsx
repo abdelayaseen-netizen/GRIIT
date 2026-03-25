@@ -14,6 +14,7 @@ import {
 import { CheckCircle2, Flame, Trophy, Share2 } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 import { useCelebrationStore, type CelebrationType } from "@/store/celebrationStore";
+import { captureError } from "@/lib/sentry";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const PARTICLE_COUNT = 36;
@@ -68,6 +69,7 @@ export default function CelebrationOverlay() {
         title: "Join my GRIIT challenge",
       });
     } catch (error) {
+      captureError(error, "CelebrationOverlayShare");
       console.error("[Share] Error:", error);
     }
   };

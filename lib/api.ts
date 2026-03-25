@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { TRPC_ERROR_CODE, TRPC_ERROR_TITLES, TRPC_ERROR_USER_MESSAGE } from '@/lib/trpc-errors';
+import { captureError } from '@/lib/sentry';
 
 /**
  * Backend path constants. Must match backend/hono.ts exactly:
@@ -156,6 +157,7 @@ export async function checkHealth(): Promise<HealthCheckResult> {
     const data = await res.json();
     return { ok: data?.ok === true, responseTimeMs, statusCode: res.status };
   } catch (error) {
+    captureError(error, 'checkHealth');
     const responseTimeMs = Date.now() - start;
     const msg = formatError(error);
     return { ok: false, responseTimeMs, errorMessage: msg };
@@ -173,7 +175,8 @@ export function formatError(error: unknown): string {
     if (typeof obj.message === 'string') return obj.message;
     try {
       return JSON.stringify(error);
-    } catch {
+    } catch (e) {
+      captureError(e, 'formatErrorStringify');
       return String(error);
     }
   }
@@ -220,7 +223,8 @@ export async function checkDbTables(): Promise<DbSanityResult> {
     }
 
     return { ok: true, missingTables: [] };
-  } catch {
+  } catch (error) {
+    captureError(error, 'checkDbTables');
     return { ok: true, missingTables: [] };
   }
 }

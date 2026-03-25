@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import { DS_COLORS } from '@/lib/design-system';
+import { captureError } from '@/lib/sentry';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -65,6 +66,7 @@ export default function EditProfileScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
     } catch (err: unknown) {
+      captureError(err, 'EditProfileUpdate');
       setFormError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setIsPending(false);

@@ -25,7 +25,7 @@ import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { initializePurchases } from "@/lib/revenue-cat";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
-import { initialiseSentry } from "@/lib/sentry";
+import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
 
 initialiseSentry();
@@ -118,6 +118,7 @@ function AuthRedirector() {
       }
       done();
     } catch (err) {
+      captureError(err, "AuthRedirectorCheckProfile");
       // error swallowed — handle in UI
       if (retry < maxRetries) {
         await checkProfile(userId, retry + 1);
@@ -255,7 +256,8 @@ function RootLayoutNav() {
       try {
         const completed = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
         setNeedsOnboarding(completed !== "true");
-      } catch {
+      } catch (e) {
+        captureError(e, "RootLayoutAsyncStorageOnboarding");
         setNeedsOnboarding(true);
       }
       setCheckingOnboarding(false);

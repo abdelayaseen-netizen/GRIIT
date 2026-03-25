@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { captureError } from "@/lib/sentry";
 import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
 import { getAvatarColor } from "@/lib/avatar";
 import { consistencyScore } from "@/lib/scoring";
@@ -147,6 +148,7 @@ export default function ActivityScreen() {
         await trpcMutate(TRPC.notifications.markAllRead);
         if (!cancelled) void queryClient.invalidateQueries({ queryKey: ["activity", "notifications", user.id] });
       } catch (e) {
+        captureError(e, "ActivityMarkAllRead");
         console.error("[Activity] markAllRead", e);
       }
     })();
@@ -255,6 +257,7 @@ function NotificationsBody({
         await trpcMutate(TRPC.profiles.followUser, { userId: actorId });
         void qc.invalidateQueries({ queryKey: ["activity", "notifications", userId] });
       } catch (e) {
+        captureError(e, "ActivityFollowUser");
         console.error("[Activity] follow", e);
       }
     },

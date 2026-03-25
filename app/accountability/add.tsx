@@ -20,6 +20,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import { captureError } from "@/lib/sentry";
 
 type SearchHit = { user_id: string; username: string; display_name: string };
 
@@ -79,6 +80,7 @@ export default function AddAccountabilityPartnerScreen() {
           router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
         }
       } catch (e: unknown) {
+        captureError(e, "AccountabilityAddInvite");
         showError(e instanceof Error ? e.message : "Could not send invite.");
       } finally {
         setInvitingId(null);

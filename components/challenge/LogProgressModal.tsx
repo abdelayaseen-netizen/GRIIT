@@ -13,6 +13,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS } from "@/lib/design-system";
+import { captureError } from "@/lib/sentry";
 
 interface LogProgressModalProps {
   visible: boolean;
@@ -42,6 +43,7 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
       setNote("");
       onClose();
     } catch (e: unknown) {
+      captureError(e, "LogProgressModalSubmit");
       setError((e as Error)?.message ?? "Failed to log. Try again.");
     } finally {
       setSubmitting(false);

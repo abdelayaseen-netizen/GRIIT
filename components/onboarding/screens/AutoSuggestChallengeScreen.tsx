@@ -14,6 +14,7 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
+import { captureError } from "@/lib/sentry";
 
 interface AutoSuggestChallengeScreenProps {
   onJoinComplete: () => void;
@@ -101,7 +102,8 @@ export default function AutoSuggestChallengeScreen({
           .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
           .eq("user_id", user.id);
       }
-    } catch {
+    } catch (e) {
+      captureError(e, "AutoSuggestOnboardingComplete");
       /* best-effort */
     }
     next();
@@ -120,6 +122,7 @@ export default function AutoSuggestChallengeScreen({
       track({ name: "onboarding_challenge_joined", challenge_id: challengeId });
       await setOnboardingCompleteAndContinue(onJoinComplete);
     } catch (e: unknown) {
+      captureError(e, "AutoSuggestChallengeJoin");
       setError(e instanceof Error ? e.message : "Could not join. Try again.");
     } finally {
       setJoiningId(null);

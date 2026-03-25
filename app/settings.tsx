@@ -28,6 +28,7 @@ import { PremiumBadge } from "@/components/PremiumBadge";
 import { restorePurchases } from "@/lib/subscription";
 import { useApp } from "@/contexts/AppContext";
 import { ROUTES } from "@/lib/routes";
+import { captureError } from "@/lib/sentry";
 import {
   cancelLapsedUserReminders,
   cancelMorningMotivation,
@@ -168,7 +169,8 @@ export default function SettingsScreen() {
       setMorningKickoff(data?.morning_kickoff_enabled !== false);
       setWeeklySummary(data?.weekly_summary_enabled !== false);
       setFriendActivity(data?.friend_activity_enabled !== false);
-    } catch {
+    } catch (e) {
+      captureError(e, "SettingsLoadReminder");
       // ignore
     } finally {
       setReminderLoading(false);
@@ -180,7 +182,8 @@ export default function SettingsScreen() {
     try {
       const data = await trpcQuery(TRPC.accountability.listMine) as { accepted: unknown[] };
       setAccountabilityCount(data?.accepted?.length ?? 0);
-    } catch {
+    } catch (e) {
+      captureError(e, "SettingsLoadAccountability");
       // ignore
     }
   }, [isGuest]);
@@ -191,7 +194,8 @@ export default function SettingsScreen() {
       const data = await trpcQuery("profiles.get") as { profile_visibility?: string | null };
       const v = data?.profile_visibility;
       if (v === "public" || v === "friends" || v === "private") setProfileVisibility(v);
-    } catch {
+    } catch (e) {
+      captureError(e, "SettingsLoadProfileVisibility");
       // ignore
     }
   }, [isGuest]);
@@ -215,7 +219,8 @@ export default function SettingsScreen() {
     try {
       await trpcMutate(TRPC.notifications.updateReminderSettings, { enabled: v });
       if (v) await registerPushTokenWithBackend();
-    } catch {
+    } catch (e) {
+      captureError(e, "SettingsReminderToggle");
       // revert on error
       setDailyReminder(!v);
     }
@@ -226,7 +231,8 @@ export default function SettingsScreen() {
     if (isGuest) return;
     try {
       await trpcMutate("notifications.updateReminderSettings", { reminder_time: value });
-    } catch {
+    } catch (e) {
+      captureError(e, "SettingsReminderTime");
       // ignore
     }
   };
@@ -277,7 +283,8 @@ export default function SettingsScreen() {
                 if (isGuest) return;
                 try {
                   await trpcMutate(TRPC.profiles.update, { profile_visibility: v });
-                } catch {
+                } catch (e) {
+                  captureError(e, "SettingsProfileVisibilityUpdate");
                   loadProfileVisibility();
                 }
               }}
@@ -412,7 +419,8 @@ export default function SettingsScreen() {
                   if (isGuest) return;
                   try {
                     await trpcMutate(TRPC.notifications.updateReminderSettings, { last_call_enabled: v });
-                  } catch {
+                  } catch (e) {
+                    captureError(e, "SettingsLastCallToggle");
                     setLastCall(prev);
                   }
                 }}
@@ -450,7 +458,9 @@ export default function SettingsScreen() {
                   }
                   if (!isGuest) {
                     await trpcMutate(TRPC.notifications.updateReminderSettings, { morning_kickoff_enabled: v }).catch(
-                      () => {}
+                      (e) => {
+                        captureError(e, "SettingsMorningKickoffTRPC");
+                      }
                     );
                   }
                 }}
@@ -486,7 +496,9 @@ export default function SettingsScreen() {
                   }
                   if (!isGuest) {
                     await trpcMutate(TRPC.notifications.updateReminderSettings, { weekly_summary_enabled: v }).catch(
-                      () => {}
+                      (e) => {
+                        captureError(e, "SettingsWeeklySummaryTRPC");
+                      }
                     );
                   }
                 }}
@@ -511,7 +523,8 @@ export default function SettingsScreen() {
                   if (isGuest) return;
                   try {
                     await trpcMutate(TRPC.notifications.updateReminderSettings, { friend_activity_enabled: v });
-                  } catch {
+                  } catch (e) {
+                    captureError(e, "SettingsFriendActivityToggle");
                     setFriendActivity(prev);
                   }
                 }}
@@ -670,7 +683,8 @@ export default function SettingsScreen() {
                     setShowDeleteModal(false);
                     setDeleteConfirmValue("");
                     router.replace(ROUTES.AUTH_LOGIN as never);
-                  } catch {
+                  } catch (e) {
+                    captureError(e, "SettingsDeleteAccount");
                     showDeleteAccountError("Failed to delete account. Please try again.");
                   } finally {
                     setDeleteAccountLoading(false);

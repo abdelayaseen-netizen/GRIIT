@@ -15,6 +15,7 @@ import { formatSecondsToMMSS } from "@/lib/formatTime";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { captureError } from "@/lib/sentry";
 
 /** Active challenge as returned by getActive (nested challenges.challenge_tasks in API shape). */
 interface ActiveChallengeWithTasks {
@@ -196,6 +197,7 @@ export default function TimerTaskScreen() {
       }
       router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
     } catch (error: unknown) {
+      captureError(error, "TimerTaskComplete");
       showError(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);

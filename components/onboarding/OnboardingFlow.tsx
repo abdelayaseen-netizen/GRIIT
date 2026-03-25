@@ -9,6 +9,7 @@ import { GRIIT_COLORS } from "@/lib/design-system";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { GOAL_OPTIONS } from "@/constants/onboarding-theme";
+import { captureError } from "@/lib/sentry";
 
 import ValueSplash from "./screens/ValueSplash";
 import GoalSelection from "./screens/GoalSelection";
@@ -52,6 +53,7 @@ export default function OnboardingFlow() {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
     } catch (e) {
+      captureError(e, "OnboardingFlowPersistFlag");
       if (__DEV__) console.error("[OnboardingFlow] persist onboarding flag failed:", e);
     }
     router.replace("/(tabs)" as never);

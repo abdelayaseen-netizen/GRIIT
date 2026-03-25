@@ -9,6 +9,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
+import { captureError } from "@/lib/sentry";
 
 type Member = {
   id: string;
@@ -59,6 +60,7 @@ export default function TeamInviteScreen() {
         setJoinCodeInput("");
         await queryClient.invalidateQueries({ queryKey: ["team", "members", team.id] });
       } catch (error) {
+        captureError(error, "TeamInviteJoinByCode");
         console.error("[TeamInvite] joinByCode failed:", error);
         setJoinError(error instanceof Error ? error.message : "Could not join with code.");
       } finally {
@@ -88,6 +90,7 @@ export default function TeamInviteScreen() {
         message: `Join my team on GRIIT! Use code ${payload.teamCode} or tap: ${payload.webLink}`,
       });
     } catch (error) {
+      captureError(error, "TeamInviteShare");
       console.error("[TeamInvite] Share failed:", error);
     } finally {
       setSharePending(false);

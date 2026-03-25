@@ -7,6 +7,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
+import { captureError } from "@/lib/sentry";
 
 export default function JoinTeamScreen() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function JoinTeamScreen() {
         router.replace(`/challenge/${team.challenge_id}` as never);
       } catch (error) {
         if (!active) return;
+        captureError(error, "JoinTeamByLink");
         console.error("[JoinTeam] joinByLink failed:", error);
         setStatus("error");
         setErrorMessage(error instanceof Error ? error.message : "Could not join this team.");

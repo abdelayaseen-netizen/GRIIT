@@ -10,6 +10,7 @@ import { DS_COLORS, DS_SHADOWS, DS_SPACING } from "@/lib/design-system";
 import { getAvatarColor } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import CommentSheet, { type FeedComment } from "@/components/CommentSheet";
+import { captureError } from "@/lib/sentry";
 
 export type LiveFeedPost = {
   id: string;
@@ -299,6 +300,7 @@ export default function LiveFeedSection() {
           respectCount: Math.max(0, result.reactionCount ?? nextC),
         }));
       } catch (e) {
+        captureError(e, "LiveFeedRespect");
         console.error("[LiveFeedSection] respect failed", e);
         updatePost(post.id, (p) => ({ ...p, reactedByMe: prevR, respectCount: prevC }));
       }
@@ -314,7 +316,10 @@ export default function LiveFeedSection() {
       });
     } catch (err) {
       const msg = (err as Error)?.message ?? "";
-      if (msg !== "User did not share") console.error("[LiveFeedSection] share failed", err);
+      if (msg !== "User did not share") {
+        captureError(err, "LiveFeedShare");
+        console.error("[LiveFeedSection] share failed", err);
+      }
     }
   }, []);
 

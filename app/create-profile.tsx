@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { DS_COLORS } from "@/lib/design-system";
 import { trackEvent } from "@/lib/analytics";
 import FormInput from "@/components/shared/FormInput";
+import { captureError } from "@/lib/sentry";
 
 const PADDING_H = 20;
 
@@ -132,6 +133,7 @@ export default function CreateProfileScreen() {
       trackEvent("profile_created");
       router.replace("/(tabs)" as never);
     } catch (e) {
+      captureError(e, "CreateProfileSave");
       console.error("[CreateProfile] save failed:", e);
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {

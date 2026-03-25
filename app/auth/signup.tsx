@@ -110,6 +110,7 @@ export default function SignupScreen() {
       );
       setUsernameStatus(result ? "taken" : "available");
     } catch (err) {
+      captureError(err, "SignupUsernameCheck");
       console.error("[Signup] username check failed:", err);
       setUsernameStatus("idle");
     }

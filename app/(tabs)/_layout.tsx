@@ -1,13 +1,32 @@
 import { Tabs, usePathname } from "expo-router";
 import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React from "react";
-import { View, StyleSheet } from "react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import * as Sentry from "@sentry/react-native";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_MEASURES, DS_SHADOWS, GRIIT_COLORS } from "@/lib/design-system";
 
 export default function TabLayout() {
   void usePathname();
 
   return (
+    <Sentry.ErrorBoundary
+      fallback={({ error, resetError }) => (
+        <View style={styles.errorBoundaryRoot}>
+          <Text style={styles.errorBoundaryTitle}>Something went wrong</Text>
+          <Text style={styles.errorBoundaryMessage}>
+            {__DEV__ ? String(error) : "Please restart the app"}
+          </Text>
+          <TouchableOpacity
+            onPress={resetError}
+            style={styles.errorBoundaryButton}
+            accessibilityLabel="Try again"
+            accessibilityRole="button"
+          >
+            <Text style={styles.errorBoundaryButtonText}>Try again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    >
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: DS_COLORS.TAB_ACTIVE,
@@ -72,10 +91,41 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </Sentry.ErrorBoundary>
   );
 }
 
 const styles = StyleSheet.create({
+  errorBoundaryRoot: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: DS_COLORS.BG_PRIMARY,
+  },
+  errorBoundaryTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+    textAlign: "center",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  errorBoundaryMessage: {
+    fontSize: 13,
+    marginBottom: 20,
+    textAlign: "center",
+    color: DS_COLORS.TEXT_SECONDARY,
+  },
+  errorBoundaryButton: {
+    backgroundColor: GRIIT_COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 28,
+  },
+  errorBoundaryButtonText: {
+    color: DS_COLORS.WHITE,
+    fontWeight: "500",
+  },
   tabBar: {
     backgroundColor: DS_COLORS.TAB_BG,
     borderTopColor: DS_COLORS.BORDER_DEFAULT,

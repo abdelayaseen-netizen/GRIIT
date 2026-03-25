@@ -25,7 +25,8 @@ export async function registerPushTokenWithBackend(): Promise<boolean> {
       token,
     });
     return true;
-  } catch {
+  } catch (error) {
+    captureError(error, "registerPushTokenWithBackend");
     return false;
   }
 }

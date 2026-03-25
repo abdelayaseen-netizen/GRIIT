@@ -44,6 +44,7 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
+import { captureError } from "@/lib/sentry";
 
 const JOURNAL_PROMPTS = [
   "What did you learn about yourself today?",
@@ -92,7 +93,8 @@ function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {
   try {
     const o = JSON.parse(taskConfigStr) as TaskCompleteConfig;
     return typeof o === "object" && o !== null ? o : {};
-  } catch {
+  } catch (e) {
+    captureError(e, "TaskCompleteParseConfig");
     return {};
   }
 }
@@ -239,6 +241,7 @@ function TaskCompleteScreenInner() {
         setPhotoUrl(upload.url);
       }
     } catch (err) {
+      captureError(err, "TaskCompleteCameraUpload");
       console.error("[TaskComplete] camera upload failed:", err);
       showError("Upload failed. Please try again.");
       setPhotoUri(null);
@@ -273,6 +276,7 @@ function TaskCompleteScreenInner() {
         setPhotoUrl(upload.url);
       }
     } catch (err) {
+      captureError(err, "TaskCompleteGalleryUpload");
       console.error("[TaskComplete] gallery upload failed:", err);
       showError("Upload failed. Please try again.");
       setPhotoUri(null);
@@ -291,6 +295,7 @@ function TaskCompleteScreenInner() {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
     } catch (err) {
+      captureError(err, "TaskCompleteGetCurrentPosition");
       console.error("[TaskComplete] getCurrentPosition failed:", err);
       showError("Could not get your location. Please try again.");
     }
@@ -430,6 +435,7 @@ function TaskCompleteScreenInner() {
         setVariableReward(null);
       }
     } catch (err: unknown) {
+      captureError(err, "TaskCompleteCompleteTask");
       console.error("[TaskComplete] completeTask failed:", err);
       showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {

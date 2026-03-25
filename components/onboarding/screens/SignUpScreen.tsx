@@ -18,6 +18,7 @@ import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { captureError } from "@/lib/sentry";
 
 interface SignUpScreenProps {
   onAuthSuccess: (userId: string) => void;
@@ -159,6 +160,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
       }
+      captureError(e, "OnboardingSignUpApple");
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);

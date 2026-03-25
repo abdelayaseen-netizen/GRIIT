@@ -40,6 +40,7 @@ import type { MoodLevel, BodyState, JournalCategory } from "@/types";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { captureError } from "@/lib/sentry";
 
 const JOURNAL_CATEGORY_LABELS: Record<JournalCategory, string> = {
   self_reflection: "Self-reflection",
@@ -130,6 +131,7 @@ export default function JournalTaskScreen() {
           if (parsed.energy) setEnergy(parsed.energy);
           if (parsed.bodyState) setBodyState(parsed.bodyState);
         } catch (e) {
+          captureError(e, "JournalTaskParseDraft");
           if (__DEV__) console.error("[JournalTask] parse draft failed:", e);
         }
       }
@@ -142,6 +144,7 @@ export default function JournalTaskScreen() {
     draftTimerRef.current = setInterval(() => {
       const draft = JSON.stringify({ entryText, mood, energy, bodyState });
       AsyncStorage.setItem(draftKey, draft).catch((e) => {
+        captureError(e, "JournalTaskSaveDraft");
         if (__DEV__) console.error("[JournalTask] save draft failed:", e);
       });
     }, 3000);
@@ -263,6 +266,7 @@ export default function JournalTaskScreen() {
         Animated.timing(confettiOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]).start();
     } catch (error: unknown) {
+      captureError(error, "JournalTaskSubmit");
       showError(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);

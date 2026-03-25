@@ -31,6 +31,7 @@ import { ErrorRetry } from "@/components/ErrorRetry";
 import { EmptyState } from "@/components/EmptyState";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { captureError } from "@/lib/sentry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -179,6 +180,7 @@ export default function ActiveChallengeDetailScreen() {
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
       router.replace(ROUTES.TABS_HOME as never);
     } catch (err) {
+      captureError(err, "ActiveChallengeLeaveChallenge");
       if (__DEV__) console.error("[ActiveChallengeDetail] leave failed:", err);
       showLeaveError("Something went wrong. Please try again.");
     }

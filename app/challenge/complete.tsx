@@ -19,6 +19,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { track, trackEvent } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
+import { captureError } from "@/lib/sentry";
 
 export default function ChallengeCompleteScreen() {
   const router = useRouter();
@@ -65,7 +66,8 @@ export default function ChallengeCompleteScreen() {
           daysCompleted: totalDays,
         });
       }
-    } catch {
+    } catch (e) {
+      captureError(e, "ChallengeCompleteShare");
       setShareError(true);
     }
   };

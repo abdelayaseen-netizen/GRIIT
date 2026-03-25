@@ -4,6 +4,7 @@ import { Share2 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 import { shareProfile } from "@/lib/share";
+import { captureError } from "@/lib/sentry";
 
 export interface ShareDisciplineCardProps {
   name: string;
@@ -30,7 +31,8 @@ export default function ShareDisciplineCard({
         tier,
       });
       onShare?.();
-    } catch {
+    } catch (e) {
+      captureError(e, "ShareDisciplineCard");
       // User cancelled or failed
     }
   };

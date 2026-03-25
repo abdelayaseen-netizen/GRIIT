@@ -30,6 +30,7 @@ import { useCelebration } from "@/hooks/useCelebration";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import { captureError } from "@/lib/sentry";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
 type TimeStatus = "too_early" | "window_open" | "too_late";
@@ -183,7 +184,8 @@ export default function CheckinTaskScreen() {
           checkGeofence(newLocation);
         }
       );
-    } catch {
+    } catch (e) {
+      captureError(e, "CheckinTaskWatchPosition");
       setLocationStatus("error");
     }
   };

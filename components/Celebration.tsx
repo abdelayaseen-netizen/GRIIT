@@ -8,6 +8,7 @@ import {
   AccessibilityInfo,
 } from "react-native";
 import { DS_COLORS } from "@/lib/design-system";
+import { captureError } from "@/lib/sentry";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -78,8 +79,11 @@ export default function Celebration({ visible, onComplete, titleText, streakCoun
     try {
       import("expo-haptics").then((Haptics) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }).catch(() => { /* haptics not available */ });
-    } catch {
+      }).catch((e) => {
+        captureError(e, "CelebrationHapticsAsync");
+      });
+    } catch (e) {
+      captureError(e, "CelebrationHaptics");
       // Silently fail
     }
   }, []);
