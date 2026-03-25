@@ -5,7 +5,13 @@ import { DS_COLORS } from "@/lib/design-system";
 
 export default function DiscoverCTA({ onPress }: { onPress: () => void }) {
   return (
-    <TouchableOpacity style={s.card} activeOpacity={0.86} onPress={onPress}>
+    <TouchableOpacity
+      style={s.card}
+      activeOpacity={0.86}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Discover your next challenge — open Discover"
+    >
       <View style={s.icon}>
         <Search size={18} color={DS_COLORS.DISCOVER_CORAL} />
       </View>

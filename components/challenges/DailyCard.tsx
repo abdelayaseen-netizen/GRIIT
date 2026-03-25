@@ -60,6 +60,7 @@ export const DailyCard = React.memo(function DailyCard({
   const subtitle = DAILY_COPY[challenge.title] ?? (challenge.description ?? "").slice(0, 30);
   const count = challenge.participants_count ?? 0;
   const dimmed = participationState === "completed";
+  const diffLabel = theme.label === "MED" ? "Medium" : theme.label === "EASY" ? "Easy" : theme.label === "HARD" ? "Hard" : theme.label;
   const stateLabel =
     participationState === "completed" ? "completed" : participationState === "active" ? "in progress" : "available";
   return (
@@ -69,7 +70,7 @@ export const DailyCard = React.memo(function DailyCard({
       onPressIn={onPressIn}
       onPress={() => onPress(challenge.id)}
       accessibilityRole="button"
-      accessibilityLabel={`${challenge.title}, ${count} participants, ${stateLabel}. Tap to view challenge.`}
+      accessibilityLabel={`${challenge.title} — ${diffLabel} — 24-hour challenge — ${stateLabel} — tap to view`}
     >
       <View style={[s.stripe, { backgroundColor: theme.accent }]} />
       {participationState === "active" ? (

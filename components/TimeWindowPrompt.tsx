@@ -64,8 +64,9 @@ export function TimeWindowPrompt({ visible, tasks, onSave, onSkip }: TimeWindowP
                         key={time}
                         style={[styles.timePill, selected && styles.timePillSelected]}
                         onPress={() => setTaskTimes((prev) => ({ ...prev, [task.id]: time }))}
-                        accessibilityLabel={`Set ${task.name} time to ${time}`}
+                        accessibilityLabel={`Set task time to ${time} — ${selected ? "selected" : "tap to select"}`}
                         accessibilityRole="button"
+                        accessibilityState={{ selected }}
                       >
                         <Text style={[styles.timePillText, selected && styles.timePillTextSelected]}>{time}</Text>
                       </TouchableOpacity>
@@ -78,7 +79,7 @@ export function TimeWindowPrompt({ visible, tasks, onSave, onSkip }: TimeWindowP
           <TouchableOpacity
             style={styles.saveButton}
             onPress={handleSave}
-            accessibilityLabel="Save my daily schedule"
+            accessibilityLabel="Save my daily schedule for this challenge"
             accessibilityRole="button"
           >
             <Text style={styles.saveText}>Save my schedule</Text>

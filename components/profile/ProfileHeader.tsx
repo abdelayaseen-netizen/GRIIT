@@ -71,7 +71,7 @@ export default React.memo(function ProfileHeader({
             onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Edit profile"
+            accessibilityLabel="Edit your profile"
           >
             <Text style={styles.editBtnText}>Edit</Text>
           </TouchableOpacity>
@@ -81,13 +81,17 @@ export default React.memo(function ProfileHeader({
           onPress={onShare}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="Share profile"
+          accessibilityLabel="Share your GRIIT profile"
         >
           <Share2 size={14} color={DS_COLORS.buttonDisabledText} />
           <Text style={styles.shareBtnText}>Share</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.socialRow}>
+      <View
+        style={styles.socialRow}
+        accessibilityRole="none"
+        accessibilityLabel="0 followers, 0 following"
+      >
         <Text style={styles.socialText}>0 followers</Text>
         <Text style={styles.socialText}> · </Text>
         <Text style={styles.socialText}>0 following</Text>

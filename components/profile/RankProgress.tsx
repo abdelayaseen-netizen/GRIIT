@@ -26,7 +26,11 @@ export default function RankProgress({ points }: { points: number }) {
   const pct = Math.max(2, Math.min(100, Math.round((inTier / tierSpan) * 100)));
   const ptsToNext = Math.max(0, next.minPoints - points);
   return (
-    <View style={s.card}>
+    <View
+      style={s.card}
+      accessibilityRole="none"
+      accessibilityLabel={`Rank progress — ${current.name} — ${ptsToNext} points to reach ${next.name}`}
+    >
       <View style={s.headRow}>
         <Text style={s.head}>Rank progress</Text>
         <Text style={s.right}>{`${ptsToNext} pts to ${next.name}`}</Text>

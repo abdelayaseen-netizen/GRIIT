@@ -216,8 +216,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            accessibilityLabel="Email"
-            accessibilityRole="text"
+            accessibilityLabel="Email address"
           />
           <TextInput
             style={styles.input}
@@ -230,14 +229,13 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
             }}
             secureTextEntry
             accessibilityLabel="Password"
-            accessibilityRole="text"
           />
 
           <Pressable
             style={styles.primaryButton}
             onPress={handleEmailSignUp}
             disabled={loading}
-            accessibilityLabel="Create account"
+            accessibilityLabel="Create your GRIIT account"
             accessibilityRole="button"
             accessibilityState={{ disabled: loading }}
           >
@@ -249,7 +247,7 @@ export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
             <Pressable
               onPress={() => router.push(ROUTES.AUTH_LOGIN as never)}
               accessibilityRole="link"
-              accessibilityLabel="Log in"
+              accessibilityLabel="Already have an account — log in instead"
             >
               <Text style={styles.loginLink}>Log in</Text>
             </Pressable>

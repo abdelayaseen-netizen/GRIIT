@@ -182,7 +182,12 @@ export default function CelebrationOverlay() {
     <Modal visible={visible} transparent animationType="none" onRequestClose={dismiss}>
       <View style={styles.root} pointerEvents="box-none">
         <Animated.View style={[styles.backdrop, { opacity: backdropOp }]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} accessibilityRole="button" accessibilityLabel="Dismiss" />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={dismiss}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss celebration"
+          />
         </Animated.View>
 
         {particles.map((p, i) => {
@@ -242,7 +247,7 @@ export default function CelebrationOverlay() {
                 style={styles.btn}
                 onPress={dismiss}
                 accessibilityRole="button"
-                accessibilityLabel="Keep going"
+                accessibilityLabel="Continue to your challenge"
               >
                 <Text style={styles.btnText}>Keep going</Text>
               </Pressable>

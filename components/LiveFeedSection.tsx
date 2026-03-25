@@ -134,18 +134,35 @@ function StandardPostCard({
           onPress={onRespect}
           style={[styles.respectBtn, post.reactedByMe ? styles.respectBtnActive : styles.respectBtnInactive]}
           accessibilityRole="button"
-          accessibilityLabel={post.reactedByMe ? "Remove respect" : "Give respect"}
+          accessibilityLabel={
+            post.reactedByMe
+              ? "Remove respect"
+              : post.respectCount > 0
+                ? `Give respect — ${post.respectCount} respect given`
+                : "Give respect"
+          }
+          accessibilityState={{ selected: post.reactedByMe }}
         >
           <Text style={[styles.respectBtnText, post.reactedByMe && styles.respectBtnTextActive]}>
             🔥 Respect{post.respectCount > 0 ? ` · ${post.respectCount}` : ""}
           </Text>
         </TouchableOpacity>
         <View style={styles.actionRight}>
-          <TouchableOpacity style={styles.chip} onPress={onComment} accessibilityRole="button" accessibilityLabel="Comments">
+          <TouchableOpacity
+            style={styles.chip}
+            onPress={onComment}
+            accessibilityRole="button"
+            accessibilityLabel={`Comment — ${post.commentCount} comments`}
+          >
             <MessageCircle size={13} color={DS_COLORS.TEXT_SECONDARY} />
             <Text style={styles.chipText}> {post.commentCount}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.chip} onPress={onShare} accessibilityRole="button" accessibilityLabel="Share">
+          <TouchableOpacity
+            style={styles.chip}
+            onPress={onShare}
+            accessibilityRole="button"
+            accessibilityLabel={`Share ${post.displayName || post.username}'s ${post.challengeName} post`}
+          >
             <ShareIcon size={13} color={DS_COLORS.TEXT_SECONDARY} />
             <Text style={styles.chipText}> Share</Text>
           </TouchableOpacity>
@@ -184,10 +201,24 @@ function MilestoneCard({
         <Text style={styles.milestoneTime}>{relativeTime(post.createdAt)}</Text>
       </View>
       <View style={styles.milestoneActions}>
-        <TouchableOpacity style={styles.milestonePrimary} onPress={onRespect} accessibilityRole="button" accessibilityLabel="Respect">
+        <TouchableOpacity
+          style={styles.milestonePrimary}
+          onPress={onRespect}
+          accessibilityRole="button"
+          accessibilityLabel={
+            post.respectCount > 0
+              ? `Give respect — ${post.respectCount} respect given`
+              : "Give respect"
+          }
+        >
           <Text style={styles.milestonePrimaryText}>🔥 Respect{post.respectCount > 0 ? ` · ${post.respectCount}` : ""}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.milestoneSecondary} onPress={onComment} accessibilityRole="button" accessibilityLabel="Comment">
+        <TouchableOpacity
+          style={styles.milestoneSecondary}
+          onPress={onComment}
+          accessibilityRole="button"
+          accessibilityLabel={`Comment on ${post.displayName || post.username}'s progress`}
+        >
           <Text style={styles.milestoneSecondaryText}>💬 Comment</Text>
         </TouchableOpacity>
       </View>
@@ -386,7 +417,8 @@ export default function LiveFeedSection() {
             onPress={() => setScope("following")}
             style={[styles.togglePill, scope === "following" && styles.togglePillOn]}
             accessibilityRole="button"
-            accessibilityLabel="Following feed"
+            accessibilityLabel="Show feed from people you follow"
+            accessibilityState={{ selected: scope === "following" }}
           >
             <Text style={[styles.toggleText, scope === "following" && styles.toggleTextOn]}>Following</Text>
           </TouchableOpacity>
@@ -394,7 +426,8 @@ export default function LiveFeedSection() {
             onPress={() => setScope("everyone")}
             style={[styles.togglePill, scope === "everyone" && styles.togglePillOn]}
             accessibilityRole="button"
-            accessibilityLabel="Everyone feed"
+            accessibilityLabel="Show feed from everyone"
+            accessibilityState={{ selected: scope === "everyone" }}
           >
             <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextOn]}>Everyone</Text>
           </TouchableOpacity>
@@ -409,7 +442,11 @@ export default function LiveFeedSection() {
       ) : feedQuery.isError ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Couldn&apos;t load feed</Text>
-          <TouchableOpacity onPress={() => void feedQuery.refetch()} accessibilityRole="button">
+          <TouchableOpacity
+            onPress={() => void feedQuery.refetch()}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading feed"
+          >
             <Text style={styles.retry}>Tap to retry</Text>
           </TouchableOpacity>
         </View>

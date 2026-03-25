@@ -42,7 +42,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => <Home color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Home tab",
+          tabBarAccessibilityLabel: "Home — your challenges and feed",
         }}
       />
       <Tabs.Screen
@@ -50,7 +50,7 @@ export default function TabLayout() {
         options={{
           title: "Discover",
           tabBarIcon: ({ color, size }) => <Compass color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Discover tab",
+          tabBarAccessibilityLabel: "Discover — browse and join challenges",
         }}
       />
       <Tabs.Screen
@@ -65,7 +65,7 @@ export default function TabLayout() {
             </View>
           ),
           tabBarLabel: () => null,
-          tabBarAccessibilityLabel: "Create tab",
+          tabBarAccessibilityLabel: "Create a new challenge",
         }}
       />
       <Tabs.Screen
@@ -73,7 +73,7 @@ export default function TabLayout() {
         options={{
           title: "Activity",
           tabBarIcon: ({ color, size }) => <Flame color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Activity tab",
+          tabBarAccessibilityLabel: "Activity — notifications and leaderboard",
         }}
       />
       <Tabs.Screen
@@ -81,7 +81,7 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => <User color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Profile tab",
+          tabBarAccessibilityLabel: "Profile — your stats and settings",
         }}
       />
       <Tabs.Screen

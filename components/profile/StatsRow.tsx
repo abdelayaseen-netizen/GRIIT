@@ -20,7 +20,12 @@ export default React.memo(function StatsRow({ streak, best, active, done }: Prop
   return (
     <View style={s.row}>
       {items.map((item) => (
-        <View key={item.label} style={s.card}>
+        <View
+          key={item.label}
+          style={s.card}
+          accessibilityRole="none"
+          accessibilityLabel={`${item.value} ${item.label}`}
+        >
           <Text style={s.value}>{item.value}</Text>
           <Text style={s.label}>{item.label}</Text>
         </View>

@@ -26,18 +26,29 @@ export function ConfirmDialog({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.wrap}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel="Dismiss dialog" />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onCancel}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss dialog"
+        />
         <View style={styles.card} accessibilityRole="alert">
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.row}>
-            <TouchableOpacity style={styles.btnSecondary} onPress={onCancel} accessibilityRole="button">
+            <TouchableOpacity
+              style={styles.btnSecondary}
+              onPress={onCancel}
+              accessibilityRole="button"
+              accessibilityLabel={cancelLabel}
+            >
               <Text style={styles.btnSecondaryText}>{cancelLabel}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.btnPrimary, destructive && styles.btnDestructive]}
               onPress={onConfirm}
               accessibilityRole="button"
+              accessibilityLabel={confirmLabel}
             >
               <Text style={[styles.btnPrimaryText, destructive && styles.btnDestructiveText]}>{confirmLabel}</Text>
             </TouchableOpacity>

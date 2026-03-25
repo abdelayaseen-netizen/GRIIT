@@ -29,7 +29,7 @@ export function TaskTypeCard(p: {
       ]}
       onPress={p.onPress}
       activeOpacity={0.85}
-      accessibilityLabel={`Select ${p.label} task type`}
+      accessibilityLabel={`${p.label} task type — ${p.selected ? "selected" : "tap to select"}`}
       accessibilityRole="button"
       accessibilityState={{ selected: p.selected }}
     >

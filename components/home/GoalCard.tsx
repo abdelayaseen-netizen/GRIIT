@@ -103,7 +103,7 @@ export default React.memo(function GoalCard({
           delayLongPress={500}
           style={s.challengeRow}
           accessibilityRole="button"
-          accessibilityLabel={`${challengeName} — ${expanded ? "collapse" : "expand"}`}
+          accessibilityLabel={`${challengeName} — Day ${currentDay ?? 1} of ${durationDays ?? 1} — ${expanded ? "collapse" : "expand"}`}
           accessibilityHint="Tap to expand or collapse. Long press for options."
         >
           <View style={[s.iconBox, completedSection && s.iconBoxCompleted]}>
@@ -115,7 +115,7 @@ export default React.memo(function GoalCard({
               activeOpacity={0.7}
               disabled={!onPressChallengeName}
               accessibilityRole="button"
-              accessibilityLabel={`View ${challengeName} challenge details`}
+              accessibilityLabel={`${challengeName} — Day ${currentDay ?? 1} of ${durationDays ?? 1} — tap to view`}
             >
               <Text style={s.challengeName}>{challengeName}</Text>
             </TouchableOpacity>
@@ -151,7 +151,7 @@ export default React.memo(function GoalCard({
               onPressIn={onPressInActiveChallenge}
               onPress={() => onPressGoal(g.id)}
               accessibilityRole="button"
-              accessibilityLabel={`Start goal: ${g.title}`}
+              accessibilityLabel={`Start ${g.title}`}
             >
               <View style={s.todoCircle}>{taskTypeIcon(g.taskType)}</View>
               <Text style={s.todoText}>{g.title}</Text>

@@ -367,7 +367,10 @@ function MissionRow({
     ? DS_COLORS.DISCOVER_CORAL
     : theme.accent;
   return (
-    <View style={[s.missionRow, !isLast && s.missionRowBorder]}>
+    <View
+      style={[s.missionRow, !isLast && s.missionRowBorder]}
+      accessibilityRole="none"
+    >
       <View style={[s.missionIcon, { backgroundColor: iconBg }]}>
         {isCompleted ? (
           <Check size={16} color={DS_COLORS.success} />
@@ -469,7 +472,7 @@ function MissionRow({
           onPress={onStart}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          accessibilityLabel={`Start ${task.title ?? "task"}`}
+          accessibilityLabel={`${task.title ?? "Task"} — not completed — tap to start`}
           accessibilityRole="button"
         >
           <Text style={[s.startActionText, { color: isJournal ? DS_COLORS.journalStartBlue : theme.accent }]}>Start</Text>
@@ -1464,7 +1467,7 @@ export default function ChallengeDetailScreen() {
                 onPress={() => handleMissionStart(firstIncompleteTask)}
                 activeOpacity={0.86}
                 accessibilityRole="button"
-                accessibilityLabel={`Today's goal: ${firstIncompleteTask.title}. Tap to start`}
+                accessibilityLabel={`${firstIncompleteTask.title ?? "Task"} — not completed — tap to start`}
               >
                 {isJoined ? (
                   <Text style={s.dayCounterText}>Day {Math.max(userCurrentDay, 1)} of {challenge.duration_days}</Text>
@@ -1648,7 +1651,7 @@ export default function ChallengeDetailScreen() {
                 disabled={joinDisabled}
                 activeOpacity={0.85}
                 testID="join-challenge-button"
-                accessibilityLabel={`Commit to ${challenge.title}`}
+                accessibilityLabel={`Join ${challenge.title ?? "challenge"} — ${challenge.duration_days ?? 0} day challenge`}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: joinDisabled }}
               >
@@ -1686,7 +1689,8 @@ export default function ChallengeDetailScreen() {
                   onPress={handleLeave}
                   disabled={leavePending}
                   activeOpacity={0.7}
-                  accessibilityLabel={`Leave ${challenge.title} challenge`}
+                  accessibilityLabel="Leave this challenge — your progress will not be saved"
+                  accessibilityHint="Double-tap to confirm leaving the challenge"
                   accessibilityRole="button"
                 >
                   {leavePending ? (

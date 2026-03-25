@@ -32,7 +32,7 @@ export default React.memo(function ActiveChallengeCard({ items, isLoading, onPre
         <View style={s.empty}>
           <Text style={s.emptyTitle}>No active challenges yet.</Text>
           <Text style={s.emptyBody}>Find one that pushes you.</Text>
-          <Pressable onPress={onPressBrowse}>
+          <Pressable onPress={onPressBrowse} accessibilityRole="button" accessibilityLabel="Browse challenges">
             <Text style={s.emptyLink}>Browse challenges →</Text>
           </Pressable>
         </View>
@@ -43,6 +43,8 @@ export default React.memo(function ActiveChallengeCard({ items, isLoading, onPre
             style={s.card}
             onPress={() => item.challengeId && onPressItem(item.challengeId)}
             disabled={!item.challengeId}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.title} — Day ${item.currentDay} of ${item.durationDays} — ${item.progressPercent}% complete — tap to view`}
           >
             <View style={s.row}>
               <View style={s.iconBox}>

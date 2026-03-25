@@ -209,7 +209,7 @@ export default function LoginScreen() {
             onBlur={() => setFocusedField(null)}
             inputStyle={{ borderColor: inputBorder("email"), marginBottom: 12 }}
             containerStyle={{ marginBottom: 0 }}
-            accessibilityLabel="Email"
+            accessibilityLabel="Email address"
           />
 
           <View style={[styles.passwordWrap, { borderColor: inputBorder("password") }]}>
@@ -227,7 +227,6 @@ export default function LoginScreen() {
               onSubmitEditing={() => canSubmit && handleSignIn()}
               editable={!loading}
               accessibilityLabel="Password"
-              accessibilityRole="text"
             />
             <TouchableOpacity
               onPress={() => setShowPassword((p) => !p)}
@@ -261,7 +260,7 @@ export default function LoginScreen() {
             disabled={!canSubmit || loading}
             activeOpacity={0.9}
             accessibilityRole="button"
-            accessibilityLabel="Sign in"
+            accessibilityLabel="Log in to GRIIT"
             accessibilityState={{ disabled: !canSubmit || loading }}
           >
             {loading ? (
@@ -291,7 +290,7 @@ export default function LoginScreen() {
               onPress={handleApple}
               disabled={loading}
               accessibilityRole="button"
-              accessibilityLabel="Sign in with Apple"
+              accessibilityLabel="Continue with Apple"
             >
               <Text style={styles.btnAppleText}>Sign in with Apple</Text>
             </TouchableOpacity>
@@ -302,7 +301,7 @@ export default function LoginScreen() {
             onPress={handleGoogle}
             disabled={loading}
             accessibilityRole="button"
-            accessibilityLabel="Sign in with Google"
+            accessibilityLabel="Continue with Google"
           >
             <Text style={styles.btnGoogleText}>Sign in with Google</Text>
           </TouchableOpacity>
@@ -315,7 +314,7 @@ export default function LoginScreen() {
               onPress={handleSignUpLink}
               disabled={loading}
               accessibilityRole="button"
-              accessibilityLabel="Sign up"
+              accessibilityLabel="Don't have an account — sign up instead"
             >
               <Text style={styles.footerLink}>Sign up</Text>
             </TouchableOpacity>

@@ -49,7 +49,15 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
         </View>
         <Text style={s.title}>{challenge.title}</Text>
         <Text style={[s.desc, { color: categoryColors.subtitleText }]}>{copy}</Text>
-        <View style={s.socialBar}>
+        <View
+          style={s.socialBar}
+          accessibilityRole="none"
+          accessibilityLabel={
+            (challenge.participants_count ?? 0) === 0
+              ? "No warriors yet — be the first to join"
+              : `${joinedToday} people joined today`
+          }
+        >
           <Text style={s.socialText}>
             {(challenge.participants_count ?? 0) === 0 ? "0 warriors · Be the first to join" : `${joinedToday} joined today`}
           </Text>
@@ -60,7 +68,7 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
           onPress={() => onPress(challenge.id)}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel={`Start ${challenge.title}, ${duration} day challenge`}
+          accessibilityLabel={`Start ${challenge.title} — ${duration} day challenge`}
         >
           <Text style={s.ctaText}>Start this challenge</Text>
         </TouchableOpacity>

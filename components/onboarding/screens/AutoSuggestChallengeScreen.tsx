@@ -174,6 +174,7 @@ export default function AutoSuggestChallengeScreen({
             disabled={joiningId !== null}
             accessibilityLabel={`Join ${first.title ?? "challenge"}`}
             accessibilityRole="button"
+            accessibilityState={{ disabled: joiningId !== null }}
           >
             {joiningId === first.id ? (
               <ActivityIndicator color={C.WHITE} />
@@ -205,6 +206,7 @@ export default function AutoSuggestChallengeScreen({
             disabled={joiningId !== null}
             accessibilityLabel={`Join ${second.title ?? "challenge"}`}
             accessibilityRole="button"
+            accessibilityState={{ disabled: joiningId !== null }}
           >
             {joiningId === second.id ? (
               <ActivityIndicator color={C.textSecondary} />
@@ -228,7 +230,11 @@ export default function AutoSuggestChallengeScreen({
       {error ? (
         <View style={styles.errorBlock}>
           <Text style={styles.errorText}>{error}</Text>
-          <Pressable onPress={handleBrowseMore} accessibilityRole="button">
+          <Pressable
+            onPress={handleBrowseMore}
+            accessibilityRole="button"
+            accessibilityLabel="Continue to app after error"
+          >
             <Text style={styles.errorLink}>Continue to app</Text>
           </Pressable>
         </View>

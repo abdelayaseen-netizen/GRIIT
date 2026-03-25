@@ -267,7 +267,7 @@ export default function SignupScreen() {
                 backgroundColor: DS_COLORS.surface,
                 color: DS_COLORS.textPrimary,
               }}
-              accessibilityLabel="Display name"
+              accessibilityLabel="Display name — what we call you"
             />
 
             <FormInput
@@ -290,7 +290,7 @@ export default function SignupScreen() {
                 backgroundColor: DS_COLORS.surface,
                 color: DS_COLORS.textPrimary,
               }}
-              accessibilityLabel="Username"
+              accessibilityLabel="Username — this is how others will find you"
             />
             {username.length > 0 && (
               <View style={styles.usernameHint}>
@@ -334,7 +334,7 @@ export default function SignupScreen() {
                 backgroundColor: DS_COLORS.surface,
                 color: DS_COLORS.textPrimary,
               }}
-              accessibilityLabel="Email"
+              accessibilityLabel="Email address"
             />
 
             <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Password</Text>
@@ -354,7 +354,6 @@ export default function SignupScreen() {
                 onSubmitEditing={() => canSubmit && handleSignup()}
                 editable={!loading}
                 accessibilityLabel="Password"
-                accessibilityRole="text"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword((p) => !p)}
@@ -426,7 +425,7 @@ export default function SignupScreen() {
               <TouchableOpacity
                 onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)}
                 disabled={loading}
-                accessibilityLabel="Log in"
+                accessibilityLabel="Already have an account — log in instead"
                 accessibilityRole="link"
                 accessibilityState={{ disabled: loading }}
               >

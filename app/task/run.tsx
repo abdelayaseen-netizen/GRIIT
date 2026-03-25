@@ -452,7 +452,8 @@ export default function RunTaskScreen() {
               style={[styles.modeButton, runMode === "outdoor_gps" && styles.modeButtonActive]}
               onPress={() => handleModeChange("outdoor_gps")}
               accessibilityRole="button"
-              accessibilityLabel="Outdoor GPS mode"
+              accessibilityLabel="Outdoor run — GPS tracking"
+              accessibilityState={{ selected: runMode === "outdoor_gps" }}
             >
               <MapPin size={18} color={runMode === "outdoor_gps" ? DS_COLORS.white : DS_COLORS.textSecondary} />
               <Text style={[styles.modeButtonText, runMode === "outdoor_gps" && styles.modeButtonTextActive]}>
@@ -462,8 +463,9 @@ export default function RunTaskScreen() {
             <TouchableOpacity
               style={[styles.modeButton, runMode === "treadmill_proof" && styles.modeButtonActive]}
               onPress={() => handleModeChange("treadmill_proof")}
-              accessibilityLabel="Treadmill mode"
+              accessibilityLabel="Treadmill run — timer based"
               accessibilityRole="button"
+              accessibilityState={{ selected: runMode === "treadmill_proof" }}
             >
               <Clock size={18} color={runMode === "treadmill_proof" ? DS_COLORS.white : DS_COLORS.textSecondary} />
               <Text style={[styles.modeButtonText, runMode === "treadmill_proof" && styles.modeButtonTextActive]}>
@@ -656,7 +658,12 @@ export default function RunTaskScreen() {
                         )}
                       </>
                     ) : (
-                      <TouchableOpacity style={styles.stopButton} onPress={finishTreadmillTimer} accessibilityRole="button" accessibilityLabel="Finish timer">
+                      <TouchableOpacity
+                        style={styles.stopButton}
+                        onPress={finishTreadmillTimer}
+                        accessibilityRole="button"
+                        accessibilityLabel="Finish timer and complete task"
+                      >
                         <Square size={28} color={DS_COLORS.white} fill={DS_COLORS.white} />
                         <Text style={styles.stopButtonText}>Finish Timer</Text>
                       </TouchableOpacity>
@@ -813,7 +820,7 @@ export default function RunTaskScreen() {
             activeOpacity={0.7}
             disabled={!(runMode === "outdoor_gps" ? canVerifyGps : canVerifyTreadmill)}
             accessibilityRole="button"
-            accessibilityLabel="Verify run"
+            accessibilityLabel="Verify and submit your run"
             accessibilityState={{ disabled: !(runMode === "outdoor_gps" ? canVerifyGps : canVerifyTreadmill) }}
           >
             <Text style={[

@@ -66,10 +66,10 @@ export const TeamChallengeCard = React.memo(function TeamChallengeCard({
       onPressIn={onPressIn}
       onPress={() => onPress(challenge.id)}
       accessibilityRole="button"
-      accessibilityLabel={`${challenge.title}, team challenge, ${duration} days, ${challenge.participants_count ?? 0} participants. Tap to view details.`}
+      accessibilityLabel={`${challenge.title} — ${theme.label} — ${duration} days — tap to view details`}
     >
       {showTeamBadge ? (
-        <View style={s.teamBadge} accessibilityRole="text" accessibilityLabel={hasActiveTeam ? "Active team challenge" : "Team challenge"}>
+        <View style={s.teamBadge} accessibilityRole="none" accessibilityLabel={hasActiveTeam ? "Active team challenge" : "Team challenge"}>
           {hasActiveTeam ? (
             <>
               <View style={s.activeDot} />

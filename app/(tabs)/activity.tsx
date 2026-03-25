@@ -206,16 +206,18 @@ export default function ActivityScreen() {
           <TouchableOpacity
             style={[styles.mainTab, mainTab === "notifications" && styles.mainTabOn]}
             onPress={() => setMainTab("notifications")}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
+            accessibilityRole="tab"
+            accessibilityLabel="Notifications tab"
+            accessibilityState={{ selected: mainTab === "notifications" }}
           >
             <Text style={[styles.mainTabText, mainTab === "notifications" && styles.mainTabTextOn]}>Notifications</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.mainTab, mainTab === "leaderboard" && styles.mainTabOn]}
             onPress={() => setMainTab("leaderboard")}
-            accessibilityRole="button"
-            accessibilityLabel="Leaderboard"
+            accessibilityRole="tab"
+            accessibilityLabel="Leaderboard tab"
+            accessibilityState={{ selected: mainTab === "leaderboard" }}
           >
             <Text style={[styles.mainTabText, mainTab === "leaderboard" && styles.mainTabTextOn]}>Leaderboard</Text>
           </TouchableOpacity>
@@ -446,25 +448,23 @@ function LeaderboardBody({
   return (
     <View>
       <View style={styles.scopeSwitcher}>
-        {(["global", "friends", "challenge"] as const).map((s) => (
+        {(["global", "friends", "challenge"] as const).map((s) => {
+          const scopeName = s === "global" ? "Global" : s === "friends" ? "Friends" : "This Challenge";
+          return (
           <TouchableOpacity
             key={s}
             style={[styles.scopeTab, scope === s && styles.scopeTabOn]}
             onPress={() => setScope(s)}
             accessibilityRole="button"
-            accessibilityLabel={
-              s === "global"
-                ? "Global leaderboard"
-                : s === "friends"
-                  ? "Friends leaderboard"
-                  : "This challenge leaderboard"
-            }
+            accessibilityLabel={`${scopeName} leaderboard — ${scope === s ? "selected" : "not selected"}`}
+            accessibilityState={{ selected: scope === s }}
           >
             <Text style={[styles.scopeTabText, scope === s && styles.scopeTabTextOn]}>
               {s === "global" ? "Global" : s === "friends" ? "Friends" : "This Challenge"}
             </Text>
           </TouchableOpacity>
-        ))}
+          );
+        })}
       </View>
 
       {loading ? <LoadingState message="Loading leaderboard..." /> : null}
@@ -556,6 +556,9 @@ function LeaderboardBody({
                     key={cid || String(i)}
                     style={[styles.challengePill, sel ? styles.challengePillOn : styles.challengePillOff]}
                     onPress={() => cid && setSelectedChallengeId(cid)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View leaderboard for ${title} — ${sel ? "selected" : "not selected"}`}
+                    accessibilityState={{ selected: sel }}
                   >
                     <Text style={[styles.challengePillText, sel && styles.challengePillTextOn]} numberOfLines={1}>
                       {title}
@@ -676,13 +679,17 @@ function CrownCard({ entry }: { entry: BoardEntry }) {
           <Text style={styles.crownPtsLabel}>pts</Text>
         </View>
       </View>
-      <View style={styles.crownActions}>
-        <TouchableOpacity style={styles.crownPrimary} accessibilityRole="button" accessibilityLabel="Respect">
+      <View
+        style={styles.crownActions}
+        accessibilityRole="none"
+        accessibilityLabel={`Respect and comment actions for ${entry.displayName || entry.username} — not interactive`}
+      >
+        <View style={styles.crownPrimary}>
           <Text style={styles.crownPrimaryText}>🔥 Respect</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.crownSecondary} accessibilityRole="button" accessibilityLabel="Comment">
+        </View>
+        <View style={styles.crownSecondary}>
           <Text style={styles.crownSecondaryText}>💬 Comment</Text>
-        </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

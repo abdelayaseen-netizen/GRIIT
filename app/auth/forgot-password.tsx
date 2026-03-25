@@ -71,6 +71,8 @@ export default function ForgotPasswordScreen() {
             style={[styles.button, { backgroundColor: themeColors.accent }]}
             onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Back to sign in"
           >
             <Text style={styles.buttonText}>Back to Sign In</Text>
           </TouchableOpacity>
@@ -102,6 +104,7 @@ export default function ForgotPasswordScreen() {
                 keyboardType="email-address"
                 autoComplete="email"
                 editable={!loading}
+                accessibilityLabel="Email address"
               />
             </View>
             <TouchableOpacity
@@ -110,7 +113,8 @@ export default function ForgotPasswordScreen() {
               disabled={loading}
               activeOpacity={0.8}
               accessibilityRole="button"
-              accessibilityLabel="Send reset link"
+              accessibilityLabel="Send password reset link"
+              accessibilityState={{ disabled: loading }}
             >
               {loading ? <ActivityIndicator color={DS_COLORS.white} /> : <Text style={styles.buttonText}>Send reset link</Text>}
             </TouchableOpacity>
@@ -125,7 +129,7 @@ export default function ForgotPasswordScreen() {
               disabled={loading}
               activeOpacity={0.8}
               accessibilityRole="button"
-              accessibilityLabel="Back to Sign In"
+              accessibilityLabel="Back to sign in without resetting"
             >
               <Text style={[styles.backLinkText, { color: themeColors.text.primary }]}>Back to Sign In</Text>
             </TouchableOpacity>

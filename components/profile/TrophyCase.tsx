@@ -52,7 +52,12 @@ export default React.memo(function TrophyCase(props: Snapshot) {
           const Icon = iconFor(b.icon);
           const iconColor = pct >= 50 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.DISCOVER_META_SILVER;
           return (
-            <View key={b.id} style={s.card}>
+            <View
+              key={b.id}
+              style={s.card}
+              accessibilityRole="none"
+              accessibilityLabel={`${b.name} — ${Math.min(current, b.target)} of ${b.target} ${b.unit} complete`}
+            >
               <View style={s.iconWrap}>
                 <Icon size={16} color={iconColor} />
               </View>

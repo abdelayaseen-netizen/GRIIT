@@ -433,7 +433,8 @@ export default function HomeScreen() {
                   style={s.completedHeader}
                   onPress={() => setCompletedExpanded((v) => !v)}
                   accessibilityRole="button"
-                  accessibilityLabel="Toggle completed today section"
+                  accessibilityLabel="Show or hide completed today tasks"
+                  accessibilityState={{ expanded: completedExpanded }}
                 >
                   <Text style={s.completedHeaderText}>Completed today ✓</Text>
                   <Text style={s.completedHeaderCount}>
@@ -478,7 +479,12 @@ export default function HomeScreen() {
           <View style={s.welcomeCard}>
             <Text style={s.welcomeTitle}>Welcome to GRIIT</Text>
             <Text style={s.welcomeBody}>Your stats will appear here as you build your streak.</Text>
-            <TouchableOpacity style={s.welcomeCta} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}>
+            <TouchableOpacity
+              style={s.welcomeCta}
+              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              accessibilityLabel="Start your first challenge"
+              accessibilityRole="button"
+            >
               <Text style={s.welcomeCtaText}>Start your first challenge</Text>
             </TouchableOpacity>
           </View>

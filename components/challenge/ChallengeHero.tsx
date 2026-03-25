@@ -74,7 +74,7 @@ export const ChallengeHero = React.memo(function ChallengeHero({
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               onPress={onShare}
               accessible
-              accessibilityLabel="Share this challenge"
+              accessibilityLabel={`Share ${challenge.title ?? "challenge"}`}
               accessibilityRole="button"
             >
               <Share2 size={18} color={DS_COLORS.white} />

@@ -8,9 +8,11 @@ type P = {
   placeholder?: string;
   label?: string;
   multiline?: boolean;
+  /** VoiceOver label for the text field (defaults to `label` when set) */
+  accessibilityLabel?: string;
 };
 
-export function CreateFlowInput({ value, onChangeText, placeholder, label, multiline }: P) {
+export function CreateFlowInput({ value, onChangeText, placeholder, label, multiline, accessibilityLabel }: P) {
   return (
     <View style={st.wrap}>
       {label != null && <Text style={st.label}>{label}</Text>}
@@ -21,6 +23,7 @@ export function CreateFlowInput({ value, onChangeText, placeholder, label, multi
         placeholder={placeholder}
         placeholderTextColor={tok.colors.textSecondaryCreate}
         multiline={multiline}
+        accessibilityLabel={accessibilityLabel ?? label}
       />
     </View>
   );

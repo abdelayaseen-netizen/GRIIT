@@ -38,6 +38,7 @@ export function CreateFlowHeader(p: {
           ]}
           accessibilityLabel={p.accessibilityRightLabel ?? p.rightLabel}
           accessibilityRole="button"
+          accessibilityState={{ disabled: p.rightDisabled }}
         >
           <Text style={[styles.rightText, isSoft && styles.rightTextSoft]}>
             {p.rightLabel}

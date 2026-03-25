@@ -179,7 +179,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
           <Text style={styles.subtitle}>This is how others see you on GRIIT.</Text>
         </View>
 
-        <Pressable style={styles.avatarWrap} onPress={pickAvatar} accessibilityRole="button" accessibilityLabel="Choose profile photo">
+        <Pressable style={styles.avatarWrap} onPress={pickAvatar} accessibilityRole="button" accessibilityLabel="Change profile photo">
           {avatarUri || avatarUrl ? (
             <Image
               source={{ uri: avatarUri ?? avatarUrl ?? "" }}
@@ -205,7 +205,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
             placeholderTextColor={C.textTertiary}
             autoCapitalize="none"
             autoCorrect={false}
-            accessibilityLabel="Username"
+            accessibilityLabel="Username — this is how others will find you"
           />
           {usernameOk ? <Text style={styles.ok}>✓</Text> : null}
         </View>
@@ -234,7 +234,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
           multiline
           textAlignVertical="top"
           maxLength={150}
-          accessibilityLabel="Bio"
+          accessibilityLabel="Bio — optional"
         />
         <Text style={styles.count}>{bio.length}/150</Text>
 
@@ -245,7 +245,8 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
           onPress={() => saveProfile({ skipMinimal: false })}
           disabled={!canContinue}
           accessibilityRole="button"
-          accessibilityLabel="Continue"
+          accessibilityLabel="Continue to next onboarding step"
+          accessibilityState={{ disabled: !canContinue }}
         >
           {saving ? <ActivityIndicator color={C.WHITE} /> : <Text style={styles.primaryButtonText}>Continue</Text>}
         </Pressable>
@@ -255,7 +256,8 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
           onPress={() => saveProfile({ skipMinimal: true })}
           disabled={saving}
           accessibilityRole="button"
-          accessibilityLabel="Skip for now"
+          accessibilityLabel="Skip profile setup for now"
+          accessibilityState={{ disabled: saving }}
         >
           <Text style={styles.skipText}>Skip for now</Text>
         </Pressable>

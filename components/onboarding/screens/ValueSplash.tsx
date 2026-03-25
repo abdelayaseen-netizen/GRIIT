@@ -90,7 +90,7 @@ export default function ValueSplash({ onContinue }: ValueSplashProps) {
             <Pressable
               style={styles.primaryButton}
               onPress={() => onContinue()}
-              accessibilityLabel="Continue onboarding"
+              accessibilityLabel="Get started with GRIIT"
               accessibilityRole="button"
             >
               <Text style={styles.primaryButtonText}>I&apos;m ready</Text>

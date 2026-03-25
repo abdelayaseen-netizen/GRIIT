@@ -16,7 +16,7 @@ export function DurationPill({
       style={[s.pill, selected && s.pillSelected]}
       onPress={onPress}
       activeOpacity={0.8}
-      accessibilityLabel={`Set duration to ${label}`}
+      accessibilityLabel={`${label} — ${selected ? "selected" : "tap to select"}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
     >

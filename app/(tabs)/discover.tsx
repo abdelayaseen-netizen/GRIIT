@@ -243,7 +243,7 @@ export default function DiscoverScreen() {
                 style={styles.v3SearchBtn}
                 onPress={() => setSearchOpen((v) => !v)}
                 activeOpacity={0.8}
-                accessibilityLabel={searchOpen ? "Close search" : "Open search"}
+                accessibilityLabel={searchOpen ? "Close search" : "Search challenges"}
                 accessibilityRole="button"
               >
                 <Search size={15} color={DS_COLORS.buttonDisabledText} />
@@ -310,9 +310,9 @@ export default function DiscoverScreen() {
           <View style={styles.v3PillsWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.v3PillsContent}>
               {[
-                { key: "all" as const, label: "All", a11y: "Show all challenges" },
-                { key: "solo" as const, label: "Solo", a11y: "Show solo challenges only" },
-                { key: "team" as const, label: "Team", a11y: "Show team challenges only" },
+                { key: "all" as const, label: "All" },
+                { key: "solo" as const, label: "Solo" },
+                { key: "team" as const, label: "Team" },
               ].map((f) => (
                 <TouchableOpacity
                   key={f.key}
@@ -328,7 +328,8 @@ export default function DiscoverScreen() {
                     backgroundColor: challengeFilter === f.key ? DS_COLORS.challengeHeaderDark : DS_COLORS.WHITE,
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel={f.a11y}
+                  accessibilityLabel={`Filter by ${f.label} — ${challengeFilter === f.key ? "selected" : "not selected"}`}
+                  accessibilityState={{ selected: challengeFilter === f.key }}
                 >
                   <Text style={{ fontSize: 13, fontWeight: "500", color: challengeFilter === f.key ? DS_COLORS.WHITE : DS_COLORS.textSecondary }}>
                     {f.label}

@@ -676,7 +676,14 @@ export default function TaskEditorModal({
     children: React.ReactNode;
   }) => (
     <View style={s.collapsibleWrap}>
-      <TouchableOpacity style={s.collapsibleHeader} onPress={onToggle} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={s.collapsibleHeader}
+        onPress={onToggle}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`${title} — ${open ? "expanded" : "collapsed"}`}
+        accessibilityState={{ expanded: open }}
+      >
         <Text style={s.collapsibleTitle}>{title}</Text>
         {open ? <ChevronUp size={18} color={tokenColors.textSecondaryCreate} /> : <ChevronDown size={18} color={tokenColors.textSecondaryCreate} />}
       </TouchableOpacity>
@@ -730,6 +737,9 @@ export default function TaskEditorModal({
                     if (cat.id === "free_write")
                       setAllowFreeWrite(!journalType.includes(cat.id));
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${cat.label} — ${sel ? "selected" : "tap to select"}`}
+                  accessibilityState={{ selected: sel }}
                 >
                   <Text style={[s.chipText, sel && s.chipTextSelected]}>
                     {cat.label}
@@ -764,6 +774,9 @@ export default function TaskEditorModal({
                       key={w}
                       style={[s.presetCard, wordLimitWords === w && s.presetCardActive]}
                       onPress={() => setWordLimitWords(w)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${w} words max — ${wordLimitWords === w ? "selected" : "tap to select"}`}
+                      accessibilityState={{ selected: wordLimitWords === w }}
                     >
                       <Text style={[s.presetNum, wordLimitWords === w && s.presetNumActive]}>{w}</Text>
                       <Text style={[s.presetLabel, wordLimitWords === w && s.presetLabelActive]}>
@@ -911,6 +924,9 @@ export default function TaskEditorModal({
               style={s.collapsibleHeader}
               onPress={() => setTeDetailsExpanded(!teDetailsExpanded)}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Time details — ${teDetailsExpanded ? "expanded" : "collapsed"}`}
+              accessibilityState={{ expanded: teDetailsExpanded }}
             >
               <Text style={s.collapsibleTitle}>Time details</Text>
               {teDetailsExpanded ? <ChevronUp size={18} color={tokenColors.textSecondaryCreate} /> : <ChevronDown size={18} color={tokenColors.textSecondaryCreate} />}
@@ -1115,8 +1131,14 @@ export default function TaskEditorModal({
           rightDisabled={!canSave()}
           rightButtonVariant="primary"
           rightButtonPill
-          accessibilityCancelLabel="Cancel editing task"
-          accessibilityRightLabel="Save task"
+          accessibilityCancelLabel="Cancel and discard this task"
+          accessibilityRightLabel={
+            editingTask
+              ? "Save task"
+              : title.trim().length > 0
+                ? `Add task: ${title.trim()}`
+                : "Add task — enter a task name first"
+          }
         />
 
         <InlineError message={error} onDismiss={clearError} />
@@ -1137,6 +1159,7 @@ export default function TaskEditorModal({
                 value={title}
                 onChangeText={setTitle}
                 placeholder="e.g. Morning run, Journal, Meditate..."
+                accessibilityLabel="Task name"
               />
             </View>
 
@@ -1149,7 +1172,10 @@ export default function TaskEditorModal({
               <View style={cfs.section}>
                 <Text style={cfs.sectionLabel}>Verification</Text>
                 <View style={s.typeGrid}>
-                  {(["manual", "photo_proof", "strava_activity"] as const).map((method) => (
+                  {(["manual", "photo_proof", "strava_activity"] as const).map((method) => {
+                    const methodLabel =
+                      method === "manual" ? "Manual" : method === "photo_proof" ? "Photo proof" : "Strava activity";
+                    return (
                     <TouchableOpacity
                       key={method}
                       style={[
@@ -1161,6 +1187,9 @@ export default function TaskEditorModal({
                         if (method === "photo_proof") setRequirePhotoProof(true);
                         else if (method === "manual" && taskType !== "photo") setRequirePhotoProof(false);
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${methodLabel} verification — ${verificationMethod === method ? "selected" : "tap to select"}`}
+                      accessibilityState={{ selected: verificationMethod === method }}
                     >
                       <Text style={[
                         s.verificationPillText,
@@ -1169,7 +1198,8 @@ export default function TaskEditorModal({
                         {method === "manual" ? "Manual" : method === "photo_proof" ? "Photo proof" : "Strava activity"}
                       </Text>
                     </TouchableOpacity>
-                  ))}
+                  );
+                  })}
                 </View>
                 {verificationMethod === "photo_proof" && (
                   <CreateFlowCheckbox
@@ -1190,6 +1220,9 @@ export default function TaskEditorModal({
                           key={sport}
                           style={[s.verificationPill, stravaSport === sport && s.verificationPillActive]}
                           onPress={() => setStravaSport(sport)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${sport} Strava sport — ${stravaSport === sport ? "selected" : "tap to select"}`}
+                          accessibilityState={{ selected: stravaSport === sport }}
                         >
                           <Text style={[s.verificationPillText, stravaSport === sport && s.verificationPillTextActive]}>{sport}</Text>
                         </TouchableOpacity>

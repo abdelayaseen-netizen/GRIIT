@@ -74,7 +74,7 @@ export const PopularChallengeRow = React.memo(function PopularChallengeRow({
         onPress={() => onPress(challenge.id)}
         activeOpacity={0.86}
         accessibilityRole="button"
-        accessibilityLabel={`Join ${challenge.title}`}
+        accessibilityLabel={`Join ${challenge.title} — ${theme.label} — ${days} days — ${members} people in`}
       >
         <Text style={s.joinText}>Join</Text>
       </TouchableOpacity>

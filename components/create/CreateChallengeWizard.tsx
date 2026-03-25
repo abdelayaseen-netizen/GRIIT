@@ -457,13 +457,23 @@ export default function CreateChallengeWizard() {
       {resumeBanner ? (
         <View style={styles.banner}>
           <Text style={styles.bannerText}>Continue where you left off?</Text>
-          <TouchableOpacity onPress={() => void resumeDraft()} style={styles.bannerBtn}>
+          <TouchableOpacity
+            onPress={() => void resumeDraft()}
+            style={styles.bannerBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Resume your saved challenge draft"
+          >
             <Text style={styles.bannerBtnText}>Resume</Text>
           </TouchableOpacity>
         </View>
       ) : null}
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={tryCancel} hitSlop={12}>
+        <TouchableOpacity
+          onPress={tryCancel}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Cancel and close create challenge"
+        >
           <Text style={styles.cancel}>Cancel</Text>
         </TouchableOpacity>
         <Text style={styles.topTitle}>Create challenge</Text>
@@ -495,6 +505,7 @@ export default function CreateChallengeWizard() {
                   placeholder="e.g. 75 Day Hard, Iron Mind..."
                   placeholderTextColor={DS_COLORS.TEXT_MUTED}
                   value={title}
+                  accessibilityLabel="Challenge name"
                   onChangeText={(text) => {
                     setTitle(text);
                     if (nameError) {
@@ -527,6 +538,15 @@ export default function CreateChallengeWizard() {
                       style={[styles.whoCard, sel && styles.whoCardSel]}
                       onPress={() => setWho(row.id)}
                       activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        row.id === "solo"
+                          ? "Solo challenge — just you — tap to select"
+                          : row.id === "duo"
+                            ? "Duo challenge — you and one partner — tap to select"
+                            : "Squad challenge — two to ten people — tap to select"
+                      }
+                      accessibilityState={{ selected: sel }}
                     >
                       <Icon size={24} color={sel ? CREATE_SELECTION.text : DS_COLORS.TEXT_SECONDARY} />
                       <Text style={[styles.whoTitle, sel && { color: CREATE_SELECTION.text }]}>{row.t}</Text>
@@ -545,6 +565,9 @@ export default function CreateChallengeWizard() {
                       setDurationDays(d);
                       setCustomDur("");
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${d} day challenge — ${durationDays === d ? "selected" : "tap to select"}`}
+                    accessibilityState={{ selected: durationDays === d }}
                   >
                     <Text style={[styles.pillTxt, durationDays === d && styles.pillTxtSel]}>{d} days</Text>
                   </TouchableOpacity>
@@ -552,6 +575,9 @@ export default function CreateChallengeWizard() {
                 <TouchableOpacity
                   style={[styles.pill, durationDays === null && styles.pillSel]}
                   onPress={() => setDurationDays(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Custom duration — ${durationDays === null ? "selected" : "tap to select"}`}
+                  accessibilityState={{ selected: durationDays === null }}
                 >
                   <Text style={[styles.pillTxt, durationDays === null && styles.pillTxtSel]}>Custom</Text>
                 </TouchableOpacity>
@@ -562,6 +588,7 @@ export default function CreateChallengeWizard() {
                     style={[styles.input, { width: 64 }]}
                     keyboardType="number-pad"
                     value={customDur}
+                    accessibilityLabel="Custom challenge duration in days"
                     onChangeText={(v) => {
                       setCustomDur(v);
                       setDurationDays(null);
@@ -575,6 +602,9 @@ export default function CreateChallengeWizard() {
                 <TouchableOpacity
                   style={[styles.typeCard, challengeType === "standard" && styles.typeCardSel]}
                   onPress={() => setChallengeType("standard")}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Standard — Multi-day, daily tasks — ${challengeType === "standard" ? "selected" : "tap to select"}`}
+                  accessibilityState={{ selected: challengeType === "standard" }}
                 >
                   <Text style={styles.typeCardTitle}>Standard</Text>
                   <Text style={styles.typeCardSub}>Multi-day, daily tasks</Text>
@@ -585,6 +615,9 @@ export default function CreateChallengeWizard() {
                     setChallengeType("one_day");
                     setDurationDays(1);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`24-Hour — One-day sprint — ${challengeType === "one_day" ? "selected" : "tap to select"}`}
+                  accessibilityState={{ selected: challengeType === "one_day" }}
                 >
                   <Text style={styles.typeCardTitle}>24-Hour</Text>
                   <Text style={styles.typeCardSub}>One-day sprint</Text>
@@ -620,6 +653,9 @@ export default function CreateChallengeWizard() {
                         }
                       }}
                       activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${pack.name} pack — ${pack.taskCount} tasks — tap to use this pack`}
+                      accessibilityState={{ selected: sel }}
                     >
                       <Text style={styles.packEmoji}>{pack.emoji}</Text>
                       <Text style={styles.packName} numberOfLines={1}>
@@ -645,14 +681,24 @@ export default function CreateChallengeWizard() {
                     <Text style={styles.taskTitle} numberOfLines={1}>
                       {task.title}
                     </Text>
-                    <TouchableOpacity onPress={() => setTasks((p) => p.filter((x) => x.id !== task.id))}>
+                    <TouchableOpacity
+                      onPress={() => setTasks((p) => p.filter((x) => x.id !== task.id))}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove task ${task.title}`}
+                    >
                       <Trash2 size={18} color={DS_COLORS.TEXT_MUTED} />
                     </TouchableOpacity>
                   </View>
                 ))
               )}
               {taskStepError ? <Text style={styles.errText}>Add at least one daily task</Text> : null}
-              <TouchableOpacity style={styles.dashedAdd} onPress={() => setNewTaskOpen(true)} activeOpacity={0.85}>
+              <TouchableOpacity
+                style={styles.dashedAdd}
+                onPress={() => setNewTaskOpen(true)}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Add a new task to this challenge"
+              >
                 <Text style={styles.dashedAddText}>+ Add custom task</Text>
               </TouchableOpacity>
             </>
@@ -667,6 +713,9 @@ export default function CreateChallengeWizard() {
                 <TouchableOpacity
                   style={[styles.ruleCard, difficultyMode === "standard" && styles.ruleCardSel]}
                   onPress={() => setDifficultyMode("standard")}
+                  accessibilityRole="button"
+                  accessibilityLabel="Standard difficulty — self-reported completion, streak freezes allowed — tap to select"
+                  accessibilityState={{ selected: difficultyMode === "standard" }}
                 >
                   <Text style={styles.ruleTitle}>Standard</Text>
                   <Text style={styles.ruleBullet}>• Self-reported completion</Text>
@@ -676,6 +725,9 @@ export default function CreateChallengeWizard() {
                 <TouchableOpacity
                   style={[styles.ruleCard, difficultyMode === "hard" && styles.ruleCardSel]}
                   onPress={() => setDifficultyMode("hard")}
+                  accessibilityRole="button"
+                  accessibilityLabel="Hard mode — photo proof required, no streak freezes, miss a day means Day 1 again — tap to select"
+                  accessibilityState={{ selected: difficultyMode === "hard" }}
                 >
                   <Text style={styles.ruleTitle}>Hard mode 🔥</Text>
                   <Text style={styles.ruleBullet}>• Photo proof every task</Text>
@@ -697,6 +749,9 @@ export default function CreateChallengeWizard() {
                     style={[styles.pillSm, photoProof === p.id && styles.pillSel, hardLocked && { opacity: 0.35 }]}
                     disabled={hardLocked}
                     onPress={() => !hardLocked && setPhotoProof(p.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Photo proof ${p.label} — ${photoProof === p.id ? "selected" : "tap to select"}`}
+                    accessibilityState={{ selected: photoProof === p.id, disabled: hardLocked }}
                   >
                     <Text style={[styles.pillTxt, photoProof === p.id && styles.pillTxtSel]}>{p.label}</Text>
                   </TouchableOpacity>
@@ -718,6 +773,9 @@ export default function CreateChallengeWizard() {
                         onPress={() =>
                           setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
                         }
+                        accessibilityRole="button"
+                        accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
+                        accessibilityState={{ selected: sel }}
                       >
                         <Text style={[styles.pillTxt, sel && styles.pillTxtSel]}>{c}</Text>
                       </TouchableOpacity>
@@ -735,6 +793,9 @@ export default function CreateChallengeWizard() {
                     <TouchableOpacity
                       style={[styles.typeCard, teamRules === "all" && styles.typeCardSel]}
                       onPress={() => setTeamRules("all")}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Everyone does all tasks — each person completes every task — ${teamRules === "all" ? "selected" : "tap to select"}`}
+                      accessibilityState={{ selected: teamRules === "all" }}
                     >
                       <Text style={styles.typeCardTitle}>Everyone does all</Text>
                       <Text style={styles.typeCardSub}>Each person completes every task individually.</Text>
@@ -742,6 +803,9 @@ export default function CreateChallengeWizard() {
                     <TouchableOpacity
                       style={[styles.typeCard, teamRules === "shared" && styles.typeCardSel]}
                       onPress={() => setTeamRules("shared")}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Shared progress — team splits numeric targets — ${teamRules === "shared" ? "selected" : "tap to select"}`}
+                      accessibilityState={{ selected: teamRules === "shared" }}
                     >
                       <Text style={styles.typeCardTitle}>Shared progress</Text>
                       <Text style={styles.typeCardSub}>Team splits numeric targets across members.</Text>
@@ -795,6 +859,15 @@ export default function CreateChallengeWizard() {
                     key={row.v}
                     style={[styles.visRow, sel && styles.visRowSel]}
                     onPress={() => setVisibility(row.v)}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      row.v === "PUBLIC"
+                        ? `Public challenge — visible to everyone on Discover — ${sel ? "selected" : "tap to select"}`
+                        : row.v === "FRIENDS"
+                          ? `Friends only — only your friends can see and join — ${sel ? "selected" : "tap to select"}`
+                          : `Private challenge — only you can see it — ${sel ? "selected" : "tap to select"}`
+                    }
+                    accessibilityState={{ selected: sel }}
                   >
                     <Icon size={20} color={sel ? CREATE_SELECTION.text : DS_COLORS.TEXT_SECONDARY} />
                     <View style={styles.visTextCol}>
@@ -813,9 +886,15 @@ export default function CreateChallengeWizard() {
                     placeholderTextColor={DS_COLORS.TEXT_MUTED}
                     value={duoInvite}
                     onChangeText={setDuoInvite}
+                    accessibilityLabel="Partner handle or phone number"
                   />
                   <Text style={styles.caption}>Your partner must accept before the challenge begins.</Text>
-                  <TouchableOpacity style={styles.outlineBtn} onPress={() => void Share.share({ message: "Join me on GRIIT!" })}>
+                  <TouchableOpacity
+                    style={styles.outlineBtn}
+                    onPress={() => void Share.share({ message: "Join me on GRIIT!" })}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share duo invite link for this challenge"
+                  >
                     <Text style={styles.outlineBtnTxt}>Share invite link</Text>
                   </TouchableOpacity>
                 </View>
@@ -823,7 +902,12 @@ export default function CreateChallengeWizard() {
               {who === "squad" && (
                 <View style={styles.inviteSection}>
                   <Text style={styles.fieldLabel}>Invite your squad</Text>
-                  <TouchableOpacity style={styles.outlineBtn} onPress={() => void Share.share({ message: "Join my squad challenge on GRIIT!" })}>
+                  <TouchableOpacity
+                    style={styles.outlineBtn}
+                    onPress={() => void Share.share({ message: "Join my squad challenge on GRIIT!" })}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share squad invite link for this challenge"
+                  >
                     <Text style={styles.outlineBtnTxt}>Share invite link</Text>
                   </TouchableOpacity>
                   <Text style={styles.caption}>Challenge starts immediately. Others can join within the first 24 hours.</Text>
@@ -843,7 +927,12 @@ export default function CreateChallengeWizard() {
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         {step > 1 && step < 4 && (
-          <TouchableOpacity style={styles.backOut} onPress={() => animateToStep(step - 1, step)}>
+          <TouchableOpacity
+            style={styles.backOut}
+            onPress={() => animateToStep(step - 1, step)}
+            accessibilityRole="button"
+            accessibilityLabel="Go back to previous step"
+          >
             <Text style={styles.backOutTxt}>Back</Text>
           </TouchableOpacity>
         )}
@@ -853,30 +942,52 @@ export default function CreateChallengeWizard() {
             onPress={onNext1}
             activeOpacity={0.9}
             disabled={!isValidChallengeName}
+            accessibilityRole="button"
+            accessibilityLabel="Continue to daily tasks step"
             accessibilityState={{ disabled: !isValidChallengeName }}
           >
             <Text style={[styles.primaryTxt, !isValidChallengeName && styles.primaryTxtDisabled]}>Next: daily tasks</Text>
           </TouchableOpacity>
         )}
         {step === 2 && (
-          <TouchableOpacity style={styles.primary} onPress={onNext2} activeOpacity={0.9}>
+          <TouchableOpacity
+            style={styles.primary}
+            onPress={onNext2}
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Continue to challenge rules step"
+          >
             <Text style={styles.primaryTxt}>Next: rules</Text>
           </TouchableOpacity>
         )}
         {step === 3 && (
-          <TouchableOpacity style={styles.primary} onPress={onNext3} activeOpacity={0.9}>
+          <TouchableOpacity
+            style={styles.primary}
+            onPress={onNext3}
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Continue to review and launch step"
+          >
             <Text style={styles.primaryTxt}>Review & launch</Text>
           </TouchableOpacity>
         )}
         {step === 4 && (
           <View style={styles.rowFooter}>
-            <TouchableOpacity style={styles.backOut} onPress={() => animateToStep(3, 4)}>
+            <TouchableOpacity
+              style={styles.backOut}
+              onPress={() => animateToStep(3, 4)}
+              accessibilityRole="button"
+              accessibilityLabel="Go back to previous step"
+            >
               <Text style={styles.backOutTxt}>Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.launch, submitting && { opacity: 0.6 }]}
               disabled={submitting}
               onPress={() => void handleLaunch()}
+              accessibilityRole="button"
+              accessibilityLabel={`Launch ${title.trim() || "challenge"}`}
+              accessibilityState={{ disabled: submitting }}
             >
               <Text style={styles.launchTxt}>{submitting ? "Launching…" : "Launch challenge"}</Text>
             </TouchableOpacity>

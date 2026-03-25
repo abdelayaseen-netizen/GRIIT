@@ -18,8 +18,9 @@ export function FilterChip({
       style={[s.chip, selected && s.chipActive]}
       onPress={onPress}
       activeOpacity={0.8}
-      accessibilityLabel={`Filter by ${label}`}
+      accessibilityLabel={`${label === "All" ? "All categories" : `${label} category`} — ${selected ? "selected" : "not selected"}`}
       accessibilityRole="button"
+      accessibilityState={{ selected }}
     >
       {icon != null && <>{icon}</>}
       <Text style={[s.text, selected && s.textActive]}>{label}</Text>

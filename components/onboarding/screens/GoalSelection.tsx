@@ -37,7 +37,7 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 toggleGoal(goal.id);
               }}
-              accessibilityLabel={goal.title}
+              accessibilityLabel={`${goal.title} — ${goal.subtitle} — ${isSelected ? "selected" : "tap to select"}`}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
             >
@@ -64,7 +64,7 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
             onContinue();
           }}
           disabled={selectedGoals.length === 0}
-          accessibilityLabel="Continue to next step"
+          accessibilityLabel="Continue with selected goals"
           accessibilityRole="button"
           accessibilityState={{ disabled: selectedGoals.length === 0 }}
         >
