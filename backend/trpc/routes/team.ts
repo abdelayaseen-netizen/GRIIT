@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
-import { generateTeamCode } from "../../../lib/team-code";
+import { generateTeamCode } from "../../lib/team-code";
 
 const createTeamSchema = z.object({
   name: z.string().min(3).max(30).trim(),
