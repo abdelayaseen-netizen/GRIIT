@@ -41,6 +41,8 @@ import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { StreakFreezeModal } from "@/components/StreakFreezeModal";
+import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -112,12 +114,13 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { stats, refetchAll } = useApp();
+  const { stats, refetchAll, profile } = useApp();
   const [leaveChallengeError, setLeaveChallengeError] = React.useState<string | null>(null);
   const [leaveConfirmChallengeId, setLeaveConfirmChallengeId] = React.useState<string | null>(null);
   const [showPointsExplainer, setShowPointsExplainer] = React.useState(false);
   const [completedExpanded, setCompletedExpanded] = React.useState(true);
   const prevCompletedCount = React.useRef(0);
+  const [showFreezeModal, setShowFreezeModal] = React.useState(false);
 
   const homeQuery = useQuery({
     queryKey: ["home", "v2", user?.id ?? ""],
@@ -216,10 +219,26 @@ export default function HomeScreen() {
   const rank = deriveRank(stats ?? null);
   const securedKeys = homeQuery.data?.securedDateKeys ?? [];
   const hasEverSecured = securedKeys.length > 0 || (stats?.totalDaysSecured ?? 0) > 0;
-  const statsAllZero = streak === 0 && points === 0;
+  const completedChallengesCount = stats?.completedChallenges ?? 0;
+  const statsAllZero = streak === 0 && points === 0 && completedChallengesCount === 0;
   const showStatDash = statsAllZero;
+  const streakPillLabel = streak === 0 ? "Day 1" : String(streak);
 
   const showCelebration = useCelebrationStore((s) => s.show);
+
+  React.useEffect(() => {
+    if (isGuest || !user?.id) return;
+    if (!profile || streak <= 0) return;
+    const keys = [...(homeQuery.data?.securedDateKeys ?? [])].sort();
+    if (keys.length === 0) return;
+    const lastKey = keys[keys.length - 1]!;
+    const today = getTodayDateKey();
+    const yesterday = getYesterdayDateKey();
+    const missedWindow = lastKey !== today && lastKey !== yesterday;
+    if (missedWindow) {
+      setShowFreezeModal(true);
+    }
+  }, [isGuest, user?.id, profile?.username, streak, homeQuery.data?.securedDateKeys]);
 
   useFocusEffect(
     useCallback(() => {
@@ -321,7 +340,7 @@ export default function HomeScreen() {
           <View style={s.pills}>
             <View style={[s.pill, streak > 0 && s.pillWarm]}>
               <Flame size={13} color={DS_COLORS.DISCOVER_CORAL} />
-              <Text style={s.pillText}>{showStatDash ? "—" : String(streak)}</Text>
+              <Text style={s.pillText}>{showStatDash ? "—" : streakPillLabel}</Text>
             </View>
             <TouchableOpacity
               style={[s.pill, points > 0 && s.pillPurple]}
@@ -446,27 +465,38 @@ export default function HomeScreen() {
         />
         <NextUnlock currentStreak={streak} />
 
-        <View style={s.statsRow}>
-          <Card padded={false} containerStyle={s.stat}>
-            <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
-              <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
-            </View>
-            <StatBadge value={showStatDash ? "—" : streak} label="streak" />
-          </Card>
-          <Card padded={false} containerStyle={s.stat}>
-            <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
-              <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
-            </View>
-            <StatBadge value={showStatDash ? "—" : points} label="points" />
-          </Card>
-          <Card padded={false} containerStyle={s.stat}>
-            <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
-              <Target size={16} color={DS_COLORS.GREEN} />
-            </View>
-            <Text style={s.rankValue}>{rank}</Text>
-            <Text style={s.statLabel}>rank</Text>
-          </Card>
-        </View>
+        {statsAllZero ? (
+          <View style={s.welcomeCard}>
+            <Text style={s.welcomeTitle}>Welcome to GRIIT</Text>
+            <Text style={s.welcomeBody}>Your stats will appear here as you build your streak.</Text>
+            <TouchableOpacity style={s.welcomeCta} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}>
+              <Text style={s.welcomeCtaText}>Start your first challenge</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={s.statsRow}>
+            <Card padded={false} containerStyle={s.stat}>
+              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
+                <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
+              </View>
+              <StatBadge value={streak === 0 ? "Day 1" : streak} label="streak" />
+              {streak === 0 ? <Text style={s.streakSubtitle}>Start your streak today</Text> : null}
+            </Card>
+            <Card padded={false} containerStyle={s.stat}>
+              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
+                <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
+              </View>
+              <StatBadge value={points} label="points" />
+            </Card>
+            <Card padded={false} containerStyle={s.stat}>
+              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
+                <Target size={16} color={DS_COLORS.GREEN} />
+              </View>
+              <Text style={s.rankValue}>{rank}</Text>
+              <Text style={s.statLabel}>rank</Text>
+            </Card>
+          </View>
+        )}
 
         <LiveFeedSection />
         <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
@@ -485,6 +515,16 @@ export default function HomeScreen() {
         destructive
         onCancel={() => setLeaveConfirmChallengeId(null)}
         onConfirm={() => void confirmLeaveChallenge()}
+      />
+      <StreakFreezeModal
+        visible={showFreezeModal}
+        streakCount={streak}
+        freezesRemaining={profile?.streak_freezes_remaining ?? 1}
+        onUseFreeze={() => {
+          console.log("[StreakFreeze] Freeze used");
+          setShowFreezeModal(false);
+        }}
+        onLetReset={() => setShowFreezeModal(false)}
       />
     </SafeAreaView>
   );
@@ -554,6 +594,42 @@ const s = StyleSheet.create({
     color: DS_COLORS.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  streakSubtitle: {
+    fontSize: 11,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 2,
+  },
+  welcomeCard: {
+    marginTop: DS_SPACING.md,
+    marginHorizontal: DS_SPACING.xl,
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: 14,
+    padding: DS_SPACING.lg,
+    alignItems: "center",
+  },
+  welcomeTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  welcomeBody: {
+    marginTop: 6,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+  },
+  welcomeCta: {
+    marginTop: 12,
+    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+  },
+  welcomeCtaText: {
+    color: DS_COLORS.WHITE,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    fontWeight: "700",
   },
   loadingWrap: { paddingVertical: DS_SPACING.xxl, alignItems: "center" },
   goalsSection: { paddingTop: 14 },

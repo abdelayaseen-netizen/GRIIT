@@ -99,7 +99,7 @@ export default function TeamInviteScreen() {
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Invite teammates</Text>
-        <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Close invite screen" accessibilityRole="button">
+        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} accessibilityLabel="Close invite screen" accessibilityRole="button">
           <X size={18} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
       </View>

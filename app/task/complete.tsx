@@ -104,7 +104,7 @@ function firstString(v: string | string[] | undefined): string {
 
 function goBackOrHome(router: ReturnType<typeof useRouter>) {
   if (router.canGoBack()) {
-    router.back();
+    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
   } else {
     router.replace(ROUTES.TABS_HOME as never);
   }

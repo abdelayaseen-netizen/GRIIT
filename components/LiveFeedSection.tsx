@@ -7,7 +7,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_COLORS, DS_SHADOWS, DS_SPACING } from "@/lib/design-system";
-import { getAvatarColor } from "@/lib/avatar";
+import { getAvatarColor } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import CommentSheet, { type FeedComment } from "@/components/CommentSheet";
 
@@ -63,15 +63,15 @@ function StandardPostCard({
   onComment: () => void;
   onShare: () => void;
 }) {
-  const colors = getAvatarColor(post.userId);
+  const avatarBg = getAvatarColor(post.username ?? post.displayName ?? "");
   const initial = (post.displayName || post.username || "?").trim().charAt(0).toUpperCase();
   const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
 
   return (
     <View style={[styles.card, DS_SHADOWS.cardSubtle]} accessibilityRole="summary">
       <View style={styles.cardHeader}>
-        <View style={[styles.avatar38, { backgroundColor: colors.bg }]}>
-          <Text style={[styles.avatarLetter14, { color: colors.letter }]}>{initial}</Text>
+        <View style={[styles.avatar38, { backgroundColor: avatarBg }]}>
+          <Text style={styles.avatarLetter14}>{initial}</Text>
         </View>
         <View style={styles.headerInfo}>
           <View style={styles.nameRow}>
@@ -136,7 +136,7 @@ function StandardPostCard({
           accessibilityLabel={post.reactedByMe ? "Remove respect" : "Give respect"}
         >
           <Text style={[styles.respectBtnText, post.reactedByMe && styles.respectBtnTextActive]}>
-            🔥 Respect · {post.respectCount}
+            🔥 Respect{post.respectCount > 0 ? ` · ${post.respectCount}` : ""}
           </Text>
         </TouchableOpacity>
         <View style={styles.actionRight}>
@@ -163,7 +163,7 @@ function MilestoneCard({
   onRespect: () => void;
   onComment: () => void;
 }) {
-  const colors = getAvatarColor(post.userId);
+  const avatarBg = getAvatarColor(post.username ?? post.displayName ?? "");
   const initial = (post.displayName || post.username || "?").trim().charAt(0).toUpperCase();
   return (
     <View style={[styles.milestoneCard, DS_SHADOWS.cardSubtle]}>
@@ -176,15 +176,15 @@ function MilestoneCard({
         Finished — Day {post.totalDays} of {post.totalDays}
       </Text>
       <View style={styles.milestoneUserRow}>
-        <View style={[styles.avatar26, { backgroundColor: colors.bg }]}>
-          <Text style={[styles.avatarLetter12, { color: colors.letter }]}>{initial}</Text>
+        <View style={[styles.avatar26, { backgroundColor: avatarBg }]}>
+          <Text style={styles.avatarLetter12}>{initial}</Text>
         </View>
         <Text style={styles.milestoneUsername}>{post.displayName || post.username}</Text>
         <Text style={styles.milestoneTime}>{relativeTime(post.createdAt)}</Text>
       </View>
       <View style={styles.milestoneActions}>
         <TouchableOpacity style={styles.milestonePrimary} onPress={onRespect} accessibilityRole="button" accessibilityLabel="Respect">
-          <Text style={styles.milestonePrimaryText}>🔥 Respect · {post.respectCount}</Text>
+          <Text style={styles.milestonePrimaryText}>🔥 Respect{post.respectCount > 0 ? ` · ${post.respectCount}` : ""}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.milestoneSecondary} onPress={onComment} accessibilityRole="button" accessibilityLabel="Comment">
           <Text style={styles.milestoneSecondaryText}>💬 Comment</Text>
@@ -224,6 +224,24 @@ export default function LiveFeedSection() {
     if (post.visibility === "private" && post.userId !== user?.id) return false;
     return true;
   });
+  // Feed deduplication:
+  // 1) one post per user per challenge per calendar day
+  // 2) no two consecutive posts from the same user
+  // 3) limit to 20 after diversity filtering
+  const seen = new Set<string>();
+  const dedupedFeed = posts.filter((post) => {
+    const dayKey = new Date(post.createdAt).toDateString();
+    const challengeKey = post.challengeId ?? post.challengeName ?? "unknown";
+    const key = `${post.userId}-${challengeKey}-${dayKey}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const diverseFeed = dedupedFeed.filter((post, i, arr) => {
+    if (i === 0) return true;
+    return post.userId !== arr[i - 1]?.userId;
+  });
+  const finalFeed = diverseFeed.slice(0, 20);
   const moving = feedQuery.data?.movingCount ?? 0;
 
   const commentsQuery = useQuery({
@@ -392,7 +410,7 @@ export default function LiveFeedSection() {
         </View>
       ) : (
         <FlatList
-          data={posts}
+          data={finalFeed}
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
           renderItem={renderItem}
@@ -471,10 +489,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarLetter14: { fontSize: 14, fontWeight: "700" },
+  avatarLetter14: { fontSize: 14, fontWeight: "700", color: DS_COLORS.white },
   headerInfo: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
-  username13: { fontSize: 13, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  username13: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY },
   streakPill: {
     backgroundColor: DS_COLORS.ACCENT_TINT,
     paddingHorizontal: 7,
@@ -482,18 +500,18 @@ const styles = StyleSheet.create({
     borderRadius: 99,
   },
   streakPillText: { fontSize: 10, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
-  challenge11: { fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
-  time11: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, flexShrink: 0 },
+  challenge11: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY, marginTop: 0 },
+  time11: { fontSize: 11, fontWeight: "400", color: DS_COLORS.TEXT_TERTIARY, flexShrink: 0, textAlign: "right" },
 
   progressBlock: { paddingHorizontal: 14, paddingTop: 10 },
-  dayLabel: { fontSize: 11, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL, marginBottom: 5 },
+  dayLabel: { fontSize: 12, fontWeight: "400", color: DS_COLORS.DISCOVER_CORAL, marginBottom: 5 },
   track: {
-    height: 3,
+    height: 6,
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
-    borderRadius: 99,
+    borderRadius: 3,
     overflow: "hidden",
   },
-  fill: { height: 3, borderRadius: 99, backgroundColor: DS_COLORS.DISCOVER_CORAL },
+  fill: { height: 6, borderRadius: 3, backgroundColor: DS_COLORS.DISCOVER_CORAL },
 
   proofOuter: { marginHorizontal: 14, marginTop: 10 },
   proofDark: {
@@ -584,7 +602,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarLetter12: { fontSize: 12, fontWeight: "600" },
+  avatarLetter12: { fontSize: 12, fontWeight: "600", color: DS_COLORS.white },
   milestoneUsername: { fontSize: 12, fontWeight: "600", color: "rgba(255,255,255,0.6)", flex: 1 },
   milestoneTime: { fontSize: 11, color: "rgba(255,255,255,0.3)" },
   milestoneActions: { flexDirection: "row", gap: 8 },

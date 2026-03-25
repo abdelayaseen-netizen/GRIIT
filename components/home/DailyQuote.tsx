@@ -21,9 +21,9 @@ const s = StyleSheet.create({
     marginLeft: 24,
   },
   text: {
-    fontSize: 13,
-    color: DS_COLORS.buttonDisabledText,
-    fontStyle: "italic",
-    lineHeight: 18,
+    fontSize: 14,
+    color: DS_COLORS.textSecondary,
+    fontStyle: "normal",
+    lineHeight: 21,
   },
 });

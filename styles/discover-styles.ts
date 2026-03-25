@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_SHADOWS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 
 export const styles = StyleSheet.create({
   container: {
@@ -769,4 +769,44 @@ export const styles = StyleSheet.create({
   },
   v3HListSep: { width: 10 },
   v3ScrollBottomSpacer: { height: 24 },
+  discoverFilterEmpty: {
+    alignItems: "center",
+    paddingVertical: 56,
+    paddingHorizontal: 24,
+  },
+  discoverFilterEmptyTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  discoverFilterEmptyBody: {
+    fontSize: 14,
+    color: DS_COLORS.textSecondary,
+    textAlign: "center",
+    lineHeight: 21,
+    marginBottom: 20,
+  },
+  discoverFilterEmptyButton: {
+    backgroundColor: GRIIT_COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 28,
+  },
+  discoverFilterEmptyButtonText: {
+    color: DS_COLORS.white,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  discoverFilterClearSearch: {
+    marginTop: 8,
+    paddingVertical: 8,
+  },
+  discoverFilterClearSearchText: {
+    fontSize: 13,
+    color: DS_COLORS.textSecondary,
+    fontWeight: "500",
+  },
 });

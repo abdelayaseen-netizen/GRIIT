@@ -1389,7 +1389,7 @@ const s = StyleSheet.create({
   presetNumActive: { color: tokenColors.accentPurple },
   presetLabel: { fontSize: 11, fontWeight: "500", color: tokenColors.textSecondaryCreate },
   presetLabelActive: { color: tokenColors.accentPurple },
-  purpleHint: { fontSize: 12, color: tokenColors.accentPurple, fontWeight: "500", marginTop: 4 },
+  accentHint: { fontSize: 12, color: tokenColors.accentPurple, fontWeight: "500", marginTop: 4 },
   lockedRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 },
   lockedText: { fontSize: 14, color: tokenColors.textSecondaryCreate },
   previewCard: {
@@ -1422,7 +1422,7 @@ const s = StyleSheet.create({
   previewPromptText: {
     fontSize: 12,
     color: tokenColors.accentPurple,
-    fontStyle: "italic",
+    fontStyle: "normal",
   },
   previewBadge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   previewBadgeText: { fontSize: 12, fontWeight: "600" },

@@ -150,7 +150,7 @@ export default function PhotoTaskScreen() {
           proofPhotoUri={photoUri ?? undefined}
           onDismiss={() => {
             setShowShareCard(false);
-            router.back();
+            router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
           }}
         />
       ) : null}

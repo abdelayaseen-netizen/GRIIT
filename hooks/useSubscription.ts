@@ -11,11 +11,11 @@ export function useSubscription() {
   const router = useRouter();
 
   /**
-   * If user has premium, returns true. Otherwise navigates to pricing with source and returns false.
+   * If user has premium, returns true. Otherwise navigates to paywall with source and returns false.
    */
   function requirePremium(source: string): boolean {
     if (isPremium) return true;
-    router.push({ pathname: ROUTES.PRICING as never, params: { source } } as never);
+    router.push({ pathname: ROUTES.PAYWALL as never, params: { source } } as never);
     return false;
   }
 

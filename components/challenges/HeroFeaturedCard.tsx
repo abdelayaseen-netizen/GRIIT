@@ -83,7 +83,7 @@ const s = StyleSheet.create({
   title: { fontSize: 21, fontWeight: "800", color: DS_COLORS.WHITE, lineHeight: 24, letterSpacing: -0.4 },
   desc: { marginTop: 8, fontSize: 12, lineHeight: 17, color: "rgba(255,255,255,0.45)" },
   socialBar: { marginTop: 14, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "rgba(255,255,255,0.06)", flexDirection: "row", alignItems: "center", gap: 8 },
-  socialText: { fontSize: 11, color: "rgba(255,255,255,0.4)" },
+  socialText: { fontSize: 11, color: DS_COLORS.WHITE },
   cta: {
     marginTop: 16,
     alignSelf: "flex-start",

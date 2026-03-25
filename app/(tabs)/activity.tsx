@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Share } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Target } from "lucide-react-native";
+import { Bell, Target, Users } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -10,12 +10,13 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
 import { getAvatarColor } from "@/lib/avatar";
+import { consistencyScore } from "@/lib/scoring";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
 
 type MainTab = "notifications" | "leaderboard";
-type LeaderScope = "friends" | "teams" | "challenge";
+type LeaderScope = "global" | "friends" | "challenge";
 
 type NotifRow = {
   id: string;
@@ -70,12 +71,11 @@ function rankNumColor(rank: number): string {
 }
 
 export default function ActivityScreen() {
-  const router = useRouter();
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const queryClient = useQueryClient();
   const [mainTab, setMainTab] = useState<MainTab>("notifications");
-  const [scope, setScope] = useState<LeaderScope>("friends");
+  const [scope, setScope] = useState<LeaderScope>("global");
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
 
   const notifQuery = useQuery({
@@ -92,10 +92,21 @@ export default function ActivityScreen() {
     staleTime: 60 * 1000,
   });
 
-  const teamBoard = useQuery({
-    queryKey: ["activity", "leaderboard", "teams", user?.id],
-    queryFn: () => trpcQuery(TRPC.leaderboard.getTeamBoard, {}) as Promise<{ teamName: string | null; entries: BoardEntry[] }>,
-    enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "teams",
+  const globalLeaderboard = useQuery({
+    queryKey: ["activity", "leaderboard", "global", user?.id],
+    queryFn: () =>
+      trpcQuery(TRPC.leaderboard.getWeekly, { limit: 20 }) as Promise<{
+        entries: Array<{
+          userId: string;
+          username: string;
+          displayName: string;
+          avatarUrl: string | null;
+          securedDaysThisWeek: number;
+          currentStreak: number;
+          rank: number;
+        }>;
+      }>,
+    enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "global",
     staleTime: 60 * 1000,
   });
 
@@ -144,18 +155,28 @@ export default function ActivityScreen() {
     };
   }, [mainTab, user?.id, queryClient]);
 
+  useEffect(() => {
+    const friendEntries = friendsBoard.data?.entries ?? [];
+    if (scope === "friends" && friendEntries.length <= 1) {
+      setScope("global");
+    }
+  }, [friendsBoard.data?.entries, scope]);
+
   const onRefresh = useCallback(async () => {
     await Promise.all([
       notifQuery.refetch(),
       friendsBoard.refetch(),
-      teamBoard.refetch(),
+      globalLeaderboard.refetch(),
       challengeBoard.refetch(),
       myActive.refetch(),
     ]);
-  }, [notifQuery, friendsBoard, teamBoard, challengeBoard, myActive]);
+  }, [notifQuery, friendsBoard, globalLeaderboard, challengeBoard, myActive]);
 
   const refreshing =
-    notifQuery.isRefetching || friendsBoard.isRefetching || teamBoard.isRefetching || challengeBoard.isRefetching;
+    notifQuery.isRefetching ||
+    friendsBoard.isRefetching ||
+    globalLeaderboard.isRefetching ||
+    challengeBoard.isRefetching;
 
   if (isGuest || !user?.id) {
     return (
@@ -206,12 +227,11 @@ export default function ActivityScreen() {
             setScope={setScope}
             userId={user.id}
             friendsBoard={friendsBoard}
-            teamBoard={teamBoard}
+            globalLeaderboard={globalLeaderboard}
             challengeBoard={challengeBoard}
             myActive={myActive}
             selectedChallengeId={selectedChallengeId}
             setSelectedChallengeId={setSelectedChallengeId}
-            router={router}
           />
         )}
       </ScrollView>
@@ -227,6 +247,7 @@ function NotificationsBody({
   userId: string;
 }) {
   const qc = useQueryClient();
+  const router = useRouter();
 
   const onFollow = useCallback(
     async (actorId: string) => {
@@ -265,9 +286,20 @@ function NotificationsBody({
         </>
       ) : null}
       {unread.length === 0 && earlier.length === 0 ? (
-        <View style={styles.emptyLb}>
+        <View style={styles.emptyState}>
+          <Bell size={40} color={DS_COLORS.TEXT_TERTIARY} />
           <Text style={styles.emptyTitle}>No notifications yet</Text>
-          <Text style={styles.emptySub}>Respects, comments, and follows show up here.</Text>
+          <Text style={styles.emptyBody}>
+            Complete a challenge to start getting Respect from others
+          </Text>
+          <TouchableOpacity
+            style={styles.emptyButton}
+            onPress={() => router.push("/(tabs)/home" as never)}
+            accessibilityLabel="Go to my challenges"
+            accessibilityRole="button"
+          >
+            <Text style={styles.emptyButtonText}>Go to my challenges</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
     </View>
@@ -334,51 +366,99 @@ function LeaderboardBody({
   setScope,
   userId,
   friendsBoard,
-  teamBoard,
+  globalLeaderboard,
   challengeBoard,
   myActive,
   selectedChallengeId,
   setSelectedChallengeId,
-  router,
 }: {
   scope: LeaderScope;
   setScope: (s: LeaderScope) => void;
   userId: string;
   friendsBoard: ReturnType<typeof useQuery<{ leaderPoints: number; entries: BoardEntry[] }>>;
-  teamBoard: ReturnType<typeof useQuery<{ teamName: string | null; entries: BoardEntry[] }>>;
+  globalLeaderboard: ReturnType<
+    typeof useQuery<{
+      entries: Array<{
+        userId: string;
+        username: string;
+        displayName: string;
+        avatarUrl: string | null;
+        securedDaysThisWeek: number;
+        currentStreak: number;
+        rank: number;
+      }>;
+    }>
+  >;
   challengeBoard: ReturnType<
     typeof useQuery<{ leaderPoints: number; challengeTitle: string; visibility: string; entries: BoardEntry[] }>
   >;
   myActive: ReturnType<typeof useQuery<{ challenge_id?: string; challenges?: { id?: string; title?: string } }[]>>;
   selectedChallengeId: string | null;
   setSelectedChallengeId: (id: string) => void;
-  router: ReturnType<typeof useRouter>;
 }) {
   const activeList = myActive.data ?? [];
+  const friendEntries = friendsBoard.data?.entries ?? [];
+  const globalRaw = globalLeaderboard.data?.entries ?? [];
+  const globalEntries: BoardEntry[] = (() => {
+    const mapped = globalRaw.map((e) => {
+      const points = consistencyScore(e.securedDaysThisWeek, e.currentStreak);
+      return {
+        userId: e.userId,
+        username: e.username,
+        displayName: e.displayName,
+        avatarUrl: e.avatarUrl,
+        rank: e.rank,
+        points,
+        checkInsThisWeek: e.securedDaysThisWeek,
+        currentStreak: e.currentStreak,
+        progressVsLeader: 0,
+        gapToAbove: 0,
+      };
+    });
+    const leaderPts = mapped[0]?.points ?? 1;
+    return mapped.map((r, i, arr) => ({
+      ...r,
+      progressVsLeader: leaderPts > 0 ? Math.min(100, Math.round((r.points / leaderPts) * 100)) : 0,
+      gapToAbove: i > 0 ? Math.max(0, (arr[i - 1]?.points ?? 0) - r.points) : 0,
+    }));
+  })();
+  const globalLeaderPoints = globalEntries[0]?.points ?? 1;
+  const handleInviteFriend = async () => {
+    await Share.share({
+      message: "Join me on GRIIT — the discipline challenge app. https://griit.fit",
+      title: "Join GRIIT",
+    });
+  };
 
   const loading =
+    (scope === "global" && globalLeaderboard.isPending) ||
     (scope === "friends" && friendsBoard.isPending) ||
-    (scope === "teams" && teamBoard.isPending) ||
     (scope === "challenge" && (myActive.isPending || challengeBoard.isPending));
 
   const err =
+    (scope === "global" && globalLeaderboard.isError) ||
     (scope === "friends" && friendsBoard.isError) ||
-    (scope === "teams" && teamBoard.isError) ||
     (scope === "challenge" && challengeBoard.isError);
 
   return (
     <View>
       <View style={styles.scopeSwitcher}>
-        {(["friends", "teams", "challenge"] as const).map((s) => (
+        {(["global", "friends", "challenge"] as const).map((s) => (
           <TouchableOpacity
             key={s}
             style={[styles.scopeTab, scope === s && styles.scopeTabOn]}
             onPress={() => setScope(s)}
             accessibilityRole="button"
-            accessibilityLabel={s === "friends" ? "Friends leaderboard" : s === "teams" ? "Teams leaderboard" : "This challenge leaderboard"}
+            accessibilityLabel={
+              s === "global"
+                ? "Global leaderboard"
+                : s === "friends"
+                  ? "Friends leaderboard"
+                  : "This challenge leaderboard"
+            }
           >
             <Text style={[styles.scopeTabText, scope === s && styles.scopeTabTextOn]}>
-              {s === "friends" ? "Friends" : s === "teams" ? "Teams" : "This Challenge"}
+              {s === "global" ? "Global" : s === "friends" ? "Friends" : "This Challenge"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -390,39 +470,67 @@ function LeaderboardBody({
           message="Couldn't load leaderboard"
           onRetry={() => {
             void friendsBoard.refetch();
-            void teamBoard.refetch();
+            void globalLeaderboard.refetch();
             void challengeBoard.refetch();
           }}
         />
       ) : null}
 
-      {!loading && !err && scope === "friends" ? (
-        <>
-          <View style={styles.scoreNote}>
-            <Text style={styles.scoreNoteIcon}>⚡</Text>
-            <Text style={styles.scoreNoteText}>
-              <Text style={styles.scoreNoteBold}>Overall consistency</Text>
-              {" — total check-ins × streak across all active challenges this week."}
-            </Text>
+      {!loading && !err && scope === "global" ? (
+        globalEntries.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Global leaderboard</Text>
+            <Text style={styles.emptyBody}>Complete your first check-in to appear here</Text>
           </View>
-          <BoardList entries={friendsBoard.data?.entries ?? []} leaderPoints={friendsBoard.data?.leaderPoints ?? 1} viewerId={userId} />
-        </>
+        ) : (
+          <>
+            <View style={styles.scoreNote}>
+              <Text style={styles.scoreNoteIcon}>⚡</Text>
+              <Text style={styles.scoreNoteText}>
+                <Text style={styles.scoreNoteBold}>Overall consistency</Text>
+                {" — top performers this week by check-ins and streak across GRIIT."}
+              </Text>
+            </View>
+            <BoardList
+              entries={globalEntries}
+              leaderPoints={globalLeaderPoints}
+              viewerId={userId}
+            />
+          </>
+        )
       ) : null}
 
-      {!loading && !err && scope === "teams" ? (
-        (teamBoard.data?.entries?.length ?? 0) === 0 ? (
-          <View style={styles.teamEmpty}>
-            <Text style={styles.teamEmptyEmoji}>🛡️</Text>
-            <Text style={styles.emptyTitle}>No teams yet</Text>
-            <Text style={styles.teamEmptySub}>Join or create a team to compete together.</Text>
-            <TouchableOpacity style={styles.findTeamBtn} onPress={() => router.push("/(tabs)/discover" as never)} accessibilityRole="button">
-              <Text style={styles.findTeamBtnText}>Find a team</Text>
+      {!loading && !err && scope === "friends" ? (
+        friendEntries.length <= 1 ? (
+          <View style={styles.emptyState}>
+            <Users size={40} color={DS_COLORS.TEXT_TERTIARY} />
+            <Text style={styles.emptyTitle}>No friends on GRIIT yet</Text>
+            <Text style={styles.emptyBody}>
+              Invite friends to compete together on the leaderboard
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => void handleInviteFriend()}
+              accessibilityLabel="Invite a friend to GRIIT"
+              accessibilityRole="button"
+            >
+              <Text style={styles.emptyButtonText}>Invite a friend</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            {teamBoard.data?.teamName ? <Text style={styles.teamTitle}>{teamBoard.data.teamName}</Text> : null}
-            <BoardList entries={teamBoard.data?.entries ?? []} leaderPoints={teamBoard.data?.entries?.[0]?.points ?? 1} viewerId={userId} />
+            <View style={styles.scoreNote}>
+              <Text style={styles.scoreNoteIcon}>⚡</Text>
+              <Text style={styles.scoreNoteText}>
+                <Text style={styles.scoreNoteBold}>Overall consistency</Text>
+                {" — total check-ins × streak across all active challenges this week."}
+              </Text>
+            </View>
+            <BoardList
+              entries={friendEntries}
+              leaderPoints={friendsBoard.data?.leaderPoints ?? 1}
+              viewerId={userId}
+            />
           </>
         )
       ) : null}
@@ -860,11 +968,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
     maxWidth: 200,
   },
-  challengePillOn: { backgroundColor: DS_COLORS.TEXT_PRIMARY },
+  challengePillOn: { backgroundColor: DS_COLORS.DISCOVER_CORAL },
   challengePillOff: {
-    backgroundColor: DS_COLORS.WHITE,
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.08)",
+    borderColor: DS_COLORS.TEXT_SECONDARY,
   },
   challengePillText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TEXT_SECONDARY },
   challengePillTextOn: { color: DS_COLORS.WHITE },
@@ -896,8 +1004,34 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyLb: { paddingVertical: 24, alignItems: "center", paddingHorizontal: 20 },
-  emptyTitle: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
+  emptyState: { alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
+  emptyBody: {
+    fontSize: 14,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    lineHeight: 21,
+  },
+  emptyButton: {
+    marginTop: 20,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 28,
+  },
+  emptyButtonText: {
+    color: DS_COLORS.WHITE,
+    fontSize: 14,
+    fontWeight: "500",
+  },
   guestWrap: { padding: 24 },
   guestText: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
 });

@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   zeroStateHint: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     color: DS_COLORS.textSecondary,
-    fontStyle: "italic",
+    fontStyle: "normal",
     marginBottom: DS_SPACING.md,
   },
   gridWrap: {

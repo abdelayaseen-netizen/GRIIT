@@ -682,7 +682,7 @@ export const challengeDetailStyles = StyleSheet.create({
     gap: 8,
   },
   journalPill: {
-    backgroundColor: DS_COLORS.avatarPurple,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -690,7 +690,7 @@ export const challengeDetailStyles = StyleSheet.create({
   journalPillText: {
     fontSize: 10,
     fontWeight: "600" as const,
-    color: DS_COLORS.avatarPurpleText,
+    color: DS_COLORS.DISCOVER_CORAL,
   },
   timePill: {
     flexDirection: "row" as const,

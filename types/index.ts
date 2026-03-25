@@ -629,6 +629,8 @@ export interface ProfileFromApi {
   username?: string | null;
   created_at?: string | null;
   bio?: string | null;
+  /** When present, used by streak freeze UI (optional DB column). */
+  streak_freezes_remaining?: number | null;
 }
 
 /** Check-in row from getTodayCheckins (task_id, status, etc.). */

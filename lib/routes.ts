@@ -38,7 +38,6 @@ export const ROUTES = {
   TASK_TIMER: "/task/timer",
   CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
   CHALLENGE_COMPLETE: "/challenge/complete",
-  PRICING: "/pricing",
   PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",
   LEGAL_TERMS: "/legal/terms",

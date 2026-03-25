@@ -119,7 +119,7 @@ export default function ForgotPasswordScreen() {
             ) : null}
             <TouchableOpacity
               style={[styles.backLink, { borderColor: themeColors.border }]}
-              onPress={() => router.back()}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
               disabled={loading}
               activeOpacity={0.8}
               accessibilityRole="button"

@@ -5,11 +5,13 @@ import {
   Text,
   StyleSheet,
   Pressable,
+  TouchableOpacity,
   Animated,
   Dimensions,
   Easing,
+  Share,
 } from "react-native";
-import { CheckCircle2, Flame, Trophy } from "lucide-react-native";
+import { CheckCircle2, Flame, Trophy, Share2 } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 import { useCelebrationStore, type CelebrationType } from "@/store/celebrationStore";
 
@@ -54,7 +56,21 @@ export default function CelebrationOverlay() {
   const title = useCelebrationStore((s) => s.title);
   const subtitle = useCelebrationStore((s) => s.subtitle);
   const type = useCelebrationStore((s) => s.type);
+  const shareMessage = useCelebrationStore((s) => s.shareMessage);
   const dismiss = useCelebrationStore((s) => s.dismiss);
+
+  const handleShareChallenge = async () => {
+    const msg = shareMessage?.trim();
+    if (!msg) return;
+    try {
+      await Share.share({
+        message: msg,
+        title: "Join my GRIIT challenge",
+      });
+    } catch (error) {
+      console.error("[Share] Error:", error);
+    }
+  };
 
   const backdropOp = useRef(new Animated.Value(0)).current;
   const cardTranslate = useRef(new Animated.Value(50)).current;
@@ -199,14 +215,36 @@ export default function CelebrationOverlay() {
             </Animated.View>
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
-            <Pressable
-              style={styles.btn}
-              onPress={dismiss}
-              accessibilityRole="button"
-              accessibilityLabel="Keep going"
-            >
-              <Text style={styles.btnText}>Keep going</Text>
-            </Pressable>
+            {shareMessage ? (
+              <>
+                <TouchableOpacity
+                  style={styles.shareButton}
+                  onPress={() => void handleShareChallenge()}
+                  accessibilityLabel="Share your new challenge with others"
+                  accessibilityRole="button"
+                >
+                  <Share2 size={16} color={DS_COLORS.white} />
+                  <Text style={styles.shareButtonText}>Share your challenge</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.keepGoingButton}
+                  onPress={dismiss}
+                  accessibilityLabel="Continue to your challenge"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.keepGoingText}>Keep going</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <Pressable
+                style={styles.btn}
+                onPress={dismiss}
+                accessibilityRole="button"
+                accessibilityLabel="Keep going"
+              >
+                <Text style={styles.btnText}>Keep going</Text>
+              </Pressable>
+            )}
           </Animated.View>
         </View>
       </View>
@@ -263,6 +301,35 @@ const styles = StyleSheet.create({
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
     fontWeight: "700",
     color: DS_COLORS.TEXT_ON_DARK,
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: GRIIT_COLORS.primary,
+    borderRadius: 28,
+    paddingVertical: 14,
+    marginTop: 16,
+    width: "100%",
+  },
+  shareButtonText: {
+    color: DS_COLORS.white,
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  keepGoingButton: {
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.border,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 10,
+    width: "100%",
+  },
+  keepGoingText: {
+    color: DS_COLORS.textSecondary,
+    fontSize: 15,
   },
   particle: {
     position: "absolute",

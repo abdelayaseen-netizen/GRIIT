@@ -98,7 +98,7 @@ export async function restorePurchases(): Promise<{
   }
 }
 
-export async function checkEntitlement(entitlementId: string = "pro"): Promise<boolean> {
+export async function checkEntitlement(entitlementId: string = "GRIIT Pro"): Promise<boolean> {
   if (!configured) return false;
   try {
     const customerInfo = await Purchases.getCustomerInfo();
@@ -110,7 +110,7 @@ export async function checkEntitlement(entitlementId: string = "pro"): Promise<b
 }
 
 export async function isProUser(): Promise<boolean> {
-  return checkEntitlement("pro");
+  return checkEntitlement("GRIIT Pro");
 }
 
 export async function getCustomerInfo(): Promise<CustomerInfo | null> {

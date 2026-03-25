@@ -69,6 +69,7 @@ import {
   getCategoryColors,
 } from "@/lib/design-system";
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
+import { TimeWindowPrompt } from "@/components/TimeWindowPrompt";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
@@ -136,8 +137,8 @@ const DIFFICULTY_THEMES: Record<string, DifficultyTheme> = {
     warningBorder: "rgba(46,125,50,0.15)",
   },
   hard: {
-    headerBg: DS_COLORS.black,
-    headerGradientEnd: DS_COLORS.black,
+    headerBg: DS_COLORS.challengeHeaderDark,
+    headerGradientEnd: DS_COLORS.challengeHeaderDark,
     accent: DS_COLORS.accent,
     accentLight: DS_COLORS.accentSoft,
     accentSoft: "rgba(232,115,58,0.14)",
@@ -153,8 +154,8 @@ const DIFFICULTY_THEMES: Record<string, DifficultyTheme> = {
     warningBorder: "rgba(232,115,58,0.20)",
   },
   extreme: {
-    headerBg: DS_COLORS.black,
-    headerGradientEnd: DS_COLORS.black,
+    headerBg: DS_COLORS.challengeHeaderDark,
+    headerGradientEnd: DS_COLORS.challengeHeaderDark,
     accent: DS_COLORS.accent,
     accentLight: DS_COLORS.accentSoft,
     accentSoft: "rgba(232,115,58,0.14)",
@@ -351,11 +352,17 @@ function MissionRow({
   const iconBg = isCompleted
     ? DS_COLORS.successSoft
     : isJournal
-    ? DS_COLORS.purpleTintLight
+    ? DS_COLORS.accentSoft
     : task.type === "run"
-    ? DS_COLORS.purpleTintWarm
+    ? DS_COLORS.accentSoft
     : theme.missionIconBg;
-  const iconColor = isCompleted ? DS_COLORS.success : isJournal ? DS_COLORS.journalPurple : task.type === "run" ? DS_COLORS.runOrange : theme.accent;
+  const iconColor = isCompleted
+    ? DS_COLORS.success
+    : isJournal
+    ? DS_COLORS.DISCOVER_CORAL
+    : task.type === "run"
+    ? DS_COLORS.DISCOVER_CORAL
+    : theme.accent;
   return (
     <View style={[s.missionRow, !isLast && s.missionRowBorder]}>
       <View style={[s.missionIcon, { backgroundColor: iconBg }]}>
@@ -526,6 +533,8 @@ export default function ChallengeDetailScreen() {
   const [stravaVerifyPending, setStravaVerifyPending] = useState<string | null>(null);
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
   const [showJoinCelebration, setShowJoinCelebration] = useState(false);
+  const [showTimePrompt, setShowTimePrompt] = useState(false);
+  const [promptTasks, setPromptTasks] = useState<Array<{ id: string; name: string }>>([]);
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [leaveTeamConfirmVisible, setLeaveTeamConfirmVisible] = useState(false);
   const [teamCodeCopied, setTeamCodeCopied] = useState(false);
@@ -781,12 +790,27 @@ export default function ChallengeDetailScreen() {
     }
   }, [id, commitmentJoining, user?.id, refetchAll, router, queryClient, myActiveListQuery, showError]);
 
-  const onJoinCelebrationDismiss = useCallback(() => {
-    setShowJoinCelebration(false);
-    // Drop cached home payload so the tab cannot briefly show pre-join empty goals after replace().
+  const finishJoinAfterTimeWindow = useCallback(() => {
+    setShowTimePrompt(false);
     queryClient.removeQueries({ queryKey: ["home"] });
     router.replace(ROUTES.TABS_HOME as never);
   }, [router, queryClient]);
+
+  const onJoinCelebrationDismiss = useCallback(() => {
+    setShowJoinCelebration(false);
+    const raw = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
+    setPromptTasks(
+      raw.map((t, i) => ({
+        id: String(t.id ?? `task-${i}`),
+        name: String((t as { title?: string }).title ?? t.type ?? "Task"),
+      }))
+    );
+    setShowTimePrompt(true);
+  }, [challenge?.tasks]);
+
+  const onTimeWindowComplete = useCallback(() => {
+    finishJoinAfterTimeWindow();
+  }, [finishJoinAfterTimeWindow]);
 
   const handleCtaPressIn = useCallback(() => {
     Animated.spring(ctaScaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
@@ -1025,7 +1049,7 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Not found</Text>
-          <TouchableOpacity onPress={() => router.back()} style={s.emptyBtn} accessibilityLabel="Go back" accessibilityRole="button">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={s.emptyBtn} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -1048,7 +1072,7 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[s.emptyWrap, { flex: 1, justifyContent: "center" }]}>
           <ErrorState message="Couldn't load this challenge" onRetry={() => void challengeQuery.refetch()} />
-          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: DS_SPACING.lg }]} accessibilityLabel="Go back" accessibilityRole="button">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={[s.emptyBtn, { marginTop: DS_SPACING.lg }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -1065,7 +1089,7 @@ export default function ChallengeDetailScreen() {
           <TouchableOpacity onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} style={s.emptyBtn} accessibilityLabel="Browse challenges" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Browse challenges</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={[s.emptyBtn, { marginTop: 12 }]} accessibilityLabel="Go back" accessibilityRole="button">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={[s.emptyBtn, { marginTop: 12 }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -1149,7 +1173,7 @@ export default function ChallengeDetailScreen() {
             eyebrowLabel={eyebrowLabel}
             referrerLabel={referrerLabel}
             subtitleColor={categoryColors.subtitleText}
-            onBack={() => router.back()}
+            onBack={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
             onShare={() => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               void handleShare();
@@ -1178,7 +1202,7 @@ export default function ChallengeDetailScreen() {
           {/* BODY: warm background, large radius cards, premium spacing */}
           <View style={[s.body, isDaily && { gap: DS_SPACING.sm }]}>
             <View style={[s.socialProofCard, DS_SHADOWS.cardSubtle]}>
-              <Text style={s.socialProofTitle}>{participantCount} warriors</Text>
+              <Text style={s.socialProofTitle}>{participantCount} {participantCount === 1 ? "warrior" : "warriors"}</Text>
               <Text style={s.socialProofSub}>{participantCount === 0 ? "Be the first to join" : `${joinedToday} joined today`}</Text>
             </View>
 
@@ -1818,6 +1842,17 @@ export default function ChallengeDetailScreen() {
         visible={showJoinCelebration}
         onDismiss={onJoinCelebrationDismiss}
         challengeName={challenge?.title ?? ""}
+      />
+
+      <TimeWindowPrompt
+        visible={showTimePrompt}
+        tasks={promptTasks}
+        onSave={(times) => {
+          // MIGRATION NOTE: active_challenges needs task_times JSONB column
+          console.log("[TimeWindow] Saved times:", times);
+          onTimeWindowComplete();
+        }}
+        onSkip={onTimeWindowComplete}
       />
 
       <ConfirmDialog

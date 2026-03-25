@@ -4,11 +4,12 @@ import { useRouter } from "expo-router";
 import { Share2 } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { getAvatarColor } from "@/lib/utils";
 
 export interface ProfileHeaderProps {
   avatarUrl?: string | null;
   fullName: string;
-  username: string;
+  username?: string;
   currentTier: string;
   joinDate?: string;
   onShare?: () => void;
@@ -35,6 +36,7 @@ export default React.memo(function ProfileHeader({
 }: ProfileHeaderProps) {
   const router = useRouter();
   const displayName = fullName || username || "User";
+  const cleanUsername = username?.trim() ?? "";
   const rankDot = RANK_DOT[currentTier] ?? DS_COLORS.DISCOVER_CORAL;
 
   return (
@@ -44,12 +46,12 @@ export default React.memo(function ProfileHeader({
         accessibilityRole="image"
         accessibilityLabel={`Profile avatar for ${displayName}`}
       >
-        <View style={styles.avatarPlaceholder}>
+        <View style={[styles.avatarPlaceholder, { backgroundColor: getAvatarColor(cleanUsername || displayName || "G") }]}>
           <Text style={styles.avatarLetter}>{displayName.charAt(0).toUpperCase()}</Text>
         </View>
       </Pressable>
       <Text style={styles.fullName}>{displayName}</Text>
-      <Text style={styles.username}>@{username || "user"}</Text>
+      {cleanUsername ? <Text style={styles.username}>@{cleanUsername}</Text> : null}
       <Text style={[styles.bio, !bio?.trim() && styles.bioPlaceholder]}>
         {bio?.trim() ? bio : "Add a bio to let people know who you are"}
       </Text>
@@ -101,11 +103,10 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: DS_COLORS.TEXT_PRIMARY,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarLetter: { fontSize: DS_TYPOGRAPHY.SIZE_2XL, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
+  avatarLetter: { fontSize: DS_TYPOGRAPHY.SIZE_2XL, fontWeight: "700", color: DS_COLORS.white },
   fullName: {
     marginTop: DS_SPACING.md,
     fontSize: 18,
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.TEXT_SECONDARY,
     textAlign: "center",
   },
-  bioPlaceholder: { color: DS_COLORS.grayMuted, fontStyle: "italic" },
+  bioPlaceholder: { color: DS_COLORS.grayMuted, fontStyle: "normal" },
   pills: { flexDirection: "row", justifyContent: "center", gap: DS_SPACING.sm, marginTop: 10 },
   pill: {
     flexDirection: "row",

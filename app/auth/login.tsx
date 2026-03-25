@@ -166,7 +166,7 @@ export default function LoginScreen() {
   }, [router]);
 
   const handleBack = useCallback(() => {
-    router.back();
+    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
   }, [router]);
 
   return (

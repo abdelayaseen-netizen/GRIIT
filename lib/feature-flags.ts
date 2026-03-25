@@ -15,10 +15,10 @@ export const FLAGS = {
   LOCATION_CHECKIN_ENABLED: false,
   /** When false, challenge chat screen shows "Not available" and is hidden from normal navigation. */
   CHAT_ENABLED: false,
-  PREMIUM_ENABLED: false,
-  PREMIUM_CHALLENGE_PACKS: false,
-  PREMIUM_ANALYTICS: false,
-  PREMIUM_PROFILE_FEATURES: false,
+  PREMIUM_ENABLED: true,
+  PREMIUM_CHALLENGE_PACKS: true,
+  PREMIUM_ANALYTICS: true,
+  PREMIUM_PROFILE_FEATURES: true,
   PREMIUM_INTEGRATIONS: false,
 } as const;
 
@@ -45,14 +45,14 @@ export const PREMIUM_LIMITS = {
 // When premium is enabled, flip individual features here.
 // ============================================
 export const PREMIUM_FEATURES = {
-  UNLIMITED_CHALLENGES: false,
-  UNLIMITED_CREATION: false,
-  ADVANCED_ANALYTICS: false,
-  PREMIUM_PACKS: false,
-  CUSTOM_THEMES: false,
-  LEADERBOARD_PRIORITY: false,
-  UNLIMITED_SOCIAL: false,
-  PREMIUM_BADGE: false,
+  UNLIMITED_CHALLENGES: true,
+  UNLIMITED_CREATION: true,
+  ADVANCED_ANALYTICS: true,
+  PREMIUM_PACKS: true,
+  CUSTOM_THEMES: true,
+  LEADERBOARD_PRIORITY: true,
+  UNLIMITED_SOCIAL: true,
+  PREMIUM_BADGE: true,
   INTEGRATIONS: false,
   CHAT: false,
 } as const;

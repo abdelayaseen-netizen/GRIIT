@@ -48,6 +48,7 @@ type TreadmillStep = "timer" | "proof" | "distance";
 
 export default function RunTaskScreen() {
   const router = useRouter();
+  const safeBack = React.useCallback(() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never)), [router]);
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
   const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();
@@ -350,7 +351,7 @@ export default function RunTaskScreen() {
       if (result.success) {
         await triggerCelebration(task.id);
         setTimeout(() => {
-          router.back();
+          safeBack();
         }, 1000);
       } else {
         showError(result.failureReason || "Verification failed.");
@@ -399,7 +400,7 @@ export default function RunTaskScreen() {
       if (result.success) {
         await triggerCelebration(task.id);
         setTimeout(() => {
-          router.back();
+          safeBack();
         }, 1000);
       } else {
         showError(result.failureReason || "Verification failed.");
@@ -424,7 +425,7 @@ export default function RunTaskScreen() {
           </View>
           <Text style={styles.verifiedTitle}>Run Verified</Text>
           <Text style={styles.verifiedSubtitle}>Your run has been verified.</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Back to Tasks" accessibilityRole="button">
+          <TouchableOpacity style={styles.backButton} onPress={safeBack} accessibilityLabel="Back to Tasks" accessibilityRole="button">
             <Text style={styles.backButtonText}>Back to Tasks</Text>
           </TouchableOpacity>
         </View>
@@ -491,7 +492,7 @@ export default function RunTaskScreen() {
 
           {runMode === "treadmill_proof" && (
             <View style={styles.warningBanner}>
-              <AlertTriangle size={16} color={DS_COLORS.taskAmber} />
+              <AlertTriangle size={16} color={DS_COLORS.warning} />
               <Text style={styles.warningText}>
                 Treadmill runs require proof. No proof = not verified.
               </Text>
@@ -603,9 +604,8 @@ export default function RunTaskScreen() {
 
                   {timerRunning && (
                     <View style={styles.lockNotice}>
-                      <Text style={styles.lockNoticeText}>
-                        ⚠️ Leaving this screen fails the timer
-                      </Text>
+                      <AlertTriangle size={14} color={DS_COLORS.warning} />
+                      <Text style={styles.lockNoticeText}>Leaving this screen fails the timer</Text>
                     </View>
                   )}
 
@@ -789,7 +789,7 @@ export default function RunTaskScreen() {
                         {isTreadmillDistanceValid ? (
                           <Check size={14} color={DS_COLORS.success} />
                         ) : (
-                          <AlertTriangle size={14} color={DS_COLORS.taskAmber} />
+                          <AlertTriangle size={14} color={DS_COLORS.warning} />
                         )}
                         <Text style={styles.summaryValueText}>
                           {distanceInput || "Not entered"} mi

@@ -14,7 +14,6 @@ import { DS_COLORS, getCategoryColors } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { EmptyState } from "@/components/shared/EmptyState";
 import Card from "@/components/shared/Card";
 import LoadingState from "@/components/shared/LoadingState";
 import ErrorState from "@/components/shared/ErrorState";
@@ -352,20 +351,33 @@ export default function DiscoverScreen() {
           ) : featuredQuery.isPending && !featuredQuery.data ? (
             <LoadingState containerStyle={styles.v3LoadingWrap} />
           ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={Search}
-              title="No challenges found"
-              subtitle={
-                debouncedQuery.trim()
-                  ? "Try a different search or check back later"
-                  : "Try another category or check back later"
-              }
-              action={
-                debouncedQuery.trim()
-                  ? { label: "Clear search", onPress: () => setQuery("") }
-                  : undefined
-              }
-            />
+            <View style={styles.discoverFilterEmpty}>
+              <Search size={40} color={DS_COLORS.textMuted} />
+              <Text style={styles.discoverFilterEmptyTitle}>No challenges found</Text>
+              <Text style={styles.discoverFilterEmptyBody}>
+                {debouncedQuery.trim()
+                  ? "Try a different search — or build your own"
+                  : "Try a different category — or build your own"}
+              </Text>
+              <TouchableOpacity
+                style={styles.discoverFilterEmptyButton}
+                onPress={() => router.push("/create-challenge" as never)}
+                accessibilityLabel="Create your own challenge"
+                accessibilityRole="button"
+              >
+                <Text style={styles.discoverFilterEmptyButtonText}>Create a challenge</Text>
+              </TouchableOpacity>
+              {debouncedQuery.trim() ? (
+                <TouchableOpacity
+                  style={styles.discoverFilterClearSearch}
+                  onPress={() => setQuery("")}
+                  accessibilityLabel="Clear search"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.discoverFilterClearSearchText}>Clear search</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
           ) : (
             <>
               <View style={styles.v3SectionPad}>

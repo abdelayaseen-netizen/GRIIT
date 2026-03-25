@@ -859,7 +859,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
         </ScrollView>
         <View style={[s.footer, { paddingBottom: insets.bottom + 12 }]}>
           <TouchableOpacity
-            style={[s.cta, !canAdd && { opacity: 0.4 }]}
+            style={[s.cta, !canAdd && s.ctaDisabled]}
             disabled={!canAdd}
             onPress={handleAdd}
             activeOpacity={0.9}
@@ -1011,6 +1011,9 @@ const s = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+  },
+  ctaDisabled: {
+    backgroundColor: DS_COLORS.buttonDisabledBg,
   },
   ctaText: { fontSize: DS_TYPOGRAPHY.SIZE_BASE, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
   timeSection: { marginTop: DS_SPACING.lg },

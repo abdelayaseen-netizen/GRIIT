@@ -358,7 +358,7 @@ export default function CheckinTaskScreen() {
       if (result.success) {
         await triggerCelebration(task.id);
         setTimeout(() => {
-          router.back();
+          router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
         }, 1000);
       } else {
         showError(result.failureReason || "Verification failed.");
@@ -410,7 +410,7 @@ export default function CheckinTaskScreen() {
           </View>
           <Text style={styles.verifiedTitle}>Check-in Verified</Text>
           <Text style={styles.verifiedSubtitle}>You showed up at the right place and time.</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Back to Tasks" accessibilityRole="button">
+          <TouchableOpacity style={styles.backButton} onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} accessibilityLabel="Back to Tasks" accessibilityRole="button">
             <Text style={styles.backButtonText}>Back to Tasks</Text>
           </TouchableOpacity>
         </View>

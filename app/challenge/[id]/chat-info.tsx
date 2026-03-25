@@ -99,7 +99,7 @@ export default function ChallengeChatInfoScreen() {
           headerLeft: () => (
             <TouchableOpacity
               style={styles.headerButton}
-              onPress={() => router.back()}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
             >
               <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>

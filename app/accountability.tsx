@@ -68,7 +68,7 @@ export default function AccountabilityScreen() {
 
   const handleBack = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
+    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
   };
 
   const handleRemove = useCallback((partnerId: string) => {

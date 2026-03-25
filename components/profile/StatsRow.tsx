@@ -10,11 +10,12 @@ type Props = {
 };
 
 export default React.memo(function StatsRow({ streak, best, active, done }: Props) {
+  const dayOneMode = streak === 0 && best === 0;
   const items = [
-    { label: "streak", value: streak },
-    { label: "best", value: best },
+    { label: "streak", value: dayOneMode ? "Day 1" : streak },
+    { label: "best", value: dayOneMode ? "Day 1" : best },
     { label: "active", value: active },
-    { label: "done", value: done },
+    { label: "done", value: done === 0 ? "–" : done },
   ];
   return (
     <View style={s.row}>

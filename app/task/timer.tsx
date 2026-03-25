@@ -194,7 +194,7 @@ export default function TimerTaskScreen() {
       if (Platform.OS !== "web") {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      router.back();
+      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
     } catch (error: unknown) {
       showError(error instanceof Error ? error.message : "Something went wrong");
     } finally {

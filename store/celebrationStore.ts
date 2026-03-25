@@ -7,7 +7,9 @@ type CelebrationState = {
   title: string;
   subtitle: string;
   type: CelebrationType;
-  show: (p: { title: string; subtitle: string; type: CelebrationType }) => void;
+  /** When set, success modal shows Share as primary CTA. */
+  shareMessage?: string | null;
+  show: (p: { title: string; subtitle: string; type: CelebrationType; shareMessage?: string }) => void;
   dismiss: () => void;
 };
 
@@ -16,8 +18,9 @@ export const useCelebrationStore = create<CelebrationState>((set) => ({
   title: "",
   subtitle: "",
   type: "goal",
-  show: (p) => set({ visible: true, ...p }),
-  dismiss: () => set({ visible: false }),
+  shareMessage: null,
+  show: (p) => set({ visible: true, ...p, shareMessage: p.shareMessage ?? null }),
+  dismiss: () => set({ visible: false, shareMessage: null }),
 }));
 
 export function showGoalCelebration(pointsEarned = 5) {

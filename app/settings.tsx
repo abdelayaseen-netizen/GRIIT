@@ -233,7 +233,7 @@ export default function SettingsScreen() {
 
   const handleBack = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
+    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
   };
 
 
@@ -539,7 +539,7 @@ export default function SettingsScreen() {
                 if (Platform.OS === "ios") Linking.openURL("https://apps.apple.com/account/subscriptions");
                 else if (Platform.OS === "android") Linking.openURL("https://play.google.com/store/account/subscriptions");
               } else {
-                router.push({ pathname: ROUTES.PRICING as never, params: { source: "settings" } } as never);
+                router.push({ pathname: ROUTES.PAYWALL as never, params: { source: "settings" } } as never);
               }
             }}
             activeOpacity={0.9}

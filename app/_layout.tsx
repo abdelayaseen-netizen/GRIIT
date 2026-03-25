@@ -166,7 +166,6 @@ function AuthRedirector() {
       "edit-profile",
       "task",
       "paywall",
-      "pricing",
       "accountability",
       "legal",
       "create",

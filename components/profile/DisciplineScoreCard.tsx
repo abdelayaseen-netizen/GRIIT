@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     color: DS_COLORS.textMuted,
     marginTop: DS_SPACING.sm,
-    fontStyle: "italic",
+    fontStyle: "normal",
   },
   rankText: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,

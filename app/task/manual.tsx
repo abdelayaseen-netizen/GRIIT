@@ -42,7 +42,7 @@ export default function ManualTaskScreen() {
       if (Platform.OS !== "web") {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      router.back();
+      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
     } catch (err: unknown) {
       showError(err instanceof Error ? err.message : "Couldn't save. Tap to retry.");
     } finally {

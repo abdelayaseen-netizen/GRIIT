@@ -105,7 +105,7 @@ export default function CreateTeamScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.keyboard}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backRow} accessibilityRole="button" accessibilityLabel="Go back">
+        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={styles.backRow} accessibilityRole="button" accessibilityLabel="Go back">
           <ChevronLeft size={18} color={DS_COLORS.textPrimary} />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>

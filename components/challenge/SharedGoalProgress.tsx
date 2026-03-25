@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    fontStyle: "italic",
+    fontStyle: "normal",
   },
   logRow: {
     paddingVertical: 10,

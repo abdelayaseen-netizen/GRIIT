@@ -225,7 +225,7 @@ export default function ActiveChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.centerWrap}>
           <Text style={s.notFoundText}>Not found</Text>
-          <TouchableOpacity onPress={() => router.back()} style={s.retryBtn}>
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={s.retryBtn}>
             <Text style={s.retryBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -277,7 +277,7 @@ export default function ActiveChallengeDetailScreen() {
       <SafeAreaView style={s.safeTop} edges={["top"]} />
       <View style={[s.header, { backgroundColor: headerColor }]}>
         <View style={s.headerTopBar}>
-          <TouchableOpacity style={s.headerCircleBtn} onPress={() => router.back()} accessibilityLabel="Back" accessibilityRole="button">
+          <TouchableOpacity style={s.headerCircleBtn} onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} accessibilityLabel="Back" accessibilityRole="button">
             <ChevronLeft size={20} color={DS_COLORS.WHITE} />
           </TouchableOpacity>
           <Text style={s.headerCenterTitle}>Challenge</Text>
@@ -576,7 +576,7 @@ const s = StyleSheet.create({
   missionTaskTitle: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
   missionTaskTitleDone: { textDecorationLine: "line-through", color: DS_COLORS.TEXT_MUTED },
   missionTaskSub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
-  startLink: { fontSize: 14, fontWeight: "500", color: DS_COLORS.ACCENT_PRIMARY },
+  startLink: { fontSize: 14, fontWeight: "500", color: DS_COLORS.DISCOVER_CORAL },
   sectionTitleRules: { fontSize: 20, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 12 },
   rulesCard: { overflow: "hidden" },
   ruleRow: { flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 16, paddingVertical: 14 },

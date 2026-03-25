@@ -9,7 +9,7 @@ import Constants from "expo-constants";
 import { setSubscriptionState } from "./premium";
 import { supabase } from "./supabase";
 
-const ENTITLEMENT_ID = "premium";
+const ENTITLEMENT_ID = "GRIIT Pro";
 
 /** Remove function for RevenueCat customer info listener; null when RC not available (web/Expo Go). */
 let purchaserInfoListener: (() => void) | null = null;
@@ -182,7 +182,7 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
 }
 
 export const SUBSCRIPTION_PRODUCT_IDS = {
-  monthly: "griit_premium_monthly",
+  monthly: "griit_pro_monthly",
   annual: "griit_premium_annual",
 } as const;
 

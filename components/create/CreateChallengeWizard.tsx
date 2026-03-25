@@ -47,6 +47,7 @@ import type { ChallengeType, ChallengeVisibility, ReplayPolicy } from "@/types";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
 import NewTaskModal from "@/components/create/NewTaskModal";
 import { useCelebrationStore } from "@/store/celebrationStore";
+import { TimeWindowPrompt } from "@/components/TimeWindowPrompt";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -81,6 +82,7 @@ export default function CreateChallengeWizard() {
   const celebrationVisible = useCelebrationStore((s) => s.visible);
   const pendingNavId = useRef<string | null>(null);
   const wasCelebration = useRef(false);
+  const [showTimePrompt, setShowTimePrompt] = useState(false);
 
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
@@ -111,6 +113,11 @@ export default function CreateChallengeWizard() {
   const { participation, teamSize } = whoToParticipation(who);
   const duration = getDurationFromDraft(challengeType, durationDays, customDur);
   const hardLocked = difficultyMode === "hard";
+  const trimmedTitle = title.trim();
+  const isValidChallengeName =
+    trimmedTitle.length >= 3 &&
+    trimmedTitle.toLowerCase() !== "challenge" &&
+    trimmedTitle.toLowerCase() !== "untitled";
 
   const animateToStep = useCallback(
     (newStep: number, currentStep: number) => {
@@ -182,12 +189,17 @@ export default function CreateChallengeWizard() {
 
   useEffect(() => {
     if (!celebrationVisible && wasCelebration.current && pendingNavId.current) {
-      const id = pendingNavId.current;
-      pendingNavId.current = null;
-      router.replace(ROUTES.CHALLENGE_ID(id) as never);
+      setShowTimePrompt(true);
     }
     wasCelebration.current = celebrationVisible;
   }, [celebrationVisible, router]);
+
+  const finishAfterTimePrompt = useCallback(() => {
+    const id = pendingNavId.current;
+    pendingNavId.current = null;
+    setShowTimePrompt(false);
+    if (id) router.replace(ROUTES.CHALLENGE_ID(id) as never);
+  }, [router]);
 
   const applyPhotoPolicyToTasks = useCallback(
     (list: (TaskEditorTask & { wizardType?: string })[]): (TaskEditorTask & { wizardType?: string })[] => {
@@ -206,7 +218,7 @@ export default function CreateChallengeWizard() {
   );
 
   const onNext1 = () => {
-    if (!title.trim()) {
+    if (!isValidChallengeName) {
       setNameError(true);
       shakeName();
       return;
@@ -369,6 +381,7 @@ export default function CreateChallengeWizard() {
           title: "Challenge created!",
           subtitle: `${title.trim()} is live.`,
           type: "badge",
+          shareMessage: `I just launched "${title.trim()}" on GRIIT. Day 1 starts now. Join me: https://griit.fit`,
         });
         if (who === "duo") {
           setTimeout(() => {
@@ -476,10 +489,18 @@ export default function CreateChallengeWizard() {
                   value={title}
                   onChangeText={(text) => {
                     setTitle(text);
-                    if (nameError && text.trim().length > 0) setNameError(false);
+                    if (nameError) {
+                      const candidate = text.trim();
+                      const ok =
+                        candidate.length >= 3 &&
+                        candidate.toLowerCase() !== "challenge" &&
+                        candidate.toLowerCase() !== "untitled";
+                      if (ok) setNameError(false);
+                    }
                   }}
                 />
               </Animated.View>
+              <Text style={styles.charCount}>{title.length}/60</Text>
               {nameError ? <Text style={styles.errText}>Give your challenge a name</Text> : null}
               <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Who&apos;s in?</Text>
               <View style={styles.whoRow}>
@@ -819,8 +840,14 @@ export default function CreateChallengeWizard() {
           </TouchableOpacity>
         )}
         {step === 1 && (
-          <TouchableOpacity style={styles.primary} onPress={onNext1} activeOpacity={0.9}>
-            <Text style={styles.primaryTxt}>Next: daily tasks</Text>
+          <TouchableOpacity
+            style={[styles.primary, !isValidChallengeName && styles.primaryDisabled]}
+            onPress={onNext1}
+            activeOpacity={0.9}
+            disabled={!isValidChallengeName}
+            accessibilityState={{ disabled: !isValidChallengeName }}
+          >
+            <Text style={[styles.primaryTxt, !isValidChallengeName && styles.primaryTxtDisabled]}>Next: daily tasks</Text>
           </TouchableOpacity>
         )}
         {step === 2 && (
@@ -893,6 +920,17 @@ export default function CreateChallengeWizard() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <TimeWindowPrompt
+        visible={showTimePrompt}
+        tasks={tasks.map((t) => ({ id: t.id, name: t.title }))}
+        onSave={(times) => {
+          // MIGRATION NOTE: active_challenges needs task_times JSONB column
+          console.log("[TimeWindow] Saved times:", times);
+          finishAfterTimePrompt();
+        }}
+        onSkip={finishAfterTimePrompt}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -1110,6 +1148,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   primaryTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 16, fontWeight: "500" },
+  primaryDisabled: { backgroundColor: DS_COLORS.buttonDisabledBg },
+  primaryTxtDisabled: { color: DS_COLORS.buttonDisabledText },
+  charCount: {
+    fontSize: 11,
+    color: DS_COLORS.TEXT_TERTIARY,
+    textAlign: "right",
+    marginTop: 4,
+  },
   backOut: {
     borderWidth: 1,
     borderColor: DS_COLORS.border,

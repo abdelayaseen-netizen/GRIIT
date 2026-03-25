@@ -135,7 +135,7 @@ export default function PaywallScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <TouchableOpacity
         style={styles.closeButton}
-        onPress={() => router.back()}
+        onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
         activeOpacity={0.7}
         accessibilityLabel="Close"
         accessibilityRole="button"

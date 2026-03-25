@@ -63,7 +63,7 @@ export default function EditProfileScreen() {
         return;
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
+      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -82,7 +82,7 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn} activeOpacity={0.7} accessibilityLabel="Close and go back" accessibilityRole="button">
+        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={styles.closeBtn} activeOpacity={0.7} accessibilityLabel="Close and go back" accessibilityRole="button">
           <X size={22} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>Edit Profile</Text>

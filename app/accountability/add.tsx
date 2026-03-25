@@ -76,7 +76,7 @@ export default function AddAccountabilityPartnerScreen() {
         if (params.from === "onboarding" || params.from === "day1") {
           router.replace((params.from === "onboarding" ? ROUTES.ONBOARDING_STEP4 : ROUTES.TABS) as never);
         } else {
-          router.back();
+          router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
         }
       } catch (e: unknown) {
         showError(e instanceof Error ? e.message : "Could not send invite.");
@@ -94,7 +94,7 @@ export default function AddAccountabilityPartnerScreen() {
     } else if (params.from === "day1") {
       router.replace(ROUTES.TABS as never);
     } else {
-      router.back();
+      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
     }
   }, [params.from, router]);
 

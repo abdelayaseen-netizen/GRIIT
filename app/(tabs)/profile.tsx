@@ -168,7 +168,7 @@ export default function ProfileScreen() {
         <ProfileHeader
           avatarUrl={profile.avatar_url ?? undefined}
           fullName={(profile.display_name || profile.username || "User").trim()}
-          username={profile.username ?? "user"}
+          username={profile.username ?? ""}
           currentTier={stats?.tier ?? "Starter"}
           joinDate={formatJoinDate(profile.created_at)}
           bio={profile.bio ?? ""}

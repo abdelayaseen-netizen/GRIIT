@@ -301,7 +301,7 @@ export default function JournalTaskScreen() {
           <Animated.View style={[s.successActions, { opacity: confettiOpacity }]}>
             <TouchableOpacity
               style={s.successPrimaryBtn}
-              onPress={() => router.back()}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
               activeOpacity={0.8}
             >
               <Text style={s.successPrimaryBtnText}>Back to challenge</Text>
@@ -324,7 +324,7 @@ export default function JournalTaskScreen() {
                 if (entryText.trim().length > 0) {
                   setDraftExitVisible(true);
                 } else {
-                  router.back();
+                  router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
                 }
               }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -566,7 +566,7 @@ export default function JournalTaskScreen() {
               onPress={() => {
                 void AsyncStorage.removeItem(draftKey);
                 setDraftExitVisible(false);
-                router.back();
+                router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
               }}
               accessibilityRole="button"
               accessibilityLabel="Discard draft"
@@ -577,7 +577,7 @@ export default function JournalTaskScreen() {
               style={s.draftExitBtnSecondary}
               onPress={() => {
                 setDraftExitVisible(false);
-                router.back();
+                router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
               }}
               accessibilityRole="button"
               accessibilityLabel="Save and exit"
