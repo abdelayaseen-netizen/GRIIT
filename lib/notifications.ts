@@ -1,9 +1,31 @@
 /**
+ * SUPABASE MIGRATIONS REQUIRED:
+ *
+ * Run these in the Supabase SQL Editor before testing push notifications:
+ *
+ * ALTER TABLE public.profiles
+ *   ADD COLUMN IF NOT EXISTS push_token TEXT;
+ *
+ * (Production already uses `profiles.expo_push_token` — prefer that column; `push_token` is optional alias.)
+ *
+ * These were already run (from previous sprint):
+ * - profiles.streak_freezes_remaining INTEGER DEFAULT 1
+ * - profiles.last_freeze_used_at TIMESTAMPTZ
+ * - active_challenges.task_times JSONB DEFAULT '{}'
+ */
+
+/**
  * Local notifications for "Time to secure your day" and optional "2 hours left".
  * Schedule is updated on app open and after secure so we don't notify if already secured today.
  */
 
 import * as Notifications from "expo-notifications";
+import { SchedulableTriggerInputTypes } from "expo-notifications";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
+import { Platform } from "react-native";
+import { captureError } from "@/lib/sentry";
+import { DS_COLORS } from "@/lib/design-system";
 import {
   pickTemplate,
   type NotifVars,
@@ -11,6 +33,16 @@ import {
   pickTaskPrepTemplate,
   normalizeTaskTypeForPrep,
 } from "@/lib/notification-copy";
+
+// Foreground: show banner + sound (Expo handler)
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const SECURE_REMINDER_ID = "secure-day-reminder";
 const TWO_HOURS_LEFT_ID = "secure-two-hours-left";
@@ -525,5 +557,172 @@ export async function scheduleChallengeCountdowns(
     }
   } catch {
     // ignore
+  }
+}
+
+// ─── Sprint 2: push registration, daily task/streak reminders, parse helpers ───
+
+/**
+ * Request permission and return the Expo push token.
+ * Returns null if permission denied or not on a physical device.
+ */
+export async function registerForPushNotifications(): Promise<string | null> {
+  if (!Device.isDevice) {
+    console.log("[Notifications] Skipping — not a physical device");
+    return null;
+  }
+
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== "granted") {
+      console.log("[Notifications] Permission denied by user");
+      return null;
+    }
+
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+
+    if (!projectId) {
+      console.warn("[Notifications] No EAS project ID found in app config");
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "GRIIT",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: DS_COLORS.DISCOVER_CORAL,
+      });
+    }
+
+    return tokenData.data;
+  } catch (error) {
+    captureError(error, "registerForPushNotifications");
+    return null;
+  }
+}
+
+/**
+ * Schedule a local notification at a specific time every day.
+ */
+export async function scheduleTaskReminder(params: {
+  taskName: string;
+  challengeName: string;
+  hour: number;
+  minute: number;
+  identifier: string;
+}): Promise<void> {
+  const { taskName, challengeName, hour, minute, identifier } = params;
+  try {
+    await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
+
+    await Notifications.scheduleNotificationAsync({
+      identifier,
+      content: {
+        title: `Time for ${taskName}`,
+        body: `${challengeName} · Don't break your streak`,
+        sound: true,
+        data: { type: "task_reminder", identifier },
+      },
+      trigger: {
+        type: SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute,
+      },
+    });
+
+    console.log(
+      `[Notifications] Scheduled daily reminder at ${hour}:${String(minute).padStart(2, "0")} for ${taskName}`
+    );
+  } catch (error) {
+    captureError(error, "scheduleTaskReminder");
+  }
+}
+
+const STREAK_REMINDER_10PM_ID = "streak-reminder-10pm";
+
+/**
+ * Schedule the 10pm streak reminder for users who haven't checked in.
+ */
+export async function scheduleStreakReminder(streakCount: number): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(STREAK_REMINDER_10PM_ID).catch(() => {});
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: STREAK_REMINDER_10PM_ID,
+      content: {
+        title:
+          streakCount > 0
+            ? `Your ${streakCount}-day streak ends at midnight`
+            : `Don't forget to check in today`,
+        body: "Complete your tasks to keep the streak alive",
+        sound: true,
+        data: { type: "streak_reminder" },
+      },
+      trigger: {
+        type: SchedulableTriggerInputTypes.DAILY,
+        hour: 22,
+        minute: 0,
+      },
+    });
+
+    console.log("[Notifications] 10pm streak reminder scheduled");
+  } catch (error) {
+    captureError(error, "scheduleStreakReminder");
+  }
+}
+
+/**
+ * Cancel scheduled notifications for a challenge (task-* identifiers).
+ */
+export async function cancelChallengeReminders(challengeId: string): Promise<void> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const prefix = `task-${challengeId}`;
+    const toCancel = scheduled.filter((n) => (n.identifier ?? "").startsWith(prefix));
+    await Promise.all(toCancel.map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier!)));
+    console.log(`[Notifications] Cancelled ${toCancel.length} reminders for challenge ${challengeId}`);
+  } catch (error) {
+    captureError(error, "cancelChallengeReminders");
+  }
+}
+
+/**
+ * Cancel ALL scheduled notifications (e.g. sign out).
+ */
+export async function cancelAllNotifications(): Promise<void> {
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    console.log("[Notifications] All notifications cancelled");
+  } catch (error) {
+    captureError(error, "cancelAllNotifications");
+  }
+}
+
+/** Parse "7:00 AM" / "10:00 PM" from TimeWindowPrompt. */
+export function parseTimeString(timeStr: string): { hour: number; minute: number } | null {
+  try {
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return null;
+
+    let hour = parseInt(match[1]!, 10);
+    const minute = parseInt(match[2]!, 10);
+    const period = match[3]!.toUpperCase();
+
+    if (period === "PM" && hour !== 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+
+    return { hour, minute };
+  } catch {
+    return null;
   }
 }

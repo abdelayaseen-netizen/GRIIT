@@ -15,6 +15,8 @@ export const STORAGE_KEYS = {
   CELEBRATION_SHOWN: 'griit_celebrations_shown_v1',
   REVIEW_PROMPT_LAST: 'griit_review_prompt_last',
   REVIEW_LAST_ASKED: 'griit_review_last_asked',
+  /** Set after first successful challenge join — gates push permission timing. */
+  HAS_JOINED_CHALLENGE: 'griit_has_joined_challenge',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];

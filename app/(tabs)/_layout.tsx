@@ -1,21 +1,11 @@
 import { Tabs, usePathname } from "expo-router";
 import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { View, StyleSheet } from "react-native";
-import { useAuth } from "@/contexts/AuthContext";
-import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_MEASURES, DS_SHADOWS } from "@/lib/design-system";
 
 export default function TabLayout() {
   void usePathname();
-  const { user } = useAuth();
-  const pushRegistrationAttempted = useRef(false);
-
-  useEffect(() => {
-    if (!user || pushRegistrationAttempted.current) return;
-    pushRegistrationAttempted.current = true;
-    registerPushTokenWithBackend();
-  }, [user]);
 
   return (
     <Tabs

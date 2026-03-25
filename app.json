@@ -52,6 +52,14 @@
           "origin": "https://griit.fit"
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#E8593C",
+          "sounds": []
+        }
+      ],
       "expo-font",
       "expo-web-browser",
       "expo-apple-authentication",

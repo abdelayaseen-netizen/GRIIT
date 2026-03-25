@@ -7,8 +7,6 @@ import { trpcQuery, trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
 import { supabase } from '@/lib/supabase';
 import {
-  requestNotificationPermissions,
-  setupNotificationChannel,
   scheduleNextSecureReminder,
   cancelSecureReminders,
   scheduleLapsedUserReminders,
@@ -23,7 +21,6 @@ import {
   fireStreakCelebration,
   isStreakCelebrationMilestone,
 } from '@/lib/notifications';
-import { registerPushTokenWithBackend } from '@/lib/register-push-token';
 import { getTodayDateKey, countSecuredLast7Days } from '@/lib/date-utils';
 import { deriveUserRank } from '@/lib/derive-user-rank';
 import { setSubscriptionState } from '@/lib/premium';
@@ -214,18 +211,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchActiveChallenge();
     fetchStories();
   }, [user, fetchProfile, fetchStats, fetchActiveChallenge, fetchStories]);
-
-  useEffect(() => {
-    if (Platform.OS === 'web' || !user) return;
-    requestNotificationPermissions().then((ok) => {
-      if (ok) {
-        setupNotificationChannel();
-        registerPushTokenWithBackend().catch(() => {
-          // error swallowed — handle in UI
-        });
-      }
-    });
-  }, [user]);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !user || !stats) return;

@@ -43,6 +43,7 @@ import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
 import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
+import { scheduleStreakReminder } from "@/lib/notifications";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -239,6 +240,11 @@ export default function HomeScreen() {
       setShowFreezeModal(true);
     }
   }, [isGuest, user?.id, profile?.username, streak, homeQuery.data?.securedDateKeys]);
+
+  React.useEffect(() => {
+    if (isGuest || !user?.id) return;
+    void scheduleStreakReminder(streak);
+  }, [isGuest, user?.id, streak]);
 
   useFocusEffect(
     useCallback(() => {

@@ -1,9 +1,15 @@
 import { queryClient } from "@/lib/query-client";
 import { clearSentryUser } from "@/lib/sentry";
 import { resetAnalytics } from "@/lib/analytics";
+import { cancelAllNotifications } from "@/lib/notifications";
 
-/** Run after `supabase.auth.signOut()` (or with session cleared). Clears React Query, Sentry user, and PostHog session. */
-export function runClientSignOutCleanup(): void {
+/** Run after `supabase.auth.signOut()` (or with session cleared). Clears React Query, Sentry user, PostHog session, and scheduled notifications. */
+export async function runClientSignOutCleanup(): Promise<void> {
+  try {
+    await cancelAllNotifications();
+  } catch {
+    // ignore
+  }
   try {
     queryClient.clear();
   } catch {

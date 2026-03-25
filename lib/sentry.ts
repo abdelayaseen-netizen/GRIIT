@@ -1,32 +1,28 @@
 import * as Sentry from "@sentry/react-native";
 
-const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
 
-export function initSentry(): void {
+/** Call once at app startup (see `app/_layout.tsx`). */
+export function initialiseSentry(): void {
   if (!SENTRY_DSN) {
-    if (__DEV__) {
-      console.warn("[Sentry] No DSN set — error monitoring disabled");
-    }
+    console.warn("[Sentry] No DSN configured — skipping init. Set EXPO_PUBLIC_SENTRY_DSN in .env");
     return;
   }
 
   Sentry.init({
     dsn: SENTRY_DSN,
     debug: __DEV__,
-    environment: process.env.NODE_ENV ?? (__DEV__ ? "development" : "production"),
-    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+    tracesSampleRate: __DEV__ ? 0 : 0.2,
+    environment: __DEV__ ? "development" : "production",
+    enabled: !__DEV__,
     enableNativeFramesTracking: true,
     enableAutoSessionTracking: true,
     attachStacktrace: true,
-    beforeSend(event) {
-      if (__DEV__) {
-        console.warn("[Sentry] Would send event:", event.event_id);
-        return null;
-      }
-      return event;
-    },
   });
 }
+
+/** @deprecated Use `initialiseSentry` — kept for existing imports. */
+export const initSentry = initialiseSentry;
 
 export function setSentryUser(userId: string, email?: string): void {
   if (!SENTRY_DSN) return;
@@ -38,13 +34,34 @@ export function clearSentryUser(): void {
   Sentry.setUser(null);
 }
 
-export function captureError(error: unknown, context?: Record<string, unknown>): void {
+export function captureError(error: unknown, context?: string | Record<string, unknown>): void {
+  if (__DEV__) {
+    const label = typeof context === "string" ? context : JSON.stringify(context ?? {});
+    console.error(`[${label}]`, error);
+    return;
+  }
   if (!SENTRY_DSN) return;
+  if (typeof context === "string") {
+    if (error instanceof Error) {
+      Sentry.captureException(error, { tags: { context: context || "unknown" } });
+    } else {
+      Sentry.captureMessage(String(error), { tags: { context: context || "unknown" } });
+    }
+    return;
+  }
   const extra = context;
   if (error instanceof Error) {
     Sentry.captureException(error, extra ? { extra } : undefined);
   } else {
     Sentry.captureMessage(String(error), extra ? { extra } : undefined);
+  }
+}
+
+export function captureMessage(message: string, level: Sentry.SeverityLevel = "info"): void {
+  if (__DEV__) {
+    console.log(`[Sentry message] ${message}`);
+  } else if (SENTRY_DSN) {
+    Sentry.captureMessage(message, level);
   }
 }
 

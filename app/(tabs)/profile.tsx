@@ -106,7 +106,7 @@ export default function ProfileScreen() {
     setSignOutConfirmVisible(false);
     await cancelLapsedUserReminders();
     await supabase.auth.signOut();
-    runClientSignOutCleanup();
+    await runClientSignOutCleanup();
     const { clearOnboardingStorage } = await import("@/store/onboardingStore");
     await clearOnboardingStorage();
     router.replace(ROUTES.AUTH as never);

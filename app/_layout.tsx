@@ -3,7 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
@@ -25,9 +25,14 @@ import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { initializePurchases } from "@/lib/revenue-cat";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
-import { initSentry } from "@/lib/sentry";
+import { initialiseSentry } from "@/lib/sentry";
+import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
 
-initSentry();
+initialiseSentry();
+
+// MIGRATION NEEDED — run in Supabase SQL editor if not present:
+// ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS push_token TEXT;
+// (expo_push_token is already used by the backend; registerToken updates both push_tokens table and profiles.expo_push_token.)
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,6 +43,16 @@ function useSessionExpired() {
   const ctx = useContext(SessionExpiredContext);
   if (!ctx) return { message: null, setMessage: () => {} };
   return ctx;
+}
+
+/** Gated push registration after first challenge join (see STORAGE_KEYS.HAS_JOINED_CHALLENGE). */
+function PushRegistrationBootstrap() {
+  const { user } = useAuth();
+  useEffect(() => {
+    if (Platform.OS === "web" || !user) return;
+    void requestNotificationPermissionAfterFirstJoin();
+  }, [user]);
+  return null;
 }
 
 const PROFILE_CHECK_TIMEOUT_MS = 2500;
@@ -406,6 +421,7 @@ function RootLayout() {
         <GestureHandlerRootView style={layoutStyles.flex1}>
           <ThemeProvider>
             <AuthProvider>
+              <PushRegistrationBootstrap />
               <SessionExpiredContext.Provider value={{ message: sessionExpiredMessage, setMessage: setSessionExpiredMessage }}>
                 <AuthGateProvider>
                   <ApiProvider>

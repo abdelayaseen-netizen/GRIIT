@@ -52,6 +52,8 @@ import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { parseTimeString, scheduleTaskReminder } from "@/lib/notifications";
 
 const DRAFT_KEY = "griit_challenge_draft";
 
@@ -377,6 +379,7 @@ export default function CreateChallengeWizard() {
       }
       if (newId) {
         pendingNavId.current = newId;
+        await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
         useCelebrationStore.getState().show({
           title: "Challenge created!",
           subtitle: `${title.trim()} is live.`,
@@ -924,8 +927,24 @@ export default function CreateChallengeWizard() {
       <TimeWindowPrompt
         visible={showTimePrompt}
         tasks={tasks.map((t) => ({ id: t.id, name: t.title }))}
-        onSave={(times) => {
-          // MIGRATION NOTE: active_challenges needs task_times JSONB column
+        onSave={async (times) => {
+          const cid = pendingNavId.current ?? "";
+          const ctitle = title.trim() || "Your challenge";
+          await Promise.all(
+            Object.entries(times).map(async ([taskId, timeStr]) => {
+              const parsed = parseTimeString(timeStr);
+              if (!parsed) return;
+              const task = tasks.find((x) => x.id === taskId);
+              if (!task) return;
+              await scheduleTaskReminder({
+                taskName: task.title,
+                challengeName: ctitle,
+                hour: parsed.hour,
+                minute: parsed.minute,
+                identifier: `task-${cid}-${taskId}`,
+              });
+            })
+          );
           console.log("[TimeWindow] Saved times:", times);
           finishAfterTimePrompt();
         }}

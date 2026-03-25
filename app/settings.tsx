@@ -603,7 +603,7 @@ export default function SettingsScreen() {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               await cancelLapsedUserReminders();
               await supabase.auth.signOut();
-              runClientSignOutCleanup();
+              await runClientSignOutCleanup();
               const { clearOnboardingStorage } = await import("@/store/onboardingStore");
               await clearOnboardingStorage();
               router.replace(ROUTES.AUTH as never);
@@ -664,7 +664,7 @@ export default function SettingsScreen() {
                     await trpcMutate(TRPC.profiles.deleteAccount);
                     await cancelLapsedUserReminders();
                     await supabase.auth.signOut();
-                    runClientSignOutCleanup();
+                    await runClientSignOutCleanup();
                     const { clearOnboardingStorage } = await import("@/store/onboardingStore");
                     await clearOnboardingStorage();
                     setShowDeleteModal(false);

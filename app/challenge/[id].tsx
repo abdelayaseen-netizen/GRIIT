@@ -36,6 +36,9 @@ import {
   Copy,
 } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { parseTimeString, scheduleTaskReminder } from "@/lib/notifications";
 import { formatTimeHHMM, getTimeWindowState } from "@/lib/time-enforcement";
 import { formatTimeRemainingHMS, isChallengeExpired } from "@/lib/challenge-timer";
 import * as Haptics from "expo-haptics";
@@ -762,6 +765,7 @@ export default function ChallengeDetailScreen() {
 
       setShowCommitmentModal(false);
       setShowJoinCelebration(true);
+      await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
       trackEvent("challenge_joined", { challenge_id: id });
       track({ name: "challenge_joined", challenge_id: id });
 
@@ -1847,8 +1851,26 @@ export default function ChallengeDetailScreen() {
       <TimeWindowPrompt
         visible={showTimePrompt}
         tasks={promptTasks}
-        onSave={(times) => {
-          // MIGRATION NOTE: active_challenges needs task_times JSONB column
+        onSave={async (times) => {
+          const cid = challenge?.id ?? id ?? "";
+          const ctitle = challenge?.title ?? "Your challenge";
+          const rawTasks = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
+          await Promise.all(
+            Object.entries(times).map(async ([taskId, timeStr]) => {
+              const parsed = parseTimeString(timeStr);
+              if (!parsed) return;
+              const task = rawTasks.find((t) => String(t.id) === String(taskId));
+              if (!task) return;
+              const taskName = String((task as { title?: string }).title ?? task.type ?? "Task");
+              await scheduleTaskReminder({
+                taskName,
+                challengeName: ctitle,
+                hour: parsed.hour,
+                minute: parsed.minute,
+                identifier: `task-${cid}-${taskId}`,
+              });
+            })
+          );
           console.log("[TimeWindow] Saved times:", times);
           onTimeWindowComplete();
         }}

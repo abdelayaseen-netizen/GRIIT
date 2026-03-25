@@ -4,30 +4,22 @@
  */
 
 import { Platform } from "react-native";
-import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { trpcMutate } from "@/lib/trpc";
 import { track } from "@/lib/analytics";
+import { registerForPushNotifications } from "@/lib/notifications";
+import { captureError } from "@/lib/sentry";
+import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 
 export async function registerPushTokenWithBackend(): Promise<boolean> {
   if (Platform.OS === "web") return false;
   try {
-    const { status: existing } = await Notifications.getPermissionsAsync();
-    let final = existing;
-    if (existing !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      final = status;
-    }
-    if (final !== "granted") {
+    const token = await registerForPushNotifications();
+    if (!token) {
       track({ name: "push_permission_denied" });
       return false;
     }
     track({ name: "push_permission_granted" });
-
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: (typeof process !== "undefined" && process.env ? (process.env as { EXPO_PUBLIC_EAS_PROJECT_ID?: string }).EXPO_PUBLIC_EAS_PROJECT_ID : undefined) ?? undefined,
-    });
-    const token = tokenData?.data;
-    if (!token) return false;
 
     await trpcMutate("notifications.registerToken", {
       token,
@@ -35,5 +27,18 @@ export async function registerPushTokenWithBackend(): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Only registers push after the user has joined at least one challenge (cold open should not prompt).
+ */
+export async function requestNotificationPermissionAfterFirstJoin(): Promise<void> {
+  try {
+    const hasJoined = await AsyncStorage.getItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE);
+    if (!hasJoined) return;
+    await registerPushTokenWithBackend();
+  } catch (error) {
+    captureError(error, "requestNotificationPermissionAfterFirstJoin");
   }
 }
