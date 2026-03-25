@@ -34,7 +34,7 @@ import LiveFeedSection from "@/components/LiveFeedSection";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { EmptyState } from "@/components/shared/EmptyState";
 import Card from "@/components/shared/Card";
-import LoadingState from "@/components/shared/LoadingState";
+import { SkeletonHomeChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
 import StatBadge from "@/components/shared/StatBadge";
@@ -367,7 +367,10 @@ export default function HomeScreen() {
         <DailyQuote />
 
         {homeQuery.isPending && !homeQuery.data ? (
-          <LoadingState containerStyle={s.loadingWrap} />
+          <View style={s.goalsSection}>
+            <SkeletonHomeChallengeCard />
+            <SkeletonHomeChallengeCard />
+          </View>
         ) : homeQuery.isError ? (
           <ErrorState message="Couldn't load your dashboard" onRetry={() => void homeQuery.refetch()} />
         ) : challengeGroups.length === 0 ? (
@@ -646,7 +649,6 @@ const s = StyleSheet.create({
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
     fontWeight: "700",
   },
-  loadingWrap: { paddingVertical: DS_SPACING.xxl, alignItems: "center" },
   goalsSection: { paddingTop: 14 },
   goalsSectionHeader: {
     flexDirection: "row",

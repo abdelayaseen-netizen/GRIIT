@@ -15,7 +15,7 @@ import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Card from "@/components/shared/Card";
-import LoadingState from "@/components/shared/LoadingState";
+import { SkeletonHeroCard, SkeletonChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { ROUTES } from "@/lib/routes";
@@ -349,8 +349,18 @@ export default function DiscoverScreen() {
 
           {featuredQuery.isError ? (
             <ErrorState message="Couldn't load challenges" onRetry={() => void featuredQuery.refetch()} />
-          ) : featuredQuery.isPending && !featuredQuery.data ? (
-            <LoadingState containerStyle={styles.v3LoadingWrap} />
+          ) : featuredQuery.isPending || featuredQuery.isPlaceholderData ? (
+            <View>
+              <View style={styles.v3SectionPad}>
+                <SkeletonHeroCard />
+              </View>
+              <View style={styles.v3ListPad}>
+                <SkeletonChallengeCard />
+                <SkeletonChallengeCard />
+                <SkeletonChallengeCard />
+                <SkeletonChallengeCard />
+              </View>
+            </View>
           ) : filtered.length === 0 ? (
             <View style={styles.discoverFilterEmpty}>
               <Search size={40} color={DS_COLORS.textMuted} />

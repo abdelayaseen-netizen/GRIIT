@@ -21,7 +21,7 @@ import TrophyCase from "@/components/profile/TrophyCase";
 import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
 import ProfileActions from "@/components/profile/ProfileActions";
 import { EmptyState } from "@/components/EmptyState";
-import LoadingState from "@/components/shared/LoadingState";
+import { SkeletonProfile } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
 import { DS_COLORS } from "@/lib/design-system";
@@ -132,9 +132,7 @@ export default function ProfileScreen() {
   if ((profileLoading && !profile) || (!profile && !isError)) {
     return (
       <SafeAreaView style={s.container} edges={["top"]}>
-        <View style={s.center}>
-          <LoadingState message="Loading profile..." />
-        </View>
+        <SkeletonProfile />
       </SafeAreaView>
     );
   }

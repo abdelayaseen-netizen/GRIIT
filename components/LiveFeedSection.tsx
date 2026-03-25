@@ -11,6 +11,7 @@ import { getAvatarColor } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import CommentSheet, { type FeedComment } from "@/components/CommentSheet";
 import { captureError } from "@/lib/sentry";
+import { SkeletonFeedCard } from "@/components/skeletons";
 
 export type LiveFeedPost = {
   id: string;
@@ -37,21 +38,6 @@ export type LiveFeedPost = {
 };
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
-
-function SkeletonCard() {
-  return (
-    <View style={[styles.card, styles.skeleton]}>
-      <View style={styles.skelRow}>
-        <View style={styles.skelAvatar} />
-        <View style={{ flex: 1, gap: 6 }}>
-          <View style={styles.skelLineLg} />
-          <View style={styles.skelLineSm} />
-        </View>
-      </View>
-      <View style={styles.skelProof} />
-    </View>
-  );
-}
 
 function StandardPostCard({
   post,
@@ -436,8 +422,9 @@ export default function LiveFeedSection() {
 
       {feedQuery.isPending ? (
         <View style={{ gap: 10 }}>
-          <SkeletonCard />
-          <SkeletonCard />
+          <SkeletonFeedCard />
+          <SkeletonFeedCard />
+          <SkeletonFeedCard />
         </View>
       ) : feedQuery.isError ? (
         <View style={styles.empty}>
@@ -670,10 +657,4 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY },
   retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600", marginTop: 8 },
 
-  skeleton: { padding: 14 },
-  skelRow: { flexDirection: "row", gap: 10 },
-  skelAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: DS_COLORS.chipFill },
-  skelLineLg: { height: 12, borderRadius: 4, backgroundColor: DS_COLORS.chipFill, width: "70%" },
-  skelLineSm: { height: 10, borderRadius: 4, backgroundColor: DS_COLORS.chipFill, width: "45%" },
-  skelProof: { marginTop: 12, height: 120, borderRadius: 12, backgroundColor: DS_COLORS.chipFill },
 });

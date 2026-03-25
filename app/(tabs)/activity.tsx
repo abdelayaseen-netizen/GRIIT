@@ -14,6 +14,7 @@ import { getAvatarColor } from "@/lib/avatar";
 import { consistencyScore } from "@/lib/scoring";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import LoadingState from "@/components/shared/LoadingState";
+import { SkeletonLeaderboardRow } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 
 type MainTab = "notifications" | "leaderboard";
@@ -436,9 +437,13 @@ function LeaderboardBody({
   };
 
   const loading =
-    (scope === "global" && globalLeaderboard.isPending) ||
-    (scope === "friends" && friendsBoard.isPending) ||
-    (scope === "challenge" && (myActive.isPending || challengeBoard.isPending));
+    (scope === "global" && (globalLeaderboard.isPending || (globalLeaderboard.isFetching && !globalLeaderboard.data))) ||
+    (scope === "friends" && (friendsBoard.isPending || (friendsBoard.isFetching && !friendsBoard.data))) ||
+    (scope === "challenge" &&
+      (myActive.isPending ||
+        (myActive.isFetching && !myActive.data) ||
+        challengeBoard.isPending ||
+        (challengeBoard.isFetching && !challengeBoard.data)));
 
   const err =
     (scope === "global" && globalLeaderboard.isError) ||
@@ -467,7 +472,15 @@ function LeaderboardBody({
         })}
       </View>
 
-      {loading ? <LoadingState message="Loading leaderboard..." /> : null}
+      {loading ? (
+        <View style={{ paddingHorizontal: 12, paddingTop: 8 }}>
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+        </View>
+      ) : null}
       {err ? (
         <ErrorState
           message="Couldn't load leaderboard"

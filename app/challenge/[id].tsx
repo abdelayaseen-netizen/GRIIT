@@ -76,7 +76,7 @@ import { TimeWindowPrompt } from "@/components/TimeWindowPrompt";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
-import LoadingState from "@/components/shared/LoadingState";
+import { SkeletonChallengeDetail } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
 import { ChallengeHero } from "@/components/challenge/ChallengeHero";
@@ -1074,7 +1074,7 @@ export default function ChallengeDetailScreen() {
     return (
       <View style={[s.loadingContainer, { backgroundColor: DS_COLORS.background }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <LoadingState message="Loading challenge..." />
+        <SkeletonChallengeDetail />
       </View>
     );
   }
