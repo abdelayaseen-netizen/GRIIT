@@ -1,29 +1,54 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { getDailyQuote } from "@/lib/quotes";
-import { DS_COLORS } from "@/lib/design-system";
+import { useFocusEffect } from "@react-navigation/native";
+import { getRandomQuote } from "@/lib/quotes";
+import { GRIIT_COLORS, DS_COLORS } from "@/lib/design-system";
 
 export default React.memo(function DailyQuote() {
+  const [quote, setQuote] = useState(() => getRandomQuote());
+
+  useFocusEffect(
+    useCallback(() => {
+      setQuote(getRandomQuote());
+    }, [])
+  );
+
   return (
-    <View style={s.wrap}>
-      <Text style={s.text}>{`"${getDailyQuote()}"`}</Text>
+    <View style={s.quoteContainer} accessibilityRole="text">
+      <View style={s.quoteAccent} />
+      <View style={s.quoteContent}>
+        <Text style={s.quoteText}>&ldquo;{quote.text}&rdquo;</Text>
+        <Text style={s.quoteAuthor}>— {quote.author}</Text>
+      </View>
     </View>
   );
 });
 
 const s = StyleSheet.create({
-  wrap: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    borderLeftWidth: 2,
-    borderLeftColor: DS_COLORS.DISCOVER_CORAL,
-    paddingLeft: 12,
-    marginLeft: 24,
+  quoteContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    marginHorizontal: 16,
   },
-  text: {
+  quoteAccent: {
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: GRIIT_COLORS.primary,
+    marginRight: 12,
+  },
+  quoteContent: {
+    flex: 1,
+  },
+  quoteText: {
     fontSize: 14,
-    color: DS_COLORS.textSecondary,
     fontStyle: "normal",
+    color: DS_COLORS.textSecondary,
     lineHeight: 21,
+    marginBottom: 4,
+  },
+  quoteAuthor: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_TERTIARY,
+    fontWeight: "500",
   },
 });

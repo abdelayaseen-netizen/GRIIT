@@ -69,10 +69,12 @@ type HomeData = {
 };
 
 function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 12) return "Good morning";
-  if (h >= 12 && h < 17) return "Good afternoon";
-  return "Good evening";
+  const hour = new Date().getHours();
+  if (hour < 5) return "Still up?";
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  if (hour < 21) return "Good evening";
+  return "Good night";
 }
 
 /** JSON for `app/task/complete` — matches TaskCompleteConfig fields from mapped challenge_tasks. */

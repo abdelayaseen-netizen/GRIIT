@@ -165,6 +165,7 @@ export default function ProfileScreen() {
         contentContainerStyle={s.scroll}
       >
         <ProfileHeader
+          userId={user?.id}
           avatarUrl={profile.avatar_url ?? undefined}
           fullName={(profile.display_name || profile.username || "User").trim()}
           username={profile.username ?? ""}
@@ -172,6 +173,7 @@ export default function ProfileScreen() {
           joinDate={formatJoinDate(profile.created_at)}
           bio={profile.bio ?? ""}
           onShare={handleShare}
+          onAvatarUpdated={() => void refetchAll()}
         />
 
         <StatsRow streak={streak} best={best} active={active} done={done} />

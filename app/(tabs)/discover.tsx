@@ -182,7 +182,7 @@ export default function DiscoverScreen() {
         member_count: number;
         max_members: number;
       }>>,
-    enabled: !isGuest && !!user?.id,
+    enabled: false, // Teams v2 — disabled until backend is ready (avoids 429/503)
     staleTime: 2 * 60 * 1000,
   });
   const myTeams = myTeamsQuery.data ?? [];

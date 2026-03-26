@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Animated, Share } from "react-native";
 import { Image } from "expo-image";
-import { MessageCircle, Share as ShareIcon } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { MessageCircle, Upload } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_SHADOWS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
 import { getAvatarColor } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import CommentSheet, { type FeedComment } from "@/components/CommentSheet";
@@ -50,109 +52,136 @@ function StandardPostCard({
   onComment: () => void;
   onShare: () => void;
 }) {
+  const router = useRouter();
   const avatarBg = getAvatarColor(post.username ?? post.displayName ?? "");
   const initial = (post.displayName || post.username || "?").trim().charAt(0).toUpperCase();
   const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
+  const displayUser = post.displayName || post.username || "Member";
+  const profileUsername = post.username?.trim();
 
   return (
-    <View style={[styles.card, DS_SHADOWS.cardSubtle]} accessibilityRole="summary">
-      <View style={styles.cardHeader}>
-        <View style={[styles.avatar38, { backgroundColor: avatarBg }]}>
-          <Text style={styles.avatarLetter14}>{initial}</Text>
-        </View>
-        <View style={styles.headerInfo}>
-          <View style={styles.nameRow}>
-            <Text style={styles.username13}>{post.displayName || post.username}</Text>
-            <View style={styles.streakPill}>
-              <Text style={styles.streakPillText}>🔥 {post.streakCount}</Text>
+    <View style={[cardStyles.card, DS_SHADOWS.card]} accessibilityRole="summary">
+      <TouchableOpacity
+        activeOpacity={0.97}
+        onPress={() => {
+          if (post.challengeId) router.push(ROUTES.CHALLENGE_ID(post.challengeId) as never);
+        }}
+        disabled={!post.challengeId}
+        accessibilityLabel={`${displayUser} — ${post.challengeName} — Day ${post.currentDay} of ${post.totalDays}`}
+        accessibilityRole="button"
+      >
+        <View style={cardStyles.header}>
+          <TouchableOpacity
+            onPress={() => {
+              if (profileUsername) {
+                router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(profileUsername)) as never);
+              }
+            }}
+            disabled={!profileUsername}
+            accessibilityLabel={profileUsername ? `View ${profileUsername}'s profile` : "Profile unavailable"}
+            accessibilityRole="button"
+          >
+            <View style={[cardStyles.avatar, { backgroundColor: avatarBg }]}>
+              <Text style={cardStyles.avatarText}>{initial}</Text>
             </View>
+          </TouchableOpacity>
+          <View style={cardStyles.headerRight}>
+            <Text style={cardStyles.username} numberOfLines={1}>
+              {displayUser}
+              {post.streakCount > 0 ? ` · 🔥 ${post.streakCount}` : ""}
+            </Text>
+            <Text style={cardStyles.challengeName} numberOfLines={1}>
+              {post.challengeName}
+            </Text>
           </View>
-          <Text style={styles.challenge11} numberOfLines={1}>
-            {post.challengeName}
+          <Text style={cardStyles.timestamp}>{relativeTime(post.createdAt)}</Text>
+        </View>
+
+        <View style={cardStyles.progressSection}>
+          <View style={cardStyles.progressLabel}>
+            <Text style={cardStyles.dayText}>
+              Day {post.currentDay} of {post.totalDays}
+            </Text>
+            <Text style={cardStyles.percentText}>{Math.round(pct)}%</Text>
+          </View>
+          <View style={cardStyles.progressTrack}>
+            <View style={[cardStyles.progressFill, { width: `${pct}%` }]} />
+          </View>
+        </View>
+
+        {post.hasProof ? (
+          <View style={cardStyles.proofWrap}>
+            {post.photoUrl ? (
+              <Image
+                source={{ uri: post.photoUrl }}
+                style={cardStyles.proofPhoto}
+                contentFit="cover"
+                accessibilityRole="image"
+                accessibilityLabel={`Proof photo for ${post.challengeName}`}
+              />
+            ) : (
+              <View style={cardStyles.proofPlaceholder}>
+                {post.verified ? (
+                  <View style={cardStyles.verifiedBadge}>
+                    <Text style={cardStyles.verifiedText}>✓ Verified</Text>
+                  </View>
+                ) : null}
+                <Text style={cardStyles.proofEmoji}>📸</Text>
+                <Text style={cardStyles.proofLabel}>PROOF PHOTO</Text>
+              </View>
+            )}
+          </View>
+        ) : null}
+
+        {post.caption ? (
+          <Text style={cardStyles.description} numberOfLines={4}>
+            {post.caption}
           </Text>
-        </View>
-        <Text style={styles.time11}>{relativeTime(post.createdAt)}</Text>
-      </View>
+        ) : null}
+      </TouchableOpacity>
 
-      <View style={styles.progressBlock}>
-        <Text style={styles.dayLabel}>
-          Day {post.currentDay} of {post.totalDays}
-        </Text>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${pct}%` }]} />
-        </View>
-      </View>
-
-      {post.hasProof ? (
-        <View style={styles.proofOuter}>
-          <View style={styles.proofDark}>
-            <View style={styles.proofTopRow}>
-              {post.verified ? (
-                <View style={styles.verifiedBadge}>
-                  <Text style={styles.verifiedText}>✓ Verified</Text>
-                </View>
-              ) : (
-                <View />
-              )}
-            </View>
-            <View style={styles.proofCenter}>
-              {post.photoUrl ? (
-                <Image source={{ uri: post.photoUrl }} style={styles.proofImage} contentFit="cover" />
-              ) : (
-                <>
-                  <Text style={styles.proofEmoji}>📸</Text>
-                  <Text style={styles.proofLabel}>PROOF PHOTO</Text>
-                </>
-              )}
-            </View>
-          </View>
-        </View>
-      ) : null}
-
-      {post.caption ? (
-        <Text style={styles.caption} numberOfLines={2}>
-          {post.caption}
-        </Text>
-      ) : null}
-
-      <View style={styles.actionRow}>
+      <View style={cardStyles.actionRow}>
         <TouchableOpacity
+          style={[cardStyles.respectButton, post.reactedByMe && cardStyles.respectButtonGiven]}
           onPress={onRespect}
-          style={[styles.respectBtn, post.reactedByMe ? styles.respectBtnActive : styles.respectBtnInactive]}
-          accessibilityRole="button"
           accessibilityLabel={
             post.reactedByMe
-              ? "Remove respect"
-              : post.respectCount > 0
-                ? `Give respect — ${post.respectCount} respect given`
-                : "Give respect"
+              ? `Remove respect from ${displayUser}`
+              : `Give respect to ${displayUser}`
           }
+          accessibilityRole="button"
           accessibilityState={{ selected: post.reactedByMe }}
         >
-          <Text style={[styles.respectBtnText, post.reactedByMe && styles.respectBtnTextActive]}>
-            🔥 Respect{post.respectCount > 0 ? ` · ${post.respectCount}` : ""}
-          </Text>
+          <Text style={cardStyles.respectEmoji}>🔥</Text>
+          <Text style={[cardStyles.respectText, post.reactedByMe && cardStyles.respectTextToggled]}>Respect</Text>
+          {post.respectCount > 0 ? (
+            <Text style={[cardStyles.respectCount, post.reactedByMe && cardStyles.respectCountToggled]}>
+              · {post.respectCount}
+            </Text>
+          ) : null}
         </TouchableOpacity>
-        <View style={styles.actionRight}>
-          <TouchableOpacity
-            style={styles.chip}
-            onPress={onComment}
-            accessibilityRole="button"
-            accessibilityLabel={`Comment — ${post.commentCount} comments`}
-          >
-            <MessageCircle size={13} color={DS_COLORS.TEXT_SECONDARY} />
-            <Text style={styles.chipText}> {post.commentCount}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.chip}
-            onPress={onShare}
-            accessibilityRole="button"
-            accessibilityLabel={`Share ${post.displayName || post.username}'s ${post.challengeName} post`}
-          >
-            <ShareIcon size={13} color={DS_COLORS.TEXT_SECONDARY} />
-            <Text style={styles.chipText}> Share</Text>
-          </TouchableOpacity>
-        </View>
+
+        <TouchableOpacity
+          style={cardStyles.ghostButton}
+          onPress={onComment}
+          accessibilityLabel={`Comment on ${displayUser}'s post — ${post.commentCount} comments`}
+          accessibilityRole="button"
+        >
+          <MessageCircle size={14} color={DS_COLORS.textSecondary} />
+          {post.commentCount > 0 ? (
+            <Text style={cardStyles.ghostButtonText}>{post.commentCount}</Text>
+          ) : null}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={cardStyles.shareButton}
+          onPress={onShare}
+          accessibilityLabel={`Share ${displayUser}'s ${post.challengeName} post`}
+          accessibilityRole="button"
+        >
+          <Upload size={14} color={DS_COLORS.textSecondary} />
+          <Text style={cardStyles.ghostButtonText}>Share</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -167,8 +196,10 @@ function MilestoneCard({
   onRespect: () => void;
   onComment: () => void;
 }) {
+  const router = useRouter();
   const avatarBg = getAvatarColor(post.username ?? post.displayName ?? "");
   const initial = (post.displayName || post.username || "?").trim().charAt(0).toUpperCase();
+  const profileUsername = post.username?.trim();
   return (
     <View style={[styles.milestoneCard, DS_SHADOWS.cardSubtle]}>
       <View style={styles.milestoneEyebrow}>
@@ -180,9 +211,20 @@ function MilestoneCard({
         Finished — Day {post.totalDays} of {post.totalDays}
       </Text>
       <View style={styles.milestoneUserRow}>
-        <View style={[styles.avatar26, { backgroundColor: avatarBg }]}>
-          <Text style={styles.avatarLetter12}>{initial}</Text>
-        </View>
+        <TouchableOpacity
+          onPress={() => {
+            if (profileUsername) {
+              router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(profileUsername)) as never);
+            }
+          }}
+          disabled={!profileUsername}
+          accessibilityLabel={profileUsername ? `View ${profileUsername}'s profile` : "Profile unavailable"}
+          accessibilityRole="button"
+        >
+          <View style={[styles.avatar26, { backgroundColor: avatarBg }]}>
+            <Text style={styles.avatarLetter12}>{initial}</Text>
+          </View>
+        </TouchableOpacity>
         <Text style={styles.milestoneUsername}>{post.displayName || post.username}</Text>
         <Text style={styles.milestoneTime}>{relativeTime(post.createdAt)}</Text>
       </View>
@@ -392,30 +434,30 @@ export default function LiveFeedSection() {
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionHeaderLeft}>
+      <View style={styles.feedHeader}>
+        <View style={styles.feedHeaderLeft}>
           <Animated.View style={[styles.liveDot, { opacity: dotOpacity }]} />
-          <Text style={styles.liveLabel}>Live</Text>
-          <Text style={styles.liveCount}>· {moving} moving</Text>
+          <Text style={styles.feedTitle}>Feed</Text>
+          <Text style={styles.liveCountMeta}>{moving} active</Text>
         </View>
-        <View style={styles.toggleOuter}>
+        <View style={styles.feedToggle}>
           <TouchableOpacity
             onPress={() => setScope("following")}
-            style={[styles.togglePill, scope === "following" && styles.togglePillOn]}
+            style={[styles.togglePill, scope === "following" && styles.togglePillActive]}
             accessibilityRole="button"
             accessibilityLabel="Show feed from people you follow"
             accessibilityState={{ selected: scope === "following" }}
           >
-            <Text style={[styles.toggleText, scope === "following" && styles.toggleTextOn]}>Following</Text>
+            <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>Following</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setScope("everyone")}
-            style={[styles.togglePill, scope === "everyone" && styles.togglePillOn]}
+            style={[styles.togglePill, scope === "everyone" && styles.togglePillActive]}
             accessibilityRole="button"
             accessibilityLabel="Show feed from everyone"
             accessibilityState={{ selected: scope === "everyone" }}
           >
-            <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextOn]}>Everyone</Text>
+            <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextActive]}>Everyone</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -465,143 +507,227 @@ export default function LiveFeedSection() {
   );
 }
 
+const cardStyles = StyleSheet.create({
+  card: {
+    backgroundColor: DS_COLORS.card,
+    borderRadius: 16,
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    paddingBottom: 10,
+    gap: 10,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: DS_COLORS.TEXT_ON_DARK,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  headerRight: {
+    flex: 1,
+  },
+  username: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: DS_COLORS.textPrimary,
+  },
+  challengeName: {
+    fontSize: 13,
+    color: DS_COLORS.textSecondary,
+    marginTop: 1,
+  },
+  timestamp: {
+    fontSize: 11,
+    color: DS_COLORS.TEXT_TERTIARY,
+  },
+  progressSection: {
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+  },
+  progressLabel: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  dayText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: GRIIT_COLORS.primary,
+  },
+  percentText: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_TERTIARY,
+    fontWeight: "500",
+  },
+  progressTrack: {
+    height: 6,
+    backgroundColor: DS_COLORS.surfaceMuted,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: GRIIT_COLORS.primary,
+  },
+  proofWrap: {
+    width: "100%",
+  },
+  proofPhoto: {
+    width: "100%",
+    height: 220,
+  },
+  proofPlaceholder: {
+    marginHorizontal: 14,
+    backgroundColor: DS_COLORS.BG_DARK,
+    borderRadius: 12,
+    height: 150,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  verifiedBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: GRIIT_COLORS.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 99,
+  },
+  verifiedText: { fontSize: 10, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
+  proofEmoji: { fontSize: 22, opacity: 0.35 },
+  proofLabel: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_MUTED,
+    letterSpacing: 1.5,
+  },
+  description: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 4,
+    fontSize: 14,
+    color: DS_COLORS.textPrimary,
+    lineHeight: 20,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 0.5,
+    borderTopColor: DS_COLORS.border,
+    gap: 8,
+  },
+  respectButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GRIIT_COLORS.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 5,
+  },
+  respectButtonGiven: {
+    backgroundColor: DS_COLORS.accentLight,
+  },
+  respectEmoji: { fontSize: 13 },
+  respectText: {
+    color: DS_COLORS.TEXT_ON_DARK,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  respectTextToggled: {
+    color: GRIIT_COLORS.primary,
+  },
+  respectCount: {
+    color: DS_COLORS.TEXT_ON_DARK,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  respectCountToggled: {
+    color: GRIIT_COLORS.primary,
+  },
+  ghostButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.border,
+    gap: 5,
+  },
+  ghostButtonText: {
+    fontSize: 13,
+    color: DS_COLORS.textSecondary,
+    fontWeight: "500",
+  },
+  shareButton: {
+    marginLeft: "auto",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.border,
+    gap: 5,
+  },
+});
+
 const styles = StyleSheet.create({
   wrap: {
     marginTop: DS_SPACING.md,
     marginHorizontal: DS_SPACING.screenHorizontal,
     marginBottom: DS_SPACING.sm,
   },
-  sectionHeader: {
+  feedHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    justifyContent: "space-between",
     paddingHorizontal: 4,
+    marginBottom: 12,
   },
-  sectionHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 8, flex: 1 },
+  feedHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1 },
   liveDot: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
     backgroundColor: DS_COLORS.DISCOVER_GREEN,
   },
-  liveLabel: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
-  liveCount: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY },
-  toggleOuter: {
+  feedTitle: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  liveCountMeta: { fontSize: 12, color: DS_COLORS.TEXT_TERTIARY },
+  feedToggle: {
     flexDirection: "row",
-    backgroundColor: DS_COLORS.ONBOARDING_BORDER,
-    borderRadius: 99,
-    padding: 3,
-    marginLeft: "auto",
+    backgroundColor: DS_COLORS.surfaceMuted,
+    borderRadius: 20,
+    padding: 2,
   },
   togglePill: {
+    paddingHorizontal: 12,
     paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 99,
+    borderRadius: 18,
     backgroundColor: "transparent",
   },
-  togglePillOn: { backgroundColor: DS_COLORS.TEXT_PRIMARY },
-  toggleText: { fontSize: 10, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
-  toggleTextOn: { color: DS_COLORS.WHITE },
-
-  card: {
-    backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 16,
-    overflow: "hidden",
+  togglePillActive: {
+    backgroundColor: DS_COLORS.card,
+    ...DS_SHADOWS.button,
   },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingTop: 14,
-  },
-  avatar38: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarLetter14: { fontSize: 14, fontWeight: "700", color: DS_COLORS.white },
-  headerInfo: { flex: 1 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
-  username13: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY },
-  streakPill: {
-    backgroundColor: DS_COLORS.ACCENT_TINT,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 99,
-  },
-  streakPillText: { fontSize: 10, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
-  challenge11: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY, marginTop: 0 },
-  time11: { fontSize: 11, fontWeight: "400", color: DS_COLORS.TEXT_TERTIARY, flexShrink: 0, textAlign: "right" },
-
-  progressBlock: { paddingHorizontal: 14, paddingTop: 10 },
-  dayLabel: { fontSize: 12, fontWeight: "400", color: DS_COLORS.DISCOVER_CORAL, marginBottom: 5 },
-  track: {
-    height: 6,
-    backgroundColor: DS_COLORS.BG_CARD_TINTED,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  fill: { height: 6, borderRadius: 3, backgroundColor: DS_COLORS.DISCOVER_CORAL },
-
-  proofOuter: { marginHorizontal: 14, marginTop: 10 },
-  proofDark: {
-    backgroundColor: DS_COLORS.BG_DARK,
-    borderRadius: 12,
-    height: 150,
-    overflow: "hidden",
-    flexDirection: "column",
-  },
-  proofTopRow: { paddingHorizontal: 8, paddingTop: 8, flexDirection: "row", justifyContent: "flex-end" },
-  verifiedBadge: {
-    backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 99,
-  },
-  verifiedText: { fontSize: 10, fontWeight: "700", color: DS_COLORS.WHITE },
-  proofCenter: { flex: 1, alignItems: "center", justifyContent: "center", gap: 5 },
-  proofEmoji: { fontSize: 22, opacity: 0.18 },
-  proofLabel: {
-    fontSize: 9,
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.22)",
-    letterSpacing: 1.5,
-  },
-  proofImage: { width: "100%", height: "100%" },
-
-  caption: {
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    fontSize: 13,
-    color: DS_COLORS.grayDarker,
-    lineHeight: 20,
-  },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 14,
-  },
-  respectBtn: { borderRadius: 99, paddingVertical: 8, paddingHorizontal: 14 },
-  respectBtnInactive: { backgroundColor: DS_COLORS.DISCOVER_CORAL },
-  respectBtnActive: { backgroundColor: DS_COLORS.ACCENT_TINT },
-  respectBtnText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.WHITE },
-  respectBtnTextActive: { color: DS_COLORS.DISCOVER_CORAL },
-  actionRight: { marginLeft: "auto", flexDirection: "row", gap: 6 },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: DS_COLORS.DISCOVER_DIVIDER,
-    borderRadius: 99,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-  },
-  chipText: { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
+  toggleText: { fontSize: 12, color: DS_COLORS.textSecondary, fontWeight: "500" },
+  toggleTextActive: { color: DS_COLORS.textPrimary, fontWeight: "600" },
 
   milestoneCard: {
     backgroundColor: DS_COLORS.TEXT_PRIMARY,

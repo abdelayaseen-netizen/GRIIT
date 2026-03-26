@@ -674,7 +674,7 @@ export default function ChallengeDetailScreen() {
   const userTeamQuery = useQuery({
     queryKey: ["team", "forChallenge", id, user?.id],
     queryFn: () => trpcQuery(TRPC.team.getForChallenge, { challenge_id: id! }),
-    enabled: !!id && !!user?.id,
+    enabled: false, // Teams v2 — disabled until backend is ready (avoids 429/503)
     staleTime: 5 * 60 * 1000,
   });
   const userTeam = (userTeamQuery.data as

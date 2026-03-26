@@ -57,7 +57,13 @@ export interface CreateTaskDraft {
   timezoneMode?: TimezoneMode;
   challengeTimezone?: string | null;
   verificationMethod?: string;
-  verificationRuleJson?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
+  verificationRuleJson?: {
+    sport?: string;
+    min_distance_m?: number;
+    min_moving_time_s?: number;
+    griit_illustration_url?: string;
+    griit_illustration_caption?: string;
+  } | null;
 }
 
 export type ParticipationTypeUI = "solo" | "duo" | "team" | "shared_goal";

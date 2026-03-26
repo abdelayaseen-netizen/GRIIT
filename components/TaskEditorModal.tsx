@@ -9,7 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Image,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   BookOpen,
@@ -25,6 +27,8 @@ import {
   Droplets,
   Dumbbell,
   Hash,
+  Image as ImageIcon,
+  X,
 } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import {
@@ -51,6 +55,8 @@ import {
 } from "@/lib/time-enforcement";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import { captureError } from "@/lib/sentry";
+import { uploadProofImageFromUri } from "@/lib/uploadProofImage";
 
 type TaskType =
   | "journal"
@@ -124,6 +130,8 @@ export interface TaskEditorTask {
     min_moving_time_s?: number;
     min_avg_bpm?: number;
     workout_type?: string;
+    griit_illustration_url?: string;
+    griit_illustration_caption?: string;
   } | null;
 }
 
@@ -253,6 +261,8 @@ export default function TaskEditorModal({
   const [advancedTimerOpen, setAdvancedTimerOpen] = useState(false);
   const [advancedRunOpen, setAdvancedRunOpen] = useState(false);
   const [teDetailsExpanded, setTeDetailsExpanded] = useState(false);
+  const [taskIllustrationUri, setTaskIllustrationUri] = useState<string | null>(null);
+  const [taskIllustrationCaption, setTaskIllustrationCaption] = useState("");
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -294,6 +304,8 @@ export default function TaskEditorModal({
     setAdvancedTimerOpen(false);
     setAdvancedRunOpen(false);
     setTeDetailsExpanded(false);
+    setTaskIllustrationUri(null);
+    setTaskIllustrationCaption("");
   }, []);
 
   useEffect(() => {
@@ -370,6 +382,16 @@ export default function TaskEditorModal({
         if (editingTask.timezoneMode) setTeTzMode(editingTask.timezoneMode);
         if (editingTask.challengeTimezone)
           setTeTz(editingTask.challengeTimezone);
+      }
+      const rule = editingTask.verificationRuleJson as Record<string, unknown> | null | undefined;
+      if (rule && typeof rule === "object") {
+        const u = rule["griit_illustration_url"];
+        const c = rule["griit_illustration_caption"];
+        setTaskIllustrationUri(typeof u === "string" ? u : null);
+        setTaskIllustrationCaption(typeof c === "string" ? c : "");
+      } else {
+        setTaskIllustrationUri(null);
+        setTaskIllustrationCaption("");
       }
     } else {
       resetForm();
@@ -452,7 +474,26 @@ export default function TaskEditorModal({
     radiusMeters,
   ]);
 
-  const handleSave = useCallback(() => {
+  const handlePickTaskPhoto = useCallback(async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) return;
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+      setTaskIllustrationUri(result.assets[0].uri);
+    } catch (error) {
+      captureError(error, "TaskPhotoPicker");
+    }
+  }, []);
+
+  const handleSave = useCallback(async () => {
     if (!canSave()) {
       showError("Please fill in all required fields.");
       return;
@@ -486,7 +527,7 @@ export default function TaskEditorModal({
       verificationMethod === "strava_activity" ? "strava_activity"
       : verificationMethod === "photo_proof" || (taskType === "photo" || requirePhotoProof) ? "photo_proof"
       : "manual";
-    const verRuleJson =
+    const stravaRule =
       verMethod === "strava_activity"
         ? {
             sport: stravaSport,
@@ -495,6 +536,31 @@ export default function TaskEditorModal({
           }
         : null;
 
+    let illustrationUrl: string | undefined =
+      taskIllustrationUri?.startsWith("http") ? taskIllustrationUri : undefined;
+    if (taskIllustrationUri && !taskIllustrationUri.startsWith("http")) {
+      const up = await uploadProofImageFromUri(taskIllustrationUri);
+      if ("error" in up) {
+        showError(up.error);
+        return;
+      }
+      illustrationUrl = up.url;
+    }
+
+    let mergedRuleJson: TaskEditorTask["verificationRuleJson"] = stravaRule;
+    const cap = taskIllustrationCaption.trim();
+    if (illustrationUrl || cap) {
+      const baseObj =
+        stravaRule && typeof stravaRule === "object"
+          ? { ...stravaRule }
+          : ({} as Record<string, unknown>);
+      mergedRuleJson = {
+        ...baseObj,
+        ...(illustrationUrl ? { griit_illustration_url: illustrationUrl } : {}),
+        ...(cap ? { griit_illustration_caption: cap } : {}),
+      } as TaskEditorTask["verificationRuleJson"];
+    }
+
     const base: TaskEditorTask = {
       id: editingTask?.id || Date.now().toString(),
       title: title.trim(),
@@ -502,7 +568,7 @@ export default function TaskEditorModal({
       required: true,
       requirePhotoProof: taskType === "photo" ? true : requirePhotoProof,
       verificationMethod: verMethod,
-      verificationRuleJson: verRuleJson,
+      verificationRuleJson: mergedRuleJson,
       ...teFields,
     };
 
@@ -598,6 +664,8 @@ export default function TaskEditorModal({
     stravaMinMovingTimeS,
     onSave,
     showError,
+    taskIllustrationUri,
+    taskIllustrationCaption,
   ]);
 
   const getPreviewMeta = (): string => {
@@ -1168,6 +1236,67 @@ export default function TaskEditorModal({
               {renderTypeSelector()}
             </View>
 
+            {taskType ? (
+              <View style={cfs.section}>
+                <Text style={s.fieldLabel}>
+                  Task photo <Text style={s.optional}>(optional)</Text>
+                </Text>
+                <Text style={s.fieldHint}>Show what completing this task looks like</Text>
+                {taskIllustrationUri ? (
+                  <View style={s.photoPreviewWrapper}>
+                    <Image
+                      source={{ uri: taskIllustrationUri }}
+                      style={s.photoPreview}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      style={s.removePhoto}
+                      onPress={() => {
+                        setTaskIllustrationUri(null);
+                        setTaskIllustrationCaption("");
+                      }}
+                      accessibilityLabel="Remove task photo"
+                      accessibilityRole="button"
+                    >
+                      <X size={14} color={DS_COLORS.TEXT_ON_DARK} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={s.addPhotoButton}
+                    onPress={() => void handlePickTaskPhoto()}
+                    accessibilityLabel="Add a photo for this task"
+                    accessibilityRole="button"
+                  >
+                    <ImageIcon size={20} color={DS_COLORS.TEXT_TERTIARY} />
+                    <Text style={s.addPhotoText}>Add task photo</Text>
+                  </TouchableOpacity>
+                )}
+                {taskIllustrationUri ? (
+                  <View style={s.descriptionSection}>
+                    <Text style={s.fieldLabel}>
+                      What&apos;s in the photo? <Text style={s.optional}>(optional)</Text>
+                    </Text>
+                    <Text style={s.fieldHint}>
+                      Give people context — e.g. &ldquo;Just crushed my morning run&rdquo; or &ldquo;Day 7 complete&rdquo;
+                    </Text>
+                    <TextInput
+                      style={s.descriptionInput}
+                      placeholder="Add a caption or description..."
+                      placeholderTextColor={DS_COLORS.TEXT_TERTIARY}
+                      value={taskIllustrationCaption}
+                      onChangeText={setTaskIllustrationCaption}
+                      maxLength={200}
+                      multiline
+                      numberOfLines={3}
+                      accessibilityLabel="Task photo description or caption"
+                    />
+                    <Text style={s.charCountSmall}>{taskIllustrationCaption.length}/200</Text>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+
             {taskType && (
               <View style={cfs.section}>
                 <Text style={cfs.sectionLabel}>Verification</Text>
@@ -1459,4 +1588,57 @@ const s = StyleSheet.create({
   },
   previewBadge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   previewBadgeText: { fontSize: 12, fontWeight: "600" },
+  taskPhotoSection: { marginTop: 20, marginBottom: 8 },
+  descriptionSection: { marginBottom: 8 },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: DS_COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  optional: { fontSize: 12, fontWeight: "400", color: DS_COLORS.TEXT_TERTIARY },
+  fieldHint: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_TERTIARY,
+    marginBottom: 10,
+    lineHeight: 17,
+  },
+  addPhotoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.border,
+    borderStyle: "dashed",
+    borderRadius: 12,
+    paddingVertical: 20,
+    backgroundColor: DS_COLORS.surfaceMuted,
+  },
+  addPhotoText: { fontSize: 14, color: DS_COLORS.TEXT_TERTIARY, fontWeight: "500" },
+  photoPreviewWrapper: { position: "relative", borderRadius: 12, overflow: "hidden" },
+  photoPreview: { width: "100%", height: 160, borderRadius: 12 },
+  removePhoto: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.overlayDark,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  descriptionInput: {
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.border,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    color: DS_COLORS.textPrimary,
+    backgroundColor: DS_COLORS.card,
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  charCountSmall: { fontSize: 11, color: DS_COLORS.TEXT_TERTIARY, textAlign: "right", marginTop: 4 },
 });
