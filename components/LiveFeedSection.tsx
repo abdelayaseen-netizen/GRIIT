@@ -1,265 +1,29 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Animated, Share } from "react-native";
-import { Image } from "expo-image";
+import { View, Text, StyleSheet, Pressable, FlatList, Share, Animated } from "react-native";
 import { useRouter } from "expo-router";
-import { MessageCircle, Upload } from "lucide-react-native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_SHADOWS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
-import { getAvatarColor } from "@/lib/utils";
-import { relativeTime } from "@/lib/utils/relativeTime";
-import CommentSheet, { type FeedComment } from "@/components/CommentSheet";
+import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { SkeletonFeedCard } from "@/components/skeletons";
-
-export type LiveFeedPost = {
-  id: string;
-  userId: string;
-  username: string;
-  displayName: string;
-  avatarUrl: string | null;
-  streakCount: number;
-  challengeId: string | null;
-  challengeName: string;
-  currentDay: number;
-  totalDays: number;
-  eventType: string;
-  isCompleted: boolean;
-  hasProof: boolean;
-  photoUrl: string | null;
-  verified: boolean;
-  caption: string | null;
-  createdAt: string;
-  respectCount: number;
-  reactedByMe: boolean;
-  commentCount: number;
-  visibility: "public" | "friends" | "private";
-};
+import DiscoverCTA from "@/components/home/DiscoverCTA";
+import { FeedPostCard } from "@/components/feed/FeedPostCard";
+import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
+import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
-function StandardPostCard({
-  post,
-  onRespect,
-  onComment,
-  onShare,
-}: {
-  post: LiveFeedPost;
-  onRespect: () => void;
-  onComment: () => void;
-  onShare: () => void;
-}) {
-  const router = useRouter();
-  const avatarBg = getAvatarColor(post.username ?? post.displayName ?? "");
-  const initial = (post.displayName || post.username || "?").trim().charAt(0).toUpperCase();
-  const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
-  const displayUser = post.displayName || post.username || "Member";
-  const profileUsername = post.username?.trim();
-
-  return (
-    <View style={[cardStyles.card, DS_SHADOWS.card]} accessibilityRole="summary">
-      <TouchableOpacity
-        activeOpacity={0.97}
-        onPress={() => {
-          if (post.challengeId) router.push(ROUTES.CHALLENGE_ID(post.challengeId) as never);
-        }}
-        disabled={!post.challengeId}
-        accessibilityLabel={`${displayUser} — ${post.challengeName} — Day ${post.currentDay} of ${post.totalDays}`}
-        accessibilityRole="button"
-      >
-        <View style={cardStyles.header}>
-          <TouchableOpacity
-            onPress={() => {
-              if (profileUsername) {
-                router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(profileUsername)) as never);
-              }
-            }}
-            disabled={!profileUsername}
-            accessibilityLabel={profileUsername ? `View ${profileUsername}'s profile` : "Profile unavailable"}
-            accessibilityRole="button"
-          >
-            <View style={[cardStyles.avatar, { backgroundColor: avatarBg }]}>
-              <Text style={cardStyles.avatarText}>{initial}</Text>
-            </View>
-          </TouchableOpacity>
-          <View style={cardStyles.headerRight}>
-            <Text style={cardStyles.username} numberOfLines={1}>
-              {displayUser}
-              {post.streakCount > 0 ? ` · 🔥 ${post.streakCount}` : ""}
-            </Text>
-            <Text style={cardStyles.challengeName} numberOfLines={1}>
-              {post.challengeName}
-            </Text>
-          </View>
-          <Text style={cardStyles.timestamp}>{relativeTime(post.createdAt)}</Text>
-        </View>
-
-        <View style={cardStyles.progressSection}>
-          <View style={cardStyles.progressLabel}>
-            <Text style={cardStyles.dayText}>
-              Day {post.currentDay} of {post.totalDays}
-            </Text>
-            <Text style={cardStyles.percentText}>{Math.round(pct)}%</Text>
-          </View>
-          <View style={cardStyles.progressTrack}>
-            <View style={[cardStyles.progressFill, { width: `${pct}%` }]} />
-          </View>
-        </View>
-
-        {post.hasProof ? (
-          <View style={cardStyles.proofWrap}>
-            {post.photoUrl ? (
-              <Image
-                source={{ uri: post.photoUrl }}
-                style={cardStyles.proofPhoto}
-                contentFit="cover"
-                accessibilityRole="image"
-                accessibilityLabel={`Proof photo for ${post.challengeName}`}
-              />
-            ) : (
-              <View style={cardStyles.proofPlaceholder}>
-                {post.verified ? (
-                  <View style={cardStyles.verifiedBadge}>
-                    <Text style={cardStyles.verifiedText}>✓ Verified</Text>
-                  </View>
-                ) : null}
-                <Text style={cardStyles.proofEmoji}>📸</Text>
-                <Text style={cardStyles.proofLabel}>PROOF PHOTO</Text>
-              </View>
-            )}
-          </View>
-        ) : null}
-
-        {post.caption ? (
-          <Text style={cardStyles.description} numberOfLines={4}>
-            {post.caption}
-          </Text>
-        ) : null}
-      </TouchableOpacity>
-
-      <View style={cardStyles.actionRow}>
-        <TouchableOpacity
-          style={[cardStyles.respectButton, post.reactedByMe && cardStyles.respectButtonGiven]}
-          onPress={onRespect}
-          accessibilityLabel={
-            post.reactedByMe
-              ? `Remove respect from ${displayUser}`
-              : `Give respect to ${displayUser}`
-          }
-          accessibilityRole="button"
-          accessibilityState={{ selected: post.reactedByMe }}
-        >
-          <Text style={cardStyles.respectEmoji}>🔥</Text>
-          <Text style={[cardStyles.respectText, post.reactedByMe && cardStyles.respectTextToggled]}>Respect</Text>
-          {post.respectCount > 0 ? (
-            <Text style={[cardStyles.respectCount, post.reactedByMe && cardStyles.respectCountToggled]}>
-              · {post.respectCount}
-            </Text>
-          ) : null}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={cardStyles.ghostButton}
-          onPress={onComment}
-          accessibilityLabel={`Comment on ${displayUser}'s post — ${post.commentCount} comments`}
-          accessibilityRole="button"
-        >
-          <MessageCircle size={14} color={DS_COLORS.textSecondary} />
-          {post.commentCount > 0 ? (
-            <Text style={cardStyles.ghostButtonText}>{post.commentCount}</Text>
-          ) : null}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={cardStyles.shareButton}
-          onPress={onShare}
-          accessibilityLabel={`Share ${displayUser}'s ${post.challengeName} post`}
-          accessibilityRole="button"
-        >
-          <Upload size={14} color={DS_COLORS.textSecondary} />
-          <Text style={cardStyles.ghostButtonText}>Share</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-function MilestoneCard({
-  post,
-  onRespect,
-  onComment,
-}: {
-  post: LiveFeedPost;
-  onRespect: () => void;
-  onComment: () => void;
-}) {
-  const router = useRouter();
-  const avatarBg = getAvatarColor(post.username ?? post.displayName ?? "");
-  const initial = (post.displayName || post.username || "?").trim().charAt(0).toUpperCase();
-  const profileUsername = post.username?.trim();
-  return (
-    <View style={[styles.milestoneCard, DS_SHADOWS.cardSubtle]}>
-      <View style={styles.milestoneEyebrow}>
-        <View style={styles.milestoneDot} />
-        <Text style={styles.milestoneEyebrowText}>CHALLENGE COMPLETED</Text>
-      </View>
-      <Text style={styles.milestoneTitle}>{post.challengeName}</Text>
-      <Text style={styles.milestoneSub}>
-        Finished — Day {post.totalDays} of {post.totalDays}
-      </Text>
-      <View style={styles.milestoneUserRow}>
-        <TouchableOpacity
-          onPress={() => {
-            if (profileUsername) {
-              router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(profileUsername)) as never);
-            }
-          }}
-          disabled={!profileUsername}
-          accessibilityLabel={profileUsername ? `View ${profileUsername}'s profile` : "Profile unavailable"}
-          accessibilityRole="button"
-        >
-          <View style={[styles.avatar26, { backgroundColor: avatarBg }]}>
-            <Text style={styles.avatarLetter12}>{initial}</Text>
-          </View>
-        </TouchableOpacity>
-        <Text style={styles.milestoneUsername}>{post.displayName || post.username}</Text>
-        <Text style={styles.milestoneTime}>{relativeTime(post.createdAt)}</Text>
-      </View>
-      <View style={styles.milestoneActions}>
-        <TouchableOpacity
-          style={styles.milestonePrimary}
-          onPress={onRespect}
-          accessibilityRole="button"
-          accessibilityLabel={
-            post.respectCount > 0
-              ? `Give respect — ${post.respectCount} respect given`
-              : "Give respect"
-          }
-        >
-          <Text style={styles.milestonePrimaryText}>🔥 Respect{post.respectCount > 0 ? ` · ${post.respectCount}` : ""}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.milestoneSecondary}
-          onPress={onComment}
-          accessibilityRole="button"
-          accessibilityLabel={`Comment on ${post.displayName || post.username}'s progress`}
-        >
-          <Text style={styles.milestoneSecondaryText}>💬 Comment</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
+const RESPECT_DEBOUNCE_MS = 300;
 
 export default function LiveFeedSection() {
   const { user } = useAuth();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [scope, setScope] = useState<"following" | "everyone">("everyone");
-  const [commentPost, setCommentPost] = useState<LiveFeedPost | null>(null);
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -280,14 +44,18 @@ export default function LiveFeedSection() {
     staleTime: 60 * 1000,
   });
 
+  const myActiveQuery = useQuery({
+    queryKey: ["challenges", "listMyActive", user?.id],
+    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
+  });
+
   const posts = (feedQuery.data?.posts ?? []).filter((post) => {
     if (post.visibility === "private" && post.userId !== user?.id) return false;
     return true;
   });
-  // Feed deduplication:
-  // 1) one post per user per challenge per calendar day
-  // 2) no two consecutive posts from the same user
-  // 3) limit to 20 after diversity filtering
+
   const seen = new Set<string>();
   const dedupedFeed = posts.filter((post) => {
     const dayKey = new Date(post.createdAt).toDateString();
@@ -302,29 +70,44 @@ export default function LiveFeedSection() {
     return post.userId !== arr[i - 1]?.userId;
   });
   const finalFeed = diverseFeed.slice(0, 20);
-  const moving = feedQuery.data?.movingCount ?? 0;
+  const activeChallengesCount = Array.isArray(myActiveQuery.data) ? myActiveQuery.data.length : 0;
 
-  const commentsQuery = useQuery({
-    queryKey: ["liveFeed", "comments", commentPost?.id],
-    queryFn: async () => {
-      if (!commentPost?.id) return [] as FeedComment[];
-      const rows = (await trpcQuery(TRPC.feed.getComments, { eventId: commentPost.id, limit: 100 })) as Array<{
-        id: string;
-        user_id: string;
-        text: string;
-        created_at: string;
-        display_name: string;
-      }>;
-      return rows.map((r) => ({
-        id: r.id,
-        user_id: r.user_id,
-        text: r.text,
-        created_at: r.created_at,
-        display_name: r.display_name,
-      }));
-    },
-    enabled: !!commentPost?.id,
+  const postsWithComments = useMemo(() => finalFeed.filter((p) => p.commentCount > 0), [finalFeed]);
+
+  const commentPreviewResults = useQueries({
+    queries: postsWithComments.map((p) => ({
+      queryKey: ["feedCommentPreview", p.id],
+      queryFn: async () => {
+        const rows = (await trpcQuery(TRPC.feed.getComments, { eventId: p.id, limit: 100 })) as Array<{
+          user_id: string;
+          text: string;
+          created_at: string;
+          display_name: string;
+          username: string;
+        }>;
+        const last = rows[rows.length - 1];
+        if (!last) return null;
+        return {
+          userId: last.user_id,
+          username: last.username,
+          displayName: last.display_name,
+          text: last.text,
+          createdAt: last.created_at,
+        } satisfies FeedCommentPreview;
+      },
+      enabled: !!user?.id && p.commentCount > 0,
+      staleTime: 60 * 1000,
+    })),
   });
+
+  const previewByPostId = useMemo(() => {
+    const map = new Map<string, FeedCommentPreview>();
+    postsWithComments.forEach((p, i) => {
+      const d = commentPreviewResults[i]?.data;
+      if (d) map.set(p.id, d);
+    });
+    return map;
+  }, [postsWithComments, commentPreviewResults]);
 
   const updatePost = useCallback(
     (postId: string, updater: (p: LiveFeedPost) => LiveFeedPost) => {
@@ -344,6 +127,11 @@ export default function LiveFeedSection() {
 
   const onRespect = useCallback(
     async (post: LiveFeedPost) => {
+      const now = Date.now();
+      const last = respectLastAt.current.get(post.id) ?? 0;
+      if (now - last < RESPECT_DEBOUNCE_MS) return;
+      respectLastAt.current.set(post.id, now);
+
       const prevR = post.reactedByMe;
       const prevC = post.respectCount;
       const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
@@ -369,8 +157,9 @@ export default function LiveFeedSection() {
 
   const onShare = useCallback(async (post: LiveFeedPost) => {
     try {
+      const handle = post.username || post.displayName || "Someone";
       await Share.share({
-        message: `${post.displayName} on GRIIT — ${post.challengeName}`,
+        message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT! 💪`,
         ...(post.photoUrl ? { url: post.photoUrl } : {}),
       });
     } catch (err) {
@@ -382,42 +171,41 @@ export default function LiveFeedSection() {
     }
   }, []);
 
-  const submitComment = useCallback(
-    async (text: string) => {
-      if (!commentPost?.id) return;
-      setCommentSubmitting(true);
-      try {
-        await trpcMutate(TRPC.feed.comment, { eventId: commentPost.id, text });
-        await commentsQuery.refetch();
-        updatePost(commentPost.id, (p) => ({ ...p, commentCount: p.commentCount + 1 }));
-      } finally {
-        setCommentSubmitting(false);
+  const navigateProfile = useCallback(
+    (post: LiveFeedPost) => {
+      if (post.userId === user?.id) {
+        router.push(ROUTES.TABS_PROFILE as never);
+        return;
       }
+      const u = post.username?.trim();
+      if (u) router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
     },
-    [commentPost?.id, commentsQuery, updatePost]
+    [router, user?.id]
+  );
+
+  const openPost = useCallback(
+    (post: LiveFeedPost) => {
+      router.push({ pathname: "/post/[id]", params: { id: post.id } } as never);
+    },
+    [router]
   );
 
   const renderItem = useCallback(
     ({ item }: { item: LiveFeedPost }) => {
+      const preview = previewByPostId.get(item.id) ?? null;
+      const common = {
+        post: item,
+        onProfilePress: () => navigateProfile(item),
+        onRespect: () => void onRespect(item),
+        onComment: () => openPost(item),
+        onShare: () => void onShare(item),
+      };
       if (item.isCompleted) {
-        return (
-          <MilestoneCard
-            post={item}
-            onRespect={() => void onRespect(item)}
-            onComment={() => setCommentPost(item)}
-          />
-        );
+        return <MilestonePostCard {...common} />;
       }
-      return (
-        <StandardPostCard
-          post={item}
-          onRespect={() => void onRespect(item)}
-          onComment={() => setCommentPost(item)}
-          onShare={() => void onShare(item)}
-        />
-      );
+      return <FeedPostCard {...common} previewComment={preview} />;
     },
-    [onRespect, onShare]
+    [navigateProfile, onRespect, onShare, openPost, previewByPostId]
   );
 
   const listEmpty = useMemo(() => {
@@ -436,12 +224,16 @@ export default function LiveFeedSection() {
     <View style={styles.wrap}>
       <View style={styles.feedHeader}>
         <View style={styles.feedHeaderLeft}>
-          <Animated.View style={[styles.liveDot, { opacity: dotOpacity }]} />
-          <Text style={styles.feedTitle}>Feed</Text>
-          <Text style={styles.liveCountMeta}>{moving} active</Text>
+          <View style={styles.feedTitleRow}>
+            <Text style={styles.feedTitle}>Feed</Text>
+            <View style={styles.liveRow}>
+              <Animated.View style={[styles.liveDot, { opacity: dotOpacity }]} />
+              <Text style={styles.liveCountMeta}>{activeChallengesCount} live</Text>
+            </View>
+          </View>
         </View>
         <View style={styles.feedToggle}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => setScope("following")}
             style={[styles.togglePill, scope === "following" && styles.togglePillActive]}
             accessibilityRole="button"
@@ -449,8 +241,8 @@ export default function LiveFeedSection() {
             accessibilityState={{ selected: scope === "following" }}
           >
             <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>Following</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             onPress={() => setScope("everyone")}
             style={[styles.togglePill, scope === "everyone" && styles.togglePillActive]}
             accessibilityRole="button"
@@ -458,7 +250,7 @@ export default function LiveFeedSection() {
             accessibilityState={{ selected: scope === "everyone" }}
           >
             <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextActive]}>Everyone</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
@@ -471,13 +263,9 @@ export default function LiveFeedSection() {
       ) : feedQuery.isError ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Couldn&apos;t load feed</Text>
-          <TouchableOpacity
-            onPress={() => void feedQuery.refetch()}
-            accessibilityRole="button"
-            accessibilityLabel="Retry loading feed"
-          >
+          <Pressable onPress={() => void feedQuery.refetch()} accessibilityRole="button" accessibilityLabel="Retry loading feed">
             <Text style={styles.retry}>Tap to retry</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       ) : (
         <FlatList
@@ -485,306 +273,72 @@ export default function LiveFeedSection() {
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
           renderItem={renderItem}
-          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           ListEmptyComponent={listEmpty}
+          ListFooterComponent={
+            <DiscoverCTA variant="feed" onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
+          }
           removeClippedSubviews
           initialNumToRender={5}
           maxToRenderPerBatch={3}
           windowSize={10}
         />
       )}
-
-      <CommentSheet
-        visible={!!commentPost}
-        postTitle={commentPost?.challengeName ?? ""}
-        comments={commentsQuery.data ?? []}
-        loading={commentsQuery.isPending}
-        submitting={commentSubmitting}
-        onClose={() => setCommentPost(null)}
-        onSubmit={submitComment}
-      />
     </View>
   );
 }
 
-const cardStyles = StyleSheet.create({
-  card: {
-    backgroundColor: DS_COLORS.card,
-    borderRadius: 16,
-    marginBottom: 12,
-    overflow: "hidden",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    paddingBottom: 10,
-    gap: 10,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: DS_COLORS.TEXT_ON_DARK,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  headerRight: {
-    flex: 1,
-  },
-  username: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: DS_COLORS.textPrimary,
-  },
-  challengeName: {
-    fontSize: 13,
-    color: DS_COLORS.textSecondary,
-    marginTop: 1,
-  },
-  timestamp: {
-    fontSize: 11,
-    color: DS_COLORS.TEXT_TERTIARY,
-  },
-  progressSection: {
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-  },
-  progressLabel: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  dayText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: GRIIT_COLORS.primary,
-  },
-  percentText: {
-    fontSize: 12,
-    color: DS_COLORS.TEXT_TERTIARY,
-    fontWeight: "500",
-  },
-  progressTrack: {
-    height: 6,
-    backgroundColor: DS_COLORS.surfaceMuted,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: GRIIT_COLORS.primary,
-  },
-  proofWrap: {
-    width: "100%",
-  },
-  proofPhoto: {
-    width: "100%",
-    height: 220,
-  },
-  proofPlaceholder: {
-    marginHorizontal: 14,
-    backgroundColor: DS_COLORS.BG_DARK,
-    borderRadius: 12,
-    height: 150,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-  },
-  verifiedBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: GRIIT_COLORS.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 99,
-  },
-  verifiedText: { fontSize: 10, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
-  proofEmoji: { fontSize: 22, opacity: 0.35 },
-  proofLabel: {
-    fontSize: 9,
-    fontWeight: "600",
-    color: DS_COLORS.TEXT_MUTED,
-    letterSpacing: 1.5,
-  },
-  description: {
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 4,
-    fontSize: 14,
-    color: DS_COLORS.textPrimary,
-    lineHeight: 20,
-  },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderTopWidth: 0.5,
-    borderTopColor: DS_COLORS.border,
-    gap: 8,
-  },
-  respectButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: GRIIT_COLORS.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 5,
-  },
-  respectButtonGiven: {
-    backgroundColor: DS_COLORS.accentLight,
-  },
-  respectEmoji: { fontSize: 13 },
-  respectText: {
-    color: DS_COLORS.TEXT_ON_DARK,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  respectTextToggled: {
-    color: GRIIT_COLORS.primary,
-  },
-  respectCount: {
-    color: DS_COLORS.TEXT_ON_DARK,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  respectCountToggled: {
-    color: GRIIT_COLORS.primary,
-  },
-  ghostButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS.border,
-    gap: 5,
-  },
-  ghostButtonText: {
-    fontSize: 13,
-    color: DS_COLORS.textSecondary,
-    fontWeight: "500",
-  },
-  shareButton: {
-    marginLeft: "auto",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS.border,
-    gap: 5,
-  },
-});
-
 const styles = StyleSheet.create({
   wrap: {
     marginTop: DS_SPACING.md,
-    marginHorizontal: DS_SPACING.screenHorizontal,
+    marginHorizontal: DS_SPACING.sm,
     marginBottom: DS_SPACING.sm,
   },
   feedHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 4,
-    marginBottom: 12,
+    paddingHorizontal: 10,
+    paddingTop: 16,
+    paddingBottom: 14,
   },
-  feedHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1 },
+  feedHeaderLeft: { flex: 1 },
+  feedTitleRow: { flexDirection: "row", alignItems: "baseline", gap: 8, flexWrap: "wrap" },
+  feedTitle: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: DS_COLORS.FEED_USERNAME,
+    letterSpacing: -0.3,
+  },
+  liveRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: DS_COLORS.DISCOVER_GREEN,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: DS_COLORS.FEED_BADGE_GREEN,
   },
-  feedTitle: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
-  liveCountMeta: { fontSize: 12, color: DS_COLORS.TEXT_TERTIARY },
+  liveCountMeta: { fontSize: 11, color: DS_COLORS.FEED_LIVE_LABEL, fontWeight: "500" },
   feedToggle: {
     flexDirection: "row",
-    backgroundColor: DS_COLORS.surfaceMuted,
-    borderRadius: 20,
-    padding: 2,
+    backgroundColor: DS_COLORS.FEED_TAB_INACTIVE_BG,
+    borderRadius: 22,
+    padding: 3,
   },
   togglePill: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 18,
-    backgroundColor: "transparent",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: DS_COLORS.TRANSPARENT,
   },
   togglePillActive: {
-    backgroundColor: DS_COLORS.card,
-    ...DS_SHADOWS.button,
+    backgroundColor: DS_COLORS.FEED_TAB_ACTIVE_BG,
   },
-  toggleText: { fontSize: 12, color: DS_COLORS.textSecondary, fontWeight: "500" },
-  toggleTextActive: { color: DS_COLORS.textPrimary, fontWeight: "600" },
-
-  milestoneCard: {
-    backgroundColor: DS_COLORS.TEXT_PRIMARY,
-    borderRadius: 16,
-    overflow: "hidden",
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 16,
-  },
-  milestoneEyebrow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 8 },
-  milestoneDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: DS_COLORS.DISCOVER_CORAL },
-  milestoneEyebrowText: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: DS_COLORS.DISCOVER_CORAL,
-    letterSpacing: 1.2,
-  },
-  milestoneTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: DS_COLORS.WHITE,
-    letterSpacing: -0.4,
-    marginBottom: 3,
-  },
-  milestoneSub: { fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 12 },
-  milestoneUserRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 },
-  avatar26: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarLetter12: { fontSize: 12, fontWeight: "600", color: DS_COLORS.white },
-  milestoneUsername: { fontSize: 12, fontWeight: "600", color: "rgba(255,255,255,0.6)", flex: 1 },
-  milestoneTime: { fontSize: 11, color: "rgba(255,255,255,0.3)" },
-  milestoneActions: { flexDirection: "row", gap: 8 },
-  milestonePrimary: {
-    flex: 1,
-    backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    borderRadius: 99,
-    paddingVertical: 9,
-    alignItems: "center",
-  },
-  milestonePrimaryText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.WHITE },
-  milestoneSecondary: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 99,
-    paddingVertical: 9,
-    alignItems: "center",
-  },
-  milestoneSecondaryText: { fontSize: 12, fontWeight: "700", color: "rgba(255,255,255,0.5)" },
-
+  toggleText: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED, fontWeight: "500" },
+  toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
+  listContent: { paddingHorizontal: 10, paddingBottom: 8 },
   empty: { paddingVertical: 32, alignItems: "center" },
   emptyTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY },
   retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600", marginTop: 8 },
-
 });

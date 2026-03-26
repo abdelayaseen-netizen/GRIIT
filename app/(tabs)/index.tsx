@@ -519,7 +519,6 @@ export default function HomeScreen() {
         )}
 
         <LiveFeedSection />
-        <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
       </ScrollView>
       <PointsExplainer
         visible={showPointsExplainer}

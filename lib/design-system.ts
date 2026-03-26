@@ -516,6 +516,42 @@ export const DS_COLORS = {
   difficultyExtremeBg: '#FFE5E5',
   difficultyMediumText: '#C17D00',
   difficultyMediumBg: '#FFF8E8',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FEED (social post cards — all hex centralized; components import only DS_COLORS)
+  // ═══════════════════════════════════════════════════════════════════════════
+  FEED_USERNAME: '#2C2C2A',
+  FEED_META_MUTED: '#B4B2A9',
+  FEED_DAY_PILL_BG: '#FFF3F0',
+  FEED_DAY_PILL_TEXT: '#993C1D',
+  FEED_MENU_DOTS: '#C4C3BC',
+  FEED_RESPECT_ACTIVE_BG: '#FFF3F0',
+  FEED_RESPECT_ACTIVE_TEXT: '#993C1D',
+  FEED_ENGAGEMENT_MUTED: '#888780',
+  FEED_COMMENT_BORDER: '#F5F3EE',
+  FEED_COMMENT_BODY: '#5F5E5A',
+  FEED_PROGRESS_LABEL: '#993C1D',
+  FEED_PROGRESS_TRACK: '#F0EDE6',
+  FEED_PLACEHOLDER_WATER: '#D4E0D0',
+  FEED_PLACEHOLDER_COLD: '#C8D8E8',
+  FEED_PLACEHOLDER_GENERAL: '#E8DDD4',
+  FEED_TAB_INACTIVE_BG: '#EDEAE3',
+  FEED_TAB_ACTIVE_BG: '#2C2C2A',
+  FEED_TAB_ACTIVE_TEXT: '#F9F6F1',
+  FEED_LIVE_LABEL: '#0F6E56',
+  FEED_MILESTONE_SURFACE: '#FAEEDA',
+  FEED_MILESTONE_ICON_SURFACE: '#FAC775',
+  FEED_MILESTONE_TITLE: '#633806',
+  FEED_MILESTONE_SUBTITLE: '#854F0B',
+  FEED_MILESTONE_STAR: '#854F0B',
+  FEED_CTA_ICON_BG: 'rgba(232,89,60,0.12)',
+  FEED_GRADIENT_END: 'rgba(0,0,0,0.6)',
+  FEED_CAPTION_TAG: 'rgba(255,255,255,0.8)',
+  FEED_STREAK_BADGE: '#E8593C',
+  FEED_SHARE_CHEVRON: '#5F5E5A',
+  FEED_AVATAR_RING: '#FFFFFF',
+  FEED_BADGE_GREEN: '#1D9E75',
+  FEED_RESPECT_ICON_FILL: '#E8593C',
 } as const;
 
 /** Brand + screen tokens (challenge detail bg matches app-wide warm page). */

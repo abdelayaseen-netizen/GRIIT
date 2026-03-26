@@ -3,23 +3,30 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Search, ChevronRight } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 
-export default function DiscoverCTA({ onPress }: { onPress: () => void }) {
+type Props = {
+  onPress: () => void;
+  /** `feed` = bottom of home feed (tighter margins, larger icon per feed redesign). */
+  variant?: "home" | "feed";
+};
+
+export default function DiscoverCTA({ onPress, variant = "home" }: Props) {
+  const isFeed = variant === "feed";
   return (
     <TouchableOpacity
-      style={s.card}
+      style={[s.card, isFeed && s.cardFeed]}
       activeOpacity={0.86}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel="Discover your next challenge — open Discover"
     >
-      <View style={s.icon}>
-        <Search size={18} color={DS_COLORS.DISCOVER_CORAL} />
+      <View style={[s.icon, isFeed && s.iconFeed]}>
+        <Search size={isFeed ? 20 : 18} color={DS_COLORS.DISCOVER_CORAL} />
       </View>
       <View style={s.mid}>
-        <Text style={s.title}>Ready for more?</Text>
-        <Text style={s.sub}>Discover your next challenge.</Text>
+        <Text style={[s.title, isFeed && s.titleFeed]}>Ready for more?</Text>
+        <Text style={[s.sub, isFeed && s.subFeed]}>Discover your next challenge</Text>
       </View>
-      <ChevronRight size={14} color="rgba(255,255,255,0.3)" />
+      <ChevronRight size={isFeed ? 16 : 14} color={DS_COLORS.FEED_SHARE_CHEVRON} />
     </TouchableOpacity>
   );
 }
@@ -35,15 +42,30 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
+  cardFeed: {
+    marginTop: 4,
+    marginHorizontal: 10,
+    marginBottom: 0,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
   icon: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(232,89,60,0.15)",
+    backgroundColor: DS_COLORS.FEED_CTA_ICON_BG,
     alignItems: "center",
     justifyContent: "center",
   },
+  iconFeed: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+  },
   mid: { flex: 1 },
   title: { fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE },
-  sub: { marginTop: 2, fontSize: 11, color: "rgba(255,255,255,0.45)" },
+  titleFeed: { fontSize: 14, fontWeight: "500", color: DS_COLORS.FEED_TAB_ACTIVE_TEXT },
+  sub: { marginTop: 2, fontSize: 11, color: DS_COLORS.FEED_ENGAGEMENT_MUTED },
+  subFeed: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED },
 });

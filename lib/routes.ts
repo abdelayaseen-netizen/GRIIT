@@ -28,6 +28,8 @@ export const ROUTES = {
   /** Active challenge detail (post-join); use activeChallengeId from active_challenges.id */
   CHALLENGE_ACTIVE: (activeChallengeId: string) => `/challenge/active/${activeChallengeId}` as const,
   PROFILE_USERNAME: (username: string) => `/profile/${username}` as const,
+  /** Feed post / comment thread */
+  POST_ID: (id: string) => `/post/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
   TASK_JOURNAL: "/task/journal",
   TASK_PHOTO: "/task/photo",
