@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Camera, CircleCheck } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
-import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
+import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
@@ -86,14 +86,12 @@ export function FeedPostCard({
 
       {previewComment ? (
         <View style={styles.commentPreview}>
-          <View
-            style={[
-              styles.miniAv,
-              { backgroundColor: getFeedAvatarBgFromUserId(previewComment.userId) },
-            ]}
-          >
-            <Text style={styles.miniAvText}>{getDisplayInitials(previewComment.displayName || previewComment.username)}</Text>
-          </View>
+          <Avatar
+            url={previewComment.avatarUrl}
+            name={previewComment.displayName || previewComment.username || "?"}
+            userId={previewComment.userId}
+            size={24}
+          />
           <View style={styles.commentBody}>
             <Text style={styles.commentLine} numberOfLines={2}>
               <Text style={styles.commentUser}>{previewComment.displayName || previewComment.username}</Text>
@@ -189,18 +187,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 16,
     paddingBottom: 14,
-  },
-  miniAv: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  miniAvText: {
-    fontSize: 9,
-    fontWeight: "600",
-    color: DS_COLORS.TEXT_ON_DARK,
   },
   commentBody: { flex: 1 },
   commentLine: { fontSize: 12 },

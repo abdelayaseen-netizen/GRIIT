@@ -1,15 +1,12 @@
 import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Share2, Camera } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
-import { getAvatarColor } from "@/lib/utils";
-import { trpcMutate } from "@/lib/trpc";
-import { TRPC } from "@/lib/trpc-paths";
-import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { pickAndUploadAvatar } from "@/lib/avatar";
+import { Avatar } from "@/components/Avatar";
 import { captureError } from "@/lib/sentry";
 
 export interface ProfileHeaderProps {
@@ -46,42 +43,32 @@ export default React.memo(function ProfileHeader({
   showEditButton = true,
 }: ProfileHeaderProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
   const displayName = fullName || username || "User";
   const cleanUsername = username?.trim() ?? "";
   const rankDot = RANK_DOT[currentTier] ?? DS_COLORS.DISCOVER_CORAL;
   const isOwnProfile = Boolean(userId) && showEditButton;
 
+  const resolvedAvatarUrl = avatarOverride ?? avatarUrl ?? null;
+
   const handlePickPhoto = useCallback(async () => {
     if (!userId) return;
+    setUploading(true);
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) return;
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (result.canceled || !result.assets?.[0]) return;
-
-      const imageUri = result.assets[0].uri;
-      setUploading(true);
-      const uploadResult = await uploadAvatarFromUri(imageUri);
-      if ("error" in uploadResult) {
-        captureError(new Error(uploadResult.error), "ProfilePhotoUpload");
-        return;
+      const url = await pickAndUploadAvatar(userId);
+      if (url) {
+        setAvatarOverride(url);
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        onAvatarUpdated?.();
       }
-      await trpcMutate(TRPC.profiles.update, { avatar_url: uploadResult.url });
-      onAvatarUpdated?.();
     } catch (error) {
       captureError(error, "ProfilePhotoUpload");
     } finally {
       setUploading(false);
     }
-  }, [userId, onAvatarUpdated]);
+  }, [userId, onAvatarUpdated, queryClient]);
 
   return (
     <View style={styles.container}>
@@ -92,13 +79,7 @@ export default React.memo(function ProfileHeader({
         accessibilityLabel={isOwnProfile ? "Change profile photo" : `Profile avatar for ${displayName}`}
         accessibilityRole={isOwnProfile ? "button" : "image"}
       >
-        {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatarImage} contentFit="cover" />
-        ) : (
-          <View style={[styles.avatarPlaceholder, { backgroundColor: getAvatarColor(cleanUsername || displayName || "G") }]}>
-            <Text style={styles.avatarLetter}>{displayName.charAt(0).toUpperCase()}</Text>
-          </View>
-        )}
+        <Avatar url={resolvedAvatarUrl} name={displayName} userId={userId} size={80} />
         {isOwnProfile ? (
           <View style={styles.cameraOverlay}>
             {uploading ? (
@@ -162,28 +143,19 @@ export default React.memo(function ProfileHeader({
 const styles = StyleSheet.create({
   container: { alignItems: "center", paddingVertical: DS_SPACING.xl, paddingHorizontal: DS_SPACING.xl },
   avatarWrapper: { position: "relative", marginBottom: DS_SPACING.sm },
-  avatarImage: { width: 80, height: 80, borderRadius: 40 },
-  avatarPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   cameraOverlay: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: GRIIT_COLORS.primary,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: DS_COLORS.FEED_USERNAME,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: DS_COLORS.WHITE,
+    borderWidth: 3,
+    borderColor: DS_COLORS.BG_PAGE,
   },
-  avatarLetter: { fontSize: DS_TYPOGRAPHY.SIZE_2XL, fontWeight: "700", color: DS_COLORS.white },
   fullName: {
     marginTop: DS_SPACING.md,
     fontSize: 18,

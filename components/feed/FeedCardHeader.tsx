@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Check, MoreHorizontal } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
-import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
+import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import type { LiveFeedPost } from "./feedTypes";
 
@@ -19,8 +19,6 @@ type Props = {
 };
 
 export function FeedCardHeader({ post, onProfilePress, onMenuPress }: Props) {
-  const avatarBg = getFeedAvatarBgFromUserId(post.userId);
-  const initials = getDisplayInitials(post.displayName || post.username || "?");
   const displayUser = post.displayName || post.username || "Member";
   const subtitle = `${post.challengeName} · ${relativeTime(post.createdAt)}`;
 
@@ -40,9 +38,12 @@ export function FeedCardHeader({ post, onProfilePress, onMenuPress }: Props) {
         accessibilityRole="button"
         accessibilityLabel={`${displayUser} profile`}
       >
-        <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
+        <Avatar
+          url={post.avatarUrl}
+          name={displayUser}
+          userId={post.userId}
+          size={40}
+        />
         {completedToday ? (
           <View style={styles.badgeOuter}>
             <View style={styles.badgeGreen}>
@@ -97,18 +98,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   avatarWrap: { position: "relative" },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: DS_COLORS.TEXT_ON_DARK,
-  },
   badgeOuter: {
     position: "absolute",
     right: -2,

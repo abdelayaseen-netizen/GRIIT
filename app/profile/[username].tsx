@@ -154,6 +154,7 @@ export default function PublicProfileScreen() {
           showsVerticalScrollIndicator={false}
         >
           <ProfileHeader
+            userId={profile.user_id}
             avatarUrl={profile.avatar_url ?? undefined}
             fullName={displayName}
             username={profile.username ?? ""}

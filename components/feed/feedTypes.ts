@@ -29,4 +29,5 @@ export type FeedCommentPreview = {
   displayName: string;
   text: string;
   createdAt: string;
+  avatarUrl: string | null;
 };

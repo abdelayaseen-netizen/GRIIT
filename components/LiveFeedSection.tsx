@@ -84,6 +84,7 @@ export default function LiveFeedSection() {
           created_at: string;
           display_name: string;
           username: string;
+          avatar_url: string | null;
         }>;
         const last = rows[rows.length - 1];
         if (!last) return null;
@@ -93,6 +94,7 @@ export default function LiveFeedSection() {
           displayName: last.display_name,
           text: last.text,
           createdAt: last.created_at,
+          avatarUrl: last.avatar_url ?? null,
         } satisfies FeedCommentPreview;
       },
       enabled: !!user?.id && p.commentCount > 0,

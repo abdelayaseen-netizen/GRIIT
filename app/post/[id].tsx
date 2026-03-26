@@ -17,7 +17,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
-import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
+import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { captureError } from "@/lib/sentry";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
@@ -31,6 +31,7 @@ type CommentRow = {
   created_at: string;
   display_name: string;
   username: string;
+  avatar_url: string | null;
 };
 
 export default function PostThreadScreen() {
@@ -114,13 +115,14 @@ export default function PostThreadScreen() {
               <Text style={styles.empty}>No comments yet. Say something kind.</Text>
             }
             renderItem={({ item }) => {
-              const bg = getFeedAvatarBgFromUserId(item.user_id);
-              const initials = getDisplayInitials(item.display_name || item.username);
               return (
                 <View style={styles.commentRow}>
-                  <View style={[styles.av, { backgroundColor: bg }]}>
-                    <Text style={styles.avText}>{initials}</Text>
-                  </View>
+                  <Avatar
+                    url={item.avatar_url}
+                    name={item.display_name || item.username}
+                    userId={item.user_id}
+                    size={36}
+                  />
                   <View style={styles.commentMain}>
                     <Text style={styles.commentName}>{item.display_name || item.username}</Text>
                     <Text style={styles.commentBody}>{item.text}</Text>
@@ -188,14 +190,6 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: DS_SPACING.lg, paddingBottom: 16 },
   empty: { textAlign: "center", color: DS_COLORS.FEED_META_MUTED, marginTop: 24, fontSize: 14 },
   commentRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
-  av: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avText: { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_ON_DARK },
   commentMain: { flex: 1 },
   commentName: { fontSize: 14, fontWeight: "600", color: DS_COLORS.FEED_USERNAME },
   commentBody: { fontSize: 14, color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },

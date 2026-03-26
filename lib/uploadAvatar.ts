@@ -27,9 +27,9 @@ export async function uploadAvatarFromUri(uri: string): Promise<UploadAvatarResu
     }
 
     const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
-    const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+    const path = `${user.id}/avatar.${ext}`;
 
-    const { data, error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType, upsert: false });
+    const { data, error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType, upsert: true });
     if (error) {
       return { error: error.message || "Upload failed" };
     }
