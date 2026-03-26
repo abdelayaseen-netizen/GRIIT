@@ -7,6 +7,10 @@ import Purchases, {
   type CustomerInfo,
 } from "react-native-purchases";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
+
+/** Native store + Purchases are not available inside Expo Go — skip all RC calls. */
+export const isExpoGo = Constants.appOwnership === "expo";
 
 const IOS_KEY =
   process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY?.trim() ||
@@ -21,8 +25,16 @@ const ANDROID_KEY =
 
 let configured = false;
 let skippedConfigLogged = false;
+let skippedExpoGoLogged = false;
 
 export function initializePurchases(userId?: string): void {
+  if (isExpoGo) {
+    if (__DEV__ && !skippedExpoGoLogged) {
+      console.log("[RevenueCat] Skipping — not available in Expo Go");
+      skippedExpoGoLogged = true;
+    }
+    return;
+  }
   const apiKey = Platform.OS === "ios" ? IOS_KEY : ANDROID_KEY;
   if (!apiKey) {
     if (!skippedConfigLogged) {
@@ -38,11 +50,11 @@ export function initializePurchases(userId?: string): void {
       configured = true;
     } else if (userId) {
       void Purchases.logIn(userId).catch((e) => {
-        if (__DEV__) console.error("[RevenueCat] logIn failed:", e);
+        if (__DEV__) console.warn("[RevenueCat] logIn failed:", e);
       });
     }
   } catch (e) {
-    if (__DEV__) console.error("[RevenueCat] configure failed:", e);
+    if (__DEV__) console.warn("[RevenueCat] configure failed:", e);
   }
 }
 
@@ -50,12 +62,12 @@ export function initializePurchases(userId?: string): void {
 export const configureRevenueCat = initializePurchases;
 
 export async function getOfferings() {
-  if (!configured) return null;
+  if (isExpoGo || !configured) return null;
   try {
     const offerings = await Purchases.getOfferings();
     return offerings.current ?? null;
   } catch (e) {
-    if (__DEV__) console.error("[RevenueCat] getOfferings failed:", e);
+    if (__DEV__) console.warn("[RevenueCat] getOfferings failed:", e);
     return null;
   }
 }
@@ -66,7 +78,7 @@ export async function purchasePackage(pkg: PurchasesPackage): Promise<{
   customerInfo?: CustomerInfo;
   error?: string;
 }> {
-  if (!configured) {
+  if (isExpoGo || !configured) {
     return { success: false, error: "Purchases unavailable right now." };
   }
   try {
@@ -75,7 +87,7 @@ export async function purchasePackage(pkg: PurchasesPackage): Promise<{
   } catch (e: unknown) {
     const err = e as { userCancelled?: boolean; message?: string };
     if (err?.userCancelled) return { success: false, cancelled: true };
-    if (__DEV__) console.error("[RevenueCat] purchasePackage failed:", e);
+    if (__DEV__) console.warn("[RevenueCat] purchasePackage failed:", e);
     return { success: false, error: err?.message ?? "Purchase failed. Please try again." };
   }
 }
@@ -85,7 +97,7 @@ export async function restorePurchases(): Promise<{
   customerInfo?: CustomerInfo;
   error?: string;
 }> {
-  if (!configured) {
+  if (isExpoGo || !configured) {
     return { success: false, error: "Purchases unavailable right now." };
   }
   try {
@@ -93,18 +105,18 @@ export async function restorePurchases(): Promise<{
     return { success: true, customerInfo };
   } catch (e: unknown) {
     const err = e as { message?: string };
-    if (__DEV__) console.error("[RevenueCat] restorePurchases failed:", e);
+    if (__DEV__) console.warn("[RevenueCat] restorePurchases failed:", e);
     return { success: false, error: err?.message ?? "No purchases found to restore." };
   }
 }
 
 export async function checkEntitlement(entitlementId: string = "GRIIT Pro"): Promise<boolean> {
-  if (!configured) return false;
+  if (isExpoGo || !configured) return false;
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     return customerInfo.entitlements.active[entitlementId] !== undefined;
   } catch (e) {
-    if (__DEV__) console.error("[RevenueCat] checkEntitlement failed:", e);
+    if (__DEV__) console.warn("[RevenueCat] checkEntitlement failed:", e);
     return false;
   }
 }
@@ -114,11 +126,11 @@ export async function isProUser(): Promise<boolean> {
 }
 
 export async function getCustomerInfo(): Promise<CustomerInfo | null> {
-  if (!configured) return null;
+  if (isExpoGo || !configured) return null;
   try {
     return await Purchases.getCustomerInfo();
   } catch (e) {
-    if (__DEV__) console.error("[RevenueCat] getCustomerInfo failed:", e);
+    if (__DEV__) console.warn("[RevenueCat] getCustomerInfo failed:", e);
     return null;
   }
 }

@@ -10,7 +10,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { DS_COLORS, getCategoryColors } from "@/lib/design-system";
+import { DS_COLORS } from "@/lib/design-system";
 import { styles } from "@/styles/discover-styles";
 import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -171,22 +171,6 @@ export default function DiscoverScreen() {
       });
   }, [all, activeCategory, debouncedQuery, challengeFilter]);
 
-  const myTeamsQuery = useQuery({
-    queryKey: ["discover", "myTeams", user?.id],
-    queryFn: () =>
-      trpcQuery(TRPC.team.getMyTeams) as Promise<Array<{
-        id: string;
-        name: string;
-        challenge_id: string;
-        challenge_title: string;
-        member_count: number;
-        max_members: number;
-      }>>,
-    enabled: false, // Teams v2 — disabled until backend is ready (avoids 429/503)
-    staleTime: 2 * 60 * 1000,
-  });
-  const myTeams = myTeamsQuery.data ?? [];
-
   const hero = useMemo(() => {
     const featured = filtered.find((c) => c.is_featured === true);
     if (featured) return featured;
@@ -270,40 +254,6 @@ export default function DiscoverScreen() {
                   <Text style={styles.v3SearchClear}>Clear</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          ) : null}
-
-          {myTeams.length > 0 ? (
-            <View style={styles.v3SectionPad}>
-              <SectionHeader title="Your teams" />
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-                {myTeams.slice(0, 5).map((teamItem) => {
-                  const challenge = all.find((c) => c.id === teamItem.challenge_id);
-                  const colors = getCategoryColors(challenge?.category ?? "discipline");
-                  return (
-                    <TouchableOpacity
-                      key={teamItem.id}
-                      onPress={() => openChallenge(teamItem.challenge_id)}
-                      style={{
-                        width: 160,
-                        height: 80,
-                        borderRadius: 12,
-                        padding: 10,
-                        backgroundColor: colors.header,
-                        justifyContent: "space-between",
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Your team: ${teamItem.name}, ${teamItem.member_count} of ${teamItem.max_members} members`}
-                    >
-                      <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE }}>{teamItem.name}</Text>
-                      <Text numberOfLines={1} style={{ fontSize: 11, color: colors.subtitleText }}>{teamItem.challenge_title}</Text>
-                      <Text style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
-                        {teamItem.member_count}/{teamItem.max_members} members
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
             </View>
           ) : null}
 

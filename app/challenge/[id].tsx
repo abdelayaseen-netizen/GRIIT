@@ -32,10 +32,7 @@ import {
   Users,
   Lock,
   MapPin,
-  UserPlus,
-  Copy,
 } from "lucide-react-native";
-import * as Clipboard from "expo-clipboard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { parseTimeString, scheduleTaskReminder } from "@/lib/notifications";
@@ -542,9 +539,6 @@ export default function ChallengeDetailScreen() {
   const [showTimePrompt, setShowTimePrompt] = useState(false);
   const [promptTasks, setPromptTasks] = useState<Array<{ id: string; name: string }>>([]);
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
-  const [leaveTeamConfirmVisible, setLeaveTeamConfirmVisible] = useState(false);
-  const [teamCodeCopied, setTeamCodeCopied] = useState(false);
-  const [leaveTeamPending, setLeaveTeamPending] = useState(false);
   const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
   const [commitmentUnderstood, setCommitmentUnderstood] = useState(false);
   const insets = useSafeAreaInsets();
@@ -670,61 +664,6 @@ export default function ChallengeDetailScreen() {
     !myActiveListQuery.isFetched;
 
   const isLoading = remoteLoading || waitingForMembership;
-
-  const userTeamQuery = useQuery({
-    queryKey: ["team", "forChallenge", id, user?.id],
-    queryFn: () => trpcQuery(TRPC.team.getForChallenge, { challenge_id: id! }),
-    enabled: false, // Teams v2 — disabled until backend is ready (avoids 429/503)
-    staleTime: 5 * 60 * 1000,
-  });
-  const userTeam = (userTeamQuery.data as
-    | {
-        id: string;
-        name: string;
-        team_code: string;
-        max_members: number;
-        goal_mode: "individual" | "shared";
-        member_count: number;
-      }
-    | null
-    | undefined) ?? null;
-  const isInTeam = !!userTeam;
-  const teamMembersQuery = useQuery({
-    queryKey: ["team", "members", userTeam?.id, user?.id],
-    queryFn: () => trpcQuery(TRPC.team.getMembers, { team_id: userTeam!.id }),
-    enabled: !!userTeam?.id && !!user?.id,
-    staleTime: 60 * 1000,
-  });
-  const teamMembersWithStats = (teamMembersQuery.data as Array<{
-    id: string;
-    user_id: string;
-    role: "creator" | "member";
-    joined_at: string;
-    tasks_completed?: number;
-    current_streak?: number;
-    completion_pct?: number;
-    profiles?: { display_name?: string | null; username?: string | null } | null;
-  }> | undefined) ?? [];
-  const creatorFallbackName =
-    teamMembersWithStats.find((m) => m.role === "creator" && m.user_id !== currentUserId)?.profiles?.display_name ??
-    teamMembersWithStats.find((m) => m.role === "creator" && m.user_id !== currentUserId)?.profiles?.username ??
-    "another member";
-  const teamLeaderboardQuery = useQuery({
-    queryKey: ["team", "leaderboard", userTeam?.id],
-    queryFn: () => trpcQuery(TRPC.team.getLeaderboard, { team_id: userTeam!.id }),
-    enabled: !!userTeam?.id && teamMembersWithStats.length >= 2,
-    staleTime: 2 * 60 * 1000,
-    retry: 2,
-  });
-  const teamLeaderboard = (teamLeaderboardQuery.data as Array<{
-    id: string;
-    user_id: string;
-    rank: number;
-    role: "creator" | "member";
-    tasks_completed?: number;
-    current_streak?: number;
-    profiles?: { display_name?: string | null; username?: string | null } | null;
-  }> | undefined) ?? [];
 
   useEffect(() => {
     if (isLoading) return;
@@ -970,50 +909,6 @@ export default function ChallengeDetailScreen() {
     setLeaveConfirmVisible(true);
   }, [id, leavePending]);
 
-  const handleInviteTeam = useCallback(() => {
-    if (!userTeam?.id) return;
-    router.push({
-      pathname: "/team-invite",
-      params: {
-        team_id: userTeam.id,
-        team_code: userTeam.team_code,
-        challenge_id: id ?? "",
-        max_members: String(userTeam.max_members ?? 5),
-      },
-    } as never);
-  }, [router, userTeam?.id, userTeam?.team_code, userTeam?.max_members, id]);
-
-  const handleCopyTeamCode = useCallback(async () => {
-    if (!userTeam?.team_code) return;
-    await Clipboard.setStringAsync(userTeam.team_code);
-    setTeamCodeCopied(true);
-    setTimeout(() => setTeamCodeCopied(false), 2000);
-  }, [userTeam?.team_code]);
-
-  const handleLeaveTeam = useCallback(() => {
-    if (!userTeam?.id || leaveTeamPending) return;
-    setLeaveTeamConfirmVisible(true);
-  }, [userTeam?.id, leaveTeamPending]);
-
-  const confirmLeaveTeam = useCallback(async () => {
-    if (!userTeam?.id || leaveTeamPending) return;
-    setLeaveTeamPending(true);
-    try {
-      await trpcMutate(TRPC.team.leave, { team_id: userTeam.id });
-      await Promise.all([
-        userTeamQuery.refetch(),
-        challengeQuery.refetch(),
-      ]);
-    } catch (e) {
-      captureError(e, "ChallengeDetailLeaveTeam");
-      console.error("[ChallengeDetail] leave team failed:", e);
-      showError((e as Error)?.message ?? "Could not leave team.");
-    } finally {
-      setLeaveTeamPending(false);
-      setLeaveTeamConfirmVisible(false);
-    }
-  }, [userTeam?.id, leaveTeamPending, userTeamQuery, challengeQuery, showError]);
-
   const confirmLeaveChallenge = useCallback(async () => {
     if (!id || leavePending) return;
     setLeaveConfirmVisible(false);
@@ -1030,8 +925,6 @@ export default function ChallengeDetailScreen() {
   }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router, showError]);
 
   const difficulty = (challenge?.difficulty || "medium") as string;
-  const challengeType = String((challenge as { challenge_type?: string })?.challenge_type ?? "").toLowerCase();
-  const challengeSupportsTeams = challengeType === "team" || challengeType === "both" || isTeamChallenge || isSharedGoal;
 
   const categoryColors = useMemo(() => getCategoryColors(challenge?.category ?? "discipline"), [challenge?.category]);
 
@@ -1116,7 +1009,6 @@ export default function ChallengeDetailScreen() {
 
   const durationLabel = isDaily ? "24 hours" : `${challenge.duration_days} days`;
   const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-  const difficultyLabelWithTeam = isInTeam ? `${difficultyLabel} • Team` : difficultyLabel;
   const rawParticipantCount = challenge.participants_count ?? 0;
   const participantCount = Math.max(rawParticipantCount, isJoined ? 1 : 0);
   const joinDisabled = isPending || (isDaily && expired);
@@ -1179,7 +1071,7 @@ export default function ChallengeDetailScreen() {
             userStreak={userStreak}
             userCurrentDay={userCurrentDay}
             difficulty={difficulty}
-            difficultyLabel={difficultyLabelWithTeam}
+            difficultyLabel={difficultyLabel}
             difficultyPillStyle={difficultyPillStyle}
             visibilityLabel={visibilityLabel}
             visibilityIcon={visibilityIcon}
@@ -1218,248 +1110,6 @@ export default function ChallengeDetailScreen() {
               <Text style={s.socialProofTitle}>{participantCount} {participantCount === 1 ? "warrior" : "warriors"}</Text>
               <Text style={s.socialProofSub}>{participantCount === 0 ? "Be the first to join" : `${joinedToday} joined today`}</Text>
             </View>
-
-            {isInTeam && userTeam ? (
-              <View style={[s.socialProofCard, DS_SHADOWS.cardSubtle]} accessibilityRole="header" accessibilityLabel={`Your team: ${userTeam.name}`}>
-                <Text style={[s.sectionTitle, { marginBottom: DS_SPACING.sm }]}>Your team</Text>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={{ fontSize: 16, fontWeight: "700", color: DS_COLORS.challengeHeaderDark }}>{userTeam.name}</Text>
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                      backgroundColor: DS_COLORS.TROPHY_ICON_WRAP_BG,
-                      borderRadius: 10,
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                    }}
-                    onPress={() => void handleCopyTeamCode()}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Team code: ${userTeam.team_code}. Tap to copy`}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: "500", color: DS_COLORS.textSecondary, letterSpacing: 1 }}>
-                      {teamCodeCopied ? "COPIED" : userTeam.team_code}
-                    </Text>
-                    <Copy size={12} color={DS_COLORS.textSecondary} />
-                  </TouchableOpacity>
-                </View>
-                <Text style={{ fontSize: 12, color: DS_COLORS.textSecondary, marginTop: 4 }}>
-                  {teamMembersWithStats.length}/{userTeam.max_members} members · {userTeam.goal_mode === "shared" ? "Shared goal" : "Individual"}
-                </Text>
-                <TouchableOpacity
-                  onPress={handleInviteTeam}
-                  style={{
-                    alignSelf: "flex-end",
-                    marginTop: 8,
-                    borderWidth: 1.5,
-                    borderColor: DS_COLORS.DISABLED_BG,
-                    borderRadius: 20,
-                    paddingVertical: 6,
-                    paddingHorizontal: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Invite teammates to ${userTeam.name}`}
-                >
-                  <UserPlus size={14} color={DS_COLORS.textSecondary} />
-                  <Text style={{ fontSize: 13, color: DS_COLORS.textSecondary, fontWeight: "600" }}>Invite</Text>
-                </TouchableOpacity>
-
-                {userTeam.goal_mode === "shared" ? (
-                  <View style={{ marginTop: 8 }} accessibilityRole="progressbar" accessibilityLabel={`Team goal: ${teamMembersWithStats.reduce((sum, m) => sum + (m.tasks_completed ?? 0), 0)} of ${Math.max(1, (challenge.duration_days ?? 1) * Math.max(1, teamMembersWithStats.length))} tasks`}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
-                      <Text style={{ fontSize: 13, fontWeight: "500", color: DS_COLORS.challengeHeaderDark }}>Team goal</Text>
-                      <Text style={{ fontSize: 12, color: DS_COLORS.textSecondary }}>
-                        {teamMembersWithStats.reduce((sum, m) => sum + (m.tasks_completed ?? 0), 0)}/{Math.max(1, (challenge.duration_days ?? 1) * Math.max(1, teamMembersWithStats.length))} tasks
-                      </Text>
-                    </View>
-                    <View style={{ height: 8, borderRadius: 8, backgroundColor: DS_COLORS.TROPHY_ICON_WRAP_BG, overflow: "hidden" }}>
-                      <View
-                        style={{
-                          height: "100%",
-                          width: `${Math.min(
-                            100,
-                            Math.max(
-                              0,
-                              (teamMembersWithStats.reduce((sum, m) => sum + (m.tasks_completed ?? 0), 0) /
-                                Math.max(1, (challenge.duration_days ?? 1) * Math.max(1, teamMembersWithStats.length))) *
-                                100
-                            )
-                          )}%`,
-                          backgroundColor: DS_COLORS.DISCOVER_CORAL,
-                        }}
-                      />
-                    </View>
-                  </View>
-                ) : null}
-
-                <View style={{ marginTop: 10 }}>
-                  {teamMembersWithStats.map((member, idx) => {
-                    const name = member.profiles?.display_name ?? member.profiles?.username ?? "Member";
-                    const metric = userTeam.goal_mode === "shared"
-                      ? `${member.tasks_completed ?? 0} tasks`
-                      : `${member.current_streak ?? 0} days`;
-                    const pct = Math.max(0, Math.min(100, Number(member.completion_pct ?? 0)));
-                    return (
-                      <View key={member.id} style={{ paddingVertical: 10, borderBottomWidth: idx < teamMembersWithStats.length - 1 ? 0.5 : 0, borderBottomColor: DS_COLORS.DISCOVER_DIVIDER }}>
-                        <View
-                          style={{ flexDirection: "row", alignItems: "center" }}
-                          accessibilityRole="text"
-                          accessibilityLabel={`${name}, ${member.role}, ${member.current_streak ?? 0} day streak`}
-                        >
-                          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: DS_COLORS.ACCENT_TINT, alignItems: "center", justifyContent: "center" }}>
-                            <Text style={{ color: DS_COLORS.DISCOVER_CORAL, fontWeight: "700" }}>{name.charAt(0).toUpperCase()}</Text>
-                          </View>
-                          <View style={{ flex: 1, marginLeft: 10 }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                              <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.challengeHeaderDark }}>{name}</Text>
-                              {member.role === "creator" ? (
-                                <View style={{ backgroundColor: DS_COLORS.TROPHY_ICON_WRAP_BG, borderRadius: 8, paddingVertical: 2, paddingHorizontal: 8 }}>
-                                  <Text style={{ fontSize: 10, color: DS_COLORS.textSecondary }}>Creator</Text>
-                                </View>
-                              ) : null}
-                            </View>
-                            <View style={{ height: 4, borderRadius: 2, backgroundColor: DS_COLORS.DISCOVER_DIVIDER, marginTop: 6 }} accessibilityRole="progressbar" accessibilityLabel={`${name} progress: ${pct} percent`}>
-                              <View style={{ height: "100%", width: `${pct}%`, backgroundColor: DS_COLORS.DISCOVER_CORAL, borderRadius: 2 }} />
-                            </View>
-                          </View>
-                          <Text style={{ fontSize: 12, color: DS_COLORS.textSecondary }}>{metric}</Text>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-
-                {teamMembersWithStats.length < (userTeam.max_members ?? 5) ? (
-                  <TouchableOpacity
-                    onPress={handleInviteTeam}
-                    style={{
-                      marginTop: 10,
-                      borderWidth: 1.5,
-                      borderStyle: "dashed",
-                      borderColor: DS_COLORS.DISABLED_BG,
-                      borderRadius: 12,
-                      padding: 12,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Invite a teammate, ${(userTeam.max_members ?? 5) - teamMembersWithStats.length} spots remaining`}
-                  >
-                    <UserPlus size={16} color={DS_COLORS.textSecondary} />
-                    <Text style={{ fontSize: 13, color: DS_COLORS.textSecondary }}>
-                      Invite a teammate
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            ) : null}
-
-            {isInTeam && userTeam ? (
-              <View style={[s.socialProofCard, DS_SHADOWS.cardSubtle]}>
-                <Text style={[s.sectionTitle, { marginBottom: DS_SPACING.sm }]} accessibilityRole="header" accessibilityLabel="Team leaderboard">
-                  Leaderboard
-                </Text>
-                {teamMembersWithStats.length < 2 ? (
-                  <View
-                    style={{
-                      borderWidth: 1.5,
-                      borderStyle: "dashed",
-                      borderColor: DS_COLORS.DISABLED_BG,
-                      borderRadius: 12,
-                      padding: 12,
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <Text style={{ fontSize: 13, color: DS_COLORS.textSecondary }}>
-                      Invite teammates to see the leaderboard
-                    </Text>
-                    <TouchableOpacity
-                      onPress={handleInviteTeam}
-                      style={{
-                        borderWidth: 1.5,
-                        borderColor: DS_COLORS.DISABLED_BG,
-                        borderRadius: 20,
-                        paddingVertical: 6,
-                        paddingHorizontal: 14,
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Invite teammates to ${userTeam.name}`}
-                    >
-                      <Text style={{ fontSize: 13, color: DS_COLORS.textSecondary, fontWeight: "600" }}>Invite</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <View style={{ borderRadius: 16, overflow: "hidden" }}>
-                    {teamLeaderboard.map((member, idx) => {
-                      const name = member.profiles?.display_name ?? member.profiles?.username ?? "Member";
-                      const isMe = member.user_id === currentUserId;
-                      const isTop = member.rank === 1;
-                      const primaryMetric = userTeam.goal_mode === "shared"
-                        ? `${member.tasks_completed ?? 0} tasks`
-                        : `${member.current_streak ?? 0} day streak`;
-                      const secondaryMetric = userTeam.goal_mode === "shared"
-                        ? `${member.current_streak ?? 0} day streak`
-                        : `${member.tasks_completed ?? 0} tasks`;
-                      return (
-                        <View
-                          key={member.id}
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            paddingVertical: 14,
-                            paddingHorizontal: 16,
-                            borderTopWidth: idx > 0 ? 0.5 : 0,
-                            borderTopColor: DS_COLORS.DISCOVER_DIVIDER,
-                            backgroundColor: isTop ? DS_COLORS.ACCENT_TINT : isMe ? DS_COLORS.ACCENT_TINT : DS_COLORS.white,
-                            borderLeftWidth: isMe && !isTop ? 3 : 0,
-                            borderLeftColor: isMe && !isTop ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TRANSPARENT,
-                          }}
-                          accessibilityRole="text"
-                          accessibilityLabel={`${isMe ? "Your rank" : `Rank ${member.rank}`}: ${name}, ${member.current_streak ?? 0} day streak`}
-                        >
-                          <View
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: 14,
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: isTop ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.DISCOVER_DIVIDER,
-                              marginRight: 10,
-                            }}
-                          >
-                            <Text style={{ fontSize: 13, fontWeight: "600", color: isTop ? DS_COLORS.white : DS_COLORS.textSecondary }}>
-                              {member.rank}
-                            </Text>
-                          </View>
-                          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: DS_COLORS.ACCENT_TINT, alignItems: "center", justifyContent: "center", marginRight: 10 }}>
-                            <Text style={{ color: DS_COLORS.DISCOVER_CORAL, fontWeight: "700" }}>{name.charAt(0).toUpperCase()}</Text>
-                          </View>
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 14, fontWeight: "700", color: DS_COLORS.challengeHeaderDark }}>{name}</Text>
-                          </View>
-                          <View style={{ alignItems: "flex-end" }}>
-                            <Text style={{ fontSize: 13, fontWeight: "600", color: isTop ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.textSecondary }}>
-                              {primaryMetric}
-                            </Text>
-                            <Text style={{ fontSize: 11, color: DS_COLORS.grayMedium }}>
-                              {secondaryMetric}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
-            ) : null}
 
             {firstIncompleteTask ? (
               <TouchableOpacity
@@ -1658,31 +1308,7 @@ export default function ChallengeDetailScreen() {
                 {isPending ? <ActivityIndicator color={DS_COLORS.white} /> : <Text style={s.commitCtaInFlowText}>Commit to This Challenge</Text>}
               </TouchableOpacity>
             )}
-            {!isJoined && challengeSupportsTeams && (
-              <TouchableOpacity
-                style={[s.leaveBtnInFlow, { marginTop: 10 }]}
-                onPress={() => router.push({ pathname: "/create-team", params: { challenge_id: id ?? "" } } as never)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={`Start a team challenge for ${challenge.title}`}
-              >
-                <Text style={[s.leaveBtnInFlowText, { color: DS_COLORS.DISCOVER_CORAL }]}>Start Team Challenge</Text>
-              </TouchableOpacity>
-            )}
-
-            {isJoined && !isInTeam && challengeSupportsTeams && (
-              <TouchableOpacity
-                style={[s.leaveBtnInFlow, { marginTop: 10 }]}
-                onPress={() => router.push({ pathname: "/create-team", params: { challenge_id: id ?? "" } } as never)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={`Start a team challenge for ${challenge.title}`}
-              >
-                <Text style={[s.leaveBtnInFlowText, { color: DS_COLORS.DISCOVER_CORAL }]}>Start Team Challenge</Text>
-              </TouchableOpacity>
-            )}
-
-            {isJoined && !isInTeam && id && (
+            {isJoined && id && (
               <>
                 <TouchableOpacity
                   style={s.leaveBtnInFlow}
@@ -1702,44 +1328,6 @@ export default function ChallengeDetailScreen() {
                 <Text style={s.ctaMicroInFlow}>Your progress will not be saved</Text>
               </>
             )}
-
-            {isInTeam && userTeam ? (
-              <>
-                <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
-                  <TouchableOpacity
-                    style={[s.leaveBtnInFlow, { flex: 1, borderColor: DS_COLORS.DISCOVER_CORAL }]}
-                    onPress={handleInviteTeam}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Invite teammates to ${userTeam.name}`}
-                  >
-                    <Text style={[s.leaveBtnInFlowText, { color: DS_COLORS.DISCOVER_CORAL }]}>Invite</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[s.leaveBtnInFlow, { flex: 1 }]}
-                    onPress={handleLeaveTeam}
-                    disabled={leaveTeamPending}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Leave team ${userTeam.name}`}
-                  >
-                    {leaveTeamPending ? (
-                      <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
-                    ) : (
-                      <Text style={s.leaveBtnInFlowText}>Leave Team</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  onPress={handleLeave}
-                  style={{ alignSelf: "center", marginTop: 8 }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Leave challenge entirely"
-                >
-                  <Text style={[s.ctaMicroInFlow, { textDecorationLine: "underline", marginBottom: 0 }]}>Leave challenge entirely</Text>
-                </TouchableOpacity>
-              </>
-            ) : null}
 
             {!isJoined && (
               <Text style={s.ctaMicroInFlow}>{isDaily ? "Challenge expires at midnight" : "Day resets at midnight"}</Text>
@@ -1896,25 +1484,6 @@ export default function ChallengeDetailScreen() {
         destructive
         onCancel={() => setLeaveConfirmVisible(false)}
         onConfirm={() => void confirmLeaveChallenge()}
-      />
-      <ConfirmDialog
-        visible={leaveTeamConfirmVisible}
-        title="Leave team?"
-        message={
-          userTeam
-            ? (
-                teamMembersWithStats.some((m) => m.role === "creator" && m.user_id === currentUserId) && teamMembersWithStats.length > 1
-                  ? `You'll be removed from ${userTeam.name}. Your individual progress stays, but you won't see team stats anymore. Team leadership will transfer to ${creatorFallbackName}.`
-                  : teamMembersWithStats.some((m) => m.role === "creator" && m.user_id === currentUserId) && teamMembersWithStats.length <= 1
-                  ? `You'll be removed from ${userTeam.name}. Since you're the only member, the team will be dissolved.`
-                  : `You'll be removed from ${userTeam.name}. Your individual progress stays, but you won't see team stats anymore.`
-              )
-            : "You'll be removed from this team."
-        }
-        confirmLabel="Leave Team"
-        destructive
-        onCancel={() => setLeaveTeamConfirmVisible(false)}
-        onConfirm={() => void confirmLeaveTeam()}
       />
     </View>
   );
