@@ -86,6 +86,7 @@ export default function ActivityScreen() {
     queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: NotifRow[]; earlier: NotifRow[] }>,
     enabled: !isGuest && !!user?.id && mainTab === "notifications",
     staleTime: 30 * 1000,
+    retry: 2,
   });
 
   const friendsBoard = useQuery({
@@ -93,6 +94,7 @@ export default function ActivityScreen() {
     queryFn: () => trpcQuery(TRPC.leaderboard.getFriendsBoard) as Promise<{ leaderPoints: number; entries: BoardEntry[] }>,
     enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "friends",
     staleTime: 60 * 1000,
+    retry: 2,
   });
 
   const globalLeaderboard = useQuery({
@@ -111,6 +113,7 @@ export default function ActivityScreen() {
       }>,
     enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "global",
     staleTime: 60 * 1000,
+    retry: 2,
   });
 
   const myActive = useQuery({
@@ -118,6 +121,7 @@ export default function ActivityScreen() {
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<{ challenge_id?: string; challenges?: { id?: string; title?: string } }[]>,
     enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "challenge",
     staleTime: 60 * 1000,
+    retry: 2,
   });
 
   useEffect(() => {
@@ -140,6 +144,7 @@ export default function ActivityScreen() {
       }>,
     enabled: !isGuest && !!user?.id && mainTab === "leaderboard" && scope === "challenge" && !!selectedChallengeId,
     staleTime: 60 * 1000,
+    retry: 2,
   });
 
   useEffect(() => {
@@ -151,7 +156,7 @@ export default function ActivityScreen() {
         if (!cancelled) void queryClient.invalidateQueries({ queryKey: ["activity", "notifications", user.id] });
       } catch (e) {
         captureError(e, "ActivityMarkAllRead");
-        console.error("[Activity] markAllRead", e);
+        console.warn("[Activity] markAllRead", e);
       }
     })();
     return () => {
@@ -160,11 +165,14 @@ export default function ActivityScreen() {
   }, [mainTab, user?.id, queryClient]);
 
   useEffect(() => {
+    if (scope !== "friends") return;
+    if (friendsBoard.isPending || friendsBoard.isFetching) return;
+    if (friendsBoard.isError) return;
     const friendEntries = friendsBoard.data?.entries ?? [];
-    if (scope === "friends" && friendEntries.length <= 1) {
+    if (friendEntries.length <= 1) {
       setScope("global");
     }
-  }, [friendsBoard.data?.entries, scope]);
+  }, [scope, friendsBoard.data?.entries, friendsBoard.isPending, friendsBoard.isFetching, friendsBoard.isError]);
 
   const onRefresh = useCallback(async () => {
     await Promise.all([
@@ -180,7 +188,8 @@ export default function ActivityScreen() {
     notifQuery.isRefetching ||
     friendsBoard.isRefetching ||
     globalLeaderboard.isRefetching ||
-    challengeBoard.isRefetching;
+    challengeBoard.isRefetching ||
+    myActive.isRefetching;
 
   if (isGuest || !user?.id) {
     return (
@@ -262,7 +271,7 @@ function NotificationsBody({
         void qc.invalidateQueries({ queryKey: ["activity", "notifications", userId] });
       } catch (e) {
         captureError(e, "ActivityFollowUser");
-        console.error("[Activity] follow", e);
+        console.warn("[Activity] follow", e);
       }
     },
     [qc, userId]
@@ -446,7 +455,7 @@ function LeaderboardBody({
   const err =
     (scope === "global" && globalLeaderboard.isError) ||
     (scope === "friends" && friendsBoard.isError) ||
-    (scope === "challenge" && challengeBoard.isError);
+    (scope === "challenge" && (myActive.isError || challengeBoard.isError));
 
   return (
     <View>
@@ -485,6 +494,7 @@ function LeaderboardBody({
           onRetry={() => {
             void friendsBoard.refetch();
             void globalLeaderboard.refetch();
+            void myActive.refetch();
             void challengeBoard.refetch();
           }}
         />
