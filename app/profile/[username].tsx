@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
+import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcQuery } from "@/lib/trpc";
@@ -44,6 +45,17 @@ export default function PublicProfileScreen() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
+
+  const followCountsQuery = useQuery({
+    queryKey: ["publicProfile", profile?.user_id ?? "", "followCounts"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getFollowCounts, { userId: profile!.user_id }) as Promise<{
+        followers: number;
+        following: number;
+      }>,
+    enabled: !!profile?.user_id && !!user?.id,
+    staleTime: 60 * 1000,
+  });
 
   const decoded = username ? decodeURIComponent(username) : "";
 
@@ -142,7 +154,7 @@ export default function PublicProfileScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={styles.backBtn} hitSlop={12} accessibilityLabel="Go back" accessibilityRole="button">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={styles.backBtn} hitSlop={12} accessibilityLabel="Go back" accessibilityRole="button">
             <ChevronLeft size={24} color={colors.text.primary} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Profile</Text>
@@ -162,6 +174,8 @@ export default function PublicProfileScreen() {
             joinDate={joinedDate}
             bio={profile.bio ?? undefined}
             showEditButton={false}
+            followerCount={followCountsQuery.isSuccess ? followCountsQuery.data.followers : undefined}
+            followingCount={followCountsQuery.isSuccess ? followCountsQuery.data.following : undefined}
           />
           <DisciplineScoreCard
             disciplineScore={disciplineScore}

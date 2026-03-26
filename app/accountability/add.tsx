@@ -77,7 +77,7 @@ export default function AddAccountabilityPartnerScreen() {
         if (params.from === "onboarding" || params.from === "day1") {
           router.replace((params.from === "onboarding" ? ROUTES.ONBOARDING_STEP4 : ROUTES.TABS) as never);
         } else {
-          router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+          router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
         }
       } catch (e: unknown) {
         captureError(e, "AccountabilityAddInvite");
@@ -96,7 +96,7 @@ export default function AddAccountabilityPartnerScreen() {
     } else if (params.from === "day1") {
       router.replace(ROUTES.TABS as never);
     } else {
-      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+      router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
     }
   }, [params.from, router]);
 

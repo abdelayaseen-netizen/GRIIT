@@ -19,7 +19,6 @@ import {
   Pressable,
 } from "react-native";
 import { Image } from "expo-image";
-import ShareSheetModal from "@/components/share/ShareSheetModal";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
@@ -45,6 +44,9 @@ import { InlineError } from "@/components/InlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
+import { useQueryClient } from "@tanstack/react-query";
 
 const JOURNAL_PROMPTS = [
   "What did you learn about yourself today?",
@@ -104,9 +106,27 @@ function firstString(v: string | string[] | undefined): string {
   return typeof v === "string" ? v : v[0] ?? "";
 }
 
+/** Disambiguate run vs workout when routing or seed data conflates the two. */
+function inferRunOrWorkout(taskType: string, taskName: string): "run" | "workout" {
+  const n = taskName.toLowerCase();
+  const looksRun = /\b(run|jog|running|5k|10k|mile|sprint)\b/.test(n);
+  const looksWorkout = /\b(workout|gym|lift|hiit|yoga|strength|exercise|training|calisthenics)\b/.test(n);
+  if (taskType === "run") {
+    if (looksWorkout && !looksRun) return "workout";
+    return "run";
+  }
+  if (taskType === "workout") {
+    if (looksRun && !looksWorkout) return "run";
+    return "workout";
+  }
+  return "workout";
+}
+
+const WORKOUT_KINDS = ["Gym", "HIIT", "Yoga", "Calisthenics", "Other"] as const;
+
 function goBackOrHome(router: ReturnType<typeof useRouter>) {
   if (router.canGoBack()) {
-    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+    router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
   } else {
     router.replace(ROUTES.TABS_HOME as never);
   }
@@ -125,11 +145,11 @@ function TaskCompleteScreenInner() {
     currentDay?: string;
     durationDays?: string;
   }>();
-  const { activeChallenge, completeTask, challenge, stats, todayCheckins } = useApp();
+  const queryClient = useQueryClient();
+  const { activeChallenge, completeTask, challenge } = useApp();
   const showCelebration = useCelebrationStore((s) => s.show);
   const [submitted, setSubmitted] = useState(false);
-  const [completionId, setCompletionId] = useState<string | null>(null);
-  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [shareFeedErr, setShareFeedErr] = useState("");
   const [variableReward, setVariableReward] = useState<{ label: string; color: string; bg: string } | null>(null);
 
   const taskId = firstString(params.taskId) || "";
@@ -164,6 +184,13 @@ function TaskCompleteScreenInner() {
   const runDurationMin = useRef("");
   const [runDistance, setRunDistance] = useState("");
   const [runDuration, setRunDuration] = useState("");
+  const [workoutDuration, setWorkoutDuration] = useState("");
+  const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Gym");
+  const [workoutNotes, setWorkoutNotes] = useState("");
+  const [photoCaption, setPhotoCaption] = useState("");
+  const [postCaption, setPostCaption] = useState("");
+  const [shareBusy, setShareBusy] = useState(false);
+  const [postedInline, setPostedInline] = useState(false);
   const manualSubmitScheduled = useRef(false);
 
   useEffect(() => {
@@ -176,10 +203,17 @@ function TaskCompleteScreenInner() {
   const isCountdown = config.timer_direction === "countdown";
   const isHardMode = config.timer_hard_mode === true;
   const isRunTimed = taskTypeRaw === "run" && minDurMinutes > 0;
+  const effectiveRunOrWorkout =
+    taskTypeRaw === "run" || taskTypeRaw === "workout" ? inferRunOrWorkout(taskTypeRaw, taskName) : null;
   const showWorkoutTimer =
     taskTypeRaw === "timer" ||
     (taskTypeRaw === "workout" && minDurMinutes > 0) ||
     (taskTypeRaw === "run" && isRunTimed && isHardMode);
+  const showRunEntry = taskTypeRaw === "run" && effectiveRunOrWorkout === "run" && !showWorkoutTimer;
+  const showWorkoutEntry =
+    !showWorkoutTimer &&
+    ((taskTypeRaw === "workout" && effectiveRunOrWorkout === "workout") ||
+      (taskTypeRaw === "run" && effectiveRunOrWorkout === "workout"));
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -336,14 +370,20 @@ function TaskCompleteScreenInner() {
 
   const runKm = parseFloat(runDistance.replace(",", "."));
   const runMin = parseInt(runDuration.trim(), 10);
-  const runOk =
-    taskTypeRaw !== "run"
-      ? true
-      : isRunTimed && isHardMode
-        ? timerOk && hardModeOk
-        : isRunTimed && !isHardMode
-          ? !Number.isNaN(runMin) && runMin >= minDurMinutes
-          : !Number.isNaN(runKm) && runKm > 0 && !Number.isNaN(runMin) && runMin > 0;
+  const runFormOk =
+    !showRunEntry ||
+    (isRunTimed && isHardMode
+      ? timerOk && hardModeOk
+      : isRunTimed && !isHardMode
+        ? !Number.isNaN(runMin) && runMin >= minDurMinutes
+        : !Number.isNaN(runKm) && runKm > 0 && !Number.isNaN(runMin) && runMin > 0);
+
+  const workoutMinParsed = parseInt(workoutDuration.trim(), 10);
+  const workoutOk =
+    !showWorkoutEntry ||
+    (!Number.isNaN(workoutMinParsed) &&
+      workoutMinParsed >= 1 &&
+      (minDurMinutes === 0 || workoutMinParsed >= minDurMinutes));
 
   const isPureManual =
     (taskTypeRaw === "manual" || taskTypeRaw === "simple") &&
@@ -360,7 +400,8 @@ function TaskCompleteScreenInner() {
     if (needsPhotoProof && !photoOk) return false;
     if (config.require_heart_rate && !heartRateOk) return false;
     if (config.require_location && !locationOk) return false;
-    if (taskTypeRaw === "run" && !runOk) return false;
+    if (showRunEntry && !runFormOk) return false;
+    if (showWorkoutEntry && !workoutOk) return false;
     return true;
   }, [
     taskTypeRaw,
@@ -376,7 +417,10 @@ function TaskCompleteScreenInner() {
     needsPhotoProof,
     config.require_heart_rate,
     config.require_location,
-    runOk,
+    runFormOk,
+    showRunEntry,
+    showWorkoutEntry,
+    workoutOk,
     timerSeconds,
   ]);
 
@@ -385,23 +429,34 @@ function TaskCompleteScreenInner() {
     setIsSubmitting(true);
     try {
       let noteTextOut: string | undefined;
-      if (taskTypeRaw === "run") {
+      if (showWorkoutEntry) {
+        const wm = parseInt(workoutDuration.trim(), 10);
+        const parts = [`Workout: ${wm} min`];
+        if (workoutKind) parts.push(workoutKind);
+        if (workoutNotes.trim()) parts.push(workoutNotes.trim());
+        noteTextOut = parts.join(" · ");
+      } else if (taskTypeRaw === "run" && showRunEntry) {
         noteTextOut = `Run: ${runDistance.trim()} km in ${runDuration.trim()} min`;
       } else if (taskTypeRaw === "journal") {
         noteTextOut = journalText.trim();
+      } else if (taskTypeRaw === "photo" && photoCaption.trim()) {
+        noteTextOut = photoCaption.trim();
       }
-      const result = await completeTask({
+      let valueOut: number | undefined;
+      if (showWorkoutEntry) {
+        valueOut = parseInt(workoutDuration.trim(), 10);
+      } else if (taskTypeRaw === "timer" || (taskTypeRaw === "workout" && showWorkoutTimer)) {
+        valueOut = Math.floor(timerSeconds / 60);
+      } else if (taskTypeRaw === "run") {
+        valueOut = isRunTimed && isHardMode ? Math.floor(timerSeconds / 60) : runMin;
+      } else {
+        valueOut = undefined;
+      }
+      await completeTask({
         activeChallengeId,
         taskId,
         noteText: noteTextOut,
-        value:
-          taskTypeRaw === "timer" || taskTypeRaw === "workout"
-            ? Math.floor(timerSeconds / 60)
-            : taskTypeRaw === "run"
-              ? isRunTimed && isHardMode
-                ? Math.floor(timerSeconds / 60)
-                : runMin
-              : undefined,
+        value: valueOut,
         proofUrl: photoUrl ?? undefined,
         photo_url: photoUrl ?? undefined,
         heart_rate_avg: heartRateData?.avg,
@@ -410,8 +465,6 @@ function TaskCompleteScreenInner() {
         location_longitude: userLocation?.lng,
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
       });
-      const id = result && typeof result === "object" && "completionId" in result ? (result as { completionId?: string }).completionId : undefined;
-      setCompletionId(id ?? null);
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -458,8 +511,14 @@ function TaskCompleteScreenInner() {
     runDuration,
     runMin,
     isRunTimed,
-    timerSeconds,
     showCelebration,
+    showWorkoutEntry,
+    showRunEntry,
+    showWorkoutTimer,
+    workoutDuration,
+    workoutKind,
+    workoutNotes,
+    photoCaption,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -482,6 +541,33 @@ function TaskCompleteScreenInner() {
       : `${String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:${String(timerSeconds % 60).padStart(2, "0")}`;
 
   const progressFrac = requiredSeconds > 0 ? Math.min(1, timerSeconds / requiredSeconds) : 0;
+
+  const challengeIdForFeed =
+    (activeChallenge as { challenge_id?: string } | null)?.challenge_id ??
+    (challenge as { id?: string } | null)?.id ??
+    "";
+
+  const handleShareToFeed = useCallback(async () => {
+    setShareFeedErr("");
+    if (!challengeIdForFeed) {
+      setShareFeedErr("Could not link this completion to a challenge. Use Done to go home.");
+      return;
+    }
+    setShareBusy(true);
+    try {
+      await trpcMutate(TRPC.feed.shareCompletion, {
+        challengeId: challengeIdForFeed,
+        caption: postCaption.trim() || undefined,
+      });
+      setPostedInline(true);
+      void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+    } catch (e) {
+      captureError(e, "TaskCompleteShareFeed");
+      setShareFeedErr(e instanceof Error ? e.message : "Could not post to feed.");
+    } finally {
+      setShareBusy(false);
+    }
+  }, [challengeIdForFeed, postCaption, queryClient]);
 
   if (!taskId.trim() || !activeChallengeId.trim()) {
     if (!paramsReady) {
@@ -514,29 +600,7 @@ function TaskCompleteScreenInner() {
   }
 
   if (submitted) {
-    const challengeName = headerChallengeName;
-    const dayNumber =
-      (activeChallenge as { current_day_index?: number; current_day?: number })?.current_day_index ??
-      (activeChallenge as { current_day?: number })?.current_day ??
-      headerCurrentDay;
-    const completionTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     const celebPoints = isHardMode ? 8 : 5;
-    const challengeTasks = ((challenge as { challenge_tasks?: { id: string; title?: string }[] } | null)?.challenge_tasks ?? []);
-    const completedTaskSet = new Set(
-      (todayCheckins ?? [])
-        .filter((c) => c.status === "completed")
-        .map((c) => c.task_id)
-    );
-    const tasksToday = challengeTasks
-      .filter((t) => completedTaskSet.has(t.id) || t.id === taskId)
-      .map((t) => ({
-        name: t.title ?? "Task",
-        details: "Verified completion",
-        timestamp: completionTime,
-      }));
-    const isAllDayComplete = challengeTasks.length > 0 && challengeTasks.every((t) => completedTaskSet.has(t.id) || t.id === taskId);
-    const isChallengeComplete = headerCurrentDay >= headerDurationDays && isAllDayComplete;
-    const rank = (stats as { tier?: string } | null)?.tier ?? "Elite";
 
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.CELEB_BG }]} edges={["bottom"]}>
@@ -562,24 +626,33 @@ function TaskCompleteScreenInner() {
             </View>
           ) : null}
 
-          <View style={celebStyles.ctaRow}>
-            <TouchableOpacity
-              style={celebStyles.shareCta}
-              onPress={() => setShowShareSheet(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Share your completion"
-            >
-              <Text style={celebStyles.shareCtaText}>Share</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={celebStyles.nextCta}
-              onPress={() => goBackOrHome(router)}
-              accessibilityRole="button"
-              accessibilityLabel="Continue to next task"
-            >
-              <Text style={celebStyles.nextCtaText}>Next task →</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={celebStyles.captionLabel}>Add a caption (optional)</Text>
+          <TextInput
+            style={celebStyles.captionInput}
+            placeholder="Just finished my workout 💪"
+            placeholderTextColor="rgba(255,255,255,0.35)"
+            value={postCaption}
+            onChangeText={setPostCaption}
+            maxLength={500}
+            editable={!postedInline}
+          />
+
+          {postedInline ? <Text style={celebStyles.postedOk}>Posted!</Text> : null}
+          {shareFeedErr ? <Text style={celebStyles.postedErr}>{shareFeedErr}</Text> : null}
+
+          <TouchableOpacity
+            style={[celebStyles.shareToFeedBtn, postedInline && { opacity: 0.85 }]}
+            onPress={() => void handleShareToFeed()}
+            disabled={shareBusy || postedInline}
+            accessibilityRole="button"
+            accessibilityLabel="Share to GRIIT feed"
+          >
+            {shareBusy ? (
+              <ActivityIndicator color={DS_COLORS.WHITE} />
+            ) : (
+              <Text style={celebStyles.shareToFeedText}>Share to GRIIT</Text>
+            )}
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={celebStyles.doneBtn}
@@ -590,22 +663,6 @@ function TaskCompleteScreenInner() {
             <Text style={celebStyles.doneBtnText}>Done</Text>
           </TouchableOpacity>
         </View>
-
-        <ShareSheetModal
-          visible={showShareSheet}
-          onClose={() => setShowShareSheet(false)}
-          dayNumber={dayNumber}
-          totalDays={headerDurationDays}
-          challengeName={challengeName}
-          taskName={taskName}
-          proofPhotoUri={photoUri ?? photoUrl ?? null}
-          rank={rank}
-          tasksToday={tasksToday}
-          isAllDayComplete={isAllDayComplete}
-          isChallengeComplete={isChallengeComplete}
-          hasPhoto={!!(photoUri ?? photoUrl)}
-          completionId={completionId}
-        />
       </SafeAreaView>
     );
   }
@@ -625,7 +682,7 @@ function TaskCompleteScreenInner() {
         {/* Manual / simple — honor tap */}
         {(taskTypeRaw === "manual" || taskTypeRaw === "simple") && (
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Honor-based verification</Text>
+            <Text style={styles.sectionLabel}>Complete: {taskName}</Text>
             <Pressable
               onPress={() => {
                 if (!isPureManual || !canSubmit) return;
@@ -651,7 +708,7 @@ function TaskCompleteScreenInner() {
         {/* Journal */}
         {taskTypeRaw === "journal" && (
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Journal</Text>
+            <Text style={styles.sectionLabel}>Journal entry</Text>
             <Text style={styles.journalPromptText}>{journalPrompt}</Text>
             <TextInput
               style={styles.journalInput}
@@ -732,8 +789,49 @@ function TaskCompleteScreenInner() {
           </View>
         )}
 
+        {/* Workout — duration + kind (no distance) */}
+        {showWorkoutEntry && (
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>Log your workout</Text>
+            <Text style={styles.hintSmall}>Duration required. Add type and notes if you want.</Text>
+            <TextInput
+              style={styles.textField}
+              placeholder="Duration (minutes)"
+              placeholderTextColor={DS_COLORS.inputPlaceholder}
+              keyboardType="number-pad"
+              value={workoutDuration}
+              onChangeText={setWorkoutDuration}
+            />
+            <Text style={[styles.hintSmall, { marginBottom: 8 }]}>Type of workout</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+              {WORKOUT_KINDS.map((k) => (
+                <TouchableOpacity
+                  key={k}
+                  style={[
+                    styles.kindChip,
+                    workoutKind === k && styles.kindChipOn,
+                  ]}
+                  onPress={() => setWorkoutKind(k)}
+                  accessibilityRole="button"
+                  accessibilityLabel={k}
+                >
+                  <Text style={[styles.kindChipText, workoutKind === k && styles.kindChipTextOn]}>{k}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={[styles.textField, { minHeight: 72 }]}
+              placeholder="Notes (optional)"
+              placeholderTextColor={DS_COLORS.inputPlaceholder}
+              value={workoutNotes}
+              onChangeText={setWorkoutNotes}
+              multiline
+            />
+          </View>
+        )}
+
         {/* Run — manual entry + Strava placeholder */}
-        {taskTypeRaw === "run" && !showWorkoutTimer && (
+        {showRunEntry && (
           <View style={styles.card}>
             <Text style={styles.sectionLabel}>Log your run</Text>
             <Text style={styles.hintSmall}>
@@ -765,6 +863,11 @@ function TaskCompleteScreenInner() {
                 runDurationMin.current = t;
               }}
             />
+            {!Number.isNaN(runKm) && runKm > 0 && !Number.isNaN(runMin) && runMin > 0 ? (
+              <Text style={styles.paceHint}>
+                Pace: {(runMin / runKm).toFixed(2)} min/km
+              </Text>
+            ) : null}
             <TouchableOpacity
               style={styles.stravaBtn}
               onPress={() => router.push(ROUTES.SETTINGS as never)}
@@ -864,7 +967,7 @@ function TaskCompleteScreenInner() {
         {/* Photo proof (required add-on or photo task) */}
         {needsPhotoProof && (
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>{taskTypeRaw === "photo" ? "Photo task" : "Photo proof"}</Text>
+            <Text style={styles.sectionLabel}>{taskTypeRaw === "photo" ? "Submit proof" : "Photo proof"}</Text>
             {photoUri ? (
               <View>
                 <Image
@@ -900,6 +1003,16 @@ function TaskCompleteScreenInner() {
               </View>
             )}
             {photoUrl ? <Text style={styles.hintSmall}>Uploaded ✓</Text> : null}
+            {taskTypeRaw === "photo" ? (
+              <TextInput
+                style={[styles.textField, { marginTop: 12 }]}
+                placeholder="Caption (optional)"
+                placeholderTextColor={DS_COLORS.inputPlaceholder}
+                value={photoCaption}
+                onChangeText={setPhotoCaption}
+                maxLength={200}
+              />
+            ) : null}
           </View>
         )}
 
@@ -1073,14 +1186,26 @@ const styles = StyleSheet.create({
   },
   submitSection: { marginTop: DS_SPACING.xxl, paddingBottom: DS_SPACING.xxl },
   primaryBtn: {
-    backgroundColor: GRIIT_COLORS.primary,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
     borderRadius: 28,
     paddingVertical: DS_SPACING.lg,
     alignItems: "center",
     ...DS_SHADOWS.button,
   },
   primaryBtnDisabled: { opacity: 0.4 },
-  primaryBtnText: { color: DS_COLORS.WHITE, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: "700" },
+  primaryBtnText: { color: DS_COLORS.WHITE, fontSize: 16, fontWeight: "500" },
+  paceHint: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, marginBottom: DS_SPACING.sm },
+  kindChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    backgroundColor: DS_COLORS.WHITE,
+  },
+  kindChipOn: { borderColor: DS_COLORS.DISCOVER_CORAL, backgroundColor: DS_COLORS.ACCENT_TINT },
+  kindChipText: { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
+  kindChipTextOn: { color: DS_COLORS.DISCOVER_CORAL },
   secondaryBtn: {
     backgroundColor: DS_COLORS.BORDER,
     borderRadius: 28,
@@ -1138,5 +1263,36 @@ const celebStyles = StyleSheet.create({
   },
   nextCtaText: { fontSize: 15, fontWeight: "500", color: "rgba(255,255,255,0.6)" },
   doneBtn: { marginTop: 20 },
-  doneBtnText: { fontSize: 14, color: "rgba(255,255,255,0.3)" },
+  doneBtnText: { fontSize: 15, color: DS_COLORS.FEED_META_MUTED },
+  captionLabel: {
+    alignSelf: "stretch",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.45)",
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  captionInput: {
+    alignSelf: "stretch",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: DS_COLORS.WHITE,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    marginBottom: 12,
+  },
+  postedOk: { fontSize: 14, fontWeight: "600", color: DS_COLORS.GREEN, marginBottom: 8 },
+  postedErr: { fontSize: 13, color: DS_COLORS.ERROR_RED, marginBottom: 8, textAlign: "center" },
+  shareToFeedBtn: {
+    alignSelf: "stretch",
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  shareToFeedText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.WHITE },
 });

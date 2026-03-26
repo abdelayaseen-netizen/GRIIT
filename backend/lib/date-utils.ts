@@ -6,6 +6,17 @@ export function getTodayDateKey(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * First calendar day (UTC) of the rolling 7-day window including today.
+ * Matches secure_day RPC: date_key from (today UTC - 6 days) through today UTC.
+ */
+export function getRollingWeekStartDateKey(): string {
+  const now = new Date();
+  const u = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  u.setUTCDate(u.getUTCDate() - 6);
+  return u.toISOString().slice(0, 10);
+}
+
 export function dateKeyFromDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }

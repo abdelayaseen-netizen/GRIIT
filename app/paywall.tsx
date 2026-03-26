@@ -20,6 +20,7 @@ import { getOfferings, purchasePackage, restorePurchases } from "@/lib/revenue-c
 import type { PurchasesPackage } from "react-native-purchases";
 import { trackEvent } from "@/lib/analytics";
 import { useProStatus } from "@/hooks/useProStatus";
+import { ROUTES } from "@/lib/routes";
 
 const VALUE_PROPS = [
   { icon: Flame, title: "Unlimited challenges", subtitle: "Join as many as you want" },
@@ -87,7 +88,7 @@ export default function PaywallScreen() {
           price: pkg.product?.priceString ?? "",
         });
         await refetchPro();
-        router.replace("/(tabs)" as never);
+        router.replace(ROUTES.TABS as never);
       } else if (!result.cancelled) {
         trackEvent("purchase_failed", { error: result.error ?? "unknown" });
         setErrorMessage(result.error ?? "Purchase failed. Please try again.");
@@ -112,7 +113,7 @@ export default function PaywallScreen() {
     if (result.success) {
       trackEvent("purchase_completed", { source: "restore" });
       await refetchPro();
-      router.replace("/(tabs)" as never);
+      router.replace(ROUTES.TABS as never);
     } else {
       trackEvent("purchase_failed", { error: "restore" });
       setErrorMessage(result.error ?? "No purchases found to restore.");
@@ -135,7 +136,7 @@ export default function PaywallScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <TouchableOpacity
         style={styles.closeButton}
-        onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
+        onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
         activeOpacity={0.7}
         accessibilityLabel="Close"
         accessibilityRole="button"

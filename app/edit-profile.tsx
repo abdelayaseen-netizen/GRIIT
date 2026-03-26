@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import { DS_COLORS } from '@/lib/design-system';
 import { captureError } from '@/lib/sentry';
+import { ROUTES } from '@/lib/routes';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function EditProfileScreen() {
         return;
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+      router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
     } catch (err: unknown) {
       captureError(err, 'EditProfileUpdate');
       setFormError(err instanceof Error ? err.message : 'Something went wrong');
@@ -84,7 +85,7 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={styles.closeBtn} activeOpacity={0.7} accessibilityLabel="Close and go back" accessibilityRole="button">
+        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={styles.closeBtn} activeOpacity={0.7} accessibilityLabel="Close and go back" accessibilityRole="button">
           <X size={22} color={DS_COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>Edit Profile</Text>

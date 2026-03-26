@@ -16,6 +16,7 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
 
 /** Active challenge as returned by getActive (nested challenges.challenge_tasks in API shape). */
 interface ActiveChallengeWithTasks {
@@ -195,7 +196,7 @@ export default function TimerTaskScreen() {
       if (Platform.OS !== "web") {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+      router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
     } catch (error: unknown) {
       captureError(error, "TimerTaskComplete");
       showError(error instanceof Error ? error.message : "Something went wrong");

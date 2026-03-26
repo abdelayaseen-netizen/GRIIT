@@ -27,7 +27,7 @@ type Props = {
   previewComment?: FeedCommentPreview | null;
 };
 
-export function FeedPostCard({
+function FeedPostCardInner({
   post,
   onProfilePress,
   onRespect,
@@ -104,6 +104,8 @@ export function FeedPostCard({
     </View>
   );
 }
+
+export const FeedPostCard = React.memo(FeedPostCardInner);
 
 const styles = StyleSheet.create({
   card: {

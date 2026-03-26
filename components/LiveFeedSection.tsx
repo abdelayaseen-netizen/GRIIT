@@ -1,5 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, FlatList, Share, Animated } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  FlatList,
+  Share,
+  Animated,
+  ActionSheetIOS,
+  Platform,
+  Modal,
+  TouchableOpacity,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -23,6 +35,9 @@ export default function LiveFeedSection() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [scope, setScope] = useState<"following" | "everyone">("everyone");
+  const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
+  const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
+  const [feedSnack, setFeedSnack] = useState<string | null>(null);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
 
@@ -52,6 +67,7 @@ export default function LiveFeedSection() {
   });
 
   const posts = (feedQuery.data?.posts ?? []).filter((post) => {
+    if (hiddenPostIds.includes(post.id)) return false;
     if (post.visibility === "private" && post.userId !== user?.id) return false;
     return true;
   });
@@ -192,6 +208,59 @@ export default function LiveFeedSection() {
     [router]
   );
 
+  const handleDeletePost = useCallback(
+    async (post: LiveFeedPost) => {
+      try {
+        await trpcMutate(TRPC.feed.deletePost, { eventId: post.id });
+        await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+        setFeedSnack("Post removed.");
+        setTimeout(() => setFeedSnack(null), 2500);
+      } catch (e) {
+        captureError(e, "LiveFeedDeletePost");
+        setFeedSnack("Couldn't delete post. Try again.");
+        setTimeout(() => setFeedSnack(null), 2500);
+      }
+    },
+    [queryClient]
+  );
+
+  const openPostMenu = useCallback(
+    (post: LiveFeedPost) => {
+      if (!user?.id) return;
+      const isOwn = post.userId === user.id;
+
+      const runOwn = (index: number) => {
+        if (index === 0) void handleDeletePost(post);
+      };
+      const runOther = (index: number) => {
+        if (index === 0) {
+          setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
+          setTimeout(() => setFeedSnack(null), 2500);
+        } else if (index === 1) {
+          setHiddenPostIds((prev) => (prev.includes(post.id) ? prev : [...prev, post.id]));
+        }
+      };
+
+      if (Platform.OS === "ios") {
+        const options = isOwn ? ["Delete post", "Cancel"] : ["Report", "Hide post", "Cancel"];
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex: options.length - 1,
+            ...(isOwn ? { destructiveButtonIndex: 0 } : {}),
+          },
+          (buttonIndex) => {
+            if (isOwn) runOwn(buttonIndex);
+            else runOther(buttonIndex);
+          }
+        );
+      } else {
+        setAndroidMenuPost(post);
+      }
+    },
+    [user?.id, handleDeletePost]
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: LiveFeedPost }) => {
       const preview = previewByPostId.get(item.id) ?? null;
@@ -201,13 +270,14 @@ export default function LiveFeedSection() {
         onRespect: () => void onRespect(item),
         onComment: () => openPost(item),
         onShare: () => void onShare(item),
+        onMenuPress: () => openPostMenu(item),
       };
       if (item.isCompleted) {
         return <MilestonePostCard {...common} />;
       }
       return <FeedPostCard {...common} previewComment={preview} />;
     },
-    [navigateProfile, onRespect, onShare, openPost, previewByPostId]
+    [navigateProfile, onRespect, onShare, openPost, openPostMenu, previewByPostId]
   );
 
   const listEmpty = useMemo(() => {
@@ -239,10 +309,10 @@ export default function LiveFeedSection() {
             onPress={() => setScope("following")}
             style={[styles.togglePill, scope === "following" && styles.togglePillActive]}
             accessibilityRole="button"
-            accessibilityLabel="Show feed from people you follow"
+            accessibilityLabel="Show feed from friends you follow"
             accessibilityState={{ selected: scope === "following" }}
           >
-            <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>Following</Text>
+            <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>Friends</Text>
           </Pressable>
           <Pressable
             onPress={() => setScope("everyone")}
@@ -287,6 +357,67 @@ export default function LiveFeedSection() {
           windowSize={10}
         />
       )}
+
+      {feedSnack ? (
+        <Text style={styles.feedSnack} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {feedSnack}
+        </Text>
+      ) : null}
+
+      <Modal
+        visible={androidMenuPost !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAndroidMenuPost(null)}
+      >
+        <View style={styles.androidMenuRoot}>
+          <Pressable style={styles.androidMenuBackdrop} onPress={() => setAndroidMenuPost(null)} />
+          <View style={styles.androidMenuSheet}>
+            {androidMenuPost && androidMenuPost.userId === user.id ? (
+              <>
+                <TouchableOpacity
+                  style={styles.androidMenuRow}
+                  onPress={() => {
+                    setAndroidMenuPost(null);
+                    void handleDeletePost(androidMenuPost);
+                  }}
+                >
+                  <Text style={styles.androidMenuDestructive}>Delete post</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.androidMenuRow} onPress={() => setAndroidMenuPost(null)}>
+                  <Text style={styles.androidMenuCancel}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            ) : androidMenuPost ? (
+              <>
+                <TouchableOpacity
+                  style={styles.androidMenuRow}
+                  onPress={() => {
+                    setAndroidMenuPost(null);
+                    setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
+                    setTimeout(() => setFeedSnack(null), 2500);
+                  }}
+                >
+                  <Text style={styles.androidMenuDefault}>Report</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.androidMenuRow}
+                  onPress={() => {
+                    const p = androidMenuPost;
+                    setAndroidMenuPost(null);
+                    setHiddenPostIds((prev) => (prev.includes(p.id) ? prev : [...prev, p.id]));
+                  }}
+                >
+                  <Text style={styles.androidMenuDefault}>Hide post</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.androidMenuRow} onPress={() => setAndroidMenuPost(null)}>
+                  <Text style={styles.androidMenuCancel}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -343,4 +474,34 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY },
   retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600", marginTop: 8 },
+  feedSnack: {
+    textAlign: "center",
+    fontSize: 13,
+    color: DS_COLORS.TEXT_SECONDARY,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  androidMenuRoot: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  androidMenuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  androidMenuSheet: {
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 28,
+    paddingTop: 8,
+  },
+  androidMenuRow: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  androidMenuDefault: { fontSize: 17, color: DS_COLORS.TEXT_PRIMARY, fontWeight: "500" },
+  androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: "600" },
+  androidMenuCancel: { fontSize: 17, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "500" },
 });

@@ -24,8 +24,6 @@ import { achievementsRouter } from "./routes/achievements";
 import { integrationsRouter } from "./routes/integrations";
 import { sharedGoalRouter } from "./routes/sharedGoal";
 import { referralsRouter } from "./routes/referrals";
-import { teamsRouter } from "./routes/teams";
-import { teamRouter } from "./routes/team";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -47,8 +45,6 @@ export const appRouter = createTRPCRouter({
   integrations: integrationsRouter,
   sharedGoal: sharedGoalRouter,
   referrals: referralsRouter,
-  teams: teamsRouter,
-  team: teamRouter,
 });
 
 export type AppRouter = typeof appRouter;

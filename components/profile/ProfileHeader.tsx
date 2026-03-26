@@ -20,6 +20,9 @@ export interface ProfileHeaderProps {
   onAvatarUpdated?: () => void;
   bio?: string;
   showEditButton?: boolean;
+  /** When set (including zeros), shows follower/following row from `user_follows`. Omit to hide the row. */
+  followerCount?: number;
+  followingCount?: number;
 }
 
 const RANK_DOT: Record<string, string> = {
@@ -41,6 +44,8 @@ export default React.memo(function ProfileHeader({
   onAvatarUpdated,
   bio,
   showEditButton = true,
+  followerCount,
+  followingCount,
 }: ProfileHeaderProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -116,26 +121,30 @@ export default React.memo(function ProfileHeader({
             <Text style={styles.editBtnText}>Edit</Text>
           </TouchableOpacity>
         ) : null}
-        <TouchableOpacity
-          style={styles.shareBtn}
-          onPress={onShare}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Share your GRIIT profile"
+        {onShare ? (
+          <TouchableOpacity
+            style={styles.shareBtn}
+            onPress={onShare}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Share your GRIIT profile"
+          >
+            <Share2 size={14} color={DS_COLORS.buttonDisabledText} />
+            <Text style={styles.shareBtnText}>Share</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      {followerCount !== undefined && followingCount !== undefined ? (
+        <View
+          style={styles.socialRow}
+          accessibilityRole="text"
+          accessibilityLabel={`${followerCount} followers, ${followingCount} following`}
         >
-          <Share2 size={14} color={DS_COLORS.buttonDisabledText} />
-          <Text style={styles.shareBtnText}>Share</Text>
-        </TouchableOpacity>
-      </View>
-      <View
-        style={styles.socialRow}
-        accessibilityRole="none"
-        accessibilityLabel="0 followers, 0 following"
-      >
-        <Text style={styles.socialText}>0 followers</Text>
-        <Text style={styles.socialText}> · </Text>
-        <Text style={styles.socialText}>0 following</Text>
-      </View>
+          <Text style={styles.socialText}>{followerCount} followers</Text>
+          <Text style={styles.socialText}> · </Text>
+          <Text style={styles.socialText}>{followingCount} following</Text>
+        </View>
+      ) : null}
     </View>
   );
 });

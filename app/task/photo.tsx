@@ -15,6 +15,7 @@ import { trackEvent } from "@/lib/analytics";
 import { InlineError } from "@/components/InlineError";
 import ProofShareCard from "@/components/ProofShareCard";
 import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
 
 const PICKER_OPTIONS = {
   allowsEditing: true,
@@ -150,7 +151,7 @@ export default function PhotoTaskScreen() {
           proofPhotoUri={photoUri ?? undefined}
           onDismiss={() => {
             setShowShareCard(false);
-            router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+            router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
           }}
         />
       ) : null}

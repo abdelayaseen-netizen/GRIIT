@@ -458,19 +458,28 @@ export const profilesRouter = createTRPCRouter({
   search: protectedProcedure
     .input(z.object({ query: z.string().min(1).max(100).transform((s) => s.trim()) }))
     .query(async ({ input, ctx }) => {
-      const q = input.query.trim().toLowerCase();
+      const q = input.query.trim();
       if (!q) return [];
       const { data, error } = await ctx.supabase
-        .from('profiles')
-        .select('user_id, username, display_name')
-        .neq('user_id', ctx.userId)
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .neq("user_id", ctx.userId)
         .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
         .limit(20);
       requireNoError(error, "Failed to search profiles.");
-      return (data ?? []).map((r: ProfileRow) => ({
+      const rows = (data ?? []) as ProfileRow[];
+      const ids = rows.map((r) => r.user_id);
+      const { data: streakRows } =
+        ids.length > 0
+          ? await ctx.supabase.from("streaks").select("user_id, active_streak_count").in("user_id", ids)
+          : { data: [] as { user_id: string; active_streak_count: number | null }[] };
+      const streakMap = new Map((streakRows ?? []).map((s) => [s.user_id, s.active_streak_count ?? 0]));
+      return rows.map((r) => ({
         user_id: r.user_id,
         username: r.username ?? "",
         display_name: r.display_name ?? r.username ?? "",
+        avatar_url: r.avatar_url ?? null,
+        current_streak: streakMap.get(r.user_id) ?? 0,
       }));
     }),
 
@@ -538,6 +547,28 @@ export const profilesRouter = createTRPCRouter({
         });
       }
       return result.reverse();
+    }),
+
+  getFollowCounts: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { getSupabaseServer } = await import("../../lib/supabase-server");
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const { count: followers, error: fErr } = await server
+        .from("user_follows")
+        .select("id", { count: "exact", head: true })
+        .eq("following_id", input.userId);
+      if (fErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: fErr.message });
+      }
+      const { count: following, error: gErr } = await server
+        .from("user_follows")
+        .select("id", { count: "exact", head: true })
+        .eq("follower_id", input.userId);
+      if (gErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: gErr.message });
+      }
+      return { followers: followers ?? 0, following: following ?? 0 };
     }),
 
   followUser: protectedProcedure

@@ -694,7 +694,7 @@ export default function ChallengeDetailScreen() {
     const count = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
     const joinGate = canJoinChallenge(count);
     if (!joinGate.allowed) {
-      router.push("/paywall" as never);
+      router.push(ROUTES.PAYWALL as never);
       return;
     }
     setCommitmentJoining(true);
@@ -728,7 +728,7 @@ export default function ChallengeDetailScreen() {
       const code = (err as { data?: { code?: string } })?.data?.code;
       if (code === "FORBIDDEN" || msg.toLowerCase().includes("up to 3 challenges")) {
         showError("Free accounts can have up to 3 active challenges. Upgrade to Premium for unlimited challenges.");
-        router.push("/paywall" as never);
+        router.push(ROUTES.PAYWALL as never);
         return;
       }
       const { title, message } = formatTRPCError(err);
@@ -955,7 +955,7 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.emptyWrap}>
           <Text style={s.emptyText}>Not found</Text>
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={s.emptyBtn} accessibilityLabel="Go back" accessibilityRole="button">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={s.emptyBtn} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -978,7 +978,7 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[s.emptyWrap, { flex: 1, justifyContent: "center" }]}>
           <ErrorState message="Couldn't load this challenge" onRetry={() => void challengeQuery.refetch()} />
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={[s.emptyBtn, { marginTop: DS_SPACING.lg }]} accessibilityLabel="Go back" accessibilityRole="button">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={[s.emptyBtn, { marginTop: DS_SPACING.lg }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -995,7 +995,7 @@ export default function ChallengeDetailScreen() {
           <TouchableOpacity onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} style={s.emptyBtn} accessibilityLabel="Browse challenges" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Browse challenges</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={[s.emptyBtn, { marginTop: 12 }]} accessibilityLabel="Go back" accessibilityRole="button">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={[s.emptyBtn, { marginTop: 12 }]} accessibilityLabel="Go back" accessibilityRole="button">
             <Text style={s.emptyBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -1078,7 +1078,7 @@ export default function ChallengeDetailScreen() {
             eyebrowLabel={eyebrowLabel}
             referrerLabel={referrerLabel}
             subtitleColor={categoryColors.subtitleText}
-            onBack={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
+            onBack={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
             onShare={() => {
               if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               void handleShare();

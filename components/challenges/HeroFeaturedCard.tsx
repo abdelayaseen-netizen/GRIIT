@@ -17,20 +17,28 @@ type HeroChallenge = {
   duration_days?: number;
   participants_count?: number;
   category?: string;
+  /** Real join count for today (from active_challenges); overrides heuristic when set. */
+  joins_today?: number;
 };
 
 export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
   challenge,
   onPress,
   onPressIn,
+  ctaLabel,
 }: {
   challenge: HeroChallenge | null;
   onPress: (id: string) => void;
   onPressIn?: () => void;
+  /** Default: "Start this challenge" */
+  ctaLabel?: string;
 }) {
   if (!challenge) return null;
   const duration = challenge.duration_days ?? 7;
-  const joinedToday = Math.max(0, Math.floor((challenge.participants_count ?? 0) * 0.02));
+  const joinedToday =
+    typeof challenge.joins_today === "number"
+      ? Math.max(0, challenge.joins_today)
+      : Math.max(0, Math.floor((challenge.participants_count ?? 0) * 0.02));
   const categoryColors = getCategoryColors(challenge.category ?? "discipline");
   const copy = HERO_COPY[challenge.title] ?? challenge.description ?? "Lock in. Show up daily. Build unbreakable discipline.";
   return (
@@ -68,9 +76,9 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
           onPress={() => onPress(challenge.id)}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel={`Start ${challenge.title} — ${duration} day challenge`}
+          accessibilityLabel={`${ctaLabel ?? "Start"} ${challenge.title} — ${duration} day challenge`}
         >
-          <Text style={s.ctaText}>Start this challenge</Text>
+          <Text style={s.ctaText}>{ctaLabel ?? "Start this challenge"}</Text>
         </TouchableOpacity>
       </View>
     </View>

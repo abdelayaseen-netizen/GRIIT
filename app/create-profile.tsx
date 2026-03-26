@@ -15,6 +15,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import { trackEvent } from "@/lib/analytics";
 import FormInput from "@/components/shared/FormInput";
 import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
 
 const PADDING_H = 20;
 
@@ -64,7 +65,7 @@ export default function CreateProfileScreen() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (cancelled || !user) {
-          if (!user) router.replace("/auth/login" as never);
+          if (!user) router.replace(ROUTES.AUTH_LOGIN as never);
           return;
         }
         const { data: profile } = await supabase
@@ -75,7 +76,7 @@ export default function CreateProfileScreen() {
 
         if (cancelled) return;
         if (profile?.username && profile?.display_name) {
-          router.replace("/(tabs)" as never);
+          router.replace(ROUTES.TABS as never);
           return;
         }
 
@@ -85,7 +86,7 @@ export default function CreateProfileScreen() {
       } catch (e) {
         if (!cancelled) {
           console.error("[CreateProfile] checkProfile failed:", e);
-          router.replace("/auth/login" as never);
+          router.replace(ROUTES.AUTH_LOGIN as never);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -131,7 +132,7 @@ export default function CreateProfileScreen() {
       }
 
       trackEvent("profile_created");
-      router.replace("/(tabs)" as never);
+      router.replace(ROUTES.TABS as never);
     } catch (e) {
       captureError(e, "CreateProfileSave");
       console.error("[CreateProfile] save failed:", e);

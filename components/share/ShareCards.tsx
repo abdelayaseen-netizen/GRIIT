@@ -5,6 +5,9 @@ import { DS_COLORS, DS_RADIUS, DS_BORDERS, GRIIT_COLORS } from "@/lib/design-sys
 
 export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1920;
+/** Logical preview size (story ratio); scale from full export size. */
+export const PREVIEW_CARD_W = 360;
+export const PREVIEW_CARD_H = 640;
 export const PREVIEW_SCALE = 0.18;
 export const SELECTED_PREVIEW_SCALE = 0.45;
 
@@ -24,16 +27,24 @@ type TaskRow = { name: string; details: string; timestamp: string; verified?: bo
 
 export function StatementCard({
   dayNumber,
+  totalDays,
   challengeName,
   calloutText,
   proofPhotoUri,
+  streak = 0,
 }: {
   dayNumber: number;
+  /** For progress bar; defaults to dayNumber if omitted */
+  totalDays?: number;
   challengeName: string;
   calloutText: string;
   proofPhotoUri?: string | null;
+  streak?: number;
 }) {
   const daysLabel = dayNumber === 1 ? "DAY" : "DAYS";
+  const td = Math.max(1, totalDays ?? dayNumber);
+  const progressPct = Math.min(100, Math.round((dayNumber / td) * 100));
+
   const centerContent = (
     <>
       <Text style={s.statementBigDay}>{dayNumber}</Text>
@@ -41,36 +52,53 @@ export function StatementCard({
         {daysLabel} IN
       </Text>
       <Text style={s.statementChallengeName}>{challengeName}</Text>
+      <View style={s.statementProgressTrack}>
+        <View style={[s.statementProgressFill, { width: `${progressPct}%` }]} />
+      </View>
+      {streak > 0 ? (
+        <Text style={s.statementStreak}>
+          🔥 {streak} day streak
+        </Text>
+      ) : null}
     </>
   );
 
-  return (
-    <View style={[s.card, s.cardDark]}>
-      <Text style={s.wordmarkTopLeft}>GRIIT</Text>
-      <View style={s.statementBody}>
-        {proofPhotoUri ? (
+  if (proofPhotoUri) {
+    return (
+      <View style={[s.card, s.cardDark]}>
+        <Text style={s.wordmarkTopLeft}>GRIIT</Text>
+        <View style={s.statementBody}>
           <ImageBackground source={{ uri: proofPhotoUri }} style={s.statementHero} resizeMode="cover">
             <View style={s.statementHeroStack}>
               <View style={s.statementHeroDim} />
               <View style={s.statementCenterOnPhoto}>{centerContent}</View>
             </View>
           </ImageBackground>
-        ) : (
-          <LinearGradient
-            colors={[DS_COLORS.DISCOVER_HERO_DARK_BG, DS_COLORS.BG_DARK]}
-            style={s.statementHero}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-          >
-            <Text style={s.statementWatermark}>GRIIT</Text>
-            <View style={s.statementCenter}>{centerContent}</View>
-          </LinearGradient>
-        )}
+        </View>
+        <View style={s.statementBottomLeft}>
+          <Text style={s.statementCallout}>{calloutText}</Text>
+          <View style={s.statementAccentBar} />
+        </View>
       </View>
-      <View style={s.statementBottomLeft}>
-        <Text style={s.statementCallout}>{calloutText}</Text>
+    );
+  }
+
+  /** No photo: solid base + diagonal gradient (avoids pure-black capture failures). */
+  return (
+    <View style={s.statementRootNoPhoto} collapsable={false}>
+      <LinearGradient
+        colors={[DS_COLORS.HEADER_MIND_DEEP, DS_COLORS.DARK_BG_PAGE, DS_COLORS.DISCOVER_HERO_DARK_BG]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <Text style={s.statementWordmarkTop}>G R I I T</Text>
+      <View style={s.statementCenterColumn}>{centerContent}</View>
+      <View style={s.statementBottomBlock}>
+        <Text style={s.statementCalloutNoAbs}>{calloutText}</Text>
         <View style={s.statementAccentBar} />
       </View>
+      <Text style={s.statementBrandBottom}>GRIIT.APP</Text>
     </View>
   );
 }
@@ -114,9 +142,15 @@ export function TransparentCard({
     );
   }
   return (
-    <LinearGradient colors={[DS_COLORS.DISCOVER_HERO_DARK_BG, DS_COLORS.SHARE_CARD_BG]} style={[s.card, s.cardOverflow]}>
+    <View style={[s.card, s.cardOverflow, { backgroundColor: DS_COLORS.DARK_BG_PAGE }]}>
+      <LinearGradient
+        colors={[DS_COLORS.DISCOVER_HERO_DARK_BG, DS_COLORS.DARK_BG_PAGE]}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       {content}
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -206,7 +240,13 @@ export function BreakdownCard({
 
 export function CalloutCard({ challengeName, totalDays, totalTasks }: { challengeName: string; totalDays: number; totalTasks: number }) {
   return (
-    <LinearGradient colors={[DS_COLORS.SHARE_CARD_BG, DS_COLORS.DISCOVER_HERO_DARK_BG]} style={[s.card, s.cardOverflow]}>
+    <View style={[s.card, s.cardOverflow, { backgroundColor: DS_COLORS.DARK_BG_PAGE }]}>
+      <LinearGradient
+        colors={[DS_COLORS.DARK_BG_PAGE, DS_COLORS.DISCOVER_HERO_DARK_BG]}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <Text style={s.wordmarkTopRight}>GRIIT</Text>
       <View style={s.calloutBody}>
         <Text style={s.calloutPre}>I JUST FINISHED</Text>
@@ -215,7 +255,7 @@ export function CalloutCard({ challengeName, totalDays, totalTasks }: { challeng
         <Text style={s.calloutCta}>THINK YOU CAN DO IT?</Text>
         <View style={s.statementAccentBar} />
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -272,10 +312,23 @@ const s = StyleSheet.create({
     fontWeight: CARD_STYLES.wordmarkWeight,
     letterSpacing: CARD_STYLES.wordmarkTracking,
   },
-  statementBody: { flex: 1, alignSelf: "stretch", width: "100%" },
+  statementBody: { flex: 1, alignSelf: "stretch", width: "100%", minHeight: 0 },
   statementHero: {
     flex: 1,
     width: "100%",
+    minHeight: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  statementHeroFill: {
+    flex: 1,
+    width: "100%",
+    minHeight: 0,
+    position: "relative",
+    overflow: "hidden",
+  },
+  statementCenterOverlay: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -308,7 +361,6 @@ const s = StyleSheet.create({
     letterSpacing: 4,
   },
   statementCenter: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 56,
@@ -317,6 +369,60 @@ const s = StyleSheet.create({
   statementBigDay: { fontSize: 240, color: DS_COLORS.WHITE, fontWeight: "800", lineHeight: 250 },
   statementDaysIn: { fontSize: 36, color: CARD_STYLES.dimWhite, letterSpacing: 5, fontWeight: "500" },
   statementChallengeName: { marginTop: 20, fontSize: 54, color: DS_COLORS.WHITE, fontWeight: "600", textAlign: "center" },
+  statementRootNoPhoto: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    backgroundColor: DS_COLORS.DARK_BG_PAGE,
+    borderRadius: DS_RADIUS.LG,
+    overflow: "hidden",
+  },
+  statementWordmarkTop: {
+    position: "absolute",
+    top: 72,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: 30,
+    letterSpacing: 8,
+    color: "rgba(255,255,255,0.35)",
+    fontWeight: "500",
+    zIndex: 2,
+  },
+  statementCenterColumn: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 56,
+    paddingTop: 120,
+    paddingBottom: 280,
+  },
+  statementBottomBlock: { position: "absolute", left: 56, right: 56, bottom: 100 },
+  statementCalloutNoAbs: { fontSize: 30, color: CARD_STYLES.mutedWhite, marginBottom: 20 },
+  statementBrandBottom: {
+    position: "absolute",
+    bottom: 44,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: 22,
+    color: "rgba(255,255,255,0.25)",
+    zIndex: 2,
+  },
+  statementProgressTrack: {
+    width: "80%",
+    maxWidth: 720,
+    height: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 4,
+    marginTop: 32,
+    overflow: "hidden",
+  },
+  statementProgressFill: {
+    height: "100%",
+    backgroundColor: CARD_STYLES.accentColor,
+    borderRadius: 4,
+  },
+  statementStreak: { marginTop: 24, fontSize: 28, color: CARD_STYLES.mutedWhite },
   statementBottomLeft: { position: "absolute", left: 56, bottom: 90, right: 56 },
   statementCallout: { fontSize: 30, color: CARD_STYLES.mutedWhite, marginBottom: 20 },
   statementAccentBar: { width: 520, height: 6, backgroundColor: CARD_STYLES.accentColor, borderRadius: 3 },

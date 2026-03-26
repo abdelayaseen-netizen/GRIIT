@@ -17,6 +17,7 @@ import { shareInvite } from "@/lib/share";
 import LoadingState from "@/components/shared/LoadingState";
 import { SkeletonLeaderboardRow } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
+import { ROUTES } from "@/lib/routes";
 
 type MainTab = "notifications" | "leaderboard";
 type LeaderScope = "global" | "friends" | "challenge";
@@ -76,7 +77,6 @@ function rankNumColor(rank: number): string {
 export default function ActivityScreen() {
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const queryClient = useQueryClient();
   const [mainTab, setMainTab] = useState<MainTab>("notifications");
   const [scope, setScope] = useState<LeaderScope>("global");
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
@@ -146,33 +146,6 @@ export default function ActivityScreen() {
     staleTime: 60 * 1000,
     retry: 2,
   });
-
-  useEffect(() => {
-    if (mainTab !== "notifications" || !user?.id) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        await trpcMutate(TRPC.notifications.markAllRead);
-        if (!cancelled) void queryClient.invalidateQueries({ queryKey: ["activity", "notifications", user.id] });
-      } catch (e) {
-        captureError(e, "ActivityMarkAllRead");
-        console.warn("[Activity] markAllRead", e);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [mainTab, user?.id, queryClient]);
-
-  useEffect(() => {
-    if (scope !== "friends") return;
-    if (friendsBoard.isPending || friendsBoard.isFetching) return;
-    if (friendsBoard.isError) return;
-    const friendEntries = friendsBoard.data?.entries ?? [];
-    if (friendEntries.length <= 1) {
-      setScope("global");
-    }
-  }, [scope, friendsBoard.data?.entries, friendsBoard.isPending, friendsBoard.isFetching, friendsBoard.isError]);
 
   const onRefresh = useCallback(async () => {
     await Promise.all([
@@ -306,11 +279,11 @@ function NotificationsBody({
           <Bell size={40} color={DS_COLORS.TEXT_TERTIARY} />
           <Text style={styles.emptyTitle}>No notifications yet</Text>
           <Text style={styles.emptyBody}>
-            Complete a challenge to start getting Respect from others
+            When people react to your posts, comment, or follow you, you will see it here.
           </Text>
           <TouchableOpacity
             style={styles.emptyButton}
-            onPress={() => router.push("/(tabs)/home" as never)}
+            onPress={() => router.push(ROUTES.TABS_HOME as never)}
             accessibilityLabel="Go to my challenges"
             accessibilityRole="button"
           >
@@ -700,18 +673,6 @@ function CrownCard({ entry }: { entry: BoardEntry }) {
           <Text style={styles.crownPtsLabel}>pts</Text>
         </View>
       </View>
-      <View
-        style={styles.crownActions}
-        accessibilityRole="none"
-        accessibilityLabel={`Respect and comment actions for ${entry.displayName || entry.username} — not interactive`}
-      >
-        <View style={styles.crownPrimary}>
-          <Text style={styles.crownPrimaryText}>🔥 Respect</Text>
-        </View>
-        <View style={styles.crownSecondary}>
-          <Text style={styles.crownSecondaryText}>💬 Comment</Text>
-        </View>
-      </View>
     </View>
   );
 }
@@ -914,23 +875,6 @@ const styles = StyleSheet.create({
   crownSub: { fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 },
   crownPts: { fontSize: 20, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER, lineHeight: 20 },
   crownPtsLabel: { fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: "600" },
-  crownActions: { flexDirection: "row", gap: 8 },
-  crownPrimary: {
-    flex: 1,
-    backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    borderRadius: 99,
-    paddingVertical: 9,
-    alignItems: "center",
-  },
-  crownPrimaryText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.WHITE },
-  crownSecondary: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 99,
-    paddingVertical: 9,
-    alignItems: "center",
-  },
-  crownSecondaryText: { fontSize: 12, fontWeight: "700", color: "rgba(255,255,255,0.5)" },
   regRow: {
     backgroundColor: DS_COLORS.WHITE,
     borderRadius: 14,

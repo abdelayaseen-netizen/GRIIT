@@ -269,7 +269,7 @@ export default function ChallengeChatScreen() {
         <View style={styles.chatDisabledWrap}>
           <TouchableOpacity
             style={styles.chatDisabledBack}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
             activeOpacity={0.7}
             accessibilityLabel="Go back"
             accessibilityRole="button"
@@ -323,7 +323,7 @@ export default function ChallengeChatScreen() {
           headerLeft: () => (
             <TouchableOpacity
               style={styles.headerButton}
-              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
               accessibilityLabel="Go back"
               accessibilityRole="button"
             >

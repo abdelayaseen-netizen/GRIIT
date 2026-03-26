@@ -2,17 +2,10 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
-import { getTodayDateKey } from "../../lib/date-utils";
+import { getTodayDateKey, getRollingWeekStartDateKey } from "../../lib/date-utils";
 import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { consistencyScore } from "../../lib/scoring";
-import { getMembersWithStats } from "./team";
-
-function getWeekStartDateKey(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 6);
-  return d.toISOString().slice(0, 10);
-}
 
 const LEADERBOARD_MAX = 100;
 
@@ -33,8 +26,9 @@ export const leaderboardRouter = createTRPCRouter({
       const noPagination = input?.cursor == null && input?.limit == null;
 
       const todayKey = getTodayDateKey();
-      const weekStartKey = getWeekStartDateKey();
+      const weekStartKey = getRollingWeekStartDateKey();
       const userId = ctx.userId;
+      const server = getSupabaseServer() ?? ctx.supabase;
       const weeklyCacheKey = `leaderboard:weekly:v1:${weekStartKey}:${todayKey}:${userId ?? "anon"}`;
       const canCacheWeekly = noPagination && safeOffset === 0;
 
@@ -43,12 +37,15 @@ export const leaderboardRouter = createTRPCRouter({
         if (cached != null) return cached;
       }
 
-      const { data: secures } = await ctx.supabase
+      const { data: secures, error: securesErr } = await server
         .from("day_secures")
         .select("user_id, date_key")
         .gte("date_key", weekStartKey)
         .lte("date_key", todayKey)
         .limit(10000);
+      if (securesErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: securesErr.message });
+      }
 
       const countByUser = new Map<string, number>();
       for (const row of secures ?? []) {
@@ -69,20 +66,20 @@ export const leaderboardRouter = createTRPCRouter({
       }
 
       const [profilesResult, streaksResult, todaySecuresResult, respectCountsResult] = await Promise.all([
-        ctx.supabase
+        server
           .from("profiles")
           .select("user_id, username, display_name, avatar_url")
           .in("user_id", sortedUserIds),
-        ctx.supabase
+        server
           .from("streaks")
           .select("user_id, active_streak_count")
           .in("user_id", sortedUserIds),
-        ctx.supabase
+        server
           .from("day_secures")
           .select("user_id")
           .eq("date_key", todayKey)
           .limit(5000),
-        ctx.supabase
+        server
           .from("respects")
           .select("recipient_id")
           .in("recipient_id", sortedUserIds),
@@ -140,7 +137,7 @@ export const leaderboardRouter = createTRPCRouter({
   getFriendsBoard: protectedProcedure.query(async ({ ctx }) => {
     const server = getSupabaseServer() ?? ctx.supabase;
     const viewerId = ctx.userId;
-    const weekStartKey = getWeekStartDateKey();
+    const weekStartKey = getRollingWeekStartDateKey();
     const todayKey = getTodayDateKey();
 
     const followingIds: string[] = [];
@@ -230,7 +227,7 @@ export const leaderboardRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const server = getSupabaseServer() ?? ctx.supabase;
       const viewerId = ctx.userId;
-      const weekStartKey = getWeekStartDateKey();
+      const weekStartKey = getRollingWeekStartDateKey();
       const todayKey = getTodayDateKey();
 
       const { data: ch, error: chErr } = await server.from("challenges").select("id, visibility, title").eq("id", input.challengeId).maybeSingle();
@@ -314,75 +311,6 @@ export const leaderboardRouter = createTRPCRouter({
           progressVsLeader: leaderPts > 0 ? Math.min(100, Math.round((r.points / leaderPts) * 100)) : 0,
           gapToAbove: r.rank > 1 ? Math.max(0, ranked[r.rank - 2]!.points - r.points) : 0,
         })),
-      };
-    }),
-
-  getTeamBoard: protectedProcedure
-    .input(z.object({ teamId: z.string().uuid().optional() }))
-    .query(async ({ input, ctx }) => {
-      let teamId = input.teamId;
-      if (!teamId) {
-        const { data: memberships } = await ctx.supabase
-          .from("team_members")
-          .select("team_id, joined_at")
-          .eq("user_id", ctx.userId)
-          .order("joined_at", { ascending: false })
-          .limit(1);
-        teamId = (memberships?.[0] as { team_id?: string } | undefined)?.team_id;
-      }
-      if (!teamId) {
-        return { teamName: null as string | null, goalMode: "individual" as const, leaderPoints: 1, entries: [] as unknown[] };
-      }
-
-      const { data: me } = await ctx.supabase.from("team_members").select("id").eq("team_id", teamId).eq("user_id", ctx.userId).maybeSingle();
-      if (!me) throw new TRPCError({ code: "FORBIDDEN", message: "You are not a member of this team" });
-
-      const { data: teamRow } = await ctx.supabase.from("teams").select("name, goal_mode").eq("id", teamId).single();
-      const goalMode = ((teamRow as { goal_mode?: string } | null)?.goal_mode ?? "individual") as "individual" | "shared";
-
-      const members = await getMembersWithStats(ctx as { supabase: typeof ctx.supabase; userId: string }, teamId);
-      const base = members.map((m) => ({
-        userId: m.user_id,
-        username: m.profiles?.username ?? "?",
-        displayName: m.profiles?.display_name ?? m.profiles?.username ?? "Member",
-        avatarUrl: m.profiles?.avatar_url ?? null,
-        checkInsThisWeek: m.tasks_completed ?? 0,
-        currentStreak: m.current_streak ?? 0,
-      }));
-
-      const sorted = [...base].sort((a, b) => {
-        if (goalMode === "shared") return b.checkInsThisWeek - a.checkInsThisWeek;
-        if (b.currentStreak !== a.currentStreak) return b.currentStreak - a.currentStreak;
-        return b.checkInsThisWeek - a.checkInsThisWeek;
-      });
-
-      const leaderPts = sorted[0]
-        ? consistencyScore(Math.max(0, sorted[0].checkInsThisWeek), sorted[0].currentStreak)
-        : 1;
-
-      const ranked = sorted.map((r, i) => {
-        const points = consistencyScore(Math.max(0, r.checkInsThisWeek), r.currentStreak);
-        const abovePts =
-          i > 0 ? consistencyScore(Math.max(0, sorted[i - 1]!.checkInsThisWeek), sorted[i - 1]!.currentStreak) : points;
-        return {
-          userId: r.userId,
-          username: r.username,
-          displayName: r.displayName,
-          avatarUrl: r.avatarUrl,
-          rank: i + 1,
-          points,
-          checkInsThisWeek: r.checkInsThisWeek,
-          currentStreak: r.currentStreak,
-          progressVsLeader: leaderPts > 0 ? Math.min(100, Math.round((points / leaderPts) * 100)) : 0,
-          gapToAbove: i > 0 ? Math.max(0, abovePts - points) : 0,
-        };
-      });
-
-      return {
-        teamName: (teamRow as { name?: string } | null)?.name ?? "Team",
-        goalMode,
-        leaderPoints: leaderPts,
-        entries: ranked,
       };
     }),
 });

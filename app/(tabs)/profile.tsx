@@ -67,11 +67,19 @@ export default function ProfileScreen() {
     placeholderData: (previousData) => previousData,
   });
 
-  const refreshing = activeListQuery.isRefetching || securedDatesQuery.isRefetching;
+  const followCountsQuery = useQuery({
+    queryKey: ["profile", user?.id, "followCounts"],
+    queryFn: () => trpcQuery(TRPC.profiles.getFollowCounts, { userId: user!.id }) as Promise<{ followers: number; following: number }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+
+  const refreshing =
+    activeListQuery.isRefetching || securedDatesQuery.isRefetching || followCountsQuery.isRefetching;
   const onRefresh = useCallback(async () => {
     await refetchAll();
-    await Promise.all([activeListQuery.refetch(), securedDatesQuery.refetch()]);
-  }, [refetchAll, activeListQuery, securedDatesQuery]);
+    await Promise.all([activeListQuery.refetch(), securedDatesQuery.refetch(), followCountsQuery.refetch()]);
+  }, [refetchAll, activeListQuery, securedDatesQuery, followCountsQuery]);
 
   const streak = stats?.activeStreak ?? 0;
   const best = stats?.longestStreak ?? 0;
@@ -174,6 +182,8 @@ export default function ProfileScreen() {
           bio={profile.bio ?? ""}
           onShare={handleShare}
           onAvatarUpdated={() => void refetchAll()}
+          followerCount={followCountsQuery.isSuccess ? followCountsQuery.data.followers : undefined}
+          followingCount={followCountsQuery.isSuccess ? followCountsQuery.data.following : undefined}
         />
 
         <StatsRow streak={streak} best={best} active={active} done={done} />

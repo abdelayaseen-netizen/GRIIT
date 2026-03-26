@@ -12,7 +12,7 @@ type Props = {
   onShare: () => void;
 };
 
-export function FeedEngagementRow({ respectCount, reactedByMe, commentCount, onRespect, onComment, onShare }: Props) {
+function FeedEngagementRowInner({ respectCount, reactedByMe, commentCount, onRespect, onComment, onShare }: Props) {
   return (
     <View style={styles.row}>
       <Pressable
@@ -44,6 +44,8 @@ export function FeedEngagementRow({ respectCount, reactedByMe, commentCount, onR
     </View>
   );
 }
+
+export const FeedEngagementRow = React.memo(FeedEngagementRowInner);
 
 const styles = StyleSheet.create({
   row: {

@@ -70,7 +70,7 @@ export default function AccountabilityScreen() {
 
   const handleBack = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+    router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
   };
 
   const handleRemove = useCallback((partnerId: string) => {
@@ -179,7 +179,7 @@ export default function AccountabilityScreen() {
             subtitle="Pair up with someone to stay on track"
             action={{
               label: "Find a partner",
-              onPress: () => router.push("/accountability/add" as never),
+              onPress: () => router.push(ROUTES.ACCOUNTABILITY_ADD as never),
             }}
           />
         ) : null}

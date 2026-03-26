@@ -18,6 +18,7 @@ import { supabase } from "@/lib/supabase";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import { DS_COLORS } from "@/lib/design-system";
+import { ROUTES } from "@/lib/routes";
 import FormInput from "@/components/shared/FormInput";
 
 const PADDING_H = 20;
@@ -82,9 +83,9 @@ export default function LoginScreen() {
         .single();
 
       if (profileError || !profile?.username) {
-        router.replace("/create-profile" as never);
+        router.replace(ROUTES.CREATE_PROFILE as never);
       } else {
-        router.replace("/(tabs)" as never);
+        router.replace(ROUTES.TABS as never);
       }
     } catch (e) {
       if (__DEV__) console.error("[Login] email sign-in failed:", e);
@@ -96,7 +97,7 @@ export default function LoginScreen() {
   }, [loading, email, password, router]);
 
   const handleForgotPassword = useCallback(() => {
-    router.push("/auth/forgot-password" as never);
+    router.push(ROUTES.AUTH_FORGOT_PASSWORD as never);
   }, [router]);
 
   const handleApple = useCallback(async () => {
@@ -129,9 +130,9 @@ export default function LoginScreen() {
         track({ name: "login_completed", method: "apple" });
         const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", data.user.id).single();
         if (!profile?.username) {
-          router.replace("/create-profile" as never);
+          router.replace(ROUTES.CREATE_PROFILE as never);
         } else {
-          router.replace("/(tabs)" as never);
+          router.replace(ROUTES.TABS as never);
         }
       } else {
         const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
@@ -162,11 +163,11 @@ export default function LoginScreen() {
   }, []);
 
   const handleSignUpLink = useCallback(() => {
-    router.push("/auth/signup" as never);
+    router.push(ROUTES.AUTH_SIGNUP as never);
   }, [router]);
 
   const handleBack = useCallback(() => {
-    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+    router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
   }, [router]);
 
   return (

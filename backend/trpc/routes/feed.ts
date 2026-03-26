@@ -193,6 +193,163 @@ export const feedRouter = createTRPCRouter({
       return { movingCount: movingUserCount, posts };
     }),
 
+  /** Single feed post by activity_events id (for post thread / deep links). */
+  getPost: protectedProcedure
+    .input(z.object({ eventId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const viewerId = ctx.userId;
+
+      type EvRow = {
+        id: string;
+        user_id: string;
+        event_type: string;
+        challenge_id: string | null;
+        metadata: Record<string, unknown>;
+        created_at: string;
+      };
+
+      const { data: raw, error: evErr } = await server
+        .from("activity_events")
+        .select("id, user_id, event_type, challenge_id, metadata, created_at")
+        .eq("id", input.eventId)
+        .maybeSingle();
+      if (evErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
+      }
+      if (!raw) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      }
+      const ev = raw as EvRow;
+      if (!LIVE_FEED_TYPES.includes(ev.event_type as (typeof LIVE_FEED_TYPES)[number])) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      }
+
+      const followingIds = new Set<string>();
+      const { data: follows } = await ctx.supabase.from("user_follows").select("following_id").eq("follower_id", viewerId);
+      for (const r of (follows ?? []) as { following_id: string }[]) followingIds.add(r.following_id);
+
+      const challengeIds = ev.challenge_id ? [ev.challenge_id] : [];
+      const userIds = [ev.user_id];
+
+      const [chRes, acRes, profRes] = await Promise.all([
+        challengeIds.length
+          ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds)
+          : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
+        challengeIds.length
+          ? server
+              .from("active_challenges")
+              .select("user_id, challenge_id, current_day, status")
+              .in("challenge_id", challengeIds)
+              .eq("status", "active")
+          : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; current_day?: number }[] }),
+        userIds.length
+          ? server.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", userIds)
+          : Promise.resolve({ data: [] as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null }[] }),
+      ]);
+
+      const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
+      const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; current_day?: number }[];
+      const profiles = (profRes as { data: unknown }).data as {
+        user_id: string;
+        display_name?: string;
+        username?: string;
+        avatar_url?: string | null;
+      }[];
+
+      const challengeMap = new Map(challenges.map((c) => [c.id, c]));
+      const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
+      const activeMap = new Map<string, { current_day: number }>();
+      for (const row of activeRows) {
+        activeMap.set(`${row.user_id}:${row.challenge_id}`, { current_day: row.current_day ?? 1 });
+      }
+
+      const passesVisibility = (e: EvRow, vis: "public" | "friends" | "private"): boolean => {
+        if (vis === "private" && e.user_id !== viewerId) return false;
+        if (vis === "friends" && e.user_id !== viewerId && !followingIds.has(e.user_id)) return false;
+        return true;
+      };
+
+      const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
+      if (ev.challenge_id && !ch) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      }
+      const vis = normalizeChallengeVisibility(ch?.visibility);
+      if (!passesVisibility(ev, vis)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can't view this post" });
+      }
+
+      const { data: reactions } = await ctx.supabase
+        .from("feed_reactions")
+        .select("event_id, user_id")
+        .eq("event_id", ev.id);
+      let reactionCount = 0;
+      let reactedByMe = false;
+      for (const row of (reactions ?? []) as { event_id: string; user_id: string }[]) {
+        reactionCount += 1;
+        if (row.user_id === viewerId) reactedByMe = true;
+      }
+
+      const { count: commentTotal, error: cErr } = await ctx.supabase
+        .from("feed_comments")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", ev.id);
+      if (cErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: cErr.message });
+      }
+
+      const { data: streakRow } = await server.from("streaks").select("active_streak_count").eq("user_id", ev.user_id).maybeSingle();
+      const streakFromDb = (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
+
+      const md = ev.metadata ?? {};
+      const profile = profileMap.get(ev.user_id);
+      const displayName = profile?.display_name ?? profile?.username ?? "Someone";
+      const username = profile?.username ?? "?";
+      const challengeName =
+        typeof md.challenge_name === "string" && md.challenge_name.trim()
+          ? md.challenge_name
+          : ch?.title ?? "Challenge";
+      const durationDays = typeof md.duration_days === "number" ? md.duration_days : ch?.duration_days ?? 14;
+      const activeKey = ev.challenge_id ? `${ev.user_id}:${ev.challenge_id}` : "";
+      const active = ev.challenge_id ? activeMap.get(activeKey) : undefined;
+      const currentDay = typeof md.day_number === "number" ? md.day_number : active?.current_day ?? 1;
+      const isCompletedChallenge = ev.event_type === "completed_challenge";
+      const hasProof = Boolean(md.photo_url) || md.has_photo === true;
+      const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
+
+      return {
+        id: ev.id,
+        userId: ev.user_id,
+        username,
+        displayName,
+        avatarUrl: profile?.avatar_url ?? null,
+        streakCount: mdStreak ?? streakFromDb,
+        challengeId: ev.challenge_id,
+        challengeName,
+        currentDay: Math.max(1, currentDay),
+        totalDays: Math.max(1, durationDays),
+        eventType: ev.event_type,
+        isCompleted: isCompletedChallenge,
+        hasProof: hasProof && !isCompletedChallenge,
+        photoUrl: typeof md.photo_url === "string" ? md.photo_url : null,
+        verified:
+          Boolean(md.photo_url) ||
+          md.verification_method === "strava_activity" ||
+          md.heart_rate_verified === true,
+        caption:
+          typeof md.note_text === "string"
+            ? md.note_text
+            : typeof md.caption === "string"
+              ? md.caption
+              : null,
+        createdAt: ev.created_at,
+        respectCount: reactionCount,
+        reactedByMe,
+        commentCount: commentTotal ?? 0,
+        visibility: vis,
+      };
+    }),
+
   list: protectedProcedure
     .input(
       z.object({
@@ -549,5 +706,74 @@ export const feedRouter = createTRPCRouter({
           avatar_url: profile?.avatar_url ?? null,
         };
       });
+    }),
+
+  /** Remove the viewer's own activity event from the feed (cascades to reactions/comments). */
+  deletePost: protectedProcedure
+    .input(z.object({ eventId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: row, error: qErr } = await ctx.supabase
+        .from("activity_events")
+        .select("user_id")
+        .eq("id", input.eventId)
+        .maybeSingle();
+      if (qErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: qErr.message });
+      }
+      const ownerId = (row as { user_id?: string } | null)?.user_id;
+      if (!ownerId || ownerId !== ctx.userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own posts." });
+      }
+      const { error } = await ctx.supabase.from("activity_events").delete().eq("id", input.eventId).eq("user_id", ctx.userId);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to delete post." });
+      }
+      return { ok: true as const };
+    }),
+
+  /** Attach caption to the latest task_completed activity event (feed). Uses service role for update. */
+  shareCompletion: protectedProcedure
+    .input(
+      z.object({
+        challengeId: z.string().uuid(),
+        caption: z.string().max(500).optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const server = getSupabaseServer();
+      if (!server) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
+      }
+      const { data: ev, error: qErr } = await server
+        .from("activity_events")
+        .select("id, metadata")
+        .eq("user_id", ctx.userId)
+        .eq("challenge_id", input.challengeId)
+        .eq("event_type", "task_completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (qErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: qErr.message });
+      }
+      if (!ev) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Nothing to share yet." });
+      }
+      const prev = (ev as { metadata?: Record<string, unknown> }).metadata ?? {};
+      const nextMeta = {
+        ...prev,
+        caption: input.caption?.trim() || null,
+        feed_shared: true,
+      };
+      const sb = server as unknown as {
+        from: (t: string) => {
+          update: (row: { metadata: Record<string, unknown> }) => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> };
+        };
+      };
+      const { error: uErr } = await sb.from("activity_events").update({ metadata: nextMeta }).eq("id", (ev as { id: string }).id);
+      if (uErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: uErr.message });
+      }
+      return { ok: true as const };
     }),
 });

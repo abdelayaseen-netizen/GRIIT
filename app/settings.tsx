@@ -239,7 +239,7 @@ export default function SettingsScreen() {
 
   const handleBack = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+    router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
   };
 
 

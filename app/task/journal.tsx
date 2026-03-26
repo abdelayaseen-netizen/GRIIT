@@ -41,6 +41,7 @@ import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
 
 const JOURNAL_CATEGORY_LABELS: Record<JournalCategory, string> = {
   self_reflection: "Self-reflection",
@@ -305,7 +306,7 @@ export default function JournalTaskScreen() {
           <Animated.View style={[s.successActions, { opacity: confettiOpacity }]}>
             <TouchableOpacity
               style={s.successPrimaryBtn}
-              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
               activeOpacity={0.8}
             >
               <Text style={s.successPrimaryBtnText}>Back to challenge</Text>
@@ -328,7 +329,7 @@ export default function JournalTaskScreen() {
                 if (entryText.trim().length > 0) {
                   setDraftExitVisible(true);
                 } else {
-                  router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+                  router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
                 }
               }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -570,7 +571,7 @@ export default function JournalTaskScreen() {
               onPress={() => {
                 void AsyncStorage.removeItem(draftKey);
                 setDraftExitVisible(false);
-                router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+                router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
               }}
               accessibilityRole="button"
               accessibilityLabel="Discard draft"
@@ -581,7 +582,7 @@ export default function JournalTaskScreen() {
               style={s.draftExitBtnSecondary}
               onPress={() => {
                 setDraftExitVisible(false);
-                router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+                router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
               }}
               accessibilityRole="button"
               accessibilityLabel="Save and exit"

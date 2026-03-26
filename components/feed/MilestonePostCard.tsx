@@ -22,7 +22,7 @@ type Props = {
   onMenuPress?: () => void;
 };
 
-export function MilestonePostCard({
+function MilestonePostCardInner({
   post,
   onProfilePress,
   onRespect,
@@ -69,6 +69,8 @@ export function MilestonePostCard({
     </View>
   );
 }
+
+export const MilestonePostCard = React.memo(MilestonePostCardInner);
 
 const styles = StyleSheet.create({
   card: {

@@ -18,7 +18,7 @@ type Props = {
   onMenuPress?: () => void;
 };
 
-export function FeedCardHeader({ post, onProfilePress, onMenuPress }: Props) {
+function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
   const displayUser = post.displayName || post.username || "Member";
   const subtitle = `${post.challengeName} · ${relativeTime(post.createdAt)}`;
 
@@ -88,6 +88,8 @@ export function FeedCardHeader({ post, onProfilePress, onMenuPress }: Props) {
     </View>
   );
 }
+
+export const FeedCardHeader = React.memo(FeedCardHeaderInner);
 
 const styles = StyleSheet.create({
   header: {

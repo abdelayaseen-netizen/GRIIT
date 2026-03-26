@@ -31,6 +31,7 @@ import { formatSecondsToMMSS } from "@/lib/formatTime";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
 type TimeStatus = "too_early" | "window_open" | "too_late";
@@ -360,7 +361,7 @@ export default function CheckinTaskScreen() {
       if (result.success) {
         await triggerCelebration(task.id);
         setTimeout(() => {
-          router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+          router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
         }, 1000);
       } else {
         showError(result.failureReason || "Verification failed.");
@@ -412,7 +413,7 @@ export default function CheckinTaskScreen() {
           </View>
           <Text style={styles.verifiedTitle}>Check-in Verified</Text>
           <Text style={styles.verifiedSubtitle}>You showed up at the right place and time.</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} accessibilityLabel="Back to Tasks" accessibilityRole="button">
+          <TouchableOpacity style={styles.backButton} onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} accessibilityLabel="Back to Tasks" accessibilityRole="button">
             <Text style={styles.backButtonText}>Back to Tasks</Text>
           </TouchableOpacity>
         </View>

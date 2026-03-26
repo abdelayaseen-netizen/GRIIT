@@ -27,6 +27,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import { InitialCircle } from "@/src/components/ui";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { ROUTES } from "@/lib/routes";
 import { InlineError } from "@/components/InlineError";
 
 export default function ChallengeChatInfoScreen() {
@@ -99,7 +100,7 @@ export default function ChallengeChatInfoScreen() {
           headerLeft: () => (
             <TouchableOpacity
               style={styles.headerButton}
-              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
             >
               <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>

@@ -37,6 +37,7 @@ import { useCelebration } from "@/hooks/useCelebration";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { ROUTES } from "@/lib/routes";
 
 interface GpsPoint {
   lat: number;
@@ -48,7 +49,7 @@ type TreadmillStep = "timer" | "proof" | "distance";
 
 export default function RunTaskScreen() {
   const router = useRouter();
-  const safeBack = React.useCallback(() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never)), [router]);
+  const safeBack = React.useCallback(() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never)), [router]);
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
   const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();

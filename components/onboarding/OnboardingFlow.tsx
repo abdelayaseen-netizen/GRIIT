@@ -10,6 +10,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { GOAL_OPTIONS } from "@/constants/onboarding-theme";
 import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
 
 import ValueSplash from "./screens/ValueSplash";
 import GoalSelection from "./screens/GoalSelection";
@@ -56,7 +57,7 @@ export default function OnboardingFlow() {
       captureError(e, "OnboardingFlowPersistFlag");
       if (__DEV__) console.error("[OnboardingFlow] persist onboarding flag failed:", e);
     }
-    router.replace("/(tabs)" as never);
+    router.replace(ROUTES.TABS as never);
   }, [completeOnboarding, router, setProfileSetupHints]);
 
   const handleBack = useCallback(() => {

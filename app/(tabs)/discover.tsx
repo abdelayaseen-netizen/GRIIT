@@ -1,105 +1,104 @@
-import React, { useMemo, useState, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  RefreshControl,
+  TextInput,
+  Pressable,
+  Keyboard,
+  Platform,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Search } from "lucide-react-native";
+import { Search, X, Plus, ChevronRight } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { DS_COLORS } from "@/lib/design-system";
-import { styles } from "@/styles/discover-styles";
-import { FilterChip } from "@/src/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Card from "@/components/shared/Card";
 import { SkeletonHeroCard, SkeletonChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { ROUTES } from "@/lib/routes";
 import { useDebounce } from "@/hooks/useDebounce";
 import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
-import { DailyCard, type DailyParticipationState } from "@/components/challenges/DailyCard";
-import { TeamChallengeCard } from "@/components/challenges/TeamChallengeCard";
-import { PopularChallengeRow } from "@/components/challenges/PopularChallengeRow";
+import {
+  DiscoverMiniChallengeCard,
+  DiscoverFullChallengeCard,
+  DiscoverChallengeSearchRow,
+  type MiniCardChallenge,
+  type FullCardChallenge,
+} from "@/components/discover/DiscoverChallengeCards";
 import { prefetchChallengeById } from "@/lib/prefetch-queries";
+import { Avatar } from "@/components/Avatar";
 
-type CategoryKey = "all" | "fitness" | "mind" | "discipline" | "faith" | "team";
-type ChallengeFilter = "all" | "solo" | "team";
+const RECENT_SEARCHES_KEY = "griit_recent_searches";
+const BROWSE_CATEGORIES = ["Fitness", "Mind", "Discipline", "Faith", "Team"] as const;
 
-type ApiChallenge = {
-  id: string;
-  title?: string;
-  description?: string;
-  short_hook?: string;
-  difficulty?: string;
-  duration_type?: string;
-  duration_days?: number;
-  category?: string;
-  visibility?: string;
-  is_featured?: boolean;
-  is_daily?: boolean;
-  ends_at?: string | null;
-  participants_count?: number;
-  participation_type?: string;
-  team_size?: number;
-  challenge_type?: string;
+type DiscoverChallenge = MiniCardChallenge &
+  FullCardChallenge & {
+    visibility?: string;
+    is_featured?: boolean;
+    is_daily?: boolean;
+    duration_type?: string;
+    ends_at?: string | null;
+    participation_type?: string;
+    recent_joins_7d?: number;
+    joins_today?: number;
+    team_preview?: { user_id: string; username: string | null; avatar_url: string | null }[];
+  };
+
+type SearchUser = {
+  user_id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  current_streak: number;
 };
 
-type GetFeaturedResponse = { items: ApiChallenge[]; nextCursor?: string | null } | ApiChallenge[];
-
-const CATEGORIES: { key: CategoryKey; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "fitness", label: "Fitness" },
-  { key: "mind", label: "Mind" },
-  { key: "discipline", label: "Discipline" },
-  { key: "faith", label: "Faith" },
-  { key: "team", label: "Team" },
-];
-
-function isTeam(c: ApiChallenge): boolean {
-  const pt = (c.participation_type ?? "solo").toLowerCase();
-  return pt === "duo" || pt === "team";
+function isTeamChallenge(c: DiscoverChallenge): boolean {
+  const pt = String(c.participation_type ?? "").toLowerCase();
+  return pt === "duo" || pt === "team" || pt === "shared_goal";
 }
 
-function isDaily(c: ApiChallenge): boolean {
+function isDaily(c: DiscoverChallenge): boolean {
   if (c.is_daily) return true;
   if (c.duration_type === "24h") return true;
   return (c.duration_days ?? 0) === 1;
 }
 
-function isActiveDaily(c: ApiChallenge): boolean {
+function isActiveDaily(c: DiscoverChallenge): boolean {
   if (!isDaily(c)) return false;
   if (!c.ends_at) return true;
   return new Date(c.ends_at).getTime() > Date.now();
 }
 
-function categoryMatch(c: ApiChallenge, cat: CategoryKey): boolean {
-  if (cat === "all") return true;
-  if (cat === "team") return isTeam(c);
-  return (c.category ?? "").toLowerCase() === cat;
+function isPublic(c: DiscoverChallenge): boolean {
+  return String(c.visibility ?? "public").toLowerCase() === "public";
 }
 
-function searchMatch(c: ApiChallenge, q: string): boolean {
-  if (!q) return true;
-  const s = q.toLowerCase();
-  return (c.title ?? "").toLowerCase().includes(s) || (c.description ?? "").toLowerCase().includes(s) || (c.short_hook ?? "").toLowerCase().includes(s);
-}
-
-/** Matches `DailyCard` width (154) + `v3HListSep` (10). */
-const DAILY_CARD_WIDTH = 154;
-const DAILY_ROW_STRIDE = DAILY_CARD_WIDTH + 10;
-
-function getDailyParticipationState(
-  challengeId: string,
-  activeIds: Set<string>,
-  completedIds: Set<string>
-): DailyParticipationState {
-  if (activeIds.has(challengeId)) return "active";
-  if (completedIds.has(challengeId)) return "completed";
-  return "available";
+function challengeMatchesQuery(c: DiscoverChallenge, q: string): boolean {
+  const s = q.trim().toLowerCase();
+  if (!s) return true;
+  if (s === "24h" || s === "24-hour" || s === "24 hour") return isDaily(c);
+  if (s === "team") return isTeamChallenge(c);
+  if (s === "solo") return !isTeamChallenge(c) && !isDaily(c);
+  const cat = String(c.category ?? "").toLowerCase();
+  if (BROWSE_CATEGORIES.some((x) => x.toLowerCase() === s) && s !== "team") {
+    return cat === s;
+  }
+  return (
+    (c.title ?? "").toLowerCase().includes(s) ||
+    (c.description ?? "").toLowerCase().includes(s) ||
+    (c.short_hook ?? "").toLowerCase().includes(s)
+  );
 }
 
 export default function DiscoverScreen() {
@@ -108,26 +107,30 @@ export default function DiscoverScreen() {
   const { user } = useAuth();
   const { isPremium } = useApp();
   const isGuest = useIsGuest();
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
-  const [challengeFilter, setChallengeFilter] = useState<ChallengeFilter>("all");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebounce(query, 250);
 
-  const featuredQuery = useInfiniteQuery({
-    queryKey: ["discover", "v3", activeCategory, debouncedQuery],
-    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
-      const data = (await trpcQuery(TRPC.challenges.getFeatured, {
-        limit: 30,
-        cursor: pageParam,
-      })) as GetFeaturedResponse;
-      if (Array.isArray(data)) return { items: data, nextCursor: undefined as string | undefined };
-      return { items: data.items ?? [], nextCursor: data.nextCursor ?? undefined };
-    },
-    getNextPageParam: (last) => last.nextCursor,
-    initialPageParam: undefined as string | undefined,
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 300);
+  const filterQuery = debouncedQuery.trim() || searchQuery.trim();
+
+  const discoverFeed = useQuery({
+    queryKey: ["discover", "feed", "v2"],
+    queryFn: () => trpcQuery(TRPC.challenges.getDiscoverFeed) as Promise<{ challenges: DiscoverChallenge[] }>,
+    staleTime: 60 * 1000,
+  });
+
+  const categoryCountsQuery = useQuery({
+    queryKey: ["discover", "categoryCounts"],
+    queryFn: () => trpcQuery(TRPC.challenges.getCategoryCounts) as Promise<Record<string, number>>,
+    enabled: searchFocused && !searchQuery.trim(),
     staleTime: 5 * 60 * 1000,
-    placeholderData: (prev) => prev,
+  });
+
+  const peopleSearch = useQuery({
+    queryKey: ["discover", "peopleSearch", debouncedQuery, user?.id],
+    queryFn: () => trpcQuery(TRPC.profiles.search, { query: debouncedQuery.trim() }) as Promise<SearchUser[]>,
+    enabled: !isGuest && !!user?.id && debouncedQuery.trim().length >= 1 && searchFocused,
+    staleTime: 30 * 1000,
   });
 
   const myActiveForDiscover = useQuery({
@@ -136,57 +139,110 @@ export default function DiscoverScreen() {
     enabled: !isGuest && !!user?.id,
     staleTime: 5 * 60 * 1000,
   });
-  const myCompletedForDiscover = useQuery({
-    queryKey: ["discover", "completed", user?.id ?? ""],
-    queryFn: () => trpcQuery(TRPC.profiles.getCompletedChallenges) as Promise<{ challengeId: string }[]>,
-    enabled: !isGuest && !!user?.id,
-    staleTime: 5 * 60 * 1000,
-  });
+
   const activeChallengeIds = useMemo(() => {
     const rows = myActiveForDiscover.data;
     if (!Array.isArray(rows)) return new Set<string>();
     return new Set(rows.map((r) => r.challenge_id).filter((cid): cid is string => typeof cid === "string" && cid.length > 0));
   }, [myActiveForDiscover.data]);
-  const completedChallengeIds = useMemo(() => {
-    const rows = myCompletedForDiscover.data;
-    if (!Array.isArray(rows)) return new Set<string>();
-    return new Set(rows.map((r) => r.challengeId).filter((cid): cid is string => typeof cid === "string" && cid.length > 0));
-  }, [myCompletedForDiscover.data]);
+
   const activeCount = useMemo(
     () => (Array.isArray(myActiveForDiscover.data) ? myActiveForDiscover.data.length : 0),
     [myActiveForDiscover.data]
   );
 
-  const all = useMemo(() => (featuredQuery.data?.pages.flatMap((p) => p.items) ?? []).filter((c) => (c.visibility ?? "public").toLowerCase() === "public"), [featuredQuery.data?.pages]);
-  const filtered = useMemo(() => {
-    return all
-      .filter((c) => categoryMatch(c, activeCategory))
-      .filter((c) => searchMatch(c, debouncedQuery))
-      .filter((c) => {
-        const ct = String(c.challenge_type ?? "").toLowerCase();
-        if (challengeFilter === "all") return true;
-        if (challengeFilter === "solo") return ct === "solo" || ct === "both" || ct === "";
-        if (challengeFilter === "team") return ct === "team" || ct === "both" || isTeam(c);
-        return true;
-      });
-  }, [all, activeCategory, debouncedQuery, challengeFilter]);
+  const allPublic = useMemo(() => {
+    const list = discoverFeed.data?.challenges ?? [];
+    return list.filter(isPublic);
+  }, [discoverFeed.data?.challenges]);
 
-  const hero = useMemo(() => {
-    const featured = filtered.find((c) => c.is_featured === true);
-    if (featured) return featured;
-    return [...filtered].sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0))[0] ?? null;
-  }, [filtered]);
+  const trendingHero = useMemo(() => {
+    if (!allPublic.length) return null;
+    const ranked = [...allPublic].sort((a, b) => {
+      const jr = (b.recent_joins_7d ?? 0) - (a.recent_joins_7d ?? 0);
+      if (jr !== 0) return jr;
+      return (b.participants_count ?? 0) - (a.participants_count ?? 0);
+    });
+    const notIn = ranked.find((c) => !activeChallengeIds.has(c.id));
+    return notIn ?? ranked[0] ?? null;
+  }, [allPublic, activeChallengeIds]);
 
-  const heroId = hero?.id ?? "";
-  const daily = useMemo(() => filtered.filter((c) => c.id !== heroId).filter((c) => isActiveDaily(c)).filter((c) => !isTeam(c)).slice(0, 8), [filtered, heroId]);
-  const team = useMemo(() => filtered.filter((c) => c.id !== heroId).filter((c) => isTeam(c)).slice(0, 4), [filtered, heroId]);
-  const popular = useMemo(() => filtered.filter((c) => c.id !== heroId).filter((c) => !isDaily(c) && !isTeam(c)).sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0)).slice(0, 5), [filtered, heroId]);
+  const heroIsActive = trendingHero ? activeChallengeIds.has(trendingHero.id) : false;
 
-  const openChallenge = useCallback((id: string) => {
-    if (!id) return;
-    if (typeof Haptics.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push(ROUTES.CHALLENGE_ID(id) as never);
-  }, [router]);
+  const twentyFourHour = useMemo(() => {
+    const hId = trendingHero?.id ?? "";
+    return allPublic.filter((c) => c.id !== hId).filter((c) => isActiveDaily(c) && !isTeamChallenge(c)).slice(0, 12);
+  }, [allPublic, trendingHero?.id]);
+
+  const soloChallenges = useMemo(() => {
+    const hId = trendingHero?.id ?? "";
+    return allPublic
+      .filter((c) => c.id !== hId)
+      .filter((c) => !isTeamChallenge(c) && !isDaily(c) && (c.duration_days ?? 0) > 1)
+      .sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0))
+      .slice(0, 4);
+  }, [allPublic, trendingHero?.id]);
+
+  const teamChallenges = useMemo(() => {
+    const hId = trendingHero?.id ?? "";
+    return allPublic
+      .filter((c) => c.id !== hId)
+      .filter((c) => isTeamChallenge(c))
+      .sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0))
+      .slice(0, 3);
+  }, [allPublic, trendingHero?.id]);
+
+  const newThisWeek = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return allPublic
+      .filter((c) => c.created_at && new Date(c.created_at).getTime() > weekAgo)
+      .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  }, [allPublic]);
+
+  const filteredChallengesForSearch = useMemo(() => {
+    if (!filterQuery) return [];
+    return allPublic.filter((c) => challengeMatchesQuery(c, filterQuery));
+  }, [allPublic, filterQuery]);
+
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
+        if (cancelled || !raw) return;
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed)) setRecentSearches(parsed.filter((x): x is string => typeof x === "string").slice(0, 5));
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchFocused]);
+
+  const pushRecentSearch = useCallback(async (q: string) => {
+    const t = q.trim();
+    if (t.length < 2) return;
+    const next = [t, ...recentSearches.filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(0, 5);
+    setRecentSearches(next);
+    try {
+      await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  }, [recentSearches]);
+
+  const openChallenge = useCallback(
+    (id: string) => {
+      if (!id) return;
+      if (typeof Haptics.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      router.push(ROUTES.CHALLENGE_ID(id) as never);
+    },
+    [router]
+  );
 
   const prefetchChallengeDetail = useCallback(
     (challengeId: string) => {
@@ -195,239 +251,422 @@ export default function DiscoverScreen() {
     [queryClient]
   );
 
-  const renderDailyCard = useCallback(
-    ({ item }: { item: ApiChallenge }) => (
-      <DailyCard
-        challenge={{
-          id: item.id,
-          title: item.title ?? "Challenge",
-          description: item.short_hook ?? item.description,
-          difficulty: item.difficulty,
-          participants_count: item.participants_count,
-        }}
-        participationState={getDailyParticipationState(item.id, activeChallengeIds, completedChallengeIds)}
-        onPress={openChallenge}
-        onPressIn={() => prefetchChallengeDetail(item.id)}
-      />
-    ),
-    [openChallenge, prefetchChallengeDetail, activeChallengeIds, completedChallengeIds]
-  );
+  const categoryCounts = categoryCountsQuery.data ?? {};
+
+  const loading = discoverFeed.isPending;
+  const err = discoverFeed.isError;
+
+  const showDefaultSections = !searchFocused && !searchQuery.trim();
+  const showBrowseMode = searchFocused && !searchQuery.trim();
+  const showSearchResults = searchFocused && searchQuery.trim().length > 0;
+  const searchPending = searchQuery.trim() !== debouncedQuery.trim() && searchQuery.trim().length > 0;
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: DS_COLORS.BG_PAGE }} edges={["top"]}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={featuredQuery.isRefetching} onRefresh={() => featuredQuery.refetch()} tintColor={DS_COLORS.ACCENT_PRIMARY} />}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={discoverFeed.isRefetching}
+              onRefresh={() => void discoverFeed.refetch()}
+              tintColor={DS_COLORS.ACCENT}
+            />
+          }
         >
-          <View style={styles.v3Header}>
-            <View style={styles.v3HeaderRow}>
-              <Text style={styles.v3Title}>Discover</Text>
-              <TouchableOpacity
-                style={styles.v3SearchBtn}
-                onPress={() => setSearchOpen((v) => !v)}
-                activeOpacity={0.8}
-                accessibilityLabel={searchOpen ? "Close search" : "Search challenges"}
-                accessibilityRole="button"
-              >
-                <Search size={15} color={DS_COLORS.buttonDisabledText} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.v3Subtitle}>What are you willing to commit to?</Text>
+          <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+            <Text style={{ fontSize: 26, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, letterSpacing: -0.5 }}>Discover</Text>
+            <Text style={{ fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED, marginTop: 4 }}>
+              What are you willing to commit to?
+            </Text>
             {!isPremium ? (
               <Text
-                style={[
-                  styles.v3Subtitle,
-                  { marginTop: 4, color: activeCount >= 3 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED },
-                ]}
+                style={{
+                  fontSize: 12,
+                  fontWeight: "500",
+                  marginTop: 4,
+                  color: activeCount >= 3 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED,
+                }}
               >
                 {activeCount}/3 challenges active
               </Text>
             ) : null}
           </View>
 
-          {searchOpen ? (
-            <View style={styles.v3SearchInlineWrap}>
-              <View style={styles.v3SearchInline}>
-                <Text style={styles.v3SearchLabel}>Search: </Text>
-                <TouchableOpacity onPress={() => setQuery("")} accessibilityLabel="Clear search" accessibilityRole="button">
-                  <Text style={styles.v3SearchClear}>Clear</Text>
-                </TouchableOpacity>
+          <View
+            style={[
+              {
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                backgroundColor: DS_COLORS.WHITE,
+                borderRadius: 14,
+                borderWidth: 0.5,
+                borderColor: DS_COLORS.BORDER,
+                marginHorizontal: 20,
+                marginTop: 14,
+              },
+              searchFocused && { borderColor: DS_COLORS.ACCENT },
+            ]}
+          >
+            <Search size={18} color={searchFocused ? DS_COLORS.ACCENT : DS_COLORS.FEED_META_MUTED} />
+            <TextInput
+              placeholder="Search challenges or people..."
+              placeholderTextColor={DS_COLORS.INPUT_PLACEHOLDER}
+              value={searchQuery}
+              onFocus={() => setSearchFocused(true)}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              onSubmitEditing={() => {
+                void pushRecentSearch(searchQuery);
+                Keyboard.dismiss();
+              }}
+              style={{ flex: 1, fontSize: 14, color: DS_COLORS.TEXT_PRIMARY, paddingVertical: Platform.OS === "ios" ? 8 : 4 }}
+            />
+            {searchQuery.length > 0 ? (
+              <Pressable
+                onPress={() => {
+                  setSearchQuery("");
+                  setSearchFocused(false);
+                  Keyboard.dismiss();
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+              >
+                <X size={16} color={DS_COLORS.FEED_META_MUTED} />
+              </Pressable>
+            ) : null}
+          </View>
+
+          {showBrowseMode ? (
+            <View style={{ marginTop: 8, paddingBottom: 32 }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "500",
+                  color: DS_COLORS.FEED_META_MUTED,
+                  letterSpacing: 0.5,
+                  paddingHorizontal: 20,
+                  marginTop: 16,
+                  marginBottom: 8,
+                }}
+              >
+                BROWSE BY CATEGORY
+              </Text>
+              {BROWSE_CATEGORIES.map((cat) => (
+                <Pressable
+                  key={cat}
+                  onPress={() => {
+                    setSearchQuery(cat);
+                    void pushRecentSearch(cat);
+                  }}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 14,
+                    paddingHorizontal: 20,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: DS_COLORS.DIVIDER,
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: DS_COLORS.TEXT_SECONDARY }}>{cat}</Text>
+                  <Text style={{ fontSize: 13, color: DS_COLORS.FEED_META_MUTED }}>
+                    {categoryCounts[cat] ?? 0} challenges ›
+                  </Text>
+                </Pressable>
+              ))}
+              {recentSearches.length > 0 ? (
+                <>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "500",
+                      color: DS_COLORS.FEED_META_MUTED,
+                      letterSpacing: 0.5,
+                      paddingHorizontal: 20,
+                      marginTop: 20,
+                      marginBottom: 8,
+                    }}
+                  >
+                    RECENT SEARCHES
+                  </Text>
+                  {recentSearches.slice(0, 3).map((r) => (
+                    <Pressable
+                      key={r}
+                      onPress={() => setSearchQuery(r)}
+                      style={{
+                        paddingVertical: 12,
+                        paddingHorizontal: 20,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: DS_COLORS.DIVIDER,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, color: DS_COLORS.TEXT_PRIMARY }}>{r}</Text>
+                    </Pressable>
+                  ))}
+                </>
+              ) : null}
+            </View>
+          ) : null}
+
+          {showSearchResults ? (
+            <View style={{ marginTop: 12, paddingBottom: 40 }}>
+              {searchPending ? (
+                <Text style={{ paddingHorizontal: 20, color: DS_COLORS.TEXT_MUTED, fontSize: 13, marginBottom: 8 }}>Searching…</Text>
+              ) : null}
+              {!isGuest && peopleSearch.isPending && !searchPending ? (
+                <Text style={{ paddingHorizontal: 20, color: DS_COLORS.TEXT_MUTED, fontSize: 13 }}>Searching people…</Text>
+              ) : null}
+              {!isGuest && peopleSearch.data && peopleSearch.data.length > 0 ? (
+                <>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "500",
+                      color: DS_COLORS.FEED_META_MUTED,
+                      letterSpacing: 0.5,
+                      paddingHorizontal: 20,
+                      marginBottom: 8,
+                    }}
+                  >
+                    PEOPLE
+                  </Text>
+                  {peopleSearch.data.map((u) => (
+                    <Pressable
+                      key={u.user_id}
+                    onPress={() => {
+                      void pushRecentSearch(filterQuery);
+                      router.push(ROUTES.PROFILE_USERNAME(u.username) as never);
+                    }}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 12,
+                        paddingVertical: 10,
+                        paddingHorizontal: 20,
+                      }}
+                    >
+                      <Avatar url={u.avatar_url} name={u.username} userId={u.user_id} size={38} />
+                      <View>
+                        <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY }}>{u.username}</Text>
+                        <Text style={{ fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 1 }}>
+                          {u.current_streak > 0 ? `${u.current_streak}-day streak` : "Active on GRIIT"}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </>
+              ) : null}
+
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "500",
+                  color: DS_COLORS.FEED_META_MUTED,
+                  letterSpacing: 0.5,
+                  paddingHorizontal: 20,
+                  marginTop: 12,
+                  marginBottom: 8,
+                }}
+              >
+                CHALLENGES
+              </Text>
+              {searchPending ? null : filteredChallengesForSearch.length === 0 ? (
+                <Text style={{ paddingHorizontal: 20, color: DS_COLORS.TEXT_SECONDARY, fontSize: 14 }}>
+                  {!isGuest && (peopleSearch.data?.length ?? 0) > 0
+                    ? `No challenges match "${filterQuery}"`
+                    : `No results for "${filterQuery}". Try another name or keyword.`}
+                </Text>
+              ) : (
+                filteredChallengesForSearch.map((c) => (
+                  <DiscoverChallengeSearchRow
+                    key={c.id}
+                    challenge={c}
+                    onPress={() => {
+                      void pushRecentSearch(filterQuery);
+                      openChallenge(c.id);
+                    }}
+                  />
+                ))
+              )}
+            </View>
+          ) : null}
+
+          {showDefaultSections && err ? (
+            <ErrorState message="Couldn't load challenges" onRetry={() => void discoverFeed.refetch()} />
+          ) : null}
+
+          {showDefaultSections && loading ? (
+            <View>
+              <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+                <SkeletonHeroCard />
+              </View>
+              <View style={{ paddingHorizontal: 16, gap: 10, marginTop: 12 }}>
+                <SkeletonChallengeCard />
+                <SkeletonChallengeCard />
+                <SkeletonChallengeCard />
               </View>
             </View>
           ) : null}
 
-          <View style={styles.v3PillsWrap}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.v3PillsContent}>
-              {[
-                { key: "all" as const, label: "All" },
-                { key: "solo" as const, label: "Solo" },
-                { key: "team" as const, label: "Team" },
-              ].map((f) => (
-                <TouchableOpacity
-                  key={f.key}
-                  onPress={() => setChallengeFilter(f.key)}
-                  style={{
-                    height: 36,
-                    paddingHorizontal: 18,
-                    borderRadius: 20,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: challengeFilter === f.key ? 0 : 1,
-                    borderColor: DS_COLORS.DISABLED_BG,
-                    backgroundColor: challengeFilter === f.key ? DS_COLORS.challengeHeaderDark : DS_COLORS.WHITE,
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Filter by ${f.label} — ${challengeFilter === f.key ? "selected" : "not selected"}`}
-                  accessibilityState={{ selected: challengeFilter === f.key }}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: "500", color: challengeFilter === f.key ? DS_COLORS.WHITE : DS_COLORS.textSecondary }}>
-                    {f.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          <View style={styles.v3PillsWrap}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.v3PillsContent}>
-              {CATEGORIES.map((c) => (
-                <FilterChip key={c.key} label={c.label} selected={activeCategory === c.key} onPress={() => setActiveCategory(c.key)} />
-              ))}
-            </ScrollView>
-          </View>
-
-          {featuredQuery.isError ? (
-            <ErrorState message="Couldn't load challenges" onRetry={() => void featuredQuery.refetch()} />
-          ) : featuredQuery.isPending || featuredQuery.isPlaceholderData ? (
-            <View>
-              <View style={styles.v3SectionPad}>
-                <SkeletonHeroCard />
-              </View>
-              <View style={styles.v3ListPad}>
-                <SkeletonChallengeCard />
-                <SkeletonChallengeCard />
-                <SkeletonChallengeCard />
-                <SkeletonChallengeCard />
-              </View>
-            </View>
-          ) : filtered.length === 0 ? (
-            <View style={styles.discoverFilterEmpty}>
-              <Search size={40} color={DS_COLORS.textMuted} />
-              <Text style={styles.discoverFilterEmptyTitle}>No challenges found</Text>
-              <Text style={styles.discoverFilterEmptyBody}>
-                {debouncedQuery.trim()
-                  ? "Try a different search — or build your own"
-                  : "Try a different category — or build your own"}
-              </Text>
-              <TouchableOpacity
-                style={styles.discoverFilterEmptyButton}
-                onPress={() => router.push("/create-challenge" as never)}
-                accessibilityLabel="Create your own challenge"
-                accessibilityRole="button"
-              >
-                <Text style={styles.discoverFilterEmptyButtonText}>Create a challenge</Text>
-              </TouchableOpacity>
-              {debouncedQuery.trim() ? (
-                <TouchableOpacity
-                  style={styles.discoverFilterClearSearch}
-                  onPress={() => setQuery("")}
-                  accessibilityLabel="Clear search"
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.discoverFilterClearSearchText}>Clear search</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          ) : (
+          {showDefaultSections && !loading && !err ? (
             <>
-              <View style={styles.v3SectionPad}>
+              <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
                 <HeroFeaturedCard
                   challenge={
-                    hero
+                    trendingHero
                       ? {
-                          id: hero.id,
-                          title: hero.title ?? "Challenge",
-                          description: hero.short_hook ?? hero.description,
-                          duration_days: hero.duration_days,
-                          participants_count: hero.participants_count,
-                          category: hero.category,
+                          id: trendingHero.id,
+                          title: trendingHero.title ?? "Challenge",
+                          description: trendingHero.short_hook ?? trendingHero.description,
+                          duration_days: trendingHero.duration_days,
+                          participants_count: trendingHero.participants_count,
+                          category: trendingHero.category,
+                          joins_today: trendingHero.joins_today,
                         }
                       : null
                   }
+                  ctaLabel={heroIsActive ? "Continue" : "Start this challenge"}
                   onPress={openChallenge}
-                  onPressIn={hero ? () => prefetchChallengeDetail(hero.id) : undefined}
+                  onPressIn={trendingHero ? () => prefetchChallengeDetail(trendingHero.id) : undefined}
                 />
               </View>
 
-              <SectionHeader title="24-Hour Challenges" />
-              <FlatList
-                horizontal
-                data={daily}
-                keyExtractor={(item) => item.id}
-                getItemLayout={(_, index) => ({
-                  length: DAILY_CARD_WIDTH,
-                  offset: DAILY_ROW_STRIDE * index,
-                  index,
-                })}
-                showsHorizontalScrollIndicator={false}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.v3FlatPad}
-                initialNumToRender={8}
-                maxToRenderPerBatch={10}
-                windowSize={5}
-                removeClippedSubviews
-                ItemSeparatorComponent={() => <View style={styles.v3HListSep} />}
-                renderItem={renderDailyCard}
-              />
-
-              <SectionHeader title="Bring your people" />
-              <View style={styles.v3ListPad}>
-                {team.map((c) => (
-                  <TeamChallengeCard
-                    key={c.id}
-                    challenge={{
-                      id: c.id,
-                      title: c.title ?? "Team Challenge",
-                      description: c.short_hook ?? c.description,
-                      difficulty: c.difficulty,
-                      duration_days: c.duration_days,
-                      team_size: c.team_size,
-                      participants_count: c.participants_count,
-                      challenge_type: c.challenge_type,
+              {twentyFourHour.length > 0 ? (
+                <>
+                  <SectionHeader
+                    title="24-hour challenges"
+                    actionLabel="See all"
+                    onPressAction={() => {
+                      setSearchFocused(true);
+                      setSearchQuery("24h");
                     }}
-                    onPress={openChallenge}
-                    onPressIn={() => prefetchChallengeDetail(c.id)}
                   />
-                ))}
-              </View>
+                  <FlatList
+                    horizontal
+                    data={twentyFourHour}
+                    keyExtractor={(item) => item.id}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 8 }}
+                    renderItem={({ item }) => (
+                      <DiscoverMiniChallengeCard
+                        challenge={item}
+                        onPress={(id) => {
+                          prefetchChallengeDetail(id);
+                          openChallenge(id);
+                        }}
+                      />
+                    )}
+                  />
+                </>
+              ) : null}
 
-              <SectionHeader
-                title="Challenges for you"
-                actionLabel="See all"
-                onPressAction={() => setActiveCategory("all")}
-              />
-              <Card padded={false} containerStyle={styles.v3PopularWrap}>
-                {popular.map((c, i) => (
-                  <PopularChallengeRow
-                    key={c.id}
-                    challenge={{
-                      id: c.id,
-                      title: c.title ?? "Challenge",
-                      difficulty: c.difficulty,
-                      duration_days: c.duration_days,
-                      participants_count: c.participants_count,
+              {soloChallenges.length > 0 ? (
+                <>
+                  <SectionHeader
+                    title="Solo challenges"
+                    actionLabel="See all"
+                    onPressAction={() => {
+                      setSearchFocused(true);
+                      setSearchQuery("solo");
                     }}
-                    index={i}
-                    isLast={i === popular.length - 1}
-                    onPress={openChallenge}
-                    onPressIn={() => prefetchChallengeDetail(c.id)}
                   />
-                ))}
-              </Card>
-              <View style={styles.v3ScrollBottomSpacer} />
+                  {soloChallenges.map((c) => (
+                    <DiscoverFullChallengeCard
+                      key={c.id}
+                      challenge={c}
+                      variant="solo"
+                      onPress={(id) => {
+                        prefetchChallengeDetail(id);
+                        openChallenge(id);
+                      }}
+                    />
+                  ))}
+                </>
+              ) : null}
+
+              {teamChallenges.length > 0 ? (
+                <>
+                  <SectionHeader
+                    title="Team challenges"
+                    actionLabel="See all"
+                    onPressAction={() => {
+                      setSearchFocused(true);
+                      setSearchQuery("Team");
+                    }}
+                  />
+                  {teamChallenges.map((c) => (
+                    <DiscoverFullChallengeCard
+                      key={c.id}
+                      challenge={c}
+                      variant="team"
+                      teamPreview={c.team_preview}
+                      onPress={(id) => {
+                        prefetchChallengeDetail(id);
+                        openChallenge(id);
+                      }}
+                    />
+                  ))}
+                </>
+              ) : null}
+
+              {newThisWeek.length > 0 ? (
+                <>
+                  <SectionHeader title="New this week" />
+                  {newThisWeek.map((c) => (
+                    <DiscoverFullChallengeCard
+                      key={c.id}
+                      challenge={c}
+                      variant="solo"
+                      onPress={(id) => {
+                        prefetchChallengeDetail(id);
+                        openChallenge(id);
+                      }}
+                    />
+                  ))}
+                </>
+              ) : null}
+
+              <Pressable
+                onPress={() => router.push(ROUTES.CREATE_WIZARD as never)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
+                  marginHorizontal: 16,
+                  marginTop: 8,
+                  marginBottom: 24,
+                  paddingVertical: 18,
+                  paddingHorizontal: 20,
+                  backgroundColor: DS_COLORS.TEXT_PRIMARY,
+                  borderRadius: 18,
+                }}
+              >
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 12,
+                    backgroundColor: DS_COLORS.FEED_CTA_ICON_BG,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Plus size={20} color={DS_COLORS.ACCENT} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.WHITE }}>Build your own</Text>
+                  <Text style={{ fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 2 }}>Create a custom challenge</Text>
+                </View>
+                <ChevronRight size={16} color={DS_COLORS.TEXT_SECONDARY} />
+              </Pressable>
             </>
-          )}
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ErrorBoundary>

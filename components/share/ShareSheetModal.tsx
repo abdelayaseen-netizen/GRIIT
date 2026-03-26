@@ -52,6 +52,7 @@ async function captureCard(ref: React.RefObject<ViewShot | null>): Promise<strin
   try {
     const current = ref.current as { capture?: () => Promise<string> } | null;
     if (!current?.capture) return null;
+    await new Promise<void>((resolve) => setTimeout(resolve, 320));
     return await current.capture();
   } catch (e) {
     if (__DEV__) console.error("[ShareSheetModal] captureCard failed:", e);
@@ -108,6 +109,7 @@ export default function ShareSheetModal({
         return (
           <StatementCard
             dayNumber={dayNumber}
+            totalDays={Math.max(totalDays, dayNumber)}
             challengeName={challengeName}
             calloutText="Most split by Day 3."
             proofPhotoUri={proofPhotoUri}
@@ -196,7 +198,11 @@ export default function ShareSheetModal({
           {availableCards.map((card) => (
             <TouchableOpacity key={card.id} style={ms.thumbWrap} onPress={() => setSelectedCard(card.id)} accessibilityLabel={`Select ${card.label} card`}>
               <View style={[ms.thumbCard, selectedCard === card.id && ms.thumbCardActive]}>
-                <View style={{ transform: [{ scale: PREVIEW_SCALE }] }}>{renderCard(card.id)}</View>
+                <View style={ms.thumbClip}>
+                  <View style={ms.thumbScaled}>
+                    {renderCard(card.id)}
+                  </View>
+                </View>
               </View>
               <Text style={ms.thumbLabel}>{card.label}</Text>
             </TouchableOpacity>
@@ -204,11 +210,25 @@ export default function ShareSheetModal({
         </ScrollView>
 
         <View style={ms.preview}>
-          <View style={{ transform: [{ scale: selectedPreviewScale }] }}>{renderCard(selectedCard)}</View>
+          <View style={ms.previewClip}>
+            <View style={[ms.previewScaled, { transform: [{ scale: selectedPreviewScale }] }]}>
+              {renderCard(selectedCard)}
+            </View>
+          </View>
         </View>
-        <View style={{ position: "absolute", left: -9999, opacity: 0 }}>
-          <ViewShot ref={viewShotRef} options={{ format: "png", width: CARD_WIDTH, height: CARD_HEIGHT }}>
-            {renderCard(selectedCard)}
+        <View
+          pointerEvents="none"
+          collapsable={false}
+          style={{ position: "absolute", left: -10000, top: 0, width: CARD_WIDTH, height: CARD_HEIGHT }}
+        >
+          <ViewShot
+            ref={viewShotRef}
+            style={{ width: CARD_WIDTH, height: CARD_HEIGHT, backgroundColor: DS_COLORS.DARK_BG_PAGE }}
+            options={{ format: "png", width: CARD_WIDTH, height: CARD_HEIGHT }}
+          >
+            <View collapsable={false} style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}>
+              {renderCard(selectedCard)}
+            </View>
           </ViewShot>
         </View>
 
@@ -266,23 +286,44 @@ const ms = StyleSheet.create({
     height: CARD_HEIGHT * PREVIEW_SCALE + 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(255,255,255,0.22)",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "visible",
-    backgroundColor: DS_COLORS.BLACK,
-    opacity: 0.6,
+    overflow: "hidden",
+    backgroundColor: DS_COLORS.DARK_BG_PAGE,
   },
-  thumbCardActive: { borderColor: GRIIT_COLORS.primary, borderWidth: 2, opacity: 1 },
+  thumbCardActive: { borderColor: DS_COLORS.DISCOVER_CORAL, borderWidth: 2 },
+  thumbClip: {
+    width: CARD_WIDTH * PREVIEW_SCALE,
+    height: CARD_HEIGHT * PREVIEW_SCALE,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thumbScaled: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    transform: [{ scale: PREVIEW_SCALE }],
+  },
   thumbLabel: { marginTop: 6, color: DS_COLORS.WHITE, fontSize: 11 },
   preview: {
     flex: 1,
     marginHorizontal: 20,
     borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.04)",
+    minHeight: 0,
+    overflow: "hidden",
+  },
+  previewClip: {
+    flex: 1,
+    width: "100%",
     justifyContent: "center",
     alignItems: "center",
-    overflow: "visible",
+    overflow: "hidden",
+  },
+  previewScaled: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
   },
   shareToLabel: {
     fontSize: 14,

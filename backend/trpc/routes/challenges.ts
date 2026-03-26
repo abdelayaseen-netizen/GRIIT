@@ -183,6 +183,149 @@ export const challengesRouter = createTRPCRouter({
       return noPagination ? items : withCursor;
     }),
 
+  /** Discover tab: all published public challenges with join stats + team avatar previews (service role when available). */
+  getDiscoverFeed: publicProcedure.query(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+
+    let q = server
+      .from("challenges")
+      .select("*, challenge_tasks (*)", { count: "exact" })
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(350);
+
+    if (ctx.userId) {
+      q = q.or(`visibility.eq.PUBLIC,creator_id.eq.${ctx.userId}`);
+    } else {
+      q = q.eq("visibility", "PUBLIC");
+    }
+
+    const { data: chRows, error } = await q;
+    requireNoError(error, "Failed to load discover challenges.");
+
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const dayStart = new Date();
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const dayStartIso = dayStart.toISOString();
+
+    const challengeIds = (chRows ?? []).map((c: { id: string }) => c.id);
+    if (challengeIds.length === 0) {
+      return { challenges: [] };
+    }
+
+    const { data: joinWeek } = await server
+      .from("active_challenges")
+      .select("challenge_id")
+      .in("challenge_id", challengeIds)
+      .gte("created_at", weekAgo);
+
+    const { data: joinToday } = await server
+      .from("active_challenges")
+      .select("challenge_id")
+      .in("challenge_id", challengeIds)
+      .gte("created_at", dayStartIso);
+
+    const recent7 = new Map<string, number>();
+    for (const r of joinWeek ?? []) {
+      const id = (r as { challenge_id: string }).challenge_id;
+      recent7.set(id, (recent7.get(id) ?? 0) + 1);
+    }
+    const todayMap = new Map<string, number>();
+    for (const r of joinToday ?? []) {
+      const id = (r as { challenge_id: string }).challenge_id;
+      todayMap.set(id, (todayMap.get(id) ?? 0) + 1);
+    }
+
+    const teamChallengeIds = (chRows ?? [])
+      .filter((c: { participation_type?: string | null }) => {
+        const pt = String(c.participation_type ?? "").toLowerCase();
+        return pt === "duo" || pt === "team" || pt === "shared_goal";
+      })
+      .map((c: { id: string }) => c.id);
+
+    const previewByChallenge = new Map<string, { user_id: string; username: string | null; avatar_url: string | null }[]>();
+
+    if (teamChallengeIds.length > 0) {
+      const { data: acPart } = await server
+        .from("active_challenges")
+        .select("challenge_id, user_id")
+        .in("challenge_id", teamChallengeIds)
+        .eq("status", "active")
+        .limit(600);
+
+      const userIds = [...new Set((acPart ?? []).map((r: { user_id: string }) => r.user_id))];
+      const { data: profs } =
+        userIds.length > 0
+          ? await server.from("profiles").select("user_id, username, avatar_url").in("user_id", userIds)
+          : { data: [] as { user_id: string; username: string | null; avatar_url: string | null }[] };
+      const profMap = new Map((profs ?? []).map((p) => [p.user_id, p]));
+
+      for (const cid of teamChallengeIds) {
+        const rows = (acPart ?? []).filter((r: { challenge_id: string }) => r.challenge_id === cid);
+        const seen = new Set<string>();
+        const out: { user_id: string; username: string | null; avatar_url: string | null }[] = [];
+        for (const r of rows) {
+          const uid = (r as { user_id: string }).user_id;
+          if (seen.has(uid)) continue;
+          seen.add(uid);
+          const p = profMap.get(uid);
+          out.push({
+            user_id: uid,
+            username: p?.username ?? null,
+            avatar_url: p?.avatar_url ?? null,
+          });
+          if (out.length >= 3) break;
+        }
+        if (out.length > 0) previewByChallenge.set(cid, out);
+      }
+    }
+
+    const items = (chRows ?? []).map((challenge: ChallengeWithTasksRow) => {
+      const normalized = with24hEndsAt(
+        challenge as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & ChallengeWithTasksRow
+      );
+      const id = normalized.id;
+      return {
+        ...normalized,
+        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
+        recent_joins_7d: recent7.get(id) ?? 0,
+        joins_today: todayMap.get(id) ?? 0,
+        team_preview: previewByChallenge.get(id) ?? [],
+      };
+    });
+
+    return { challenges: items };
+  }),
+
+  /** Count published public challenges per Discover category label (includes Team = duo/team runs). */
+  getCategoryCounts: publicProcedure.query(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    const { data, error } = await server
+      .from("challenges")
+      .select("category, participation_type")
+      .eq("status", "published")
+      .eq("visibility", "PUBLIC");
+    requireNoError(error, "Failed to load category counts.");
+    const counts: Record<string, number> = {
+      Fitness: 0,
+      Mind: 0,
+      Discipline: 0,
+      Faith: 0,
+      Team: 0,
+    };
+    for (const row of data ?? []) {
+      const r = row as { category?: string | null; participation_type?: string | null };
+      const cat = String(r.category ?? "").toLowerCase();
+      if (cat === "fitness") counts.Fitness = (counts.Fitness ?? 0) + 1;
+      else if (cat === "mind") counts.Mind = (counts.Mind ?? 0) + 1;
+      else if (cat === "discipline") counts.Discipline = (counts.Discipline ?? 0) + 1;
+      else if (cat === "faith") counts.Faith = (counts.Faith ?? 0) + 1;
+      const pt = String(r.participation_type ?? "").toLowerCase();
+      if (pt === "duo" || pt === "team") counts.Team = (counts.Team ?? 0) + 1;
+    }
+    return counts;
+  }),
+
   /** Curated list of starter-pack challenges (e.g. onboarding). Stable order. Requires challenges seeded with source_starter_id. */
   getStarterPack: publicProcedure
     .query(async ({ ctx }) => {

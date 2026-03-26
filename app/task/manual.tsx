@@ -10,6 +10,7 @@ import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-sy
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
 
 /**
  * Manual / simple task completion: user taps "Mark as Complete" with no proof.
@@ -43,7 +44,7 @@ export default function ManualTaskScreen() {
       if (Platform.OS !== "web") {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never);
+      router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
     } catch (err: unknown) {
       captureError(err, "ManualTaskComplete");
       showError(err instanceof Error ? err.message : "Couldn't save. Tap to retry.");

@@ -227,7 +227,7 @@ export default function ActiveChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.centerWrap}>
           <Text style={s.notFoundText}>Not found</Text>
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} style={s.retryBtn}>
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={s.retryBtn}>
             <Text style={s.retryBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -279,7 +279,7 @@ export default function ActiveChallengeDetailScreen() {
       <SafeAreaView style={s.safeTop} edges={["top"]} />
       <View style={[s.header, { backgroundColor: headerColor }]}>
         <View style={s.headerTopBar}>
-          <TouchableOpacity style={s.headerCircleBtn} onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/home" as never))} accessibilityLabel="Back" accessibilityRole="button">
+          <TouchableOpacity style={s.headerCircleBtn} onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} accessibilityLabel="Back" accessibilityRole="button">
             <ChevronLeft size={20} color={DS_COLORS.WHITE} />
           </TouchableOpacity>
           <Text style={s.headerCenterTitle}>Challenge</Text>
