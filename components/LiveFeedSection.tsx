@@ -185,7 +185,7 @@ export default function LiveFeedSection() {
 
   const openPost = useCallback(
     (post: LiveFeedPost) => {
-      router.push({ pathname: "/post/[id]", params: { id: post.id } } as never);
+      router.push(ROUTES.POST_ID(post.id) as never);
     },
     [router]
   );
