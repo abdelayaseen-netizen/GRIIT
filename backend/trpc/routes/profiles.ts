@@ -62,11 +62,8 @@ export const profilesRouter = createTRPCRouter({
   /** Public profile by username (for deep link /profile/[username]). Uses service client so RLS does not block reads. */
   getPublicByUsername: publicProcedure
     .input(z.object({ username: z.string().min(1).max(64) }))
-    .query(async ({ input }) => {
-      const server = getSupabaseServer();
-      if (!server) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Service unavailable." });
-      }
+    .query(async ({ input, ctx }) => {
+      const server = getSupabaseServer() ?? ctx.supabase;
       const { data: profile, error: profileError } = await server
         .from("profiles")
         .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at")

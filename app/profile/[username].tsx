@@ -68,8 +68,13 @@ export default function PublicProfileScreen() {
   }, [username]);
 
   useEffect(() => {
-    if (!decoded) {
-      router.replace(ROUTES.TABS as never);
+    const looksInvalid =
+      !decoded ||
+      /^user_[0-9a-f]+$/i.test(decoded) ||
+      /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(decoded);
+    if (looksInvalid) {
+      setIsLoading(false);
+      setIsError(true);
       return;
     }
     let cancelled = false;
@@ -89,7 +94,7 @@ export default function PublicProfileScreen() {
         if (!cancelled) setIsLoading(false);
       });
     return () => { cancelled = true; };
-  }, [decoded, router]);
+  }, [decoded]);
 
   if (isLoading) {
     return (
