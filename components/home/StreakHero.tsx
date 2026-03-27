@@ -35,8 +35,8 @@ export default React.memo(function StreakHero({ streak, ringProgress, onStartFir
   const timerLabel = useMemo(() => midnightCountdownText(), [tick]);
 
   const message = useMemo(() => {
-    if (streak === 0) return "Complete your first task to start the clock.";
-    if (streak >= 1 && streak <= 6) return "Complete today's goals. Day 7 unlocks Builder rank.";
+    if (streak <= 1) return "Complete your first task to start the clock.";
+    if (streak >= 2 && streak <= 6) return "Complete today's goals. Day 7 unlocks Builder rank.";
     return `${streak}-day streak. Keep the chain alive.`;
   }, [streak]);
 

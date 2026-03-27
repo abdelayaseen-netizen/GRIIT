@@ -11,7 +11,6 @@ import {
   Platform,
   Modal,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
@@ -19,7 +18,6 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { SkeletonFeedCard } from "@/components/skeletons";
@@ -29,7 +27,6 @@ import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
 import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
 import { Avatar } from "@/components/Avatar";
-import { Camera, MessageCircle } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
@@ -42,7 +39,6 @@ type LiveFeedSectionProps = {
 
 export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
   const { user } = useAuth();
-  const { profile } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [scope, setScope] = useState<"following" | "everyone">("everyone");
@@ -378,23 +374,6 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
         </Pressable>
       ) : null}
 
-      <Pressable
-        style={styles.composeBar}
-        onPress={() => Alert.alert("Coming soon", "Sharing thoughts from home is almost ready.")}
-        accessibilityRole="button"
-        accessibilityLabel="Compose a post"
-      >
-        <Avatar
-          url={profile?.avatar_url ?? null}
-          name={profile?.display_name || profile?.username || "You"}
-          userId={user?.id ?? ""}
-          size={24}
-        />
-        <Text style={styles.composePlaceholder}>Share a thought or motivation...</Text>
-        <Camera size={20} color={DS_COLORS.TEXT_MUTED} />
-        <MessageCircle size={20} color={DS_COLORS.TEXT_MUTED} style={{ marginLeft: 8 }} />
-      </Pressable>
-
       {feedQuery.isPending ? (
         <View style={{ gap: 10 }}>
           <SkeletonFeedCard />
@@ -598,24 +577,6 @@ const styles = StyleSheet.create({
     color: DS_COLORS.TEXT_SECONDARY,
     fontWeight: "500",
     lineHeight: 18,
-  },
-  composeBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: DS_SPACING.sm,
-    marginBottom: DS_SPACING.md,
-    paddingHorizontal: DS_SPACING.md,
-    paddingVertical: 10,
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: DS_RADIUS.MD,
-    borderWidth: 1,
-    borderColor: DS_COLORS.BORDER,
-    gap: DS_SPACING.sm,
-  },
-  composePlaceholder: {
-    flex: 1,
-    fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    color: DS_COLORS.TEXT_MUTED,
   },
   thoughtCard: {
     backgroundColor: DS_COLORS.BG_CARD,

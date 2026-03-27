@@ -257,6 +257,7 @@ export default function HomeScreen() {
   }, [completedTodayChallenges.length]);
 
   const streak = stats?.activeStreak ?? 0;
+  const displayStreak = Math.max(1, streak);
   const basePoints = (stats?.totalDaysSecured ?? 0) * 5;
   const activeCount = homeQuery.data?.activeList.length ?? 0;
   const points = activeCount > 0 ? Math.max(7, basePoints) : basePoints;
@@ -406,7 +407,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <StreakHero streak={streak} ringProgress={ringProgress} onStartFirstTask={scrollToGoalsSection} />
+        <StreakHero streak={displayStreak} ringProgress={ringProgress} onStartFirstTask={scrollToGoalsSection} />
 
         <WeekStrip
           securedDateKeys={securedKeys}
@@ -434,9 +435,7 @@ export default function HomeScreen() {
               <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
                 <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
               </View>
-              <Text style={streak > 0 ? s.statValueNum : s.statValueText}>
-                {streak === 0 ? "Day 1" : streak}
-              </Text>
+              <Text style={s.statValueNum}>{displayStreak}</Text>
               <Text style={s.statLabelLower}>streak</Text>
               {streak === 0 ? <Text style={s.streakSubtitle}>Start your streak today</Text> : null}
             </Card>
