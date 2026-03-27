@@ -203,7 +203,8 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
         return;
       }
       const u = post.username?.trim();
-      if (u) router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+      if (!u || u === "?" || u === "Someone" || u.length < 2) return;
+      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
     },
     [router, user?.id]
   );

@@ -135,8 +135,23 @@ export default function PublicProfileScreen() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={[styles.centered, { backgroundColor: colors.background }]}>
-          <Text style={[styles.text, { color: colors.text.secondary }]}>Profile not found</Text>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <TouchableOpacity
+              onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
+              style={styles.backBtn}
+              hitSlop={12}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+            >
+              <ChevronLeft size={24} color={colors.text.primary} />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Profile</Text>
+            <View style={styles.headerSpacer} />
+          </View>
+          <View style={[styles.centered, { flex: 1 }]}>
+            <Text style={[styles.text, { color: colors.text.secondary }]}>@{decoded} not found</Text>
+          </View>
         </View>
       </>
     );

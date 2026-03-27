@@ -5,6 +5,7 @@ import { requireNoError } from "../errors";
 import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/progression";
 import { getTodayDateKey, daysBetweenKeys, getWeekStartDateKey, getWeekEndDateKey } from "../../lib/date-utils";
 import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
+import { getSupabaseServer } from "../../lib/supabase-server";
 
 /** Subscription fields are written only by profiles.validateSubscription (server-side RevenueCat validation). */
 const PROFILE_UPDATE_KEYS = [
@@ -58,13 +59,17 @@ export const profilesRouter = createTRPCRouter({
       return data;
     }),
 
-  /** Public profile by username (for deep link /profile/[username]). */
+  /** Public profile by username (for deep link /profile/[username]). Uses service client so RLS does not block reads. */
   getPublicByUsername: publicProcedure
     .input(z.object({ username: z.string().min(1).max(64) }))
-    .query(async ({ input, ctx }) => {
-      const { data: profile, error: profileError } = await ctx.supabase
+    .query(async ({ input }) => {
+      const server = getSupabaseServer();
+      if (!server) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Service unavailable." });
+      }
+      const { data: profile, error: profileError } = await server
         .from("profiles")
-        .select("user_id, username, display_name, avatar_url, total_days_secured, tier")
+        .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at")
         .eq("username", input.username.trim())
         .maybeSingle();
       if (profileError) {
@@ -73,19 +78,35 @@ export const profilesRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
       }
       if (!profile) return null;
-      const { data: streakRow } = await ctx.supabase
+      const p = profile as {
+        user_id: string;
+        username: string;
+        display_name: string | null;
+        avatar_url: string | null;
+        total_days_secured: number | null;
+        tier: string | null;
+        bio: string | null;
+        created_at: string | null;
+      };
+      const { data: streakRow, error: streakError } = await server
         .from("streaks")
         .select("active_streak_count")
-        .eq("user_id", profile.user_id)
+        .eq("user_id", p.user_id)
         .maybeSingle();
+      if (streakError) {
+        const { logger } = await import("../../lib/logger");
+        logger.warn({ error: streakError, userId: p.user_id }, "[profiles.getPublicByUsername] streaks read");
+      }
       return {
-        user_id: profile.user_id,
-        username: profile.username,
-        display_name: profile.display_name,
-        avatar_url: profile.avatar_url,
-        total_days_secured: profile.total_days_secured ?? 0,
-        tier: profile.tier ?? "Starter",
+        user_id: p.user_id,
+        username: p.username,
+        display_name: p.display_name,
+        avatar_url: p.avatar_url,
+        total_days_secured: p.total_days_secured ?? 0,
+        tier: p.tier ?? "Starter",
         active_streak: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
+        bio: p.bio ?? null,
+        created_at: p.created_at ?? null,
       };
     }),
 
