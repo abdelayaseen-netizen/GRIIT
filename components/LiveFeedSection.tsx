@@ -204,7 +204,6 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
       }
       const u = post.username?.trim();
       if (!u || u === "?" || u === "Someone" || u.length < 2) return;
-      if (/^user_[0-9a-f]+$/i.test(u)) return;
       router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
     },
     [router, user?.id]

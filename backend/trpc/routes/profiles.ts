@@ -66,7 +66,9 @@ export const profilesRouter = createTRPCRouter({
       const server = getSupabaseServer() ?? ctx.supabase;
       const { data: profile, error: profileError } = await server
         .from("profiles")
-        .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at")
+        .select(
+          "user_id, username, display_name, avatar_url, cover_url, total_days_secured, tier, bio, created_at, profile_visibility"
+        )
         .eq("username", input.username.trim())
         .maybeSingle();
       if (profileError) {
@@ -80,10 +82,12 @@ export const profilesRouter = createTRPCRouter({
         username: string;
         display_name: string | null;
         avatar_url: string | null;
+        cover_url: string | null;
         total_days_secured: number | null;
         tier: string | null;
         bio: string | null;
         created_at: string | null;
+        profile_visibility: string | null;
       };
       const { data: streakRow, error: streakError } = await server
         .from("streaks")
@@ -99,11 +103,13 @@ export const profilesRouter = createTRPCRouter({
         username: p.username,
         display_name: p.display_name,
         avatar_url: p.avatar_url,
+        cover_url: p.cover_url ?? null,
         total_days_secured: p.total_days_secured ?? 0,
         tier: p.tier ?? "Starter",
         active_streak: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
         bio: p.bio ?? null,
         created_at: p.created_at ?? null,
+        profile_visibility: p.profile_visibility ?? "public",
       };
     }),
 
@@ -587,6 +593,22 @@ export const profilesRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: gErr.message });
       }
       return { followers: followers ?? 0, following: following ?? 0 };
+    }),
+
+  /** Whether the current user follows the given profile (for public profile UI). */
+  isFollowing: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from("user_follows")
+        .select("follower_id")
+        .eq("follower_id", ctx.userId)
+        .eq("following_id", input.userId)
+        .maybeSingle();
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      return { isFollowing: Boolean(data) };
     }),
 
   followUser: protectedProcedure

@@ -25,6 +25,7 @@ export const TRPC = {
     deleteAccount: 'profiles.deleteAccount',
     followUser: 'profiles.followUser',
     getFollowCounts: 'profiles.getFollowCounts',
+    isFollowing: 'profiles.isFollowing',
   },
   challenges: {
     list: 'challenges.list',

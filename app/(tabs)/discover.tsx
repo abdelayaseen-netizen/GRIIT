@@ -441,7 +441,7 @@ export default function DiscoverScreen() {
                       key={u.user_id}
                     onPress={() => {
                       void pushRecentSearch(filterQuery);
-                      router.push(ROUTES.PROFILE_USERNAME(u.username) as never);
+                      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
                     }}
                       style={{
                         flexDirection: "row",

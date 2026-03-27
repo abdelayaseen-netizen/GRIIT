@@ -123,7 +123,7 @@ export default function PostThreadScreen() {
         return;
       }
       const u = post.username?.trim();
-      if (u && !/^user_[0-9a-f]+$/i.test(u)) router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+      if (u) router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
     },
     [router, user?.id]
   );
