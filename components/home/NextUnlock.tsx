@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Shield, Trophy } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
 
 const STREAK_MILESTONES = [
   { days: 3, name: "3-Day Streak badge", icon: "Flame" },
@@ -29,7 +29,7 @@ export default React.memo(function NextUnlock({ currentStreak }: { currentStreak
       </View>
       <View style={s.row}>
         <View style={s.iconBox}>
-          <Icon size={18} color={DS_COLORS.DISCOVER_CORAL} />
+          <Icon size={18} color={DS_COLORS.ACCENT} />
         </View>
         <View style={s.mid}>
           <Text style={s.title}>{next.name}</Text>
@@ -47,30 +47,37 @@ const s = StyleSheet.create({
     marginTop: 12,
     marginHorizontal: 24,
     backgroundColor: DS_COLORS.NEXT_UNLOCK_SURFACE,
-    borderRadius: 16,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: 14,
+    borderBottomRightRadius: 14,
     padding: 14,
     borderLeftWidth: 3,
-    borderLeftColor: DS_COLORS.DISCOVER_CORAL,
+    borderLeftColor: DS_COLORS.ACCENT,
   },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   head: { fontSize: 13, fontWeight: "700", color: DS_COLORS.DISCOVER_INK },
-  away: { fontSize: 10, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600" },
+  away: { fontSize: 11, fontWeight: "600", color: DS_COLORS.ACCENT },
   row: { marginTop: 10, flexDirection: "row", alignItems: "center", gap: 10 },
   iconBox: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     backgroundColor: DS_COLORS.NEXT_UNLOCK_ICON_BOX,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.SM,
     alignItems: "center",
     justifyContent: "center",
   },
   mid: { flex: 1 },
   title: { fontSize: 14, fontWeight: "700", color: DS_COLORS.DISCOVER_INK, marginBottom: 6 },
   barBg: {
-    height: 4,
+    height: DS_MEASURES.PROGRESS_BAR_HEIGHT,
     backgroundColor: DS_COLORS.PROGRESS_TRACK_WARM,
     borderRadius: 2,
     overflow: "hidden",
   },
-  barFill: { height: 4, backgroundColor: DS_COLORS.DISCOVER_CORAL, borderRadius: 2 },
+  barFill: {
+    height: DS_MEASURES.PROGRESS_BAR_HEIGHT,
+    backgroundColor: DS_COLORS.ACCENT,
+    borderRadius: 2,
+  },
 });

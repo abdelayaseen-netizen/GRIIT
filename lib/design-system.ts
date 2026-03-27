@@ -552,6 +552,10 @@ export const DS_COLORS = {
   FEED_AVATAR_RING: '#FFFFFF',
   FEED_BADGE_GREEN: '#1D9E75',
   FEED_RESPECT_ICON_FILL: '#E8593C',
+
+  /** Daily bonus quest card (home) — borders / timer track; no raw rgba in components */
+  DAILY_BONUS_BORDER: 'rgba(245,166,35,0.12)',
+  DAILY_BONUS_TIMER_TRACK: 'rgba(245,166,35,0.15)',
 } as const;
 
 /** Brand + screen tokens (challenge detail bg matches app-wide warm page). */

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
 import {
   Check,
@@ -11,7 +11,8 @@ import {
   MapPin,
   ChevronDown,
 } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { formatTimeHHMM } from "@/lib/time-enforcement";
 
 function taskTypeIcon(type?: string): React.ReactNode {
   switch (type) {
@@ -29,6 +30,29 @@ function taskTypeIcon(type?: string): React.ReactNode {
       return <Activity size={12} color={DS_COLORS.DISCOVER_GREEN} />;
     default:
       return <Check size={12} color={DS_COLORS.TEXT_MUTED} />;
+  }
+}
+
+function isOverdue(timeStr: string): boolean {
+  const parts = timeStr.split(":");
+  if (parts.length < 2) return false;
+  const h = Number(parts[0]);
+  const m = Number(parts[1]);
+  if (Number.isNaN(h) || Number.isNaN(m)) return false;
+  const now = new Date();
+  return now.getHours() > h || (now.getHours() === h && now.getMinutes() > m);
+}
+
+function parseTaskMeta(taskConfig?: string): { scheduledTime?: string; durationMin?: number } {
+  if (!taskConfig?.trim()) return {};
+  try {
+    const c = JSON.parse(taskConfig) as { scheduled_time?: string; min_duration_minutes?: number };
+    return {
+      scheduledTime: typeof c.scheduled_time === "string" ? c.scheduled_time : undefined,
+      durationMin: typeof c.min_duration_minutes === "number" ? c.min_duration_minutes : undefined,
+    };
+  } catch {
+    return {};
   }
 }
 
@@ -98,78 +122,117 @@ export default React.memo(function GoalCard({
     <View style={s.wrap}>
       <View style={[s.card, completedSection && s.cardCompleted]}>
         <Pressable
-          onPress={() => setExpanded((e) => !e)}
           onLongPress={onLongPressChallenge}
           delayLongPress={500}
           style={s.challengeRow}
           accessibilityRole="button"
-          accessibilityLabel={`${challengeName} — Day ${currentDay ?? 1} of ${durationDays ?? 1} — ${expanded ? "collapse" : "expand"}`}
-          accessibilityHint="Tap to expand or collapse. Long press for options."
+          accessibilityLabel={`${challengeName} — Day ${currentDay ?? 1} of ${durationDays ?? 1}`}
+          accessibilityHint="Long press for options."
         >
           <View style={[s.iconBox, completedSection && s.iconBoxCompleted]}>
             {completedSection ? <Check size={16} color={DS_COLORS.GREEN} /> : <Target size={16} color={DS_COLORS.GREEN} />}
           </View>
           <View style={s.challengeMid}>
             <TouchableOpacity
-              onPress={onPressChallengeName}
+              onPress={() => onPressChallengeName?.()}
               activeOpacity={0.7}
               disabled={!onPressChallengeName}
               accessibilityRole="button"
-              accessibilityLabel={`${challengeName} — Day ${currentDay ?? 1} of ${durationDays ?? 1} — tap to view`}
+              accessibilityLabel={`${challengeName} — open challenge`}
             >
               <Text style={s.challengeName}>{challengeName}</Text>
             </TouchableOpacity>
+            <Text style={s.daySubtitle}>{`Day ${currentDay ?? 1} of ${durationDays ?? 1}`}</Text>
             <View style={s.progressBg}>
               <View style={[s.progressFill, completedSection && s.progressFillCompleted, { width: `${Math.max(2, progress)}%` }]} />
             </View>
           </View>
-          <View style={s.challengeRight}>
-            <Text style={s.dayText}>{`Day ${currentDay ?? 1} of ${durationDays ?? 1}`}</Text>
+          <TouchableOpacity
+            style={s.challengeRight}
+            onPress={() => setExpanded((e) => !e)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={expanded ? "Collapse tasks" : "Expand tasks"}
+          >
             <Text style={[s.count, completedSection && s.countCompleted]}>{`${completed}/${total}`}</Text>
             <ChevronDown
               size={14}
               color={DS_COLORS.TEXT_MUTED}
               style={{ transform: [{ rotate: expanded ? "180deg" : "0deg" }] }}
             />
-          </View>
+          </TouchableOpacity>
         </Pressable>
 
         {expanded &&
           rows.map((g) =>
-          g.completed ? (
-            <View key={g.id} style={s.doneRow}>
-              <View style={s.doneCircle}>
-                <Check size={12} color={DS_COLORS.TEXT_ON_DARK} />
+            g.completed ? (
+              <View key={g.id} style={s.doneRow}>
+                <View style={s.doneCircle}>
+                  <Check size={12} color={DS_COLORS.TEXT_ON_DARK} />
+                </View>
+                <Text style={s.doneText}>{g.title}</Text>
+                <Text style={s.doneRight}>Done</Text>
               </View>
-              <Text style={s.doneText}>{g.title}</Text>
-              <Text style={s.doneRight}>Done</Text>
-            </View>
-          ) : (
-            <Pressable
-              key={g.id}
-              style={({ pressed }) => [s.todoRow, pressed && s.todoRowPressed]}
-              onPressIn={onPressInActiveChallenge}
-              onPress={() => onPressGoal(g.id)}
-              accessibilityRole="button"
-              accessibilityLabel={`Start ${g.title}`}
-            >
-              <View style={s.todoCircle}>{taskTypeIcon(g.taskType)}</View>
-              <Text style={s.todoText}>{g.title}</Text>
-              <View style={s.startPill}>
-                <Text style={s.startPillText}>Start</Text>
-              </View>
-            </Pressable>
-          )
-        )}
+            ) : (
+              <TaskTodoRow
+                key={g.id}
+                goal={g}
+                onPressInActiveChallenge={onPressInActiveChallenge}
+                onPressGoal={() => onPressGoal(g.id)}
+              />
+            )
+          )}
       </View>
     </View>
   );
 });
 
+function TaskTodoRow({
+  goal,
+  onPressInActiveChallenge,
+  onPressGoal,
+}: {
+  goal: Goal;
+  onPressInActiveChallenge?: () => void;
+  onPressGoal: () => void;
+}) {
+  const meta = useMemo(() => parseTaskMeta(goal.taskConfig), [goal.taskConfig]);
+  const { scheduledTime, durationMin } = meta;
+  const overdue = scheduledTime ? isOverdue(scheduledTime) : false;
+  const showSub = Boolean(scheduledTime || durationMin);
+
+  return (
+    <Pressable
+      style={({ pressed }) => [s.todoRow, pressed && s.todoRowPressed]}
+      onPressIn={onPressInActiveChallenge}
+      onPress={onPressGoal}
+      accessibilityRole="button"
+      accessibilityLabel={`Start ${goal.title}`}
+    >
+      <View style={s.todoCircle}>{taskTypeIcon(goal.taskType)}</View>
+      <View style={s.todoTextCol}>
+        <Text style={s.todoText}>{goal.title}</Text>
+        {showSub ? (
+          <Text style={[s.taskTimeSub, overdue && { color: DS_COLORS.DANGER }]}>
+            {scheduledTime ? formatTimeHHMM(scheduledTime) : ""}
+            {scheduledTime && overdue ? " · overdue" : ""}
+            {durationMin != null
+              ? `${scheduledTime ? " · " : ""}${durationMin} min`
+              : ""}
+          </Text>
+        ) : null}
+      </View>
+      <View style={s.startBtn}>
+        <Text style={s.startBtnText}>Let&apos;s go</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const s = StyleSheet.create({
   wrap: { paddingHorizontal: DS_SPACING.xl, paddingTop: 0, marginBottom: DS_SPACING.md },
   challengeRight: { alignItems: "flex-end", justifyContent: "center", gap: 4 },
-  dayText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
+  daySubtitle: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginBottom: 6 },
   card: {
     backgroundColor: DS_COLORS.WHITE,
     borderRadius: DS_RADIUS.card,
@@ -198,7 +261,7 @@ const s = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: DS_COLORS.TEXT_PRIMARY,
-    marginBottom: 6,
+    marginBottom: 2,
   },
   progressBg: {
     height: 3,
@@ -231,6 +294,7 @@ const s = StyleSheet.create({
     gap: DS_SPACING.sm,
   },
   todoRowPressed: { backgroundColor: DS_COLORS.ACCENT_TINT },
+  todoTextCol: { flex: 1, minWidth: 0 },
   doneCircle: {
     width: 18,
     height: 18,
@@ -255,18 +319,19 @@ const s = StyleSheet.create({
     textDecorationLine: "line-through",
     opacity: 0.6,
   },
-  todoText: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.grayDarker },
+  todoText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.grayDarker },
+  taskTimeSub: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 1 },
   doneRight: { fontSize: 10, fontWeight: "600", color: DS_COLORS.DISCOVER_GREEN },
-  startPill: {
-    backgroundColor: DS_COLORS.ACCENT_TINT,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+  startBtn: {
+    backgroundColor: DS_COLORS.TEXT_PRIMARY,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 14,
   },
-  startPillText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: DS_COLORS.DISCOVER_CORAL,
+  startBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_ON_DARK,
   },
   empty: {
     backgroundColor: DS_COLORS.WHITE,

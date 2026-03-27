@@ -1,14 +1,13 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { Camera, CircleCheck } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
-import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
+import { Avatar } from "@/components/Avatar";
 
 function placeholderBg(challengeName: string): string {
   const s = challengeName.toLowerCase();
@@ -37,30 +36,39 @@ function FeedPostCardInner({
   previewComment,
 }: Props) {
   const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
-  const showPhotoBlock = post.hasProof || Boolean(post.photoUrl);
+  const proofUri = post.proofPhotoUrl || post.photoUrl;
+  const showProof = post.hasProof || Boolean(proofUri);
 
   return (
     <View style={styles.card}>
       <FeedCardHeader post={post} onProfilePress={onProfilePress} onMenuPress={onMenuPress} />
 
-      {showPhotoBlock ? (
-        <View style={styles.photoOuter}>
-          {post.photoUrl ? (
-            <Image source={{ uri: post.photoUrl }} style={styles.photo} contentFit="cover" accessibilityRole="image" />
+      {post.caption ? (
+        <Text style={styles.captionBody} accessibilityRole="text">
+          {post.caption}
+        </Text>
+      ) : null}
+
+      {showProof ? (
+        <View style={styles.proofWrap}>
+          {proofUri ? (
+            <Image
+              source={{ uri: proofUri }}
+              style={styles.proofImage}
+              contentFit="cover"
+              accessibilityRole="image"
+            />
           ) : (
             <View style={[styles.placeholder, { backgroundColor: placeholderBg(post.challengeName) }]}>
-              <Camera size={56} color={DS_COLORS.TEXT_PRIMARY} style={{ opacity: 0.35 }} />
+              <Camera size={40} color={DS_COLORS.TEXT_PRIMARY} style={{ opacity: 0.35 }} />
             </View>
           )}
-          <LinearGradient colors={[DS_COLORS.TRANSPARENT, DS_COLORS.FEED_GRADIENT_END]} style={styles.gradient}>
-            {post.caption ? <Text style={styles.caption}>{post.caption}</Text> : null}
-            <View style={[styles.taskTagRow, !post.caption && { marginTop: 0 }]}>
-              <CircleCheck size={12} color={DS_COLORS.FEED_CAPTION_TAG} />
-              <Text style={styles.taskTag}>
-                {post.challengeName} · Task {post.currentDay} of {post.totalDays}
-              </Text>
-            </View>
-          </LinearGradient>
+          <View style={styles.proofMeta}>
+            <CircleCheck size={12} color={DS_COLORS.ACCENT} />
+            <Text style={styles.taskTag}>
+              {post.challengeName} · Task {post.currentDay} of {post.totalDays}
+            </Text>
+          </View>
         </View>
       ) : null}
 
@@ -113,46 +121,41 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
   },
-  photoOuter: {
-    width: "100%",
-    aspectRatio: 4 / 5,
-    maxHeight: 360,
-    position: "relative",
+  captionBody: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_PRIMARY,
+    lineHeight: 20,
+    paddingHorizontal: 14,
+    paddingTop: 6,
+  },
+  proofWrap: {
+    marginHorizontal: 14,
+    marginTop: 8,
+    borderRadius: 10,
+    overflow: "hidden",
     backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
   },
-  photo: {
+  proofImage: {
     width: "100%",
-    height: "100%",
+    height: 140,
   },
   placeholder: {
     width: "100%",
-    height: "100%",
+    height: 140,
     alignItems: "center",
     justifyContent: "center",
   },
-  gradient: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingTop: 36,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  caption: {
-    fontSize: 14,
-    color: DS_COLORS.TEXT_ON_DARK,
-    lineHeight: 20,
-  },
-  taskTagRow: {
+  proofMeta: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
   },
   taskTag: {
     fontSize: 11,
-    color: DS_COLORS.FEED_CAPTION_TAG,
+    color: DS_COLORS.TEXT_SECONDARY,
     flex: 1,
   },
   progressBlock: {
@@ -179,7 +182,7 @@ const styles = StyleSheet.create({
   fill: {
     height: 3,
     borderRadius: 2,
-    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    backgroundColor: DS_COLORS.ACCENT,
   },
   commentPreview: {
     flexDirection: "row",

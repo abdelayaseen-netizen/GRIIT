@@ -11,6 +11,7 @@ import {
   Platform,
   Modal,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
@@ -18,20 +19,30 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { useApp } from "@/contexts/AppContext";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { SkeletonFeedCard } from "@/components/skeletons";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
+import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
+import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
+import { Avatar } from "@/components/Avatar";
+import { Camera, MessageCircle } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
 const RESPECT_DEBOUNCE_MS = 300;
 
-export default function LiveFeedSection() {
+type LiveFeedSectionProps = {
+  onScrollToFeed?: () => void;
+};
+
+export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
   const { user } = useAuth();
+  const { profile } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [scope, setScope] = useState<"following" | "everyone">("everyone");
@@ -272,6 +283,25 @@ export default function LiveFeedSection() {
         onShare: () => void onShare(item),
         onMenuPress: () => openPostMenu(item),
       };
+      if (item.eventType === "thought" || item.eventType === "motivation") {
+        return (
+          <View style={styles.thoughtCard}>
+            <FeedCardHeader post={item} onProfilePress={() => navigateProfile(item)} onMenuPress={() => openPostMenu(item)} />
+            <Text style={styles.thoughtEyebrow}>💭 Daily thought</Text>
+            <View style={styles.thoughtQuote}>
+              <Text style={styles.thoughtQuoteText}>{item.caption ?? ""}</Text>
+            </View>
+            <FeedEngagementRow
+              respectCount={item.respectCount}
+              reactedByMe={item.reactedByMe}
+              commentCount={item.commentCount}
+              onRespect={() => void onRespect(item)}
+              onComment={() => openPost(item)}
+              onShare={() => void onShare(item)}
+            />
+          </View>
+        );
+      }
       if (item.isCompleted) {
         return <MilestonePostCard {...common} />;
       }
@@ -325,6 +355,45 @@ export default function LiveFeedSection() {
           </Pressable>
         </View>
       </View>
+
+      {finalFeed.length > 0 ? (
+        <Pressable
+          style={styles.digestCard}
+          onPress={() => onScrollToFeed?.()}
+          accessibilityRole="button"
+          accessibilityLabel="While you were away summary"
+        >
+          <View style={styles.digestAvatars}>
+            {Array.from(new Map(finalFeed.map((p) => [p.userId, p])).values())
+              .slice(0, 3)
+              .map((p, i) => (
+                <View key={p.userId} style={[styles.digestAvatarWrap, i === 0 && { marginLeft: 0 }]}>
+                  <Avatar url={p.avatarUrl} name={p.displayName || p.username} userId={p.userId} size={28} />
+                </View>
+              ))}
+          </View>
+          <Text style={styles.digestText} numberOfLines={2}>
+            While you were away, your network kept moving — catch up below.
+          </Text>
+        </Pressable>
+      ) : null}
+
+      <Pressable
+        style={styles.composeBar}
+        onPress={() => Alert.alert("Coming soon", "Sharing thoughts from home is almost ready.")}
+        accessibilityRole="button"
+        accessibilityLabel="Compose a post"
+      >
+        <Avatar
+          url={profile?.avatar_url ?? null}
+          name={profile?.display_name || profile?.username || "You"}
+          userId={user?.id ?? ""}
+          size={24}
+        />
+        <Text style={styles.composePlaceholder}>Share a thought or motivation...</Text>
+        <Camera size={20} color={DS_COLORS.TEXT_MUTED} />
+        <MessageCircle size={20} color={DS_COLORS.TEXT_MUTED} style={{ marginLeft: 8 }} />
+      </Pressable>
 
       {feedQuery.isPending ? (
         <View style={{ gap: 10 }}>
@@ -504,4 +573,83 @@ const styles = StyleSheet.create({
   androidMenuDefault: { fontSize: 17, color: DS_COLORS.TEXT_PRIMARY, fontWeight: "500" },
   androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: "600" },
   androidMenuCancel: { fontSize: 17, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "500" },
+  digestCard: {
+    marginHorizontal: DS_SPACING.sm,
+    marginBottom: DS_SPACING.sm,
+    padding: DS_SPACING.md,
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: DS_RADIUS.MD,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.md,
+  },
+  digestAvatars: { flexDirection: "row", alignItems: "center" },
+  digestAvatarWrap: {
+    marginLeft: -10,
+    borderWidth: 2,
+    borderColor: DS_COLORS.WHITE,
+    borderRadius: 16,
+  },
+  digestText: {
+    flex: 1,
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    color: DS_COLORS.TEXT_SECONDARY,
+    fontWeight: "500",
+    lineHeight: 18,
+  },
+  composeBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: DS_SPACING.sm,
+    marginBottom: DS_SPACING.md,
+    paddingHorizontal: DS_SPACING.md,
+    paddingVertical: 10,
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: DS_RADIUS.MD,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    gap: DS_SPACING.sm,
+  },
+  composePlaceholder: {
+    flex: 1,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_MUTED,
+  },
+  thoughtCard: {
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: 20,
+    overflow: "hidden",
+    paddingBottom: DS_SPACING.sm,
+  },
+  thoughtEyebrow: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_MUTED,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    paddingHorizontal: 14,
+    paddingTop: 4,
+  },
+  thoughtQuote: {
+    marginHorizontal: 14,
+    marginTop: 6,
+    marginBottom: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    borderLeftWidth: 3,
+    borderLeftColor: DS_COLORS.ACCENT,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  },
+  thoughtQuoteText: {
+    fontSize: 11,
+    fontStyle: "italic",
+    color: DS_COLORS.TEXT_SECONDARY,
+    lineHeight: 17,
+  },
 });

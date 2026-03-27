@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Modal,
 } from "react-native";
 import { InlineError } from "@/components/InlineError";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,6 +27,8 @@ import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import type { TodayCheckinForUser, StatsFromApi, ChallengeTaskFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
+import StreakHero from "@/components/home/StreakHero";
+import DailyBonus from "@/components/home/DailyBonus";
 import GoalCard from "@/components/home/GoalCard";
 import PointsExplainer from "@/components/home/PointsExplainer";
 import WeekStrip from "@/components/home/WeekStrip";
@@ -37,8 +40,7 @@ import Card from "@/components/shared/Card";
 import { SkeletonHomeChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
-import StatBadge from "@/components/shared/StatBadge";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -47,6 +49,21 @@ import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { scheduleStreakReminder } from "@/lib/notifications";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
+
+const RANK_LADDER = [
+  { name: "Starter", days: 0 },
+  { name: "Builder", days: 7 },
+  { name: "Disciplined", days: 14 },
+  { name: "Elite", days: 30 },
+  { name: "Legend", days: 75 },
+] as const;
+
+function rankLadderIndex(streak: number): number {
+  for (let i = RANK_LADDER.length - 1; i >= 0; i--) {
+    if (streak >= RANK_LADDER[i]!.days) return i;
+  }
+  return 0;
+}
 
 type TaskRow = { id: string; title?: string; type?: string; required?: boolean };
 type ActiveRow = {
@@ -85,6 +102,7 @@ function buildTaskConfigParam(task: ChallengeTaskFromApi | undefined): string {
     return JSON.stringify({
       require_photo: t.require_photo ?? t.require_photo_proof,
       min_duration_minutes: t.min_duration_minutes ?? t.duration_minutes,
+      scheduled_time: typeof t.scheduled_time === "string" ? t.scheduled_time : undefined,
       min_words: t.min_words,
       timer_direction: t.timer_direction,
       timer_hard_mode: t.timer_hard_mode ?? t.strict_timer_mode,
@@ -126,6 +144,10 @@ export default function HomeScreen() {
   const [completedExpanded, setCompletedExpanded] = React.useState(true);
   const prevCompletedCount = React.useRef(0);
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
+  const [showRankModal, setShowRankModal] = React.useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const goalsSectionYRef = useRef(0);
+  const feedSectionYRef = useRef(0);
 
   const homeQuery = useQuery({
     queryKey: ["home", "v2", user?.id ?? ""],
@@ -195,6 +217,23 @@ export default function HomeScreen() {
       };
     });
   }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
+
+  const ringProgress = useMemo(() => {
+    const total = challengeGroups.reduce((sum, g) => sum + g.goals.length, 0);
+    const done = challengeGroups.reduce(
+      (sum, g) => sum + g.goals.filter((gl) => gl.completed).length,
+      0
+    );
+    return total > 0 ? done / total : 0;
+  }, [challengeGroups]);
+
+  const scrollToGoalsSection = useCallback(() => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, goalsSectionYRef.current - 12),
+      animated: true,
+    });
+  }, []);
+
   const isCompleteForToday = useCallback((group: ChallengeGoalGroup) => {
     if (group.goals.length === 0) return false;
     return group.goals.every((goal) => goal.completed);
@@ -330,6 +369,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={s.container}>
       <ScrollView
+        ref={scrollRef}
         refreshControl={
           <RefreshControl
             refreshing={homeQuery.isRefetching}
@@ -366,7 +406,65 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <DailyQuote />
+        <StreakHero streak={streak} ringProgress={ringProgress} onStartFirstTask={scrollToGoalsSection} />
+
+        <WeekStrip
+          securedDateKeys={securedKeys}
+          currentStreak={streak}
+          freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0}
+          hasEverSecured={hasEverSecured}
+        />
+
+        {statsAllZero ? (
+          <View style={s.welcomeCard}>
+            <Text style={s.welcomeTitle}>Welcome to GRIIT</Text>
+            <Text style={s.welcomeBody}>Your stats will appear here as you build your streak.</Text>
+            <TouchableOpacity
+              style={s.welcomeCta}
+              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              accessibilityLabel="Start your first challenge"
+              accessibilityRole="button"
+            >
+              <Text style={s.welcomeCtaText}>Start your first challenge</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={s.statsRow}>
+            <Card padded={false} containerStyle={s.stat}>
+              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
+                <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
+              </View>
+              <Text style={streak > 0 ? s.statValueNum : s.statValueText}>
+                {streak === 0 ? "Day 1" : streak}
+              </Text>
+              <Text style={s.statLabelLower}>streak</Text>
+              {streak === 0 ? <Text style={s.streakSubtitle}>Start your streak today</Text> : null}
+            </Card>
+            <Card padded={false} containerStyle={s.stat}>
+              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
+                <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
+              </View>
+              <Text style={s.statValueNum}>{points}</Text>
+              <Text style={s.statLabelLower}>points</Text>
+            </Card>
+            <TouchableOpacity
+              style={s.statTouchable}
+              activeOpacity={0.85}
+              onPress={() => setShowRankModal(true)}
+              accessibilityRole="button"
+            >
+              <Card padded={false} containerStyle={s.stat}>
+                <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
+                  <Target size={16} color={DS_COLORS.GREEN} />
+                </View>
+                <Text style={s.statValueText}>{rank}</Text>
+                <Text style={s.statLabelLower}>rank</Text>
+              </Card>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <DailyBonus />
 
         {homeQuery.isPending && !homeQuery.data ? (
           <View style={s.goalsSection}>
@@ -386,7 +484,12 @@ export default function HomeScreen() {
             }}
           />
         ) : (
-          <View style={s.goalsSection}>
+          <View
+            style={s.goalsSection}
+            onLayout={(e) => {
+              goalsSectionYRef.current = e.nativeEvent.layout.y;
+            }}
+          >
             {incompleteChallenges.length === 0 ? (
               <View style={s.allDoneBanner}>
                 <Text style={s.allDoneTitle}>🔥 All tasks secured for today</Text>
@@ -394,7 +497,7 @@ export default function HomeScreen() {
               </View>
             ) : null}
             <SectionHeader
-              title="Today&apos;s goals"
+              title="Today's goals"
               actionLabel={`${incompleteChallenges.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining`}
               onPressAction={() => {}}
             />
@@ -472,53 +575,23 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <WeekStrip
-          securedDateKeys={securedKeys}
-          currentStreak={streak}
-          freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0}
-          hasEverSecured={hasEverSecured}
-        />
         <NextUnlock currentStreak={streak} />
 
-        {statsAllZero ? (
-          <View style={s.welcomeCard}>
-            <Text style={s.welcomeTitle}>Welcome to GRIIT</Text>
-            <Text style={s.welcomeBody}>Your stats will appear here as you build your streak.</Text>
-            <TouchableOpacity
-              style={s.welcomeCta}
-              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
-              accessibilityLabel="Start your first challenge"
-              accessibilityRole="button"
-            >
-              <Text style={s.welcomeCtaText}>Start your first challenge</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={s.statsRow}>
-            <Card padded={false} containerStyle={s.stat}>
-              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
-                <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
-              </View>
-              <StatBadge value={streak === 0 ? "Day 1" : streak} label="streak" />
-              {streak === 0 ? <Text style={s.streakSubtitle}>Start your streak today</Text> : null}
-            </Card>
-            <Card padded={false} containerStyle={s.stat}>
-              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
-                <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
-              </View>
-              <StatBadge value={points} label="points" />
-            </Card>
-            <Card padded={false} containerStyle={s.stat}>
-              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
-                <Target size={16} color={DS_COLORS.GREEN} />
-              </View>
-              <Text style={s.rankValue}>{rank}</Text>
-              <Text style={s.statLabel}>rank</Text>
-            </Card>
-          </View>
-        )}
+        <View style={s.sectionDivider} />
 
-        <LiveFeedSection />
+        <View
+          onLayout={(e) => {
+            feedSectionYRef.current = e.nativeEvent.layout.y;
+          }}
+        >
+          <LiveFeedSection
+            onScrollToFeed={() => {
+              scrollRef.current?.scrollTo({ y: Math.max(0, feedSectionYRef.current - 8), animated: true });
+            }}
+          />
+        </View>
+
+        <DailyQuote />
       </ScrollView>
       <PointsExplainer
         visible={showPointsExplainer}
@@ -545,6 +618,35 @@ export default function HomeScreen() {
         }}
         onLetReset={() => setShowFreezeModal(false)}
       />
+      <Modal
+        visible={showRankModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRankModal(false)}
+      >
+        <View style={s.rankModalRoot}>
+          <TouchableOpacity
+            style={s.rankModalBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowRankModal(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          />
+          <View style={s.rankModalSheet}>
+            <Text style={s.rankModalTitle}>Rank ladder</Text>
+            {RANK_LADDER.map((r, i) => {
+              const active = i === rankLadderIndex(streak);
+              return (
+                <View key={r.name} style={s.rankRow}>
+                  {active ? <View style={s.rankDot} /> : <View style={s.rankDotPlaceholder} />}
+                  <Text style={[s.rankRowName, active && s.rankRowNameActive]}>{r.name}</Text>
+                  <Text style={s.rankRowDays}>({r.days}d)</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -581,6 +683,7 @@ const s = StyleSheet.create({
   pillPurple: { backgroundColor: DS_COLORS.purpleTintWarm },
   pillText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
   statsRow: { marginTop: DS_SPACING.md, marginHorizontal: DS_SPACING.xl, flexDirection: "row", gap: DS_SPACING.sm },
+  statTouchable: { flex: 1 },
   stat: {
     flex: 1,
     backgroundColor: DS_COLORS.WHITE,
@@ -589,31 +692,75 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   statIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: DS_RADIUS.SM,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: DS_SPACING.sm,
+    marginBottom: 6,
   },
-  statValue: {
+  statValueNum: {
     fontSize: DS_TYPOGRAPHY.SIZE_XL,
     fontWeight: "700",
     color: DS_COLORS.TEXT_PRIMARY,
   },
-  rankValue: {
-    fontSize: 14,
+  statValueText: {
+    fontSize: 13,
     fontWeight: "700",
     color: DS_COLORS.TEXT_PRIMARY,
-    marginTop: 3,
   },
-  statLabel: {
+  statLabelLower: {
     marginTop: 2,
-    fontSize: 10,
+    fontSize: 9,
+    fontWeight: "600",
     color: DS_COLORS.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: DS_COLORS.BORDER,
+    marginHorizontal: DS_SPACING.xl,
+    marginTop: DS_SPACING.md,
+    marginBottom: DS_SPACING.sm,
+  },
+  rankModalRoot: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: DS_SPACING.xl,
+  },
+  rankModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: DS_COLORS.MODAL_BACKDROP,
+  },
+  rankModalSheet: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.LG,
+    padding: DS_SPACING.lg,
+    zIndex: 1,
+  },
+  rankModalTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: DS_SPACING.md,
+  },
+  rankRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.sm,
+    paddingVertical: 10,
+  },
+  rankDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: DS_COLORS.ACCENT,
+  },
+  rankDotPlaceholder: { width: 8, height: 8 },
+  rankRowName: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "600" },
+  rankRowNameActive: { color: DS_COLORS.TEXT_PRIMARY },
+  rankRowDays: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_MUTED, fontWeight: "600" },
   streakSubtitle: {
     fontSize: 11,
     color: DS_COLORS.TEXT_SECONDARY,

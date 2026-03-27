@@ -14,6 +14,8 @@ export type LiveFeedPost = {
   isCompleted: boolean;
   hasProof: boolean;
   photoUrl: string | null;
+  /** Proof image URL when distinct from `photoUrl` (task completion). */
+  proofPhotoUrl?: string | null;
   verified: boolean;
   caption: string | null;
   createdAt: string;
