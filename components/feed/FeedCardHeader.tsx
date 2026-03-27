@@ -20,7 +20,10 @@ type Props = {
 
 function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
   const displayUser = post.displayName || post.username || "Member";
-  const subtitle = `${post.challengeName} · ${relativeTime(post.createdAt)}`;
+  const challengeTask = post.taskName
+    ? `${post.challengeName} · ${post.taskName}`
+    : post.challengeName;
+  const timeAgo = relativeTime(post.createdAt);
 
   const completedToday =
     isSameDay(post.createdAt) &&
@@ -70,9 +73,14 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
             <Text style={styles.dayPillText}>Day {post.currentDay}</Text>
           </View>
         </View>
-        <Text style={styles.subtitle} numberOfLines={2}>
-          {subtitle}
-        </Text>
+        <View style={styles.subtitleRow}>
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {challengeTask}
+          </Text>
+          <Text style={styles.subtitleTime}>
+            {timeAgo}
+          </Text>
+        </View>
       </Pressable>
 
       <Pressable
@@ -151,10 +159,22 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: DS_COLORS.FEED_DAY_PILL_TEXT,
   },
-  subtitle: {
+  subtitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
     marginTop: 2,
-    fontSize: 12,
+  },
+  subtitle: {
+    fontSize: 11,
     color: DS_COLORS.FEED_META_MUTED,
+    flex: 1,
+  },
+  subtitleTime: {
+    fontSize: 11,
+    color: DS_COLORS.FEED_META_MUTED,
+    flexShrink: 0,
   },
   menuBtn: { padding: 4, marginTop: -4 },
 });

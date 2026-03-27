@@ -8,6 +8,7 @@ export type LiveFeedPost = {
   streakCount: number;
   challengeId: string | null;
   challengeName: string;
+  taskName?: string | null;
   currentDay: number;
   totalDays: number;
   eventType: string;

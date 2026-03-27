@@ -24,7 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { Camera, Lock, CheckCircle, XCircle, MapPin, Check } from "lucide-react-native";
+import { Camera, Lock, CheckCircle, XCircle, MapPin, Check, Image as GalleryIcon } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { haversineDistance } from "@/lib/geo";
@@ -627,6 +627,52 @@ function TaskCompleteScreenInner() {
             </View>
           ) : null}
 
+          {!postedInline && (
+            <View style={celebStyles.photoSection}>
+              {photoUrl ? (
+                <View style={celebStyles.photoPreview}>
+                  <Image source={{ uri: photoUri || photoUrl }} style={celebStyles.photoImage} />
+                  <TouchableOpacity
+                    style={celebStyles.photoChangeBadge}
+                    onPress={() => {
+                      setPhotoUrl(null);
+                      setPhotoUri(null);
+                    }}
+                    accessibilityLabel="Remove photo"
+                  >
+                    <Text style={celebStyles.photoChangeBadgeText}>Change</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={celebStyles.photoPickerRow}>
+                  <TouchableOpacity
+                    style={celebStyles.photoPickerBtn}
+                    onPress={handleTakePhoto}
+                    disabled={photoUploading}
+                    accessibilityRole="button"
+                    accessibilityLabel="Take a photo"
+                  >
+                    <Camera size={20} color="rgba(255,255,255,0.6)" />
+                    <Text style={celebStyles.photoPickerText}>Take photo</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={celebStyles.photoPickerBtn}
+                    onPress={handlePickImage}
+                    disabled={photoUploading}
+                    accessibilityRole="button"
+                    accessibilityLabel="Choose from gallery"
+                  >
+                    <GalleryIcon size={20} color="rgba(255,255,255,0.6)" />
+                    <Text style={celebStyles.photoPickerText}>Choose photo</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {photoUploading ? (
+                <ActivityIndicator size="small" color={DS_COLORS.WHITE} style={{ marginTop: 8 }} />
+              ) : null}
+            </View>
+          )}
+
           <Text style={celebStyles.captionLabel}>Add a caption (optional)</Text>
           <TextInput
             style={celebStyles.captionInput}
@@ -651,7 +697,7 @@ function TaskCompleteScreenInner() {
             {shareBusy ? (
               <ActivityIndicator color={DS_COLORS.WHITE} />
             ) : (
-              <Text style={celebStyles.shareToFeedText}>Share to GRIIT</Text>
+              <Text style={celebStyles.shareToFeedText}>Post to GRIIT</Text>
             )}
           </TouchableOpacity>
 
@@ -661,7 +707,7 @@ function TaskCompleteScreenInner() {
             accessibilityRole="button"
             accessibilityLabel="Done"
           >
-            <Text style={celebStyles.doneBtnText}>Done</Text>
+            <Text style={celebStyles.doneBtnText}>Skip — go home</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -1264,7 +1310,63 @@ const celebStyles = StyleSheet.create({
   },
   nextCtaText: { fontSize: 15, fontWeight: "500", color: "rgba(255,255,255,0.6)" },
   doneBtn: { marginTop: 20 },
-  doneBtnText: { fontSize: 15, color: DS_COLORS.FEED_META_MUTED },
+  doneBtnText: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.5)",
+    fontWeight: "500",
+    paddingVertical: 8,
+  },
+  photoSection: {
+    alignSelf: "stretch",
+    marginTop: 20,
+    marginBottom: 4,
+  },
+  photoPreview: {
+    width: "100%",
+    height: 160,
+    borderRadius: 14,
+    overflow: "hidden",
+    position: "relative",
+  },
+  photoImage: {
+    width: "100%",
+    height: "100%",
+  },
+  photoChangeBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  photoChangeBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: DS_COLORS.WHITE,
+  },
+  photoPickerRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  photoPickerBtn: {
+    flex: 1,
+    height: 80,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.15)",
+    borderStyle: "dashed",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  photoPickerText: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.45)",
+    fontWeight: "500",
+  },
   captionLabel: {
     alignSelf: "stretch",
     fontSize: 12,

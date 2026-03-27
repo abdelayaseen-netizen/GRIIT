@@ -66,7 +66,7 @@ function FeedPostCardInner({
           <View style={styles.proofMeta}>
             <CircleCheck size={12} color={DS_COLORS.ACCENT} />
             <Text style={styles.taskTag}>
-              {post.challengeName} · Task {post.currentDay} of {post.totalDays}
+              {post.challengeName}{post.taskName ? ` · ${post.taskName}` : ` · Task ${post.currentDay} of ${post.totalDays}`}
             </Text>
           </View>
         </View>

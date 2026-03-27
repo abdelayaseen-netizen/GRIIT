@@ -167,6 +167,7 @@ export const feedRouter = createTRPCRouter({
           streakCount: mdStreak ?? streakByUser.get(ev.user_id) ?? 0,
           challengeId: ev.challenge_id,
           challengeName,
+          taskName: typeof md.task_name === "string" ? md.task_name : null,
           currentDay: Math.max(1, currentDay),
           totalDays: Math.max(1, durationDays),
           eventType: ev.event_type,
