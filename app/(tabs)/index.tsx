@@ -437,7 +437,6 @@ export default function HomeScreen() {
               </View>
               <Text style={s.statValueNum}>{displayStreak}</Text>
               <Text style={s.statLabelLower}>streak</Text>
-              {streak === 0 ? <Text style={s.streakSubtitle}>Start your streak today</Text> : null}
             </Card>
             <Card padded={false} containerStyle={s.stat}>
               <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
@@ -687,7 +686,8 @@ const s = StyleSheet.create({
     flex: 1,
     backgroundColor: DS_COLORS.WHITE,
     borderRadius: 14,
-    padding: DS_SPACING.md,
+    paddingVertical: 14,
+    paddingHorizontal: DS_SPACING.sm,
     alignItems: "center",
   },
   statIconWrap: {
@@ -699,22 +699,25 @@ const s = StyleSheet.create({
     marginBottom: 6,
   },
   statValueNum: {
-    fontSize: DS_TYPOGRAPHY.SIZE_XL,
+    fontSize: 22,
     fontWeight: "700",
     color: DS_COLORS.TEXT_PRIMARY,
+    lineHeight: 26,
   },
   statValueText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     color: DS_COLORS.TEXT_PRIMARY,
+    lineHeight: 26,
   },
   statLabelLower: {
     marginTop: 2,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "600",
     color: DS_COLORS.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+    lineHeight: 14,
   },
   sectionDivider: {
     height: 1,
@@ -760,11 +763,6 @@ const s = StyleSheet.create({
   rankRowName: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "600" },
   rankRowNameActive: { color: DS_COLORS.TEXT_PRIMARY },
   rankRowDays: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_MUTED, fontWeight: "600" },
-  streakSubtitle: {
-    fontSize: 11,
-    color: DS_COLORS.TEXT_SECONDARY,
-    marginTop: 2,
-  },
   welcomeCard: {
     marginTop: DS_SPACING.md,
     marginHorizontal: DS_SPACING.xl,

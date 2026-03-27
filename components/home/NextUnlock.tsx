@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Shield, Trophy } from "lucide-react-native";
-import { DS_COLORS, DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
 
 const STREAK_MILESTONES = [
   { days: 3, name: "3-Day Streak badge", icon: "Flame" },
@@ -45,12 +45,9 @@ export default React.memo(function NextUnlock({ currentStreak }: { currentStreak
 const s = StyleSheet.create({
   wrap: {
     marginTop: 12,
-    marginHorizontal: 24,
+    marginHorizontal: DS_SPACING.xl,
     backgroundColor: DS_COLORS.NEXT_UNLOCK_SURFACE,
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    borderTopRightRadius: 14,
-    borderBottomRightRadius: 14,
+    borderRadius: DS_RADIUS.LG,
     padding: 14,
     borderLeftWidth: 3,
     borderLeftColor: DS_COLORS.ACCENT,

@@ -153,7 +153,8 @@ export const feedRouter = createTRPCRouter({
         const currentDay =
           typeof md.day_number === "number" ? md.day_number : active?.current_day ?? 1;
         const isCompletedChallenge = ev.event_type === "completed_challenge";
-        const hasProof = Boolean(md.photo_url) || md.has_photo === true;
+        const hasProof =
+          Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
         const stat = reactionStats.get(ev.id);
         const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
         const visibility = normalizeChallengeVisibility(ch?.visibility);
@@ -172,8 +173,10 @@ export const feedRouter = createTRPCRouter({
           isCompleted: isCompletedChallenge,
           hasProof: hasProof && !isCompletedChallenge,
           photoUrl: typeof md.photo_url === "string" ? md.photo_url : null,
+          proofPhotoUrl: typeof md.proof_photo_url === "string" ? md.proof_photo_url : null,
           verified:
             Boolean(md.photo_url) ||
+            Boolean(md.proof_photo_url) ||
             md.verification_method === "strava_activity" ||
             md.heart_rate_verified === true,
           caption:
@@ -314,7 +317,8 @@ export const feedRouter = createTRPCRouter({
       const active = ev.challenge_id ? activeMap.get(activeKey) : undefined;
       const currentDay = typeof md.day_number === "number" ? md.day_number : active?.current_day ?? 1;
       const isCompletedChallenge = ev.event_type === "completed_challenge";
-      const hasProof = Boolean(md.photo_url) || md.has_photo === true;
+      const hasProof =
+        Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
       const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
 
       return {
@@ -332,8 +336,10 @@ export const feedRouter = createTRPCRouter({
         isCompleted: isCompletedChallenge,
         hasProof: hasProof && !isCompletedChallenge,
         photoUrl: typeof md.photo_url === "string" ? md.photo_url : null,
+        proofPhotoUrl: typeof md.proof_photo_url === "string" ? md.proof_photo_url : null,
         verified:
           Boolean(md.photo_url) ||
+          Boolean(md.proof_photo_url) ||
           md.verification_method === "strava_activity" ||
           md.heart_rate_verified === true,
         caption:
@@ -737,6 +743,7 @@ export const feedRouter = createTRPCRouter({
       z.object({
         challengeId: z.string().uuid(),
         caption: z.string().max(500).optional(),
+        proofPhotoUrl: z.string().url().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -763,6 +770,7 @@ export const feedRouter = createTRPCRouter({
       const nextMeta = {
         ...prev,
         caption: input.caption?.trim() || null,
+        proof_photo_url: input.proofPhotoUrl?.trim() || null,
         feed_shared: true,
       };
       const sb = server as unknown as {

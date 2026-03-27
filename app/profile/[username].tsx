@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
@@ -57,7 +57,15 @@ export default function PublicProfileScreen() {
     staleTime: 60 * 1000,
   });
 
-  const decoded = username ? decodeURIComponent(username) : "";
+  const decoded = useMemo(() => {
+    const raw = typeof username === "string" ? username : "";
+    if (!raw) return "";
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  }, [username]);
 
   useEffect(() => {
     if (!decoded) {
@@ -71,8 +79,11 @@ export default function PublicProfileScreen() {
       .then((data) => {
         if (!cancelled) setProfile(data as PublicProfile | null);
       })
-      .catch(() => {
-        if (!cancelled) setIsError(true);
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("[PublicProfile] Failed to load:", decoded, err);
+          setIsError(true);
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -96,7 +107,9 @@ export default function PublicProfileScreen() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.centered, { backgroundColor: colors.background }]}>
-          <Text style={[styles.text, { color: colors.text.secondary }]}>Couldn&apos;t load profile. Check your connection and try again.</Text>
+          <Text style={[styles.text, { color: colors.text.secondary }]}>
+            Couldn&apos;t load this profile. Check your connection, confirm the username, and try again.
+          </Text>
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: colors.accent }]}
             onPress={() => {
@@ -104,7 +117,10 @@ export default function PublicProfileScreen() {
               setIsLoading(true);
               trpcQuery(TRPC.profiles.getPublicByUsername, { username: decoded })
                 .then((data) => setProfile(data as PublicProfile | null))
-                .catch(() => setIsError(true))
+                .catch((err) => {
+                  console.error("[PublicProfile] Retry failed:", decoded, err);
+                  setIsError(true);
+                })
                 .finally(() => setIsLoading(false));
             }}
           >

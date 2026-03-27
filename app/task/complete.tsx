@@ -558,6 +558,7 @@ function TaskCompleteScreenInner() {
       await trpcMutate(TRPC.feed.shareCompletion, {
         challengeId: challengeIdForFeed,
         caption: postCaption.trim() || undefined,
+        proofPhotoUrl: photoUrl ?? undefined,
       });
       setPostedInline(true);
       void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
@@ -567,7 +568,7 @@ function TaskCompleteScreenInner() {
     } finally {
       setShareBusy(false);
     }
-  }, [challengeIdForFeed, postCaption, queryClient]);
+  }, [challengeIdForFeed, postCaption, photoUrl, queryClient]);
 
   if (!taskId.trim() || !activeChallengeId.trim()) {
     if (!paramsReady) {
