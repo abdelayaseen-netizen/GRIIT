@@ -35,7 +35,6 @@ type PublicProfile = {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
-  cover_url: string | null;
   total_days_secured: number;
   tier: string;
   active_streak: number;

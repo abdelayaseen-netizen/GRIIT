@@ -67,7 +67,7 @@ export const profilesRouter = createTRPCRouter({
       const { data: profile, error: profileError } = await server
         .from("profiles")
         .select(
-          "user_id, username, display_name, avatar_url, cover_url, total_days_secured, tier, bio, created_at, profile_visibility"
+          "user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility"
         )
         .eq("username", input.username.trim())
         .maybeSingle();
@@ -82,7 +82,6 @@ export const profilesRouter = createTRPCRouter({
         username: string;
         display_name: string | null;
         avatar_url: string | null;
-        cover_url: string | null;
         total_days_secured: number | null;
         tier: string | null;
         bio: string | null;
@@ -103,7 +102,6 @@ export const profilesRouter = createTRPCRouter({
         username: p.username,
         display_name: p.display_name,
         avatar_url: p.avatar_url,
-        cover_url: p.cover_url ?? null,
         total_days_secured: p.total_days_secured ?? 0,
         tier: p.tier ?? "Starter",
         active_streak: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
