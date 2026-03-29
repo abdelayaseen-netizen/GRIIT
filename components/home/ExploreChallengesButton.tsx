@@ -20,6 +20,8 @@ export default function ExploreChallengesButton() {
       onPress={handlePress}
       activeOpacity={0.85}
       testID="explore-challenges-button"
+      accessibilityRole="button"
+      accessibilityLabel="Open Discover to explore challenges"
     >
       <Text style={styles.label}>Explore Challenges</Text>
       <ChevronRight size={18} color={DS_COLORS.white} strokeWidth={2.5} />

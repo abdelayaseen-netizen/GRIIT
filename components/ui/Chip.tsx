@@ -40,6 +40,13 @@ export function Chip({
       ]}
       onPress={onPress}
       activeOpacity={onPress ? 0.8 : 1}
+      {...(onPress
+        ? {
+            accessibilityLabel: label,
+            accessibilityRole: "button" as const,
+            accessibilityState: { selected },
+          }
+        : {})}
     >
       <Text style={[styles.text, { color: v.text }]} numberOfLines={1}>
         {label}

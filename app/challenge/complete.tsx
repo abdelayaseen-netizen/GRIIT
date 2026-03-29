@@ -47,6 +47,7 @@ export default function ChallengeCompleteScreen() {
 
   useEffect(() => {
     if (totalDaysSecured > 0) {
+      // Review prompt is best-effort; failure is not user-facing
       maybePromptForReview(totalDaysSecured, "challenge_completed").catch(() => {});
     }
   }, [totalDaysSecured]);

@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+import { createTRPCRouter, publicProcedure, protectedProcedure, type Context } from "../create-context";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
 import { getTodayDateKey, getRollingWeekStartDateKey } from "../../lib/date-utils";
 import { getCached, setCached } from "../../lib/cache";
@@ -13,11 +13,7 @@ function followRowAcceptedLb(row: { status?: string | null }): boolean {
   return String(row.status ?? "accepted").toLowerCase() === "accepted";
 }
 
-async function mutualFriendUserIds(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ctx: any,
-  viewerId: string
-): Promise<Set<string>> {
+async function mutualFriendUserIds(ctx: Context, viewerId: string): Promise<Set<string>> {
   const { data: out } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId);
   const iFollow = new Set<string>();
   for (const r of (out ?? []) as { following_id: string; status?: string | null }[]) {

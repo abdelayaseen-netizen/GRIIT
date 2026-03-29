@@ -31,7 +31,12 @@ export default function PointsExplainer({ visible, onClose, currentPoints, curre
       <View style={s.container}>
         <View style={s.header}>
           <Text style={s.title}>Discipline points</Text>
-          <TouchableOpacity onPress={onClose} style={s.closeBtn} accessibilityLabel="Close">
+          <TouchableOpacity
+            onPress={onClose}
+            style={s.closeBtn}
+            accessibilityLabel="Close"
+            accessibilityRole="button"
+          >
             <X size={20} color={DS_COLORS.TEXT_PRIMARY} />
           </TouchableOpacity>
         </View>

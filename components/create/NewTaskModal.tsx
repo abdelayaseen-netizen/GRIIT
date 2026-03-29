@@ -479,7 +479,12 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     const row = (label: string, value: boolean, onValue: (v: boolean) => void, a11y: string) => (
       <View style={s.toggleRow}>
         <Text style={s.toggleLabel}>{label}</Text>
-        <Switch value={value} onValueChange={onValue} accessibilityLabel={a11y} />
+        <Switch
+          value={value}
+          onValueChange={onValue}
+          accessibilityRole="switch"
+          accessibilityLabel={a11y}
+        />
       </View>
     );
     switch (kind) {
@@ -506,7 +511,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               multiline
               accessibilityLabel="Journal prompt"
             />
-            {row("Capture mood", captureMoodJournal, setCaptureMoodJournal, "Capture mood toggle")}
+            {row("Capture mood", captureMoodJournal, setCaptureMoodJournal, "Toggle capture mood for journal")}
           </View>
         );
       case "timer":
@@ -522,8 +527,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setTimerMins}
               accessibilityLabel="Timer duration in minutes"
             />
-            {row("Require photo proof", requirePhotoTimer, setRequirePhotoTimer, "Require photo proof")}
-            {row("Hard mode (stay on screen)", hardModeTimer, setHardModeTimer, "Hard mode timer")}
+            {row("Require photo proof", requirePhotoTimer, setRequirePhotoTimer, "Toggle require photo proof for timer")}
+            {row("Hard mode (stay on screen)", hardModeTimer, setHardModeTimer, "Toggle hard mode timer, stay on screen")}
           </View>
         );
       case "water":
@@ -554,7 +559,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setReadingPages}
               accessibilityLabel="Reading target pages"
             />
-            {row("Timed reading session", timedReading, setTimedReading, "Timed reading session")}
+            {row("Timed reading session", timedReading, setTimedReading, "Toggle timed reading session")}
             {timedReading ? (
               <>
                 <Text style={[s.label, s.labelSp]}>Session length (minutes)</Text>
@@ -593,7 +598,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setCounterUnit}
               accessibilityLabel="Unit of measurement"
             />
-            {row("Require photo proof", requirePhotoCounter, setRequirePhotoCounter, "Require photo proof for counter")}
+            {row("Require photo proof", requirePhotoCounter, setRequirePhotoCounter, "Toggle require photo proof for counter")}
           </View>
         );
       case "photo":
@@ -603,7 +608,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               <Camera size={16} color={DS_COLORS.TEXT_SECONDARY} />
               <Text style={s.infoText}>Photo proof is always required for this type</Text>
             </View>
-            {row("Add location stamp", locationStampPhoto, setLocationStampPhoto, "Add location stamp to photo")}
+            {row("Add location stamp", locationStampPhoto, setLocationStampPhoto, "Toggle location stamp on photo proof")}
           </View>
         );
       case "run":
@@ -615,7 +620,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 style={[s.seg, runTracking === "distance" && s.segOn]}
                 onPress={() => setRunTracking("distance")}
                 accessibilityRole="button"
-                accessibilityLabel="Track by distance"
+                accessibilityLabel="Track run by distance"
+                accessibilityState={{ selected: runTracking === "distance" }}
               >
                 <Text style={[s.segTxt, runTracking === "distance" && s.segTxtOn]}>Distance</Text>
               </TouchableOpacity>
@@ -623,7 +629,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 style={[s.seg, runTracking === "time" && s.segOn]}
                 onPress={() => setRunTracking("time")}
                 accessibilityRole="button"
-                accessibilityLabel="Track by time"
+                accessibilityLabel="Track run by duration"
+                accessibilityState={{ selected: runTracking === "time" }}
               >
                 <Text style={[s.segTxt, runTracking === "time" && s.segTxtOn]}>Time</Text>
               </TouchableOpacity>
@@ -645,7 +652,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                     style={[s.seg, runUnitDist === "miles" && s.segOn]}
                     onPress={() => setRunUnitDist("miles")}
                     accessibilityRole="button"
-                    accessibilityLabel="Miles"
+                    accessibilityLabel="Use miles for run distance"
+                    accessibilityState={{ selected: runUnitDist === "miles" }}
                   >
                     <Text style={[s.segTxt, runUnitDist === "miles" && s.segTxtOn]}>Miles</Text>
                   </TouchableOpacity>
@@ -653,7 +661,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                     style={[s.seg, runUnitDist === "km" && s.segOn]}
                     onPress={() => setRunUnitDist("km")}
                     accessibilityRole="button"
-                    accessibilityLabel="Kilometers"
+                    accessibilityLabel="Use kilometers for run distance"
+                    accessibilityState={{ selected: runUnitDist === "km" }}
                   >
                     <Text style={[s.segTxt, runUnitDist === "km" && s.segTxtOn]}>Km</Text>
                   </TouchableOpacity>
@@ -673,8 +682,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 />
               </>
             )}
-            {row("GPS tracking", gpsRun, setGpsRun, "GPS tracking")}
-            {row("Require photo proof", requirePhotoRun, setRequirePhotoRun, "Require photo proof for run")}
+            {row("GPS tracking", gpsRun, setGpsRun, "Toggle GPS tracking for run")}
+            {row("Require photo proof", requirePhotoRun, setRequirePhotoRun, "Toggle require photo proof for run")}
           </View>
         );
       case "workout":
@@ -688,7 +697,14 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   style={[s.seg, workoutType === wt && s.segOn]}
                   onPress={() => setWorkoutType(wt)}
                   accessibilityRole="button"
-                  accessibilityLabel={wt === "hiit" ? "HIIT" : wt}
+                  accessibilityState={{ selected: workoutType === wt }}
+                  accessibilityLabel={
+                    wt === "hiit"
+                      ? "Select HIIT workout type"
+                      : wt === "general"
+                        ? "Select general workout type"
+                        : `Select ${wt} workout type`
+                  }
                 >
                   <Text style={[s.segTxt, workoutType === wt && s.segTxtOn]}>
                     {wt === "hiit" ? "HIIT" : wt.charAt(0).toUpperCase() + wt.slice(1)}
@@ -708,12 +724,12 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               accessibilityLabel="Workout duration in minutes"
             />
 
-            {row("Timer must run full duration", timedWorkout, setTimedWorkout, "Enforce timer during workout")}
+            {row("Timer must run full duration", timedWorkout, setTimedWorkout, "Toggle require full-duration on-screen timer")}
             {timedWorkout ? (
               <Text style={s.hint}>User must keep the timer running on-screen for the full duration to complete this task.</Text>
             ) : null}
 
-            {row("Require elevated heart rate", requireHeartRate, setRequireHeartRate, "Require heart rate verification")}
+            {row("Require elevated heart rate", requireHeartRate, setRequireHeartRate, "Toggle heart rate verification for workout")}
             {requireHeartRate ? (
               <>
                 <Text style={[s.label, { marginTop: 8 }]}>Minimum average BPM</Text>
@@ -738,8 +754,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               </>
             ) : null}
 
-            {row("Require photo proof", requirePhotoWorkout, setRequirePhotoWorkout, "Require photo proof for workout")}
-            {row("Location check-in", requireLocationWorkout, setRequireLocationWorkout, "Location check-in for workout")}
+            {row("Require photo proof", requirePhotoWorkout, setRequirePhotoWorkout, "Toggle require photo proof for workout")}
+            {row("Location check-in", requireLocationWorkout, setRequireLocationWorkout, "Toggle location check-in for workout")}
             {requireLocationWorkout ? (
               <>
                 <Text style={[s.label, s.labelSp]}>Location name</Text>
@@ -764,11 +780,23 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={[s.header, { paddingTop: insets.top + 8 }]}>
-          <TouchableOpacity onPress={onClose} hitSlop={12}>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Close new task without saving"
+          >
             <Text style={s.headerLink}>Cancel</Text>
           </TouchableOpacity>
           <Text style={s.headerTitle}>New task</Text>
-          <TouchableOpacity onPress={handleAdd} disabled={!canAdd} hitSlop={12}>
+          <TouchableOpacity
+            onPress={handleAdd}
+            disabled={!canAdd}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Add task to challenge"
+            accessibilityState={{ disabled: !canAdd }}
+          >
             <Text style={[s.headerLink, !canAdd && s.headerLinkDisabled]}>Add</Text>
           </TouchableOpacity>
         </View>
@@ -799,7 +827,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                       style={[s.typeChip, sel && s.typeChipSel]}
                       onPress={() => setKind(t.id)}
                       activeOpacity={0.8}
-                      accessibilityLabel={`${t.label}: ${t.hint}`}
+                      accessibilityLabel={`Select ${t.label} task type, ${t.hint}`}
                       accessibilityRole="button"
                       accessibilityState={{ selected: sel }}
                     >
@@ -819,6 +847,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 <Switch
                   value={timeEnforcementEnabled}
                   onValueChange={setTimeEnforcementEnabled}
+                  accessibilityRole="switch"
+                  accessibilityLabel="Toggle daily time window for this task"
                   trackColor={{ false: DS_COLORS.BORDER, true: GRIIT_COLORS.primary }}
                 />
               </View>
@@ -863,6 +893,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             disabled={!canAdd}
             onPress={handleAdd}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Add task to challenge"
+            accessibilityState={{ disabled: !canAdd }}
           >
             <Text style={s.ctaText}>Add task</Text>
           </TouchableOpacity>

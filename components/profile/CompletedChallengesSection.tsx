@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Award, ChevronRight } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
-import { formatShortDate } from "@/lib/date-format";
+import { formatShortDate } from "@/lib/date-utils";
 
 export interface CompletedChallengeItem {
   id: string;

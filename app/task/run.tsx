@@ -452,7 +452,7 @@ export default function RunTaskScreen() {
             <TouchableOpacity
               style={[styles.modeButton, runMode === "outdoor_gps" && styles.modeButtonActive]}
               onPress={() => handleModeChange("outdoor_gps")}
-              accessibilityRole="button"
+              accessibilityRole="tab"
               accessibilityLabel="Outdoor run — GPS tracking"
               accessibilityState={{ selected: runMode === "outdoor_gps" }}
             >
@@ -465,7 +465,7 @@ export default function RunTaskScreen() {
               style={[styles.modeButton, runMode === "treadmill_proof" && styles.modeButtonActive]}
               onPress={() => handleModeChange("treadmill_proof")}
               accessibilityLabel="Treadmill run — timer based"
-              accessibilityRole="button"
+              accessibilityRole="tab"
               accessibilityState={{ selected: runMode === "treadmill_proof" }}
             >
               <Clock size={18} color={runMode === "treadmill_proof" ? DS_COLORS.white : DS_COLORS.textSecondary} />

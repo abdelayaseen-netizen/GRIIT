@@ -308,6 +308,8 @@ export default function JournalTaskScreen() {
               style={s.successPrimaryBtn}
               onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Back to challenge"
             >
               <Text style={s.successPrimaryBtnText}>Back to challenge</Text>
             </TouchableOpacity>
@@ -333,6 +335,8 @@ export default function JournalTaskScreen() {
                 }
               }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
             >
               <ChevronLeft size={22} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
@@ -388,6 +392,9 @@ export default function JournalTaskScreen() {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           }}
                           activeOpacity={0.7}
+                          accessibilityRole="tab"
+                          accessibilityLabel={`Mood: ${opt.label}`}
+                          accessibilityState={{ selected: isSelected }}
                         >
                           <Icon size={22} color={isSelected ? opt.color : DS_COLORS.textMuted} />
                           <Text style={[s.moodLabel, isSelected && { color: opt.color }]}>{opt.label}</Text>
@@ -414,6 +421,9 @@ export default function JournalTaskScreen() {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           }}
                           activeOpacity={0.7}
+                          accessibilityRole="tab"
+                          accessibilityLabel={`Energy level ${level}`}
+                          accessibilityState={{ selected: isSelected }}
                         >
                           <Zap size={16} color={isSelected ? fillColor : DS_COLORS.textMuted} />
                           <Text style={[s.energyNumber, isSelected && { color: fillColor }]}>{level}</Text>
@@ -439,6 +449,9 @@ export default function JournalTaskScreen() {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           }}
                           activeOpacity={0.7}
+                          accessibilityRole="tab"
+                          accessibilityLabel={`Body state: ${opt.label}`}
+                          accessibilityState={{ selected: isSelected }}
                         >
                           <Text style={[s.bodyChipText, isSelected && { color: opt.color }]}>{opt.label}</Text>
                         </TouchableOpacity>
@@ -509,11 +522,23 @@ export default function JournalTaskScreen() {
                     </View>
                   ) : (
                     <View style={s.photoProofEmpty}>
-                      <TouchableOpacity style={s.photoProofPrimaryBtn} onPress={handleTakePhoto} activeOpacity={0.8}>
+                      <TouchableOpacity
+                        style={s.photoProofPrimaryBtn}
+                        onPress={handleTakePhoto}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel="Take photo"
+                      >
                         <Camera size={22} color={DS_COLORS.white} />
                         <Text style={s.photoProofPrimaryBtnText}>Take photo</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={s.photoProofSecondaryBtn} onPress={handlePickFromGallery} activeOpacity={0.8}>
+                      <TouchableOpacity
+                        style={s.photoProofSecondaryBtn}
+                        onPress={handlePickFromGallery}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel="Upload from gallery"
+                      >
                         <ImagePlus size={20} color={DS_COLORS.textSecondary} />
                         <Text style={s.photoProofSecondaryBtnText}>Upload from gallery</Text>
                       </TouchableOpacity>
@@ -554,8 +579,13 @@ export default function JournalTaskScreen() {
       </Animated.View>
 
       <Modal visible={draftExitVisible} transparent animationType="fade" onRequestClose={() => setDraftExitVisible(false)}>
-        <Pressable style={s.draftExitBackdrop} onPress={() => setDraftExitVisible(false)} accessibilityLabel="Dismiss">
-          <Pressable style={s.draftExitCard} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={s.draftExitBackdrop}
+          onPress={() => setDraftExitVisible(false)}
+          accessibilityLabel="Dismiss"
+          accessibilityRole="button"
+        >
+          <Pressable style={s.draftExitCard} onPress={(e) => e.stopPropagation()} accessible={false}>
             <Text style={s.draftExitTitle}>Save draft?</Text>
             <Text style={s.draftExitBody}>Your entry will be saved as a draft.</Text>
             <TouchableOpacity

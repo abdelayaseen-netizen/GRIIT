@@ -101,6 +101,8 @@ export default function ChallengeChatInfoScreen() {
             <TouchableOpacity
               style={styles.headerButton}
               onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
             >
               <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
             </TouchableOpacity>
@@ -159,7 +161,11 @@ export default function ChallengeChatInfoScreen() {
               {(challenge.participantsCount ?? challenge.participants_count ?? 0).toLocaleString()}
             </Text>
           </View>
-          <TouchableOpacity style={styles.membersCard}>
+          <TouchableOpacity
+            style={styles.membersCard}
+            accessibilityRole="button"
+            accessibilityLabel="View all chat members"
+          >
             <View style={styles.avatarStack}>
               {memberInitials.map((initial, index) => (
                 <View key={`${initial}-${index}`} style={[styles.stackAvatar, { marginLeft: index > 0 ? -10 : 0, zIndex: 5 - index }]}>
@@ -203,6 +209,9 @@ export default function ChallengeChatInfoScreen() {
                 onValueChange={handleToggleMute}
                 trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
                 thumbColor={DS_COLORS.white}
+                accessibilityRole="switch"
+                accessibilityLabel="Mute chat"
+                accessibilityState={{ checked: settings.muteRoom }}
               />
             </View>
             <View style={styles.settingDivider} />
@@ -222,12 +231,21 @@ export default function ChallengeChatInfoScreen() {
                 trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
                 thumbColor={DS_COLORS.white}
                 disabled={settings.muteRoom}
+                accessibilityRole="switch"
+                accessibilityLabel="Mentions only notifications"
+                accessibilityState={{ checked: settings.mentionsOnly, disabled: settings.muteRoom }}
               />
             </View>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.reportButton} onPress={handleReport} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.reportButton}
+          onPress={handleReport}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Report an issue with this chat"
+        >
           <AlertCircle size={18} color={DS_COLORS.warning} />
           <Text style={styles.reportText}>Report an issue</Text>
         </TouchableOpacity>

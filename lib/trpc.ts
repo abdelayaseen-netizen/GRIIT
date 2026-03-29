@@ -86,7 +86,9 @@ export async function trpcMutate<T = any>(
       if (parsed?.error?.message) errorMessage = parsed.error.message;
       else if (parsed?.error?.json?.message) errorMessage = parsed.error.json.message;
       errorCode = parsed?.error?.data?.code ?? parsed?.error?.code;
-    } catch {}
+    } catch {
+      // JSON parse failure means non-JSON response; fall through to default handling
+    }
     const err = new Error(errorMessage) as Error & { data?: { code?: string } };
     if (errorCode) err.data = { code: errorCode };
     throw err;

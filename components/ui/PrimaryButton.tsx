@@ -60,6 +60,7 @@ export function PrimaryButton({
       disabled={isDisabled}
       activeOpacity={isDisabled ? 1 : 0.8}
       accessibilityRole="button"
+      accessibilityLabel={title}
       accessibilityState={{ disabled: isDisabled }}
       testID={testID}
     >

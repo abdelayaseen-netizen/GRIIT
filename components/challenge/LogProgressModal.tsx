@@ -61,12 +61,18 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose}>
+      <TouchableOpacity
+        style={styles.backdrop}
+        activeOpacity={1}
+        onPress={handleClose}
+        accessibilityRole="button"
+        accessibilityLabel="Dismiss log progress"
+      >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.keyboard}
         >
-          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} accessible={false}>
             <View style={[styles.dialog, { backgroundColor: colors.card }]}>
               <Text style={[styles.title, { color: colors.text.primary }]}>Log {unit}</Text>
               <Text style={[styles.label, { color: colors.text.secondary }]}>How many {unit}?</Text>
@@ -93,6 +99,8 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
                   style={[styles.cancelBtn, { borderColor: colors.border }]}
                   onPress={handleClose}
                   disabled={submitting}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel logging progress"
                 >
                   <Text style={[styles.cancelText, { color: colors.text.secondary }]}>Cancel</Text>
                 </TouchableOpacity>
@@ -100,6 +108,8 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
                   style={[styles.logBtn, { backgroundColor: colors.accent }]}
                   onPress={handleSubmit}
                   disabled={!isValid || submitting}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Submit log for ${unit}`}
                 >
                   {submitting ? (
                     <ActivityIndicator size="small" color={DS_COLORS.white} />

@@ -371,6 +371,8 @@ export default function DiscoverScreen() {
               {BROWSE_CATEGORIES.map((cat) => (
                 <Pressable
                   key={cat}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Browse ${cat} challenges`}
                   onPress={() => {
                     setSearchQuery(cat);
                     void pushRecentSearch(cat);
@@ -409,6 +411,8 @@ export default function DiscoverScreen() {
                   {recentSearches.slice(0, 3).map((r) => (
                     <Pressable
                       key={r}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Search for ${r}`}
                       onPress={() => setSearchQuery(r)}
                       style={{
                         paddingVertical: 12,
@@ -450,10 +454,12 @@ export default function DiscoverScreen() {
                   {peopleSearch.data.map((u) => (
                     <Pressable
                       key={u.user_id}
-                    onPress={() => {
-                      void pushRecentSearch(filterQuery);
-                      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
-                    }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Open profile for ${u.display_name || u.username}`}
+                      onPress={() => {
+                        void pushRecentSearch(filterQuery);
+                        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
+                      }}
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -641,6 +647,8 @@ export default function DiscoverScreen() {
 
               <Pressable
                 onPress={() => router.push(ROUTES.CREATE_WIZARD as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Create a custom challenge"
                 style={{
                   flexDirection: "row",
                   alignItems: "center",

@@ -1,6 +1,8 @@
+// TODO: Split into sub-routers — see docs/ARCHITECTURE.md
 import * as z from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "../create-context";
+import { createTRPCRouter, protectedProcedure, type Context } from "../create-context";
 import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
 
@@ -31,10 +33,8 @@ async function hydrateActivityEventsToPosts(
   events: EvRow[],
   viewerId: string,
   followingIds: Set<string>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ctx: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  server: any
+  ctx: Context,
+  server: SupabaseClient
 ): Promise<
   Array<{
     id: string;

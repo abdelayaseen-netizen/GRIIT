@@ -21,7 +21,9 @@ export function reportClientError(error: Error, componentStack?: string | null):
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    }).catch(() => {});
+    }).catch(() => {
+      // Error reporter itself must not throw
+    });
   }
   captureError(error, componentStack ? { componentStack } : undefined);
 }

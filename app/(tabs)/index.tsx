@@ -450,6 +450,7 @@ export default function HomeScreen() {
               activeOpacity={0.85}
               onPress={() => setShowRankModal(true)}
               accessibilityRole="button"
+              accessibilityLabel="View rank ladder"
             >
               <Card padded={false} containerStyle={s.stat}>
                 <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>

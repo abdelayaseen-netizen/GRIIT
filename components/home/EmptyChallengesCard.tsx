@@ -24,6 +24,8 @@ export default function EmptyChallengesCard() {
         onPress={handlePress}
         activeOpacity={0.85}
         testID="empty-challenges-discover-button"
+        accessibilityRole="button"
+        accessibilityLabel="Discover challenges to join"
       >
         <Text style={styles.buttonText}>Discover challenges ›</Text>
       </TouchableOpacity>

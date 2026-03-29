@@ -227,7 +227,12 @@ export default function ActiveChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={s.centerWrap}>
           <Text style={s.notFoundText}>Not found</Text>
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={s.retryBtn}>
+          <TouchableOpacity
+            onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
+            style={s.retryBtn}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
             <Text style={s.retryBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -286,7 +291,7 @@ export default function ActiveChallengeDetailScreen() {
           <TouchableOpacity
             style={s.headerCircleBtn}
             onPress={handleLeaveChallenge}
-            accessibilityLabel="More"
+            accessibilityLabel="Open challenge options"
             accessibilityRole="button"
           >
             <MoreHorizontal size={20} color={DS_COLORS.WHITE} />
@@ -386,6 +391,11 @@ export default function ActiveChallengeDetailScreen() {
                   }}
                   activeOpacity={0.7}
                   accessibilityRole="button"
+                  accessibilityLabel={
+                    isCompleted
+                      ? `Open completed task ${task.title ?? "Task"}`
+                      : `Start task ${task.title ?? "Task"}`
+                  }
                 >
                   <View style={[s.missionIconWrap, isCompleted && s.missionIconWrapDone]}>
                     <IconComp size={20} color={isCompleted ? DS_COLORS.ACCENT_GREEN : DS_COLORS.ACCENT_PRIMARY} />

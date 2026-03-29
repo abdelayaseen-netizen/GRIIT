@@ -621,6 +621,7 @@ export async function scheduleTaskReminder(params: {
 }): Promise<void> {
   const { taskName, challengeName, hour, minute, identifier } = params;
   try {
+    // Cancellation is best-effort; stale notification is harmless
     await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
 
     await Notifications.scheduleNotificationAsync({
@@ -649,6 +650,7 @@ const STREAK_REMINDER_10PM_ID = "streak-reminder-10pm";
  */
 export async function scheduleStreakReminder(streakCount: number): Promise<void> {
   try {
+    // Cancellation is best-effort; stale notification is harmless
     await Notifications.cancelScheduledNotificationAsync(STREAK_REMINDER_10PM_ID).catch(() => {});
 
     await Notifications.scheduleNotificationAsync({

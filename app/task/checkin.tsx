@@ -529,6 +529,9 @@ export default function CheckinTaskScreen() {
               style={[styles.startButton, !canStartCheckin && styles.startButtonDisabled]}
               onPress={startSession}
               disabled={!canStartCheckin}
+              accessibilityRole="button"
+              accessibilityLabel="Start check-in"
+              accessibilityState={{ disabled: !canStartCheckin }}
             >
               <Play size={28} color={DS_COLORS.white} fill={DS_COLORS.white} />
               <Text style={styles.startButtonText}>START CHECK-IN</Text>
@@ -572,6 +575,9 @@ export default function CheckinTaskScreen() {
           style={[styles.verifyButton, !canFinish && styles.verifyButtonDisabled]}
           onPress={handleFinish}
           disabled={!canFinish}
+          accessibilityRole="button"
+          accessibilityLabel={sessionActive ? "Finish check-in" : "Start session first"}
+          accessibilityState={{ disabled: !canFinish }}
         >
           <Text style={[styles.verifyButtonText, !canFinish && styles.verifyButtonTextDisabled]}>
             {sessionActive ? "FINISH CHECK-IN" : "START SESSION FIRST"}

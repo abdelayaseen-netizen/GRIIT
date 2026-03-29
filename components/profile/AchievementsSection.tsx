@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Trophy, Lock } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
-import { formatShortDate } from "@/lib/date-format";
+import { formatShortDate } from "@/lib/date-utils";
 
 export type AchievementCategory = "consistency" | "challenge" | "discipline";
 

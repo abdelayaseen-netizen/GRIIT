@@ -1001,8 +1001,13 @@ export default function CreateChallengeWizard() {
       />
 
       <Modal visible={cancelDraftVisible} transparent animationType="fade" onRequestClose={() => setCancelDraftVisible(false)}>
-        <Pressable style={styles.draftExitBackdrop} onPress={() => setCancelDraftVisible(false)} accessibilityLabel="Dismiss">
-          <Pressable style={styles.draftExitCard} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={styles.draftExitBackdrop}
+          onPress={() => setCancelDraftVisible(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Close save draft dialog"
+        >
+          <Pressable style={styles.draftExitCard} onPress={(e) => e.stopPropagation()} accessible={false}>
             <Text style={styles.draftExitTitle}>Save as draft?</Text>
             <TouchableOpacity
               style={styles.draftExitPrimary}

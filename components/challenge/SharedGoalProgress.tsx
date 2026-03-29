@@ -4,7 +4,7 @@ import { Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import LogProgressModal from "./LogProgressModal";
-import { formatShortDate } from "@/lib/date-format";
+import { formatShortDate } from "@/lib/date-utils";
 import { DS_COLORS } from "@/lib/design-system";
 
 export interface SharedGoalLogEntry {
@@ -140,6 +140,8 @@ export default function SharedGoalProgress({
           style={[styles.logCta, { backgroundColor: colors.accent }]}
           onPress={handleLogPress}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`Log ${unit}`}
         >
           <Text style={styles.logCtaText}>Log {unit}</Text>
         </TouchableOpacity>

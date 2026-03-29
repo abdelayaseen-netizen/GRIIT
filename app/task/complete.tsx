@@ -638,6 +638,7 @@ function TaskCompleteScreenInner() {
                       setPhotoUrl(null);
                       setPhotoUri(null);
                     }}
+                    accessibilityRole="button"
                     accessibilityLabel="Remove photo"
                   >
                     <Text style={celebStyles.photoChangeBadgeText}>Change</Text>
@@ -737,6 +738,9 @@ function TaskCompleteScreenInner() {
               }}
               disabled={!isPureManual || !canSubmit || isSubmitting}
               style={styles.manualPress}
+              accessibilityRole="button"
+              accessibilityLabel="Mark task complete"
+              accessibilityState={{ disabled: !isPureManual || !canSubmit || isSubmitting }}
             >
               <Animated.View style={[styles.manualCircle, { transform: [{ scale: manualScale }] }]}>
                 <Check
@@ -826,6 +830,8 @@ function TaskCompleteScreenInner() {
                   setIsTimerRunning((r) => !r);
                   if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={isTimerRunning ? "Pause timer" : "Resume timer"}
               >
                 <Text style={styles.secondaryBtnText}>{isTimerRunning ? "Pause" : "Resume"}</Text>
               </TouchableOpacity>
@@ -945,7 +951,11 @@ function TaskCompleteScreenInner() {
                     <Text style={styles.hintSmall}>peak BPM</Text>
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => setHeartRateData(null)}>
+                <TouchableOpacity
+                  onPress={() => setHeartRateData(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Change heart rate"
+                >
                   <Text style={styles.link}>Change</Text>
                 </TouchableOpacity>
               </View>
@@ -970,6 +980,8 @@ function TaskCompleteScreenInner() {
                     setHeartRateData({ avg, peak: avg + Math.floor(avg * 0.1) });
                     setHeartRateManual("");
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Save heart rate"
                 >
                   <Text style={styles.primaryBtnText}>Save heart rate</Text>
                 </TouchableOpacity>
@@ -998,12 +1010,21 @@ function TaskCompleteScreenInner() {
                     </Text>
                   </>
                 )}
-                <TouchableOpacity onPress={() => setUserLocation(null)}>
+                <TouchableOpacity
+                  onPress={() => setUserLocation(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Verify location again"
+                >
                   <Text style={styles.link}>Check again</Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity style={styles.locCta} onPress={handleCheckLocation}>
+              <TouchableOpacity
+                style={styles.locCta}
+                onPress={handleCheckLocation}
+                accessibilityRole="button"
+                accessibilityLabel="Verify my location"
+              >
                 <MapPin size={24} color={GRIIT_COLORS.primary} />
                 <Text style={styles.locCtaText}>Verify my location</Text>
               </TouchableOpacity>
@@ -1028,13 +1049,22 @@ function TaskCompleteScreenInner() {
                     setPhotoUri(null);
                     setPhotoUrl(null);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retake photo"
                 >
                   <Text style={styles.link}>Retake</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View>
-                <TouchableOpacity style={styles.photoBig} onPress={handleTakePhoto} disabled={photoUploading}>
+                <TouchableOpacity
+                  style={styles.photoBig}
+                  onPress={handleTakePhoto}
+                  disabled={photoUploading}
+                  accessibilityRole="button"
+                  accessibilityLabel="Take photo"
+                  accessibilityState={{ disabled: photoUploading }}
+                >
                   {photoUploading ? (
                     <ActivityIndicator color={GRIIT_COLORS.primary} />
                   ) : (
@@ -1044,7 +1074,14 @@ function TaskCompleteScreenInner() {
                     </>
                   )}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.galleryLink} onPress={handlePickImage} disabled={photoUploading}>
+                <TouchableOpacity
+                  style={styles.galleryLink}
+                  onPress={handlePickImage}
+                  disabled={photoUploading}
+                  accessibilityRole="button"
+                  accessibilityLabel="Choose from gallery"
+                  accessibilityState={{ disabled: photoUploading }}
+                >
                   <Text style={styles.link}>Choose from gallery</Text>
                 </TouchableOpacity>
               </View>
@@ -1070,6 +1107,9 @@ function TaskCompleteScreenInner() {
               style={[styles.primaryBtn, (!canSubmit || isSubmitting) && styles.primaryBtnDisabled]}
               onPress={() => void handleSubmit()}
               disabled={!canSubmit || isSubmitting}
+              accessibilityRole="button"
+              accessibilityLabel="Complete task"
+              accessibilityState={{ disabled: !canSubmit || isSubmitting }}
             >
               {isSubmitting ? (
                 <ActivityIndicator color={DS_COLORS.WHITE} size="small" />

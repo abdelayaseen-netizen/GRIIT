@@ -229,6 +229,9 @@ export default function AccountabilityScreen() {
                       onPress={() => handleRespond(inv.id, "accept")}
                       disabled={actingId === inv.id}
                       style={[styles.iconBtn, styles.acceptBtn]}
+                      accessibilityLabel={`Accept invite from ${inv.display_name || inv.username}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: actingId === inv.id }}
                     >
                       {actingId === inv.id ? (
                         <ActivityIndicator size="small" color={DS_COLORS.white} />

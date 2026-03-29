@@ -281,6 +281,13 @@ export default function PostThreadScreen() {
             onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
             delayLongPress={450}
             style={styles.commentRow}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isMine
+                ? "Your comment — long press to delete"
+                : `Comment by ${item.display_name || item.username}`
+            }
+            {...(isMine ? { accessibilityHint: "Long press to show delete options" } : {})}
           >
             <Avatar
               url={item.avatar_url}
@@ -402,7 +409,12 @@ export default function PostThreadScreen() {
 
       <Modal visible={androidMenuOpen} transparent animationType="fade" onRequestClose={() => setAndroidMenuOpen(false)}>
         <View style={styles.androidMenuRoot}>
-          <Pressable style={styles.androidMenuBackdrop} onPress={() => setAndroidMenuOpen(false)} />
+          <Pressable
+            style={styles.androidMenuBackdrop}
+            onPress={() => setAndroidMenuOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close post actions menu"
+          />
           <View style={styles.androidMenuSheet}>
             {displayPost && user?.id && displayPost.userId !== user.id ? (
               <>
@@ -411,6 +423,8 @@ export default function PostThreadScreen() {
                   onPress={() => {
                     setAndroidMenuOpen(false);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Report post"
                 >
                   <Text style={styles.androidMenuDefault}>Report</Text>
                 </TouchableOpacity>
@@ -420,6 +434,8 @@ export default function PostThreadScreen() {
                     setAndroidMenuOpen(false);
                     router.back();
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Hide post and go back"
                 >
                   <Text style={styles.androidMenuDefault}>Hide post</Text>
                 </TouchableOpacity>
@@ -431,11 +447,18 @@ export default function PostThreadScreen() {
                   setAndroidMenuOpen(false);
                   void handleDeletePost(displayPost);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel="Delete post"
               >
                 <Text style={styles.androidMenuDestructive}>Delete post</Text>
               </TouchableOpacity>
             ) : null}
-            <TouchableOpacity style={styles.androidMenuRow} onPress={() => setAndroidMenuOpen(false)}>
+            <TouchableOpacity
+              style={styles.androidMenuRow}
+              onPress={() => setAndroidMenuOpen(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close menu"
+            >
               <Text style={styles.androidMenuCancel}>Cancel</Text>
             </TouchableOpacity>
           </View>

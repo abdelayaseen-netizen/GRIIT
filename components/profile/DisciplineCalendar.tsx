@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
-import { formatMonthShort } from "@/lib/date-format";
+import { formatMonthShort } from "@/lib/date-utils";
 export interface DisciplineCalendarProps {
   securedDateKeys: string[];
   currentStreak: number;

@@ -53,6 +53,7 @@ export default function JoinCelebrationModal({
     }
 
     dismissed.current = false;
+    // Haptics are optional; gracefully degrade on simulator
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     opacity.setValue(0);
     scale.setValue(0.88);
@@ -70,6 +71,7 @@ export default function JoinCelebrationModal({
   }, [visible, opacity, scale]);
 
   const handleLetsGo = () => {
+    // Haptics are optional; gracefully degrade on simulator
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     runDismiss();
   };
