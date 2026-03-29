@@ -9,6 +9,28 @@ import { consistencyScore } from "../../lib/scoring";
 
 const LEADERBOARD_MAX = 100;
 
+function followRowAcceptedLb(row: { status?: string | null }): boolean {
+  return String(row.status ?? "accepted").toLowerCase() === "accepted";
+}
+
+async function mutualFriendUserIds(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ctx: any,
+  viewerId: string
+): Promise<Set<string>> {
+  const { data: out } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId);
+  const iFollow = new Set<string>();
+  for (const r of (out ?? []) as { following_id: string; status?: string | null }[]) {
+    if (followRowAcceptedLb(r)) iFollow.add(r.following_id);
+  }
+  const { data: inc } = await ctx.supabase.from("user_follows").select("follower_id, status").eq("following_id", viewerId);
+  const mutual = new Set<string>();
+  for (const r of (inc ?? []) as { follower_id: string; status?: string | null }[]) {
+    if (followRowAcceptedLb(r) && iFollow.has(r.follower_id)) mutual.add(r.follower_id);
+  }
+  return mutual;
+}
+
 export const leaderboardRouter = createTRPCRouter({
   getWeekly: publicProcedure
     .input(
@@ -140,12 +162,8 @@ export const leaderboardRouter = createTRPCRouter({
     const weekStartKey = getRollingWeekStartDateKey();
     const todayKey = getTodayDateKey();
 
-    const followingIds: string[] = [];
-    const { data: follows, error: fErr } = await ctx.supabase.from("user_follows").select("following_id").eq("follower_id", viewerId);
-    if (!fErr && follows) {
-      for (const r of follows as { following_id: string }[]) followingIds.push(r.following_id);
-    }
-    const candidateIds = [...new Set([viewerId, ...followingIds])];
+    const mutual = await mutualFriendUserIds(ctx, viewerId);
+    const candidateIds = [...new Set([viewerId, ...mutual])];
 
     const { data: secures, error: sErr } = await server
       .from("day_secures")
@@ -255,12 +273,8 @@ export const leaderboardRouter = createTRPCRouter({
       }
 
       if (input.scope === "friends" && vis !== "private") {
-        const followingIds = new Set<string>();
-        const { data: follows } = await ctx.supabase.from("user_follows").select("following_id").eq("follower_id", viewerId);
-        for (const r of (follows ?? []) as { following_id: string }[]) {
-          followingIds.add(r.following_id);
-        }
-        userIds = userIds.filter((id) => id === viewerId || followingIds.has(id));
+        const mutual = await mutualFriendUserIds(ctx, viewerId);
+        userIds = userIds.filter((id) => id === viewerId || mutual.has(id));
       }
 
       if (userIds.length === 0) {

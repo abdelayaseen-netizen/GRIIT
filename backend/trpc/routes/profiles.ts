@@ -66,7 +66,7 @@ export const profilesRouter = createTRPCRouter({
       const server = getSupabaseServer() ?? ctx.supabase;
       const { data: profile, error: profileError } = await server
         .from("profiles")
-        .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at")
+        .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
         .eq("username", input.username.trim())
         .maybeSingle();
       if (profileError) {
@@ -84,16 +84,29 @@ export const profilesRouter = createTRPCRouter({
         tier: string | null;
         bio: string | null;
         created_at: string | null;
+        profile_visibility?: string | null;
       };
       const { data: streakRow, error: streakError } = await server
         .from("streaks")
-        .select("active_streak_count")
+        .select("active_streak_count, longest_streak_count")
         .eq("user_id", p.user_id)
         .maybeSingle();
       if (streakError) {
         const { logger } = await import("../../lib/logger");
         logger.warn({ error: streakError, userId: p.user_id }, "[profiles.getPublicByUsername] streaks read");
       }
+      const [{ count: activeChal }, { count: doneChal }] = await Promise.all([
+        server
+          .from("active_challenges")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", p.user_id)
+          .eq("status", "active"),
+        server
+          .from("active_challenges")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", p.user_id)
+          .eq("status", "completed"),
+      ]);
       return {
         user_id: p.user_id,
         username: p.username,
@@ -102,8 +115,12 @@ export const profilesRouter = createTRPCRouter({
         total_days_secured: p.total_days_secured ?? 0,
         tier: p.tier ?? "Starter",
         active_streak: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
+        longest_streak: (streakRow as { longest_streak_count?: number } | null)?.longest_streak_count ?? 0,
+        active_challenges_count: activeChal ?? 0,
+        completed_challenges_count: doneChal ?? 0,
         bio: p.bio ?? null,
         created_at: p.created_at ?? null,
+        profile_visibility: String(p.profile_visibility ?? "public").toLowerCase(),
       };
     }),
 
@@ -575,14 +592,16 @@ export const profilesRouter = createTRPCRouter({
       const { count: followers, error: fErr } = await server
         .from("user_follows")
         .select("id", { count: "exact", head: true })
-        .eq("following_id", input.userId);
+        .eq("following_id", input.userId)
+        .eq("status", "accepted");
       if (fErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: fErr.message });
       }
       const { count: following, error: gErr } = await server
         .from("user_follows")
         .select("id", { count: "exact", head: true })
-        .eq("follower_id", input.userId);
+        .eq("follower_id", input.userId)
+        .eq("status", "accepted");
       if (gErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: gErr.message });
       }
@@ -598,11 +617,33 @@ export const profilesRouter = createTRPCRouter({
         .select("follower_id")
         .eq("follower_id", ctx.userId)
         .eq("following_id", input.userId)
+        .eq("status", "accepted")
         .maybeSingle();
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
       }
       return { isFollowing: Boolean(data) };
+    }),
+
+  getFollowStatus: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      if (input.userId === ctx.userId) {
+        return { status: "none" as const };
+      }
+      const { data, error } = await ctx.supabase
+        .from("user_follows")
+        .select("status")
+        .eq("follower_id", ctx.userId)
+        .eq("following_id", input.userId)
+        .maybeSingle();
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      const st = String((data as { status?: string } | null)?.status ?? "").toLowerCase();
+      if (!data) return { status: "none" as const };
+      if (st === "pending") return { status: "pending" as const };
+      return { status: "following" as const };
     }),
 
   followUser: protectedProcedure
@@ -611,31 +652,261 @@ export const profilesRouter = createTRPCRouter({
       if (input.userId === ctx.userId) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot follow yourself." });
       }
+      const { data: target, error: tErr } = await ctx.supabase
+        .from("profiles")
+        .select("profile_visibility")
+        .eq("user_id", input.userId)
+        .maybeSingle();
+      if (tErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: tErr.message });
+      }
+      const vis = String((target as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+      if (vis === "private" || vis === "friends") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This profile requires a follow request.",
+        });
+      }
       const { error } = await ctx.supabase.from("user_follows").insert({
         follower_id: ctx.userId,
         following_id: input.userId,
+        status: "accepted",
       });
       if (error && (error as PgError).code !== "23505") {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
       }
 
-      const { getSupabaseServer } = await import("../../lib/supabase-server");
-      const srv = getSupabaseServer();
-      if (srv) {
-        const anySrv = srv as unknown as {
-          from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
-        };
-        const { error: nErr } = await anySrv.from("in_app_notifications").insert({
-          user_id: input.userId,
-          type: "follow",
-          read: false,
-          actor_id: ctx.userId,
-          metadata: {},
-        });
-        if (nErr) console.error("[profiles.followUser] notification insert:", nErr);
+      const { data: me } = await ctx.supabase
+        .from("profiles")
+        .select("username, display_name")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const uname = (me as { username?: string; display_name?: string } | null)?.username ?? "Someone";
+      const dname = (me as { username?: string; display_name?: string } | null)?.display_name ?? uname;
+      const { error: nErr } = await ctx.supabase.from("in_app_notifications").insert({
+        user_id: input.userId,
+        type: "follow",
+        title: "New follower",
+        body: `${dname} started following you`,
+        read: false,
+        data: {
+          requesterId: ctx.userId,
+          requesterUsername: uname,
+          requesterDisplayName: dname,
+        },
+      });
+      if (nErr && process.env.NODE_ENV !== "test") {
+        console.error("[profiles.followUser] notification insert:", nErr);
       }
 
       return { success: true as const };
+    }),
+
+  unfollowUser: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { error } = await ctx.supabase
+        .from("user_follows")
+        .delete()
+        .eq("follower_id", ctx.userId)
+        .eq("following_id", input.userId);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      return { success: true as const };
+    }),
+
+  sendFollowRequest: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId === ctx.userId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid target." });
+      }
+      const { data: target, error: tErr } = await ctx.supabase
+        .from("profiles")
+        .select("profile_visibility, username")
+        .eq("user_id", input.userId)
+        .maybeSingle();
+      if (tErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: tErr.message });
+      }
+      const vis = String((target as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+      if (vis !== "private" && vis !== "friends") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Use follow for public profiles." });
+      }
+      const { data: existing } = await ctx.supabase
+        .from("user_follows")
+        .select("status")
+        .eq("follower_id", ctx.userId)
+        .eq("following_id", input.userId)
+        .maybeSingle();
+      const exSt = String((existing as { status?: string } | null)?.status ?? "").toLowerCase();
+      if (existing && exSt === "accepted") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Already following." });
+      }
+      if (existing && exSt === "pending") {
+        return { success: true as const };
+      }
+      const { error } = await ctx.supabase.from("user_follows").insert({
+        follower_id: ctx.userId,
+        following_id: input.userId,
+        status: "pending",
+      });
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      const { data: me } = await ctx.supabase
+        .from("profiles")
+        .select("username, display_name")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const uname = (me as { username?: string } | null)?.username ?? "Someone";
+      const dname = (me as { display_name?: string } | null)?.display_name ?? uname;
+      const { error: nErr } = await ctx.supabase.from("in_app_notifications").insert({
+        user_id: input.userId,
+        type: "follow_request",
+        title: "New follow request",
+        body: `${uname} wants to follow you`,
+        read: false,
+        data: {
+          requesterId: ctx.userId,
+          requesterUsername: uname,
+          requesterDisplayName: dname,
+        },
+      });
+      if (nErr && process.env.NODE_ENV !== "test") {
+        console.error("[profiles.sendFollowRequest] notification insert:", nErr);
+      }
+      return { success: true as const };
+    }),
+
+  acceptFollowRequest: protectedProcedure
+    .input(z.object({ requesterId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: row, error: uErr } = await ctx.supabase
+        .from("user_follows")
+        .update({ status: "accepted" })
+        .eq("follower_id", input.requesterId)
+        .eq("following_id", ctx.userId)
+        .eq("status", "pending")
+        .select("follower_id")
+        .maybeSingle();
+      if (uErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: uErr.message });
+      }
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "No pending request." });
+      }
+      const { data: me } = await ctx.supabase
+        .from("profiles")
+        .select("username, display_name")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const uname = (me as { username?: string } | null)?.username ?? "Someone";
+      await ctx.supabase.from("in_app_notifications").insert({
+        user_id: input.requesterId,
+        type: "general",
+        title: "Request accepted",
+        body: `${uname} accepted your follow request`,
+        read: false,
+        data: { accepterId: ctx.userId, accepterUsername: uname },
+      });
+      return { success: true as const };
+    }),
+
+  declineFollowRequest: protectedProcedure
+    .input(z.object({ requesterId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { error } = await ctx.supabase
+        .from("user_follows")
+        .delete()
+        .eq("follower_id", input.requesterId)
+        .eq("following_id", ctx.userId)
+        .eq("status", "pending");
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      return { success: true as const };
+    }),
+
+  getPendingFollowRequests: protectedProcedure.query(async ({ ctx }) => {
+    const { data: rows, error } = await ctx.supabase
+      .from("user_follows")
+      .select("follower_id, created_at")
+      .eq("following_id", ctx.userId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    if (error) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+    }
+    const ids = [...new Set((rows ?? []).map((r: { follower_id: string }) => r.follower_id))];
+    if (ids.length === 0) return [];
+    const server = getSupabaseServer() ?? ctx.supabase;
+    const { data: profs } = await server.from("profiles").select("user_id, username, display_name, avatar_url").in("user_id", ids);
+    const pmap = new Map((profs ?? []).map((p: ProfileRow) => [p.user_id, p]));
+    return (rows ?? []).map((r: { follower_id: string; created_at: string }) => {
+      const p = pmap.get(r.follower_id);
+      return {
+        id: `${r.follower_id}:${r.created_at}`,
+        requesterId: r.follower_id,
+        requesterUsername: p?.username ?? "?",
+        requesterAvatarUrl: p?.avatar_url ?? null,
+        createdAt: r.created_at,
+      };
+    });
+  }),
+
+  getBadges: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const { data: streakRow } = await server
+        .from("streaks")
+        .select("longest_streak_count")
+        .eq("user_id", input.userId)
+        .maybeSingle();
+      const bestStreak = (streakRow as { longest_streak_count?: number } | null)?.longest_streak_count ?? 0;
+
+      let canSee = input.userId === ctx.userId;
+      if (!canSee) {
+        const { data: pr } = await server
+          .from("profiles")
+          .select("profile_visibility")
+          .eq("user_id", input.userId)
+          .maybeSingle();
+        const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+        if (vis === "public") {
+          canSee = true;
+        } else {
+          const { data: fol } = await ctx.supabase
+            .from("user_follows")
+            .select("status")
+            .eq("follower_id", ctx.userId)
+            .eq("following_id", input.userId)
+            .maybeSingle();
+          canSee = Boolean(fol && String((fol as { status?: string }).status ?? "").toLowerCase() === "accepted");
+        }
+      }
+      if (!canSee) {
+        return { earned: [] as { id: string; name: string; icon: string; color: string; progress: number; total: number }[], next: [] };
+      }
+
+      const allBadges = [
+        { id: "3day", name: "3-Day Fire", icon: "Zap", color: "coral", requirement: 3, type: "streak" as const },
+        { id: "7day", name: "Week Warrior", icon: "Star", color: "amber", requirement: 7, type: "streak" as const },
+        { id: "14day", name: "Fortnight", icon: "Trophy", color: "purple", requirement: 14, type: "streak" as const },
+        { id: "30day", name: "Month Master", icon: "Target", color: "teal", requirement: 30, type: "streak" as const },
+        { id: "60day", name: "Iron Will", icon: "Zap", color: "coral", requirement: 60, type: "streak" as const },
+      ];
+
+      const earned = allBadges
+        .filter((b) => bestStreak >= b.requirement)
+        .map((b) => ({ ...b, progress: b.requirement, total: b.requirement }));
+      const next = allBadges
+        .filter((b) => bestStreak < b.requirement)
+        .slice(0, 3)
+        .map((b) => ({ ...b, progress: bestStreak, total: b.requirement }));
+      return { earned, next };
     }),
 
   /** Delete account: clears profile data; when SUPABASE_SERVICE_ROLE_KEY is set, also deletes auth user. Client must sign out after. */

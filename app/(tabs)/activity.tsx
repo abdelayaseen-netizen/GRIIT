@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Bell, Target, Trophy, UserPlus, Users } from "lucide-react-native";
@@ -24,7 +24,7 @@ type LeaderScope = "global" | "friends" | "challenge";
 
 type NotifRow = {
   id: string;
-  type: "respect" | "comment" | "follow" | "rank" | "general";
+  type: "respect" | "comment" | "follow" | "follow_request" | "rank" | "general";
   read: boolean;
   createdAt: string;
   title?: string | null;
@@ -64,6 +64,8 @@ function getNotifText(n: NotifRow): { bold: string; rest: string } {
       return { bold: name, rest: ` commented — "${String(n.metadata.comment_text ?? "").slice(0, 80)}"` };
     case "follow":
       return { bold: name, rest: " started following you" };
+    case "follow_request":
+      return { bold: name, rest: " wants to follow you" };
     case "rank":
       return {
         bold: "",
@@ -278,7 +280,7 @@ function NotificationsBody({
         <>
           <Text style={styles.groupLabel}>NEW</Text>
           {unread.map((n) => (
-            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread />
+            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread userId={userId} />
           ))}
         </>
       ) : null}
@@ -286,7 +288,7 @@ function NotificationsBody({
         <>
           <Text style={styles.groupLabel}>EARLIER</Text>
           {earlier.map((n) => (
-            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread={false} />
+            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread={false} userId={userId} />
           ))}
         </>
       ) : null}
@@ -316,14 +318,44 @@ function NotificationRow({
   n,
   onFollow,
   unread,
+  userId,
 }: {
   n: NotifRow;
   onFollow: (id: string) => void;
   unread: boolean;
+  userId: string;
 }) {
+  const qc = useQueryClient();
+  const [frDone, setFrDone] = useState<"accepted" | "declined" | null>(null);
   const text = getNotifText(n);
   const colors = n.actorId ? getAvatarColor(n.actorId) : getAvatarColor(n.id);
   const initial = (n.actorDisplayName ?? n.actorUsername ?? "?").charAt(0).toUpperCase();
+
+  const onAcceptFr = useCallback(async () => {
+    if (!n.actorId) return;
+    try {
+      await trpcMutate(TRPC.profiles.acceptFollowRequest, { requesterId: n.actorId });
+      setFrDone("accepted");
+      void qc.invalidateQueries({ queryKey: ["activity", "notifications", userId] });
+    } catch (e) {
+      captureError(e, "AcceptFollowRequest");
+    }
+  }, [n.actorId, qc, userId]);
+
+  const onDeclineFr = useCallback(async () => {
+    if (!n.actorId) return;
+    try {
+      await trpcMutate(TRPC.profiles.declineFollowRequest, { requesterId: n.actorId });
+      setFrDone("declined");
+      void qc.invalidateQueries({ queryKey: ["activity", "notifications", userId] });
+    } catch (e) {
+      captureError(e, "DeclineFollowRequest");
+    }
+  }, [n.actorId, qc, userId]);
+
+  if (n.type === "follow_request" && frDone === "declined") {
+    return null;
+  }
 
   return (
     <View style={[styles.notifRow, DS_SHADOWS.cardSubtle, unread ? styles.notifUnread : styles.notifRead]}>
@@ -340,7 +372,7 @@ function NotificationRow({
                   ? DS_COLORS.DISCOVER_CORAL
                   : n.type === "comment"
                     ? DS_COLORS.CELEB_BONUS_PURPLE
-                    : n.type === "follow"
+                    : n.type === "follow" || n.type === "follow_request"
                       ? DS_COLORS.DISCOVER_GREEN
                       : n.type === "rank"
                         ? DS_COLORS.WARNING
@@ -349,7 +381,7 @@ function NotificationRow({
           ]}
         >
           <Text style={[styles.typeBadgeText, n.type === "follow" && styles.typeBadgeFollow]}>
-            {n.type === "respect" ? "🔥" : n.type === "comment" ? "💬" : n.type === "follow" ? "+" : n.type === "rank" ? "★" : "•"}
+            {n.type === "respect" ? "🔥" : n.type === "comment" ? "💬" : n.type === "follow" || n.type === "follow_request" ? "+" : n.type === "rank" ? "★" : "•"}
           </Text>
         </View>
       </View>
@@ -360,7 +392,30 @@ function NotificationRow({
         </Text>
         <Text style={styles.notifTime}>{relativeTime(n.createdAt)}</Text>
       </View>
-      {n.type === "follow" && n.actorId ? (
+      {n.type === "follow_request" && n.actorId ? (
+        frDone === "accepted" ? (
+          <Text style={styles.frAccepted}>Accepted</Text>
+        ) : (
+          <View style={styles.frActions}>
+            <TouchableOpacity
+              style={styles.frAcceptBtn}
+              onPress={() => void onAcceptFr()}
+              accessibilityRole="button"
+              accessibilityLabel="Accept follow request"
+            >
+              <Text style={styles.frAcceptTxt}>Accept</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.frDeclineBtn}
+              onPress={() => void onDeclineFr()}
+              accessibilityRole="button"
+              accessibilityLabel="Decline follow request"
+            >
+              <Text style={styles.frDeclineTxt}>Decline</Text>
+            </TouchableOpacity>
+          </View>
+        )
+      ) : n.type === "follow" && n.actorId ? (
         <TouchableOpacity
           style={styles.followBtn}
           onPress={() => onFollow(n.actorId!)}
@@ -754,6 +809,23 @@ function LeaderboardBody({
   );
 }
 
+function useOpenLeaderboardProfile() {
+  const router = useRouter();
+  return useCallback(
+    (viewerId: string, entry: BoardEntry) => {
+      if (entry.userId === viewerId) {
+        router.push(ROUTES.TABS_PROFILE as never);
+        return;
+      }
+      const u = entry.username?.trim();
+      if (!u || u === "?") return;
+      if (/^user_[0-9a-f]+$/i.test(u)) return;
+      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+    },
+    [router]
+  );
+}
+
 function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[]; leaderPoints: number; viewerId: string }) {
   const viewer = entries.find((e) => e.userId === viewerId);
   if (entries.length === 0) {
@@ -789,11 +861,17 @@ function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[];
 }
 
 function CrownCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string }) {
+  const openProfile = useOpenLeaderboardProfile();
   const colors = getAvatarColor(entry.userId);
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
   const isSelf = entry.userId === viewerId;
   return (
-    <View style={styles.crownCard}>
+    <Pressable
+      style={styles.crownCard}
+      onPress={() => openProfile(viewerId, entry)}
+      accessibilityRole="button"
+      accessibilityLabel={`View profile for ${entry.displayName}`}
+    >
       {isSelf ? <View style={styles.rowSelfAccent} /> : null}
       <View style={styles.crownEyebrow}>
         <View style={styles.crownDot} />
@@ -826,7 +904,7 @@ function CrownCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string })
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -834,9 +912,15 @@ function RegularRow({ entry, leaderPoints, viewerId }: { entry: BoardEntry; lead
   const colors = getAvatarColor(entry.userId);
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
   const pct = leaderPoints > 0 ? Math.min(100, (entry.points / leaderPoints) * 100) : 0;
+  const openProfile = useOpenLeaderboardProfile();
   const isSelf = entry.userId === viewerId;
   return (
-    <View style={[styles.regRow, DS_SHADOWS.cardSubtle]}>
+    <Pressable
+      style={[styles.regRow, DS_SHADOWS.cardSubtle]}
+      onPress={() => openProfile(viewerId, entry)}
+      accessibilityRole="button"
+      accessibilityLabel={`View profile for ${entry.displayName}`}
+    >
       {isSelf ? <View style={styles.rowSelfAccent} /> : null}
       <Text style={[styles.regRank, { color: rankNumColor(entry.rank) }]}>#{entry.rank}</Text>
       <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
@@ -865,7 +949,7 @@ function RegularRow({ entry, leaderPoints, viewerId }: { entry: BoardEntry; lead
         <Text style={styles.regPts}>{entry.points}</Text>
         <Text style={styles.regPtsLabel}>pts</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -873,9 +957,15 @@ function YourRankCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string
   const colors = getAvatarColor(entry.userId);
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
   const gap = entry.gapToAbove;
+  const openProfile = useOpenLeaderboardProfile();
   const isSelf = entry.userId === viewerId;
   return (
-    <View style={styles.yourCard}>
+    <Pressable
+      style={styles.yourCard}
+      onPress={() => openProfile(viewerId, entry)}
+      accessibilityRole="button"
+      accessibilityLabel="View your profile"
+    >
       {isSelf ? <View style={styles.rowSelfAccent} /> : null}
       <Text style={styles.yourRankNum}>#{entry.rank}</Text>
       <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
@@ -898,7 +988,7 @@ function YourRankCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string
         </Text>
       </View>
       <Text style={styles.yourPts}>{entry.points}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -983,6 +1073,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   followBtnText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.WHITE },
+  frActions: { flexDirection: "row", gap: 8, flexShrink: 0 },
+  frAcceptBtn: {
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    borderRadius: 28,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  frAcceptTxt: { fontSize: 12, fontWeight: "500", color: DS_COLORS.WHITE },
+  frDeclineBtn: {
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    borderRadius: 28,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  frDeclineTxt: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
+  frAccepted: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_SUCCESS },
   thumbPlaceholder: {
     width: 36,
     height: 36,

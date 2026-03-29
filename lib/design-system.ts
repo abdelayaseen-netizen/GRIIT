@@ -275,6 +275,33 @@ export const DS_COLORS = {
   RANK_DOT: '#AAAAAA',
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // PROFILE REDESIGN — tokens (no raw hex in profile screens)
+  // ═══════════════════════════════════════════════════════════════════════════
+  PRIMARY: '#E8593C',
+  SURFACE: '#F1EFE8',
+  PROFILE_PAGE_BG: '#F2F1EC',
+  PROFILE_TEXT_PRIMARY: '#2C2C2A',
+  PROFILE_TEXT_SECONDARY: '#888780',
+  PROFILE_TEXT_MUTED: '#B4B2A9',
+  PROFILE_BORDER_ALT: '#E8E6DF',
+  PROFILE_TIER_STARTER_BG: '#FFF3F0',
+  PROFILE_TIER_STARTER_TEXT: '#993C1D',
+  PROFILE_TIER_BUILDER_BG: '#E1F5EE',
+  PROFILE_TIER_BUILDER_TEXT: '#0F6E56',
+  PROFILE_TIER_WARRIOR_BG: '#EEEDFE',
+  PROFILE_TIER_WARRIOR_TEXT: '#534AB7',
+  PROFILE_STAT_CORAL_BG: '#FFF3F0',
+  PROFILE_STAT_AMBER_BG: '#FAEEDA',
+  PROFILE_STAT_TEAL_BG: '#E1F5EE',
+  PROFILE_STAT_BLUE_BG: '#E6F1FB',
+  PROFILE_STAT_CORAL_ICON: '#E8593C',
+  PROFILE_STAT_AMBER_ICON: '#BA7517',
+  PROFILE_STAT_TEAL_ICON: '#1D9E75',
+  PROFILE_STAT_BLUE_ICON: '#378ADD',
+  PROFILE_NEXT_BADGE_BG: '#F1EFE8',
+  PROFILE_SUCCESS: '#4CAF50',
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TASK TYPE COLORS
   // ═══════════════════════════════════════════════════════════════════════════
   taskIndigo: '#6366F1',

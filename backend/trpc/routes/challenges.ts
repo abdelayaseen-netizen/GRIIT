@@ -752,6 +752,57 @@ export const challengesRouter = createTRPCRouter({
       }
     }),
 
+  /** Another user's active challenges (privacy: public profile or accepted follow). */
+  getPublicChallenges: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const server = getSupabaseServer() ?? ctx.supabase;
+      let canSee = input.userId === ctx.userId;
+      if (!canSee) {
+        const { data: pr } = await server
+          .from("profiles")
+          .select("profile_visibility")
+          .eq("user_id", input.userId)
+          .maybeSingle();
+        const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+        if (vis === "public") {
+          canSee = true;
+        } else {
+          const { data: fol } = await ctx.supabase
+            .from("user_follows")
+            .select("status")
+            .eq("follower_id", ctx.userId)
+            .eq("following_id", input.userId)
+            .maybeSingle();
+          canSee = Boolean(fol && String((fol as { status?: string }).status ?? "").toLowerCase() === "accepted");
+        }
+      }
+      if (!canSee) return [];
+      const { data, error } = await server
+        .from("active_challenges")
+        .select(
+          `
+          id,
+          challenge_id,
+          current_day,
+          progress_percent,
+          challenges (
+            id,
+            title,
+            duration_days
+          )
+        `
+        )
+        .eq("user_id", input.userId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      return data ?? [];
+    }),
+
   startTeamChallenge: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {

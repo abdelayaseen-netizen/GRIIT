@@ -8,7 +8,7 @@ const DEVICE_ID_MAX = 256;
 
 const NOTIF_SELECT = "id, user_id, type, title, body, data, read, created_at";
 
-type NotifType = "respect" | "comment" | "follow" | "rank" | "general";
+type NotifType = "respect" | "comment" | "follow" | "rank" | "follow_request" | "general";
 
 function parseDataObject(raw: unknown): Record<string, unknown> {
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
@@ -32,15 +32,25 @@ function mapDbRow(r: DbNotifRow) {
   const dataObj = parseDataObject(r.data);
   const actorKey = "actor" + "_id";
   const rawActor = dataObj[actorKey];
-  const actorId = typeof rawActor === "string" ? rawActor : null;
+  const reqId = dataObj["requesterId"];
+  const actorId =
+    typeof reqId === "string" ? reqId : typeof rawActor === "string" ? rawActor : null;
   const actorUsername =
-    typeof dataObj["actor_username"] === "string" ? dataObj["actor_username"] : null;
+    typeof dataObj["requesterUsername"] === "string"
+      ? dataObj["requesterUsername"]
+      : typeof dataObj["actor_username"] === "string"
+        ? dataObj["actor_username"]
+        : null;
   const actorDisplayName =
-    typeof dataObj["actor_display_name"] === "string" ? dataObj["actor_display_name"] : null;
+    typeof dataObj["requesterDisplayName"] === "string"
+      ? dataObj["requesterDisplayName"]
+      : typeof dataObj["actor_display_name"] === "string"
+        ? dataObj["actor_display_name"]
+        : null;
   const actorAvatarUrl =
     typeof dataObj["actor_avatar_url"] === "string" ? dataObj["actor_avatar_url"] : null;
 
-  const allowed = new Set(["respect", "comment", "follow", "rank"]);
+  const allowed = new Set(["respect", "comment", "follow", "rank", "follow_request"]);
   const typeStr = String(r.type ?? "general");
   const type: NotifType = allowed.has(typeStr) ? (typeStr as NotifType) : "general";
 

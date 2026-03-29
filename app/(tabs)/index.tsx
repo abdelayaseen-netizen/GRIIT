@@ -455,7 +455,9 @@ export default function HomeScreen() {
                 <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
                   <Target size={16} color={DS_COLORS.GREEN} />
                 </View>
-                <Text style={s.statValueText}>{rank}</Text>
+                <Text style={s.statValueNum} numberOfLines={1}>
+                  {rank}
+                </Text>
                 <Text style={s.statLabelLower}>rank</Text>
               </Card>
             </TouchableOpacity>
@@ -700,12 +702,6 @@ const s = StyleSheet.create({
   },
   statValueNum: {
     fontSize: 22,
-    fontWeight: "700",
-    color: DS_COLORS.TEXT_PRIMARY,
-    lineHeight: 26,
-  },
-  statValueText: {
-    fontSize: 14,
     fontWeight: "700",
     color: DS_COLORS.TEXT_PRIMARY,
     lineHeight: 26,
