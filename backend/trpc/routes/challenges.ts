@@ -865,6 +865,8 @@ export const challengesRouter = createTRPCRouter({
       showReplayLabel: z.boolean().optional(),
       participationType: z.enum(['solo', 'duo', 'team', 'shared_goal']).optional().default('solo'),
       teamSize: z.number().min(1).max(10).optional().default(1),
+      difficulty: z.enum(['standard', 'hard']).optional().default('standard'),
+      status: z.enum(['published', 'draft']).optional().default('published'),
       sharedGoalTarget: z.number().positive().optional(),
       sharedGoalUnit: z.string().max(50).optional(),
       deadlineType: z.enum(['none', 'soft', 'hard']).optional(),
@@ -1019,6 +1021,7 @@ export const challengesRouter = createTRPCRouter({
         input.participationType === "duo";
       const runStatus = isTeamOrShared ? "waiting" : null;
       const isOneDay = input.type === "one_day";
+      const challengeStatus = input.status ?? "published";
       const insertPayload: Record<string, unknown> = {
         creator_id: ctx.userId,
         title: input.title,
@@ -1026,8 +1029,8 @@ export const challengesRouter = createTRPCRouter({
         duration_type: isOneDay ? "24h" : "multi_day",
         duration_days: input.durationDays,
         category: input.categories?.[0] || "other",
-        difficulty: "medium",
-        status: "published",
+        difficulty: input.difficulty === "hard" ? "hard" : "medium",
+        status: challengeStatus,
         live_date: input.liveDate || null,
         replay_policy: input.replayPolicy || "allow_replay",
         require_same_rules: input.requireSameRules ?? true,
@@ -1093,16 +1096,20 @@ export const challengesRouter = createTRPCRouter({
       }
 
       if (input.tasks.length === 0) {
-        const activeChallenge = await autoJoinCreatorAfterCreate(
-          ctx.supabase,
-          ctx.userId,
-          challenge.id,
-          input.title,
-          "[challenges.create] Auto-join (no tasks) failed — non-fatal"
-        );
-        return { ...challenge, tasks: [], activeChallenge };
+        const activeChallengeNoTasks =
+          challengeStatus === "published"
+            ? await autoJoinCreatorAfterCreate(
+                ctx.supabase,
+                ctx.userId,
+                challenge.id,
+                input.title,
+                "[challenges.create] Auto-join (no tasks) failed — non-fatal"
+              )
+            : null;
+        return { ...challenge, tasks: [], activeChallenge: activeChallengeNoTasks };
       }
 
+      const forcePhotoProof = input.difficulty === "hard";
       const tasksToInsert = input.tasks.map((task, i) =>
         buildTaskInsertPayload(
           {
@@ -1115,8 +1122,8 @@ export const challengesRouter = createTRPCRouter({
             trackingMode: task.trackingMode,
             durationMinutes: task.durationMinutes,
             mustCompleteInSession: task.mustCompleteInSession,
-            photoRequired: task.photoRequired,
-            requirePhotoProof: task.requirePhotoProof,
+            photoRequired: forcePhotoProof ? true : task.photoRequired,
+            requirePhotoProof: forcePhotoProof ? true : (task.requirePhotoProof ?? false),
             strictTimerMode: task.strictTimerMode,
             locationName: task.locationName,
             radiusMeters: task.radiusMeters,
@@ -1146,13 +1153,16 @@ export const challengesRouter = createTRPCRouter({
         });
       }
 
-      const activeChallenge = await autoJoinCreatorAfterCreate(
-        ctx.supabase,
-        ctx.userId,
-        challenge.id,
-        input.title,
-        "[challenges.create] Auto-join failed — non-fatal"
-      );
+      let activeChallenge: Awaited<ReturnType<typeof joinChallengeDirect>> | null = null;
+      if (challengeStatus === "published") {
+        activeChallenge = await autoJoinCreatorAfterCreate(
+          ctx.supabase,
+          ctx.userId,
+          challenge.id,
+          input.title,
+          "[challenges.create] Auto-join failed — non-fatal"
+        );
+      }
 
       return {
         ...challenge,

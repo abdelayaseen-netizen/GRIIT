@@ -88,6 +88,10 @@ export interface CreateChallengeDraft {
   sharedGoalUnit?: string;
   deadlineType?: DeadlineTypeUI;
   deadlineDate?: string | null;
+  /** Sent to API as challenge difficulty (hard enforces photo proof server-side). */
+  difficulty?: "standard" | "hard";
+  /** published = live create; draft = saved without launching. */
+  status?: "published" | "draft";
 }
 
 /** Compute effective duration in days from draft state. */
@@ -187,6 +191,8 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
     description: sanitizeChallengeDescription(draft.description ?? ""),
     type: draft.type,
     durationDays,
+    difficulty: draft.difficulty ?? "standard",
+    status: draft.status ?? "published",
     categories: draft.categories,
     liveDate: draft.type === "one_day" ? draft.liveDate : undefined,
     replayPolicy: draft.type === "one_day" ? draft.replayPolicy : undefined,

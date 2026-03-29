@@ -403,6 +403,15 @@ export const DS_COLORS = {
   createErrorText: '#DC2626',
   createErrorBg: '#FEF2F2',
   createChallengeGreen: '#10B981',
+  /** Hard mode photo-proof banner (create wizard) */
+  CREATE_HARD_WARNING_BG: '#FFF8E1',
+  CREATE_HARD_WARNING_BORDER: '#FFE082',
+  CREATE_HARD_WARNING_TEXT: '#7A5C00',
+  /** Aliases for create redesign (map to existing surfaces) */
+  TEXT_HINT: '#999999',
+  BORDER_LIGHT: '#EEEBE5',
+  CARD_BG: '#FFFFFF',
+  WARM_CREAM: '#F2F1EC',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CHIP / FILTER

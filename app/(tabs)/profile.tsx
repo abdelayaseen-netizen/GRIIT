@@ -1,3 +1,4 @@
+// TODO: Add "Drafts" section to profile — filter challenges where status === 'draft' && creator_id === user.id
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,

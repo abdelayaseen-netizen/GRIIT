@@ -18,15 +18,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import {
-  User,
-  Users,
-  UsersRound,
-  Globe,
-  Lock,
-  Trash2,
-  Flame,
-} from "lucide-react-native";
+import { User, Users, UsersRound, Trash2 } from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { DS_COLORS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
 import { CREATE_SELECTION } from "@/lib/create-selection";
 import { CHALLENGE_PACKS, tasksFromPack } from "@/lib/challenge-packs";
@@ -47,6 +40,7 @@ import { sharePlainMessage } from "@/lib/share";
 import type { ChallengeType, ChallengeVisibility, ReplayPolicy } from "@/types";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
 import NewTaskModal from "@/components/create/NewTaskModal";
+import CommitModal from "@/components/create/CommitModal";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { TimeWindowPrompt } from "@/components/TimeWindowPrompt";
 import { useAuthGate, useIsGuest } from "@/contexts/AuthGateContext";
@@ -69,6 +63,92 @@ type DifficultyMode = "standard" | "hard";
 
 const DURATION_PRESETS = [7, 14, 21, 30, 75] as const;
 const CATEGORY_OPTIONS = ["Fitness", "Mind", "Faith", "Discipline", "Other"] as const;
+
+function DurationPill({
+  label,
+  selected,
+  onPress,
+  disabled,
+  style,
+  accessibilityLabel: a11yLabel,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  disabled?: boolean;
+  style?: object;
+  accessibilityLabel?: string;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityLabel={a11yLabel ?? `Duration ${label}`}
+      accessibilityRole="button"
+      accessibilityState={{ selected, disabled: Boolean(disabled) }}
+      style={[
+        {
+          height: 44,
+          borderRadius: 22,
+          borderWidth: 1.5,
+          borderColor: selected ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
+          backgroundColor: selected ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: disabled ? 0.45 : 1,
+        },
+        style,
+      ]}
+    >
+      <Text
+        style={{
+          fontSize: 15,
+          fontWeight: "500",
+          color: selected ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+function getTaskIcon(taskType: string): string {
+  const icons: Record<string, string> = {
+    workout: "💪",
+    run: "🏃",
+    timer: "⏱️",
+    simple: "✓",
+    water: "💧",
+    journal: "📓",
+    reading: "📖",
+    photo: "📷",
+    checkin: "📍",
+    counter: "#️⃣",
+  };
+  return icons[taskType] || "✓";
+}
+
+function getTaskMeta(task: TaskEditorTask & { wizardType?: string }): string {
+  const t = task.wizardType ?? task.type;
+  const parts: string[] = [t.charAt(0).toUpperCase() + t.slice(1)];
+  if (task.type === "run" && task.trackingMode === "distance" && task.targetValue != null) {
+    parts.push(`${task.targetValue} ${task.unit || "mi"}`);
+  }
+  if (task.durationMinutes != null && task.durationMinutes > 0) {
+    parts.push(`${task.durationMinutes} min`);
+  }
+  if (task.type === "counter" && task.targetValue != null) {
+    parts.push(`${task.targetValue} ${task.unit || "reps"}`);
+  }
+  if (task.type === "reading" && task.targetValue != null) {
+    parts.push(`${task.targetValue} pages`);
+  }
+  if (task.type === "water" && task.targetValue != null) {
+    parts.push(`${task.targetValue} glasses`);
+  }
+  return parts.join(" · ");
+}
 
 function whoToParticipation(w: Who): { participation: ParticipationTypeUI; teamSize: number } {
   if (w === "solo") return { participation: "solo", teamSize: 1 };
@@ -110,6 +190,7 @@ export default function CreateChallengeWizard() {
   const [duoInvite, setDuoInvite] = useState("");
   const [resumeBanner, setResumeBanner] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showCommitModal, setShowCommitModal] = useState(false);
   const [cancelDraftVisible, setCancelDraftVisible] = useState(false);
   const { error: wizardError, showError: showWizardError, clearError: clearWizardError } = useInlineError();
 
@@ -333,96 +414,113 @@ export default function CreateChallengeWizard() {
     }
   }, []);
 
-  const handleLaunch = useCallback(async () => {
-    if (isGuest) {
-      showGate("create");
-      return;
-    }
-    clearWizardError();
-    const list = applyPhotoPolicyToTasks(tasks);
-    const draftTasks = list as unknown as CreateChallengeDraft["tasks"];
-    const v = validateDraftTasks(draftTasks, participation);
-    if (!v.valid) {
-      showWizardError(v.error ?? "Fix tasks and try again.");
-      return;
-    }
-    const liveDate =
-      challengeType === "one_day" ? new Date().toISOString().slice(0, 10) : "";
-    if (!canProceedStep1(title, duration, challengeType, liveDate, participation)) {
-      showWizardError("Add a title and duration.");
-      return;
-    }
-    setSubmitting(true);
-    const draft: CreateChallengeDraft = {
-      title,
-      description: "",
-      type: challengeType,
-      durationDays,
-      customDuration: customDur,
-      categories,
-      tasks: draftTasks,
-      liveDate,
-      replayPolicy: "allow_replay" as ReplayPolicy,
-      requireSameRules: true,
-      showReplayLabel: true,
-      visibility,
-      participationType: participation,
-      teamSize,
-    };
-    const payload = buildCreatePayload(draft);
-    try {
-      const challenge = (await trpcMutate(TRPC.challenges.create, payload)) as { id?: string };
-      await AsyncStorage.removeItem(DRAFT_KEY);
-      const { queryClient } = await import("@/lib/query-client");
-      void queryClient.invalidateQueries({ queryKey: ["home"] });
-      void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
-      void queryClient.invalidateQueries({ queryKey: ["discover"] });
-      const newId = challenge?.id;
-      if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  const submitChallenge = useCallback(
+    async (publishStatus: "published" | "draft") => {
+      if (isGuest) {
+        showGate("create");
+        return;
       }
-      if (newId) {
-        pendingNavId.current = newId;
-        await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
-        useCelebrationStore.getState().show({
-          title: "Challenge created!",
-          subtitle: `${title.trim()} is live.`,
-          type: "badge",
-          shareMessage: `I just launched "${title.trim()}" on GRIIT. Day 1 starts now. Join me: https://griit.fit`,
-        });
-        if (who === "duo") {
-          setTimeout(() => {
-            void sharePlainMessage(`Join my challenge on GRIIT: ${title.trim()}`);
-          }, 400);
+      clearWizardError();
+      const list = applyPhotoPolicyToTasks(tasks);
+      const draftTasks = list as unknown as CreateChallengeDraft["tasks"];
+      const v = validateDraftTasks(draftTasks, participation);
+      if (!v.valid) {
+        showWizardError(v.error ?? "Fix tasks and try again.");
+        return;
+      }
+      const liveDate =
+        challengeType === "one_day" ? new Date().toISOString().slice(0, 10) : "";
+      if (!canProceedStep1(title, duration, challengeType, liveDate, participation)) {
+        showWizardError("Add a title and duration.");
+        return;
+      }
+      setSubmitting(true);
+      const draft: CreateChallengeDraft = {
+        title,
+        description: "",
+        type: challengeType,
+        durationDays,
+        customDuration: customDur,
+        categories,
+        tasks: draftTasks,
+        liveDate,
+        replayPolicy: "allow_replay" as ReplayPolicy,
+        requireSameRules: true,
+        showReplayLabel: true,
+        visibility,
+        participationType: participation,
+        teamSize,
+        difficulty: difficultyMode === "hard" ? "hard" : "standard",
+        status: publishStatus,
+      };
+      const payload = buildCreatePayload(draft);
+      try {
+        const challenge = (await trpcMutate(TRPC.challenges.create, payload)) as { id?: string };
+        await AsyncStorage.removeItem(DRAFT_KEY);
+        const { queryClient } = await import("@/lib/query-client");
+        void queryClient.invalidateQueries({ queryKey: ["home"] });
+        void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
+        void queryClient.invalidateQueries({ queryKey: ["discover"] });
+
+        if (publishStatus === "draft") {
+          if (challenge?.id) {
+            router.replace(ROUTES.TABS_PROFILE as never);
+          }
+          return;
         }
-      } else {
-        router.replace(ROUTES.TABS_DISCOVER as never);
+
+        const newId = challenge?.id;
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        if (newId) {
+          pendingNavId.current = newId;
+          await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
+          useCelebrationStore.getState().show({
+            title: "Challenge created!",
+            subtitle: `${title.trim()} is live.`,
+            type: "badge",
+            shareMessage: `I just launched "${title.trim()}" on GRIIT. Day 1 starts now. Join me: https://griit.fit`,
+          });
+          if (who === "duo") {
+            setTimeout(() => {
+              void sharePlainMessage(`Join my challenge on GRIIT: ${title.trim()}`);
+            }, 400);
+          }
+        } else {
+          router.replace(ROUTES.TABS_DISCOVER as never);
+        }
+      } catch (e: unknown) {
+        captureError(
+          e,
+          publishStatus === "draft" ? "CreateChallengeWizardSaveServerDraft" : "CreateChallengeWizardLaunch"
+        );
+        showWizardError(e instanceof Error ? e.message : "Try again.");
+      } finally {
+        setSubmitting(false);
       }
-    } catch (e: unknown) {
-      captureError(e, "CreateChallengeWizardLaunch");
-      showWizardError(e instanceof Error ? e.message : "Try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [
-    isGuest,
-    user?.id,
-    showGate,
-    applyPhotoPolicyToTasks,
-    tasks,
-    participation,
-    title,
-    duration,
-    challengeType,
-    customDur,
-    categories,
-    visibility,
-    teamSize,
-    who,
-    router,
-    clearWizardError,
-    showWizardError,
-  ]);
+    },
+    [
+      isGuest,
+      user?.id,
+      showGate,
+      applyPhotoPolicyToTasks,
+      tasks,
+      participation,
+      title,
+      duration,
+      challengeType,
+      customDur,
+      categories,
+      visibility,
+      teamSize,
+      who,
+      router,
+      clearWizardError,
+      showWizardError,
+      difficultyMode,
+    ]
+  );
 
   const estTasks: EstimateTaskInput[] = tasks.map((t) => ({
     type: t.type,
@@ -554,31 +652,44 @@ export default function CreateChallengeWizard() {
                 })}
               </View>
               <Text style={[styles.fieldLabel, { marginTop: 16 }]}>How long?</Text>
-              <View style={styles.pillRow}>
-                {DURATION_PRESETS.map((d) => (
-                  <TouchableOpacity
-                    key={d}
-                    style={[styles.pill, durationDays === d && styles.pillSel]}
-                    onPress={() => {
-                      setDurationDays(d);
-                      setCustomDur("");
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${d} day challenge — ${durationDays === d ? "selected" : "tap to select"}`}
-                    accessibilityState={{ selected: durationDays === d }}
-                  >
-                    <Text style={[styles.pillTxt, durationDays === d && styles.pillTxtSel]}>{d} days</Text>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity
-                  style={[styles.pill, durationDays === null && styles.pillSel]}
-                  onPress={() => setDurationDays(null)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Custom duration — ${durationDays === null ? "selected" : "tap to select"}`}
-                  accessibilityState={{ selected: durationDays === null }}
-                >
-                  <Text style={[styles.pillTxt, durationDays === null && styles.pillTxtSel]}>Custom</Text>
-                </TouchableOpacity>
+              <View style={{ flexDirection: "column", gap: DS_SPACING.SM }}>
+                <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                  {DURATION_PRESETS.slice(0, 3).map((d) => (
+                    <DurationPill
+                      key={d}
+                      label={`${d} days`}
+                      selected={durationDays === d}
+                      onPress={() => {
+                        setDurationDays(d);
+                        setCustomDur("");
+                      }}
+                      accessibilityLabel={`${d} day challenge — ${durationDays === d ? "selected" : "tap to select"}`}
+                      style={{ flex: 1 }}
+                    />
+                  ))}
+                </View>
+                <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                  {DURATION_PRESETS.slice(3, 5).map((d) => (
+                    <DurationPill
+                      key={d}
+                      label={`${d} days`}
+                      selected={durationDays === d}
+                      onPress={() => {
+                        setDurationDays(d);
+                        setCustomDur("");
+                      }}
+                      accessibilityLabel={`${d} day challenge — ${durationDays === d ? "selected" : "tap to select"}`}
+                      style={{ flex: 1 }}
+                    />
+                  ))}
+                  <DurationPill
+                    label="Custom"
+                    selected={durationDays === null}
+                    onPress={() => setDurationDays(null)}
+                    accessibilityLabel={`Custom duration — ${durationDays === null ? "selected" : "tap to select"}`}
+                    style={{ flex: 1 }}
+                  />
+                </View>
               </View>
               {durationDays === null && (
                 <View style={styles.customRow}>
@@ -629,41 +740,49 @@ export default function CreateChallengeWizard() {
               <Text style={styles.h1}>Daily tasks</Text>
               <Text style={styles.sub}>What must get done every single day?</Text>
               <Text style={styles.packsHead}>Quick start packs</Text>
-              <View style={styles.packGrid}>
-                {CHALLENGE_PACKS.map((pack) => {
-                  const sel = selectedPackId === pack.id;
+              <View style={{ flexDirection: "column", gap: DS_SPACING.SM }}>
+                {Array.from({ length: Math.ceil(CHALLENGE_PACKS.length / 2) }, (_, rowIdx) => {
+                  const row = CHALLENGE_PACKS.slice(rowIdx * 2, rowIdx * 2 + 2);
                   return (
-                    <TouchableOpacity
-                      key={pack.id}
-                      style={[styles.packCard, sel && styles.packCardSel]}
-                      onPress={() => {
-                        if (sel) {
-                          setSelectedPackId(null);
-                          setTasks([]);
-                        } else {
-                          setSelectedPackId(pack.id);
-                          const built = tasksFromPack(pack) as unknown as (TaskEditorTask & { wizardType?: string })[];
-                          const withW = pack.tasks.map((t, i) => ({
-                            ...(built[i] as object),
-                            wizardType: t.type,
-                          })) as unknown as (TaskEditorTask & { wizardType?: string })[];
-                          setTasks(withW);
-                        }
-                      }}
-                      activeOpacity={0.85}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${pack.name} pack — ${pack.taskCount} tasks — tap to use this pack`}
-                      accessibilityState={{ selected: sel }}
-                    >
-                      <Text style={styles.packEmoji}>{pack.emoji}</Text>
-                      <Text style={styles.packName} numberOfLines={1}>
-                        {pack.name}
-                      </Text>
-                      <Text style={styles.packDesc} numberOfLines={2}>
-                        {pack.description}
-                      </Text>
-                      <Text style={styles.packCount}>{pack.taskCount} tasks</Text>
-                    </TouchableOpacity>
+                    <View key={row.map((p) => p.id).join("-")} style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                      {row.map((pack) => {
+                        const sel = selectedPackId === pack.id;
+                        return (
+                          <TouchableOpacity
+                            key={pack.id}
+                            style={[styles.packCard, sel && styles.packCardSel, { flex: 1 }]}
+                            onPress={() => {
+                              if (sel) {
+                                setSelectedPackId(null);
+                                setTasks([]);
+                              } else {
+                                setSelectedPackId(pack.id);
+                                const built = tasksFromPack(pack) as unknown as (TaskEditorTask & { wizardType?: string })[];
+                                const withW = pack.tasks.map((t, i) => ({
+                                  ...(built[i] as object),
+                                  wizardType: t.type,
+                                })) as unknown as (TaskEditorTask & { wizardType?: string })[];
+                                setTasks(withW);
+                              }
+                            }}
+                            activeOpacity={0.85}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${pack.name} pack — ${pack.taskCount} tasks — tap to use this pack`}
+                            accessibilityState={{ selected: sel }}
+                          >
+                            <Text style={styles.packEmoji}>{pack.emoji}</Text>
+                            <Text style={styles.packName} numberOfLines={1}>
+                              {pack.name}
+                            </Text>
+                            <Text style={styles.packDesc} numberOfLines={2}>
+                              {pack.description}
+                            </Text>
+                            <Text style={styles.packCount}>{pack.taskCount} tasks</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+                    </View>
                   );
                 })}
               </View>
@@ -710,7 +829,9 @@ export default function CreateChallengeWizard() {
               <View style={styles.typeRow}>
                 <TouchableOpacity
                   style={[styles.ruleCard, difficultyMode === "standard" && styles.ruleCardSel]}
-                  onPress={() => setDifficultyMode("standard")}
+                  onPress={() => {
+                    setDifficultyMode("standard");
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel="Standard difficulty — self-reported completion, streak freezes allowed — tap to select"
                   accessibilityState={{ selected: difficultyMode === "standard" }}
@@ -722,7 +843,10 @@ export default function CreateChallengeWizard() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.ruleCard, difficultyMode === "hard" && styles.ruleCardSel]}
-                  onPress={() => setDifficultyMode("hard")}
+                  onPress={() => {
+                    setDifficultyMode("hard");
+                    setPhotoProof("required");
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel="Hard mode — photo proof required, no streak freezes, miss a day means Day 1 again — tap to select"
                   accessibilityState={{ selected: difficultyMode === "hard" }}
@@ -733,26 +857,44 @@ export default function CreateChallengeWizard() {
                   <Text style={styles.ruleBullet}>• Miss a day? Day 1 again</Text>
                 </TouchableOpacity>
               </View>
+              {difficultyMode === "hard" ? (
+                <View
+                  style={{
+                    backgroundColor: DS_COLORS.CREATE_HARD_WARNING_BG,
+                    borderWidth: 1.5,
+                    borderColor: DS_COLORS.CREATE_HARD_WARNING_BORDER,
+                    borderRadius: 14,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    marginBottom: 16,
+                    marginTop: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 14, color: DS_COLORS.CREATE_HARD_WARNING_TEXT, lineHeight: 21 }}>
+                    Hard mode requires photo proof on every task. Tasks without it will be updated automatically.
+                  </Text>
+                </View>
+              ) : null}
               <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Photo proof</Text>
-              <View style={styles.pillRow}>
+              <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
                 {(
                   [
                     { id: "off" as const, label: "Off" },
-                    { id: "optional" as const, label: "Optional per task" },
-                    { id: "required" as const, label: "Required all tasks" },
+                    { id: "optional" as const, label: "Optional" },
+                    { id: "required" as const, label: "Required" },
                   ] as const
                 ).map((p) => (
-                  <TouchableOpacity
+                  <DurationPill
                     key={p.id}
-                    style={[styles.pillSm, photoProof === p.id && styles.pillSel, hardLocked && { opacity: 0.35 }]}
+                    label={p.label}
+                    selected={hardLocked ? p.id === "required" : photoProof === p.id}
                     disabled={hardLocked}
-                    onPress={() => !hardLocked && setPhotoProof(p.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Photo proof ${p.label} — ${photoProof === p.id ? "selected" : "tap to select"}`}
-                    accessibilityState={{ selected: photoProof === p.id, disabled: hardLocked }}
-                  >
-                    <Text style={[styles.pillTxt, photoProof === p.id && styles.pillTxtSel]}>{p.label}</Text>
-                  </TouchableOpacity>
+                    onPress={() => {
+                      if (!hardLocked) setPhotoProof(p.id);
+                    }}
+                    accessibilityLabel={`Photo proof ${p.label} — ${photoProof === p.id || (hardLocked && p.id === "required") ? "selected" : "tap to select"}`}
+                    style={{ flex: 1 }}
+                  />
                 ))}
               </View>
               {hardLocked ? <Text style={styles.hardNote}>Set by hard mode</Text> : null}
@@ -761,24 +903,42 @@ export default function CreateChallengeWizard() {
                 Category <Text style={styles.light}>(select all that apply)</Text>
               </Text>
               <View style={[styles.catPillWrap, catError && styles.catPillWrapErr]}>
-                <View style={styles.pillRow}>
-                  {CATEGORY_OPTIONS.map((c) => {
-                    const sel = categories.includes(c);
-                    return (
-                      <TouchableOpacity
-                        key={c}
-                        style={[styles.pill, sel && styles.pillSel]}
-                        onPress={() =>
-                          setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
-                        }
-                        accessibilityRole="button"
-                        accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
-                        accessibilityState={{ selected: sel }}
-                      >
-                        <Text style={[styles.pillTxt, sel && styles.pillTxtSel]}>{c}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                <View style={{ flexDirection: "column", gap: DS_SPACING.SM }}>
+                  <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                    {CATEGORY_OPTIONS.slice(0, 3).map((c) => {
+                      const sel = categories.includes(c);
+                      return (
+                        <DurationPill
+                          key={c}
+                          label={c}
+                          selected={sel}
+                          onPress={() =>
+                            setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
+                          }
+                          accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
+                          style={{ flex: 1 }}
+                        />
+                      );
+                    })}
+                  </View>
+                  <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                    {CATEGORY_OPTIONS.slice(3, 5).map((c) => {
+                      const sel = categories.includes(c);
+                      return (
+                        <DurationPill
+                          key={c}
+                          label={c}
+                          selected={sel}
+                          onPress={() =>
+                            setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
+                          }
+                          accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
+                          style={{ flex: 1 }}
+                        />
+                      );
+                    })}
+                    <View style={{ flex: 1 }} />
+                  </View>
                 </View>
               </View>
               {catError ? <Text style={styles.errText}>Pick at least one category</Text> : null}
@@ -818,63 +978,191 @@ export default function CreateChallengeWizard() {
             <>
               <Text style={styles.h1}>Ready to commit?</Text>
               <Text style={styles.sub}>Once you launch, the clock starts.</Text>
-              <View style={styles.summary}>
-                <Text style={styles.sumTitle}>{title.trim() || "Untitled"}</Text>
-                <Text style={styles.sumMeta}>
-                  {who === "solo" ? "Solo" : who === "duo" ? "Duo" : "Squad"} · {challengeType === "one_day" ? "24-Hour" : "Standard"} ·{" "}
-                  {challengeType === "one_day" ? "1 day" : `${duration} days`}
-                </Text>
-                <View style={styles.badgeRow}>
-                  {categories.map((c) => (
-                    <View key={c} style={styles.badge}>
-                      <Text style={styles.badgeTxt}>{c}</Text>
-                    </View>
-                  ))}
-                </View>
-                <Text style={styles.est}>{estLabel} estimated</Text>
-              </View>
-              <Text style={styles.listHead}>Daily tasks ({tasks.length})</Text>
-              {tasks.map((t) => (
-                <View key={t.id} style={styles.taskRow}>
-                  <Flame size={14} color={GRIIT_COLORS.primary} />
-                  <Text style={styles.taskTitle} numberOfLines={1}>
-                    {t.title}
-                  </Text>
-                </View>
-              ))}
-              <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Who can see this?</Text>
-              {(
-                [
-                  { v: "PUBLIC" as const, label: "Everyone", desc: "On Discover. Anyone can join.", Icon: Globe },
-                  { v: "FRIENDS" as const, label: "Friends", desc: "Only your friends can see and join.", Icon: Users },
-                  { v: "PRIVATE" as const, label: "Just me", desc: "Private. No one else sees it.", Icon: Lock },
-                ] as const
-              ).map((row) => {
-                const Icon = row.Icon;
-                const sel = visibility === row.v;
-                return (
-                  <TouchableOpacity
-                    key={row.v}
-                    style={[styles.visRow, sel && styles.visRowSel]}
-                    onPress={() => setVisibility(row.v)}
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      row.v === "PUBLIC"
-                        ? `Public challenge — visible to everyone on Discover — ${sel ? "selected" : "tap to select"}`
-                        : row.v === "FRIENDS"
-                          ? `Friends only — only your friends can see and join — ${sel ? "selected" : "tap to select"}`
-                          : `Private challenge — only you can see it — ${sel ? "selected" : "tap to select"}`
-                    }
-                    accessibilityState={{ selected: sel }}
+              <View
+                style={{
+                  backgroundColor: DS_COLORS.CARD_BG,
+                  borderRadius: 20,
+                  padding: 20,
+                  borderLeftWidth: 4,
+                  borderLeftColor: DS_COLORS.PRIMARY,
+                  borderWidth: 1.5,
+                  borderColor: DS_COLORS.BORDER_LIGHT,
+                  marginBottom: 20,
+                }}
+              >
+                <View
+                  style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 24,
+                        fontWeight: "700",
+                        color: DS_COLORS.TEXT_PRIMARY,
+                        letterSpacing: -0.3,
+                      }}
+                    >
+                      {title.trim() || "Untitled"}
+                    </Text>
+                    <Text style={{ fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, marginTop: 4 }}>
+                      {who === "solo" ? "Solo" : who === "duo" ? "Duo" : "Squad"} ·{" "}
+                      {difficultyMode === "hard" ? "Hard mode" : "Standard"} ·{" "}
+                      {challengeType === "one_day" ? 1 : duration} days
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      backgroundColor: DS_COLORS.ACCENT_TINT,
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderRadius: 10,
+                    }}
                   >
-                    <Icon size={20} color={sel ? CREATE_SELECTION.text : DS_COLORS.TEXT_SECONDARY} />
-                    <View style={styles.visTextCol}>
-                      <Text style={styles.visTitle}>{row.label}</Text>
-                      <Text style={styles.visDesc}>{row.desc}</Text>
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: DS_COLORS.PRIMARY }}>
+                      {difficultyMode === "hard" ? "Hard" : "Standard"}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ marginTop: 12, flexDirection: "column", gap: 6 }}>
+                  {Array.from({ length: Math.ceil(categories.length / 3) }, (_, rowIdx) => {
+                    const row = categories.slice(rowIdx * 3, rowIdx * 3 + 3);
+                    return (
+                      <View key={row.join("-")} style={{ flexDirection: "row", gap: 6 }}>
+                        {row.map((c) => (
+                          <View
+                            key={c}
+                            style={{
+                              flex: 1,
+                              backgroundColor: DS_COLORS.WARM_CREAM,
+                              paddingHorizontal: 14,
+                              paddingVertical: 5,
+                              borderRadius: 12,
+                              alignItems: "center",
+                            }}
+                          >
+                            <Text style={{ fontSize: 13, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY }}>
+                              {c.charAt(0).toUpperCase() + c.slice(1)}
+                            </Text>
+                          </View>
+                        ))}
+                        {row.length < 3
+                          ? Array.from({ length: 3 - row.length }, (_, i) => <View key={`sp-${i}`} style={{ flex: 1 }} />)
+                          : null}
+                      </View>
+                    );
+                  })}
+                </View>
+                <View style={{ height: 1, backgroundColor: DS_COLORS.DIVIDER, marginVertical: 16 }} />
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <View>
+                    <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT }}>Daily commitment</Text>
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 }}>
+                      {estLabel}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT }}>Tasks per day</Text>
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 }}>
+                      {tasks.length}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View
+                style={{
+                  backgroundColor: DS_COLORS.CARD_BG,
+                  borderRadius: 16,
+                  borderWidth: 1.5,
+                  borderColor: DS_COLORS.BORDER_LIGHT,
+                  overflow: "hidden",
+                  marginBottom: 20,
+                }}
+              >
+                {tasks.map((task, i) => (
+                  <View
+                    key={task.id}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 14,
+                      padding: 16,
+                      borderBottomWidth: i < tasks.length - 1 ? 1 : 0,
+                      borderBottomColor: DS_COLORS.DIVIDER,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 12,
+                        backgroundColor: DS_COLORS.ACCENT_TINT,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ fontSize: 18 }}>{getTaskIcon(task.wizardType ?? task.type)}</Text>
                     </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY }}>{task.title}</Text>
+                      <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 2 }}>{getTaskMeta(task)}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+              <Text style={[styles.fieldLabel, { marginTop: 0 }]}>Who can see this?</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: DS_COLORS.CARD_BG,
+                  borderWidth: 1.5,
+                  borderColor: DS_COLORS.BORDER,
+                  borderRadius: 14,
+                  overflow: "hidden",
+                }}
+              >
+                {(
+                  [
+                    { key: "PUBLIC" as const, label: "Everyone", icon: "🌐" },
+                    { key: "FRIENDS" as const, label: "Friends", icon: "👥" },
+                    { key: "PRIVATE" as const, label: "Just me", icon: "🔒" },
+                  ] as const
+                ).map((v, i) => (
+                  <TouchableOpacity
+                    key={v.key}
+                    onPress={() => setVisibility(v.key)}
+                    accessibilityLabel={`Visibility ${v.label}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: visibility === v.key }}
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 5,
+                      paddingVertical: 14,
+                      backgroundColor: visibility === v.key ? DS_COLORS.ACCENT_TINT : DS_COLORS.TRANSPARENT,
+                      borderRightWidth: i < 2 ? 1 : 0,
+                      borderRightColor: DS_COLORS.BORDER_LIGHT,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13 }}>{v.icon}</Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: visibility === v.key ? "600" : "400",
+                        color: visibility === v.key ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+                      }}
+                    >
+                      {v.label}
+                    </Text>
                   </TouchableOpacity>
-                );
-              })}
+                ))}
+              </View>
+              <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 8, lineHeight: 20 }}>
+                {visibility === "PUBLIC" && "Visible on Discover. Anyone can find and join."}
+                {visibility === "FRIENDS" && "Only your friends can see and join."}
+                {visibility === "PRIVATE" && "Private. No one else sees it."}
+              </Text>
               {who === "duo" && (
                 <View style={styles.inviteSection}>
                   <Text style={styles.fieldLabel}>Invite your partner</Text>
@@ -970,26 +1258,52 @@ export default function CreateChallengeWizard() {
           </TouchableOpacity>
         )}
         {step === 4 && (
-          <View style={styles.rowFooter}>
+          <>
+            <View style={styles.rowFooter}>
+              <TouchableOpacity
+                style={styles.backOut}
+                onPress={() => animateToStep(3, 4)}
+                accessibilityRole="button"
+                accessibilityLabel="Go back to previous step"
+              >
+                <Text style={styles.backOutTxt}>Back</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.launch, submitting && { opacity: 0.6 }]}
+                disabled={submitting}
+                onPress={() => setShowCommitModal(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Launch ${title.trim() || "challenge"}`}
+                accessibilityState={{ disabled: submitting }}
+              >
+                <Text style={styles.launchTxt}>{submitting ? "Launching…" : "Launch challenge"}</Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
-              style={styles.backOut}
-              onPress={() => animateToStep(3, 4)}
-              accessibilityRole="button"
-              accessibilityLabel="Go back to previous step"
-            >
-              <Text style={styles.backOutTxt}>Back</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.launch, submitting && { opacity: 0.6 }]}
+              onPress={() => void submitChallenge("draft")}
               disabled={submitting}
-              onPress={() => void handleLaunch()}
+              accessibilityLabel="Save as draft"
               accessibilityRole="button"
-              accessibilityLabel={`Launch ${title.trim() || "challenge"}`}
               accessibilityState={{ disabled: submitting }}
+              style={{
+                width: "100%",
+                height: 48,
+                borderRadius: 24,
+                borderWidth: 1.5,
+                borderColor: DS_COLORS.BORDER,
+                backgroundColor: DS_COLORS.CARD_BG,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                marginTop: 10,
+                opacity: submitting ? 0.6 : 1,
+              }}
             >
-              <Text style={styles.launchTxt}>{submitting ? "Launching…" : "Launch challenge"}</Text>
+              <Ionicons name="bookmark-outline" size={16} color={DS_COLORS.TEXT_SECONDARY} />
+              <Text style={{ fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY }}>Save as draft</Text>
             </TouchableOpacity>
-          </View>
+          </>
         )}
       </View>
 
@@ -1042,6 +1356,18 @@ export default function CreateChallengeWizard() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <CommitModal
+        visible={showCommitModal}
+        challengeName={title.trim() || "Your challenge"}
+        taskCount={tasks.length}
+        durationDays={challengeType === "one_day" ? 1 : duration}
+        onConfirm={() => {
+          setShowCommitModal(false);
+          void submitChallenge("published");
+        }}
+        onCancel={() => setShowCommitModal(false)}
+      />
 
       <TimeWindowPrompt
         visible={showTimePrompt}
@@ -1103,14 +1429,14 @@ const styles = StyleSheet.create({
   stepLineOn: { backgroundColor: GRIIT_COLORS.primary },
   scroll: { paddingHorizontal: DS_SPACING.lg },
   h1: {
-    fontSize: 24,
-    fontWeight: "500",
+    fontSize: 28,
+    fontWeight: "700",
     letterSpacing: -0.5,
     color: DS_COLORS.TEXT_PRIMARY,
     marginBottom: 4,
   },
-  sub: { fontSize: 13, color: DS_COLORS.textSecondary, marginBottom: 20 },
-  fieldLabel: { fontSize: 12, fontWeight: "500", color: DS_COLORS.textSecondary, marginBottom: 8 },
+  sub: { fontSize: 16, fontWeight: "400", color: DS_COLORS.textSecondary, marginBottom: 20 },
+  fieldLabel: { fontSize: 15, fontWeight: "600", color: DS_COLORS.textSecondary, marginBottom: 8 },
   light: { color: DS_COLORS.TEXT_MUTED, fontWeight: "400" },
   input: {
     backgroundColor: DS_COLORS.surface,
@@ -1140,23 +1466,7 @@ const styles = StyleSheet.create({
     backgroundColor: CREATE_SELECTION.background,
   },
   whoTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 6 },
-  whoSub: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, textAlign: "center", marginTop: 4 },
-  pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  pill: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-    backgroundColor: DS_COLORS.surfaceSubtle,
-  },
-  pillSm: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 16, borderWidth: 1, borderColor: DS_COLORS.border },
-  pillSel: {
-    borderColor: CREATE_SELECTION.border,
-    backgroundColor: CREATE_SELECTION.background,
-  },
-  pillTxt: { fontSize: 13, color: DS_COLORS.TEXT_PRIMARY },
-  pillTxtSel: { color: CREATE_SELECTION.text, fontWeight: "500" },
+  whoSub: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, textAlign: "center", marginTop: 4 },
   customRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
   daysLabel: { fontSize: 15, color: DS_COLORS.TEXT_SECONDARY },
   typeRow: { flexDirection: "row", gap: 8 },
@@ -1171,10 +1481,8 @@ const styles = StyleSheet.create({
   typeCardSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
   typeCardTitle: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
   typeCardSub: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
-  packsHead: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TEXT_MUTED, marginBottom: 8 },
-  packGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  packsHead: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_MUTED, marginBottom: 8 },
   packCard: {
-    width: "47%",
     backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     borderWidth: 1,
@@ -1185,8 +1493,8 @@ const styles = StyleSheet.create({
   packEmoji: { fontSize: 24, marginBottom: 6 },
   packName: { fontSize: 14, fontWeight: "700", color: GRIIT_COLORS.primary },
   packDesc: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
-  packCount: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 6 },
-  listHead: { fontSize: 14, fontWeight: "700", marginTop: 16, marginBottom: 8 },
+  packCount: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 6 },
+  listHead: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 8 },
   taskRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1227,40 +1535,10 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.surface,
   },
   ruleCardSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
-  ruleTitle: { fontSize: 14, fontWeight: "700", marginBottom: 6 },
-  ruleBullet: { fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 2 },
-  caption: { fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, marginTop: 6 },
-  hardNote: { fontSize: 10, color: GRIIT_COLORS.primary, marginTop: 4 },
-  summary: {
-    backgroundColor: DS_COLORS.surfaceSubtle,
-    borderRadius: 16,
-    padding: 14,
-    marginTop: 8,
-  },
-  sumTitle: { fontSize: 16, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
-  sumMeta: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
-  badgeRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: DS_COLORS.chipFill,
-  },
-  badgeTxt: { fontSize: 11, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
-  est: { fontSize: 12, color: DS_COLORS.textSecondary, marginTop: 8 },
-  visRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-    backgroundColor: DS_COLORS.surface,
-    marginBottom: 8,
-  },
-  visRowSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
-  visTitle: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
-  visDesc: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 2 },
+  ruleTitle: { fontSize: 15, fontWeight: "600", marginBottom: 6, color: DS_COLORS.TEXT_PRIMARY },
+  ruleBullet: { fontSize: 14, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY, marginBottom: 2 },
+  caption: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_HINT, marginTop: 6 },
+  hardNote: { fontSize: 12, color: GRIIT_COLORS.primary, marginTop: 4 },
   outlineBtn: {
     marginTop: 10,
     borderWidth: 1,
@@ -1270,7 +1548,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   outlineBtnTxt: { color: GRIIT_COLORS.primary, fontWeight: "600" },
-  lockHint: { fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center", marginTop: 16 },
+  lockHint: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_HINT, textAlign: "center", marginTop: 16 },
   footer: {
     paddingHorizontal: DS_SPACING.lg,
     borderTopWidth: 1,
@@ -1285,7 +1563,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 8,
   },
-  primaryTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 16, fontWeight: "500" },
+  primaryTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 17, fontWeight: "600" },
   primaryDisabled: { backgroundColor: DS_COLORS.buttonDisabledBg },
   primaryTxtDisabled: { color: DS_COLORS.buttonDisabledText },
   charCount: {
@@ -1312,9 +1590,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  launchTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 16, fontWeight: "500" },
+  launchTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 17, fontWeight: "600" },
   topBarSpacer: { width: 56 },
-  visTextCol: { flex: 1, marginLeft: 10 },
   inviteSection: { marginTop: 16 },
   draftExitBackdrop: {
     flex: 1,

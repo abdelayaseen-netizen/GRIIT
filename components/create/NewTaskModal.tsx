@@ -617,7 +617,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             <Text style={s.label}>Track by</Text>
             <View style={s.segRow}>
               <TouchableOpacity
-                style={[s.seg, runTracking === "distance" && s.segOn]}
+                style={[s.seg, s.segFlex, runTracking === "distance" && s.segOn]}
                 onPress={() => setRunTracking("distance")}
                 accessibilityRole="button"
                 accessibilityLabel="Track run by distance"
@@ -626,7 +626,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 <Text style={[s.segTxt, runTracking === "distance" && s.segTxtOn]}>Distance</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[s.seg, runTracking === "time" && s.segOn]}
+                style={[s.seg, s.segFlex, runTracking === "time" && s.segOn]}
                 onPress={() => setRunTracking("time")}
                 accessibilityRole="button"
                 accessibilityLabel="Track run by duration"
@@ -649,7 +649,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 />
                 <View style={s.segRow}>
                   <TouchableOpacity
-                    style={[s.seg, runUnitDist === "miles" && s.segOn]}
+                    style={[s.seg, s.segFlex, runUnitDist === "miles" && s.segOn]}
                     onPress={() => setRunUnitDist("miles")}
                     accessibilityRole="button"
                     accessibilityLabel="Use miles for run distance"
@@ -658,7 +658,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                     <Text style={[s.segTxt, runUnitDist === "miles" && s.segTxtOn]}>Miles</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[s.seg, runUnitDist === "km" && s.segOn]}
+                    style={[s.seg, s.segFlex, runUnitDist === "km" && s.segOn]}
                     onPress={() => setRunUnitDist("km")}
                     accessibilityRole="button"
                     accessibilityLabel="Use kilometers for run distance"
@@ -690,27 +690,44 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
         return (
           <View style={s.configBlock}>
             <Text style={s.label}>Workout type</Text>
-            <View style={s.segRow}>
-              {(["general", "cardio", "strength", "hiit", "yoga"] as const).map((wt) => (
-                <TouchableOpacity
-                  key={wt}
-                  style={[s.seg, workoutType === wt && s.segOn]}
-                  onPress={() => setWorkoutType(wt)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: workoutType === wt }}
-                  accessibilityLabel={
-                    wt === "hiit"
-                      ? "Select HIIT workout type"
-                      : wt === "general"
-                        ? "Select general workout type"
-                        : `Select ${wt} workout type`
-                  }
-                >
-                  <Text style={[s.segTxt, workoutType === wt && s.segTxtOn]}>
-                    {wt === "hiit" ? "HIIT" : wt.charAt(0).toUpperCase() + wt.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <View style={s.segCol}>
+              <View style={s.segRow}>
+                {(["general", "cardio", "strength"] as const).map((wt) => (
+                  <TouchableOpacity
+                    key={wt}
+                    style={[s.seg, s.segFlex, workoutType === wt && s.segOn]}
+                    onPress={() => setWorkoutType(wt)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: workoutType === wt }}
+                    accessibilityLabel={
+                      wt === "general" ? "Select general workout type" : `Select ${wt} workout type`
+                    }
+                  >
+                    <Text style={[s.segTxt, workoutType === wt && s.segTxtOn]}>
+                      {wt.charAt(0).toUpperCase() + wt.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <View style={s.segRow}>
+                {(["hiit", "yoga"] as const).map((wt) => (
+                  <TouchableOpacity
+                    key={wt}
+                    style={[s.seg, s.segFlex, workoutType === wt && s.segOn]}
+                    onPress={() => setWorkoutType(wt)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: workoutType === wt }}
+                    accessibilityLabel={
+                      wt === "hiit" ? "Select HIIT workout type" : "Select yoga workout type"
+                    }
+                  >
+                    <Text style={[s.segTxt, workoutType === wt && s.segTxtOn]}>
+                      {wt === "hiit" ? "HIIT" : "Yoga"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                <View style={s.segFlex} />
+              </View>
             </View>
 
             <Text style={[s.label, s.labelSp]}>Minimum duration (minutes)</Text>
@@ -817,23 +834,33 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
           {TYPE_CATEGORIES.map((cat) => (
             <View key={cat.title} style={s.typeCategorySection}>
               <Text style={s.typeCategoryTitle}>{cat.title}</Text>
-              <View style={s.typeCategoryRow}>
-                {cat.types.map((t) => {
-                  const sel = kind === t.id;
-                  const Icon = t.Icon;
+              <View style={s.typeCategoryCol}>
+                {Array.from({ length: Math.ceil(cat.types.length / 3) }, (_, rowIdx) => {
+                  const row = cat.types.slice(rowIdx * 3, rowIdx * 3 + 3);
                   return (
-                    <TouchableOpacity
-                      key={t.id}
-                      style={[s.typeChip, sel && s.typeChipSel]}
-                      onPress={() => setKind(t.id)}
-                      activeOpacity={0.8}
-                      accessibilityLabel={`Select ${t.label} task type, ${t.hint}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: sel }}
-                    >
-                      <Icon size={18} color={sel ? GRIIT_COLORS.primary : DS_COLORS.TEXT_SECONDARY} />
-                      <Text style={[s.typeChipLabel, sel && s.typeChipLabelSel]}>{t.label}</Text>
-                    </TouchableOpacity>
+                    <View key={row.map((t) => t.id).join("-")} style={s.typeCategoryChunkRow}>
+                      {row.map((t) => {
+                        const sel = kind === t.id;
+                        const Icon = t.Icon;
+                        return (
+                          <TouchableOpacity
+                            key={t.id}
+                            style={[s.typeChip, s.typeChipFlex, sel && s.typeChipSel]}
+                            onPress={() => setKind(t.id)}
+                            activeOpacity={0.8}
+                            accessibilityLabel={`Select ${t.label} task type, ${t.hint}`}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: sel }}
+                          >
+                            <Icon size={18} color={sel ? GRIIT_COLORS.primary : DS_COLORS.TEXT_SECONDARY} />
+                            <Text style={[s.typeChipLabel, sel && s.typeChipLabelSel]}>{t.label}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {row.length < 3
+                        ? Array.from({ length: 3 - row.length }, (_, i) => <View key={`sp-${i}`} style={s.typeChipFlex} />)
+                        : null}
+                    </View>
                   );
                 })}
               </View>
@@ -944,9 +971,12 @@ const s = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 8,
   },
-  typeCategoryRow: {
+  typeCategoryCol: {
+    flexDirection: "column",
+    gap: 8,
+  },
+  typeCategoryChunkRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: 8,
   },
   typeChip: {
@@ -959,6 +989,10 @@ const s = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: "transparent",
+  },
+  typeChipFlex: {
+    flex: 1,
+    minWidth: 0,
   },
   typeChipSel: {
     borderColor: GRIIT_COLORS.primary,
@@ -1010,11 +1044,15 @@ const s = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: "top",
   },
-  segRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  segCol: {
+    flexDirection: "column",
     gap: 8,
     marginTop: 8,
+  },
+  segRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 0,
   },
   seg: {
     paddingVertical: 8,
@@ -1024,6 +1062,10 @@ const s = StyleSheet.create({
     borderColor: "transparent",
     backgroundColor: DS_COLORS.surface,
     alignItems: "center",
+  },
+  segFlex: {
+    flex: 1,
+    minWidth: 0,
   },
   segOn: {
     borderColor: CREATE_SELECTION.border,
