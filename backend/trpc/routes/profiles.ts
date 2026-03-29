@@ -66,9 +66,7 @@ export const profilesRouter = createTRPCRouter({
       const server = getSupabaseServer() ?? ctx.supabase;
       const { data: profile, error: profileError } = await server
         .from("profiles")
-        .select(
-          "user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility"
-        )
+        .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at")
         .eq("username", input.username.trim())
         .maybeSingle();
       if (profileError) {
@@ -86,7 +84,6 @@ export const profilesRouter = createTRPCRouter({
         tier: string | null;
         bio: string | null;
         created_at: string | null;
-        profile_visibility: string | null;
       };
       const { data: streakRow, error: streakError } = await server
         .from("streaks")
@@ -107,7 +104,6 @@ export const profilesRouter = createTRPCRouter({
         active_streak: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
         bio: p.bio ?? null,
         created_at: p.created_at ?? null,
-        profile_visibility: p.profile_visibility ?? "public",
       };
     }),
 

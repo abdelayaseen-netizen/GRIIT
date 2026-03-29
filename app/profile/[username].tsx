@@ -7,9 +7,8 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import { ChevronLeft, Lock } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +16,6 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS } from "@/lib/design-system";
-import { Avatar } from "@/components/Avatar";
 import {
   ProfileHeader,
   DisciplineScoreCard,
@@ -40,7 +38,6 @@ type PublicProfile = {
   active_streak: number;
   bio: string | null;
   created_at: string | null;
-  profile_visibility: string;
 };
 
 /**
@@ -210,9 +207,6 @@ export default function PublicProfileScreen() {
     );
   }
 
-  const isPrivate = profile.profile_visibility === "private";
-  const showPrivateGate = isPrivate && !isFollowing;
-
   const displayName = profile.display_name || profile.username || "User";
   const joinedDate = profile.created_at ? formatMonthYearLong(profile.created_at) : undefined;
   const disciplineScore = Math.max(0, profile.total_days_secured ?? 0);
@@ -249,64 +243,6 @@ export default function PublicProfileScreen() {
       )}
     </View>
   );
-
-  if (showPrivateGate) {
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <TouchableOpacity
-              onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
-              style={styles.backBtn}
-              hitSlop={12}
-              accessibilityLabel="Go back"
-              accessibilityRole="button"
-            >
-              <ChevronLeft size={24} color={colors.text.primary} />
-            </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: colors.text.primary }]}>@{profile.username}</Text>
-            <View style={styles.headerSpacer} />
-          </View>
-          <View style={styles.privateContainer}>
-            <View style={styles.privateAvatar}>
-              <Avatar
-                url={profile.avatar_url}
-                name={profile.display_name || profile.username}
-                userId={profile.user_id}
-                size={80}
-              />
-            </View>
-            <Text style={[styles.privateName, { color: colors.text.primary }]}>{displayName}</Text>
-            <Text style={[styles.privateUsername, { color: colors.text.secondary }]}>@{profile.username}</Text>
-            {profile.bio ? (
-              <Text style={[styles.privateBio, { color: colors.text.secondary }]}>{profile.bio}</Text>
-            ) : null}
-            <View style={styles.privateLockSection}>
-              <Lock size={20} color={colors.text.secondary} />
-              <Text style={[styles.privateLockText, { color: colors.text.secondary }]}>This account is private</Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.followButton, { backgroundColor: DS_COLORS.ACCENT }]}
-              onPress={() => void handleFollow()}
-              disabled={followLoading}
-              accessibilityRole="button"
-              accessibilityLabel={`Follow ${displayName}`}
-            >
-              {followLoading ? (
-                <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
-              ) : (
-                <Text style={styles.followButtonText}>{user?.id ? "Follow" : "Sign in to follow"}</Text>
-              )}
-            </TouchableOpacity>
-            <Text style={[styles.privateHint, { color: colors.text.muted }]}>
-              Follow this account to see their activity
-            </Text>
-          </View>
-        </SafeAreaView>
-      </>
-    );
-  }
 
   return (
     <>
@@ -410,41 +346,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     alignItems: "stretch",
   },
-  privateContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 32,
-    paddingBottom: 80,
-  },
-  privateAvatar: {
-    marginBottom: 16,
-  },
-  privateName: {
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  privateUsername: {
-    fontSize: 15,
-    marginTop: 4,
-  },
-  privateBio: {
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 12,
-    lineHeight: 20,
-  },
-  privateLockSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 24,
-    marginBottom: 20,
-  },
-  privateLockText: {
-    fontSize: 15,
-    fontWeight: "500",
-  },
   followButton: {
     paddingVertical: 12,
     paddingHorizontal: 48,
@@ -469,10 +370,5 @@ const styles = StyleSheet.create({
   followingButtonText: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  privateHint: {
-    fontSize: 13,
-    marginTop: 12,
-    textAlign: "center",
   },
 });
