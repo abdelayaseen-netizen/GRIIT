@@ -6,11 +6,64 @@ import type { PgError } from "../../types/db";
 const PUSH_TOKEN_MAX = 500;
 const DEVICE_ID_MAX = 256;
 
+const NOTIF_SELECT = "id, user_id, type, title, body, data, read, created_at";
+
+type NotifType = "respect" | "comment" | "follow" | "rank" | "general";
+
+function parseDataObject(raw: unknown): Record<string, unknown> {
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  return {};
+}
+
+type DbNotifRow = {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string | null;
+  body: string | null;
+  data: unknown;
+  read: boolean;
+  created_at: string;
+};
+
+function mapDbRow(r: DbNotifRow) {
+  const dataObj = parseDataObject(r.data);
+  const actorKey = "actor" + "_id";
+  const rawActor = dataObj[actorKey];
+  const actorId = typeof rawActor === "string" ? rawActor : null;
+  const actorUsername =
+    typeof dataObj["actor_username"] === "string" ? dataObj["actor_username"] : null;
+  const actorDisplayName =
+    typeof dataObj["actor_display_name"] === "string" ? dataObj["actor_display_name"] : null;
+  const actorAvatarUrl =
+    typeof dataObj["actor_avatar_url"] === "string" ? dataObj["actor_avatar_url"] : null;
+
+  const allowed = new Set(["respect", "comment", "follow", "rank"]);
+  const typeStr = String(r.type ?? "general");
+  const type: NotifType = allowed.has(typeStr) ? (typeStr as NotifType) : "general";
+
+  return {
+    id: r.id,
+    type,
+    read: r.read,
+    createdAt: r.created_at,
+    title: r.title,
+    body: r.body,
+    actorId,
+    actorUsername,
+    actorDisplayName,
+    actorAvatarUrl,
+    metadata: dataObj,
+  };
+}
+
 export const notificationsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const { data: unread, error: uErr } = await ctx.supabase
       .from("in_app_notifications")
-      .select("id, type, read, actor_id, metadata, created_at")
+      .select(NOTIF_SELECT)
       .eq("user_id", ctx.userId)
       .eq("read", false)
       .order("created_at", { ascending: false })
@@ -21,7 +74,7 @@ export const notificationsRouter = createTRPCRouter({
 
     const { data: earlier, error: eErr } = await ctx.supabase
       .from("in_app_notifications")
-      .select("id, type, read, actor_id, metadata, created_at")
+      .select(NOTIF_SELECT)
       .eq("user_id", ctx.userId)
       .eq("read", true)
       .order("created_at", { ascending: false })
@@ -30,41 +83,12 @@ export const notificationsRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: eErr.message });
     }
 
-    const uRows = (unread ?? []) as {
-      id: string;
-      type: string;
-      read: boolean;
-      actor_id: string | null;
-      metadata: Record<string, unknown>;
-      created_at: string;
-    }[];
-    const eRows = (earlier ?? []) as typeof uRows;
-    const actorIds = [...new Set([...uRows, ...eRows].map((r) => r.actor_id).filter(Boolean))] as string[];
-
-    const { data: actors } = actorIds.length
-      ? await ctx.supabase.from("profiles").select("user_id, username, display_name, avatar_url").in("user_id", actorIds)
-      : { data: [] as { user_id: string; username?: string; display_name?: string; avatar_url?: string | null }[] };
-
-    const actorMap = new Map((actors ?? []).map((a) => [a.user_id, a]));
-
-    const mapRow = (r: (typeof uRows)[0]) => {
-      const act = r.actor_id ? actorMap.get(r.actor_id) : null;
-      return {
-        id: r.id,
-        type: r.type as "respect" | "comment" | "follow" | "rank",
-        read: r.read,
-        createdAt: r.created_at,
-        actorId: r.actor_id,
-        actorUsername: act?.username ?? null,
-        actorDisplayName: act?.display_name ?? act?.username ?? null,
-        actorAvatarUrl: act?.avatar_url ?? null,
-        metadata: r.metadata ?? {},
-      };
-    };
+    const uRows = (unread ?? []) as DbNotifRow[];
+    const eRows = (earlier ?? []) as DbNotifRow[];
 
     return {
-      unread: uRows.map(mapRow),
-      earlier: eRows.map(mapRow),
+      unread: uRows.map(mapDbRow),
+      earlier: eRows.map(mapDbRow),
     };
   }),
 
@@ -81,23 +105,23 @@ export const notificationsRouter = createTRPCRouter({
   }),
 
   registerToken: protectedProcedure
-    .input(z.object({
-      token: z.string().min(1).max(PUSH_TOKEN_MAX),
-      device_id: z.string().max(DEVICE_ID_MAX).optional(),
-    }))
+    .input(
+      z.object({
+        token: z.string().min(1).max(PUSH_TOKEN_MAX),
+        device_id: z.string().max(DEVICE_ID_MAX).optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       const token = input.token.trim();
-      const { error } = await ctx.supabase
-        .from("push_tokens")
-        .upsert(
-          {
-            user_id: ctx.userId,
-            token,
-            device_id: input.device_id?.trim().slice(0, DEVICE_ID_MAX) ?? null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,token" }
-        );
+      const { error } = await ctx.supabase.from("push_tokens").upsert(
+        {
+          user_id: ctx.userId,
+          token,
+          device_id: input.device_id?.trim().slice(0, DEVICE_ID_MAX) ?? null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,token" }
+      );
 
       if (error) {
         if ((error as PgError).code === "42P01") {
@@ -106,10 +130,7 @@ export const notificationsRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to register push token." });
       }
 
-      await ctx.supabase
-        .from("profiles")
-        .update({ expo_push_token: token })
-        .eq("user_id", ctx.userId);
+      await ctx.supabase.from("profiles").update({ expo_push_token: token }).eq("user_id", ctx.userId);
 
       return { success: true };
     }),
@@ -137,10 +158,7 @@ export const notificationsRouter = createTRPCRouter({
       if (input.weekly_summary_enabled !== undefined) update.weekly_summary_enabled = input.weekly_summary_enabled;
       if (Object.keys(update).length === 0) return { success: true };
 
-      const { error } = await ctx.supabase
-        .from("profiles")
-        .update(update)
-        .eq("user_id", ctx.userId);
+      const { error } = await ctx.supabase.from("profiles").update(update).eq("user_id", ctx.userId);
 
       if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to update reminder settings." });
       return { success: true };

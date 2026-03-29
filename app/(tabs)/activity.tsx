@@ -2,18 +2,18 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Bell, Target, Users } from "lucide-react-native";
+import { Bell, Target, Trophy, UserPlus, Users } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
-import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS, DS_SPACING } from "@/lib/design-system";
 import { getAvatarColor } from "@/lib/avatar";
 import { consistencyScore } from "@/lib/scoring";
 import { relativeTime } from "@/lib/utils/relativeTime";
-import { shareInvite } from "@/lib/share";
+import { inviteToChallenge, shareInvite } from "@/lib/share";
 import LoadingState from "@/components/shared/LoadingState";
 import { SkeletonLeaderboardRow } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
@@ -24,9 +24,11 @@ type LeaderScope = "global" | "friends" | "challenge";
 
 type NotifRow = {
   id: string;
-  type: "respect" | "comment" | "follow" | "rank";
+  type: "respect" | "comment" | "follow" | "rank" | "general";
   read: boolean;
   createdAt: string;
+  title?: string | null;
+  body?: string | null;
   actorId: string | null;
   actorUsername: string | null;
   actorDisplayName: string | null;
@@ -48,6 +50,11 @@ type BoardEntry = {
 };
 
 function getNotifText(n: NotifRow): { bold: string; rest: string } {
+  const t = (n.title ?? "").trim();
+  const b = (n.body ?? "").trim();
+  if (t || b) {
+    return { bold: t, rest: t && b ? ` ${b}` : b || "" };
+  }
   const name = n.actorDisplayName ?? n.actorUsername ?? "Someone";
   const challengeName = String(n.metadata.challenge_title ?? n.metadata.challenge_name ?? "challenge");
   switch (n.type) {
@@ -80,6 +87,7 @@ export default function ActivityScreen() {
   const [mainTab, setMainTab] = useState<MainTab>("notifications");
   const [scope, setScope] = useState<LeaderScope>("global");
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
+  const [challengeScope, setChallengeScope] = useState<"friends" | "everyone">("friends");
 
   const notifQuery = useQuery({
     queryKey: ["activity", "notifications", user?.id],
@@ -134,9 +142,12 @@ export default function ActivityScreen() {
   }, [myActive.data, selectedChallengeId]);
 
   const challengeBoard = useQuery({
-    queryKey: ["activity", "leaderboard", "challenge", selectedChallengeId, user?.id],
+    queryKey: ["activity", "leaderboard", "challenge", selectedChallengeId, challengeScope, user?.id],
     queryFn: () =>
-      trpcQuery(TRPC.leaderboard.getChallengeBoard, { challengeId: selectedChallengeId! }) as Promise<{
+      trpcQuery(TRPC.leaderboard.getChallengeBoard, {
+        challengeId: selectedChallengeId!,
+        scope: challengeScope,
+      }) as Promise<{
         leaderPoints: number;
         challengeTitle: string;
         visibility: string;
@@ -212,7 +223,10 @@ export default function ActivityScreen() {
         ) : (
           <LeaderboardBody
             scope={scope}
-            setScope={setScope}
+            setScope={(s) => {
+              if (s === "challenge") setChallengeScope("friends");
+              setScope(s);
+            }}
             userId={user.id}
             friendsBoard={friendsBoard}
             globalLeaderboard={globalLeaderboard}
@@ -220,6 +234,8 @@ export default function ActivityScreen() {
             myActive={myActive}
             selectedChallengeId={selectedChallengeId}
             setSelectedChallengeId={setSelectedChallengeId}
+            challengeScope={challengeScope}
+            setChallengeScope={setChallengeScope}
           />
         )}
       </ScrollView>
@@ -275,19 +291,20 @@ function NotificationsBody({
         </>
       ) : null}
       {unread.length === 0 && earlier.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Bell size={40} color={DS_COLORS.TEXT_TERTIARY} />
-          <Text style={styles.emptyTitle}>No notifications yet</Text>
-          <Text style={styles.emptyBody}>
-            When people react to your posts, comment, or follow you, you will see it here.
+        <View style={styles.emptyStateFill}>
+          <View style={styles.emptyIconCircle}>
+            <Bell size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+          </View>
+          <Text style={styles.emptyTitleStrong}>No notifications yet</Text>
+          <Text style={styles.emptyBodyNarrow}>
+            Complete a task or join a challenge to start getting updates from the community.
           </Text>
           <TouchableOpacity
-            style={styles.emptyButton}
-            onPress={() => router.push(ROUTES.TABS_HOME as never)}
-            accessibilityLabel="Go to my challenges"
+            onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+            accessibilityLabel="Start a challenge"
             accessibilityRole="button"
           >
-            <Text style={styles.emptyButtonText}>Go to my challenges</Text>
+            <Text style={styles.emptyTextCta}>Start a challenge →</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -317,11 +334,22 @@ function NotificationRow({
         <View
           style={[
             styles.typeBadge,
-            { backgroundColor: n.type === "respect" ? DS_COLORS.DISCOVER_CORAL : n.type === "comment" ? DS_COLORS.CELEB_BONUS_PURPLE : DS_COLORS.DISCOVER_GREEN },
+            {
+              backgroundColor:
+                n.type === "respect"
+                  ? DS_COLORS.DISCOVER_CORAL
+                  : n.type === "comment"
+                    ? DS_COLORS.CELEB_BONUS_PURPLE
+                    : n.type === "follow"
+                      ? DS_COLORS.DISCOVER_GREEN
+                      : n.type === "rank"
+                        ? DS_COLORS.WARNING
+                        : DS_COLORS.TASK_ICON_BG,
+            },
           ]}
         >
           <Text style={[styles.typeBadgeText, n.type === "follow" && styles.typeBadgeFollow]}>
-            {n.type === "respect" ? "🔥" : n.type === "comment" ? "💬" : n.type === "follow" ? "+" : "★"}
+            {n.type === "respect" ? "🔥" : n.type === "comment" ? "💬" : n.type === "follow" ? "+" : n.type === "rank" ? "★" : "•"}
           </Text>
         </View>
       </View>
@@ -360,6 +388,8 @@ function LeaderboardBody({
   myActive,
   selectedChallengeId,
   setSelectedChallengeId,
+  challengeScope,
+  setChallengeScope,
 }: {
   scope: LeaderScope;
   setScope: (s: LeaderScope) => void;
@@ -384,9 +414,13 @@ function LeaderboardBody({
   myActive: ReturnType<typeof useQuery<{ challenge_id?: string; challenges?: { id?: string; title?: string } }[]>>;
   selectedChallengeId: string | null;
   setSelectedChallengeId: (id: string) => void;
+  challengeScope: "friends" | "everyone";
+  setChallengeScope: (s: "friends" | "everyone") => void;
 }) {
+  const router = useRouter();
   const activeList = myActive.data ?? [];
   const friendEntries = friendsBoard.data?.entries ?? [];
+  const challengeEntries = challengeBoard.data?.entries ?? [];
   const globalEntries: BoardEntry[] = useMemo(() => {
     const globalRaw = globalLeaderboard.data?.entries ?? [];
     const mapped = globalRaw.map((e) => {
@@ -416,6 +450,14 @@ function LeaderboardBody({
     await shareInvite();
   };
 
+  const handleInviteToThisChallenge = async () => {
+    if (!selectedChallengeId) return;
+    await inviteToChallenge(
+      { name: challengeBoard.data?.challengeTitle ?? "Challenge", id: selectedChallengeId },
+      userId
+    );
+  };
+
   const loading =
     (scope === "global" && (globalLeaderboard.isPending || (globalLeaderboard.isFetching && !globalLeaderboard.data))) ||
     (scope === "friends" && (friendsBoard.isPending || (friendsBoard.isFetching && !friendsBoard.data))) ||
@@ -434,20 +476,20 @@ function LeaderboardBody({
     <View>
       <View style={styles.scopeSwitcher}>
         {(["global", "friends", "challenge"] as const).map((s) => {
-          const scopeName = s === "global" ? "Global" : s === "friends" ? "Friends" : "This Challenge";
+          const scopeName = s === "global" ? "Global" : s === "friends" ? "Friends" : "Challenges";
           return (
-          <TouchableOpacity
-            key={s}
-            style={[styles.scopeTab, scope === s && styles.scopeTabOn]}
-            onPress={() => setScope(s)}
-            accessibilityRole="button"
-            accessibilityLabel={`${scopeName} leaderboard — ${scope === s ? "selected" : "not selected"}`}
-            accessibilityState={{ selected: scope === s }}
-          >
-            <Text style={[styles.scopeTabText, scope === s && styles.scopeTabTextOn]}>
-              {s === "global" ? "Global" : s === "friends" ? "Friends" : "This Challenge"}
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              key={s}
+              style={[styles.scopeTab, scope === s && styles.scopeTabOn]}
+              onPress={() => setScope(s)}
+              accessibilityRole="button"
+              accessibilityLabel={`${scopeName} leaderboard — ${scope === s ? "selected" : "not selected"}`}
+              accessibilityState={{ selected: scope === s }}
+            >
+              <Text style={[styles.scopeTabText, scope === s && styles.scopeTabTextOn]}>
+                {s === "global" ? "Global" : s === "friends" ? "Friends" : "Challenges"}
+              </Text>
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -475,17 +517,30 @@ function LeaderboardBody({
 
       {!loading && !err && scope === "global" ? (
         globalEntries.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Global leaderboard</Text>
-            <Text style={styles.emptyBody}>Complete your first check-in to appear here</Text>
+          <View style={styles.emptyStateFill}>
+            <View style={styles.emptyIconCircle}>
+              <Trophy size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+            </View>
+            <Text style={styles.emptyTitleStrong}>Earn your spot</Text>
+            <Text style={styles.emptyBodyNarrow}>
+              Complete a daily check-in to appear on the global leaderboard.
+            </Text>
+            <Text style={styles.emptyFootnote}>Rankings reset every Monday.</Text>
+            <TouchableOpacity
+              onPress={() => router.push(ROUTES.TABS_HOME as never)}
+              accessibilityLabel="Go to my challenges"
+              accessibilityRole="button"
+            >
+              <Text style={styles.emptyTextCta}>Go to my challenges →</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <>
-            <View style={styles.scoreNote}>
-              <Text style={styles.scoreNoteIcon}>⚡</Text>
+            <View style={styles.scoreNoteWarm}>
+              <Text style={styles.scoreNoteIcon}>🔥</Text>
               <Text style={styles.scoreNoteText}>
-                <Text style={styles.scoreNoteBold}>Overall consistency</Text>
-                {" — top performers this week by check-ins and streak across GRIIT."}
+                <Text style={styles.scoreNoteBold}>Global rankings reset every Monday.</Text>
+                {" Complete daily check-ins to climb the board."}
               </Text>
             </View>
             <BoardList
@@ -499,28 +554,30 @@ function LeaderboardBody({
 
       {!loading && !err && scope === "friends" ? (
         friendEntries.length <= 1 ? (
-          <View style={styles.emptyState}>
-            <Users size={40} color={DS_COLORS.TEXT_TERTIARY} />
-            <Text style={styles.emptyTitle}>No friends on GRIIT yet</Text>
-            <Text style={styles.emptyBody}>
-              Invite friends to compete together on the leaderboard
+          <View style={styles.emptyStateFill}>
+            <View style={styles.emptyIconCircle}>
+              <Users size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+            </View>
+            <Text style={styles.emptyTitleStrong}>No friends on GRIIT yet</Text>
+            <Text style={styles.emptyBodyNarrow}>
+              Invite friends to compete together on the leaderboard.
             </Text>
             <TouchableOpacity
-              style={styles.emptyButton}
+              style={styles.emptyInvitePill}
               onPress={() => void handleInviteFriend()}
-              accessibilityLabel="Invite a friend to GRIIT"
+              accessibilityLabel="Invite a friend"
               accessibilityRole="button"
             >
-              <Text style={styles.emptyButtonText}>Invite a friend</Text>
+              <Text style={styles.emptyInvitePillText}>Invite a friend</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <View style={styles.scoreNote}>
-              <Text style={styles.scoreNoteIcon}>⚡</Text>
+            <View style={styles.scoreNoteWarm}>
+              <Text style={styles.scoreNoteIcon}>🔥</Text>
               <Text style={styles.scoreNoteText}>
-                <Text style={styles.scoreNoteBold}>Overall consistency</Text>
-                {" — total check-ins × streak across all active challenges this week."}
+                <Text style={styles.scoreNoteBold}>See how you stack up against friends.</Text>
+                {" Rankings reset every Monday."}
               </Text>
             </View>
             <BoardList
@@ -535,12 +592,28 @@ function LeaderboardBody({
       {!loading && !err && scope === "challenge" ? (
         <>
           {activeList.length === 0 ? (
-            <View style={styles.emptyLb}>
-              <Target size={32} color={DS_COLORS.TEXT_MUTED} />
-              <Text style={styles.emptySub}>Join a challenge to see this leaderboard.</Text>
+            <View style={styles.emptyStateFill}>
+              <View style={styles.emptyIconCircle}>
+                <Target size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+              </View>
+              <Text style={styles.emptyTitleStrong}>No active challenges</Text>
+              <Text style={styles.emptyBodyNarrow}>
+                Join a challenge to start competing on the leaderboard.
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+                accessibilityLabel="Browse challenges"
+                accessibilityRole="button"
+              >
+                <Text style={styles.emptyTextCta}>Browse challenges →</Text>
+              </TouchableOpacity>
             </View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.challengePills}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.challengePillsRow}
+            >
               {activeList.map((item, i) => {
                 const cid = item.challenge_id ?? item.challenges?.id ?? "";
                 const title = item.challenges?.title ?? "Challenge";
@@ -548,13 +621,16 @@ function LeaderboardBody({
                 return (
                   <TouchableOpacity
                     key={cid || String(i)}
-                    style={[styles.challengePill, sel ? styles.challengePillOn : styles.challengePillOff]}
+                    style={[styles.challengePillNew, sel ? styles.challengePillNewOn : styles.challengePillNewOff]}
                     onPress={() => cid && setSelectedChallengeId(cid)}
+                    accessibilityLabel={`View leaderboard for ${title}`}
                     accessibilityRole="button"
-                    accessibilityLabel={`View leaderboard for ${title} — ${sel ? "selected" : "not selected"}`}
                     accessibilityState={{ selected: sel }}
                   >
-                    <Text style={[styles.challengePillText, sel && styles.challengePillTextOn]} numberOfLines={1}>
+                    <Text
+                      style={[styles.challengePillNewText, sel ? styles.challengePillNewTextOn : styles.challengePillNewTextOff]}
+                      numberOfLines={1}
+                    >
                       {title}
                     </Text>
                   </TouchableOpacity>
@@ -562,7 +638,53 @@ function LeaderboardBody({
               })}
             </ScrollView>
           )}
-          {selectedChallengeId ? (
+          {activeList.length > 0 && selectedChallengeId ? (
+            <View style={styles.challengeScopeToggle}>
+              <TouchableOpacity
+                onPress={() => setChallengeScope("friends")}
+                accessibilityLabel="Show friends only"
+                accessibilityRole="button"
+                style={[
+                  styles.challengeScopeTab,
+                  {
+                    borderBottomColor:
+                      challengeScope === "friends" ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.BORDER,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.challengeScopeTabText,
+                    { color: challengeScope === "friends" ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED },
+                  ]}
+                >
+                  Friends
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setChallengeScope("everyone")}
+                accessibilityLabel="Show everyone"
+                accessibilityRole="button"
+                style={[
+                  styles.challengeScopeTab,
+                  {
+                    borderBottomColor:
+                      challengeScope === "everyone" ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.BORDER,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.challengeScopeTabText,
+                    { color: challengeScope === "everyone" ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED },
+                  ]}
+                >
+                  Everyone
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+          {activeList.length > 0 && selectedChallengeId ? (
             <View
               style={[
                 styles.privacyPill,
@@ -593,18 +715,39 @@ function LeaderboardBody({
                   ? "👥 Friends only"
                   : (challengeBoard.data?.visibility ?? "public").toLowerCase() === "private"
                     ? "🔒 Private — only you can see this"
-                    : `🌐 Public · ${challengeBoard.data?.entries.length ?? 0} people in this challenge`}
+                    : `🌐 Public · ${challengeEntries.length} people in this challenge`}
               </Text>
             </View>
           ) : null}
-          <View style={styles.scoreNote}>
-            <Text style={styles.scoreNoteIcon}>🔥</Text>
-            <Text style={styles.scoreNoteText}>
-              <Text style={styles.scoreNoteBold}>Ranked by consistency</Text>
-              {" — daily check-ins × streak multiplier. Everyone started this challenge so the playing field is level."}
-            </Text>
-          </View>
-          <BoardList entries={challengeBoard.data?.entries ?? []} leaderPoints={challengeBoard.data?.leaderPoints ?? 1} viewerId={userId} />
+          {activeList.length > 0 && selectedChallengeId ? (
+            <>
+              <View style={styles.scoreNoteWarm}>
+                <Text style={styles.scoreNoteIcon}>🔥</Text>
+                <Text style={styles.scoreNoteText}>
+                  <Text style={styles.scoreNoteBold}>Ranked by consistency</Text>
+                  {" — check-ins × streak. Resets Monday."}
+                </Text>
+              </View>
+              <BoardList
+                entries={challengeEntries}
+                leaderPoints={challengeBoard.data?.leaderPoints ?? 1}
+                viewerId={userId}
+              />
+              {challengeEntries.length === 1 ? (
+                <View style={styles.soloChallengeHint}>
+                  <UserPlus size={20} color={DS_COLORS.TEXT_MUTED} />
+                  <Text style={styles.soloChallengeHintText}>Challenge your friends to climb the ranks</Text>
+                  <TouchableOpacity
+                    onPress={() => void handleInviteToThisChallenge()}
+                    accessibilityLabel="Invite friends to this challenge"
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.emptyTextCta}>Invite friends to this challenge →</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </>
+          ) : null}
         </>
       ) : null}
     </View>
@@ -627,9 +770,9 @@ function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[];
 
   return (
     <View style={{ marginBottom: 24 }}>
-      <CrownCard entry={first} />
+      <CrownCard entry={first} viewerId={viewerId} />
       {rest.map((e) => (
-        <RegularRow key={e.userId} entry={e} leaderPoints={leaderPoints} />
+        <RegularRow key={e.userId} entry={e} leaderPoints={leaderPoints} viewerId={viewerId} />
       ))}
       {viewer && !(viewer.rank === 1 && first.userId === viewerId) ? (
         <>
@@ -638,18 +781,20 @@ function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[];
             <Text style={styles.yourRankLabel}>Your rank</Text>
             <View style={styles.dividerLine} />
           </View>
-          <YourRankCard entry={viewer} />
+          <YourRankCard entry={viewer} viewerId={viewerId} />
         </>
       ) : null}
     </View>
   );
 }
 
-function CrownCard({ entry }: { entry: BoardEntry }) {
+function CrownCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string }) {
   const colors = getAvatarColor(entry.userId);
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
+  const isSelf = entry.userId === viewerId;
   return (
     <View style={styles.crownCard}>
+      {isSelf ? <View style={styles.rowSelfAccent} /> : null}
       <View style={styles.crownEyebrow}>
         <View style={styles.crownDot} />
         <Text style={styles.crownEyebrowText}>MOST CONSISTENT THIS WEEK</Text>
@@ -662,27 +807,37 @@ function CrownCard({ entry }: { entry: BoardEntry }) {
         <View style={{ flex: 1 }}>
           <View style={styles.nameRow}>
             <Text style={styles.crownName}>{entry.displayName}</Text>
-            <View style={styles.crownStreakPill}>
-              <Text style={styles.crownStreakText}>🔥 {entry.currentStreak}</Text>
-            </View>
+            {isSelf ? (
+              <View style={styles.youBadgeDark}>
+                <Text style={styles.youBadgeDarkText}>You</Text>
+              </View>
+            ) : null}
           </View>
-          <Text style={styles.crownSub}>{entry.checkInsThisWeek} check-ins this week</Text>
+          <View style={styles.crownSubWrap}>
+            <Text style={styles.crownSub}>
+              {entry.checkInsThisWeek} check-ins · 🔥 {entry.currentStreak}
+            </Text>
+          </View>
         </View>
         <View style={{ alignItems: "flex-end" }}>
           <Text style={styles.crownPts}>{entry.points}</Text>
-          <Text style={styles.crownPtsLabel}>pts</Text>
+          <View style={styles.crownPtsLabelWrap}>
+            <Text style={styles.crownPtsLabel}>pts</Text>
+          </View>
         </View>
       </View>
     </View>
   );
 }
 
-function RegularRow({ entry, leaderPoints }: { entry: BoardEntry; leaderPoints: number }) {
+function RegularRow({ entry, leaderPoints, viewerId }: { entry: BoardEntry; leaderPoints: number; viewerId: string }) {
   const colors = getAvatarColor(entry.userId);
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
   const pct = leaderPoints > 0 ? Math.min(100, (entry.points / leaderPoints) * 100) : 0;
+  const isSelf = entry.userId === viewerId;
   return (
     <View style={[styles.regRow, DS_SHADOWS.cardSubtle]}>
+      {isSelf ? <View style={styles.rowSelfAccent} /> : null}
       <Text style={[styles.regRank, { color: rankNumColor(entry.rank) }]}>#{entry.rank}</Text>
       <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
         <Text style={[styles.regAvatarLetter, { color: colors.letter }]}>{initial}</Text>
@@ -690,11 +845,18 @@ function RegularRow({ entry, leaderPoints }: { entry: BoardEntry; leaderPoints: 
       <View style={{ flex: 1 }}>
         <View style={styles.nameRow}>
           <Text style={styles.regName}>{entry.displayName}</Text>
+          {isSelf ? (
+            <View style={styles.youBadge}>
+              <Text style={styles.youBadgeText}>You</Text>
+            </View>
+          ) : null}
           <View style={styles.regStreakPill}>
             <Text style={styles.regStreakText}>🔥 {entry.currentStreak}</Text>
           </View>
         </View>
-        <Text style={styles.regSub}>{entry.checkInsThisWeek} check-ins · score {entry.points}</Text>
+        <Text style={styles.regSubMuted}>
+          {entry.checkInsThisWeek} check-ins · 🔥 {entry.currentStreak}
+        </Text>
         <View style={styles.regTrack}>
           <View style={[styles.regFill, { width: `${pct}%` }]} />
         </View>
@@ -707,18 +869,30 @@ function RegularRow({ entry, leaderPoints }: { entry: BoardEntry; leaderPoints: 
   );
 }
 
-function YourRankCard({ entry }: { entry: BoardEntry }) {
+function YourRankCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string }) {
   const colors = getAvatarColor(entry.userId);
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
   const gap = entry.gapToAbove;
+  const isSelf = entry.userId === viewerId;
   return (
     <View style={styles.yourCard}>
+      {isSelf ? <View style={styles.rowSelfAccent} /> : null}
       <Text style={styles.yourRankNum}>#{entry.rank}</Text>
       <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
         <Text style={[styles.regAvatarLetter, { color: colors.letter }]}>{initial}</Text>
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.yourName}>{entry.displayName}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.yourName}>{entry.displayName}</Text>
+          {isSelf ? (
+            <View style={styles.youBadge}>
+              <Text style={styles.youBadgeText}>You</Text>
+            </View>
+          ) : null}
+        </View>
+        <Text style={styles.yourSubMuted}>
+          {entry.checkInsThisWeek} check-ins · 🔥 {entry.currentStreak}
+        </Text>
         <Text style={styles.yourSub}>
           {gap > 0 ? `${gap} pts behind #${entry.rank - 1}` : "You're at the top"}
         </Text>
@@ -842,8 +1016,18 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 8,
   },
+  scoreNoteWarm: {
+    backgroundColor: DS_COLORS.FEATURED_BG,
+    borderRadius: 10,
+    marginHorizontal: DS_SPACING.MD,
+    marginBottom: 12,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
   scoreNoteIcon: { fontSize: 14, marginTop: 1 },
-  scoreNoteText: { flex: 1, fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 16 },
+  scoreNoteText: { flex: 1, fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 18 },
   scoreNoteBold: { fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
   crownCard: {
     backgroundColor: DS_COLORS.TEXT_PRIMARY,
@@ -851,6 +1035,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginBottom: 8,
     padding: 16,
+    position: "relative",
+    overflow: "hidden",
   },
   crownEyebrow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 10 },
   crownDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: DS_COLORS.CELEB_BONUS_AMBER },
@@ -866,16 +1052,20 @@ const styles = StyleSheet.create({
   crownAvatarLetter: { fontSize: 15, fontWeight: "700" },
   crownName: { fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE },
   crownStreakPill: {
-    backgroundColor: "rgba(200,147,26,0.25)",
+    backgroundColor: DS_COLORS.CELEB_BONUS_AMBER_BG,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 99,
+    opacity: 0.45,
   },
   crownStreakText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER },
-  crownSub: { fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 },
+  crownSubWrap: { marginTop: 2, opacity: 0.55 },
+  crownSub: { fontSize: 11, color: DS_COLORS.TEXT_ON_DARK, lineHeight: 15 },
   crownPts: { fontSize: 20, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER, lineHeight: 20 },
-  crownPtsLabel: { fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: "600" },
+  crownPtsLabelWrap: { opacity: 0.45 },
+  crownPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_ON_DARK, fontWeight: "600" },
   regRow: {
+    position: "relative",
     backgroundColor: DS_COLORS.WHITE,
     borderRadius: 14,
     marginHorizontal: 12,
@@ -885,9 +1075,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    overflow: "hidden",
+  },
+  rowSelfAccent: {
+    position: "absolute",
+    left: 0,
+    top: 4,
+    bottom: 4,
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
   },
   regRank: { width: 24, textAlign: "center", fontSize: 16, fontWeight: "700" },
-  regAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  regAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   regAvatarLetter: { fontSize: 13, fontWeight: "700" },
   regName: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
   regStreakPill: {
@@ -898,6 +1098,7 @@ const styles = StyleSheet.create({
   },
   regStreakText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
   regSub: { fontSize: 10, color: DS_COLORS.TAB_INACTIVE, marginTop: 1 },
+  regSubMuted: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 2, lineHeight: 14 },
   regTrack: {
     height: 2,
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
@@ -916,9 +1117,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "rgba(0,0,0,0.08)" },
+  dividerLine: { flex: 1, height: 1, backgroundColor: DS_COLORS.DIVIDER },
   yourRankLabel: { fontSize: 10, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
   yourCard: {
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -930,12 +1132,71 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.ACCENT_TINT,
     borderWidth: 1.5,
     borderColor: DS_COLORS.ACCENT_TINT_BORDER,
+    overflow: "hidden",
   },
   yourRankNum: { width: 24, textAlign: "center", fontSize: 13, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
   yourName: { fontSize: 12, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
   yourSub: { fontSize: 10, color: DS_COLORS.TEXT_SECONDARY, marginTop: 1 },
+  yourSubMuted: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 2, lineHeight: 14 },
   yourPts: { fontSize: 14, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
   challengePills: { paddingHorizontal: 12, paddingBottom: 12, gap: 8 },
+  challengePillsRow: {
+    paddingHorizontal: DS_SPACING.MD,
+    paddingBottom: 4,
+    gap: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  challengePillNew: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    marginRight: 8,
+    maxWidth: 220,
+  },
+  challengePillNewOn: { backgroundColor: DS_COLORS.DISCOVER_CORAL },
+  challengePillNewOff: { backgroundColor: DS_COLORS.BG_CARD_TINTED },
+  challengePillNewText: { fontSize: 12, fontWeight: "500" },
+  challengePillNewTextOn: { color: DS_COLORS.WHITE },
+  challengePillNewTextOff: { color: DS_COLORS.TEXT_SECONDARY },
+  challengeScopeToggle: {
+    flexDirection: "row",
+    marginTop: 10,
+    marginBottom: 10,
+    marginHorizontal: DS_SPACING.MD,
+  },
+  challengeScopeTab: {
+    flex: 1,
+    alignItems: "center",
+    paddingBottom: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: DS_COLORS.BORDER,
+  },
+  challengeScopeTabText: { fontSize: 12, fontWeight: "500" },
+  soloChallengeHint: {
+    alignItems: "center",
+    paddingHorizontal: DS_SPACING.XL,
+    paddingBottom: 24,
+    gap: 6,
+  },
+  soloChallengeHintText: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
+  youBadge: {
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    marginLeft: 4,
+  },
+  youBadgeText: { fontSize: 10, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "500" },
+  youBadgeDark: {
+    backgroundColor: DS_COLORS.CELEB_BONUS_AMBER_BG,
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    marginLeft: 4,
+    opacity: 0.9,
+  },
+  youBadgeDarkText: { fontSize: 10, color: DS_COLORS.CELEB_BONUS_AMBER, fontWeight: "500" },
   challengePill: {
     paddingVertical: 7,
     paddingHorizontal: 14,
@@ -980,6 +1241,57 @@ const styles = StyleSheet.create({
   },
   emptyLb: { paddingVertical: 24, alignItems: "center", paddingHorizontal: 20 },
   emptyState: { alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 },
+  emptyStateFill: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: DS_SPACING.XL,
+    paddingVertical: 48,
+    minHeight: 280,
+  },
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitleStrong: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginTop: 16,
+    textAlign: "center",
+  },
+  emptyBodyNarrow: {
+    fontSize: 13,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    lineHeight: 19,
+    maxWidth: 280,
+    marginTop: 6,
+  },
+  emptyFootnote: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_MUTED,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  emptyTextCta: {
+    marginTop: 20,
+    fontSize: 13,
+    fontWeight: "600",
+    color: DS_COLORS.DISCOVER_CORAL,
+  },
+  emptyInvitePill: {
+    marginTop: 20,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    borderRadius: 28,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+  },
+  emptyInvitePillText: { color: DS_COLORS.WHITE, fontSize: 14, fontWeight: "600" },
   emptyTitle: {
     fontSize: 16,
     fontWeight: "500",

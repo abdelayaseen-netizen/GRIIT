@@ -223,7 +223,12 @@ export const leaderboardRouter = createTRPCRouter({
   }),
 
   getChallengeBoard: protectedProcedure
-    .input(z.object({ challengeId: z.string().uuid() }))
+    .input(
+      z.object({
+        challengeId: z.string().uuid(),
+        scope: z.enum(["friends", "everyone"]).optional().default("everyone"),
+      })
+    )
     .query(async ({ input, ctx }) => {
       const server = getSupabaseServer() ?? ctx.supabase;
       const viewerId = ctx.userId;
@@ -247,6 +252,15 @@ export const leaderboardRouter = createTRPCRouter({
       if (vis === "private") {
         userIds = userIds.filter((id) => id === viewerId);
         if (!userIds.includes(viewerId)) userIds = [viewerId];
+      }
+
+      if (input.scope === "friends" && vis !== "private") {
+        const followingIds = new Set<string>();
+        const { data: follows } = await ctx.supabase.from("user_follows").select("following_id").eq("follower_id", viewerId);
+        for (const r of (follows ?? []) as { following_id: string }[]) {
+          followingIds.add(r.following_id);
+        }
+        userIds = userIds.filter((id) => id === viewerId || followingIds.has(id));
       }
 
       if (userIds.length === 0) {
