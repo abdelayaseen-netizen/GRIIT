@@ -32,6 +32,8 @@ export const TRPC = {
     getPendingFollowRequests: 'profiles.getPendingFollowRequests',
     getBadges: 'profiles.getBadges',
     getFollowCounts: 'profiles.getFollowCounts',
+    getFollowers: 'profiles.getFollowers',
+    getFollowing: 'profiles.getFollowing',
     isFollowing: 'profiles.isFollowing',
   },
   challenges: {

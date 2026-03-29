@@ -620,6 +620,100 @@ export const profilesRouter = createTRPCRouter({
       return { followers: followers ?? 0, following: following ?? 0 };
     }),
 
+  getFollowers: publicProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { data: rows, error } = await ctx.supabase
+        .from("user_follows")
+        .select("follower_id")
+        .eq("following_id", input.userId)
+        .eq("status", "accepted");
+      if (error || !rows?.length) {
+        return [] as {
+          user_id: string;
+          username: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          is_following: boolean;
+        }[];
+      }
+      const ids = [...new Set(rows.map((r: { follower_id: string }) => r.follower_id))];
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", ids);
+      const pmap = new Map((profiles ?? []).map((p: { user_id: string }) => [p.user_id, p]));
+
+      let followingSet = new Set<string>();
+      if (ctx.userId && ids.length > 0) {
+        const { data: my } = await ctx.supabase
+          .from("user_follows")
+          .select("following_id")
+          .eq("follower_id", ctx.userId)
+          .eq("status", "accepted")
+          .in("following_id", ids);
+        followingSet = new Set((my ?? []).map((m: { following_id: string }) => m.following_id));
+      }
+
+      return ids.map((id) => {
+        const p = pmap.get(id) as { username?: string; display_name?: string | null; avatar_url?: string | null } | undefined;
+        return {
+          user_id: id,
+          username: p?.username ?? "unknown",
+          display_name: p?.display_name ?? null,
+          avatar_url: p?.avatar_url ?? null,
+          is_following: followingSet.has(id),
+        };
+      });
+    }),
+
+  getFollowing: publicProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { data: rows, error } = await ctx.supabase
+        .from("user_follows")
+        .select("following_id")
+        .eq("follower_id", input.userId)
+        .eq("status", "accepted");
+      if (error || !rows?.length) {
+        return [] as {
+          user_id: string;
+          username: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          is_following: boolean;
+        }[];
+      }
+      const ids = [...new Set(rows.map((r: { following_id: string }) => r.following_id))];
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", ids);
+      const pmap = new Map((profiles ?? []).map((p: { user_id: string }) => [p.user_id, p]));
+
+      let followingSet = new Set<string>();
+      if (ctx.userId && ids.length > 0) {
+        const { data: my } = await ctx.supabase
+          .from("user_follows")
+          .select("following_id")
+          .eq("follower_id", ctx.userId)
+          .eq("status", "accepted")
+          .in("following_id", ids);
+        followingSet = new Set((my ?? []).map((m: { following_id: string }) => m.following_id));
+      }
+
+      return ids.map((id) => {
+        const p = pmap.get(id) as { username?: string; display_name?: string | null; avatar_url?: string | null } | undefined;
+        return {
+          user_id: id,
+          username: p?.username ?? "unknown",
+          display_name: p?.display_name ?? null,
+          avatar_url: p?.avatar_url ?? null,
+          is_following: followingSet.has(id),
+        };
+      });
+    }),
+
   /** Whether the current user follows the given profile (for public profile UI). */
   isFollowing: protectedProcedure
     .input(z.object({ userId: z.string().uuid() }))

@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Pressable,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -41,6 +42,7 @@ import Card from "@/components/shared/Card";
 import { DS_COLORS } from "@/lib/design-system";
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
+import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
 
 type ProfileTab = "challenges" | "posts" | "badges";
 
@@ -83,6 +85,7 @@ export default function ProfileScreen() {
   const { profile, profileLoading, profileMissing, isError, stats, refetchAll } = useApp();
   const [tab, setTab] = useState<ProfileTab>("challenges");
   const [uploading, setUploading] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
 
   const activeListQuery = useQuery({
     queryKey: ["profile", user?.id, "activeChallenges"],
@@ -159,7 +162,8 @@ export default function ProfileScreen() {
     });
   }, [profile?.username, streak, stats?.totalDaysSecured, stats?.tier]);
 
-  const onAvatarPick = useCallback(async () => {
+  /** handleAvatarPress: picker + FormData upload (see lib/uploadAvatar, lib/avatar). */
+  const handleAvatarPress = useCallback(async () => {
     if (!user?.id) return;
     setUploading(true);
     try {
@@ -222,6 +226,7 @@ export default function ProfileScreen() {
     Boolean(profile.display_name?.trim()) &&
     Boolean(profile.username?.trim()) &&
     profile.display_name!.trim() !== profile.username!.trim();
+  const listUsername = profile.username?.trim() || primaryLine;
   const tier = stats?.tier ?? "Starter";
   const tierColors = tierPillStyle(tier);
   const fc = followCountsQuery.data;
@@ -250,12 +255,20 @@ export default function ProfileScreen() {
         <View style={styles.profileRow}>
           <View style={styles.avatarCol}>
             <Pressable
-              onPress={() => void onAvatarPick()}
+              onPress={() => void handleAvatarPress()}
               disabled={uploading}
               accessibilityLabel="Change profile photo"
               accessibilityRole="button"
             >
-              <Avatar url={profile.avatar_url ?? null} name={primaryLine} userId={user.id} size={80} />
+              {profile.avatar_url?.trim() ? (
+                <Image
+                  source={{ uri: profile.avatar_url.trim() }}
+                  style={styles.avatarImage}
+                  accessibilityIgnoresInvertColors
+                />
+              ) : (
+                <Avatar url={null} name={primaryLine} userId={user.id} size={80} />
+              )}
               <View style={styles.cameraBadge}>
                 {uploading ? (
                   <Text style={styles.cameraBadgeText}>…</Text>
@@ -283,7 +296,7 @@ export default function ProfileScreen() {
         <View style={styles.followMeta}>
           <TouchableOpacity
             style={styles.followMetaInner}
-            onPress={() => router.push(`${ROUTES.PROFILE_FOLLOW_LIST}?kind=followers` as never)}
+            onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
             accessibilityLabel="View followers"
             accessibilityRole="button"
           >
@@ -293,7 +306,7 @@ export default function ProfileScreen() {
           <Text style={styles.followDot}> · </Text>
           <TouchableOpacity
             style={styles.followMetaInner}
-            onPress={() => router.push(`${ROUTES.PROFILE_FOLLOW_LIST}?kind=following` as never)}
+            onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
             accessibilityLabel="View following"
             accessibilityRole="button"
           >
@@ -454,7 +467,22 @@ export default function ProfileScreen() {
                     const IconComp = BADGE_ICONS[b.icon] ?? Zap;
                     const accent = badgeAccentFor(b.color);
                     return (
-                      <View key={b.id} style={styles.badgeCard}>
+                      <Pressable
+                        key={b.id}
+                        style={styles.badgeCard}
+                        onPress={() =>
+                          setSelectedBadge({
+                            id: b.id,
+                            name: b.name,
+                            icon: b.icon,
+                            color: b.color,
+                            progress: b.progress,
+                            total: b.total,
+                          })
+                        }
+                        accessibilityLabel={`${b.name} badge details`}
+                        accessibilityRole="button"
+                      >
                         <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
                           <IconComp size={22} color={accent.stroke} strokeWidth={2} />
                         </View>
@@ -462,7 +490,7 @@ export default function ProfileScreen() {
                         <Text style={styles.badgeProg}>
                           {b.progress}/{b.total} days
                         </Text>
-                      </View>
+                      </Pressable>
                     );
                   })}
                 </View>
@@ -471,7 +499,22 @@ export default function ProfileScreen() {
                   {(badgesQuery.data?.next ?? []).map((b) => {
                     const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
                     return (
-                      <View key={b.id} style={[styles.badgeCard, styles.badgeCardDim]}>
+                      <Pressable
+                        key={b.id}
+                        style={[styles.badgeCard, styles.badgeCardDim]}
+                        onPress={() =>
+                          setSelectedBadge({
+                            id: b.id,
+                            name: b.name,
+                            icon: b.icon,
+                            color: b.color,
+                            progress: b.progress,
+                            total: b.total,
+                          })
+                        }
+                        accessibilityLabel={`${b.name} badge details`}
+                        accessibilityRole="button"
+                      >
                         <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
                           <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
                         </View>
@@ -482,7 +525,7 @@ export default function ProfileScreen() {
                         <View style={styles.nextBarTrack}>
                           <View style={[styles.nextBarFill, { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` }]} />
                         </View>
-                      </View>
+                      </Pressable>
                     );
                   })}
                 </View>
@@ -493,6 +536,7 @@ export default function ProfileScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+      <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </SafeAreaView>
   );
 }
@@ -514,6 +558,12 @@ const styles = StyleSheet.create({
   topBarTitle: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   profileRow: { flexDirection: "row", paddingHorizontal: 20, gap: 14, alignItems: "flex-start" },
   avatarCol: { position: "relative" },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: DS_COLORS.photoThumbBg,
+  },
   cameraBadge: {
     position: "absolute",
     right: -2,

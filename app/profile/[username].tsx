@@ -33,6 +33,7 @@ import { shareProfile } from "@/lib/share";
 import { Avatar } from "@/components/Avatar";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
 
 type PublicProfile = {
   user_id: string;
@@ -74,6 +75,7 @@ export default function PublicProfileScreen() {
   const { user } = useAuth();
   const [tab, setTab] = useState<ProfileTab>("challenges");
   const [followBusy, setFollowBusy] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
 
   const decoded = useMemo(() => {
     const raw = typeof username === "string" ? username : "";
@@ -356,11 +358,25 @@ export default function PublicProfileScreen() {
           </View>
 
           <View style={styles.followMeta}>
-            <Text style={styles.followNum}>{fc?.followers ?? 0}</Text>
-            <Text style={styles.followLbl}> followers</Text>
+            <TouchableOpacity
+              style={styles.followMetaInner}
+              onPress={() => router.push(ROUTES.FOLLOW_LIST(profile.user_id, "followers", profile.username) as never)}
+              accessibilityLabel="View followers"
+              accessibilityRole="button"
+            >
+              <Text style={styles.followNum}>{fc?.followers ?? 0}</Text>
+              <Text style={styles.followLbl}> followers</Text>
+            </TouchableOpacity>
             <Text style={styles.followDot}> · </Text>
-            <Text style={styles.followNum}>{fc?.following ?? 0}</Text>
-            <Text style={styles.followLbl}> following</Text>
+            <TouchableOpacity
+              style={styles.followMetaInner}
+              onPress={() => router.push(ROUTES.FOLLOW_LIST(profile.user_id, "following", profile.username) as never)}
+              accessibilityLabel="View following"
+              accessibilityRole="button"
+            >
+              <Text style={styles.followNum}>{fc?.following ?? 0}</Text>
+              <Text style={styles.followLbl}> following</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.actionRow}>
@@ -537,7 +553,22 @@ export default function PublicProfileScreen() {
                           const IconComp = BADGE_ICONS[b.icon] ?? Zap;
                           const accent = badgeAccentFor(b.color);
                           return (
-                            <View key={b.id} style={styles.badgeCard}>
+                            <Pressable
+                              key={b.id}
+                              style={styles.badgeCard}
+                              onPress={() =>
+                                setSelectedBadge({
+                                  id: b.id,
+                                  name: b.name,
+                                  icon: b.icon,
+                                  color: b.color,
+                                  progress: b.progress,
+                                  total: b.total,
+                                })
+                              }
+                              accessibilityLabel={`${b.name} badge details`}
+                              accessibilityRole="button"
+                            >
                               <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
                                 <IconComp size={22} color={accent.stroke} strokeWidth={2} />
                               </View>
@@ -545,7 +576,7 @@ export default function PublicProfileScreen() {
                               <Text style={styles.badgeProg}>
                                 {b.progress}/{b.total} days
                               </Text>
-                            </View>
+                            </Pressable>
                           );
                         })}
                       </View>
@@ -554,7 +585,22 @@ export default function PublicProfileScreen() {
                         {(badgesQuery.data?.next ?? []).map((b) => {
                           const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
                           return (
-                            <View key={b.id} style={[styles.badgeCard, styles.badgeCardDim]}>
+                            <Pressable
+                              key={b.id}
+                              style={[styles.badgeCard, styles.badgeCardDim]}
+                              onPress={() =>
+                                setSelectedBadge({
+                                  id: b.id,
+                                  name: b.name,
+                                  icon: b.icon,
+                                  color: b.color,
+                                  progress: b.progress,
+                                  total: b.total,
+                                })
+                              }
+                              accessibilityLabel={`${b.name} badge details`}
+                              accessibilityRole="button"
+                            >
                               <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
                                 <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
                               </View>
@@ -570,7 +616,7 @@ export default function PublicProfileScreen() {
                                   ]}
                                 />
                               </View>
-                            </View>
+                            </Pressable>
                           );
                         })}
                       </View>
@@ -584,6 +630,7 @@ export default function PublicProfileScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
       </View>
+      <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </>
   );
 }
@@ -623,6 +670,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 14,
   },
+  followMetaInner: { flexDirection: "row", alignItems: "baseline" },
   followNum: { fontSize: 16, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   followLbl: { fontSize: 14, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
   followDot: { fontSize: 14, color: DS_COLORS.PROFILE_BORDER_ALT },

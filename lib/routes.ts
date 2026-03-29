@@ -28,8 +28,8 @@ export const ROUTES = {
   /** Active challenge detail (post-join); use activeChallengeId from active_challenges.id */
   CHALLENGE_ACTIVE: (activeChallengeId: string) => `/challenge/active/${activeChallengeId}` as const,
   PROFILE_USERNAME: (username: string) => `/profile/${username}` as const,
-  /** Stub: followers / following list (query: ?kind=followers|following) */
-  PROFILE_FOLLOW_LIST: "/profile/follow-list",
+  FOLLOW_LIST: (userId: string, mode: "followers" | "following", username: string) =>
+    `/follow-list?userId=${encodeURIComponent(userId)}&mode=${mode}&username=${encodeURIComponent(username)}` as const,
   /** Feed post / comment thread */
   POST_ID: (id: string) => `/post/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
