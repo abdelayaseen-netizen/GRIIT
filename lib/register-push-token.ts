@@ -6,6 +6,7 @@
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { track } from "@/lib/analytics";
 import { registerForPushNotifications } from "@/lib/notifications";
 import { captureError } from "@/lib/sentry";
@@ -21,7 +22,7 @@ export async function registerPushTokenWithBackend(): Promise<boolean> {
     }
     track({ name: "push_permission_granted" });
 
-    await trpcMutate("notifications.registerToken", {
+    await trpcMutate(TRPC.notifications.registerToken, {
       token,
     });
     return true;

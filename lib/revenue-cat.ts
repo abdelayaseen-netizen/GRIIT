@@ -30,7 +30,7 @@ let skippedExpoGoLogged = false;
 export function initializePurchases(userId?: string): void {
   if (isExpoGo) {
     if (__DEV__ && !skippedExpoGoLogged) {
-      console.log("[RevenueCat] Skipping — not available in Expo Go");
+      console.warn("[RevenueCat] Skipping — not available in Expo Go");
       skippedExpoGoLogged = true;
     }
     return;

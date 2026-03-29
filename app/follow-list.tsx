@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -19,6 +18,7 @@ import { ROUTES } from "@/lib/routes";
 import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 type FollowRow = {
   user_id: string;
@@ -43,6 +43,8 @@ export default function FollowListScreen() {
   const mode = paramString(params.mode) === "following" ? "following" : "followers";
   const username = paramString(params.username);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  const [unfollowTarget, setUnfollowTarget] = useState<FollowRow | null>(null);
 
   const validUserId = useMemo(() => {
     const re =
@@ -59,6 +61,12 @@ export default function FollowListScreen() {
     enabled: !!validUserId,
   });
 
+  useEffect(() => {
+    if (!bannerError) return;
+    const t = setTimeout(() => setBannerError(null), 3000);
+    return () => clearTimeout(t);
+  }, [bannerError]);
+
   const titlePrefix = username ? `${username}'s ` : "";
   const headerTitle = mode === "followers" ? `${titlePrefix}Followers` : `${titlePrefix}Following`;
 
@@ -69,6 +77,21 @@ export default function FollowListScreen() {
       await qc.invalidateQueries({ queryKey: ["profile", user.id, "followCounts"] });
     }
   }, [qc, user?.id]);
+
+  const runUnfollow = useCallback(
+    async (row: FollowRow) => {
+      setBusyId(row.user_id);
+      try {
+        await trpcMutate(TRPC.profiles.unfollowUser, { userId: row.user_id });
+        await invalidateFollow();
+      } catch {
+        setBannerError("Could not unfollow.");
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [invalidateFollow]
+  );
 
   const onToggleFollow = useCallback(
     async (row: FollowRow) => {
@@ -83,41 +106,102 @@ export default function FollowListScreen() {
             await trpcMutate(TRPC.profiles.sendFollowRequest, { userId: row.user_id });
             await invalidateFollow();
           } catch {
-            Alert.alert("Could not follow", "Try again from their profile.");
+            setBannerError("Could not follow. Try again from their profile.");
           }
         } finally {
           setBusyId(null);
         }
         return;
       }
-      Alert.alert("Unfollow", `Stop following @${row.username}?`, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Unfollow",
-          style: "destructive",
-          onPress: async () => {
-            setBusyId(row.user_id);
-            try {
-              await trpcMutate(TRPC.profiles.unfollowUser, { userId: row.user_id });
-              await invalidateFollow();
-            } catch {
-              Alert.alert("Something went wrong", "Could not unfollow.");
-            } finally {
-              setBusyId(null);
-            }
-          },
-        },
-      ]);
+      setUnfollowTarget(row);
     },
     [user?.id, invalidateFollow]
   );
 
+  const confirmUnfollow = useCallback(() => {
+    const row = unfollowTarget;
+    setUnfollowTarget(null);
+    if (row) void runUnfollow(row);
+  }, [unfollowTarget, runUnfollow]);
+
   const users = listQuery.data ?? [];
+
+  const renderItem = useCallback(
+    ({ item }: { item: FollowRow }) => {
+      const primary = item.display_name?.trim() || item.username;
+      const busy = busyId === item.user_id;
+      return (
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={styles.rowMain}
+            onPress={() => {
+              if (item.user_id === user?.id) {
+                router.push(ROUTES.TABS_PROFILE as never);
+              } else {
+                router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.username)) as never);
+              }
+            }}
+            accessibilityLabel={`View ${item.username}'s profile`}
+            accessibilityRole="button"
+          >
+            {item.avatar_url?.trim() ? (
+              <Image source={{ uri: item.avatar_url.trim() }} style={styles.avatarImg} accessibilityIgnoresInvertColors />
+            ) : (
+              <View style={[styles.avatarFallback, { backgroundColor: getFeedAvatarBgFromUserId(item.user_id) }]}>
+                <Text style={styles.avatarLetter}>{getDisplayInitials(primary)}</Text>
+              </View>
+            )}
+            <View style={styles.rowText}>
+              <Text style={styles.name}>{primary}</Text>
+              <Text style={styles.handle}>@{item.username}</Text>
+            </View>
+          </TouchableOpacity>
+          {user?.id && item.user_id !== user.id ? (
+            <TouchableOpacity
+              style={[styles.followBtn, item.is_following && styles.followBtnOutline]}
+              onPress={() => void onToggleFollow(item)}
+              disabled={busy}
+              accessibilityLabel={item.is_following ? `Unfollow ${item.username}` : `Follow ${item.username}`}
+              accessibilityRole="button"
+            >
+              {busy ? (
+                <ActivityIndicator size="small" color={item.is_following ? DS_COLORS.TEXT_SECONDARY : DS_COLORS.WHITE} />
+              ) : (
+                <Text style={[styles.followBtnTxt, item.is_following && styles.followBtnTxtOutline]}>
+                  {item.is_following ? "Following" : "Follow"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      );
+    },
+    [busyId, onToggleFollow, router, user?.id]
+  );
+
+  const listEmpty = useCallback(
+    () => (
+      <View style={styles.emptyWrap}>
+        <Text style={styles.emptyTitle}>{mode === "followers" ? "No followers yet" : "Not following anyone yet"}</Text>
+        <Text style={styles.emptySub}>
+          {mode === "followers"
+            ? "Share your profile to get followers."
+            : "Discover people to follow on the leaderboard."}
+        </Text>
+      </View>
+    ),
+    [mode]
+  );
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.safe} edges={["top"]}>
+        {bannerError ? (
+          <View style={styles.banner} accessibilityRole="alert">
+            <Text style={styles.bannerText}>{bannerError}</Text>
+          </View>
+        ) : null}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_PROFILE as never))}
@@ -144,75 +228,46 @@ export default function FollowListScreen() {
           <FlatList
             data={users}
             keyExtractor={(item) => item.user_id}
+            renderItem={renderItem}
+            ListEmptyComponent={listEmpty}
             contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => {
-              const primary = item.display_name?.trim() || item.username;
-              const busy = busyId === item.user_id;
-              return (
-                <View style={styles.row}>
-                  <TouchableOpacity
-                    style={styles.rowMain}
-                    onPress={() => {
-                      if (item.user_id === user?.id) {
-                        router.push(ROUTES.TABS_PROFILE as never);
-                      } else {
-                        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.username)) as never);
-                      }
-                    }}
-                    accessibilityLabel={`View ${item.username}'s profile`}
-                    accessibilityRole="button"
-                  >
-                    {item.avatar_url?.trim() ? (
-                      <Image source={{ uri: item.avatar_url.trim() }} style={styles.avatarImg} accessibilityIgnoresInvertColors />
-                    ) : (
-                      <View style={[styles.avatarFallback, { backgroundColor: getFeedAvatarBgFromUserId(item.user_id) }]}>
-                        <Text style={styles.avatarLetter}>{getDisplayInitials(primary)}</Text>
-                      </View>
-                    )}
-                    <View style={styles.rowText}>
-                      <Text style={styles.name}>{primary}</Text>
-                      <Text style={styles.handle}>@{item.username}</Text>
-                    </View>
-                  </TouchableOpacity>
-                  {user?.id && item.user_id !== user.id ? (
-                    <TouchableOpacity
-                      style={[styles.followBtn, item.is_following && styles.followBtnOutline]}
-                      onPress={() => void onToggleFollow(item)}
-                      disabled={busy}
-                      accessibilityLabel={item.is_following ? `Unfollow ${item.username}` : `Follow ${item.username}`}
-                      accessibilityRole="button"
-                    >
-                      {busy ? (
-                        <ActivityIndicator size="small" color={item.is_following ? DS_COLORS.TEXT_SECONDARY : DS_COLORS.WHITE} />
-                      ) : (
-                        <Text style={[styles.followBtnTxt, item.is_following && styles.followBtnTxtOutline]}>
-                          {item.is_following ? "Following" : "Follow"}
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              );
-            }}
-            ListEmptyComponent={
-              <View style={styles.emptyWrap}>
-                <Text style={styles.emptyTitle}>{mode === "followers" ? "No followers yet" : "Not following anyone yet"}</Text>
-                <Text style={styles.emptySub}>
-                  {mode === "followers"
-                    ? "Share your profile to get followers."
-                    : "Discover people to follow on the leaderboard."}
-                </Text>
-              </View>
-            }
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews
+            showsVerticalScrollIndicator={false}
           />
         )}
       </SafeAreaView>
+      <ConfirmDialog
+        visible={unfollowTarget !== null}
+        title="Unfollow"
+        message={
+          unfollowTarget ? `Stop following @${unfollowTarget.username}?` : ""
+        }
+        cancelLabel="Cancel"
+        confirmLabel="Unfollow"
+        destructive
+        onCancel={() => setUnfollowTarget(null)}
+        onConfirm={confirmUnfollow}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  banner: {
+    marginHorizontal: DS_SPACING.md,
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: DS_COLORS.dangerLight,
+    borderWidth: 1,
+    borderColor: DS_COLORS.alertRedBorder,
+  },
+  bannerText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.dangerDark, textAlign: "center" },
   header: {
     flexDirection: "row",
     alignItems: "center",

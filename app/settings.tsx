@@ -230,7 +230,7 @@ export default function SettingsScreen() {
     setReminderTime(value);
     if (isGuest) return;
     try {
-      await trpcMutate("notifications.updateReminderSettings", { reminder_time: value });
+      await trpcMutate(TRPC.notifications.updateReminderSettings, { reminder_time: value });
     } catch (e) {
       captureError(e, "SettingsReminderTime");
       // ignore

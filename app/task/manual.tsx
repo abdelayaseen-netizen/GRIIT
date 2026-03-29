@@ -69,6 +69,8 @@ export default function ManualTaskScreen() {
           onPress={handleMarkComplete}
           disabled={loading}
           activeOpacity={0.85}
+          accessibilityLabel="Mark task as complete"
+          accessibilityRole="button"
         >
           {loading ? (
             <ActivityIndicator color={DS_COLORS.white} size="small" />

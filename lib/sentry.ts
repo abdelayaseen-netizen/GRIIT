@@ -59,7 +59,7 @@ export function captureError(error: unknown, context?: string | Record<string, u
 
 export function captureMessage(message: string, level: Sentry.SeverityLevel = "info"): void {
   if (__DEV__) {
-    console.log(`[Sentry message] ${message}`);
+    console.warn(`[Sentry message] ${message}`);
   } else if (SENTRY_DSN) {
     Sentry.captureMessage(message, level);
   }

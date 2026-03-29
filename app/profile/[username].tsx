@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  Alert,
   Pressable,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -34,6 +33,8 @@ import { Avatar } from "@/components/Avatar";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { captureError } from "@/lib/sentry";
 
 type PublicProfile = {
   user_id: string;
@@ -76,6 +77,8 @@ export default function PublicProfileScreen() {
   const [tab, setTab] = useState<ProfileTab>("challenges");
   const [followBusy, setFollowBusy] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
+  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
+  const [followActionError, setFollowActionError] = useState<string | null>(null);
 
   const decoded = useMemo(() => {
     const raw = typeof username === "string" ? username : "";
@@ -86,6 +89,12 @@ export default function PublicProfileScreen() {
       return raw;
     }
   }, [username]);
+
+  useEffect(() => {
+    if (!followActionError) return;
+    const t = setTimeout(() => setFollowActionError(null), 3000);
+    return () => clearTimeout(t);
+  }, [followActionError]);
 
   const profileQuery = useQuery({
     queryKey: ["publicProfile", decoded],
@@ -176,35 +185,33 @@ export default function PublicProfileScreen() {
     await queryClient.invalidateQueries({ queryKey: ["userBadges", profileUserId] });
   }, [queryClient, decoded, profileUserId]);
 
+  const handleConfirmUnfollow = useCallback(async () => {
+    if (!profile?.user_id) return;
+    setShowUnfollowConfirm(false);
+    setFollowBusy(true);
+    try {
+      await trpcMutate(TRPC.profiles.unfollowUser, { userId: profile.user_id });
+      await invalidatePublic();
+    } catch (e) {
+      captureError(e, "PublicProfileUnfollow");
+      setFollowActionError("Could not unfollow. Try again.");
+    } finally {
+      setFollowBusy(false);
+    }
+  }, [profile?.user_id, invalidatePublic]);
+
   const handlePrimaryFollow = useCallback(async () => {
     if (!profile?.user_id || followBusy) return;
     if (!user?.id) {
       router.push(ROUTES.AUTH_LOGIN as never);
       return;
     }
+    if (isFollowing) {
+      setShowUnfollowConfirm(true);
+      return;
+    }
     setFollowBusy(true);
     try {
-      if (isFollowing) {
-        Alert.alert("Unfollow", `Stop following @${profile.username}?`, [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Unfollow",
-            style: "destructive",
-            onPress: () => {
-              void (async () => {
-                try {
-                  await trpcMutate(TRPC.profiles.unfollowUser, { userId: profile.user_id });
-                  await invalidatePublic();
-                } catch (e) {
-                  console.error(e);
-                }
-              })();
-            },
-          },
-        ]);
-        setFollowBusy(false);
-        return;
-      }
       if (needsRequest) {
         await trpcMutate(TRPC.profiles.sendFollowRequest, { userId: profile.user_id });
       } else {
@@ -212,7 +219,8 @@ export default function PublicProfileScreen() {
       }
       await invalidatePublic();
     } catch (err) {
-      console.error("[PublicProfile] follow action", err);
+      captureError(err, "PublicProfileFollow");
+      setFollowActionError("Could not update follow. Try again.");
     } finally {
       setFollowBusy(false);
     }
@@ -412,6 +420,12 @@ export default function PublicProfileScreen() {
               <View style={styles.shareSq} />
             )}
           </View>
+
+          {followActionError ? (
+            <View style={styles.inlineErrorBanner} accessibilityRole="alert">
+              <Text style={styles.inlineErrorText}>{followActionError}</Text>
+            </View>
+          ) : null}
 
           {showPendingNote ? (
             <Text style={styles.pendingNote}>Follow request sent. You&apos;ll see their profile when they accept.</Text>
@@ -631,6 +645,16 @@ export default function PublicProfileScreen() {
         </ScrollView>
       </View>
       <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+      <ConfirmDialog
+        visible={showUnfollowConfirm}
+        title="Unfollow"
+        message={profile ? `Stop following @${profile.username}?` : ""}
+        cancelLabel="Cancel"
+        confirmLabel="Unfollow"
+        destructive
+        onCancel={() => setShowUnfollowConfirm(false)}
+        onConfirm={() => void handleConfirmUnfollow()}
+      />
     </>
   );
 }
@@ -700,6 +724,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  inlineErrorBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: DS_COLORS.dangerLight,
+    borderWidth: 1,
+    borderColor: DS_COLORS.alertRedBorder,
+  },
+  inlineErrorText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.dangerDark, textAlign: "center" },
   gate: { alignItems: "center", paddingHorizontal: 24, paddingVertical: 24 },
   gateIcon: {
     width: 64,

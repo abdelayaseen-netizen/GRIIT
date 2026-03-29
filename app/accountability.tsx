@@ -83,7 +83,7 @@ export default function AccountabilityScreen() {
     if (!partnerId) return;
     setActingId(partnerId);
     try {
-      await trpcMutate("accountability.remove", { partnerId });
+      await trpcMutate(TRPC.accountability.remove, { partnerId });
       await load();
     } catch (e: unknown) {
       captureError(e, "AccountabilityRemovePartner");
@@ -113,7 +113,7 @@ export default function AccountabilityScreen() {
     async (partnerId: string) => {
       setActingId(partnerId);
       try {
-        await trpcMutate("accountability.remove", { partnerId });
+        await trpcMutate(TRPC.accountability.remove, { partnerId });
         await load();
       } catch (e: unknown) {
         captureError(e, "AccountabilityCancelOutgoing");

@@ -17,7 +17,12 @@ export default function TeamsTabScreen() {
         <Text style={styles.body}>
           Accountability squads are coming in a future update. Browse Discover to find challenges you can commit to today.
         </Text>
-        <TouchableOpacity style={styles.btn} onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} accessibilityRole="button">
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+          accessibilityRole="button"
+          accessibilityLabel="Go to Discover tab"
+        >
           <Text style={styles.btnText}>Go to Discover</Text>
         </TouchableOpacity>
       </View>
