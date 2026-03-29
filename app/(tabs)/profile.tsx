@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -85,7 +85,14 @@ export default function ProfileScreen() {
   const { profile, profileLoading, profileMissing, isError, stats, refetchAll } = useApp();
   const [tab, setTab] = useState<ProfileTab>("challenges");
   const [uploading, setUploading] = useState(false);
+  const [avatarInlineError, setAvatarInlineError] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
+
+  useEffect(() => {
+    if (!avatarInlineError) return;
+    const t = setTimeout(() => setAvatarInlineError(null), 4000);
+    return () => clearTimeout(t);
+  }, [avatarInlineError]);
 
   const activeListQuery = useQuery({
     queryKey: ["profile", user?.id, "activeChallenges"],
@@ -162,18 +169,29 @@ export default function ProfileScreen() {
     });
   }, [profile?.username, streak, stats?.totalDaysSecured, stats?.tier]);
 
-  /** handleAvatarPress: picker + FormData upload (see lib/uploadAvatar, lib/avatar). */
+  /** Picker + FormData upload (`lib/uploadAvatar`) + `profiles.update` + context refetch. */
   const handleAvatarPress = useCallback(async () => {
     if (!user?.id) return;
+    setAvatarInlineError(null);
     setUploading(true);
     try {
-      const url = await pickAndUploadAvatar(user.id);
-      if (url) {
+      const outcome = await pickAndUploadAvatar(user.id);
+      if (outcome.status === "ok") {
         await qc.invalidateQueries({ queryKey: ["profile"] });
         await refetchAll();
+        return;
+      }
+      if (outcome.status === "denied") {
+        setAvatarInlineError("Allow photo access in Settings to change your avatar.");
+        return;
+      }
+      if (outcome.status === "failed") {
+        setAvatarInlineError(outcome.message);
+        return;
       }
     } catch (e) {
       captureError(e, "ProfileAvatarPick");
+      setAvatarInlineError("Something went wrong. Try again.");
     } finally {
       setUploading(false);
     }
@@ -251,6 +269,12 @@ export default function ProfileScreen() {
             <Settings size={22} color={DS_COLORS.PROFILE_TEXT_SECONDARY} />
           </TouchableOpacity>
         </View>
+
+        {avatarInlineError ? (
+          <View style={styles.avatarErrorBanner} accessibilityRole="alert">
+            <Text style={styles.avatarErrorText}>{avatarInlineError}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.profileRow}>
           <View style={styles.avatarCol}>
@@ -556,6 +580,17 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   topBarTitle: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
+  avatarErrorBanner: {
+    marginHorizontal: 20,
+    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: DS_COLORS.dangerLight,
+    borderWidth: 1,
+    borderColor: DS_COLORS.alertRedBorder,
+  },
+  avatarErrorText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.dangerDark, textAlign: "center" },
   profileRow: { flexDirection: "row", paddingHorizontal: 20, gap: 14, alignItems: "flex-start" },
   avatarCol: { position: "relative" },
   avatarImage: {

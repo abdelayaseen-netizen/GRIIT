@@ -257,6 +257,25 @@ export default function PostThreadScreen() {
     );
   }, [displayPost, postQuery.isPending, postQuery.isError, postQuery.error, navigateProfile, onRespect, onShare, openMenu]);
 
+  const renderCommentItem = useCallback(
+    ({ item }: { item: CommentRow }) => (
+      <View style={styles.commentRow}>
+        <Avatar
+          url={item.avatar_url}
+          name={item.display_name || item.username}
+          userId={item.user_id}
+          size={36}
+        />
+        <View style={styles.commentMain}>
+          <Text style={styles.commentName}>{item.display_name || item.username}</Text>
+          <Text style={styles.commentBody}>{item.text}</Text>
+          <Text style={styles.commentTime}>{relativeTime(item.created_at)}</Text>
+        </View>
+      </View>
+    ),
+    []
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -294,23 +313,12 @@ export default function PostThreadScreen() {
               />
             }
             ListEmptyComponent={<Text style={styles.empty}>No comments yet. Say something kind.</Text>}
-            renderItem={({ item }) => {
-              return (
-                <View style={styles.commentRow}>
-                  <Avatar
-                    url={item.avatar_url}
-                    name={item.display_name || item.username}
-                    userId={item.user_id}
-                    size={36}
-                  />
-                  <View style={styles.commentMain}>
-                    <Text style={styles.commentName}>{item.display_name || item.username}</Text>
-                    <Text style={styles.commentBody}>{item.text}</Text>
-                    <Text style={styles.commentTime}>{relativeTime(item.created_at)}</Text>
-                  </View>
-                </View>
-              );
-            }}
+            renderItem={renderCommentItem}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={Platform.OS === "android"}
+            showsVerticalScrollIndicator={false}
           />
         )}
 

@@ -401,10 +401,11 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
           ListFooterComponent={
             <DiscoverCTA variant="feed" onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
           }
-          removeClippedSubviews
+          removeClippedSubviews={Platform.OS === "android"}
           initialNumToRender={5}
           maxToRenderPerBatch={3}
           windowSize={10}
+          showsVerticalScrollIndicator={false}
         />
       )}
 

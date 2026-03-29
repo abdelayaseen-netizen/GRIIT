@@ -18,6 +18,22 @@ function inferExtAndMime(uri: string): { ext: string; mimeType: string } {
   return { ext, mimeType };
 }
 
+/** Prefer `expo-image-picker` asset `mimeType` — file URIs often lack a reliable extension on device. */
+function extAndMimeFromHints(
+  uri: string,
+  hints?: { mimeType?: string | null; fileName?: string | null }
+): { ext: string; mimeType: string } {
+  const m = hints?.mimeType?.trim().toLowerCase() ?? "";
+  if (m === "image/png") return { ext: "png", mimeType: "image/png" };
+  if (m === "image/webp") return { ext: "webp", mimeType: "image/webp" };
+  if (m === "image/jpeg" || m === "image/jpg") return { ext: "jpg", mimeType: "image/jpeg" };
+  const fn = hints?.fileName?.trim().toLowerCase() ?? "";
+  if (fn.endsWith(".png")) return { ext: "png", mimeType: "image/png" };
+  if (fn.endsWith(".webp")) return { ext: "webp", mimeType: "image/webp" };
+  if (fn.endsWith(".jpg") || fn.endsWith(".jpeg")) return { ext: "jpg", mimeType: "image/jpeg" };
+  return inferExtAndMime(uri);
+}
+
 async function uploadAvatarFromUriWeb(uri: string, userId: string): Promise<UploadAvatarResult> {
   try {
     const response = await fetch(uri);
@@ -45,7 +61,11 @@ async function uploadAvatarFromUriWeb(uri: string, userId: string): Promise<Uplo
   }
 }
 
-async function uploadAvatarFromUriNative(uri: string, userId: string): Promise<UploadAvatarResult> {
+async function uploadAvatarFromUriNative(
+  uri: string,
+  userId: string,
+  hints?: { mimeType?: string | null; fileName?: string | null }
+): Promise<UploadAvatarResult> {
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
   const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
   const {
@@ -59,7 +79,7 @@ async function uploadAvatarFromUriNative(uri: string, userId: string): Promise<U
     return { error: "Missing Supabase configuration" };
   }
 
-  const { ext, mimeType } = inferExtAndMime(uri);
+  const { ext, mimeType } = extAndMimeFromHints(uri, hints);
   const filePath = `${userId}/avatar.${ext}`;
 
   const formData = new FormData();
@@ -90,7 +110,10 @@ async function uploadAvatarFromUriNative(uri: string, userId: string): Promise<U
   }
 }
 
-export async function uploadAvatarFromUri(uri: string): Promise<UploadAvatarResult> {
+export async function uploadAvatarFromUri(
+  uri: string,
+  hints?: { mimeType?: string | null; fileName?: string | null }
+): Promise<UploadAvatarResult> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id) {
     return { error: "You must be signed in to upload" };
@@ -99,5 +122,5 @@ export async function uploadAvatarFromUri(uri: string): Promise<UploadAvatarResu
   if (Platform.OS === "web") {
     return uploadAvatarFromUriWeb(uri, user.id);
   }
-  return uploadAvatarFromUriNative(uri, user.id);
+  return uploadAvatarFromUriNative(uri, user.id, hints);
 }

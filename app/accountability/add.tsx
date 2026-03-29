@@ -177,7 +177,7 @@ export default function AddAccountabilityPartnerScreen() {
           initialNumToRender={8}
           maxToRenderPerBatch={10}
           windowSize={5}
-          removeClippedSubviews
+          removeClippedSubviews={Platform.OS === "android"}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"

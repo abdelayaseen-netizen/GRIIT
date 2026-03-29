@@ -176,7 +176,7 @@ export default function SharedGoalProgress({
             initialNumToRender={8}
             maxToRenderPerBatch={10}
             windowSize={5}
-            removeClippedSubviews
+            removeClippedSubviews={Platform.OS === "android"}
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
             renderItem={renderLogItem}

@@ -251,6 +251,17 @@ export default function DiscoverScreen() {
     [queryClient]
   );
 
+  const renderTwentyFourHourItem = useCallback(
+    ({ item }: { item: DiscoverChallenge }) => (
+      <DiscoverMiniChallengeCard
+        challenge={item}
+        onPressIn={() => prefetchChallengeDetail(item.id)}
+        onPress={(challengeId) => openChallenge(challengeId)}
+      />
+    ),
+    [openChallenge, prefetchChallengeDetail]
+  );
+
   const categoryCounts = categoryCountsQuery.data ?? {};
 
   const loading = discoverFeed.isPending;
@@ -553,15 +564,11 @@ export default function DiscoverScreen() {
                     keyExtractor={(item) => item.id}
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 8 }}
-                    renderItem={({ item }) => (
-                      <DiscoverMiniChallengeCard
-                        challenge={item}
-                        onPress={(id) => {
-                          prefetchChallengeDetail(id);
-                          openChallenge(id);
-                        }}
-                      />
-                    )}
+                    renderItem={renderTwentyFourHourItem}
+                    initialNumToRender={10}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    removeClippedSubviews={Platform.OS === "android"}
                   />
                 </>
               ) : null}

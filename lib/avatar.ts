@@ -18,15 +18,22 @@ export function getAvatarColor(userId: string): { bg: string; letter: string } {
   return AVATAR_COLORS[idx] ?? AVATAR_COLORS[0];
 }
 
+export type PickAvatarOutcome =
+  | { status: "ok"; url: string }
+  | { status: "cancelled" }
+  | { status: "denied" }
+  | { status: "failed"; message: string };
+
 /**
- * Image picker + upload to `avatars` bucket (upsert) + `profiles.avatar_url` update.
- * Returns public URL with cache-bust query, or null on cancel/deny/failure.
+ * Image picker + FormData upload to `avatars` + `profiles.update` with `avatar_url`.
+ * Uses picker `mimeType` / `fileName` on native so Storage gets a correct Content-Type.
  */
-export async function pickAndUploadAvatar(userId: string): Promise<string | null> {
-  if (!userId) return null;
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== "granted") {
-    return null;
+export async function pickAndUploadAvatar(userId: string): Promise<PickAvatarOutcome> {
+  if (!userId) return { status: "failed", message: "Not signed in." };
+
+  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (perm.status !== "granted") {
+    return { status: "denied" };
   }
 
   const result = await ImagePicker.launchImageLibraryAsync({
@@ -37,14 +44,18 @@ export async function pickAndUploadAvatar(userId: string): Promise<string | null
   });
 
   if (result.canceled || !result.assets?.[0]?.uri) {
-    return null;
+    return { status: "cancelled" };
   }
 
-  const uri = result.assets[0].uri;
-  const uploadResult = await uploadAvatarFromUri(uri);
+  const asset = result.assets[0];
+  const uri = asset.uri;
+  const uploadResult = await uploadAvatarFromUri(uri, {
+    mimeType: asset.mimeType,
+    fileName: asset.fileName,
+  });
+
   if ("error" in uploadResult) {
-    if (__DEV__) console.warn("[Avatar] Upload failed:", uploadResult.error);
-    return null;
+    return { status: "failed", message: uploadResult.error || "Upload failed." };
   }
 
   const baseUrl = uploadResult.url.split("?")[0];
@@ -53,9 +64,10 @@ export async function pickAndUploadAvatar(userId: string): Promise<string | null
   try {
     await trpcMutate(TRPC.profiles.update, { avatar_url: publicUrl });
   } catch (e) {
-    if (__DEV__) console.warn("[Avatar] Profile update failed:", e instanceof Error ? e.message : e);
-    return null;
+    const msg = e instanceof Error ? e.message : "Could not save profile.";
+    if (__DEV__) console.warn("[Avatar] Profile update failed:", msg);
+    return { status: "failed", message: msg };
   }
 
-  return publicUrl;
+  return { status: "ok", url: publicUrl };
 }

@@ -49,12 +49,14 @@ export type MiniCardChallenge = {
   created_at?: string;
 };
 
-export function DiscoverMiniChallengeCard({
+export const DiscoverMiniChallengeCard = React.memo(function DiscoverMiniChallengeCard({
   challenge,
   onPress,
+  onPressIn,
 }: {
   challenge: MiniCardChallenge;
   onPress: (id: string) => void;
+  onPressIn?: () => void;
 }) {
   const theme = difficultyBorder(challenge.difficulty);
   const desc = (challenge.short_hook ?? challenge.description ?? "").trim();
@@ -62,6 +64,7 @@ export function DiscoverMiniChallengeCard({
   const isNew = challenge.created_at ? Date.now() - new Date(challenge.created_at).getTime() < weekMs : false;
   return (
     <Pressable
+      onPressIn={onPressIn}
       onPress={() => onPress(challenge.id)}
       style={[s.miniRoot, { borderLeftColor: theme.border }]}
       accessibilityRole="button"
@@ -85,7 +88,7 @@ export function DiscoverMiniChallengeCard({
       </View>
     </Pressable>
   );
-}
+});
 
 export type FullCardChallenge = {
   id: string;

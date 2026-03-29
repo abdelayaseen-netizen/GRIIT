@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -234,7 +235,7 @@ export default function FollowListScreen() {
             initialNumToRender={10}
             maxToRenderPerBatch={10}
             windowSize={5}
-            removeClippedSubviews
+            removeClippedSubviews={Platform.OS === "android"}
             showsVerticalScrollIndicator={false}
           />
         )}
