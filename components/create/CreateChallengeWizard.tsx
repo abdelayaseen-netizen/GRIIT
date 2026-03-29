@@ -740,11 +740,14 @@ export default function CreateChallengeWizard() {
               <Text style={styles.h1}>Daily tasks</Text>
               <Text style={styles.sub}>What must get done every single day?</Text>
               <Text style={styles.packsHead}>Quick start packs</Text>
-              <View style={{ flexDirection: "column", gap: DS_SPACING.SM }}>
+              <View style={{ flexDirection: "column", gap: 0 }}>
                 {Array.from({ length: Math.ceil(CHALLENGE_PACKS.length / 2) }, (_, rowIdx) => {
                   const row = CHALLENGE_PACKS.slice(rowIdx * 2, rowIdx * 2 + 2);
                   return (
-                    <View key={row.map((p) => p.id).join("-")} style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                    <View
+                      key={row.map((p) => p.id).join("-")}
+                      style={{ flexDirection: "row", gap: 10, marginBottom: 10 }}
+                    >
                       {row.map((pack) => {
                         const sel = selectedPackId === pack.id;
                         return (
@@ -1573,19 +1576,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   backOut: {
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    height: 54,
+    paddingHorizontal: 24,
     borderRadius: 28,
-    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.BORDER,
+    backgroundColor: DS_COLORS.CARD_BG,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
   },
-  backOutTxt: { fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  backOutTxt: { fontSize: 16, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
   rowFooter: { flexDirection: "row", gap: 10, alignItems: "center", marginTop: 8 },
   launch: {
     flex: 1,
-    backgroundColor: DS_COLORS.HEADER_GREEN,
-    height: 52,
+    backgroundColor: DS_COLORS.TEXT_PRIMARY,
+    height: 54,
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",

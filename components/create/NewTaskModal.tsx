@@ -12,18 +12,8 @@ import {
   Switch,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  BookOpen,
-  Timer,
-  Camera,
-  Footprints,
-  CheckCircle,
-  MapPin,
-  Droplets,
-  BookOpenText,
-  Dumbbell,
-  Hash,
-} from "lucide-react-native";
+import { Camera } from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS, GRIIT_COLORS } from "@/lib/design-system";
 import { CREATE_SELECTION } from "@/lib/create-selection";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
@@ -41,33 +31,62 @@ type WizardTaskType =
   | "workout"
   | "counter";
 
-const TYPE_CATEGORIES = [
-  {
-    title: "Physical",
-    types: [
-      { id: "workout" as const, label: "Workout", Icon: Dumbbell, hint: "Gym, calisthenics, yoga" },
-      { id: "run" as const, label: "Run", Icon: Footprints, hint: "Track distance or time" },
-      { id: "timer" as const, label: "Timer", Icon: Timer, hint: "Timed activity" },
-      { id: "water" as const, label: "Water", Icon: Droplets, hint: "Daily hydration" },
-    ],
-  },
-  {
-    title: "Mental",
-    types: [
-      { id: "journal" as const, label: "Journal", Icon: BookOpen, hint: "Write & reflect" },
-      { id: "reading" as const, label: "Reading", Icon: BookOpenText, hint: "Track pages" },
-    ],
-  },
-  {
-    title: "Verification",
-    types: [
-      { id: "photo" as const, label: "Photo", Icon: Camera, hint: "Photo proof required" },
-      { id: "checkin" as const, label: "Check-in", Icon: MapPin, hint: "Location verified" },
-      { id: "counter" as const, label: "Counter", Icon: Hash, hint: "Count anything" },
-      { id: "simple" as const, label: "Simple", Icon: CheckCircle, hint: "Honor-based tap" },
-    ],
-  },
-] as const;
+const MORE_TASK_TYPES: WizardTaskType[] = ["water", "journal", "reading", "photo", "checkin", "counter"];
+
+function NewTaskTypeCard({
+  icon,
+  name,
+  subtitle,
+  selected,
+  onPress,
+  style,
+}: {
+  icon: string;
+  name: string;
+  subtitle: string;
+  selected: boolean;
+  onPress: () => void;
+  style?: object;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityLabel={`Task type ${name}`}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={[
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          backgroundColor: selected ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
+          borderWidth: 1.5,
+          borderColor: selected ? DS_COLORS.PRIMARY : DS_COLORS.BORDER_LIGHT,
+          borderRadius: 14,
+          padding: 14,
+        },
+        style,
+      ]}
+    >
+      <View
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          backgroundColor: selected ? DS_COLORS.FEED_CTA_ICON_BG : DS_COLORS.WARM_CREAM,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text style={{ fontSize: 17 }}>{icon}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY }}>{name}</Text>
+        <Text style={{ fontSize: 12, color: DS_COLORS.TEXT_HINT, marginTop: 1 }}>{subtitle}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 function newId(): string {
   return `task-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -267,6 +286,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<WizardTaskType>("simple");
+  const [showMoreTypes, setShowMoreTypes] = useState(false);
   const [timerMins, setTimerMins] = useState("30");
   const [waterGlasses, setWaterGlasses] = useState("8");
   const [readingPages, setReadingPages] = useState("10");
@@ -302,6 +322,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     if (!visible) {
       setName("");
       setKind("simple");
+      setShowMoreTypes(false);
       setTimerMins("30");
       setWaterGlasses("8");
       setReadingPages("10");
@@ -830,42 +851,143 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             value={name}
             onChangeText={setName}
           />
-          <Text style={[s.label, { marginTop: DS_SPACING.lg }]}>Task type</Text>
-          {TYPE_CATEGORIES.map((cat) => (
-            <View key={cat.title} style={s.typeCategorySection}>
-              <Text style={s.typeCategoryTitle}>{cat.title}</Text>
-              <View style={s.typeCategoryCol}>
-                {Array.from({ length: Math.ceil(cat.types.length / 3) }, (_, rowIdx) => {
-                  const row = cat.types.slice(rowIdx * 3, rowIdx * 3 + 3);
-                  return (
-                    <View key={row.map((t) => t.id).join("-")} style={s.typeCategoryChunkRow}>
-                      {row.map((t) => {
-                        const sel = kind === t.id;
-                        const Icon = t.Icon;
-                        return (
-                          <TouchableOpacity
-                            key={t.id}
-                            style={[s.typeChip, s.typeChipFlex, sel && s.typeChipSel]}
-                            onPress={() => setKind(t.id)}
-                            activeOpacity={0.8}
-                            accessibilityLabel={`Select ${t.label} task type, ${t.hint}`}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: sel }}
-                          >
-                            <Icon size={18} color={sel ? GRIIT_COLORS.primary : DS_COLORS.TEXT_SECONDARY} />
-                            <Text style={[s.typeChipLabel, sel && s.typeChipLabelSel]}>{t.label}</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                      {row.length < 3
-                        ? Array.from({ length: 3 - row.length }, (_, i) => <View key={`sp-${i}`} style={s.typeChipFlex} />)
-                        : null}
-                    </View>
-                  );
-                })}
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              color: DS_COLORS.TEXT_PRIMARY,
+              marginBottom: 10,
+              marginTop: 20,
+            }}
+          >
+            What type of task?
+          </Text>
+          <View style={{ flexDirection: "column", gap: 8 }}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <NewTaskTypeCard
+                icon="💪"
+                name="Workout"
+                subtitle="Gym, strength, cardio"
+                selected={kind === "workout"}
+                onPress={() => setKind("workout")}
+                style={{ flex: 1 }}
+              />
+              <NewTaskTypeCard
+                icon="🏃"
+                name="Run"
+                subtitle="Distance or time"
+                selected={kind === "run"}
+                onPress={() => setKind("run")}
+                style={{ flex: 1 }}
+              />
+            </View>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <NewTaskTypeCard
+                icon="⏱️"
+                name="Timer"
+                subtitle="Meditation, focus"
+                selected={kind === "timer"}
+                onPress={() => setKind("timer")}
+                style={{ flex: 1 }}
+              />
+              <NewTaskTypeCard
+                icon="✓"
+                name="Simple"
+                subtitle="Just check it off"
+                selected={kind === "simple"}
+                onPress={() => setKind("simple")}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={() => setShowMoreTypes(!showMoreTypes)}
+            accessibilityLabel={showMoreTypes ? "Show fewer task types" : "Show more task types"}
+            accessibilityRole="button"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              paddingVertical: 14,
+            }}
+          >
+            <Ionicons
+              name={showMoreTypes ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={DS_COLORS.TEXT_SECONDARY}
+            />
+            <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY }}>
+              {showMoreTypes ? "Show less" : "6 more types"}
+            </Text>
+          </TouchableOpacity>
+          {(showMoreTypes || MORE_TASK_TYPES.includes(kind)) && (
+            <View
+              style={{
+                flexDirection: "column",
+                gap: 8,
+                paddingTop: 10,
+                borderTopWidth: 1,
+                borderTopColor: DS_COLORS.BORDER,
+                borderStyle: "dashed",
+              }}
+            >
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <NewTaskTypeCard
+                  icon="💧"
+                  name="Water"
+                  subtitle="Track glasses"
+                  selected={kind === "water"}
+                  onPress={() => setKind("water")}
+                  style={{ flex: 1 }}
+                />
+                <NewTaskTypeCard
+                  icon="📓"
+                  name="Journal"
+                  subtitle="Write, reflect"
+                  selected={kind === "journal"}
+                  onPress={() => setKind("journal")}
+                  style={{ flex: 1 }}
+                />
+              </View>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <NewTaskTypeCard
+                  icon="📖"
+                  name="Reading"
+                  subtitle="Pages or time"
+                  selected={kind === "reading"}
+                  onPress={() => setKind("reading")}
+                  style={{ flex: 1 }}
+                />
+                <NewTaskTypeCard
+                  icon="📷"
+                  name="Photo"
+                  subtitle="Proof required"
+                  selected={kind === "photo"}
+                  onPress={() => setKind("photo")}
+                  style={{ flex: 1 }}
+                />
+              </View>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <NewTaskTypeCard
+                  icon="📍"
+                  name="Check-in"
+                  subtitle="Location stamp"
+                  selected={kind === "checkin"}
+                  onPress={() => setKind("checkin")}
+                  style={{ flex: 1 }}
+                />
+                <NewTaskTypeCard
+                  icon="#️⃣"
+                  name="Counter"
+                  subtitle="Reps, sets, count"
+                  selected={kind === "counter"}
+                  onPress={() => setKind("counter")}
+                  style={{ flex: 1 }}
+                />
               </View>
             </View>
-          ))}
+          )}
           {configBlock}
           {kind !== "simple" && (
             <View style={s.timeSection}>
@@ -960,52 +1082,6 @@ const s = StyleSheet.create({
     fontSize: 15,
     color: DS_COLORS.TEXT_PRIMARY,
   },
-  typeCategorySection: {
-    marginTop: 12,
-  },
-  typeCategoryTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: DS_COLORS.TEXT_MUTED,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  typeCategoryCol: {
-    flexDirection: "column",
-    gap: 8,
-  },
-  typeCategoryChunkRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  typeChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    backgroundColor: DS_COLORS.surface,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "transparent",
-  },
-  typeChipFlex: {
-    flex: 1,
-    minWidth: 0,
-  },
-  typeChipSel: {
-    borderColor: GRIIT_COLORS.primary,
-    backgroundColor: CREATE_SELECTION.background,
-  },
-  typeChipLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: DS_COLORS.TEXT_SECONDARY,
-  },
-  typeChipLabelSel: {
-    color: GRIIT_COLORS.primary,
-  },
   configBlock: {
     marginTop: DS_SPACING.lg,
     gap: DS_SPACING.sm,
@@ -1081,7 +1157,7 @@ const s = StyleSheet.create({
     paddingTop: 12,
   },
   cta: {
-    backgroundColor: GRIIT_COLORS.primary,
+    backgroundColor: DS_COLORS.PRIMARY,
     height: 48,
     borderRadius: 28,
     alignItems: "center",
