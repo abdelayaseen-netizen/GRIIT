@@ -1,3 +1,10 @@
+/**
+ * REQUIRED ENV VAR for server-side subscription validation:
+ *   REVENUECAT_API_KEY — RevenueCat secret API key (starts with sk_).
+ *   Get from: app.revenuecat.com → Project Settings → API Keys → Secret API key
+ *   Set in Railway dashboard as environment variable.
+ *   If unset, validateSubscription returns current DB values without verification.
+ */
 // TODO: Split into sub-routers — see docs/ARCHITECTURE.md
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
@@ -7,6 +14,9 @@ import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/
 import { getTodayDateKey, daysBetweenKeys, getWeekStartDateKey, getWeekEndDateKey } from "../../lib/date-utils";
 import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
+
+/** Must match the entitlement identifier in RevenueCat dashboard exactly. */
+const RC_ENTITLEMENT_ID = "GRIIT Pro";
 
 /** Subscription fields are written only by profiles.validateSubscription (server-side RevenueCat validation). */
 const PROFILE_UPDATE_KEYS = [
@@ -197,8 +207,8 @@ export const profilesRouter = createTRPCRouter({
           };
         };
         const entitlements = json?.subscriber?.entitlements ?? {};
-        const premium = entitlements["premium"];
-        const expiresDate = premium?.expires_date ?? null;
+        const rcEntitlement = entitlements[RC_ENTITLEMENT_ID];
+        const expiresDate = rcEntitlement?.expires_date ?? null;
         const subscription_status = mapEntitlementToStatus(expiresDate);
         const subscription_expiry = expiresDate;
 
@@ -206,7 +216,7 @@ export const profilesRouter = createTRPCRouter({
           subscription_status,
           subscription_expiry,
           subscription_platform: null,
-          subscription_product_id: premium?.product_identifier ?? null,
+          subscription_product_id: rcEntitlement?.product_identifier ?? null,
         };
 
         const { error: updateError } = await ctx.supabase

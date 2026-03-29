@@ -23,7 +23,6 @@ import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { initializePurchases } from "@/lib/revenue-cat";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
@@ -241,14 +240,8 @@ function AuthRedirector() {
 }
 
 function RootLayoutNav() {
-  const { user } = useAuth();
   const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
 
-  useEffect(() => {
-    if (user?.id) {
-      initializePurchases(user.id);
-    }
-  }, [user?.id]);
   const segments = useSegments();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);

@@ -70,7 +70,8 @@
           "project": "griit",
           "organization": "your-org-slug"
         }
-      ]
+      ],
+      "react-native-purchases"
     ],
     "experiments": {
       "typedRoutes": true,

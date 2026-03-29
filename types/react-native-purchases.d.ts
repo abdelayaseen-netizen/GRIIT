@@ -1,6 +1,6 @@
 /**
  * Augments the real SDK where strict bundler resolution picks this file.
- * Keep in sync with react-native-purchases public API used in lib/revenue-cat.ts.
+ * Keep in sync with react-native-purchases public API used in lib/subscription.ts and app/paywall.tsx.
  */
 declare module "react-native-purchases" {
   export interface CustomerInfo {

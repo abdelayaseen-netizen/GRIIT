@@ -1,6 +1,6 @@
 /**
  * RevenueCat subscription: init, purchase, restore, sync to Supabase.
- * Uses EXPO_PUBLIC_REVENUECAT_IOS_API_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY.
+ * API keys (public): EXPO_PUBLIC_REVENUECAT_IOS_KEY first, then legacy *_API_KEY fallbacks (see initializeRevenueCat).
  * In Expo Go, Purchases is not loaded to avoid native module crashes.
  */
 
@@ -8,6 +8,8 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { setSubscriptionState } from "./premium";
 import { supabase } from "./supabase";
+import { trpcMutate } from "./trpc";
+import { TRPC } from "./trpc-paths";
 
 const ENTITLEMENT_ID = "GRIIT Pro";
 
@@ -21,7 +23,7 @@ export type CustomerInfo = {
 export type PurchasesPackage = {
   identifier: string;
   packageType: string;
-  product: { priceString: string; title?: string };
+  product?: { priceString?: string; title?: string; description?: string };
 };
 export type PurchasesOffering = {
   identifier: string;
@@ -44,10 +46,10 @@ function getPurchases(): typeof import("react-native-purchases") | null {
 export async function initializeRevenueCat(userId: string): Promise<void> {
   const apiKey =
     Platform.OS === "ios"
-      ? (process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY ?? "").trim() ||
-        (process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY ?? "").trim()
-      : (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY ?? "").trim() ||
-        (process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY ?? "").trim();
+      ? (process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? "").trim() ||
+        (process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY ?? "").trim()
+      : (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? "").trim() ||
+        (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY ?? "").trim();
 
   if (!apiKey) {
     if (__DEV__) {
@@ -73,6 +75,9 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
     setSubscriptionState(premium ? "premium" : "free", info?.entitlements?.active?.[ENTITLEMENT_ID]?.expirationDate ?? null);
     notifySubscriptionChange(premium);
     await syncSubscriptionToSupabase(userId, info);
+    void trpcMutate(TRPC.profiles.validateSubscription, {}).catch(() => {
+      // Best-effort — DB already has client-side values from syncSubscriptionToSupabase
+    });
 
     RC.addCustomerInfoUpdateListener((info) => {
       const updatedInfo = info as CustomerInfo;
@@ -81,6 +86,9 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
       setSubscriptionState(isPremium ? "premium" : "free", ent?.expirationDate ?? null);
       notifySubscriptionChange(isPremium);
       void syncSubscriptionToSupabase(userId, updatedInfo);
+      void trpcMutate(TRPC.profiles.validateSubscription, {}).catch(() => {
+        // Best-effort — DB already has client-side values from syncSubscriptionToSupabase
+      });
     });
   } catch (err) {
     if (__DEV__) {
@@ -139,7 +147,7 @@ export async function getOfferings(): Promise<PurchasesOffering | null> {
 /** Purchase a package. Returns success and optional customerInfo or error. */
 export async function purchasePackage(
   pkg: PurchasesPackage
-): Promise<{ success: boolean; customerInfo?: CustomerInfo; error?: string }> {
+): Promise<{ success: boolean; cancelled?: boolean; customerInfo?: CustomerInfo; error?: string }> {
   const Purchases = getPurchases();
   if (!Purchases?.default) return { success: false, error: "Purchases not available" };
   try {
@@ -147,26 +155,40 @@ export async function purchasePackage(
     const result = await RC.purchasePackage?.(pkg);
     const customerInfo = result?.customerInfo;
     const isPremium = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
+    if (isPremium) {
+      void trpcMutate(TRPC.profiles.validateSubscription, {}).catch(() => {
+        // Best-effort — client entitlement already synced via listener / premium state
+      });
+    }
     return { success: isPremium, customerInfo: customerInfo ?? undefined };
   } catch (err: unknown) {
     const e = err as { userCancelled?: boolean; message?: string };
-    if (e?.userCancelled) return { success: false, error: "cancelled" };
-    // error swallowed — handle in UI
+    if (e?.userCancelled) return { success: false, cancelled: true };
     return { success: false, error: e?.message ?? "Purchase failed" };
   }
 }
 
-/** Restore purchases. */
-export async function restorePurchases(): Promise<{ success: boolean; isPremium: boolean }> {
+/** Restore purchases (matches paywall: success when RC restore API succeeds). */
+export async function restorePurchases(): Promise<{
+  success: boolean;
+  isPremium: boolean;
+  customerInfo?: CustomerInfo;
+  error?: string;
+}> {
   const Purchases = getPurchases();
-  if (!Purchases?.default) return { success: false, isPremium: false };
+  if (!Purchases?.default) return { success: false, isPremium: false, error: "Purchases not available" };
   try {
-    const customerInfo = await Purchases.default.restorePurchases();
+    const customerInfo = (await Purchases.default.restorePurchases()) as CustomerInfo;
     const isPremium = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
-    return { success: true, isPremium };
-  } catch (err) {
-    // error swallowed — handle in UI
-    return { success: false, isPremium: false };
+    if (isPremium) {
+      void trpcMutate(TRPC.profiles.validateSubscription, {}).catch(() => {
+        // Best-effort — DB sync also driven by listener when RC updates
+      });
+    }
+    return { success: true, isPremium, customerInfo };
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    return { success: false, isPremium: false, error: e?.message ?? "No purchases found to restore." };
   }
 }
 
