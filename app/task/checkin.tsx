@@ -24,7 +24,7 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
 import { AllowedLocation } from "@/types";
-import { checkinStyles as styles } from "@/styles/checkin-styles";
+import { checkinStyles as styles } from "./checkin-styles";
 import Celebration from "@/components/Celebration";
 import { useCelebration } from "@/hooks/useCelebration";
 import { formatSecondsToMMSS } from "@/lib/formatTime";

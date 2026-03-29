@@ -26,7 +26,7 @@ import {
   DS_BORDERS,
   DS_SHADOWS,
 } from "@/lib/design-system";
-import { GRIITWordmark } from "@/src/components/ui";
+import { GRIITWordmark } from "@/components/ui";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";

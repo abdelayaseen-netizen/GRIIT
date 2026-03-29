@@ -122,6 +122,7 @@ export const TRPC = {
     getLiveFeed: 'feed.getLiveFeed',
     react: 'feed.react',
     comment: 'feed.comment',
+    deleteComment: 'feed.deleteComment',
     getComments: 'feed.getComments',
     shareCompletion: 'feed.shareCompletion',
     deletePost: 'feed.deletePost',

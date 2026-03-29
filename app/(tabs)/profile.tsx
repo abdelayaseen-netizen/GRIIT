@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -46,6 +46,8 @@ import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/
 
 type ProfileTab = "challenges" | "posts" | "badges";
 
+const RESPECT_DEBOUNCE_MS = 300;
+
 type ActiveRow = {
   id: string;
   current_day?: number;
@@ -86,13 +88,23 @@ export default function ProfileScreen() {
   const [tab, setTab] = useState<ProfileTab>("challenges");
   const [uploading, setUploading] = useState(false);
   const [avatarInlineError, setAvatarInlineError] = useState<string | null>(null);
+  const [avatarDisplayOverride, setAvatarDisplayOverride] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
+  const respectLastAtProfile = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     if (!avatarInlineError) return;
     const t = setTimeout(() => setAvatarInlineError(null), 4000);
     return () => clearTimeout(t);
   }, [avatarInlineError]);
+
+  useEffect(() => {
+    const fromServer = profile?.avatar_url?.trim();
+    if (!fromServer || !avatarDisplayOverride) return;
+    if (fromServer.split("?")[0] === avatarDisplayOverride.split("?")[0]) {
+      setAvatarDisplayOverride(null);
+    }
+  }, [profile?.avatar_url, avatarDisplayOverride]);
 
   const activeListQuery = useQuery({
     queryKey: ["profile", user?.id, "activeChallenges"],
@@ -158,6 +170,55 @@ export default function ProfileScreen() {
     });
   }, [activeListQuery.data]);
 
+  const onPostRespect = useCallback(
+    async (post: LiveFeedPost) => {
+      if (!user?.id) return;
+      const now = Date.now();
+      const last = respectLastAtProfile.current.get(post.id) ?? 0;
+      if (now - last < RESPECT_DEBOUNCE_MS) return;
+      respectLastAtProfile.current.set(post.id, now);
+
+      const prevR = post.reactedByMe;
+      const prevC = post.respectCount;
+      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
+      qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: !prevR, respectCount: nextC } : p)),
+        };
+      });
+      try {
+        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
+          reacted?: boolean;
+          reactionCount?: number;
+        };
+        qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            posts: old.posts.map((p) =>
+              p.id === post.id
+                ? { ...p, reactedByMe: !!result.reacted, respectCount: Math.max(0, result.reactionCount ?? nextC) }
+                : p
+            ),
+          };
+        });
+        await qc.invalidateQueries({ queryKey: ["liveFeed"] });
+      } catch (e) {
+        captureError(e, "ProfileTabRespect");
+        qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: prevR, respectCount: prevC } : p)),
+          };
+        });
+      }
+    },
+    [user?.id, qc]
+  );
+
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
     trackEvent("share_tapped", { content_type: "profile" });
@@ -177,6 +238,7 @@ export default function ProfileScreen() {
     try {
       const outcome = await pickAndUploadAvatar(user.id);
       if (outcome.status === "ok") {
+        setAvatarDisplayOverride(outcome.url);
         await qc.invalidateQueries({ queryKey: ["profile"] });
         await refetchAll();
         return;
@@ -248,6 +310,7 @@ export default function ProfileScreen() {
   const tier = stats?.tier ?? "Starter";
   const tierColors = tierPillStyle(tier);
   const fc = followCountsQuery.data;
+  const avatarUri = (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "";
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -284,9 +347,9 @@ export default function ProfileScreen() {
               accessibilityLabel="Change profile photo"
               accessibilityRole="button"
             >
-              {profile.avatar_url?.trim() ? (
+              {avatarUri ? (
                 <Image
-                  source={{ uri: profile.avatar_url.trim() }}
+                  source={{ uri: avatarUri }}
                   style={styles.avatarImage}
                   accessibilityIgnoresInvertColors
                 />
@@ -470,7 +533,7 @@ export default function ProfileScreen() {
                   key={post.id}
                   post={post}
                   onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
-                  onRespect={() => void trpcMutate(TRPC.feed.react, { eventId: post.id }).then(() => void postsQuery.refetch())}
+                  onRespect={() => void onPostRespect(post)}
                   onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
                   onShare={() => {}}
                 />

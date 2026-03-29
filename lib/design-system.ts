@@ -471,6 +471,8 @@ export const DS_COLORS = {
   surfaceMuted: '#F7F5F0',
   accentLight: '#FFF0ED',
   accentSoft: '#FFF0ED',
+  /** Softer peach on accent backgrounds (challenge detail secondary on orange) */
+  accentMuted: '#E8A87C',
   successLight: '#EBF5EE',
   successSoft: '#EBF5EE',
   dangerLight: '#FEF2F2',

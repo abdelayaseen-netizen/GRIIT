@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { colors, spacing, radius } from "@/src/theme/tokens";
-import { PrimaryButton } from "@/src/components/ui/PrimaryButton";
+import { colors, spacing, radius } from "@/lib/theme/tokens";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export type GateContext =
   | "join"

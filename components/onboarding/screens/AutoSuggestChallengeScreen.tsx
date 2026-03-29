@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/constants/onboarding-theme";
+import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
 import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";

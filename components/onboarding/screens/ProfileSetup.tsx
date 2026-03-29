@@ -14,7 +14,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { Camera } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/constants/onboarding-theme";
+import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
 import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";

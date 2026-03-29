@@ -4,11 +4,11 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ChevronLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { ONBOARDING_COLORS as C } from "@/constants/onboarding-theme";
+import { ONBOARDING_COLORS as C } from "@/components/onboarding/onboarding-theme";
 import { GRIIT_COLORS } from "@/lib/design-system";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
-import { GOAL_OPTIONS } from "@/constants/onboarding-theme";
+import { GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 

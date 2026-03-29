@@ -31,7 +31,7 @@ import { useApp } from "@/contexts/AppContext";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
 import { DS_COLORS } from "@/lib/design-system";
 import { RunMode } from "@/types";
-import { styles } from "@/styles/run-styles";
+import { styles } from "./run-styles";
 import Celebration from "@/components/Celebration";
 import { useCelebration } from "@/hooks/useCelebration";
 import { useInlineError } from "@/hooks/useInlineError";

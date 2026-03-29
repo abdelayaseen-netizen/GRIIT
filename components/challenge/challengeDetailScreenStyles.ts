@@ -155,12 +155,12 @@ export const challengeDetailStyles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.accent,
   },
   activeBadgeText: {
     fontSize: 11,
     fontWeight: "600" as const,
-    color: "#E8A87C",
+    color: DS_COLORS.accentMuted,
     letterSpacing: 0.5,
   },
   heroEyebrow: {
@@ -251,7 +251,7 @@ export const challengeDetailStyles = StyleSheet.create({
     elevation: 4,
   },
   socialProofCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.surface,
     marginTop: -14,
     marginHorizontal: 0,
     borderRadius: 16,
@@ -262,15 +262,15 @@ export const challengeDetailStyles = StyleSheet.create({
   socialProofTitle: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#2B3A2E",
+    color: DS_COLORS.challengeHeaderDark,
   },
   socialProofSub: {
     fontSize: 11,
-    color: "#8B8680",
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   todayGoalCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -280,7 +280,7 @@ export const challengeDetailStyles = StyleSheet.create({
   dayCounterText: {
     fontSize: 12,
     fontWeight: "600" as const,
-    color: "#E8593C",
+    color: DS_COLORS.accent,
     marginBottom: 10,
   },
   todayGoalRow: {
@@ -293,7 +293,7 @@ export const challengeDetailStyles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 2.5,
-    borderColor: "#E8593C",
+    borderColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -309,11 +309,11 @@ export const challengeDetailStyles = StyleSheet.create({
   todayGoalTitle: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: "#2B3A2E",
+    color: DS_COLORS.challengeHeaderDark,
   },
   todayGoalSubtitle: {
     fontSize: 12,
-    color: "#8B8680",
+    color: DS_COLORS.textSecondary,
     marginTop: 2,
   },
   todayGoalArrowWrap: {
@@ -325,7 +325,7 @@ export const challengeDetailStyles = StyleSheet.create({
     backgroundColor: "rgba(232,89,60,0.08)",
   },
   progressSectionCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: DS_COLORS.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -333,13 +333,13 @@ export const challengeDetailStyles = StyleSheet.create({
   progressTrack: {
     height: 8,
     borderRadius: 6,
-    backgroundColor: "#ECEAE4",
+    backgroundColor: DS_COLORS.surfaceMuted,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
     borderRadius: 6,
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.accent,
   },
   progressDotsRow: {
     flexDirection: "row",
@@ -350,12 +350,12 @@ export const challengeDetailStyles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#ECEAE4",
+    backgroundColor: DS_COLORS.surfaceMuted,
     borderWidth: 2,
-    borderColor: "#D4D1CB",
+    borderColor: DS_COLORS.border,
   },
   progressDotFilled: {
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.accent,
     borderWidth: 0,
   },
   progressLabelsRow: {
@@ -365,11 +365,11 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 10,
-    color: "#A8A49E",
+    color: DS_COLORS.textMuted,
   },
   progressLabelStart: {
     fontSize: 10,
-    color: "#E8593C",
+    color: DS_COLORS.accent,
     fontWeight: "600" as const,
   },
 
@@ -892,20 +892,20 @@ export const challengeDetailStyles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 28,
     borderWidth: 1.5,
-    borderColor: "#D4D1CB",
+    borderColor: DS_COLORS.border,
     backgroundColor: "transparent",
     marginTop: 8,
   },
   leaveBtnInFlowText: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#8B8680",
+    color: DS_COLORS.textSecondary,
   },
   commitCtaInFlow: {
     marginTop: 8,
     minHeight: 56,
     borderRadius: 28,
-    backgroundColor: "#E8593C",
+    backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 17,
@@ -913,11 +913,11 @@ export const challengeDetailStyles = StyleSheet.create({
   commitCtaInFlowText: {
     fontSize: 16,
     fontWeight: "700" as const,
-    color: "#FFFFFF",
+    color: DS_COLORS.surface,
   },
   ctaMicroInFlow: {
     fontSize: 11,
-    color: "#A8A49E",
+    color: DS_COLORS.textMuted,
     textAlign: "center",
     marginTop: 8,
     marginBottom: 8,

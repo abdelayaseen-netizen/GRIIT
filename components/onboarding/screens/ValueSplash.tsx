@@ -8,9 +8,9 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/constants/onboarding-theme";
+import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
 import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
-import { GRIITWordmark } from "@/src/components/ui/GRIITWordmark";
+import { GRIITWordmark } from "@/components/ui/GRIITWordmark";
 import { track } from "@/lib/analytics";
 
 interface ValueSplashProps {

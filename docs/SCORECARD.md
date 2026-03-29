@@ -1,149 +1,174 @@
-# GRIIT Scorecard — 2026-03-28
+# GRIIT Master Scorecard — 2026-03-29
 
-Deep clean + consolidation + performance pass. Verification commands were run from the repo root on Windows (PowerShell). Some counts were cross-checked with `rg` when `Get-ChildItem -Include` behaved inconsistently.
+This scorecard reflects **work completed in this session** (deep clean Phases 1A–1F, 1E hex fix, Phase 2A feature-gates merge, Phase 2B review) plus **honest gaps** for everything not executed (mega-file splits, full a11y sweep, backend catch/`any` pass, competitive research depth, live revenue data).
 
----
+**Verification (repo root):**
 
-## Summary
+| Check | Result |
+|--------|--------|
+| `npx tsc --noEmit` (root) | Exit **0** |
+| `cd backend; npx tsc --noEmit` | Exit **0** |
+| `(Get-ChildItem docs\*.md).Count` (PowerShell) | **9** |
+| `from … @/src/` in `app/`, `components/`, `lib/` | **0** (workspace search) |
+| `from … @/constants/` in same | **0** |
+| `from … @/styles/` in `app/`, `components/` | **0** |
+| `#[0-9a-fA-F]{6}` in `app/**/*.tsx` | **0** matches (workspace search) |
+| `#[0-9a-fA-F]{6}` in `components/**/*.tsx` | **0** matches |
+| `Alert.alert` in `app/`, `components/` | **0** |
+| `GRIT[^I]` in `app/`, `components/`, `lib/` `*.ts(x)` | **0** (no false “GRIT” product spelling) |
 
-**Overall: 78/100** — weighted toward honest gaps: large files remain un-split, not every `FlatList` has full perf props, and backend route files still exceed 500 lines. Consolidation targets (`Alert.alert`, string tRPC paths, a11y on previously flagged screens) are **cleared**.
-
----
-
-## Backend (82/100)
-
-| Category | Score | Evidence | Issues |
-|----------|------:|----------|--------|
-| Route compilation | 10/10 | `cd backend; npx tsc --noEmit` → exit **0**, no errors | — |
-| Column safety | 7/10 | Static review only; no live DB probe in this pass | Runtime schema drift still possible |
-| getSupabaseServer fallback | 10/10 | Loop over `backend/trpc/routes/*.ts`: **no** `WARNING` for missing `??` after `getSupabaseServer()` | — |
-| Error handling | 8/10 | `rg` empty `catch {}` in app/components/backend → **no** hits | Some catches log only; not all rethrow `TRPCError` |
-| Console cleanup | 9/10 | `rg "console\\.log" backend/trpc backend/lib backend/*.ts` → **0** matches in first-party backend sources | Dependencies under `backend/node_modules` ignored |
-
-**Procedure counts** (`^\s+\w+:\s*(public|protected)Procedure`): profiles 25, notifications 5, challenges 14, feed 11, leaderboard 3, checkins 8, plus 14 other route modules (meta, auth, user, …) as before.
-
-**Files >500 lines (first-party backend):** `challenges.ts` (~1078), `feed.ts` (~838), `profiles.ts` (~975), `checkins.ts` (~675) — hurts maintainability score.
+**Note:** `rg` is not on PATH in the default Windows shell used here; counts above use the same intent as the prompt’s `rg` gates via the editor/workspace search tool.
 
 ---
 
-## Frontend (92/100)
+## Executive summary
 
-| Category | Score | Evidence | Issues |
-|----------|------:|----------|--------|
-| Design system compliance | 10/10 | `Select-String "'#[0-9A-Fa-f]{3,8}'"` on `app/**/*.tsx`, `components/**/*.tsx` → **0** matches | — |
-| Accessibility labels | 9/10 | Script: touchable in `app/**/*.tsx` without file-level `accessibilityLabel` → **0** files after fixing `teams.tsx`, `manual.tsx` | Heuristic is file-level; individual controls could still lack labels |
-| GRIIT spelling | 10/10 | `rg "GRIT[^I]" app components` → **0** violations | — |
-| TypeScript clean | 10/10 | `npx tsc --noEmit` (root) → **0** errors | — |
-| No Alert.alert | 10/10 | `rg "Alert\\.alert" app components` → **0** | Replaced with `ConfirmDialog` + inline banners |
-| No silent catch blocks | 10/10 | `rg 'catch\s*\([^)]*\)\s*\{\s*\}'` → **0** | — |
-| No console.log in prod paths | 9/10 | Lines with `console.log` either include `__DEV__` on same line **or** only `__DEV__`-guarded blocks remain; `lib/sentry.ts` / `lib/revenue-cat.ts` dev paths use `console.warn` | `captureMessage` dev noise is `console.warn` |
-| No TODO/FIXME/HACK | 10/10 | `rg "TODO\|FIXME\|HACK" app components lib backend/trpc` (excluding `node_modules`) → **0** | — |
+| Pillar | Score | Notes |
+|--------|------:|-------|
+| **Clean / structure** | **72/100** | Legacy `src/`, `constants/`, `styles/` removed or relocated; **9** living docs; loose backend `migration*.sql` removed. |
+| **Frontend** | **88/100** | TS clean, design tokens on challenge detail styles, imports unified. Large screens and partial a11y gap remain. |
+| **Backend** | **80/100** | Unchanged this session; `supabase.ts` / `supabase-admin.ts` / `supabase-server.ts` all still referenced — no redundant file removed. |
+| **Performance** | **62/100** | No mega-file splits or FlatList normalization in this pass. |
+| **Competitive readiness** | **55/100** | See gap table — strong core loop; missing industry-standard growth and infra items. |
+| **Overall (weighted)** | **~74/100** | Up on repo hygiene; down vs a “fully complete” mega-prompt because Phases 3–5 and full scorecard automation were not finished. |
 
 ---
 
-## Performance (68/100)
+## Deep clean gates (Phase 6 style)
 
-| Category | Score | Evidence | Issues |
-|----------|------:|----------|--------|
-| React.memo on list items | 8/10 | **39** component files under `components/` export patterns using `React.memo` (cards, rows, feed, home, profile) | Not every list child is a dedicated memo component |
-| FlatList optimization | 6/10 | **8** `<FlatList` sites in app/components; **`follow-list.tsx`** now has `initialNumToRender`, `maxToRenderPerBatch`, `windowSize`, `removeClippedSubviews`, `useCallback` `renderItem` | `discover.tsx` / `activity.tsx` / others not fully normalized to the audit checklist |
-| useCallback renderItems | 7/10 | **~120** `useCallback` matches under `app/**/*.tsx` (approx.) | Not all `FlatList`s use extracted `renderItem` |
-| staleTime configured | 8/10 | **`lib/query-client.ts`** sets default `staleTime: 5 * 60 * 1000` for all queries; hot paths (e.g. discover, profile) add explicit overrides | Not every `useQuery` duplicates `staleTime` locally |
-| Prefetch on navigation | 8/10 | **`prefetchChallengeById`** + `onPressIn` / prefetch hooks already used from Discover (`discover.tsx`) | Leaderboard → profile prefetch not added in this pass |
-| No files >500 lines | 3/10 | First-party **>500 lines**: e.g. `activity.tsx` (~1386), `task/complete.tsx` (~1342), `CreateChallengeWizard.tsx` (~1324), `TaskEditorModal.tsx` (~1581), `settings.tsx` (~946), `challenge/[id].tsx` (large), `design-system.ts` (~789) | Split deferred |
-| Skeleton loaders | 9/10 | `rg "Skeleton|skeleton" app components` → **98** matches (prior audit) | — |
-| Error boundaries | 9/10 | `app/_layout.tsx` wraps tree with `<ErrorBoundary>` | — |
-| captureError usage | 9/10 | **143** references across `app`, `components`, `lib` (prior count; still extensive) | — |
+| Gate | Before (prompt) | After (2026-03-29) | Notes |
+|------|-----------------|---------------------|--------|
+| Raw `#hex` in `app/` / `components/` / `contexts/` | 23 in one file | **0** in app/components TSX (search) | `lib/design-system.ts` remains the hex source of truth. |
+| `Alert.alert` | 0 | **0** | — |
+| `console.log` outside dev intent | 0 | **0** prod-style | Remaining logs are `if (__DEV__) console.log(…)`. |
+| Empty / swallowed catches | ~7 | **Still present** | e.g. `.catch(() => {})` on haptics/notifications/scheduling; `catch {}` in `lib/trpc.ts`. Not cleaned in this pass. |
+| Missing `accessibilityLabel` (heuristic) | ~680 | **Not re-counted** | Full Phase 4 not run; many touchables remain. |
+| `src/` imports | 11 | **0** | `src/` deleted; UI → `components/ui`, theme → `lib/theme`. |
+| `constants/` imports | 15 | **0** | Onboarding theme → `components/onboarding/onboarding-theme.ts`; `ShareCard` uses `DS_COLORS` only. |
+| `styles/` imports | 2 | **0** | `checkin-styles` / `run-styles` live under `app/task/`. |
+| Files > 500 lines (`app`, `components`, `lib`) | 19 | **~18+** | Still includes `TaskEditorModal.tsx`, `activity.tsx`, `complete.tsx`, `CreateChallengeWizard.tsx`, `challengeDetailScreenStyles.ts`, etc. |
+| TypeScript errors | 0 | **0** | Root + backend `tsc` clean. |
+| Doc `.md` files in `docs/` | 108 | **9** | Only the agreed keep list retained. |
+| Dead dirs | — | **Removed** | `src/`, `constants/`, `styles/`, `coverage/` / `web-fallback*` if present; `backend/migration*.sql` (loose) removed. |
 
----
-
-## Screen-by-screen (80/100)
-
-| Screen | Score | Issues |
-|--------|------:|--------|
-| Home | 8/10 | Large `index.tsx`; relies on global query defaults |
-| Discover | 8/10 | Prefetch present; screen file still long |
-| Activity — Notifications | 8/10 | Monolithic `activity.tsx` |
-| Activity — Leaderboard | 8/10 | Same file; scope toggles verified earlier |
-| Profile (own) | 8/10 | Tab queries + staleTimes |
-| Profile (public) | 9/10 | Unfollow confirm modal; inline follow errors |
-| Settings | 9/10 | `TRPC.notifications.updateReminderSettings` for reminder time (no string path) |
-| Challenge detail | 7/10 | Very large file; functional |
-| Task completion | 7/10 | Several large task screens |
-| Onboarding | 7/10 | Not refactored this pass |
-| Follow list | 9/10 | No `Alert`; `ConfirmDialog`; FlatList perf props |
-| Badge modal | 8/10 | `BadgeDetailModal` unchanged |
+**Clean sub-score (honest):** Swallowed catches + mega-files + a11y keep this below 80.
 
 ---
 
-## Top 5 remaining action items
+## Frontend scorecard (Phase 7 style)
 
-1. **Split mega-files** (`activity.tsx`, `task/complete.tsx`, `CreateChallengeWizard.tsx`, `TaskEditorModal.tsx`, `challenge/[id].tsx`) into hooks + presentational modules.
-2. **Normalize every `FlatList`** to the checklist (`renderItem` + `useCallback`, perf props, `showsVerticalScrollIndicator={false}` where desired).
-3. **Per-control a11y pass** — file-level heuristic passes; audit individual `Pressable`s in dense screens.
-4. **Backend route splits** — `profiles.ts`, `challenges.ts`, `feed.ts` over 500 lines.
-5. **Optional:** run the Phase 4 “unused procedure” PowerShell script and mark dead exports (careful with string/dynamic callers).
+### Code quality (50 pts) → **42/50**
 
----
+- **TypeScript:** 10/10 — `npx tsc --noEmit` OK.
+- **Design system:** 9/10 — Challenge detail raw hex removed; `lib/theme` + `components/ui` still carry some rgba literals and legacy token shapes (acceptable but not “perfect DS everywhere”).
+- **Architecture:** 7/10 — Many files **>800** lines unchanged.
+- **Error handling:** 6/10 — Silent `.catch(() => {})` / empty `catch` still exist.
+- **Cleanliness:** 10/10 — No `Alert.alert`; dev-only logging pattern preserved.
 
-## Changes made in this pass
+### UX (30 pts) → **24/30**
 
-**Deleted**
+- **Accessibility:** 6/10 — Not a full interactive-element pass this session.
+- **Loading / errors:** 9/10 — Existing skeletons and `ErrorBoundary` unchanged; still solid.
+- **Navigation:** 9/10 — No route work in this pass; prior fixes assumed stable.
 
-- `Open GRIT App.url`
-- `Open GRIT in browser.bat`
-- `Start and open GRIT app.bat`
-- `20250228000000_accountability_pairs.sql` (duplicate; canonical copy remains under `supabase/migrations/`)
+### Performance (20 pts) → **11/20**
 
-**Modified**
+- **Lists:** 4/10 — No systematic `React.memo` / `FlatList` prop audit this session.
+- **Images:** 4/10 — No `expo-image` migration pass.
+- **Queries:** 8/10 — Default `staleTime` in query client still the main story.
+- **Bundle / splits:** 3/10 — Largest components untouched.
 
-- `app/follow-list.tsx` — removed `Alert.alert`; added `ConfirmDialog`, auto-clearing banner errors, `FlatList` perf props, `useCallback` list renderer
-- `app/profile/[username].tsx` — unfollow `ConfirmDialog`; inline follow/unfollow error banner; `captureError` on failures; removed `Alert`
-- `app/settings.tsx` — `trpcMutate(TRPC.notifications.updateReminderSettings, …)` for reminder time
-- `app/accountability.tsx` — `TRPC.accountability.remove` instead of string paths
-- `lib/register-push-token.ts` — `TRPC.notifications.registerToken`
-- `app/(tabs)/teams.tsx` — `accessibilityLabel` on primary CTA
-- `app/task/manual.tsx` — `accessibilityLabel` / role on complete button
-- `lib/sentry.ts` — dev `captureMessage` uses `console.warn` instead of `console.log`
-- `lib/revenue-cat.ts` — Expo Go skip log uses `console.warn` (avoids naked `console.log` lines)
-
-**Not done (scope / risk)**
-
-- Phase 1B orphan component sweep (slow + risk of false orphans via dynamic imports)
-- Phase 1D commented-code mass deletion (high risk without file-by-file review)
-- Phase 4 unused-procedure commenting across all routers
-- Phase 6 `git push` (requires your remote credentials)
+**Frontend total:** **~77/100** (rounded from weighted feel of the sections above; prior pass claimed higher when a11y heuristics looked cleaner).
 
 ---
 
-## Verification commands (this run)
+## Backend scorecard (Phase 8 style)
 
-```text
-npx tsc --noEmit                    → OK
-cd backend && npx tsc --noEmit        → OK
-Alert.alert count (app+components)   → 0
-trpcMutate(" / trpcQuery(" strings   → 0
-app/*.tsx touchable without a11y     → 0 files
-rg TODO|FIXME|HACK (first-party)     → 0
-backend first-party console.log      → 0 (rg)
-```
+| Area | Score | Evidence |
+|------|------:|----------|
+| Security / validation | 8/10 | Zod on routes (prior audits); RevenueCat still client-led; rate limit in-memory. |
+| Reliability | 8/10 | TRPC patterns stable; not re-audited every catch this session. |
+| Performance | 6/10 | Large route files; daily reset stub / caching story unchanged from known issues. |
+| Maintainability | 7/10 | Three Supabase entrypoints **all used** — consolidation would be merge/refactor, not deletion. |
+
+**Backend total:** **~80/100** (no regression from this PR; no major backend edits).
 
 ---
 
-## Phase 6 — Commit
+## Competitive & research gap analysis (Phase 9 — concise)
 
-After review, run:
+Frameworks applied qualitatively: **Fogg B=MAP**, **Hook Model**, **SDT**.
 
-```powershell
-git add -A
-git commit -m "chore: deep clean + consolidation + performance optimization
+| Capability | GRIIT (2026-03) | Gap |
+|------------|-----------------|-----|
+| Push / streak prompts | Strong | Widgets + smarter timing A/B |
+| Social feed | Yes | Density, shares to Stories, referral deep links |
+| Photo / proof tasks | Yes | Optional server-side integrity signals |
+| Leaderboards | Yes | Habit apps often pair with weekly narrative — polish |
+| Teams | Partial / gated | Clear Pro value story |
+| Offline-first | Weak | Competitors often cache critical read paths |
+| App Store review prompt | Verify | Standard growth hygiene |
+| Server-side receipt validation | No | Industry baseline for subscription trust |
 
-- Removed root junk (bat/url, duplicate accountability SQL)
-- Replaced Alert.alert with ConfirmDialog and inline banners
-- Normalized string tRPC paths to TRPC.* constants
-- Added accessibility labels on teams + manual task screens
-- follow-list FlatList perf props + useCallback renderItem
-- Dev logging: console.warn for Sentry/RevenueCat messages"
-```
+**Fogg (B=MAP):** Motivation **7/10**, Ability **6/10** (complex flows in large files), Prompt **7/10**.
 
-Push when ready: `git push origin main`.
+**Hook:** Trigger **7**, Action **6**, Variable reward **7**, Investment **7**.
+
+**SDT:** Autonomy **7**, Competence **7**, Relatedness **6**.
+
+**Top 5 to compete**
+
+1. **Receipt validation + entitlements** — trust and fraud resistance.  
+2. **Referral + deep links** — viral coefficient (benchmark: need meaningful K-factor for organic lift).  
+3. **Widgets + notification intelligence** — prompt channel (Fogg).  
+4. **Offline / resilience** — perceived ability on poor networks.  
+5. **Social sharing to Stories** — acquisition loop (Strava / BeReal pattern).
+
+---
+
+## Revenue projections (Phase 10 — honest, no live metrics)
+
+Benchmarks (industry reports cited in the prompt): Health & Fitness trial-to-paid **~8–12%**; D30 retention often **single digits**; high churn month 1; ARPPU often **~$11–15/mo** in category.
+
+**Pricing assumed:** Free (3 active challenges), Pro **$9.99/mo** / **$49.99/yr**.
+
+| Horizon | MRR | Assumption |
+|---------|-----|------------|
+| Current | **$0** (unless you have live dashboards) | Pre-scale or testflight-only is normal. |
+| 3 mo | **$0–$500** | Requires store launch + small paid cohort. |
+| 6 mo | **$500–$5k** | Needs ASO + content loop + paywall optimization. |
+| 12 mo | **$5k–$30k** | Needs retention work + possibly teams/Pro proof. |
+| 24–36 mo | **Highly variable** | $1M ARR needs **~8.3k** subs at $9.99 or equivalent ARPPU mix. |
+
+**Acceleration levers:** (1) Server-validated subscriptions, (2) onboarding & paywall timing, (3) push + widget prompts, (4) referral program, (5) retention cohort fixes (onboarding → day-7 → day-30).
+
+---
+
+## Top 10 priorities (by impact)
+
+1. Split **TaskEditorModal** + **activity** + **challenge/[id]** + **task/complete** (maintainability → fewer regressions → faster shipping).  
+2. **Accessibility** pass on tab screens and create flow.  
+3. **Remove silent catches** or document + narrow scope.  
+4. **FlatList / memo** normalization on hottest lists.  
+5. **Server-side RevenueCat** validation sketch → implementation.  
+6. **Redis** (or hosted limiter) for rate limits in production.  
+7. **daily-reset** cron — replace stub.  
+8. **expo-image** for remote images on feed/profile.  
+9. **Prefetch** on more navigation surfaces (challenge, profile).  
+10. **Referral / deep link** MVP.
+
+---
+
+## Session changelog (what actually landed)
+
+- Removed **`src/`** after moving **UI** to `components/ui` and **theme** to `lib/theme`; updated all imports.  
+- Removed **`constants/`** and **`styles/`**; onboarding theme → `components/onboarding/onboarding-theme.ts`; task styles → `app/task/*-styles.ts`.  
+- **`challengeDetailScreenStyles.ts`:** replaced remaining `#hex` with **`DS_COLORS`**; added **`DS_COLORS.accentMuted`**.  
+- **`ShareCard`:** dropped `@/constants/theme`; uses **`DS_COLORS.BG_PRIMARY`**.  
+- **`lib/feature-gates.ts`** merged into **`lib/feature-flags.ts`**; duplicate file deleted.  
+- **Docs:** pruned to **9** files per keep list.  
+- **Backend:** deleted loose **`migration*.sql`** copies from `backend/` (migrations live under `supabase/migrations/`).
+
+---
+
+*Next verification you can run locally (install ripgrep or use IDE search): duplicate the prompt’s `rg` gates for hex, `Alert.alert`, imports, and file-length listing.*

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { ONBOARDING_COLORS as C } from "@/constants/onboarding-theme";
+import { ONBOARDING_COLORS as C } from "@/components/onboarding/onboarding-theme";
 
 interface ProgressDotsProps {
   total: number;

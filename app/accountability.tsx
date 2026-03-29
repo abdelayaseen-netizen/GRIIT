@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { ChevronLeft, UserPlus, UserMinus, Check, X, Users } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { sharedStyles } from "@/src/theme";
+import { sharedStyles } from "@/lib/theme";
 import { DS_COLORS } from "@/lib/design-system";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";

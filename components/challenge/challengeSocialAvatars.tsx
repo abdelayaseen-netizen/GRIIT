@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { InitialCircle } from "@/src/components/ui";
+import { InitialCircle } from "@/components/ui";
 import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
 
 export function SocialAvatars({

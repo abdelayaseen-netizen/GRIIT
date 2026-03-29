@@ -53,6 +53,7 @@ export default function PostThreadScreen() {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
   const [androidMenuOpen, setAndroidMenuOpen] = useState(false);
+  const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
   const respectLastAt = useRef<Map<string, number>>(new Map());
 
   const cachedPost = useMemo(() => {
@@ -107,6 +108,20 @@ export default function PostThreadScreen() {
     },
     onError: (e) => {
       captureError(e, "PostThreadComment");
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: string) => trpcMutate(TRPC.feed.deleteComment, { commentId }),
+    onSuccess: async () => {
+      setDeleteCommentTargetId(null);
+      await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
+      await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+      void postQuery.refetch();
+    },
+    onError: (e) => {
+      captureError(e, "PostThreadDeleteComment");
     },
   });
 
@@ -258,22 +273,59 @@ export default function PostThreadScreen() {
   }, [displayPost, postQuery.isPending, postQuery.isError, postQuery.error, navigateProfile, onRespect, onShare, openMenu]);
 
   const renderCommentItem = useCallback(
-    ({ item }: { item: CommentRow }) => (
-      <View style={styles.commentRow}>
-        <Avatar
-          url={item.avatar_url}
-          name={item.display_name || item.username}
-          userId={item.user_id}
-          size={36}
-        />
-        <View style={styles.commentMain}>
-          <Text style={styles.commentName}>{item.display_name || item.username}</Text>
-          <Text style={styles.commentBody}>{item.text}</Text>
-          <Text style={styles.commentTime}>{relativeTime(item.created_at)}</Text>
+    ({ item }: { item: CommentRow }) => {
+      const isMine = Boolean(user?.id && item.user_id === user.id);
+      return (
+        <View style={styles.commentBlock}>
+          <Pressable
+            onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
+            delayLongPress={450}
+            style={styles.commentRow}
+          >
+            <Avatar
+              url={item.avatar_url}
+              name={item.display_name || item.username}
+              userId={item.user_id}
+              size={36}
+            />
+            <View style={styles.commentMain}>
+              <Text style={styles.commentName}>{item.display_name || item.username}</Text>
+              <Text style={styles.commentBody}>{item.text}</Text>
+              <Text style={styles.commentTime}>{relativeTime(item.created_at)}</Text>
+            </View>
+          </Pressable>
+          {deleteCommentTargetId === item.id ? (
+            <View style={styles.deleteCommentBar}>
+              <Text style={styles.deleteCommentQuestion}>Delete this comment?</Text>
+              <View style={styles.deleteCommentActions}>
+                <Pressable
+                  onPress={() => setDeleteCommentTargetId(null)}
+                  style={styles.deleteCommentBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel delete"
+                >
+                  <Text style={styles.deleteCommentCancel}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => deleteCommentMutation.mutate(item.id)}
+                  disabled={deleteCommentMutation.isPending}
+                  style={styles.deleteCommentBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Confirm delete comment"
+                >
+                  {deleteCommentMutation.isPending ? (
+                    <ActivityIndicator size="small" color={DS_COLORS.errorText} />
+                  ) : (
+                    <Text style={styles.deleteCommentConfirm}>Delete</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
         </View>
-      </View>
-    ),
-    []
+      );
+    },
+    [user?.id, deleteCommentTargetId, deleteCommentMutation]
   );
 
   return (
@@ -415,11 +467,26 @@ const styles = StyleSheet.create({
   loader: { marginTop: 24 },
   list: { paddingHorizontal: DS_SPACING.lg, paddingBottom: 16 },
   empty: { textAlign: "center", color: DS_COLORS.FEED_META_MUTED, marginTop: 24, fontSize: 14 },
-  commentRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  commentBlock: { marginBottom: 16 },
+  commentRow: { flexDirection: "row", gap: 10 },
   commentMain: { flex: 1 },
   commentName: { fontSize: 14, fontWeight: "600", color: DS_COLORS.FEED_USERNAME },
   commentBody: { fontSize: 14, color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },
   commentTime: { fontSize: 11, color: DS_COLORS.FEED_META_MUTED, marginTop: 4 },
+  deleteCommentBar: {
+    marginTop: 8,
+    marginLeft: 46,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: DS_COLORS.INPUT_BG,
+    borderWidth: 1,
+    borderColor: DS_COLORS.INPUT_BORDER,
+  },
+  deleteCommentQuestion: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 8 },
+  deleteCommentActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  deleteCommentBtn: { paddingVertical: 4, paddingHorizontal: 4, minWidth: 64, alignItems: "center" },
+  deleteCommentCancel: { fontSize: 14, color: DS_COLORS.TEXT_MUTED, fontWeight: "600" },
+  deleteCommentConfirm: { fontSize: 14, color: DS_COLORS.errorText, fontWeight: "600" },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",

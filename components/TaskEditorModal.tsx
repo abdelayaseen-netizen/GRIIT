@@ -38,9 +38,9 @@ import {
   EnforcementBlock,
   DurationPill,
   CreateFlowCheckbox,
-} from "@/src/components/ui";
-import { colors as tokenColors } from "@/src/theme/tokens";
-import { createFlowStyles as cfs } from "@/src/theme/createFlowStyles";
+} from "@/components/ui";
+import { colors as tokenColors } from "@/lib/theme/tokens";
+import { createFlowStyles as cfs } from "@/lib/theme/createFlowStyles";
 import {
   JournalCategory,
   WordLimitMode,

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
-import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S, GOAL_OPTIONS } from "@/constants/onboarding-theme";
+import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S, GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
 import { DS_RADIUS } from "@/lib/design-system";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { track } from "@/lib/analytics";

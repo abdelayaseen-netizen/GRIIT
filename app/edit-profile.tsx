@@ -14,17 +14,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { supabase } from '@/lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
+import { trpcMutate } from '@/lib/trpc';
+import { TRPC } from '@/lib/trpc-paths';
 import { DS_COLORS } from '@/lib/design-system';
 import { captureError } from '@/lib/sentry';
 import { ROUTES } from '@/lib/routes';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { profile } = useApp();
+  const { profile, refetchAll } = useApp();
   const [isPending, setIsPending] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
 
@@ -48,22 +51,13 @@ export default function EditProfileScreen() {
     setFormError('');
     setIsPending(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          display_name: data.display_name,
-          bio: data.bio,
-          avatar_url: data.avatar_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id)
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        setFormError(error.message);
-        return;
-      }
+      await trpcMutate(TRPC.profiles.update, {
+        display_name: data.display_name,
+        bio: data.bio,
+        avatar_url: data.avatar_url.trim() || undefined,
+      });
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await refetchAll();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
     } catch (err: unknown) {

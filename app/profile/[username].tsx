@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -55,6 +55,8 @@ type PublicProfile = {
 type ProfileTab = "challenges" | "posts" | "badges";
 type BadgeDef = { id: string; name: string; icon: string; color: string; progress: number; total: number; type?: string };
 
+const RESPECT_DEBOUNCE_MS = 300;
+
 function formatJoinDate(value?: string | null): string {
   if (!value) return "";
   const d = new Date(value);
@@ -79,6 +81,7 @@ export default function PublicProfileScreen() {
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const [followActionError, setFollowActionError] = useState<string | null>(null);
+  const respectLastAtUserPosts = useRef<Map<string, number>>(new Map());
 
   const decoded = useMemo(() => {
     const raw = typeof username === "string" ? username : "";
@@ -235,6 +238,55 @@ export default function PublicProfileScreen() {
       tier: profile.tier ?? "Starter",
     });
   }, [profile]);
+
+  const onUserPostRespect = useCallback(
+    async (post: LiveFeedPost) => {
+      if (!profileUserId || tab !== "posts") return;
+      const now = Date.now();
+      const last = respectLastAtUserPosts.current.get(post.id) ?? 0;
+      if (now - last < RESPECT_DEBOUNCE_MS) return;
+      respectLastAtUserPosts.current.set(post.id, now);
+
+      const prevR = post.reactedByMe;
+      const prevC = post.respectCount;
+      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
+      queryClient.setQueryData(["userPosts", profileUserId, tab], (old: { posts: LiveFeedPost[] } | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: !prevR, respectCount: nextC } : p)),
+        };
+      });
+      try {
+        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
+          reacted?: boolean;
+          reactionCount?: number;
+        };
+        queryClient.setQueryData(["userPosts", profileUserId, tab], (old: { posts: LiveFeedPost[] } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            posts: old.posts.map((p) =>
+              p.id === post.id
+                ? { ...p, reactedByMe: !!result.reacted, respectCount: Math.max(0, result.reactionCount ?? nextC) }
+                : p
+            ),
+          };
+        });
+        await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+      } catch (e) {
+        captureError(e, "PublicProfilePostRespect");
+        queryClient.setQueryData(["userPosts", profileUserId, tab], (old: { posts: LiveFeedPost[] } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: prevR, respectCount: prevC } : p)),
+          };
+        });
+      }
+    },
+    [profileUserId, tab, queryClient]
+  );
 
   const navigateToProfile = useCallback(
     (post: LiveFeedPost) => {
@@ -548,7 +600,7 @@ export default function PublicProfileScreen() {
                         key={post.id}
                         post={post}
                         onProfilePress={() => navigateToProfile(post)}
-                        onRespect={() => void trpcMutate(TRPC.feed.react, { eventId: post.id }).then(() => void postsQuery.refetch())}
+                        onRespect={() => void onUserPostRespect(post)}
                         onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
                         onShare={() => {}}
                       />

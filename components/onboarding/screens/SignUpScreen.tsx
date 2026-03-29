@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
-import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/constants/onboarding-theme";
+import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
 import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";

@@ -833,6 +833,31 @@ export const feedRouter = createTRPCRouter({
       });
     }),
 
+  deleteComment: protectedProcedure
+    .input(z.object({ commentId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: comment, error: qErr } = await ctx.supabase
+        .from("feed_comments")
+        .select("id, user_id")
+        .eq("id", input.commentId)
+        .maybeSingle();
+      if (qErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: qErr.message || "Failed to load comment." });
+      }
+      if (!comment) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
+      }
+      const row = comment as { id: string; user_id: string };
+      if (row.user_id !== ctx.userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own comments" });
+      }
+      const { error } = await ctx.supabase.from("feed_comments").delete().eq("id", input.commentId);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to delete comment" });
+      }
+      return { deleted: true as const };
+    }),
+
   /** Remove the viewer's own activity event from the feed (cascades to reactions/comments). */
   deletePost: protectedProcedure
     .input(z.object({ eventId: z.string().uuid() }))
