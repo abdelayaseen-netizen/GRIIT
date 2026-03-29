@@ -627,6 +627,7 @@ export interface ProfileFromApi {
   display_name?: string | null;
   avatar_url?: string | null;
   username?: string | null;
+  profile_visibility?: string | null;
   created_at?: string | null;
   bio?: string | null;
   /** When present, used by streak freeze UI (optional DB column). */

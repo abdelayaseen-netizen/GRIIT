@@ -175,35 +175,47 @@ export const notificationsRouter = createTRPCRouter({
     }),
 
   getReminderSettings: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await ctx.supabase
-      .from("profiles")
-      .select(
-        "reminder_time, preferred_secure_time, reminder_enabled, reminder_timezone, last_call_enabled, friend_activity_enabled, morning_kickoff_enabled, weekly_summary_enabled"
-      )
-      .eq("user_id", ctx.userId)
-      .single();
-
-    if (error && (error as PgError).code !== "PGRST116") {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load reminder settings." });
-    }
-    const row = data as {
-      reminder_time?: string | null;
-      preferred_secure_time?: string | null;
-      reminder_enabled?: boolean | null;
-      reminder_timezone?: string | null;
-      last_call_enabled?: boolean | null;
-      friend_activity_enabled?: boolean | null;
-      morning_kickoff_enabled?: boolean | null;
-      weekly_summary_enabled?: boolean | null;
-    } | null;
-    return {
-      reminder_time: row?.reminder_time ?? row?.preferred_secure_time ?? "09:00",
-      enabled: row?.reminder_enabled !== false,
-      timezone: row?.reminder_timezone ?? "UTC",
-      last_call_enabled: row?.last_call_enabled !== false,
-      friend_activity_enabled: row?.friend_activity_enabled !== false,
-      morning_kickoff_enabled: row?.morning_kickoff_enabled !== false,
-      weekly_summary_enabled: row?.weekly_summary_enabled !== false,
+    const defaults = {
+      reminder_time: "09:00",
+      enabled: true,
+      timezone: "UTC",
+      last_call_enabled: true,
+      friend_activity_enabled: true,
+      morning_kickoff_enabled: true,
+      weekly_summary_enabled: true,
     };
+
+    try {
+      // Select only columns added in repo migrations — unknown columns make PostgREST fail the whole select.
+      const { data, error } = await ctx.supabase
+        .from("profiles")
+        .select("reminder_time, last_call_enabled, friend_activity_enabled, morning_kickoff_enabled, weekly_summary_enabled")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+
+      if (error) return defaults;
+
+      const row = data as {
+        reminder_time?: string | null;
+        last_call_enabled?: boolean | null;
+        friend_activity_enabled?: boolean | null;
+        morning_kickoff_enabled?: boolean | null;
+        weekly_summary_enabled?: boolean | null;
+      } | null;
+
+      if (!row) return defaults;
+
+      return {
+        reminder_time: row.reminder_time ?? defaults.reminder_time,
+        enabled: defaults.enabled,
+        timezone: defaults.timezone,
+        last_call_enabled: row.last_call_enabled !== false,
+        friend_activity_enabled: row.friend_activity_enabled !== false,
+        morning_kickoff_enabled: row.morning_kickoff_enabled !== false,
+        weekly_summary_enabled: row.weekly_summary_enabled !== false,
+      };
+    } catch {
+      return defaults;
+    }
   }),
 });

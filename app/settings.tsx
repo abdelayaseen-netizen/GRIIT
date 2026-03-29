@@ -191,7 +191,7 @@ export default function SettingsScreen() {
   const loadProfileVisibility = useCallback(async () => {
     if (isGuest) return;
     try {
-      const data = await trpcQuery("profiles.get") as { profile_visibility?: string | null };
+      const data = await trpcQuery(TRPC.profiles.get) as { profile_visibility?: string | null };
       const v = data?.profile_visibility;
       if (v === "public" || v === "friends" || v === "private") setProfileVisibility(v);
     } catch (e) {

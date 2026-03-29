@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { DS_COLORS } from "@/lib/design-system";
-import { supabase } from "@/lib/supabase";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 
 /** Deterministic avatar colors from user id (design tokens only). */
@@ -22,6 +23,7 @@ export function getAvatarColor(userId: string): { bg: string; letter: string } {
  * Returns public URL with cache-bust query, or null on cancel/deny/failure.
  */
 export async function pickAndUploadAvatar(userId: string): Promise<string | null> {
+  if (!userId) return null;
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== "granted") {
     return null;
@@ -48,10 +50,10 @@ export async function pickAndUploadAvatar(userId: string): Promise<string | null
   const baseUrl = uploadResult.url.split("?")[0];
   const publicUrl = `${baseUrl}?t=${Date.now()}`;
 
-  const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", userId);
-
-  if (updateError) {
-    if (__DEV__) console.warn("[Avatar] Profile update failed:", updateError.message);
+  try {
+    await trpcMutate(TRPC.profiles.update, { avatar_url: publicUrl });
+  } catch (e) {
+    if (__DEV__) console.warn("[Avatar] Profile update failed:", e instanceof Error ? e.message : e);
     return null;
   }
 

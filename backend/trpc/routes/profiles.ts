@@ -126,13 +126,16 @@ export const profilesRouter = createTRPCRouter({
 
   get: protectedProcedure
     .query(async ({ ctx }) => {
+      // Only columns present in shipped Supabase migrations — avoids 500 when optional columns are missing.
       const { data, error } = await ctx.supabase
-        .from('profiles')
-        .select('user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, streak_freeze_used_count, streak_freeze_reset_at, preferred_secure_time, onboarding_completed, created_at')
-        .eq('user_id', ctx.userId)
+        .from("profiles")
+        .select(
+          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility"
+        )
+        .eq("user_id", ctx.userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && error.code !== "PGRST116") {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
       }
       return data;
@@ -254,7 +257,14 @@ export const profilesRouter = createTRPCRouter({
         }
       }
       if (Object.keys(updatePayload).length === 0) {
-        return (await ctx.supabase.from('profiles').select('user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, streak_freeze_used_count, streak_freeze_reset_at, preferred_secure_time, onboarding_completed, created_at').eq('user_id', ctx.userId).single()).data;
+        const { data } = await ctx.supabase
+          .from("profiles")
+          .select(
+            "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility"
+          )
+          .eq("user_id", ctx.userId)
+          .single();
+        return data;
       }
 
       const { data, error } = await ctx.supabase
@@ -293,9 +303,9 @@ export const profilesRouter = createTRPCRouter({
           .eq('user_id', ctx.userId)
           .maybeSingle(),
         ctx.supabase
-          .from('profiles')
-          .select('streak_freeze_used_count, streak_freeze_reset_at, total_days_secured, tier, preferred_secure_time, subscription_status')
-          .eq('user_id', ctx.userId)
+          .from("profiles")
+          .select("streak_freeze_used_count, streak_freeze_reset_at, total_days_secured, tier, preferred_secure_time, subscription_status")
+          .eq("user_id", ctx.userId)
           .maybeSingle(),
         ctx.supabase
           .from('streak_freezes')
@@ -319,10 +329,12 @@ export const profilesRouter = createTRPCRouter({
         usedCount = 0;
         resetAt = now;
         const { error: resetErr } = await ctx.supabase
-          .from('profiles')
+          .from("profiles")
           .update({ streak_freeze_used_count: 0, streak_freeze_reset_at: resetAt.toISOString() })
-          .eq('user_id', ctx.userId);
-        if (!resetErr) { /* optional reset */ }
+          .eq("user_id", ctx.userId);
+        if (!resetErr) {
+          /* optional reset */
+        }
       }
       const freezesRemaining = Math.max(0, streakFreezePerMonth - usedCount);
       const frozenDateKeys = new Set((freezesRows?.data ?? []).map((r: { date_key: string }) => r.date_key));
@@ -409,7 +421,7 @@ export const profilesRouter = createTRPCRouter({
       const tier = profileRow?.data?.tier ?? getTierForDays(totalDaysSecured);
       const pointsToNextTier = getPointsToNextTier(totalDaysSecured);
       const nextTierName = getNextTierName(totalDaysSecured);
-      const preferredSecureTime = profileRow?.data?.preferred_secure_time ?? '20:00';
+      const preferredSecureTime = profileRow?.data?.preferred_secure_time ?? "20:00";
 
       return {
         activeChallenges: activeChallenges.data?.length || 0,

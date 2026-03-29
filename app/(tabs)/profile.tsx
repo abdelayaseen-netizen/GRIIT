@@ -20,8 +20,6 @@ import {
   Check,
   CheckCircle,
   ChevronRight,
-  Trophy,
-  Target,
 } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
@@ -41,6 +39,8 @@ import { SkeletonProfile } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
 import { DS_COLORS } from "@/lib/design-system";
+import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
+import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 
 type ProfileTab = "challenges" | "posts" | "badges";
 
@@ -74,14 +74,6 @@ function tierPillStyle(tier: string): { bg: string; fg: string } {
   if (t.includes("start")) return { bg: DS_COLORS.PROFILE_TIER_STARTER_BG, fg: DS_COLORS.PROFILE_TIER_STARTER_TEXT };
   return { bg: DS_COLORS.PROFILE_TIER_WARRIOR_BG, fg: DS_COLORS.PROFILE_TIER_WARRIOR_TEXT };
 }
-
-const BADGE_ROTATION: { bg: string; icon: string }[] = [
-  { bg: DS_COLORS.PROFILE_STAT_CORAL_BG, icon: DS_COLORS.PROFILE_STAT_CORAL_ICON },
-  { bg: DS_COLORS.PROFILE_STAT_AMBER_BG, icon: DS_COLORS.PROFILE_STAT_AMBER_ICON },
-  { bg: DS_COLORS.PROFILE_TIER_WARRIOR_BG, icon: DS_COLORS.PROFILE_TIER_WARRIOR_TEXT },
-  { bg: DS_COLORS.PROFILE_STAT_TEAL_BG, icon: DS_COLORS.PROFILE_STAT_TEAL_ICON },
-  { bg: DS_COLORS.PROFILE_STAT_BLUE_BG, icon: DS_COLORS.PROFILE_STAT_BLUE_ICON },
-];
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -222,7 +214,14 @@ export default function ProfileScreen() {
 
   if (!profile || !user?.id) return null;
 
-  const displayName = (profile.display_name || profile.username || "User").trim();
+  const emailLocal = user.email?.includes("@") ? user.email.split("@")[0] : undefined;
+  const primaryLine = profilePrimaryName(profile, emailLocal);
+  const handleAt = profileHandleAt(profile);
+  const showHandleRow =
+    Boolean(handleAt) &&
+    Boolean(profile.display_name?.trim()) &&
+    Boolean(profile.username?.trim()) &&
+    profile.display_name!.trim() !== profile.username!.trim();
   const tier = stats?.tier ?? "Starter";
   const tierColors = tierPillStyle(tier);
   const fc = followCountsQuery.data;
@@ -256,7 +255,7 @@ export default function ProfileScreen() {
               accessibilityLabel="Change profile photo"
               accessibilityRole="button"
             >
-              <Avatar url={profile.avatar_url ?? null} name={displayName} userId={user.id} size={80} />
+              <Avatar url={profile.avatar_url ?? null} name={primaryLine} userId={user.id} size={80} />
               <View style={styles.cameraBadge}>
                 {uploading ? (
                   <Text style={styles.cameraBadgeText}>…</Text>
@@ -267,7 +266,8 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
           <View style={styles.textCol}>
-            <Text style={styles.username}>{profile.username ? `@${profile.username}` : displayName}</Text>
+            <Text style={styles.username}>{primaryLine}</Text>
+            {showHandleRow ? <Text style={styles.handleAt}>{handleAt}</Text> : null}
             <View style={styles.tierRow}>
               <View style={[styles.tierPill, { backgroundColor: tierColors.bg }]}>
                 <Text style={[styles.tierPillText, { color: tierColors.fg }]}>{tier}</Text>
@@ -450,12 +450,13 @@ export default function ProfileScreen() {
               <>
                 <Text style={styles.secHead}>EARNED ({badgesQuery.data?.earned.length ?? 0})</Text>
                 <View style={styles.badgeGrid}>
-                  {(badgesQuery.data?.earned ?? []).map((b, i) => {
-                    const rot = BADGE_ROTATION[i % BADGE_ROTATION.length]!;
+                  {(badgesQuery.data?.earned ?? []).map((b) => {
+                    const IconComp = BADGE_ICONS[b.icon] ?? Zap;
+                    const accent = badgeAccentFor(b.color);
                     return (
                       <View key={b.id} style={styles.badgeCard}>
-                        <View style={[styles.badgeIconOuter, { backgroundColor: rot.bg }]}>
-                          <Trophy size={22} color={rot.icon} strokeWidth={2} />
+                        <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
+                          <IconComp size={22} color={accent.stroke} strokeWidth={2} />
                         </View>
                         <Text style={styles.badgeName}>{b.name}</Text>
                         <Text style={styles.badgeProg}>
@@ -467,17 +468,23 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={[styles.secHead, { marginTop: 20 }]}>NEXT UP ({badgesQuery.data?.next.length ?? 0})</Text>
                 <View style={styles.badgeGrid}>
-                  {(badgesQuery.data?.next ?? []).map((b) => (
-                    <View key={b.id} style={[styles.badgeCard, styles.badgeCardDim]}>
-                      <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
-                        <Target size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} style={{ opacity: 0.5 }} />
+                  {(badgesQuery.data?.next ?? []).map((b) => {
+                    const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
+                    return (
+                      <View key={b.id} style={[styles.badgeCard, styles.badgeCardDim]}>
+                        <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
+                          <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
+                        </View>
+                        <Text style={styles.badgeName}>{b.name}</Text>
+                        <Text style={styles.badgeProg}>
+                          {b.progress}/{b.total} days
+                        </Text>
+                        <View style={styles.nextBarTrack}>
+                          <View style={[styles.nextBarFill, { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` }]} />
+                        </View>
                       </View>
-                      <Text style={styles.badgeName}>{b.name}</Text>
-                      <View style={styles.nextBarTrack}>
-                        <View style={[styles.nextBarFill, { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` }]} />
-                      </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               </>
             )}
@@ -491,8 +498,8 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS_COLORS.PROFILE_PAGE_BG },
-  scroll: { paddingBottom: 24 },
+  safe: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  scroll: { paddingBottom: 24, backgroundColor: DS_COLORS.BG_PAGE },
   centerGuest: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },
   guestTitle: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, textAlign: "center" },
   guestSub: { marginTop: 8, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED, textAlign: "center" },
@@ -516,13 +523,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: DS_COLORS.PRIMARY,
     borderWidth: 3,
-    borderColor: DS_COLORS.PROFILE_PAGE_BG,
+    borderColor: DS_COLORS.BG_PAGE,
     alignItems: "center",
     justifyContent: "center",
   },
   cameraBadgeText: { color: DS_COLORS.WHITE, fontSize: 12 },
   textCol: { flex: 1, minWidth: 0 },
   username: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, letterSpacing: -0.3 },
+  handleAt: { marginTop: 2, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
   tierRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 6 },
   tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 },
   tierPillText: { fontSize: 11, fontWeight: "500" },

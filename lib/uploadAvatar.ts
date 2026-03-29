@@ -18,7 +18,13 @@ export async function uploadAvatarFromUri(uri: string): Promise<UploadAvatarResu
     const response = await fetch(uri);
     if (!response.ok) return { error: "Could not read image file" };
     const blob = await response.blob();
-    const contentType = blob.type || "image/jpeg";
+    let contentType = blob.type?.trim() || "";
+    if (!contentType || contentType === "application/octet-stream" || contentType === "image/jpg") {
+      const lower = uri.toLowerCase();
+      if (lower.endsWith(".png")) contentType = "image/png";
+      else if (lower.endsWith(".webp")) contentType = "image/webp";
+      else contentType = "image/jpeg";
+    }
     if (!["image/jpeg", "image/png", "image/webp"].includes(contentType)) {
       return { error: "Invalid file format. Use JPEG, PNG, or WebP." };
     }

@@ -20,8 +20,6 @@ import {
   CheckCircle,
   ChevronRight,
   Lock,
-  Trophy,
-  Target,
 } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +27,8 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS } from "@/lib/design-system";
+import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
+import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { shareProfile } from "@/lib/share";
 import { Avatar } from "@/components/Avatar";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
@@ -66,14 +66,6 @@ function tierPillStyle(tier: string): { bg: string; fg: string } {
   if (t.includes("start")) return { bg: DS_COLORS.PROFILE_TIER_STARTER_BG, fg: DS_COLORS.PROFILE_TIER_STARTER_TEXT };
   return { bg: DS_COLORS.PROFILE_TIER_WARRIOR_BG, fg: DS_COLORS.PROFILE_TIER_WARRIOR_TEXT };
 }
-
-const BADGE_ROTATION: { bg: string; icon: string }[] = [
-  { bg: DS_COLORS.PROFILE_STAT_CORAL_BG, icon: DS_COLORS.PROFILE_STAT_CORAL_ICON },
-  { bg: DS_COLORS.PROFILE_STAT_AMBER_BG, icon: DS_COLORS.PROFILE_STAT_AMBER_ICON },
-  { bg: DS_COLORS.PROFILE_TIER_WARRIOR_BG, icon: DS_COLORS.PROFILE_TIER_WARRIOR_TEXT },
-  { bg: DS_COLORS.PROFILE_STAT_TEAL_BG, icon: DS_COLORS.PROFILE_STAT_TEAL_ICON },
-  { bg: DS_COLORS.PROFILE_STAT_BLUE_BG, icon: DS_COLORS.PROFILE_STAT_BLUE_ICON },
-];
 
 export default function PublicProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -308,7 +300,13 @@ export default function PublicProfileScreen() {
     );
   }
 
-  const displayName = profile.display_name || profile.username || "User";
+  const primaryLine = profilePrimaryName(profile, null);
+  const handleAt = profileHandleAt(profile);
+  const showHandleRow =
+    Boolean(handleAt) &&
+    Boolean(profile.display_name?.trim()) &&
+    Boolean(profile.username?.trim()) &&
+    profile.display_name!.trim() !== profile.username!.trim();
   const tierColors = tierPillStyle(profile.tier ?? "Starter");
   const fc = followCountsQuery.data;
   const showPrivateGate = needsRequest && !isFollowing && !isPending;
@@ -343,9 +341,10 @@ export default function PublicProfileScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           <View style={styles.profileRow}>
-            <Avatar url={profile.avatar_url ?? null} name={displayName} userId={profile.user_id} size={80} />
+            <Avatar url={profile.avatar_url ?? null} name={primaryLine} userId={profile.user_id} size={80} />
             <View style={styles.textCol}>
-              <Text style={styles.username}>@{profile.username}</Text>
+              <Text style={styles.username}>{primaryLine}</Text>
+              {showHandleRow ? <Text style={styles.handleAt}>{handleAt}</Text> : null}
               <View style={styles.tierRow}>
                 <View style={[styles.tierPill, { backgroundColor: tierColors.bg }]}>
                   <Text style={[styles.tierPillText, { color: tierColors.fg }]}>{profile.tier}</Text>
@@ -534,12 +533,13 @@ export default function PublicProfileScreen() {
                     <>
                       <Text style={styles.secHead}>EARNED ({badgesQuery.data?.earned.length ?? 0})</Text>
                       <View style={styles.badgeGrid}>
-                        {(badgesQuery.data?.earned ?? []).map((b, i) => {
-                          const rot = BADGE_ROTATION[i % BADGE_ROTATION.length]!;
+                        {(badgesQuery.data?.earned ?? []).map((b) => {
+                          const IconComp = BADGE_ICONS[b.icon] ?? Zap;
+                          const accent = badgeAccentFor(b.color);
                           return (
                             <View key={b.id} style={styles.badgeCard}>
-                              <View style={[styles.badgeIconOuter, { backgroundColor: rot.bg }]}>
-                                <Trophy size={22} color={rot.icon} strokeWidth={2} />
+                              <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
+                                <IconComp size={22} color={accent.stroke} strokeWidth={2} />
                               </View>
                               <Text style={styles.badgeName}>{b.name}</Text>
                               <Text style={styles.badgeProg}>
@@ -551,22 +551,28 @@ export default function PublicProfileScreen() {
                       </View>
                       <Text style={[styles.secHead, { marginTop: 20 }]}>NEXT UP ({badgesQuery.data?.next.length ?? 0})</Text>
                       <View style={styles.badgeGrid}>
-                        {(badgesQuery.data?.next ?? []).map((b) => (
-                          <View key={b.id} style={[styles.badgeCard, styles.badgeCardDim]}>
-                            <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
-                              <Target size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} style={{ opacity: 0.5 }} />
+                        {(badgesQuery.data?.next ?? []).map((b) => {
+                          const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
+                          return (
+                            <View key={b.id} style={[styles.badgeCard, styles.badgeCardDim]}>
+                              <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
+                                <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
+                              </View>
+                              <Text style={styles.badgeName}>{b.name}</Text>
+                              <Text style={styles.badgeProg}>
+                                {b.progress}/{b.total} days
+                              </Text>
+                              <View style={styles.nextBarTrack}>
+                                <View
+                                  style={[
+                                    styles.nextBarFill,
+                                    { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` },
+                                  ]}
+                                />
+                              </View>
                             </View>
-                            <Text style={styles.badgeName}>{b.name}</Text>
-                            <View style={styles.nextBarTrack}>
-                              <View
-                                style={[
-                                  styles.nextBarFill,
-                                  { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` },
-                                ]}
-                              />
-                            </View>
-                          </View>
-                        ))}
+                          );
+                        })}
                       </View>
                     </>
                   )
@@ -583,7 +589,7 @@ export default function PublicProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: DS_COLORS.PROFILE_PAGE_BG },
+  page: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
   centered: { justifyContent: "center", alignItems: "center", paddingHorizontal: 24 },
   muted: { fontSize: 15, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, textAlign: "center" },
   retry: { marginTop: 16, paddingHorizontal: 22, paddingVertical: 10, borderRadius: 12, backgroundColor: DS_COLORS.PRIMARY },
@@ -600,10 +606,11 @@ const styles = StyleSheet.create({
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   headerSpacer: { width: 40 },
-  scroll: { paddingBottom: 24 },
+  scroll: { paddingBottom: 24, backgroundColor: DS_COLORS.BG_PAGE },
   profileRow: { flexDirection: "row", paddingHorizontal: 20, paddingTop: 16, gap: 14, alignItems: "flex-start" },
   textCol: { flex: 1, minWidth: 0 },
   username: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, letterSpacing: -0.3 },
+  handleAt: { marginTop: 2, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
   tierRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 6 },
   tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 },
   tierPillText: { fontSize: 11, fontWeight: "500" },
