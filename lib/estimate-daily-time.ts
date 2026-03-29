@@ -65,6 +65,6 @@ export function formatEstimatedDailyLabel(mins: number): string {
   if (mins <= 60) return `~${Math.round(mins / 15) * 15} min/day`;
   const hrs = mins / 60;
   const rounded = Math.round(hrs * 2) / 2;
-  if (rounded === Math.floor(rounded)) return `~${rounded} hrs/day`;
-  return `~${rounded} hrs/day`;
+  const unit = rounded === 1 ? "hr" : "hrs";
+  return `~${rounded} ${unit}/day`;
 }

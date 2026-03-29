@@ -740,14 +740,11 @@ export default function CreateChallengeWizard() {
               <Text style={styles.h1}>Daily tasks</Text>
               <Text style={styles.sub}>What must get done every single day?</Text>
               <Text style={styles.packsHead}>Quick start packs</Text>
-              <View style={{ flexDirection: "column", gap: 0 }}>
+              <View style={{ flexDirection: "column", gap: 10 }}>
                 {Array.from({ length: Math.ceil(CHALLENGE_PACKS.length / 2) }, (_, rowIdx) => {
                   const row = CHALLENGE_PACKS.slice(rowIdx * 2, rowIdx * 2 + 2);
                   return (
-                    <View
-                      key={row.map((p) => p.id).join("-")}
-                      style={{ flexDirection: "row", gap: 10, marginBottom: 10 }}
-                    >
+                    <View key={row.map((p) => p.id).join("-")} style={{ flexDirection: "row", gap: 10 }}>
                       {row.map((pack) => {
                         const sel = selectedPackId === pack.id;
                         return (
@@ -840,9 +837,32 @@ export default function CreateChallengeWizard() {
                   accessibilityState={{ selected: difficultyMode === "standard" }}
                 >
                   <Text style={styles.ruleTitle}>Standard</Text>
-                  <Text style={styles.ruleBullet}>• Self-reported completion</Text>
-                  <Text style={styles.ruleBullet}>• Streak freezes allowed</Text>
-                  <Text style={styles.ruleBullet}>• Miss a day? Keep going</Text>
+                  {(
+                    [
+                      "Self-reported completion",
+                      "Streak freezes allowed",
+                      "Miss a day? Keep going",
+                    ] as const
+                  ).map((item, i) => (
+                    <View key={i} style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, marginBottom: 4 }}>
+                      <Ionicons
+                        name={difficultyMode === "standard" ? "checkmark" : "remove"}
+                        size={14}
+                        color={difficultyMode === "standard" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_HINT}
+                        style={{ marginTop: 2 }}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: DS_COLORS.TEXT_SECONDARY,
+                          lineHeight: 20,
+                          flex: 1,
+                        }}
+                      >
+                        {item}
+                      </Text>
+                    </View>
+                  ))}
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.ruleCard, difficultyMode === "hard" && styles.ruleCardSel]}
@@ -855,9 +875,28 @@ export default function CreateChallengeWizard() {
                   accessibilityState={{ selected: difficultyMode === "hard" }}
                 >
                   <Text style={styles.ruleTitle}>Hard mode 🔥</Text>
-                  <Text style={styles.ruleBullet}>• Photo proof every task</Text>
-                  <Text style={styles.ruleBullet}>• No streak freezes</Text>
-                  <Text style={styles.ruleBullet}>• Miss a day? Day 1 again</Text>
+                  {(
+                    ["Photo proof every task", "No streak freezes", "Miss a day? Day 1 again"] as const
+                  ).map((item, i) => (
+                    <View key={i} style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, marginBottom: 4 }}>
+                      <Ionicons
+                        name={difficultyMode === "hard" ? "checkmark" : "remove"}
+                        size={14}
+                        color={difficultyMode === "hard" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_HINT}
+                        style={{ marginTop: 2 }}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: DS_COLORS.TEXT_SECONDARY,
+                          lineHeight: 20,
+                          flex: 1,
+                        }}
+                      >
+                        {item}
+                      </Text>
+                    </View>
+                  ))}
                 </TouchableOpacity>
               </View>
               {difficultyMode === "hard" ? (
@@ -1267,7 +1306,7 @@ export default function CreateChallengeWizard() {
                 style={styles.backOut}
                 onPress={() => animateToStep(3, 4)}
                 accessibilityRole="button"
-                accessibilityLabel="Go back to previous step"
+                accessibilityLabel="Go back to rules"
               >
                 <Text style={styles.backOutTxt}>Back</Text>
               </TouchableOpacity>
@@ -1539,7 +1578,6 @@ const styles = StyleSheet.create({
   },
   ruleCardSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
   ruleTitle: { fontSize: 15, fontWeight: "600", marginBottom: 6, color: DS_COLORS.TEXT_PRIMARY },
-  ruleBullet: { fontSize: 14, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY, marginBottom: 2 },
   caption: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_HINT, marginTop: 6 },
   hardNote: { fontSize: 12, color: GRIIT_COLORS.primary, marginTop: 4 },
   outlineBtn: {

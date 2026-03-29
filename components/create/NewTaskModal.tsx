@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Camera } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS, GRIIT_COLORS } from "@/lib/design-system";
-import { CREATE_SELECTION } from "@/lib/create-selection";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
 import type { JournalCategory, ScheduleType } from "@/types";
 
@@ -636,24 +635,58 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
         return (
           <View style={s.configBlock}>
             <Text style={s.label}>Track by</Text>
-            <View style={s.segRow}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
               <TouchableOpacity
-                style={[s.seg, s.segFlex, runTracking === "distance" && s.segOn]}
                 onPress={() => setRunTracking("distance")}
                 accessibilityRole="button"
                 accessibilityLabel="Track run by distance"
                 accessibilityState={{ selected: runTracking === "distance" }}
+                style={{
+                  flex: 1,
+                  height: 44,
+                  borderRadius: 22,
+                  borderWidth: 1.5,
+                  borderColor: runTracking === "distance" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
+                  backgroundColor: runTracking === "distance" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <Text style={[s.segTxt, runTracking === "distance" && s.segTxtOn]}>Distance</Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: runTracking === "distance" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+                  }}
+                >
+                  Distance
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[s.seg, s.segFlex, runTracking === "time" && s.segOn]}
                 onPress={() => setRunTracking("time")}
                 accessibilityRole="button"
                 accessibilityLabel="Track run by duration"
                 accessibilityState={{ selected: runTracking === "time" }}
+                style={{
+                  flex: 1,
+                  height: 44,
+                  borderRadius: 22,
+                  borderWidth: 1.5,
+                  borderColor: runTracking === "time" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
+                  backgroundColor: runTracking === "time" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <Text style={[s.segTxt, runTracking === "time" && s.segTxtOn]}>Time</Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: runTracking === "time" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+                  }}
+                >
+                  Time
+                </Text>
               </TouchableOpacity>
             </View>
             {runTracking === "distance" ? (
@@ -668,24 +701,58 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   onChangeText={setRunTarget}
                   accessibilityLabel="Target distance"
                 />
-                <View style={s.segRow}>
+                <View style={{ flexDirection: "row", gap: 8 }}>
                   <TouchableOpacity
-                    style={[s.seg, s.segFlex, runUnitDist === "miles" && s.segOn]}
                     onPress={() => setRunUnitDist("miles")}
                     accessibilityRole="button"
                     accessibilityLabel="Use miles for run distance"
                     accessibilityState={{ selected: runUnitDist === "miles" }}
+                    style={{
+                      flex: 1,
+                      height: 44,
+                      borderRadius: 22,
+                      borderWidth: 1.5,
+                      borderColor: runUnitDist === "miles" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
+                      backgroundColor: runUnitDist === "miles" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
-                    <Text style={[s.segTxt, runUnitDist === "miles" && s.segTxtOn]}>Miles</Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "500",
+                        color: runUnitDist === "miles" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+                      }}
+                    >
+                      Miles
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[s.seg, s.segFlex, runUnitDist === "km" && s.segOn]}
                     onPress={() => setRunUnitDist("km")}
                     accessibilityRole="button"
                     accessibilityLabel="Use kilometers for run distance"
                     accessibilityState={{ selected: runUnitDist === "km" }}
+                    style={{
+                      flex: 1,
+                      height: 44,
+                      borderRadius: 22,
+                      borderWidth: 1.5,
+                      borderColor: runUnitDist === "km" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
+                      backgroundColor: runUnitDist === "km" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
-                    <Text style={[s.segTxt, runUnitDist === "km" && s.segTxtOn]}>Km</Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "500",
+                        color: runUnitDist === "km" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+                      }}
+                    >
+                      Km
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -707,47 +774,54 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             {row("Require photo proof", requirePhotoRun, setRequirePhotoRun, "Toggle require photo proof for run")}
           </View>
         );
-      case "workout":
+      case "workout": {
+        const workoutPill = (label: string, key: WorkoutTypeUI) => {
+          const selected = workoutType === key;
+          return (
+            <TouchableOpacity
+              key={key}
+              onPress={() => setWorkoutType(key)}
+              accessibilityRole="button"
+              accessibilityLabel={`Workout type ${label}`}
+              accessibilityState={{ selected }}
+              style={{
+                flex: 1,
+                height: 44,
+                borderRadius: 22,
+                borderWidth: 1.5,
+                borderColor: selected ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
+                backgroundColor: selected ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "500",
+                  color: selected ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+                }}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        };
         return (
           <View style={s.configBlock}>
-            <Text style={s.label}>Workout type</Text>
-            <View style={s.segCol}>
-              <View style={s.segRow}>
-                {(["general", "cardio", "strength"] as const).map((wt) => (
-                  <TouchableOpacity
-                    key={wt}
-                    style={[s.seg, s.segFlex, workoutType === wt && s.segOn]}
-                    onPress={() => setWorkoutType(wt)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: workoutType === wt }}
-                    accessibilityLabel={
-                      wt === "general" ? "Select general workout type" : `Select ${wt} workout type`
-                    }
-                  >
-                    <Text style={[s.segTxt, workoutType === wt && s.segTxtOn]}>
-                      {wt.charAt(0).toUpperCase() + wt.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+            <Text style={{ fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10 }}>
+              Workout type
+            </Text>
+            <View style={{ flexDirection: "column", gap: 8, marginBottom: 16 }}>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {workoutPill("General", "general")}
+                {workoutPill("Cardio", "cardio")}
+                {workoutPill("Strength", "strength")}
               </View>
-              <View style={s.segRow}>
-                {(["hiit", "yoga"] as const).map((wt) => (
-                  <TouchableOpacity
-                    key={wt}
-                    style={[s.seg, s.segFlex, workoutType === wt && s.segOn]}
-                    onPress={() => setWorkoutType(wt)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: workoutType === wt }}
-                    accessibilityLabel={
-                      wt === "hiit" ? "Select HIIT workout type" : "Select yoga workout type"
-                    }
-                  >
-                    <Text style={[s.segTxt, workoutType === wt && s.segTxtOn]}>
-                      {wt === "hiit" ? "HIIT" : "Yoga"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                <View style={s.segFlex} />
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {workoutPill("HIIT", "hiit")}
+                {workoutPill("Yoga", "yoga")}
+                <View style={{ flex: 1 }} />
               </View>
             </View>
 
@@ -809,6 +883,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             ) : null}
           </View>
         );
+      }
       default:
         return null;
     }
@@ -1120,35 +1195,6 @@ const s = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: "top",
   },
-  segCol: {
-    flexDirection: "column",
-    gap: 8,
-    marginTop: 8,
-  },
-  segRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 0,
-  },
-  seg: {
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: DS_RADIUS.MD,
-    borderWidth: 2,
-    borderColor: "transparent",
-    backgroundColor: DS_COLORS.surface,
-    alignItems: "center",
-  },
-  segFlex: {
-    flex: 1,
-    minWidth: 0,
-  },
-  segOn: {
-    borderColor: CREATE_SELECTION.border,
-    backgroundColor: CREATE_SELECTION.background,
-  },
-  segTxt: { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_SECONDARY },
-  segTxtOn: { color: CREATE_SELECTION.text },
   footer: {
     paddingHorizontal: DS_SPACING.lg,
     borderTopWidth: 1,
