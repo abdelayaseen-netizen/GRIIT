@@ -9,11 +9,16 @@ type Props = {
 };
 
 export default function SectionHeader({ title, actionLabel, onPressAction }: Props) {
+  const seeAllLabel = `See all ${title}`;
   return (
     <View style={s.row}>
       <Text style={s.title}>{title}</Text>
       {actionLabel && onPressAction ? (
-        <TouchableOpacity onPress={onPressAction} accessibilityRole="button" accessibilityLabel={actionLabel}>
+        <TouchableOpacity
+          onPress={onPressAction}
+          accessibilityRole="button"
+          accessibilityLabel={seeAllLabel}
+        >
           <Text style={s.action}>{actionLabel}</Text>
         </TouchableOpacity>
       ) : null}

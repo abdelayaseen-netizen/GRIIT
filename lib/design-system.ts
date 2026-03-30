@@ -332,6 +332,8 @@ export const DS_COLORS = {
   DISCOVER_LABEL_MUTED: '#777777',
   /** Hero featured card & CTA dark panels — was #1A1410 */
   DISCOVER_HERO_DARK_BG: '#1A1410',
+  /** Avatar ring on hero social cluster (on dark gradient) */
+  DISCOVER_HERO_AVATAR_RING: 'rgba(255,255,255,0.35)',
   /** Difficulty pill tints (Popular/Daily/Team cards) */
   DISCOVER_DIFF_TINT_EASY: '#F0FAF2',
   DISCOVER_DIFF_TINT_HARD: '#FFF5F0',
@@ -370,6 +372,12 @@ export const DS_COLORS = {
   DISCOVER_V3_LABEL: '#777777',
   /** Discover v3 inline search border — matches default BORDER */
   DISCOVER_V3_SEARCH_BORDER: '#E8E5DF',
+  /** Team compact row left accent (Material blue) */
+  DISCOVER_V3_TEAM_ROW_ACCENT: '#2196F3',
+  /** Lucide stroke on neutral discover icons */
+  DISCOVER_V3_ICON_MUTED: '#888888',
+  /** Hard difficulty left border on compact rows */
+  DISCOVER_V3_ROW_HARD_BORDER: '#C62828',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ONBOARDING (migrated from constants/onboarding-theme.ts)

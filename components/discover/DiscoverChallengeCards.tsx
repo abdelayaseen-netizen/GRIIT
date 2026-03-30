@@ -47,6 +47,7 @@ export type MiniCardChallenge = {
   difficulty?: string;
   category?: string;
   created_at?: string;
+  participants_count?: number;
 };
 
 export const DiscoverMiniChallengeCard = React.memo(function DiscoverMiniChallengeCard({
@@ -59,9 +60,10 @@ export const DiscoverMiniChallengeCard = React.memo(function DiscoverMiniChallen
   onPressIn?: () => void;
 }) {
   const theme = difficultyBorder(challenge.difficulty);
-  const desc = (challenge.short_hook ?? challenge.description ?? "").trim();
   const weekMs = 7 * 24 * 60 * 60 * 1000;
   const isNew = challenge.created_at ? Date.now() - new Date(challenge.created_at).getTime() < weekMs : false;
+  const active = challenge.participants_count ?? 0;
+  const meta24 = active >= 10 ? `24h · ${active} active` : "24h";
   return (
     <Pressable
       onPressIn={onPressIn}
@@ -79,12 +81,10 @@ export const DiscoverMiniChallengeCard = React.memo(function DiscoverMiniChallen
       <Text style={s.miniTitle} numberOfLines={2}>
         {challenge.title ?? "Challenge"}
       </Text>
-      <Text style={s.miniDesc} numberOfLines={2}>
-        {desc || " "}
-      </Text>
       <View style={s.miniFoot}>
         <Text style={s.miniNew}>{isNew ? "New" : " "}</Text>
-        <Text style={s.miniGo}>Go ›</Text>
+        <Text style={s.miniMeta24}>{meta24}</Text>
+        <Text style={s.miniGo}>Start now →</Text>
       </View>
     </Pressable>
   );
@@ -143,7 +143,9 @@ export function DiscoverChallengeSearchRow({
           {challenge.title ?? "Challenge"}
         </Text>
         <Text style={{ fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 1 }}>
-          {challenge.duration_days ?? 7} days · {challenge.participants_count ?? 0} active
+          {(challenge.participants_count ?? 0) >= 10
+            ? `${challenge.duration_days ?? 7} days · ${challenge.participants_count} active`
+            : `${challenge.duration_days ?? 7} days`}
         </Text>
       </View>
     </Pressable>
@@ -158,11 +160,14 @@ export function DiscoverFullChallengeCard({
   challenge,
   variant,
   teamPreview,
+  teamInviteText,
   onPress,
 }: {
   challenge: FullCardChallenge;
   variant: "solo" | "team";
   teamPreview?: { user_id: string; username: string | null; avatar_url: string | null }[];
+  /** Shown for team rows when preview is empty — never use “0 active”. */
+  teamInviteText?: string;
   onPress: (id: string) => void;
 }) {
   const left = categoryAccent(challenge.category);
@@ -221,11 +226,11 @@ export function DiscoverFullChallengeCard({
             <Text style={s.moreAv}>+{Math.max(0, active - 3)} more</Text>
           ) : null}
         </View>
-      ) : (
-        <Text style={s.statsMuted}>
-          {active} active
-        </Text>
-      )}
+      ) : variant === "team" ? (
+        teamInviteText ? <Text style={s.statsMuted}>{teamInviteText}</Text> : null
+      ) : active >= 10 ? (
+        <Text style={s.statsMuted}>{active} active</Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -262,14 +267,16 @@ const s = StyleSheet.create({
   },
   miniTop: { flexDirection: "row", marginBottom: 8 },
   miniTitle: { fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
-  miniDesc: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, marginTop: 6, minHeight: 32 },
   miniFoot: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 10,
+    flexWrap: "wrap",
+    gap: 4,
   },
   miniNew: { fontSize: 11, color: DS_COLORS.TEXT_MUTED },
+  miniMeta24: { fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, flex: 1 },
   miniGo: { fontSize: 12, fontWeight: "700", color: DS_COLORS.ACCENT },
   fullRoot: {
     marginHorizontal: 16,

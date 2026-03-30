@@ -2,7 +2,7 @@
 import * as z from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure, type Context } from "../create-context";
+import { createTRPCRouter, publicProcedure, protectedProcedure, type Context } from "../create-context";
 import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getTodayDateKey } from "../../lib/date-utils";
@@ -195,6 +195,87 @@ async function hydrateActivityEventsToPosts(
 }
 
 export const feedRouter = createTRPCRouter({
+  /** Discover “Happening now” ticker: recent public task_completed events. */
+  getRecentCompletions: publicProcedure.query(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    const { data: raw, error } = await server
+      .from("activity_events")
+      .select("id, user_id, challenge_id, metadata, created_at")
+      .eq("event_type", "task_completed")
+      .order("created_at", { ascending: false })
+      .limit(45);
+    if (error) {
+      console.error("[feed.getRecentCompletions] query failed:", error.message);
+      return [];
+    }
+    const events = (raw ?? []) as EvRow[];
+    const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((x): x is string => !!x))];
+    if (challengeIds.length === 0) return [];
+
+    const { data: chRows } = await server.from("challenges").select("id, title, visibility").in("id", challengeIds);
+    const publicIds = new Set(
+      (chRows ?? [])
+        .filter((c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() === "PUBLIC")
+        .map((c: { id: string }) => c.id)
+    );
+    const chTitle = new Map((chRows ?? []).map((c: { id: string; title?: string | null }) => [c.id, c.title ?? ""]));
+
+    const userIds = [...new Set(events.map((e) => e.user_id))];
+    const { data: profRows } = await server
+      .from("profiles")
+      .select("user_id, display_name, username, avatar_url")
+      .in("user_id", userIds);
+    const profMap = new Map(
+      (profRows ?? []).map((p: { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }) => [
+        p.user_id,
+        p,
+      ])
+    );
+
+    const picked: EvRow[] = [];
+    for (const ev of events) {
+      if (!ev.challenge_id || !publicIds.has(ev.challenge_id)) continue;
+      picked.push(ev);
+      if (picked.length >= 15) break;
+    }
+    if (picked.length === 0) return [];
+
+    const pairs = picked.map((e) => ({ uid: e.user_id, cid: e.challenge_id as string }));
+    const cids = [...new Set(pairs.map((p) => p.cid))];
+    const uids = [...new Set(pairs.map((p) => p.uid))];
+    const { data: acRows } = await server
+      .from("active_challenges")
+      .select("user_id, challenge_id, current_day")
+      .in("challenge_id", cids)
+      .in("user_id", uids)
+      .eq("status", "active");
+    const dayMap = new Map<string, number>();
+    for (const r of acRows ?? []) {
+      const row = r as { user_id: string; challenge_id: string; current_day?: number | null };
+      dayMap.set(`${row.user_id}:${row.challenge_id}`, row.current_day ?? 1);
+    }
+
+    return picked.map((ev) => {
+      const meta = ev.metadata ?? {};
+      const p = profMap.get(ev.user_id);
+      const titleFromMeta = typeof meta.challenge_name === "string" ? meta.challenge_name.trim() : "";
+      const challengeTitle = titleFromMeta || chTitle.get(ev.challenge_id as string) || "a challenge";
+      const day =
+        typeof meta.current_day === "number"
+          ? meta.current_day
+          : dayMap.get(`${ev.user_id}:${ev.challenge_id}`) ?? 1;
+      return {
+        id: ev.id,
+        completedAt: ev.created_at,
+        userName: (p?.display_name?.trim() || p?.username || "Someone") as string,
+        avatarUrl: p?.avatar_url ?? null,
+        challengeTitle,
+        challengeId: ev.challenge_id as string,
+        currentDay: day,
+      };
+    });
+  }),
+
   getLiveFeed: protectedProcedure
     .input(
       z.object({

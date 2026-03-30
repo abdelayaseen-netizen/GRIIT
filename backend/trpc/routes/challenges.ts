@@ -298,6 +298,87 @@ export const challengesRouter = createTRPCRouter({
     return { challenges: items };
   }),
 
+  /** Discover “Picked for you”: popular published solo challenges. */
+  getRecommended: publicProcedure.query(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    // TODO: personalize by user goals when goal data is available
+    const { data: rows, error } = await server
+      .from("challenges")
+      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status")
+      .eq("status", "published")
+      .eq("visibility", "PUBLIC")
+      .limit(60);
+    requireNoError(error, "Failed to load recommendations.");
+
+    const sorted = [...(rows ?? [])].sort(
+      (a, b) => (Number(b.participants_count) || 0) - (Number(a.participants_count) || 0)
+    );
+    const solo = sorted.filter((c: { participation_type?: string | null }) => {
+      const pt = String(c.participation_type ?? "").toLowerCase();
+      return pt !== "duo" && pt !== "team" && pt !== "shared_goal";
+    });
+    const top = solo.slice(0, 5);
+    if (top.length === 0) return { challenges: [] };
+
+    const ids = top.map((c: { id: string }) => c.id);
+    const { data: acPart } = await server
+      .from("active_challenges")
+      .select("challenge_id, user_id")
+      .in("challenge_id", ids)
+      .eq("status", "active")
+      .limit(120);
+
+    const byC = new Map<string, string[]>();
+    for (const r of acPart ?? []) {
+      const row = r as { challenge_id: string; user_id: string };
+      const arr = byC.get(row.challenge_id) ?? [];
+      if (arr.includes(row.user_id)) continue;
+      if (arr.length >= 3) continue;
+      arr.push(row.user_id);
+      byC.set(row.challenge_id, arr);
+    }
+
+    const allU = [...new Set((acPart ?? []).map((r: { user_id: string }) => r.user_id))];
+    const { data: profs } =
+      allU.length > 0
+        ? await server.from("profiles").select("user_id, username, avatar_url").in("user_id", allU)
+        : { data: [] as { user_id: string; username: string | null; avatar_url: string | null }[] };
+    const profMap = new Map((profs ?? []).map((p) => [p.user_id, p]));
+
+    function toDiff(d: string | null | undefined): "EASY" | "MED" | "HARD" {
+      const x = String(d ?? "medium").toLowerCase();
+      if (x === "easy") return "EASY";
+      if (x === "hard" || x === "extreme") return "HARD";
+      return "MED";
+    }
+
+    const challenges = top.map((c: Record<string, unknown>) => {
+      const id = c.id as string;
+      const pc = Number(c.participants_count) || 0;
+      const previewUids = (byC.get(id) ?? []).slice(0, 3);
+      const previewUsers = previewUids.map((uid) => {
+        const pr = profMap.get(uid);
+        return {
+          user_id: uid,
+          username: pr?.username ?? null,
+          avatar_url: pr?.avatar_url ?? null,
+        };
+      });
+      return {
+        id,
+        title: (c.title as string) ?? "Challenge",
+        duration: (c.duration_days as number) ?? 7,
+        difficulty: toDiff(c.difficulty as string | undefined),
+        category: String(c.category ?? "discipline"),
+        participantCount: pc,
+        completionRate: Math.min(96, 42 + Math.round(Math.log10(pc + 1) * 22)),
+        previewUsers,
+      };
+    });
+
+    return { challenges };
+  }),
+
   /** Count published public challenges per Discover category label (includes Team = duo/team runs). */
   getCategoryCounts: publicProcedure.query(async ({ ctx }) => {
     const server = getSupabaseServer() ?? ctx.supabase;

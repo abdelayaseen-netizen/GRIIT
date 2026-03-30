@@ -27,15 +27,19 @@ import { SkeletonHeroCard, SkeletonChallengeCard } from "@/components/skeletons"
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { ROUTES } from "@/lib/routes";
+import { DISCOVER_HPADDING } from "@/styles/discover-styles";
 import { useDebounce } from "@/hooks/useDebounce";
 import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
 import {
   DiscoverMiniChallengeCard,
-  DiscoverFullChallengeCard,
   DiscoverChallengeSearchRow,
   type MiniCardChallenge,
   type FullCardChallenge,
 } from "@/components/discover/DiscoverChallengeCards";
+import { FilterChips, type DiscoverFilterId } from "@/components/discover/FilterChips";
+import { ActivityTicker } from "@/components/discover/ActivityTicker";
+import { CompactChallengeRow } from "@/components/discover/CompactChallengeRow";
+import { PickedForYou, type PickedChallenge } from "@/components/discover/PickedForYou";
 import { prefetchChallengeById } from "@/lib/prefetch-queries";
 import { Avatar } from "@/components/Avatar";
 
@@ -84,6 +88,59 @@ function isPublic(c: DiscoverChallenge): boolean {
   return String(c.visibility ?? "public").toLowerCase() === "public";
 }
 
+function matchesDiscoverFilter(c: DiscoverChallenge, f: DiscoverFilterId): boolean {
+  if (f === "All") return true;
+  if (f === "Easy") return String(c.difficulty ?? "").toLowerCase() === "easy";
+  if (f === "7 days") return (c.duration_days ?? 0) === 7;
+  const cat = String(c.category ?? "").toLowerCase();
+  if (f === "Physical") return cat === "fitness";
+  if (f === "Mental") return cat === "mind" || cat === "mindfulness";
+  if (f === "Spiritual") return cat === "faith";
+  return true;
+}
+
+function toCompactDifficulty(d?: string | null): "EASY" | "MED" | "HARD" {
+  const x = String(d ?? "medium").toLowerCase();
+  if (x === "easy") return "EASY";
+  if (x === "hard" || x === "extreme") return "HARD";
+  return "MED";
+}
+
+function completionRateHeuristic(c: DiscoverChallenge): number {
+  const p = c.participants_count ?? 0;
+  return Math.min(96, 42 + Math.round(Math.log10(p + 1) * 22));
+}
+
+function badgeForDiscoverChallenge(c: DiscoverChallenge): string | undefined {
+  const t = (c.title ?? "").toLowerCase();
+  if (t.includes("gratitude") && t.includes("journal")) return "Grateful Heart";
+  if (t.includes("gratitude")) return "Grateful Heart";
+  if (t.includes("cold")) return "Ice Breaker";
+  if (t.includes("hydrat") || t.includes("water") || t.includes("gallon")) return "Hydrated";
+  if (t.includes("prayer") || t.includes("pray")) return "Faithful";
+  if (t.includes("bed")) return "Commander";
+  if (t.includes("breath")) return "Zen Mind";
+  if (t.includes("wake") || t.includes("5am") || t.includes("5 am")) return "Early Riser";
+  if (t.includes("social media") || t.includes("no phone")) return "Unplugged";
+  if (t.includes("step") || t.includes("10k") || t.includes("walk")) return "Road Warrior";
+  return undefined;
+}
+
+function teamInviteCopy(participants: number, teamSize?: number): string {
+  const max = Math.max(2, teamSize ?? 4);
+  if (participants >= max) return "Full — waitlist";
+  const need = max - participants;
+  if (participants === 0) return `Looking for ${need} more`;
+  return `Needs ${need} more`;
+}
+
+function teamSizeLabel(teamSize?: number): string {
+  const s = teamSize ?? 4;
+  if (s <= 2) return "2 people";
+  if (s <= 4) return "3-4 people";
+  return `${s} people`;
+}
+
 function challengeMatchesQuery(c: DiscoverChallenge, q: string): boolean {
   const s = q.trim().toLowerCase();
   if (!s) return true;
@@ -110,6 +167,7 @@ export default function DiscoverScreen() {
 
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [chipFilter, setChipFilter] = useState<DiscoverFilterId>("All");
   const debouncedQuery = useDebounce(searchQuery, 300);
   const filterQuery = debouncedQuery.trim() || searchQuery.trim();
 
@@ -140,6 +198,15 @@ export default function DiscoverScreen() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const recommendedQuery = useQuery({
+    queryKey: ["discover", "recommended"],
+    queryFn: () =>
+      trpcQuery(TRPC.challenges.getRecommended) as Promise<{
+        challenges: Omit<PickedChallenge, "badgeLabel">[];
+      }>,
+    staleTime: 60 * 1000,
+  });
+
   const activeChallengeIds = useMemo(() => {
     const rows = myActiveForDiscover.data;
     if (!Array.isArray(rows)) return new Set<string>();
@@ -156,53 +223,69 @@ export default function DiscoverScreen() {
     return list.filter(isPublic);
   }, [discoverFeed.data?.challenges]);
 
+  const filteredPublic = useMemo(
+    () => allPublic.filter((c) => matchesDiscoverFilter(c, chipFilter)),
+    [allPublic, chipFilter]
+  );
+
+  const pickedForYouData: PickedChallenge[] = useMemo(() => {
+    const rows = recommendedQuery.data?.challenges ?? [];
+    return rows.map((r) => ({
+      ...r,
+      badgeLabel: badgeForDiscoverChallenge({ title: r.title } as DiscoverChallenge),
+    }));
+  }, [recommendedQuery.data?.challenges]);
+
   const trendingHero = useMemo(() => {
-    if (!allPublic.length) return null;
-    const ranked = [...allPublic].sort((a, b) => {
+    if (!filteredPublic.length) return null;
+    const ranked = [...filteredPublic].sort((a, b) => {
       const jr = (b.recent_joins_7d ?? 0) - (a.recent_joins_7d ?? 0);
       if (jr !== 0) return jr;
       return (b.participants_count ?? 0) - (a.participants_count ?? 0);
     });
     const notIn = ranked.find((c) => !activeChallengeIds.has(c.id));
     return notIn ?? ranked[0] ?? null;
-  }, [allPublic, activeChallengeIds]);
+  }, [filteredPublic, activeChallengeIds]);
 
   const heroIsActive = trendingHero ? activeChallengeIds.has(trendingHero.id) : false;
 
   const twentyFourHour = useMemo(() => {
     const hId = trendingHero?.id ?? "";
-    return allPublic.filter((c) => c.id !== hId).filter((c) => isActiveDaily(c) && !isTeamChallenge(c)).slice(0, 12);
-  }, [allPublic, trendingHero?.id]);
+    return filteredPublic
+      .filter((c) => c.id !== hId)
+      .filter((c) => isActiveDaily(c) && !isTeamChallenge(c))
+      .slice(0, 12);
+  }, [filteredPublic, trendingHero?.id]);
 
   const soloChallenges = useMemo(() => {
     const hId = trendingHero?.id ?? "";
-    return allPublic
+    return filteredPublic
       .filter((c) => c.id !== hId)
       .filter((c) => !isTeamChallenge(c) && !isDaily(c) && (c.duration_days ?? 0) > 1)
       .sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0))
-      .slice(0, 4);
-  }, [allPublic, trendingHero?.id]);
+      .slice(0, 5);
+  }, [filteredPublic, trendingHero?.id]);
 
   const teamChallenges = useMemo(() => {
     const hId = trendingHero?.id ?? "";
-    return allPublic
+    return filteredPublic
       .filter((c) => c.id !== hId)
       .filter((c) => isTeamChallenge(c))
       .sort((a, b) => (b.participants_count ?? 0) - (a.participants_count ?? 0))
       .slice(0, 3);
-  }, [allPublic, trendingHero?.id]);
+  }, [filteredPublic, trendingHero?.id]);
 
   const newThisWeek = useMemo(() => {
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return allPublic
+    return filteredPublic
       .filter((c) => c.created_at && new Date(c.created_at).getTime() > weekAgo)
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
-  }, [allPublic]);
+  }, [filteredPublic]);
 
   const filteredChallengesForSearch = useMemo(() => {
     if (!filterQuery) return [];
     return allPublic.filter((c) => challengeMatchesQuery(c, filterQuery));
-  }, [allPublic, filterQuery]);
+  }, [allPublic, filterQuery]); // search uses full catalog, not chip filter
 
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
@@ -352,6 +435,8 @@ export default function DiscoverScreen() {
               </Pressable>
             ) : null}
           </View>
+
+          <FilterChips onFilterChange={setChipFilter} />
 
           {showBrowseMode ? (
             <View style={{ marginTop: 8, paddingBottom: 32 }}>
@@ -533,6 +618,10 @@ export default function DiscoverScreen() {
 
           {showDefaultSections && !loading && !err ? (
             <>
+              <PickedForYou challenges={pickedForYouData} />
+
+              <ActivityTicker />
+
               <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
                 <HeroFeaturedCard
                   challenge={
@@ -545,6 +634,8 @@ export default function DiscoverScreen() {
                           participants_count: trendingHero.participants_count,
                           category: trendingHero.category,
                           joins_today: trendingHero.joins_today,
+                          recent_joins_7d: trendingHero.recent_joins_7d,
+                          joinPreview: trendingHero.team_preview,
                         }
                       : null
                   }
@@ -589,17 +680,23 @@ export default function DiscoverScreen() {
                       setSearchQuery("solo");
                     }}
                   />
-                  {soloChallenges.map((c) => (
-                    <DiscoverFullChallengeCard
-                      key={c.id}
-                      challenge={c}
-                      variant="solo"
-                      onPress={(id) => {
-                        prefetchChallengeDetail(id);
-                        openChallenge(id);
-                      }}
-                    />
-                  ))}
+                  <View style={{ paddingHorizontal: DISCOVER_HPADDING }}>
+                    {soloChallenges.map((c) => (
+                      <CompactChallengeRow
+                        key={c.id}
+                        id={c.id}
+                        title={c.title ?? "Challenge"}
+                        duration={c.duration_days ?? 7}
+                        difficulty={toCompactDifficulty(c.difficulty)}
+                        participantCount={c.participants_count ?? 0}
+                        completionRate={completionRateHeuristic(c)}
+                        badgeName={badgeForDiscoverChallenge(c)}
+                        category={c.category ?? undefined}
+                        isTeam={false}
+                        onPressIn={() => prefetchChallengeDetail(c.id)}
+                      />
+                    ))}
+                  </View>
                 </>
               ) : null}
 
@@ -613,35 +710,53 @@ export default function DiscoverScreen() {
                       setSearchQuery("Team");
                     }}
                   />
-                  {teamChallenges.map((c) => (
-                    <DiscoverFullChallengeCard
-                      key={c.id}
-                      challenge={c}
-                      variant="team"
-                      teamPreview={c.team_preview}
-                      onPress={(id) => {
-                        prefetchChallengeDetail(id);
-                        openChallenge(id);
-                      }}
-                    />
-                  ))}
+                  <View style={{ paddingHorizontal: DISCOVER_HPADDING }}>
+                    {teamChallenges.map((c) => (
+                      <CompactChallengeRow
+                        key={c.id}
+                        id={c.id}
+                        title={c.title ?? "Challenge"}
+                        duration={c.duration_days ?? 7}
+                        difficulty={toCompactDifficulty(c.difficulty)}
+                        participantCount={c.participants_count ?? 0}
+                        completionRate={completionRateHeuristic(c)}
+                        category={c.category ?? undefined}
+                        isTeam
+                        teamSize={teamSizeLabel(c.team_size)}
+                        inviteText={teamInviteCopy(c.participants_count ?? 0, c.team_size)}
+                        onPressIn={() => prefetchChallengeDetail(c.id)}
+                      />
+                    ))}
+                  </View>
                 </>
               ) : null}
 
               {newThisWeek.length > 0 ? (
                 <>
                   <SectionHeader title="New this week" />
-                  {newThisWeek.map((c) => (
-                    <DiscoverFullChallengeCard
-                      key={c.id}
-                      challenge={c}
-                      variant="solo"
-                      onPress={(id) => {
-                        prefetchChallengeDetail(id);
-                        openChallenge(id);
-                      }}
-                    />
-                  ))}
+                  <View style={{ paddingHorizontal: DISCOVER_HPADDING }}>
+                    {newThisWeek.map((c) => (
+                      <CompactChallengeRow
+                        key={c.id}
+                        id={c.id}
+                        title={c.title ?? "Challenge"}
+                        duration={c.duration_days ?? 7}
+                        difficulty={toCompactDifficulty(c.difficulty)}
+                        participantCount={c.participants_count ?? 0}
+                        completionRate={completionRateHeuristic(c)}
+                        badgeName={isTeamChallenge(c) ? undefined : badgeForDiscoverChallenge(c)}
+                        category={c.category ?? undefined}
+                        isTeam={isTeamChallenge(c)}
+                        teamSize={isTeamChallenge(c) ? teamSizeLabel(c.team_size) : undefined}
+                        inviteText={
+                          isTeamChallenge(c)
+                            ? teamInviteCopy(c.participants_count ?? 0, c.team_size)
+                            : undefined
+                        }
+                        onPressIn={() => prefetchChallengeDetail(c.id)}
+                      />
+                    ))}
+                  </View>
                 </>
               ) : null}
 

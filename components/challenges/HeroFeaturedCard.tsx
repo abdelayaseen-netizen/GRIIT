@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { DS_COLORS, getCategoryColors } from "@/lib/design-system";
+import { Avatar } from "@/components/Avatar";
 
 const HERO_COPY: Record<string, string> = {
   "Daily Gratitude": "The challenge that rewires your brain. 3 things. Every morning. No excuses.",
@@ -19,6 +20,10 @@ type HeroChallenge = {
   category?: string;
   /** Real join count for today (from active_challenges); overrides heuristic when set. */
   joins_today?: number;
+  /** Joins in the last 7 days — preferred for social proof copy. */
+  recent_joins_7d?: number;
+  /** Up to 3 avatars beside social proof (e.g. recent joiners). */
+  joinPreview?: { user_id: string; username: string | null; avatar_url: string | null }[];
 };
 
 export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
@@ -35,10 +40,15 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
 }) {
   if (!challenge) return null;
   const duration = challenge.duration_days ?? 7;
-  const joinedToday =
-    typeof challenge.joins_today === "number"
-      ? Math.max(0, challenge.joins_today)
-      : Math.max(0, Math.floor((challenge.participants_count ?? 0) * 0.02));
+  const weekJoins =
+    typeof challenge.recent_joins_7d === "number"
+      ? Math.max(0, challenge.recent_joins_7d)
+      : typeof challenge.joins_today === "number"
+        ? Math.max(0, challenge.joins_today)
+        : Math.max(0, Math.floor((challenge.participants_count ?? 0) * 0.05));
+  const showWeekCount = weekJoins >= 5;
+  const socialLine = showWeekCount ? `${weekJoins} joined this week` : "Trending now";
+  const previews = (challenge.joinPreview ?? []).slice(0, 3);
   const categoryColors = getCategoryColors(challenge.category ?? "discipline");
   const copy = HERO_COPY[challenge.title] ?? challenge.description ?? "Lock in. Show up daily. Build unbreakable discipline.";
   return (
@@ -57,18 +67,22 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
         </View>
         <Text style={s.title}>{challenge.title}</Text>
         <Text style={[s.desc, { color: categoryColors.subtitleText }]}>{copy}</Text>
-        <View
-          style={s.socialBar}
-          accessibilityRole="none"
-          accessibilityLabel={
-            (challenge.participants_count ?? 0) === 0
-              ? "No warriors yet — be the first to join"
-              : `${joinedToday} people joined today`
-          }
-        >
-          <Text style={s.socialText}>
-            {(challenge.participants_count ?? 0) === 0 ? "0 warriors · Be the first to join" : `${joinedToday} joined today`}
-          </Text>
+        <View style={s.socialBar} accessibilityRole="none" accessibilityLabel={socialLine}>
+          {previews.length > 0 ? (
+            <View style={s.avatarCluster}>
+              {previews.map((p, i) => (
+                <Avatar
+                  key={p.user_id}
+                  url={p.avatar_url}
+                  name={p.username ?? "?"}
+                  userId={p.user_id}
+                  size={22}
+                  style={{ marginLeft: i > 0 ? -7 : 0, borderWidth: 2, borderColor: DS_COLORS.DISCOVER_HERO_AVATAR_RING }}
+                />
+              ))}
+            </View>
+          ) : null}
+          <Text style={s.socialText}>{socialLine}</Text>
         </View>
         <TouchableOpacity
           style={s.cta}
@@ -98,8 +112,18 @@ const s = StyleSheet.create({
   durationText: { fontSize: 10, fontWeight: "600", color: "rgba(255,255,255,0.4)" },
   title: { fontSize: 21, fontWeight: "800", color: DS_COLORS.WHITE, lineHeight: 24, letterSpacing: -0.4 },
   desc: { marginTop: 8, fontSize: 12, lineHeight: 17, color: "rgba(255,255,255,0.45)" },
-  socialBar: { marginTop: 14, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "rgba(255,255,255,0.06)", flexDirection: "row", alignItems: "center", gap: 8 },
-  socialText: { fontSize: 11, color: DS_COLORS.WHITE },
+  socialBar: {
+    marginTop: 14,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  avatarCluster: { flexDirection: "row", alignItems: "center" },
+  socialText: { fontSize: 11, color: DS_COLORS.WHITE, flex: 1 },
   cta: {
     marginTop: 16,
     alignSelf: "flex-start",
