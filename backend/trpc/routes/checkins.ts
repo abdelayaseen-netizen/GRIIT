@@ -273,7 +273,10 @@ export const checkinsRouter = createTRPCRouter({
         },
       });
       if (taskCompletedEventError) {
-        console.error("[checkins.complete] task_completed event failed:", taskCompletedEventError);
+        console.error(
+          "[checkins.complete] task_completed event FAILED — shareCompletion will use recovery path:",
+          JSON.stringify(taskCompletedEventError)
+        );
       }
 
       const [{ data: allTasks }, { data: completedCheckins }] = await Promise.all([

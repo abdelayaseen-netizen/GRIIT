@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   image: {
     marginTop: DS_SPACING.sm,
     width: "100%",
-    aspectRatio: 4 / 3,
+    aspectRatio: 16 / 9,
     borderRadius: DS_RADIUS.cardAlt,
     backgroundColor: DS_COLORS.SKELETON_BG,
   },

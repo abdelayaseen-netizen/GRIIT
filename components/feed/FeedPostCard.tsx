@@ -137,11 +137,11 @@ const styles = StyleSheet.create({
   },
   proofImage: {
     width: "100%",
-    aspectRatio: 4 / 3,
+    aspectRatio: 16 / 9,
   },
   placeholder: {
     width: "100%",
-    aspectRatio: 4 / 3,
+    aspectRatio: 16 / 9,
     alignItems: "center",
     justifyContent: "center",
   },
