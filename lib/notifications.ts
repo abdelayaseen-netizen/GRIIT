@@ -587,10 +587,6 @@ export async function registerForPushNotifications(): Promise<string | null> {
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
 
-    if (!projectId) {
-      console.warn("[Notifications] No EAS project ID found in app config");
-    }
-
     const tokenData = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
 
     if (Platform.OS === "android") {

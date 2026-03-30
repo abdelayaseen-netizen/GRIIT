@@ -262,7 +262,6 @@ function NotificationsBody({
         void qc.invalidateQueries({ queryKey: ["activity", "notifications", userId] });
       } catch (e) {
         captureError(e, "ActivityFollowUser");
-        console.warn("[Activity] follow", e);
       }
     },
     [qc, userId]

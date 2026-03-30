@@ -48,7 +48,7 @@ export default function AddAccountabilityPartnerScreen() {
       const data = await trpcQuery(TRPC.profiles.search, { query: t }) as SearchHit[];
       setHits(data ?? []);
     } catch (err) {
-      if (__DEV__) console.warn("[accountability/add] search failed", err);
+      captureError(err, "accountability/add search");
       setHits([]);
     } finally {
       setSearching(false);

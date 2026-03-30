@@ -1432,7 +1432,6 @@ export default function CreateChallengeWizard() {
               });
             })
           );
-          if (__DEV__) console.log("[TimeWindow] Saved times:", times);
           finishAfterTimePrompt();
         }}
         onSkip={finishAfterTimePrompt}

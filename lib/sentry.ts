@@ -5,7 +5,6 @@ const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
 /** Call once at app startup (see `app/_layout.tsx`). */
 export function initialiseSentry(): void {
   if (!SENTRY_DSN) {
-    console.warn("[Sentry] No DSN configured — skipping init. Set EXPO_PUBLIC_SENTRY_DSN in .env");
     return;
   }
 
@@ -59,8 +58,9 @@ export function captureError(error: unknown, context?: string | Record<string, u
 
 export function captureMessage(message: string, level: Sentry.SeverityLevel = "info"): void {
   if (__DEV__) {
-    console.warn(`[Sentry message] ${message}`);
-  } else if (SENTRY_DSN) {
+    return;
+  }
+  if (SENTRY_DSN) {
     Sentry.captureMessage(message, level);
   }
 }

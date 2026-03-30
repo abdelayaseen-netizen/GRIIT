@@ -1470,7 +1470,6 @@ export default function ChallengeDetailScreen() {
               });
             })
           );
-          if (__DEV__) console.log("[TimeWindow] Saved times:", times);
           onTimeWindowComplete();
         }}
         onSkip={onTimeWindowComplete}

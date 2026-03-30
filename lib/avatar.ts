@@ -3,6 +3,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
+import { captureError } from "@/lib/sentry";
 
 /** Deterministic avatar colors from user id (design tokens only). */
 export const AVATAR_COLORS = [
@@ -65,7 +66,7 @@ export async function pickAndUploadAvatar(userId: string): Promise<PickAvatarOut
     await trpcMutate(TRPC.profiles.update, { avatar_url: publicUrl });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Could not save profile.";
-    if (__DEV__) console.warn("[Avatar] Profile update failed:", msg);
+    captureError(e, "avatar profile update");
     return { status: "failed", message: msg };
   }
 

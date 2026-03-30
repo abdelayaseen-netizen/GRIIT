@@ -123,10 +123,8 @@ export function trackEvent(event: string, properties?: FunnelProps): void {
     if (!shouldSendPostHog()) return;
     const ph = getPostHog();
     ph?.capture(event, properties);
-  } catch (error) {
-    if (__DEV__) {
-      console.warn(`[Analytics] Failed to track ${event}:`, error);
-    }
+  } catch {
+    /* non-fatal — analytics must not break UX */
   }
 }
 
