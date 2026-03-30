@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, FlatList, Platform } from "react-native";
 import { Trophy, Lock } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { formatShortDate } from "@/lib/date-utils";
@@ -30,6 +30,7 @@ export default React.memo(function AchievementsSection({ achievements, loading }
     {} as Record<AchievementCategory, AchievementItem[]>
   );
   const order: AchievementCategory[] = ["consistency", "challenge", "discipline"];
+  const flatBadges = useMemo(() => order.flatMap((cat) => byCategory[cat] ?? []), [byCategory]);
 
   if (loading) {
     return (
@@ -48,49 +49,44 @@ export default React.memo(function AchievementsSection({ achievements, loading }
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>🏆 Achievements</Text>
       </View>
-      <ScrollView
+      <FlatList
         horizontal
+        data={flatBadges}
+        keyExtractor={(a) => a.id}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-      >
-        {order.flatMap((cat) =>
-          (byCategory[cat] ?? []).map((a) => (
+        renderItem={({ item: a }) => (
+          <View style={[styles.badge, a.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}>
             <View
-              key={a.id}
-              style={[styles.badge, a.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}
+              style={[
+                styles.badgeIcon,
+                { backgroundColor: a.unlocked ? DS_COLORS.accent + "18" : DS_COLORS.surfaceMuted },
+              ]}
             >
-              <View
-                style={[
-                  styles.badgeIcon,
-                  { backgroundColor: a.unlocked ? DS_COLORS.accent + "18" : DS_COLORS.surfaceMuted },
-                ]}
-              >
-                {a.unlocked ? (
-                  <Trophy size={16} color={DS_COLORS.accent} />
-                ) : (
-                  <Lock size={16} color={DS_COLORS.textMuted} />
-                )}
-              </View>
-              <Text
-                style={[styles.badgeTitle, !a.unlocked && styles.badgeTitleLocked]}
-                numberOfLines={2}
-              >
-                {a.title}
-              </Text>
-              {a.description ? (
-                <Text style={styles.badgeDesc} numberOfLines={1}>
-                  {a.description}
-                </Text>
-              ) : null}
-              {a.unlocked && a.unlockDate ? (
-                <Text style={styles.badgeDate}>
-                  {formatShortDate(a.unlockDate)}
-                </Text>
-              ) : null}
+              {a.unlocked ? (
+                <Trophy size={16} color={DS_COLORS.accent} />
+              ) : (
+                <Lock size={16} color={DS_COLORS.textMuted} />
+              )}
             </View>
-          ))
+            <Text style={[styles.badgeTitle, !a.unlocked && styles.badgeTitleLocked]} numberOfLines={2}>
+              {a.title}
+            </Text>
+            {a.description ? (
+              <Text style={styles.badgeDesc} numberOfLines={1}>
+                {a.description}
+              </Text>
+            ) : null}
+            {a.unlocked && a.unlockDate ? (
+              <Text style={styles.badgeDate}>{formatShortDate(a.unlockDate)}</Text>
+            ) : null}
+          </View>
         )}
-      </ScrollView>
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
+        removeClippedSubviews={Platform.OS === "android"}
+      />
     </View>
   );
 });

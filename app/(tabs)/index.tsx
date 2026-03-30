@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
@@ -145,7 +146,7 @@ export default function HomeScreen() {
   const prevCompletedCount = React.useRef(0);
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showRankModal, setShowRankModal] = React.useState(false);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<FlatList<{ key: string }>>(null);
   const goalsSectionYRef = useRef(0);
   const feedSectionYRef = useRef(0);
 
@@ -228,8 +229,8 @@ export default function HomeScreen() {
   }, [challengeGroups]);
 
   const scrollToGoalsSection = useCallback(() => {
-    scrollRef.current?.scrollTo({
-      y: Math.max(0, goalsSectionYRef.current - 12),
+    scrollRef.current?.scrollToOffset({
+      offset: Math.max(0, goalsSectionYRef.current - 12),
       animated: true,
     });
   }, []);
@@ -369,18 +370,12 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={s.container}>
-      <ScrollView
+      <FlatList
         ref={scrollRef}
-        refreshControl={
-          <RefreshControl
-            refreshing={homeQuery.isRefetching}
-            onRefresh={refresh}
-            tintColor={DS_COLORS.ACCENT}
-          />
-        }
-        contentContainerStyle={{ paddingBottom: 32 }}
-        showsVerticalScrollIndicator={false}
-      >
+        data={[{ key: "home-root" }]}
+        keyExtractor={(item) => item.key}
+        renderItem={() => (
+          <View>
         {leaveChallengeError ? (
           <InlineError message={leaveChallengeError} onDismiss={() => setLeaveChallengeError(null)} />
         ) : null}
@@ -502,40 +497,49 @@ export default function HomeScreen() {
               actionLabel={`${incompleteChallenges.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining`}
               onPressAction={() => {}}
             />
-            {incompleteChallenges.map((group, index) => (
-              <GoalCard
-                key={group.activeChallengeId}
-                defaultExpanded={index === 0}
-                challengeName={group.challengeName}
-                goals={group.goals}
-                currentDay={group.currentDay}
-                durationDays={group.durationDays}
-                onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
-                onPressGoal={(goalId: string) => {
-                  const goal = group.goals.find((gl) => gl.id === goalId);
-                  if (!goal) return;
-                  onPressGoal(
-                    goalId,
-                    group.activeChallengeId,
-                    goal.taskType,
-                    goal.title,
-                    goal.taskConfig,
-                    group.challengeName,
-                    group.currentDay,
-                    group.durationDays
-                  );
-                }}
-                onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
-                onPressInActiveChallenge={() => {
-                  void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
-                }}
-                onLongPressChallenge={() => {
-                  setLeaveChallengeError(null);
-                  setLeaveConfirmChallengeId(group.challengeId);
-                }}
-                isError={homeQuery.isError}
-              />
-            ))}
+            <FlatList
+              data={incompleteChallenges}
+              keyExtractor={(group) => group.activeChallengeId}
+              scrollEnabled={false}
+              nestedScrollEnabled
+              renderItem={({ item: group, index }) => (
+                <GoalCard
+                  defaultExpanded={index === 0}
+                  challengeName={group.challengeName}
+                  goals={group.goals}
+                  currentDay={group.currentDay}
+                  durationDays={group.durationDays}
+                  onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
+                  onPressGoal={(goalId: string) => {
+                    const goal = group.goals.find((gl) => gl.id === goalId);
+                    if (!goal) return;
+                    onPressGoal(
+                      goalId,
+                      group.activeChallengeId,
+                      goal.taskType,
+                      goal.title,
+                      goal.taskConfig,
+                      group.challengeName,
+                      group.currentDay,
+                      group.durationDays
+                    );
+                  }}
+                  onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+                  onPressInActiveChallenge={() => {
+                    void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
+                  }}
+                  onLongPressChallenge={() => {
+                    setLeaveChallengeError(null);
+                    setLeaveConfirmChallengeId(group.challengeId);
+                  }}
+                  isError={homeQuery.isError}
+                />
+              )}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              initialNumToRender={8}
+              removeClippedSubviews={Platform.OS === "android"}
+            />
             {completedTodayChallenges.length > 0 ? (
               <>
                 <TouchableOpacity
@@ -550,10 +554,14 @@ export default function HomeScreen() {
                     {completedExpanded ? "Hide" : "Show"} ({completedTodayChallenges.length})
                   </Text>
                 </TouchableOpacity>
-                {completedExpanded
-                  ? completedTodayChallenges.map((group) => (
+                {completedExpanded ? (
+                  <FlatList
+                    data={completedTodayChallenges}
+                    keyExtractor={(group) => `${group.activeChallengeId}-completed`}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
+                    renderItem={({ item: group }) => (
                       <GoalCard
-                        key={`${group.activeChallengeId}-completed`}
                         defaultExpanded={false}
                         challengeName={group.challengeName}
                         goals={group.goals}
@@ -569,8 +577,13 @@ export default function HomeScreen() {
                         onLongPressChallenge={undefined}
                         isError={homeQuery.isError}
                       />
-                    ))
-                  : null}
+                    )}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={8}
+                    removeClippedSubviews={Platform.OS === "android"}
+                  />
+                ) : null}
               </>
             ) : null}
           </View>
@@ -587,13 +600,28 @@ export default function HomeScreen() {
         >
           <LiveFeedSection
             onScrollToFeed={() => {
-              scrollRef.current?.scrollTo({ y: Math.max(0, feedSectionYRef.current - 8), animated: true });
+              scrollRef.current?.scrollToOffset({
+                offset: Math.max(0, feedSectionYRef.current - 8),
+                animated: true,
+              });
             }}
           />
         </View>
 
         <DailyQuote />
-      </ScrollView>
+          </View>
+        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={homeQuery.isRefetching}
+            onRefresh={refresh}
+            tintColor={DS_COLORS.ACCENT}
+          />
+        }
+        contentContainerStyle={{ paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
       <PointsExplainer
         visible={showPointsExplainer}
         onClose={() => setShowPointsExplainer(false)}

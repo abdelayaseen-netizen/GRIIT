@@ -1,5 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  RefreshControl,
+  Pressable,
+  FlatList,
+  SectionList,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Bell, Target, Trophy, UserPlus, Users } from "lucide-react-native";
@@ -188,40 +198,46 @@ export default function ActivityScreen() {
     );
   }
 
+  const activityHeader = (
+    <>
+      <Text style={styles.screenTitle} accessibilityRole="header">
+        Activity
+      </Text>
+
+      <View style={styles.mainSwitcher}>
+        <TouchableOpacity
+          style={[styles.mainTab, mainTab === "notifications" && styles.mainTabOn]}
+          onPress={() => setMainTab("notifications")}
+          accessibilityRole="tab"
+          accessibilityLabel="Notifications tab"
+          accessibilityState={{ selected: mainTab === "notifications" }}
+        >
+          <Text style={[styles.mainTabText, mainTab === "notifications" && styles.mainTabTextOn]}>Notifications</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.mainTab, mainTab === "leaderboard" && styles.mainTabOn]}
+          onPress={() => setMainTab("leaderboard")}
+          accessibilityRole="tab"
+          accessibilityLabel="Leaderboard tab"
+          accessibilityState={{ selected: mainTab === "leaderboard" }}
+        >
+          <Text style={[styles.mainTabText, mainTab === "leaderboard" && styles.mainTabTextOn]}>Leaderboard</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Text style={styles.screenTitle} accessibilityRole="header">
-          Activity
-        </Text>
-
-        <View style={styles.mainSwitcher}>
-          <TouchableOpacity
-            style={[styles.mainTab, mainTab === "notifications" && styles.mainTabOn]}
-            onPress={() => setMainTab("notifications")}
-            accessibilityRole="tab"
-            accessibilityLabel="Notifications tab"
-            accessibilityState={{ selected: mainTab === "notifications" }}
-          >
-            <Text style={[styles.mainTabText, mainTab === "notifications" && styles.mainTabTextOn]}>Notifications</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.mainTab, mainTab === "leaderboard" && styles.mainTabOn]}
-            onPress={() => setMainTab("leaderboard")}
-            accessibilityRole="tab"
-            accessibilityLabel="Leaderboard tab"
-            accessibilityState={{ selected: mainTab === "leaderboard" }}
-          >
-            <Text style={[styles.mainTabText, mainTab === "leaderboard" && styles.mainTabTextOn]}>Leaderboard</Text>
-          </TouchableOpacity>
-        </View>
-
+      <View style={styles.tabShell}>
         {mainTab === "notifications" ? (
-          <NotificationsBody query={notifQuery} userId={user.id} />
+          <NotificationsBody
+            query={notifQuery}
+            userId={user.id}
+            listHeader={activityHeader}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
         ) : (
           <LeaderboardBody
             scope={scope}
@@ -238,9 +254,12 @@ export default function ActivityScreen() {
             setSelectedChallengeId={setSelectedChallengeId}
             challengeScope={challengeScope}
             setChallengeScope={setChallengeScope}
+            listHeader={activityHeader}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -248,9 +267,15 @@ export default function ActivityScreen() {
 function NotificationsBody({
   query,
   userId,
+  listHeader,
+  refreshing,
+  onRefresh,
 }: {
   query: ReturnType<typeof useQuery<{ unread: NotifRow[]; earlier: NotifRow[] }>>;
   userId: string;
+  listHeader: React.ReactNode;
+  refreshing: boolean;
+  onRefresh: () => Promise<void>;
 }) {
   const qc = useQueryClient();
   const router = useRouter();
@@ -267,6 +292,28 @@ function NotificationsBody({
     [qc, userId]
   );
 
+  const sections = useMemo(() => {
+    const unread = query.data?.unread ?? [];
+    const earlier = query.data?.earlier ?? [];
+    const s: { title: string; data: NotifRow[] }[] = [];
+    if (unread.length) s.push({ title: "NEW", data: unread });
+    if (earlier.length) s.push({ title: "EARLIER", data: earlier });
+    return s;
+  }, [query.data?.unread, query.data?.earlier]);
+
+  const renderItem = useCallback(
+    ({
+      item,
+      section,
+    }: {
+      item: NotifRow;
+      section: { title: string; data: NotifRow[] };
+    }) => (
+      <NotificationRow n={item} onFollow={onFollow} unread={section.title === "NEW"} userId={userId} />
+    ),
+    [onFollow, userId]
+  );
+
   if (query.isPending) return <LoadingState message="Loading notifications..." />;
   if (query.isError) return <ErrorState message="Couldn't load notifications" onRetry={() => void query.refetch()} />;
 
@@ -274,46 +321,45 @@ function NotificationsBody({
   const earlier = query.data?.earlier ?? [];
 
   return (
-    <View>
-      {unread.length > 0 ? (
-        <>
-          <Text style={styles.groupLabel}>NEW</Text>
-          {unread.map((n) => (
-            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread userId={userId} />
-          ))}
-        </>
-      ) : null}
-      {earlier.length > 0 ? (
-        <>
-          <Text style={styles.groupLabel}>EARLIER</Text>
-          {earlier.map((n) => (
-            <NotificationRow key={n.id} n={n} onFollow={onFollow} unread={false} userId={userId} />
-          ))}
-        </>
-      ) : null}
-      {unread.length === 0 && earlier.length === 0 ? (
-        <View style={styles.emptyStateFill}>
-          <View style={styles.emptyIconCircle}>
-            <Bell size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+    <SectionList
+      sections={sections}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      renderSectionHeader={({ section: { title } }) => <Text style={styles.groupLabel}>{title}</Text>}
+      ListHeaderComponent={<>{listHeader}</>}
+      ListEmptyComponent={
+        unread.length === 0 && earlier.length === 0 ? (
+          <View style={styles.emptyStateFill}>
+            <View style={styles.emptyIconCircle}>
+              <Bell size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+            </View>
+            <Text style={styles.emptyTitleStrong}>No notifications yet</Text>
+            <Text style={styles.emptyBodyNarrow}>
+              Complete a task or join a challenge to start getting updates from the community.
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              accessibilityLabel="Start a challenge"
+              accessibilityRole="button"
+            >
+              <Text style={styles.emptyTextCta}>Start a challenge →</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.emptyTitleStrong}>No notifications yet</Text>
-          <Text style={styles.emptyBodyNarrow}>
-            Complete a task or join a challenge to start getting updates from the community.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
-            accessibilityLabel="Start a challenge"
-            accessibilityRole="button"
-          >
-            <Text style={styles.emptyTextCta}>Start a challenge →</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-    </View>
+        ) : null
+      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+      stickySectionHeadersEnabled={false}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+      initialNumToRender={8}
+      removeClippedSubviews={Platform.OS === "android"}
+    />
   );
 }
 
-function NotificationRow({
+const NotificationRow = React.memo(function NotificationRow({
   n,
   onFollow,
   unread,
@@ -430,7 +476,7 @@ function NotificationRow({
       ) : null}
     </View>
   );
-}
+});
 
 function LeaderboardBody({
   scope,
@@ -444,6 +490,9 @@ function LeaderboardBody({
   setSelectedChallengeId,
   challengeScope,
   setChallengeScope,
+  listHeader,
+  refreshing,
+  onRefresh,
 }: {
   scope: LeaderScope;
   setScope: (s: LeaderScope) => void;
@@ -470,6 +519,9 @@ function LeaderboardBody({
   setSelectedChallengeId: (id: string) => void;
   challengeScope: "friends" | "everyone";
   setChallengeScope: (s: "friends" | "everyone") => void;
+  listHeader: React.ReactNode;
+  refreshing: boolean;
+  onRefresh: () => Promise<void>;
 }) {
   const router = useRouter();
   const activeList = myActive.data ?? [];
@@ -526,7 +578,7 @@ function LeaderboardBody({
     (scope === "friends" && friendsBoard.isError) ||
     (scope === "challenge" && (myActive.isError || challengeBoard.isError));
 
-  return (
+  const leaderboardInner = (
     <View>
       <View style={styles.scopeSwitcher}>
         {(["global", "friends", "challenge"] as const).map((s) => {
@@ -663,18 +715,18 @@ function LeaderboardBody({
               </TouchableOpacity>
             </View>
           ) : (
-            <ScrollView
+            <FlatList
               horizontal
+              data={activeList}
+              keyExtractor={(item, i) => item.challenge_id ?? item.challenges?.id ?? `ch-${i}`}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.challengePillsRow}
-            >
-              {activeList.map((item, i) => {
+              renderItem={({ item }) => {
                 const cid = item.challenge_id ?? item.challenges?.id ?? "";
                 const title = item.challenges?.title ?? "Challenge";
                 const sel = cid === selectedChallengeId;
                 return (
                   <TouchableOpacity
-                    key={cid || String(i)}
                     style={[styles.challengePillNew, sel ? styles.challengePillNewOn : styles.challengePillNewOff]}
                     onPress={() => cid && setSelectedChallengeId(cid)}
                     accessibilityLabel={`View leaderboard for ${title}`}
@@ -689,8 +741,8 @@ function LeaderboardBody({
                     </Text>
                   </TouchableOpacity>
                 );
-              })}
-            </ScrollView>
+              }}
+            />
           )}
           {activeList.length > 0 && selectedChallengeId ? (
             <View style={styles.challengeScopeToggle}>
@@ -806,6 +858,25 @@ function LeaderboardBody({
       ) : null}
     </View>
   );
+
+  return (
+    <FlatList
+      data={[]}
+      keyExtractor={(_, i) => `lb-pad-${i}`}
+      renderItem={() => null}
+      ListHeaderComponent={
+        <>
+          {listHeader}
+          {leaderboardInner}
+        </>
+      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+      style={{ flex: 1 }}
+      keyboardShouldPersistTaps="handled"
+    />
+  );
 }
 
 function useOpenLeaderboardProfile() {
@@ -839,22 +910,35 @@ function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[];
   const first = entries[0]!;
   const rest = entries.slice(1).filter((e) => e.userId !== viewerId);
 
+  const footer =
+    viewer && !(viewer.rank === 1 && first.userId === viewerId) ? (
+      <>
+        <View style={styles.yourRankDivider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.yourRankLabel}>Your rank</Text>
+          <View style={styles.dividerLine} />
+        </View>
+        <YourRankCard entry={viewer} viewerId={viewerId} />
+      </>
+    ) : null;
+
   return (
     <View style={{ marginBottom: 24 }}>
       <CrownCard entry={first} viewerId={viewerId} />
-      {rest.map((e) => (
-        <RegularRow key={e.userId} entry={e} leaderPoints={leaderPoints} viewerId={viewerId} />
-      ))}
-      {viewer && !(viewer.rank === 1 && first.userId === viewerId) ? (
-        <>
-          <View style={styles.yourRankDivider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.yourRankLabel}>Your rank</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          <YourRankCard entry={viewer} viewerId={viewerId} />
-        </>
-      ) : null}
+      <FlatList
+        data={rest}
+        keyExtractor={(e) => e.userId}
+        renderItem={({ item }) => (
+          <RegularRow entry={item} leaderPoints={leaderPoints} viewerId={viewerId} />
+        )}
+        scrollEnabled={false}
+        nestedScrollEnabled
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
+        ListFooterComponent={footer}
+        removeClippedSubviews={Platform.OS === "android"}
+      />
     </View>
   );
 }
@@ -907,7 +991,15 @@ function CrownCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string })
   );
 }
 
-function RegularRow({ entry, leaderPoints, viewerId }: { entry: BoardEntry; leaderPoints: number; viewerId: string }) {
+const RegularRow = React.memo(function RegularRow({
+  entry,
+  leaderPoints,
+  viewerId,
+}: {
+  entry: BoardEntry;
+  leaderPoints: number;
+  viewerId: string;
+}) {
   const colors = getAvatarColor(entry.userId);
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
   const pct = leaderPoints > 0 ? Math.min(100, (entry.points / leaderPoints) * 100) : 0;
@@ -950,7 +1042,7 @@ function RegularRow({ entry, leaderPoints, viewerId }: { entry: BoardEntry; lead
       </View>
     </Pressable>
   );
-}
+});
 
 function YourRankCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string }) {
   const colors = getAvatarColor(entry.userId);
@@ -993,6 +1085,7 @@ function YourRankCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  tabShell: { flex: 1 },
   scrollContent: { paddingBottom: 32 },
   screenTitle: {
     fontSize: 26,

@@ -8,6 +8,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
@@ -739,7 +740,14 @@ function TaskCompleteScreenInner() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
       <Stack.Screen options={{ title: taskName, headerBackVisible: true }} />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <FlatList
+        data={[{ key: "task-complete-root" }]}
+        keyExtractor={(item) => item.key}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        renderItem={() => (
+          <View>
         <InlineError message={error} onDismiss={clearError} />
 
         <Text style={styles.screenTitle}>{taskName}</Text>
@@ -1140,7 +1148,9 @@ function TaskCompleteScreenInner() {
             </TouchableOpacity>
           </View>
         )}
-      </ScrollView>
+          </View>
+        )}
+      />
     </SafeAreaView>
   );
 }

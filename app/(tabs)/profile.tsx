@@ -4,11 +4,12 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   RefreshControl,
   TouchableOpacity,
   Pressable,
   Image,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -315,11 +316,11 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.PRIMARY} />}
-        contentContainerStyle={styles.scroll}
-      >
+      <FlatList
+        data={[{ key: "profile-root" }]}
+        keyExtractor={(item) => item.key}
+        renderItem={() => (
+          <View>
         <View style={styles.topBar}>
           <Text style={styles.topBarTitle} accessibilityRole="header">
             Profile
@@ -476,38 +477,47 @@ export default function ProfileScreen() {
             {activeItems.length === 0 ? (
               <Text style={styles.emptyHint}>No active challenges. Discover one to get started.</Text>
             ) : (
-              activeItems.map((item) => {
-                const fillColor = item.progressPercent < 50 ? DS_COLORS.PRIMARY : DS_COLORS.PROFILE_SUCCESS;
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.chCard}
-                    onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
-                    accessibilityLabel={`Open challenge ${item.title}`}
-                    accessibilityRole="button"
-                  >
-                    <View style={styles.chTop}>
-                      <View style={styles.chIconBox}>
-                        <CheckCircle size={18} color={DS_COLORS.PROFILE_STAT_TEAL_ICON} strokeWidth={2} />
+              <FlatList
+                data={activeItems}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                nestedScrollEnabled
+                renderItem={({ item }) => {
+                  const fillColor = item.progressPercent < 50 ? DS_COLORS.PRIMARY : DS_COLORS.PROFILE_SUCCESS;
+                  return (
+                    <TouchableOpacity
+                      style={styles.chCard}
+                      onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
+                      accessibilityLabel={`Open challenge ${item.title}`}
+                      accessibilityRole="button"
+                    >
+                      <View style={styles.chTop}>
+                        <View style={styles.chIconBox}>
+                          <CheckCircle size={18} color={DS_COLORS.PROFILE_STAT_TEAL_ICON} strokeWidth={2} />
+                        </View>
+                        <View style={styles.chMid}>
+                          <Text style={styles.chTitle}>{item.title}</Text>
+                          <Text style={styles.chSub}>
+                            Day {item.currentDay} of {item.durationDays}
+                          </Text>
+                        </View>
+                        <ChevronRight size={16} color={DS_COLORS.PROFILE_TEXT_MUTED} />
                       </View>
-                      <View style={styles.chMid}>
-                        <Text style={styles.chTitle}>{item.title}</Text>
-                        <Text style={styles.chSub}>
-                          Day {item.currentDay} of {item.durationDays}
-                        </Text>
+                      <View style={styles.chTrack}>
+                        <View style={[styles.chFill, { width: `${item.progressPercent}%`, backgroundColor: fillColor }]} />
                       </View>
-                      <ChevronRight size={16} color={DS_COLORS.PROFILE_TEXT_MUTED} />
-                    </View>
-                    <View style={styles.chTrack}>
-                      <View style={[styles.chFill, { width: `${item.progressPercent}%`, backgroundColor: fillColor }]} />
-                    </View>
-                    <View style={styles.chFoot}>
-                      <Text style={styles.chFootTxt}>{item.progressPercent}% complete</Text>
-                      <Text style={styles.chFootTxt}>{item.durationDays} days</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })
+                      <View style={styles.chFoot}>
+                        <Text style={styles.chFootTxt}>{item.progressPercent}% complete</Text>
+                        <Text style={styles.chFootTxt}>{item.durationDays} days</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                initialNumToRender={8}
+                removeClippedSubviews={Platform.OS === "android"}
+              />
             )}
           </View>
         ) : null}
@@ -529,16 +539,25 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
             ) : (
-              (postsQuery.data?.posts ?? []).map((post) => (
-                <FeedPostCard
-                  key={post.id}
-                  post={post}
-                  onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
-                  onRespect={() => void onPostRespect(post)}
-                  onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
-                  onShare={() => {}}
-                />
-              ))
+              <FlatList
+                data={postsQuery.data?.posts ?? []}
+                keyExtractor={(post) => post.id}
+                scrollEnabled={false}
+                nestedScrollEnabled
+                renderItem={({ item: post }) => (
+                  <FeedPostCard
+                    post={post}
+                    onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
+                    onRespect={() => void onPostRespect(post)}
+                    onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
+                    onShare={() => {}}
+                  />
+                )}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                initialNumToRender={8}
+                removeClippedSubviews={Platform.OS === "android"}
+              />
             )}
           </View>
         ) : null}
@@ -550,13 +569,18 @@ export default function ProfileScreen() {
             ) : (
               <>
                 <Text style={styles.secHead}>EARNED ({badgesQuery.data?.earned.length ?? 0})</Text>
-                <View style={styles.badgeGrid}>
-                  {(badgesQuery.data?.earned ?? []).map((b) => {
+                <FlatList
+                  data={badgesQuery.data?.earned ?? []}
+                  keyExtractor={(b) => b.id}
+                  numColumns={3}
+                  scrollEnabled={false}
+                  nestedScrollEnabled
+                  columnWrapperStyle={styles.badgeGridRow}
+                  renderItem={({ item: b }) => {
                     const IconComp = BADGE_ICONS[b.icon] ?? Zap;
                     const accent = badgeAccentFor(b.color);
                     return (
                       <Pressable
-                        key={b.id}
                         style={styles.badgeCard}
                         onPress={() =>
                           setSelectedBadge({
@@ -580,15 +604,24 @@ export default function ProfileScreen() {
                         </Text>
                       </Pressable>
                     );
-                  })}
-                </View>
+                  }}
+                  maxToRenderPerBatch={12}
+                  windowSize={5}
+                  initialNumToRender={12}
+                  removeClippedSubviews={Platform.OS === "android"}
+                />
                 <Text style={[styles.secHead, { marginTop: 20 }]}>NEXT UP ({badgesQuery.data?.next.length ?? 0})</Text>
-                <View style={styles.badgeGrid}>
-                  {(badgesQuery.data?.next ?? []).map((b) => {
+                <FlatList
+                  data={badgesQuery.data?.next ?? []}
+                  keyExtractor={(b) => b.id}
+                  numColumns={3}
+                  scrollEnabled={false}
+                  nestedScrollEnabled
+                  columnWrapperStyle={styles.badgeGridRow}
+                  renderItem={({ item: b }) => {
                     const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
                     return (
                       <Pressable
-                        key={b.id}
                         style={[styles.badgeCard, styles.badgeCardDim]}
                         onPress={() =>
                           setSelectedBadge({
@@ -615,15 +648,24 @@ export default function ProfileScreen() {
                         </View>
                       </Pressable>
                     );
-                  })}
-                </View>
+                  }}
+                  maxToRenderPerBatch={12}
+                  windowSize={5}
+                  initialNumToRender={12}
+                  removeClippedSubviews={Platform.OS === "android"}
+                />
               </>
             )}
           </View>
         ) : null}
 
         <View style={{ height: 32 }} />
-      </ScrollView>
+          </View>
+        )}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.PRIMARY} />}
+        contentContainerStyle={styles.scroll}
+      />
       <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </SafeAreaView>
   );
@@ -788,6 +830,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  badgeGridRow: { gap: 10, marginBottom: 10 },
   badgeCard: {
     width: "31%",
     minWidth: 100,

@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -155,11 +155,14 @@ export default function AccountabilityScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
+      <FlatList
+        data={[{ key: "accountability-root" }]}
+        keyExtractor={(item) => item.key}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
+        renderItem={() => (
+          <View>
         <InlineError message={error} onDismiss={clearError} />
         <View style={styles.countRow}>
           <Text style={styles.countText}>{acceptedCount}/3 partners</Text>
@@ -188,28 +191,38 @@ export default function AccountabilityScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Partners</Text>
             <View style={styles.card}>
-              {list.accepted.map((p) => (
-                <View key={p.id} style={styles.row}>
-                  <View style={styles.rowText}>
-                    <Text style={styles.rowTitle}>{p.partner_display_name || p.partner_username || "Partner"}</Text>
-                    <Text style={styles.rowSub}>@{p.partner_username}</Text>
+              <FlatList
+                data={list.accepted}
+                keyExtractor={(p) => p.id}
+                scrollEnabled={false}
+                nestedScrollEnabled
+                renderItem={({ item: p }) => (
+                  <View style={styles.row}>
+                    <View style={styles.rowText}>
+                      <Text style={styles.rowTitle}>{p.partner_display_name || p.partner_username || "Partner"}</Text>
+                      <Text style={styles.rowSub}>@{p.partner_username}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleRemove(p.partner_id)}
+                      disabled={actingId === p.partner_id}
+                      style={styles.removeBtn}
+                      accessibilityLabel={`Remove ${p.partner_display_name || p.partner_username || "partner"}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: actingId === p.partner_id }}
+                    >
+                      {actingId === p.partner_id ? (
+                        <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
+                      ) : (
+                        <UserMinus size={20} color={DS_COLORS.textSecondary} />
+                      )}
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleRemove(p.partner_id)}
-                    disabled={actingId === p.partner_id}
-                    style={styles.removeBtn}
-                    accessibilityLabel={`Remove ${p.partner_display_name || p.partner_username || "partner"}`}
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: actingId === p.partner_id }}
-                  >
-                    {actingId === p.partner_id ? (
-                      <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
-                    ) : (
-                      <UserMinus size={20} color={DS_COLORS.textSecondary} />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              ))}
+                )}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                initialNumToRender={8}
+                removeClippedSubviews={Platform.OS === "android"}
+              />
             </View>
           </View>
         )}
@@ -218,40 +231,50 @@ export default function AccountabilityScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Incoming invites</Text>
             <View style={styles.card}>
-              {list.incomingPending.map((inv) => (
-                <View key={inv.id} style={styles.row}>
-                  <View style={styles.rowText}>
-                    <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
-                    <Text style={styles.rowSub}>@{inv.username}</Text>
+              <FlatList
+                data={list.incomingPending}
+                keyExtractor={(inv) => inv.id}
+                scrollEnabled={false}
+                nestedScrollEnabled
+                renderItem={({ item: inv }) => (
+                  <View style={styles.row}>
+                    <View style={styles.rowText}>
+                      <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
+                      <Text style={styles.rowSub}>@{inv.username}</Text>
+                    </View>
+                    <View style={styles.actions}>
+                      <TouchableOpacity
+                        onPress={() => handleRespond(inv.id, "accept")}
+                        disabled={actingId === inv.id}
+                        style={[styles.iconBtn, styles.acceptBtn]}
+                        accessibilityLabel={`Accept invite from ${inv.display_name || inv.username}`}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: actingId === inv.id }}
+                      >
+                        {actingId === inv.id ? (
+                          <ActivityIndicator size="small" color={DS_COLORS.white} />
+                        ) : (
+                          <Check size={20} color={DS_COLORS.white} />
+                        )}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleRespond(inv.id, "decline")}
+                        disabled={actingId === inv.id}
+                        style={[styles.iconBtn, styles.declineBtn]}
+                        accessibilityLabel={`Decline invite from ${inv.display_name || inv.username}`}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: actingId === inv.id }}
+                      >
+                        <X size={20} color={DS_COLORS.textPrimary} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={styles.actions}>
-                    <TouchableOpacity
-                      onPress={() => handleRespond(inv.id, "accept")}
-                      disabled={actingId === inv.id}
-                      style={[styles.iconBtn, styles.acceptBtn]}
-                      accessibilityLabel={`Accept invite from ${inv.display_name || inv.username}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: actingId === inv.id }}
-                    >
-                      {actingId === inv.id ? (
-                        <ActivityIndicator size="small" color={DS_COLORS.white} />
-                      ) : (
-                        <Check size={20} color={DS_COLORS.white} />
-                      )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleRespond(inv.id, "decline")}
-                      disabled={actingId === inv.id}
-                      style={[styles.iconBtn, styles.declineBtn]}
-                      accessibilityLabel={`Decline invite from ${inv.display_name || inv.username}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: actingId === inv.id }}
-                    >
-                      <X size={20} color={DS_COLORS.textPrimary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
+                )}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                initialNumToRender={8}
+                removeClippedSubviews={Platform.OS === "android"}
+              />
             </View>
           </View>
         )}
@@ -260,24 +283,34 @@ export default function AccountabilityScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Outgoing invites</Text>
             <View style={styles.card}>
-              {list.outgoingPending.map((inv) => (
-                <View key={inv.id} style={styles.row}>
-                  <View style={styles.rowText}>
-                    <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
-                    <Text style={styles.rowSub}>@{inv.username} · Pending</Text>
+              <FlatList
+                data={list.outgoingPending}
+                keyExtractor={(inv) => inv.id}
+                scrollEnabled={false}
+                nestedScrollEnabled
+                renderItem={({ item: inv }) => (
+                  <View style={styles.row}>
+                    <View style={styles.rowText}>
+                      <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
+                      <Text style={styles.rowSub}>@{inv.username} · Pending</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleCancelOutgoing(inv.partner_id)}
+                      disabled={actingId === inv.partner_id}
+                      style={styles.cancelBtn}
+                      accessibilityLabel={`Cancel invite to ${inv.display_name || inv.username}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: actingId === inv.partner_id }}
+                    >
+                      <Text style={styles.cancelBtnText}>Cancel</Text>
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleCancelOutgoing(inv.partner_id)}
-                    disabled={actingId === inv.partner_id}
-                    style={styles.cancelBtn}
-                    accessibilityLabel={`Cancel invite to ${inv.display_name || inv.username}`}
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: actingId === inv.partner_id }}
-                  >
-                    <Text style={styles.cancelBtnText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                )}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                initialNumToRender={8}
+                removeClippedSubviews={Platform.OS === "android"}
+              />
             </View>
           </View>
         )}
@@ -294,7 +327,11 @@ export default function AccountabilityScreen() {
         </TouchableOpacity>
 
         <View style={styles.bottomSpacer} />
-      </ScrollView>
+          </View>
+        )}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
 
       <ConfirmDialog
         visible={removePartnerId !== null}

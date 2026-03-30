@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
   FlatList,
   RefreshControl,
   TextInput,
@@ -358,17 +357,11 @@ export default function DiscoverScreen() {
   return (
     <ErrorBoundary>
       <SafeAreaView style={{ flex: 1, backgroundColor: DS_COLORS.BG_PAGE }} edges={["top"]}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl
-              refreshing={discoverFeed.isRefetching}
-              onRefresh={() => void discoverFeed.refetch()}
-              tintColor={DS_COLORS.ACCENT}
-            />
-          }
-        >
+        <FlatList
+          data={[{ key: "discover-root" }]}
+          keyExtractor={(item) => item.key}
+          renderItem={() => (
+            <View>
           <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
             <Text style={{ fontSize: 26, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, letterSpacing: -0.5 }}>Discover</Text>
             <Text style={{ fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED, marginTop: 4 }}>
@@ -536,32 +529,41 @@ export default function DiscoverScreen() {
                   >
                     PEOPLE
                   </Text>
-                  {peopleSearch.data.map((u) => (
-                    <Pressable
-                      key={u.user_id}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Open profile for ${u.display_name || u.username}`}
-                      onPress={() => {
-                        void pushRecentSearch(filterQuery);
-                        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
-                      }}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 12,
-                        paddingVertical: 10,
-                        paddingHorizontal: 20,
-                      }}
-                    >
-                      <Avatar url={u.avatar_url} name={u.username} userId={u.user_id} size={38} />
-                      <View>
-                        <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY }}>{u.username}</Text>
-                        <Text style={{ fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 1 }}>
-                          {u.current_streak > 0 ? `${u.current_streak}-day streak` : "Active on GRIIT"}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  ))}
+                  <FlatList
+                    data={peopleSearch.data}
+                    keyExtractor={(u) => u.user_id}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
+                    renderItem={({ item: u }) => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open profile for ${u.display_name || u.username}`}
+                        onPress={() => {
+                          void pushRecentSearch(filterQuery);
+                          router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
+                        }}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 12,
+                          paddingVertical: 10,
+                          paddingHorizontal: 20,
+                        }}
+                      >
+                        <Avatar url={u.avatar_url} name={u.username} userId={u.user_id} size={38} />
+                        <View>
+                          <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY }}>{u.username}</Text>
+                          <Text style={{ fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 1 }}>
+                            {u.current_streak > 0 ? `${u.current_streak}-day streak` : "Active on GRIIT"}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    )}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={8}
+                    removeClippedSubviews={Platform.OS === "android"}
+                  />
                 </>
               ) : null}
 
@@ -585,16 +587,25 @@ export default function DiscoverScreen() {
                     : `No results for "${filterQuery}". Try another name or keyword.`}
                 </Text>
               ) : (
-                filteredChallengesForSearch.map((c) => (
-                  <DiscoverChallengeSearchRow
-                    key={c.id}
-                    challenge={c}
-                    onPress={() => {
-                      void pushRecentSearch(filterQuery);
-                      openChallenge(c.id);
-                    }}
-                  />
-                ))
+                <FlatList
+                  data={filteredChallengesForSearch}
+                  keyExtractor={(c) => c.id}
+                  scrollEnabled={false}
+                  nestedScrollEnabled
+                  renderItem={({ item: c }) => (
+                    <DiscoverChallengeSearchRow
+                      challenge={c}
+                      onPress={() => {
+                        void pushRecentSearch(filterQuery);
+                        openChallenge(c.id);
+                      }}
+                    />
+                  )}
+                  maxToRenderPerBatch={10}
+                  windowSize={5}
+                  initialNumToRender={8}
+                  removeClippedSubviews={Platform.OS === "android"}
+                />
               )}
             </View>
           ) : null}
@@ -680,10 +691,14 @@ export default function DiscoverScreen() {
                       setSearchQuery("solo");
                     }}
                   />
-                  <View style={{ paddingHorizontal: DISCOVER_HPADDING }}>
-                    {soloChallenges.map((c) => (
+                  <FlatList
+                    data={soloChallenges}
+                    keyExtractor={(c) => c.id}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
+                    contentContainerStyle={{ paddingHorizontal: DISCOVER_HPADDING }}
+                    renderItem={({ item: c }) => (
                       <CompactChallengeRow
-                        key={c.id}
                         id={c.id}
                         title={c.title ?? "Challenge"}
                         duration={c.duration_days ?? 7}
@@ -695,8 +710,12 @@ export default function DiscoverScreen() {
                         isTeam={false}
                         onPressIn={() => prefetchChallengeDetail(c.id)}
                       />
-                    ))}
-                  </View>
+                    )}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={8}
+                    removeClippedSubviews={Platform.OS === "android"}
+                  />
                 </>
               ) : null}
 
@@ -710,10 +729,14 @@ export default function DiscoverScreen() {
                       setSearchQuery("Team");
                     }}
                   />
-                  <View style={{ paddingHorizontal: DISCOVER_HPADDING }}>
-                    {teamChallenges.map((c) => (
+                  <FlatList
+                    data={teamChallenges}
+                    keyExtractor={(c) => c.id}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
+                    contentContainerStyle={{ paddingHorizontal: DISCOVER_HPADDING }}
+                    renderItem={({ item: c }) => (
                       <CompactChallengeRow
-                        key={c.id}
                         id={c.id}
                         title={c.title ?? "Challenge"}
                         duration={c.duration_days ?? 7}
@@ -726,18 +749,26 @@ export default function DiscoverScreen() {
                         inviteText={teamInviteCopy(c.participants_count ?? 0, c.team_size)}
                         onPressIn={() => prefetchChallengeDetail(c.id)}
                       />
-                    ))}
-                  </View>
+                    )}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={8}
+                    removeClippedSubviews={Platform.OS === "android"}
+                  />
                 </>
               ) : null}
 
               {newThisWeek.length > 0 ? (
                 <>
                   <SectionHeader title="New this week" />
-                  <View style={{ paddingHorizontal: DISCOVER_HPADDING }}>
-                    {newThisWeek.map((c) => (
+                  <FlatList
+                    data={newThisWeek}
+                    keyExtractor={(c) => c.id}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
+                    contentContainerStyle={{ paddingHorizontal: DISCOVER_HPADDING }}
+                    renderItem={({ item: c }) => (
                       <CompactChallengeRow
-                        key={c.id}
                         id={c.id}
                         title={c.title ?? "Challenge"}
                         duration={c.duration_days ?? 7}
@@ -755,8 +786,12 @@ export default function DiscoverScreen() {
                         }
                         onPressIn={() => prefetchChallengeDetail(c.id)}
                       />
-                    ))}
-                  </View>
+                    )}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={8}
+                    removeClippedSubviews={Platform.OS === "android"}
+                  />
                 </>
               ) : null}
 
@@ -797,7 +832,18 @@ export default function DiscoverScreen() {
               </Pressable>
             </>
           ) : null}
-        </ScrollView>
+            </View>
+          )}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={discoverFeed.isRefetching}
+              onRefresh={() => void discoverFeed.refetch()}
+              tintColor={DS_COLORS.ACCENT}
+            />
+          }
+        />
       </SafeAreaView>
     </ErrorBoundary>
   );
