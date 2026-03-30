@@ -502,7 +502,7 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: activeChallenge, error: acError } = await ctx.supabase
         .from("active_challenges")
-        .select("*, challenges (challenge_tasks (id, task_type, config))")
+        .select("id, current_day, challenges (challenge_tasks (id, task_type, config))")
         .eq("id", input.activeChallengeId)
         .single();
 

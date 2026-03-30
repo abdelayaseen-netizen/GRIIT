@@ -134,7 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     setProfileLoading(true);
     try {
-      const data = await trpcQuery(TRPC.profiles.get);
+      const data = await trpcQuery<ProfileFromApi>(TRPC.profiles.get);
       setProfile(data);
       const subStatus = (data as ProfileFromApi)?.subscription_status;
       const subExpiry = (data as ProfileFromApi)?.subscription_expiry;
@@ -156,17 +156,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchStats = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await trpcQuery(TRPC.profiles.getStats);
+      const data = await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
       setStats(data);
     } catch {
       // Stats fetch failed — non-blocking
     }
   }, [user]);
 
-  const fetchActiveChallenge = useCallback(async (): Promise<unknown> => {
+  const fetchActiveChallenge = useCallback(async (): Promise<ActiveChallengeFromApi | null> => {
     if (!user) return null;
     try {
-      const data = await trpcQuery(TRPC.challenges.getActive);
+      const data = await trpcQuery<ActiveChallengeFromApi | null>(TRPC.challenges.getActive);
       setActiveChallenge(data);
       setActiveChallengeError(false);
       setActiveChallengeLoaded(true);
@@ -181,7 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchStories = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await trpcQuery(TRPC.stories.list);
+      const data = await trpcQuery<unknown[]>(TRPC.stories.list);
       setStories(data || []);
     } catch {
       // Stories fetch failed — non-blocking
@@ -190,7 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const fetchTodayCheckins = useCallback(async (activeChallengeId: string) => {
     try {
-      const data = await trpcQuery(TRPC.checkins.getTodayCheckins, { activeChallengeId });
+      const data = await trpcQuery<TodayCheckinForUser[]>(TRPC.checkins.getTodayCheckins, { activeChallengeId });
       setTodayCheckins(data || []);
     } catch {
       // Today checkins failed — non-blocking
@@ -551,8 +551,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     setTodayCheckins((prev) => [...prev, optimisticCheckin]);
 
-    return trpcMutate(TRPC.checkins.complete, params)
-      .then((data: { id?: string } | undefined) => {
+    return trpcMutate<{ id?: string }>(TRPC.checkins.complete, params)
+      .then((data) => {
         if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
         void fetchActiveChallenge();
         void fetchStats();

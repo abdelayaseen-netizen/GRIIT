@@ -10,7 +10,7 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return token ? { authorization: `Bearer ${token}` } : {};
 }
 
-export async function trpcQuery<T = any>(
+export async function trpcQuery<T = unknown>(
   path: string,
   input?: unknown,
 ): Promise<T> {
@@ -49,7 +49,7 @@ export async function trpcQuery<T = any>(
   return json as T;
 }
 
-export async function trpcMutate<T = any>(
+export async function trpcMutate<T = unknown>(
   path: string,
   input?: unknown,
 ): Promise<T> {

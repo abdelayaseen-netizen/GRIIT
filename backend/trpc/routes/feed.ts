@@ -977,6 +977,24 @@ export const feedRouter = createTRPCRouter({
       if (!server) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
       }
+      type ActivityEventsWriter = {
+        from: (table: "activity_events") => {
+          insert: (row: {
+            user_id: string;
+            event_type: string;
+            challenge_id: string;
+            metadata: Record<string, unknown>;
+          }) => {
+            select: (cols: "id, metadata") => {
+              single: () => Promise<{ data: { id: string; metadata?: Record<string, unknown> } | null; error: { message: string } | null }>;
+            };
+          };
+          update: (row: { metadata: Record<string, unknown> }) => {
+            eq: (col: "id", value: string) => Promise<{ error: { message: string } | null }>;
+          };
+        };
+      };
+      const activityEventsWriter = server as unknown as ActivityEventsWriter;
 
       const { data: existingEvent, error: qErr } = await server
         .from("activity_events")
@@ -1073,7 +1091,7 @@ export const feedRouter = createTRPCRouter({
           location_verified: false,
         };
 
-        const { data: inserted, error: insErr } = await (server as any)
+        const { data: inserted, error: insErr } = await activityEventsWriter
           .from("activity_events")
           .insert({
             user_id: ctx.userId,
@@ -1104,7 +1122,7 @@ export const feedRouter = createTRPCRouter({
         feed_shared: true,
       };
 
-      const { error: uErr } = await (server as any)
+      const { error: uErr } = await activityEventsWriter
         .from("activity_events")
         .update({ metadata: nextMeta })
         .eq("id", eventId);

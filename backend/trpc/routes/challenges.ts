@@ -98,7 +98,10 @@ export const challengesRouter = createTRPCRouter({
 
       let query = ctx.supabase
         .from("challenges")
-        .select("*, challenge_tasks (*)", { count: "exact" })
+        .select(
+          "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, required)",
+          { count: "exact" }
+        )
         .eq("visibility", "PUBLIC")
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);
@@ -145,7 +148,10 @@ export const challengesRouter = createTRPCRouter({
 
       let query = ctx.supabase
         .from("challenges")
-        .select("*, challenge_tasks (*)", { count: "exact" })
+        .select(
+          "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, required)",
+          { count: "exact" }
+        )
         .eq("status", "published")
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);
@@ -190,7 +196,10 @@ export const challengesRouter = createTRPCRouter({
 
     let q = server
       .from("challenges")
-      .select("*, challenge_tasks (*)", { count: "exact" })
+      .select(
+        "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, required)",
+        { count: "exact" }
+      )
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(350);
@@ -458,7 +467,9 @@ export const challengesRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const { data, error } = await ctx.supabase
         .from("challenges")
-        .select("*, challenge_tasks (*)")
+        .select(
+          "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, rules, replay_policy, challenge_tasks (id, title, task_type, order_index, config, required)"
+        )
         .eq("id", input.id)
         .single();
 

@@ -46,7 +46,9 @@ export const startersRouter = createTRPCRouter({
 
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from("challenges")
-        .select("*, challenge_tasks (*)")
+        .select(
+          "id, title, duration_days, duration_type, challenge_tasks (id, title, task_type, order_index, config, required)"
+        )
         .eq("source_starter_id", input.starterId)
         .single();
 
