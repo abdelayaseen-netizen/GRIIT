@@ -17,6 +17,7 @@ import {
   Platform,
   Animated,
   Pressable,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Image } from "expo-image";
 import { useCelebrationStore } from "@/store/celebrationStore";
@@ -555,10 +556,16 @@ function TaskCompleteScreenInner() {
     }
     setShareBusy(true);
     try {
+      const proofForFeed =
+        photoUrl && /^https?:\/\//i.test(photoUrl)
+          ? photoUrl
+          : photoUri && /^https?:\/\//i.test(photoUri)
+            ? photoUri
+            : undefined;
       await trpcMutate(TRPC.feed.shareCompletion, {
         challengeId: challengeIdForFeed,
         caption: postCaption.trim() || undefined,
-        proofPhotoUrl: photoUrl ?? undefined,
+        proofPhotoUrl: proofForFeed,
       });
       setPostedInline(true);
       void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
@@ -568,7 +575,7 @@ function TaskCompleteScreenInner() {
     } finally {
       setShareBusy(false);
     }
-  }, [challengeIdForFeed, postCaption, photoUrl, queryClient]);
+  }, [challengeIdForFeed, postCaption, photoUrl, photoUri, queryClient]);
 
   if (!taskId.trim() || !activeChallengeId.trim()) {
     if (!paramsReady) {
@@ -614,103 +621,117 @@ function TaskCompleteScreenInner() {
           }}
         />
 
-        <View style={celebStyles.wrap}>
-          <Text style={celebStyles.fireEmoji}>🔥</Text>
-          <Text style={celebStyles.title}>Secured.</Text>
-          <Text style={celebStyles.subtitle}>
-            +{celebPoints} points · {taskName}
-          </Text>
-
-          {variableReward ? (
-            <View style={[celebStyles.rewardPill, { backgroundColor: variableReward.bg }]}>
-              <Text style={[celebStyles.rewardText, { color: variableReward.color }]}>{variableReward.label}</Text>
-            </View>
-          ) : null}
-
-          {!postedInline && (
-            <View style={celebStyles.photoSection}>
-              {photoUrl ? (
-                <View style={celebStyles.photoPreview}>
-                  <Image source={{ uri: photoUri || photoUrl }} style={celebStyles.photoImage} />
-                  <TouchableOpacity
-                    style={celebStyles.photoChangeBadge}
-                    onPress={() => {
-                      setPhotoUrl(null);
-                      setPhotoUri(null);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Remove photo"
-                  >
-                    <Text style={celebStyles.photoChangeBadgeText}>Change</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={celebStyles.photoPickerRow}>
-                  <TouchableOpacity
-                    style={celebStyles.photoPickerBtn}
-                    onPress={handleTakePhoto}
-                    disabled={photoUploading}
-                    accessibilityRole="button"
-                    accessibilityLabel="Take a photo"
-                  >
-                    <Camera size={20} color="rgba(255,255,255,0.6)" />
-                    <Text style={celebStyles.photoPickerText}>Take photo</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={celebStyles.photoPickerBtn}
-                    onPress={handlePickImage}
-                    disabled={photoUploading}
-                    accessibilityRole="button"
-                    accessibilityLabel="Choose from gallery"
-                  >
-                    <GalleryIcon size={20} color="rgba(255,255,255,0.6)" />
-                    <Text style={celebStyles.photoPickerText}>Choose photo</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {photoUploading ? (
-                <ActivityIndicator size="small" color={DS_COLORS.WHITE} style={{ marginTop: 8 }} />
-              ) : null}
-            </View>
-          )}
-
-          <Text style={celebStyles.captionLabel}>Add a caption (optional)</Text>
-          <TextInput
-            style={celebStyles.captionInput}
-            placeholder="Just finished my workout 💪"
-            placeholderTextColor="rgba(255,255,255,0.35)"
-            value={postCaption}
-            onChangeText={setPostCaption}
-            maxLength={500}
-            editable={!postedInline}
-          />
-
-          {postedInline ? <Text style={celebStyles.postedOk}>Posted!</Text> : null}
-          {shareFeedErr ? <Text style={celebStyles.postedErr}>{shareFeedErr}</Text> : null}
-
-          <TouchableOpacity
-            style={[celebStyles.shareToFeedBtn, postedInline && { opacity: 0.85 }]}
-            onPress={() => void handleShareToFeed()}
-            disabled={shareBusy || postedInline}
-            accessibilityRole="button"
-            accessibilityLabel="Share to GRIIT feed"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            contentContainerStyle={celebStyles.wrap}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
           >
-            {shareBusy ? (
-              <ActivityIndicator color={DS_COLORS.WHITE} />
-            ) : (
-              <Text style={celebStyles.shareToFeedText}>Post to GRIIT</Text>
+            <Text style={celebStyles.fireEmoji}>🔥</Text>
+            <Text style={celebStyles.title}>Secured.</Text>
+            <Text style={celebStyles.subtitle}>
+              +{celebPoints} points · {taskName}
+            </Text>
+
+            {variableReward ? (
+              <View style={[celebStyles.rewardPill, { backgroundColor: variableReward.bg }]}>
+                <Text style={[celebStyles.rewardText, { color: variableReward.color }]}>{variableReward.label}</Text>
+              </View>
+            ) : null}
+
+            {!postedInline && (
+              <View style={celebStyles.photoSection}>
+                {photoUrl ? (
+                  <View style={celebStyles.photoPreview}>
+                    <Image
+                      source={{ uri: photoUri || photoUrl }}
+                      style={celebStyles.photoImage}
+                      contentFit="contain"
+                      accessibilityLabel="Proof photo"
+                    />
+                    <TouchableOpacity
+                      style={celebStyles.photoChangeBadge}
+                      onPress={() => {
+                        setPhotoUrl(null);
+                        setPhotoUri(null);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Remove photo"
+                    >
+                      <Text style={celebStyles.photoChangeBadgeText}>Change</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={celebStyles.photoPickerRow}>
+                    <TouchableOpacity
+                      style={celebStyles.photoPickerBtn}
+                      onPress={handleTakePhoto}
+                      disabled={photoUploading}
+                      accessibilityRole="button"
+                      accessibilityLabel="Take a photo"
+                    >
+                      <Camera size={20} color="rgba(255,255,255,0.6)" />
+                      <Text style={celebStyles.photoPickerText}>Take photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={celebStyles.photoPickerBtn}
+                      onPress={handlePickImage}
+                      disabled={photoUploading}
+                      accessibilityRole="button"
+                      accessibilityLabel="Choose from gallery"
+                    >
+                      <GalleryIcon size={20} color="rgba(255,255,255,0.6)" />
+                      <Text style={celebStyles.photoPickerText}>Choose photo</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {photoUploading ? (
+                  <ActivityIndicator size="small" color={DS_COLORS.WHITE} style={{ marginTop: 8 }} />
+                ) : null}
+              </View>
             )}
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={celebStyles.doneBtn}
-            onPress={() => goBackOrHome(router)}
-            accessibilityRole="button"
-            accessibilityLabel="Done"
-          >
-            <Text style={celebStyles.doneBtnText}>Skip — go home</Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={celebStyles.captionLabel}>Add a caption (optional)</Text>
+            <TextInput
+              style={celebStyles.captionInput}
+              placeholder="Just finished my workout 💪"
+              placeholderTextColor="rgba(255,255,255,0.35)"
+              value={postCaption}
+              onChangeText={setPostCaption}
+              maxLength={500}
+              editable={!postedInline}
+            />
+
+            {postedInline ? <Text style={celebStyles.postedOk}>Posted!</Text> : null}
+            {shareFeedErr ? <Text style={celebStyles.postedErr}>{shareFeedErr}</Text> : null}
+
+            <TouchableOpacity
+              style={[celebStyles.shareToFeedBtn, postedInline && { opacity: 0.85 }]}
+              onPress={() => void handleShareToFeed()}
+              disabled={shareBusy || postedInline}
+              accessibilityRole="button"
+              accessibilityLabel="Share to GRIIT feed"
+            >
+              {shareBusy ? (
+                <ActivityIndicator color={DS_COLORS.WHITE} />
+              ) : (
+                <Text style={celebStyles.shareToFeedText}>Post to GRIIT</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={celebStyles.doneBtn}
+              onPress={() => goBackOrHome(router)}
+              accessibilityRole="button"
+              accessibilityLabel="Done"
+            >
+              <Text style={celebStyles.doneBtnText}>Skip — go home</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -1315,10 +1336,11 @@ const styles = StyleSheet.create({
 
 const celebStyles = StyleSheet.create({
   wrap: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
+    paddingBottom: 40,
   },
   fireEmoji: { fontSize: 48, marginBottom: 12 },
   title: { fontSize: 28, fontWeight: "700", color: DS_COLORS.WHITE },
@@ -1363,7 +1385,7 @@ const celebStyles = StyleSheet.create({
   },
   photoPreview: {
     width: "100%",
-    height: 160,
+    height: 240,
     borderRadius: 14,
     overflow: "hidden",
     position: "relative",
@@ -1371,6 +1393,7 @@ const celebStyles = StyleSheet.create({
   photoImage: {
     width: "100%",
     height: "100%",
+    backgroundColor: DS_COLORS.CELEB_PHOTO_CONTAIN_BG,
   },
   photoChangeBadge: {
     position: "absolute",

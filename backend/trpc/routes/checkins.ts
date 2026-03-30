@@ -260,6 +260,7 @@ export const checkinsRouter = createTRPCRouter({
         event_type: "task_completed",
         challenge_id,
         metadata: {
+          task_id: input.taskId,
           task_name: taskTitle,
           task_type: taskType,
           challenge_name: challengeTitleForFeed,

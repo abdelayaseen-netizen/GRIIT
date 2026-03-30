@@ -5,6 +5,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure, type Context } from "../create-context";
 import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { getTodayDateKey } from "../../lib/date-utils";
 
 const LIVE_FEED_TYPES = ["task_completed", "completed_challenge", "joined_challenge", "secured_day"] as const;
 
@@ -907,10 +908,86 @@ export const feedRouter = createTRPCRouter({
       if (qErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: qErr.message });
       }
-      if (!ev) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Nothing to share yet." });
+      let evRow = ev as { id: string; metadata?: Record<string, unknown> } | null;
+      if (!evRow) {
+        const dateKey = getTodayDateKey();
+        const { data: acRow } = await server
+          .from("active_challenges")
+          .select("id")
+          .eq("user_id", ctx.userId)
+          .eq("challenge_id", input.challengeId)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+        const activeChallengeId = (acRow as { id?: string } | null)?.id;
+        if (!activeChallengeId) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Nothing to share yet." });
+        }
+        const { data: cin } = await server
+          .from("check_ins")
+          .select("task_id, proof_url, completion_image_url, photo_url, created_at")
+          .eq("active_challenge_id", activeChallengeId)
+          .eq("date_key", dateKey)
+          .eq("status", "completed")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const cinRow = cin as {
+          task_id?: string;
+          proof_url?: string | null;
+          completion_image_url?: string | null;
+          photo_url?: string | null;
+        } | null;
+        if (!cinRow?.task_id) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Nothing to share yet." });
+        }
+        const { data: taskRow } = await server
+          .from("challenge_tasks")
+          .select("title, task_type")
+          .eq("id", cinRow.task_id)
+          .maybeSingle();
+        const t = taskRow as { title?: string; task_type?: string } | null;
+        const { data: chForTitle } = await server.from("challenges").select("title").eq("id", input.challengeId).maybeSingle();
+        const proofFromCheckin =
+          cinRow.proof_url ?? cinRow.completion_image_url ?? cinRow.photo_url ?? null;
+        // Service client is untyped; activity_events row shape matches checkins.complete insert.
+        const sbInsert = server as unknown as {
+          from: (t: string) => {
+            insert: (row: Record<string, unknown>) => {
+              select: (cols: string) => { single: () => Promise<{ data: unknown; error: { message: string } | null }> };
+            };
+          };
+        };
+        const { data: inserted, error: insErr } = await sbInsert
+          .from("activity_events")
+          .insert({
+            user_id: ctx.userId,
+            event_type: "task_completed",
+            challenge_id: input.challengeId,
+            metadata: {
+              task_id: cinRow.task_id,
+              task_name: t?.title ?? "Task",
+              task_type: t?.task_type ?? "manual",
+              challenge_name: (chForTitle as { title?: string } | null)?.title ?? "Challenge",
+              has_photo: !!proofFromCheckin,
+              photo_url: proofFromCheckin,
+              verification_method: "manual",
+              is_hard_mode: false,
+              heart_rate_verified: false,
+              location_verified: false,
+            },
+          })
+          .select("id, metadata")
+          .single();
+        if (insErr || !inserted) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: insErr?.message ?? "Could not create share event.",
+          });
+        }
+        evRow = inserted as { id: string; metadata?: Record<string, unknown> };
       }
-      const prev = (ev as { metadata?: Record<string, unknown> }).metadata ?? {};
+      const prev = evRow.metadata ?? {};
       const nextMeta = {
         ...prev,
         caption: input.caption?.trim() || null,
@@ -922,7 +999,7 @@ export const feedRouter = createTRPCRouter({
           update: (row: { metadata: Record<string, unknown> }) => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> };
         };
       };
-      const { error: uErr } = await sb.from("activity_events").update({ metadata: nextMeta }).eq("id", (ev as { id: string }).id);
+      const { error: uErr } = await sb.from("activity_events").update({ metadata: nextMeta }).eq("id", evRow.id);
       if (uErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: uErr.message });
       }
