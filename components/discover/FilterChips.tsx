@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, Pressable, Text, StyleSheet } from "react-native";
+import { FlatList, Pressable, Text, StyleSheet } from "react-native";
 import { DS_COLORS, DS_RADIUS } from "@/lib/design-system";
 
 export type DiscoverFilterId = "All" | "Easy" | "7 days" | "Physical" | "Mental" | "Spiritual";
@@ -19,14 +19,14 @@ export function FilterChips({ onFilterChange }: FilterChipsProps) {
   };
 
   return (
-    <ScrollView
+    <FlatList
       horizontal
+      data={FILTERS}
+      keyExtractor={(item) => item}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
-    >
-      {FILTERS.map((filter) => (
+      renderItem={({ item: filter }) => (
         <Pressable
-          key={filter}
           onPress={() => handlePress(filter)}
           accessibilityRole="button"
           accessibilityLabel={`Filter by ${filter}`}
@@ -35,8 +35,11 @@ export function FilterChips({ onFilterChange }: FilterChipsProps) {
         >
           <Text style={[styles.chipText, active === filter && styles.chipTextActive]}>{filter}</Text>
         </Pressable>
-      ))}
-    </ScrollView>
+      )}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+      initialNumToRender={6}
+    />
   );
 }
 

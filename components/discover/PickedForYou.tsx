@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
+import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { BookOpen, Flame, Target } from "lucide-react-native";
 import { DS_COLORS, DS_RADIUS, getCategoryColors } from "@/lib/design-system";
@@ -45,16 +45,16 @@ export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) 
         <Text style={styles.sectionTitle}>Picked for you</Text>
         <Text style={styles.sectionSub}>Based on your goals</Text>
       </View>
-      <ScrollView
+      <FlatList
         horizontal
+        data={challenges}
+        keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
-      >
-        {challenges.map((c) => {
+        renderItem={({ item: c }) => {
           const colors = getCategoryColors(String(c.category ?? "discipline").toLowerCase());
           return (
             <Pressable
-              key={c.id}
               onPress={() => router.push(ROUTES.CHALLENGE_ID(c.id) as never)}
               accessibilityRole="button"
               accessibilityLabel={`${c.title}, ${c.duration} days, ${diffLabel(c.difficulty)}, ${c.completionRate} percent finish rate`}
@@ -93,8 +93,11 @@ export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) 
               {c.badgeLabel ? <Text style={styles.earn}>Earns: {c.badgeLabel}</Text> : null}
             </Pressable>
           );
-        })}
-      </ScrollView>
+        }}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={5}
+      />
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, ScrollView, Text, Pressable, Image, StyleSheet } from "react-native";
+import { View, FlatList, Text, Pressable, Image, StyleSheet } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { trpcQuery } from "@/lib/trpc";
@@ -44,10 +44,14 @@ export function ActivityTicker() {
         <View style={styles.liveDot} />
         <Text style={styles.headerText}>Happening now</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {completions.slice(0, 10).map((item) => (
+      <FlatList
+        horizontal
+        data={completions.slice(0, 10)}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        renderItem={({ item }) => (
           <Pressable
-            key={item.id}
             onPress={() => router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
             accessibilityRole="button"
             accessibilityLabel={`${item.userName} completed day ${item.currentDay} of ${item.challengeTitle}, ${timeAgo(item.completedAt)}`}
@@ -69,8 +73,11 @@ export function ActivityTicker() {
               <Text style={styles.time}>{timeAgo(item.completedAt)}</Text>
             </View>
           </Pressable>
-        ))}
-      </ScrollView>
+        )}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
+      />
     </View>
   );
 }
