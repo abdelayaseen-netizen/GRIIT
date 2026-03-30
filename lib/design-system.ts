@@ -127,8 +127,6 @@ export const DS_COLORS = {
 
   // Celebration / share (task complete overlay)
   CELEB_BG: '#050505',
-  /** Letterbox behind proof image when contentFit is contain (task complete celebration) */
-  CELEB_PHOTO_CONTAIN_BG: 'rgba(0,0,0,0.3)',
   CELEB_BONUS_AMBER: '#854F0B',
   CELEB_BONUS_AMBER_BG: '#FAEEDA',
   CELEB_BONUS_GREEN: '#0F6E56',

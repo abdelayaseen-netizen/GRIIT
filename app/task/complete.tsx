@@ -259,7 +259,7 @@ function TaskCompleteScreenInner() {
     }
     const result = await ImagePicker.launchCameraAsync({
       quality: 0.7,
-      allowsEditing: true,
+      allowsEditing: false,
       base64: true,
     });
     if (result.canceled || !result.assets[0]) return;
@@ -293,7 +293,7 @@ function TaskCompleteScreenInner() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       quality: 0.7,
-      allowsEditing: true,
+      allowsEditing: false,
       base64: true,
       mediaTypes: ["images"],
     });
@@ -649,7 +649,7 @@ function TaskCompleteScreenInner() {
                     <Image
                       source={{ uri: photoUri || photoUrl }}
                       style={celebStyles.photoImage}
-                      contentFit="contain"
+                      contentFit="cover"
                       accessibilityLabel="Proof photo"
                     />
                     <TouchableOpacity
@@ -1385,7 +1385,7 @@ const celebStyles = StyleSheet.create({
   },
   photoPreview: {
     width: "100%",
-    height: 240,
+    aspectRatio: 4 / 3,
     borderRadius: 14,
     overflow: "hidden",
     position: "relative",
@@ -1393,7 +1393,6 @@ const celebStyles = StyleSheet.create({
   photoImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: DS_COLORS.CELEB_PHOTO_CONTAIN_BG,
   },
   photoChangeBadge: {
     position: "absolute",
