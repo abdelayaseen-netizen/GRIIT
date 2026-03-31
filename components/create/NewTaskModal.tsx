@@ -67,21 +67,12 @@ function NewTaskTypeCard({
         style,
       ]}
     >
-      <View
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: 10,
-          backgroundColor: selected ? DS_COLORS.FEED_CTA_ICON_BG : DS_COLORS.WARM_CREAM,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text style={{ fontSize: 17 }}>{icon}</Text>
+      <View style={[s.taskIconWrap, { backgroundColor: selected ? DS_COLORS.FEED_CTA_ICON_BG : DS_COLORS.WARM_CREAM }]}>
+        <Text style={s.taskIconText}>{icon}</Text>
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 14, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY }}>{name}</Text>
-        <Text style={{ fontSize: 12, color: DS_COLORS.TEXT_HINT, marginTop: 1 }}>{subtitle}</Text>
+      <View style={s.flex1}>
+        <Text style={s.taskName}>{name}</Text>
+        <Text style={s.taskSubtitle}>{subtitle}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -635,30 +626,18 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
         return (
           <View style={s.configBlock}>
             <Text style={s.label}>Track by</Text>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={s.rowGap8}>
               <TouchableOpacity
                 onPress={() => setRunTracking("distance")}
                 accessibilityRole="button"
                 accessibilityLabel="Track run by distance"
                 accessibilityState={{ selected: runTracking === "distance" }}
-                style={{
-                  flex: 1,
-                  height: 44,
-                  borderRadius: 22,
-                  borderWidth: 1.5,
-                  borderColor: runTracking === "distance" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
-                  backgroundColor: runTracking === "distance" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                style={[
+                  s.selectorPill,
+                  runTracking === "distance" ? s.selectorPillSelected : s.selectorPillIdle,
+                ]}
               >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "500",
-                    color: runTracking === "distance" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
-                  }}
-                >
+                <Text style={[s.selectorPillText, runTracking === "distance" ? s.selectorPillTextSelected : s.selectorPillTextIdle]}>
                   Distance
                 </Text>
               </TouchableOpacity>
@@ -667,24 +646,12 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 accessibilityRole="button"
                 accessibilityLabel="Track run by duration"
                 accessibilityState={{ selected: runTracking === "time" }}
-                style={{
-                  flex: 1,
-                  height: 44,
-                  borderRadius: 22,
-                  borderWidth: 1.5,
-                  borderColor: runTracking === "time" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
-                  backgroundColor: runTracking === "time" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                style={[
+                  s.selectorPill,
+                  runTracking === "time" ? s.selectorPillSelected : s.selectorPillIdle,
+                ]}
               >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "500",
-                    color: runTracking === "time" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
-                  }}
-                >
+                <Text style={[s.selectorPillText, runTracking === "time" ? s.selectorPillTextSelected : s.selectorPillTextIdle]}>
                   Time
                 </Text>
               </TouchableOpacity>
@@ -701,30 +668,18 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   onChangeText={setRunTarget}
                   accessibilityLabel="Target distance"
                 />
-                <View style={{ flexDirection: "row", gap: 8 }}>
+                <View style={s.rowGap8}>
                   <TouchableOpacity
                     onPress={() => setRunUnitDist("miles")}
                     accessibilityRole="button"
                     accessibilityLabel="Use miles for run distance"
                     accessibilityState={{ selected: runUnitDist === "miles" }}
-                    style={{
-                      flex: 1,
-                      height: 44,
-                      borderRadius: 22,
-                      borderWidth: 1.5,
-                      borderColor: runUnitDist === "miles" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
-                      backgroundColor: runUnitDist === "miles" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    style={[
+                      s.selectorPill,
+                      runUnitDist === "miles" ? s.selectorPillSelected : s.selectorPillIdle,
+                    ]}
                   >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "500",
-                        color: runUnitDist === "miles" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
-                      }}
-                    >
+                    <Text style={[s.selectorPillText, runUnitDist === "miles" ? s.selectorPillTextSelected : s.selectorPillTextIdle]}>
                       Miles
                     </Text>
                   </TouchableOpacity>
@@ -733,24 +688,12 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                     accessibilityRole="button"
                     accessibilityLabel="Use kilometers for run distance"
                     accessibilityState={{ selected: runUnitDist === "km" }}
-                    style={{
-                      flex: 1,
-                      height: 44,
-                      borderRadius: 22,
-                      borderWidth: 1.5,
-                      borderColor: runUnitDist === "km" ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
-                      backgroundColor: runUnitDist === "km" ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    style={[
+                      s.selectorPill,
+                      runUnitDist === "km" ? s.selectorPillSelected : s.selectorPillIdle,
+                    ]}
                   >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "500",
-                        color: runUnitDist === "km" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
-                      }}
-                    >
+                    <Text style={[s.selectorPillText, runUnitDist === "km" ? s.selectorPillTextSelected : s.selectorPillTextIdle]}>
                       Km
                     </Text>
                   </TouchableOpacity>
@@ -784,24 +727,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               accessibilityRole="button"
               accessibilityLabel={`Workout type ${label}`}
               accessibilityState={{ selected }}
-              style={{
-                flex: 1,
-                height: 44,
-                borderRadius: 22,
-                borderWidth: 1.5,
-                borderColor: selected ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
-                backgroundColor: selected ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              style={[s.selectorPill, selected ? s.selectorPillSelected : s.selectorPillIdle]}
             >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "500",
-                  color: selected ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
-                }}
-              >
+              <Text style={[s.selectorPillText, selected ? s.selectorPillTextSelected : s.selectorPillTextIdle]}>
                 {label}
               </Text>
             </TouchableOpacity>
@@ -809,19 +737,19 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
         };
         return (
           <View style={s.configBlock}>
-            <Text style={{ fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10 }}>
+            <Text style={s.sectionTitle}>
               Workout type
             </Text>
-            <View style={{ flexDirection: "column", gap: 8, marginBottom: 16 }}>
-              <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={s.colGap8Mb16}>
+              <View style={s.rowGap8}>
                 {workoutPill("General", "general")}
                 {workoutPill("Cardio", "cardio")}
                 {workoutPill("Strength", "strength")}
               </View>
-              <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={s.rowGap8}>
                 {workoutPill("HIIT", "hiit")}
                 {workoutPill("Yoga", "yoga")}
-                <View style={{ flex: 1 }} />
+                <View style={s.flex1} />
               </View>
             </View>
 
@@ -927,25 +855,19 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             onChangeText={setName}
           />
           <Text
-            style={{
-              fontSize: 15,
-              fontWeight: "600",
-              color: DS_COLORS.TEXT_PRIMARY,
-              marginBottom: 10,
-              marginTop: 20,
-            }}
+            style={s.typeSectionTitle}
           >
             What type of task?
           </Text>
-          <View style={{ flexDirection: "column", gap: 8 }}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={s.colGap8}>
+            <View style={s.rowGap8}>
               <NewTaskTypeCard
                 icon="💪"
                 name="Workout"
                 subtitle="Gym, strength, cardio"
                 selected={kind === "workout"}
                 onPress={() => setKind("workout")}
-                style={{ flex: 1 }}
+                style={s.flex1}
               />
               <NewTaskTypeCard
                 icon="🏃"
@@ -953,17 +875,17 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 subtitle="Distance or time"
                 selected={kind === "run"}
                 onPress={() => setKind("run")}
-                style={{ flex: 1 }}
+                style={s.flex1}
               />
             </View>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={s.rowGap8}>
               <NewTaskTypeCard
                 icon="⏱️"
                 name="Timer"
                 subtitle="Meditation, focus"
                 selected={kind === "timer"}
                 onPress={() => setKind("timer")}
-                style={{ flex: 1 }}
+                style={s.flex1}
               />
               <NewTaskTypeCard
                 icon="✓"
@@ -971,7 +893,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 subtitle="Just check it off"
                 selected={kind === "simple"}
                 onPress={() => setKind("simple")}
-                style={{ flex: 1 }}
+                style={s.flex1}
               />
             </View>
           </View>
@@ -979,42 +901,29 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             onPress={() => setShowMoreTypes(!showMoreTypes)}
             accessibilityLabel={showMoreTypes ? "Show fewer task types" : "Show more task types"}
             accessibilityRole="button"
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              paddingVertical: 14,
-            }}
+            style={s.showMoreToggle}
           >
             <Ionicons
               name={showMoreTypes ? "chevron-up" : "chevron-down"}
               size={16}
               color={DS_COLORS.TEXT_SECONDARY}
             />
-            <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY }}>
+            <Text style={s.showMoreText}>
               {showMoreTypes ? "Show less" : "6 more types"}
             </Text>
           </TouchableOpacity>
           {(showMoreTypes || MORE_TASK_TYPES.includes(kind)) && (
             <View
-              style={{
-                flexDirection: "column",
-                gap: 8,
-                paddingTop: 10,
-                borderTopWidth: 1,
-                borderTopColor: DS_COLORS.BORDER,
-                borderStyle: "dashed",
-              }}
+              style={s.moreTypesWrap}
             >
-              <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={s.rowGap8}>
                 <NewTaskTypeCard
                   icon="💧"
                   name="Water"
                   subtitle="Track glasses"
                   selected={kind === "water"}
                   onPress={() => setKind("water")}
-                  style={{ flex: 1 }}
+                  style={s.flex1}
                 />
                 <NewTaskTypeCard
                   icon="📓"
@@ -1022,17 +931,17 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   subtitle="Write, reflect"
                   selected={kind === "journal"}
                   onPress={() => setKind("journal")}
-                  style={{ flex: 1 }}
+                  style={s.flex1}
                 />
               </View>
-              <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={s.rowGap8}>
                 <NewTaskTypeCard
                   icon="📖"
                   name="Reading"
                   subtitle="Pages or time"
                   selected={kind === "reading"}
                   onPress={() => setKind("reading")}
-                  style={{ flex: 1 }}
+                  style={s.flex1}
                 />
                 <NewTaskTypeCard
                   icon="📷"
@@ -1040,17 +949,17 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   subtitle="Proof required"
                   selected={kind === "photo"}
                   onPress={() => setKind("photo")}
-                  style={{ flex: 1 }}
+                  style={s.flex1}
                 />
               </View>
-              <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={s.rowGap8}>
                 <NewTaskTypeCard
                   icon="📍"
                   name="Check-in"
                   subtitle="Location stamp"
                   selected={kind === "checkin"}
                   onPress={() => setKind("checkin")}
-                  style={{ flex: 1 }}
+                  style={s.flex1}
                 />
                 <NewTaskTypeCard
                   icon="#️⃣"
@@ -1058,7 +967,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   subtitle="Reps, sets, count"
                   selected={kind === "counter"}
                   onPress={() => setKind("counter")}
-                  style={{ flex: 1 }}
+                  style={s.flex1}
                 />
               </View>
             </View>
@@ -1220,4 +1129,23 @@ const s = StyleSheet.create({
   timeField: { flex: 1 },
   sublabel: { fontSize: 12, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 4 },
   hint: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 4, marginBottom: 8 },
+  flex1: { flex: 1 },
+  rowGap8: { flexDirection: "row", gap: 8 },
+  colGap8: { flexDirection: "column", gap: 8 },
+  colGap8Mb16: { flexDirection: "column", gap: 8, marginBottom: 16 },
+  selectorPill: { flex: 1, height: 44, borderRadius: 22, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
+  selectorPillSelected: { borderColor: DS_COLORS.PRIMARY, backgroundColor: DS_COLORS.ACCENT_TINT },
+  selectorPillIdle: { borderColor: DS_COLORS.BORDER, backgroundColor: DS_COLORS.CARD_BG },
+  selectorPillText: { fontSize: 14, fontWeight: "500" },
+  selectorPillTextSelected: { color: DS_COLORS.PRIMARY },
+  selectorPillTextIdle: { color: DS_COLORS.TEXT_SECONDARY },
+  sectionTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10 },
+  typeSectionTitle: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10, marginTop: 20 },
+  showMoreToggle: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 14 },
+  showMoreText: { fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
+  moreTypesWrap: { flexDirection: "column", gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: DS_COLORS.BORDER, borderStyle: "dashed" },
+  taskIconWrap: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  taskIconText: { fontSize: 17 },
+  taskName: { fontSize: 14, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  taskSubtitle: { fontSize: 12, color: DS_COLORS.TEXT_HINT, marginTop: 1 },
 });

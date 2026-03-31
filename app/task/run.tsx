@@ -38,6 +38,7 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface GpsPoint {
   lat: number;
@@ -435,6 +436,7 @@ export default function RunTaskScreen() {
   }
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <Celebration visible={showCelebration} onComplete={onCelebrationComplete} />
       <KeyboardAvoidingView 
@@ -843,6 +845,7 @@ export default function RunTaskScreen() {
         onConfirm={confirmModeSwitch}
       />
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

@@ -20,6 +20,7 @@ import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type FollowRow = {
   user_id: string;
@@ -195,6 +196,7 @@ export default function FollowListScreen() {
   );
 
   return (
+    <ErrorBoundary>
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -253,6 +255,7 @@ export default function FollowListScreen() {
         onConfirm={confirmUnfollow}
       />
     </>
+    </ErrorBoundary>
   );
 }
 

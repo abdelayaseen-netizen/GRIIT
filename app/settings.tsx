@@ -42,6 +42,7 @@ import type { StatsFromApi } from "@/types";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const REMINDER_PRESETS = [
   { label: "6:00 AM", value: "06:00" },
@@ -244,6 +245,7 @@ export default function SettingsScreen() {
 
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={[styles.safe, { backgroundColor: DS_COLORS.settingsPageBg }]} edges={["top"]}>
       <View style={[styles.header, { backgroundColor: DS_COLORS.settingsPageBg, borderBottomColor: DS_COLORS.border }]}>
         <TouchableOpacity
@@ -771,6 +773,7 @@ export default function SettingsScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

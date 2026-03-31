@@ -11,6 +11,7 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * Manual / simple task completion: user taps "Mark as Complete" with no proof.
@@ -54,6 +55,7 @@ export default function ManualTaskScreen() {
   };
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.content}>
         <InlineError message={error} onDismiss={clearError} />
@@ -80,6 +82,7 @@ export default function ManualTaskScreen() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

@@ -22,6 +22,7 @@ import { TRPC } from '@/lib/trpc-paths';
 import { DS_COLORS } from '@/lib/design-system';
 import { captureError } from '@/lib/sentry';
 import { ROUTES } from '@/lib/routes';
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -77,6 +78,7 @@ export default function EditProfileScreen() {
   };
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))} style={styles.closeBtn} activeOpacity={0.7} accessibilityLabel="Close and go back" accessibilityRole="button">
@@ -167,6 +169,7 @@ export default function EditProfileScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

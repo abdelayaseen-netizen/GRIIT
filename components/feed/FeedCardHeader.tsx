@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   badgeStreakText: {
-    fontSize: 7,
+    fontSize: 9,
     fontWeight: "700",
     color: DS_COLORS.TEXT_ON_DARK,
   },

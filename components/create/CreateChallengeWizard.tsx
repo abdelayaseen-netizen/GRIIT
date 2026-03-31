@@ -595,7 +595,7 @@ export default function CreateChallengeWizard() {
               <Text style={styles.h1}>What are you building?</Text>
               <Text style={styles.sub}>Most people finish in under 90 seconds.</Text>
               <Text style={styles.fieldLabel}>Challenge name</Text>
-              <Animated.View style={{ transform: [{ translateX: shake }] }}>
+              <Animated.View style={[styles.shakeWrap, { transform: [{ translateX: shake }] }]}>
                 <TextInput
                   style={[styles.input, nameError && styles.inputErr]}
                   placeholder="e.g. 75 Day Hard, Iron Mind..."
@@ -652,8 +652,8 @@ export default function CreateChallengeWizard() {
                 })}
               </View>
               <Text style={[styles.fieldLabel, { marginTop: 16 }]}>How long?</Text>
-              <View style={{ flexDirection: "column", gap: DS_SPACING.SM }}>
-                <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+              <View style={styles.colGapSm}>
+                <View style={styles.rowGapSm}>
                   {DURATION_PRESETS.slice(0, 3).map((d) => (
                     <DurationPill
                       key={d}
@@ -664,11 +664,11 @@ export default function CreateChallengeWizard() {
                         setCustomDur("");
                       }}
                       accessibilityLabel={`${d} day challenge — ${durationDays === d ? "selected" : "tap to select"}`}
-                      style={{ flex: 1 }}
+                      style={styles.flex1}
                     />
                   ))}
                 </View>
-                <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                <View style={styles.rowGapSm}>
                   {DURATION_PRESETS.slice(3, 5).map((d) => (
                     <DurationPill
                       key={d}
@@ -679,7 +679,7 @@ export default function CreateChallengeWizard() {
                         setCustomDur("");
                       }}
                       accessibilityLabel={`${d} day challenge — ${durationDays === d ? "selected" : "tap to select"}`}
-                      style={{ flex: 1 }}
+                      style={styles.flex1}
                     />
                   ))}
                   <DurationPill
@@ -687,7 +687,7 @@ export default function CreateChallengeWizard() {
                     selected={durationDays === null}
                     onPress={() => setDurationDays(null)}
                     accessibilityLabel={`Custom duration — ${durationDays === null ? "selected" : "tap to select"}`}
-                    style={{ flex: 1 }}
+                    style={styles.flex1}
                   />
                 </View>
               </View>
@@ -740,11 +740,11 @@ export default function CreateChallengeWizard() {
               <Text style={styles.h1}>Daily tasks</Text>
               <Text style={styles.sub}>What must get done every single day?</Text>
               <Text style={styles.packsHead}>Quick start packs</Text>
-              <View style={{ flexDirection: "column", gap: 10 }}>
+              <View style={styles.colGap10}>
                 {Array.from({ length: Math.ceil(CHALLENGE_PACKS.length / 2) }, (_, rowIdx) => {
                   const row = CHALLENGE_PACKS.slice(rowIdx * 2, rowIdx * 2 + 2);
                   return (
-                    <View key={row.map((p) => p.id).join("-")} style={{ flexDirection: "row", gap: 10 }}>
+                    <View key={row.map((p) => p.id).join("-")} style={styles.rowGap10}>
                       {row.map((pack) => {
                         const sel = selectedPackId === pack.id;
                         return (
@@ -781,7 +781,7 @@ export default function CreateChallengeWizard() {
                           </TouchableOpacity>
                         );
                       })}
-                      {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
+                      {row.length === 1 ? <View style={styles.flex1} /> : null}
                     </View>
                   );
                 })}
@@ -844,12 +844,12 @@ export default function CreateChallengeWizard() {
                       "Miss a day? Keep going",
                     ] as const
                   ).map((item, i) => (
-                    <View key={i} style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, marginBottom: 4 }}>
+                    <View key={i} style={styles.rowStartGap8Mb4}>
                       <Ionicons
                         name={difficultyMode === "standard" ? "checkmark" : "remove"}
                         size={14}
                         color={difficultyMode === "standard" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_HINT}
-                        style={{ marginTop: 2 }}
+                        style={styles.mt2}
                       />
                       <Text
                         style={{
@@ -878,12 +878,12 @@ export default function CreateChallengeWizard() {
                   {(
                     ["Photo proof every task", "No streak freezes", "Miss a day? Day 1 again"] as const
                   ).map((item, i) => (
-                    <View key={i} style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, marginBottom: 4 }}>
+                    <View key={i} style={styles.rowStartGap8Mb4}>
                       <Ionicons
                         name={difficultyMode === "hard" ? "checkmark" : "remove"}
                         size={14}
                         color={difficultyMode === "hard" ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_HINT}
-                        style={{ marginTop: 2 }}
+                        style={styles.mt2}
                       />
                       <Text
                         style={{
@@ -900,25 +900,14 @@ export default function CreateChallengeWizard() {
                 </TouchableOpacity>
               </View>
               {difficultyMode === "hard" ? (
-                <View
-                  style={{
-                    backgroundColor: DS_COLORS.CREATE_HARD_WARNING_BG,
-                    borderWidth: 1.5,
-                    borderColor: DS_COLORS.CREATE_HARD_WARNING_BORDER,
-                    borderRadius: 14,
-                    paddingVertical: 14,
-                    paddingHorizontal: 16,
-                    marginBottom: 16,
-                    marginTop: 4,
-                  }}
-                >
-                  <Text style={{ fontSize: 14, color: DS_COLORS.CREATE_HARD_WARNING_TEXT, lineHeight: 21 }}>
+                <View style={styles.hardWarningBox}>
+                  <Text style={styles.hardWarningText}>
                     Hard mode requires photo proof on every task. Tasks without it will be updated automatically.
                   </Text>
                 </View>
               ) : null}
               <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Photo proof</Text>
-              <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+              <View style={styles.rowGapSm}>
                 {(
                   [
                     { id: "off" as const, label: "Off" },
@@ -935,7 +924,7 @@ export default function CreateChallengeWizard() {
                       if (!hardLocked) setPhotoProof(p.id);
                     }}
                     accessibilityLabel={`Photo proof ${p.label} — ${photoProof === p.id || (hardLocked && p.id === "required") ? "selected" : "tap to select"}`}
-                    style={{ flex: 1 }}
+                    style={styles.flex1}
                   />
                 ))}
               </View>
@@ -945,8 +934,8 @@ export default function CreateChallengeWizard() {
                 Category <Text style={styles.light}>(select all that apply)</Text>
               </Text>
               <View style={[styles.catPillWrap, catError && styles.catPillWrapErr]}>
-                <View style={{ flexDirection: "column", gap: DS_SPACING.SM }}>
-                  <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                <View style={styles.colGapSm}>
+                  <View style={styles.rowGapSm}>
                     {CATEGORY_OPTIONS.slice(0, 3).map((c) => {
                       const sel = categories.includes(c);
                       return (
@@ -958,12 +947,12 @@ export default function CreateChallengeWizard() {
                             setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
                           }
                           accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
-                          style={{ flex: 1 }}
+                          style={styles.flex1}
                         />
                       );
                     })}
                   </View>
-                  <View style={{ flexDirection: "row", gap: DS_SPACING.SM }}>
+                  <View style={styles.rowGapSm}>
                     {CATEGORY_OPTIONS.slice(3, 5).map((c) => {
                       const sel = categories.includes(c);
                       return (
@@ -975,11 +964,11 @@ export default function CreateChallengeWizard() {
                             setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
                           }
                           accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
-                          style={{ flex: 1 }}
+                          style={styles.flex1}
                         />
                       );
                     })}
-                    <View style={{ flex: 1 }} />
+                    <View style={styles.flex1} />
                   </View>
                 </View>
               </View>
@@ -1033,9 +1022,9 @@ export default function CreateChallengeWizard() {
                 }}
               >
                 <View
-                  style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}
+                  style={styles.rowBetweenStartMb8}
                 >
-                  <View style={{ flex: 1 }}>
+                  <View style={styles.flex1}>
                     <Text
                       style={{
                         fontSize: 24,
@@ -1046,7 +1035,7 @@ export default function CreateChallengeWizard() {
                     >
                       {title.trim() || "Untitled"}
                     </Text>
-                    <Text style={{ fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, marginTop: 4 }}>
+                    <Text style={styles.text14SecondaryMt4}>
                       {who === "solo" ? "Solo" : who === "duo" ? "Duo" : "Squad"} ·{" "}
                       {difficultyMode === "hard" ? "Hard mode" : "Standard"} ·{" "}
                       {challengeType === "one_day" ? 1 : duration} days
@@ -1060,16 +1049,16 @@ export default function CreateChallengeWizard() {
                       borderRadius: 10,
                     }}
                   >
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: DS_COLORS.PRIMARY }}>
+                    <Text style={styles.text13SemiboldPrimary}>
                       {difficultyMode === "hard" ? "Hard" : "Standard"}
                     </Text>
                   </View>
                 </View>
-                <View style={{ marginTop: 12, flexDirection: "column", gap: 6 }}>
+                <View style={styles.mt12ColGap6}>
                   {Array.from({ length: Math.ceil(categories.length / 3) }, (_, rowIdx) => {
                     const row = categories.slice(rowIdx * 3, rowIdx * 3 + 3);
                     return (
-                      <View key={row.join("-")} style={{ flexDirection: "row", gap: 6 }}>
+                      <View key={row.join("-")} style={styles.rowGap6}>
                         {row.map((c) => (
                           <View
                             key={c}
@@ -1082,29 +1071,29 @@ export default function CreateChallengeWizard() {
                               alignItems: "center",
                             }}
                           >
-                            <Text style={{ fontSize: 13, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY }}>
+                            <Text style={styles.text13MediumSecondary}>
                               {c.charAt(0).toUpperCase() + c.slice(1)}
                             </Text>
                           </View>
                         ))}
                         {row.length < 3
-                          ? Array.from({ length: 3 - row.length }, (_, i) => <View key={`sp-${i}`} style={{ flex: 1 }} />)
+                          ? Array.from({ length: 3 - row.length }, (_, i) => <View key={`sp-${i}`} style={styles.flex1} />)
                           : null}
                       </View>
                     );
                   })}
                 </View>
-                <View style={{ height: 1, backgroundColor: DS_COLORS.DIVIDER, marginVertical: 16 }} />
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={styles.dividerMv16} />
+                <View style={styles.rowBetweenCenter}>
                   <View>
-                    <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT }}>Daily commitment</Text>
-                    <Text style={{ fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 }}>
+                    <Text style={styles.text13Hint}>Daily commitment</Text>
+                    <Text style={styles.text18BoldPrimaryMt2}>
                       {estLabel}
                     </Text>
                   </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT }}>Tasks per day</Text>
-                    <Text style={{ fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 }}>
+                  <View style={styles.itemsEnd}>
+                    <Text style={styles.text13Hint}>Tasks per day</Text>
+                    <Text style={styles.text18BoldPrimaryMt2}>
                       {tasks.length}
                     </Text>
                   </View>
@@ -1142,11 +1131,11 @@ export default function CreateChallengeWizard() {
                         justifyContent: "center",
                       }}
                     >
-                      <Text style={{ fontSize: 18 }}>{getTaskIcon(task.wizardType ?? task.type)}</Text>
+                      <Text style={styles.text18}>{getTaskIcon(task.wizardType ?? task.type)}</Text>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY }}>{task.title}</Text>
-                      <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 2 }}>{getTaskMeta(task)}</Text>
+                    <View style={styles.flex1}>
+                      <Text style={styles.text16SemiboldPrimary}>{task.title}</Text>
+                      <Text style={styles.text13HintMt2}>{getTaskMeta(task)}</Text>
                     </View>
                   </View>
                 ))}
@@ -1187,7 +1176,7 @@ export default function CreateChallengeWizard() {
                       borderRightColor: DS_COLORS.BORDER_LIGHT,
                     }}
                   >
-                    <Text style={{ fontSize: 13 }}>{v.icon}</Text>
+                    <Text style={styles.text13}>{v.icon}</Text>
                     <Text
                       style={{
                         fontSize: 14,
@@ -1200,7 +1189,7 @@ export default function CreateChallengeWizard() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <Text style={{ fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 8, lineHeight: 20 }}>
+              <Text style={styles.text13HintMt8Lh20}>
                 {visibility === "PUBLIC" && "Visible on Discover. Anyone can find and join."}
                 {visibility === "FRIENDS" && "Only your friends can see and join."}
                 {visibility === "PRIVATE" && "Private. No one else sees it."}
@@ -1327,23 +1316,10 @@ export default function CreateChallengeWizard() {
               accessibilityLabel="Save as draft"
               accessibilityRole="button"
               accessibilityState={{ disabled: submitting }}
-              style={{
-                width: "100%",
-                height: 48,
-                borderRadius: 24,
-                borderWidth: 1.5,
-                borderColor: DS_COLORS.BORDER,
-                backgroundColor: DS_COLORS.CARD_BG,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                marginTop: 10,
-                opacity: submitting ? 0.6 : 1,
-              }}
+              style={[styles.saveDraftBtn, submitting && styles.saveDraftBtnDisabled]}
             >
               <Ionicons name="bookmark-outline" size={16} color={DS_COLORS.TEXT_SECONDARY} />
-              <Text style={{ fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY }}>Save as draft</Text>
+              <Text style={styles.saveDraftText}>Save as draft</Text>
             </TouchableOpacity>
           </>
         )}
@@ -1682,4 +1658,54 @@ const styles = StyleSheet.create({
     borderColor: DS_COLORS.border,
   },
   draftExitSecondaryTxt: { fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  flex1: { flex: 1 },
+  shakeWrap: {},
+  saveDraftText: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
+  colGapSm: { flexDirection: "column", gap: DS_SPACING.SM },
+  rowGapSm: { flexDirection: "row", gap: DS_SPACING.SM },
+  colGap10: { flexDirection: "column", gap: 10 },
+  rowGap10: { flexDirection: "row", gap: 10 },
+  rowStartGap8Mb4: { flexDirection: "row", alignItems: "flex-start", gap: 8, marginBottom: 4 },
+  mt2: { marginTop: 2 },
+  rowBetweenStartMb8: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
+  text14SecondaryMt4: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, marginTop: 4 },
+  text13SemiboldPrimary: { fontSize: 13, fontWeight: "600", color: DS_COLORS.PRIMARY },
+  mt12ColGap6: { marginTop: 12, flexDirection: "column", gap: 6 },
+  rowGap6: { flexDirection: "row", gap: 6 },
+  text13MediumSecondary: { fontSize: 13, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
+  dividerMv16: { height: 1, backgroundColor: DS_COLORS.DIVIDER, marginVertical: 16 },
+  rowBetweenCenter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  text13Hint: { fontSize: 13, color: DS_COLORS.TEXT_HINT },
+  text18BoldPrimaryMt2: { fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },
+  itemsEnd: { alignItems: "flex-end" },
+  text18: { fontSize: 18 },
+  text16SemiboldPrimary: { fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  text13HintMt2: { fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 2 },
+  text13: { fontSize: 13 },
+  text13HintMt8Lh20: { fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 8, lineHeight: 20 },
+  hardWarningBox: {
+    backgroundColor: DS_COLORS.CREATE_HARD_WARNING_BG,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.CREATE_HARD_WARNING_BORDER,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 4,
+  },
+  hardWarningText: { fontSize: 14, color: DS_COLORS.CREATE_HARD_WARNING_TEXT, lineHeight: 21 },
+  saveDraftBtn: {
+    width: "100%",
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.BORDER,
+    backgroundColor: DS_COLORS.CARD_BG,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 10,
+  },
+  saveDraftBtnDisabled: { opacity: 0.6 },
 });

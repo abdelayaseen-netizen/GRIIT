@@ -45,6 +45,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
 
@@ -315,6 +316,7 @@ export default function ProfileScreen() {
   const avatarUri = (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "";
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <FlatList
         data={[{ key: "profile-root" }]}
@@ -675,6 +677,7 @@ export default function ProfileScreen() {
       />
       <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

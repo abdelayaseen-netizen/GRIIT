@@ -21,6 +21,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { trackEvent } from "@/lib/analytics";
 import { useProStatus } from "@/hooks/useProStatus";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const VALUE_PROPS = [
   { icon: Flame, title: "Unlimited challenges", subtitle: "Join as many as you want" },
@@ -133,6 +134,7 @@ export default function PaywallScreen() {
       : "Cancel anytime.";
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.container} edges={["top"]}>
       <TouchableOpacity
         style={styles.closeButton}
@@ -295,6 +297,7 @@ export default function PaywallScreen() {
         </Text>
       </View>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

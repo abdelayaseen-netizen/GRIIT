@@ -48,6 +48,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
 import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { scheduleStreakReminder } from "@/lib/notifications";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -369,6 +370,7 @@ export default function HomeScreen() {
   }
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={s.container}>
       <FlatList
         ref={scrollRef}
@@ -676,6 +678,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

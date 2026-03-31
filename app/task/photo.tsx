@@ -16,6 +16,7 @@ import { InlineError } from "@/components/InlineError";
 import ProofShareCard from "@/components/ProofShareCard";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const PICKER_OPTIONS = {
   allowsEditing: true,
@@ -140,6 +141,7 @@ export default function PhotoTaskScreen() {
     (stats as { activeStreak?: number } | null)?.activeStreak ?? 0;
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       {showShareCard ? (
         <ProofShareCard
@@ -234,6 +236,7 @@ export default function PhotoTaskScreen() {
         )}
       </View>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

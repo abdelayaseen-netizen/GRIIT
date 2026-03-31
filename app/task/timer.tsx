@@ -17,6 +17,7 @@ import { InlineError } from "@/components/InlineError";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 /** Active challenge as returned by getActive (nested challenges.challenge_tasks in API shape). */
 interface ActiveChallengeWithTasks {
@@ -207,6 +208,7 @@ export default function TimerTaskScreen() {
   };
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>
         <InlineError message={error} onDismiss={clearError} />
@@ -317,6 +319,7 @@ export default function TimerTaskScreen() {
         }}
       />
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

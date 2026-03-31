@@ -32,6 +32,7 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
 type TimeStatus = "too_early" | "window_open" | "too_late";
@@ -422,6 +423,7 @@ export default function CheckinTaskScreen() {
   }
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <Celebration visible={showCelebration} onComplete={onCelebrationComplete} />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -585,6 +587,7 @@ export default function CheckinTaskScreen() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

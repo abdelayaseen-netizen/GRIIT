@@ -1,0 +1,303 @@
+import * as z from "zod";
+import { TRPCError } from "@trpc/server";
+import { publicProcedure, protectedProcedure } from "../create-context";
+import { getSupabaseServer } from "../../lib/supabase-server";
+
+type EvRow = {
+  id: string;
+  user_id: string;
+  event_type: string;
+  challenge_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+export const feedSocialProcedures = {
+  react: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { data: existing } = await ctx.supabase
+        .from("feed_reactions")
+        .select("id")
+        .eq("event_id", input.eventId)
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      let reacted = false;
+      if (existing?.id) {
+        const { error } = await ctx.supabase
+          .from("feed_reactions")
+          .delete()
+          .eq("id", existing.id);
+        if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to remove reaction." });
+      } else {
+        const { error } = await ctx.supabase
+          .from("feed_reactions")
+          .insert({
+            user_id: ctx.userId,
+            event_id: input.eventId,
+            reaction: "fire",
+          });
+        if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to react." });
+        reacted = true;
+      }
+      const { count } = await ctx.supabase
+        .from("feed_reactions")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", input.eventId);
+
+      if (reacted) {
+        const srv = getSupabaseServer();
+        if (srv) {
+          const { data: evRow } = await srv.from("activity_events").select("user_id").eq("id", input.eventId).maybeSingle();
+          const ownerId = (evRow as { user_id?: string } | null)?.user_id;
+          if (ownerId && ownerId !== ctx.userId) {
+            const anySrv = srv as unknown as {
+              from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
+            };
+            const { error: nErr } = await anySrv.from("in_app_notifications").insert({
+              user_id: ownerId,
+              type: "respect",
+              read: false,
+              actor_id: ctx.userId,
+              metadata: { event_id: input.eventId },
+            });
+            if (nErr) console.error("[feed.react] in_app_notifications insert:", nErr);
+          }
+        }
+      }
+
+      return { success: true as const, reacted, reactionCount: count ?? 0 };
+    }),
+
+  getComments: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        limit: z.number().min(1).max(100).default(50),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { data: comments, error } = await ctx.supabase
+        .from("feed_comments")
+        .select("id, event_id, user_id, text, created_at")
+        .eq("event_id", input.eventId)
+        .order("created_at", { ascending: true })
+        .limit(input.limit);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load comments." });
+      }
+      const userIds = [...new Set((comments ?? []).map((c: { user_id: string }) => c.user_id))];
+      const { data: profiles } = userIds.length
+        ? await ctx.supabase
+            .from("profiles")
+            .select("user_id, display_name, username, avatar_url")
+            .in("user_id", userIds)
+        : { data: [] as { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }[] };
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.user_id, p])
+      );
+      return (comments ?? []).map((row) => {
+        const profile = profileMap.get(row.user_id);
+        return {
+          id: row.id,
+          event_id: row.event_id,
+          user_id: row.user_id,
+          text: row.text,
+          created_at: row.created_at,
+          display_name: profile?.display_name ?? profile?.username ?? "Someone",
+          username: profile?.username ?? "?",
+          avatar_url: profile?.avatar_url ?? null,
+        };
+      });
+    }),
+
+  comment: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        text: z.string().min(1).max(200),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { data: inserted, error } = await ctx.supabase.from("feed_comments").insert({
+        user_id: ctx.userId,
+        event_id: input.eventId,
+        text: input.text.trim(),
+      }).select("id, event_id, user_id, text, created_at").single();
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to comment." });
+      }
+      const { data: profile } = await ctx.supabase
+        .from("profiles")
+        .select("display_name, username, avatar_url")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+
+      const srv = getSupabaseServer();
+      if (srv) {
+        const { data: evRow } = await srv.from("activity_events").select("user_id").eq("id", input.eventId).maybeSingle();
+        const ownerId = (evRow as { user_id?: string } | null)?.user_id;
+        if (ownerId && ownerId !== ctx.userId) {
+          const anySrv = srv as unknown as {
+            from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
+          };
+          const { error: nErr } = await anySrv.from("in_app_notifications").insert({
+            user_id: ownerId,
+            type: "comment",
+            read: false,
+            actor_id: ctx.userId,
+            metadata: { event_id: input.eventId, comment_text: input.text.trim().slice(0, 200) },
+          });
+          if (nErr) console.error("[feed.comment] in_app_notifications insert:", nErr);
+        }
+      }
+
+      return {
+        success: true as const,
+        comment: {
+          id: inserted?.id,
+          event_id: inserted?.event_id,
+          user_id: inserted?.user_id,
+          text: inserted?.text,
+          created_at: inserted?.created_at,
+          display_name: profile?.display_name ?? profile?.username ?? "You",
+          username: profile?.username ?? "you",
+          avatar_url: profile?.avatar_url ?? null,
+        },
+      };
+    }),
+
+  deleteComment: protectedProcedure
+    .input(z.object({ commentId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: comment, error: qErr } = await ctx.supabase
+        .from("feed_comments")
+        .select("id, user_id")
+        .eq("id", input.commentId)
+        .maybeSingle();
+      if (qErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: qErr.message || "Failed to load comment." });
+      }
+      if (!comment) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
+      }
+      const row = comment as { id: string; user_id: string };
+      if (row.user_id !== ctx.userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own comments" });
+      }
+      const { error } = await ctx.supabase.from("feed_comments").delete().eq("id", input.commentId);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to delete comment" });
+      }
+      return { deleted: true as const };
+    }),
+
+  /** Remove the viewer's own activity event from the feed (cascades to reactions/comments). */
+  deletePost: protectedProcedure
+    .input(z.object({ eventId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: row, error: qErr } = await ctx.supabase
+        .from("activity_events")
+        .select("user_id")
+        .eq("id", input.eventId)
+        .maybeSingle();
+      if (qErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: qErr.message });
+      }
+      const ownerId = (row as { user_id?: string } | null)?.user_id;
+      if (!ownerId || ownerId !== ctx.userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own posts." });
+      }
+      const { error } = await ctx.supabase.from("activity_events").delete().eq("id", input.eventId).eq("user_id", ctx.userId);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to delete post." });
+      }
+      return { ok: true as const };
+    }),
+
+  /** Attach caption to the latest task_completed activity event (feed). Uses service role for update. */
+  getRecentCompletions: publicProcedure.query(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    const { data: raw, error } = await server
+      .from("activity_events")
+      .select("id, user_id, challenge_id, metadata, created_at")
+      .eq("event_type", "task_completed")
+      .order("created_at", { ascending: false })
+      .limit(45);
+    if (error) {
+      console.error("[feed.getRecentCompletions] query failed:", error.message);
+      return [];
+    }
+    const events = (raw ?? []) as EvRow[];
+    const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((x): x is string => !!x))];
+    if (challengeIds.length === 0) return [];
+
+    const { data: chRows } = await server.from("challenges").select("id, title, visibility").in("id", challengeIds);
+    const publicIds = new Set(
+      (chRows ?? [])
+        .filter((c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() === "PUBLIC")
+        .map((c: { id: string }) => c.id)
+    );
+    const chTitle = new Map((chRows ?? []).map((c: { id: string; title?: string | null }) => [c.id, c.title ?? ""]));
+
+    const userIds = [...new Set(events.map((e) => e.user_id))];
+    const { data: profRows } = await server
+      .from("profiles")
+      .select("user_id, display_name, username, avatar_url")
+      .in("user_id", userIds);
+    const profMap = new Map(
+      (profRows ?? []).map((p: { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }) => [
+        p.user_id,
+        p,
+      ])
+    );
+
+    const picked: EvRow[] = [];
+    for (const ev of events) {
+      if (!ev.challenge_id || !publicIds.has(ev.challenge_id)) continue;
+      picked.push(ev);
+      if (picked.length >= 15) break;
+    }
+    if (picked.length === 0) return [];
+
+    const pairs = picked.map((e) => ({ uid: e.user_id, cid: e.challenge_id as string }));
+    const cids = [...new Set(pairs.map((p) => p.cid))];
+    const uids = [...new Set(pairs.map((p) => p.uid))];
+    const { data: acRows } = await server
+      .from("active_challenges")
+      .select("user_id, challenge_id, current_day")
+      .in("challenge_id", cids)
+      .in("user_id", uids)
+      .eq("status", "active");
+    const dayMap = new Map<string, number>();
+    for (const r of acRows ?? []) {
+      const row = r as { user_id: string; challenge_id: string; current_day?: number | null };
+      dayMap.set(`${row.user_id}:${row.challenge_id}`, row.current_day ?? 1);
+    }
+
+    return picked.map((ev) => {
+      const meta = ev.metadata ?? {};
+      const p = profMap.get(ev.user_id);
+      const titleFromMeta = typeof meta.challenge_name === "string" ? meta.challenge_name.trim() : "";
+      const challengeTitle = titleFromMeta || chTitle.get(ev.challenge_id as string) || "a challenge";
+      const day =
+        typeof meta.current_day === "number"
+          ? meta.current_day
+          : dayMap.get(`${ev.user_id}:${ev.challenge_id}`) ?? 1;
+      return {
+        id: ev.id,
+        completedAt: ev.created_at,
+        userName: (p?.display_name?.trim() || p?.username || "Someone") as string,
+        avatarUrl: p?.avatar_url ?? null,
+        challengeTitle,
+        challengeId: ev.challenge_id as string,
+        currentDay: day,
+      };
+    });
+  }),
+
+};

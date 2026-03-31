@@ -28,6 +28,7 @@ import LoadingState from "@/components/shared/LoadingState";
 import { SkeletonLeaderboardRow } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type MainTab = "notifications" | "leaderboard";
 type LeaderScope = "global" | "friends" | "challenge";
@@ -228,6 +229,7 @@ export default function ActivityScreen() {
   );
 
   return (
+    <ErrorBoundary>
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.tabShell}>
         {mainTab === "notifications" ? (
@@ -261,6 +263,7 @@ export default function ActivityScreen() {
         )}
       </View>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

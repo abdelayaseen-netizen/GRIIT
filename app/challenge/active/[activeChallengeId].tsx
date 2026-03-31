@@ -35,6 +35,7 @@ import { captureError } from "@/lib/sentry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type TaskRow = {
   id: string;
@@ -278,6 +279,7 @@ export default function ActiveChallengeDetailScreen() {
   }
 
   return (
+    <ErrorBoundary>
     <View style={s.container}>
       <Stack.Screen options={{ headerShown: false }} />
       {/* SECTION 1 — HEADER (fixed, ~42%) */}
@@ -475,6 +477,7 @@ export default function ActiveChallengeDetailScreen() {
         onConfirm={() => void confirmLeaveChallenge()}
       />
     </View>
+    </ErrorBoundary>
   );
 }
 

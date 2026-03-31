@@ -42,6 +42,7 @@ import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 import { journalScreenStyles as s } from "@/components/task/journalScreenStyles";
 import { submitJournalEntry } from "@/hooks/useJournalSubmit";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const JOURNAL_CATEGORY_LABELS: Record<JournalCategory, string> = {
   self_reflection: "Self-reflection",
@@ -300,6 +301,7 @@ export default function JournalTaskScreen() {
   }
 
   return (
+    <ErrorBoundary>
     <View style={s.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View style={[s.flex, { opacity: fadeAnim }]}>
@@ -603,5 +605,6 @@ export default function JournalTaskScreen() {
         </Pressable>
       </Modal>
     </View>
+    </ErrorBoundary>
   );
 }

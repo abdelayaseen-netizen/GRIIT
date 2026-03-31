@@ -75,6 +75,7 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { SkeletonChallengeDetail } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
 import { ChallengeHero } from "@/components/challenge/ChallengeHero";
 import { ChallengeStats } from "@/components/challenge/ChallengeStats";
@@ -1044,6 +1045,7 @@ export default function ChallengeDetailScreen() {
   ];
 
   return (
+    <ErrorBoundary>
     <View style={[s.container, { backgroundColor: GRIIT_COLORS.background }]}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
@@ -1485,6 +1487,7 @@ export default function ChallengeDetailScreen() {
         onConfirm={() => void confirmLeaveChallenge()}
       />
     </View>
+    </ErrorBoundary>
   );
 }
 
