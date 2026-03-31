@@ -99,7 +99,7 @@ export const challengesRouter = createTRPCRouter({
       let query = ctx.supabase
         .from("challenges")
         .select(
-          "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, required)",
+          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config)",
           { count: "exact" }
         )
         .eq("visibility", "PUBLIC")
@@ -111,10 +111,15 @@ export const challengesRouter = createTRPCRouter({
 
       const { data, error, count } = await query;
       requireNoError(error, "Failed to load challenges.");
-      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => ({
-        ...challenge,
-        tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
-      }));
+      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => {
+        const meta = (challenge as { metadata?: Record<string, unknown> }).metadata;
+        const short_hook = typeof meta?.short_hook === "string" ? meta.short_hook : null;
+        return {
+          ...challenge,
+          short_hook,
+          tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
+        };
+      });
       const nextOffset = safeOffset + items.length;
       const hasMore = count != null && nextOffset < count;
       const withCursor = { items, nextCursor: hasMore ? String(nextOffset) : undefined };
@@ -149,7 +154,7 @@ export const challengesRouter = createTRPCRouter({
       let query = ctx.supabase
         .from("challenges")
         .select(
-          "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, required)",
+          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config)",
           { count: "exact" }
         )
         .eq("status", "published")
@@ -175,9 +180,12 @@ export const challengesRouter = createTRPCRouter({
       const { data, error, count } = await query;
       requireNoError(error, "Failed to load featured challenges.");
       const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => {
+        const meta = (challenge as { metadata?: Record<string, unknown> }).metadata;
+        const short_hook = typeof meta?.short_hook === "string" ? meta.short_hook : null;
         const normalized = with24hEndsAt(challenge as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & ChallengeWithTasksRow);
         return {
           ...normalized,
+          short_hook,
           tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
         };
       });
@@ -197,7 +205,7 @@ export const challengesRouter = createTRPCRouter({
     let q = server
       .from("challenges")
       .select(
-        "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, required)",
+        "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config)",
         { count: "exact" }
       )
       .eq("status", "published")
@@ -291,12 +299,15 @@ export const challengesRouter = createTRPCRouter({
     }
 
     const items = (chRows ?? []).map((challenge: ChallengeWithTasksRow) => {
+      const meta = (challenge as { metadata?: Record<string, unknown> }).metadata;
+      const short_hook = typeof meta?.short_hook === "string" ? meta.short_hook : null;
       const normalized = with24hEndsAt(
         challenge as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & ChallengeWithTasksRow
       );
       const id = normalized.id;
       return {
         ...normalized,
+        short_hook,
         tasks: mapTaskRowsToApi((challenge.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
         recent_joins_7d: recent7.get(id) ?? 0,
         joins_today: todayMap.get(id) ?? 0,
@@ -468,7 +479,7 @@ export const challengesRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from("challenges")
         .select(
-          "id, title, description, short_hook, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, rules, replay_policy, challenge_tasks (id, title, task_type, order_index, config, required)"
+          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, challenge_tasks (id, title, task_type, order_index, config)"
         )
         .eq("id", input.id)
         .single();
@@ -594,8 +605,11 @@ export const challengesRouter = createTRPCRouter({
       }
 
       const normalized = with24hEndsAt(data as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & typeof data);
+      const meta = (data as { metadata?: Record<string, unknown> }).metadata;
+      const short_hook = typeof meta?.short_hook === "string" ? meta.short_hook : null;
       return {
         ...normalized,
+        short_hook,
         tasks: mapTaskRowsToApi((data.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
         ...(isTeam ? { teamMembers } : {}),
         ...(participationType === "shared_goal" ? { sharedGoalTotal } : {}),

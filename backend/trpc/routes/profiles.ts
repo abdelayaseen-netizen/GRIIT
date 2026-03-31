@@ -72,14 +72,24 @@ export const profilesRouter = createTRPCRouter({
 
   /** Public profile by username (for deep link /profile/[username]). Uses service client so RLS does not block reads. */
   getPublicByUsername: publicProcedure
-    .input(z.object({ username: z.string().min(1).max(64) }))
+    .input(z.object({ username: z.string().min(1).max(100) }))
     .query(async ({ input, ctx }) => {
       const server = getSupabaseServer() ?? ctx.supabase;
-      const { data: profile, error: profileError } = await server
-        .from("profiles")
-        .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
-        .eq("username", input.username.trim())
-        .maybeSingle();
+      const trimmed = input.username.trim();
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed);
+      const profileQuery = isUuid
+        ? server
+            .from("profiles")
+            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
+            .eq("user_id", trimmed)
+            .maybeSingle()
+        : server
+            .from("profiles")
+            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
+            .eq("username", trimmed)
+            .maybeSingle();
+      const { data: profile, error: profileError } = await profileQuery;
       if (profileError) {
         const { logger } = await import("../../lib/logger");
         logger.error({ error: profileError, username: input.username }, "[profiles.getPublicByUsername]");

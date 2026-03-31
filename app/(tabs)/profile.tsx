@@ -322,9 +322,7 @@ export default function ProfileScreen() {
         renderItem={() => (
           <View>
         <View style={styles.topBar}>
-          <Text style={styles.topBarTitle} accessibilityRole="header">
-            Profile
-          </Text>
+          <View style={{ width: 22 }} />
           <TouchableOpacity
             onPress={() => router.push(ROUTES.SETTINGS as never)}
             accessibilityLabel="Open settings"
@@ -350,13 +348,17 @@ export default function ProfileScreen() {
               accessibilityRole="button"
             >
               {avatarUri ? (
-                <Image
-                  source={{ uri: avatarUri }}
-                  style={styles.avatarImage}
-                  accessibilityIgnoresInvertColors
-                />
+                <View pointerEvents="none">
+                  <Image
+                    source={{ uri: avatarUri }}
+                    style={styles.avatarImage}
+                    accessibilityIgnoresInvertColors
+                  />
+                </View>
               ) : (
-                <Avatar url={null} name={primaryLine} userId={user.id} size={80} />
+                <View pointerEvents="none">
+                  <Avatar url={null} name={primaryLine} userId={user.id} size={80} />
+                </View>
               )}
               <View style={styles.cameraBadge}>
                 {uploading ? (
@@ -379,29 +381,27 @@ export default function ProfileScreen() {
             <Text style={[styles.bio, !profile.bio?.trim() && styles.bioPlaceholder]}>
               {profile.bio?.trim() ? profile.bio : "Add a bio…"}
             </Text>
+            <View style={styles.followInline}>
+              <TouchableOpacity
+                style={styles.followInlineBtn}
+                onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
+                accessibilityLabel="View followers"
+                accessibilityRole="button"
+              >
+                <Text style={styles.followInlineNum}>{fc?.followers ?? 0}</Text>
+                <Text style={styles.followInlineLbl}> followers</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.followInlineBtn}
+                onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
+                accessibilityLabel="View following"
+                accessibilityRole="button"
+              >
+                <Text style={styles.followInlineNum}>{fc?.following ?? 0}</Text>
+                <Text style={styles.followInlineLbl}> following</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-
-        <View style={styles.followMeta}>
-          <TouchableOpacity
-            style={styles.followMetaInner}
-            onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
-            accessibilityLabel="View followers"
-            accessibilityRole="button"
-          >
-            <Text style={styles.followNum}>{fc?.followers ?? 0}</Text>
-            <Text style={styles.followLbl}> followers</Text>
-          </TouchableOpacity>
-          <Text style={styles.followDot}> · </Text>
-          <TouchableOpacity
-            style={styles.followMetaInner}
-            onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
-            accessibilityLabel="View following"
-            accessibilityRole="button"
-          >
-            <Text style={styles.followNum}>{fc?.following ?? 0}</Text>
-            <Text style={styles.followLbl}> following</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.actionRow}>
@@ -414,44 +414,51 @@ export default function ProfileScreen() {
             <Text style={styles.btnOutlineText}>Edit profile</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.btnGhost}
+            style={styles.btnShareCompact}
             onPress={() => void handleShare()}
             accessibilityLabel="Share profile"
             accessibilityRole="button"
           >
-            <Share2 size={14} color={DS_COLORS.PROFILE_TEXT_SECONDARY} strokeWidth={2} />
-            <Text style={styles.btnGhostText}> Share</Text>
+            <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_SECONDARY} strokeWidth={2} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_CORAL_BG }]}>
+        <View style={styles.statsGrid}>
+          <View style={styles.statGridCard}>
+            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_CORAL_BG }]}>
               <Zap size={14} color={DS_COLORS.PROFILE_STAT_CORAL_ICON} strokeWidth={2} />
             </View>
-            <Text style={styles.statNum}>{streak}</Text>
-            <Text style={styles.statLbl}>streak</Text>
+            <View>
+              <Text style={styles.statGridNum}>{streak}</Text>
+              <Text style={styles.statGridLbl}>day streak</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_AMBER_BG }]}>
+          <View style={styles.statGridCard}>
+            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_AMBER_BG }]}>
               <Star size={14} color={DS_COLORS.PROFILE_STAT_AMBER_ICON} strokeWidth={2} />
             </View>
-            <Text style={styles.statNum}>{best}</Text>
-            <Text style={styles.statLbl}>best</Text>
+            <View>
+              <Text style={styles.statGridNum}>{best}</Text>
+              <Text style={styles.statGridLbl}>best streak</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_TEAL_BG }]}>
+          <View style={styles.statGridCard}>
+            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_TEAL_BG }]}>
               <Clock size={14} color={DS_COLORS.PROFILE_STAT_TEAL_ICON} strokeWidth={2} />
             </View>
-            <Text style={styles.statNum}>{active}</Text>
-            <Text style={styles.statLbl}>active</Text>
+            <View>
+              <Text style={styles.statGridNum}>{active}</Text>
+              <Text style={styles.statGridLbl}>active</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_BLUE_BG }]}>
+          <View style={styles.statGridCard}>
+            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_BLUE_BG }]}>
               <Check size={14} color={DS_COLORS.PROFILE_STAT_BLUE_ICON} strokeWidth={2} />
             </View>
-            <Text style={styles.statNum}>{done}</Text>
-            <Text style={styles.statLbl}>done</Text>
+            <View>
+              <Text style={styles.statGridNum}>{done}</Text>
+              <Text style={styles.statGridLbl}>completed</Text>
+            </View>
           </View>
         </View>
 
@@ -680,12 +687,11 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 12,
+    paddingBottom: 4,
   },
-  topBarTitle: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   avatarErrorBanner: {
     marginHorizontal: 20,
     marginBottom: 10,
@@ -728,19 +734,11 @@ const styles = StyleSheet.create({
   joined: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
   bio: { marginTop: 8, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, lineHeight: 18 },
   bioPlaceholder: { fontStyle: "italic" },
-  followMeta: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 16,
-    marginBottom: 14,
-    paddingHorizontal: 20,
-  },
-  followMetaInner: { flexDirection: "row", alignItems: "baseline" },
-  followNum: { fontSize: 16, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
-  followLbl: { fontSize: 14, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
-  followDot: { fontSize: 14, color: DS_COLORS.PROFILE_BORDER_ALT },
-  actionRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 18 },
+  followInline: { flexDirection: "row", gap: 14, marginTop: 8 },
+  followInlineBtn: { flexDirection: "row", alignItems: "baseline" },
+  followInlineNum: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
+  followInlineLbl: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+  actionRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginTop: 14, marginBottom: 14 },
   btnOutline: {
     flex: 1,
     borderRadius: 28,
@@ -752,9 +750,8 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.BG_CARD,
   },
   btnOutlineText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PRIMARY },
-  btnGhost: {
-    flex: 1,
-    flexDirection: "row",
+  btnShareCompact: {
+    width: 44,
     borderRadius: 28,
     borderWidth: 1.5,
     borderColor: DS_COLORS.PROFILE_BORDER_ALT,
@@ -763,25 +760,32 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: DS_COLORS.BG_CARD,
   },
-  btnGhostText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
-  statsRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 20 },
-  statCard: {
-    flex: 1,
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: "center",
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
-  statIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  statGridCard: {
+    width: "48%",
+    flexGrow: 1,
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  statGridIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 6,
   },
-  statNum: { fontSize: 24, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, lineHeight: 28 },
-  statLbl: { fontSize: 11, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED, marginTop: 4, textTransform: "lowercase" },
+  statGridNum: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, lineHeight: 22 },
+  statGridLbl: { fontSize: 10, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
   tabsBar: {
     flexDirection: "row",
     marginHorizontal: 20,
@@ -793,13 +797,13 @@ const styles = StyleSheet.create({
   tabTxt: { fontSize: 13 },
   tabTxtOn: { fontWeight: "500", color: DS_COLORS.PRIMARY },
   tabTxtOff: { fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
-  tabPad: { paddingHorizontal: 20, paddingTop: 14, gap: 10 },
+  tabPad: { paddingHorizontal: 20, paddingTop: 14, gap: 12 },
   emptyHint: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, textAlign: "center", paddingVertical: 16 },
   chCard: {
     backgroundColor: DS_COLORS.BG_CARD,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 2,
+    marginBottom: 0,
   },
   chTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   chIconBox: {

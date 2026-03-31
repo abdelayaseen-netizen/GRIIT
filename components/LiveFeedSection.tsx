@@ -203,9 +203,11 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
         return;
       }
       const u = post.username?.trim();
-      if (!u || u === "?" || u === "Someone" || u.length < 2) return;
-      if (/^user_[0-9a-f]+$/i.test(u)) return;
-      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+      if (u && u !== "?" && u !== "Someone" && u.length >= 2 && !/^user_[0-9a-f]+$/i.test(u)) {
+        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+      } else if (post.userId) {
+        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(post.userId)) as never);
+      }
     },
     [router, user?.id]
   );

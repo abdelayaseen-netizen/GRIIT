@@ -1019,7 +1019,10 @@ export const feedRouter = createTRPCRouter({
         eventId = ev.id;
         prevMeta = ev.metadata ?? {};
       } else {
-        const dateKey = getTodayDateKey();
+        const todayKey = getTodayDateKey();
+        const yesterday = new Date();
+        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+        const yesterdayKey = yesterday.toISOString().slice(0, 10);
 
         const { data: acRow } = await server
           .from("active_challenges")
@@ -1043,7 +1046,7 @@ export const feedRouter = createTRPCRouter({
           .from("check_ins")
           .select("task_id, proof_url, completion_image_url, photo_url, created_at")
           .eq("active_challenge_id", activeChallengeId)
-          .eq("date_key", dateKey)
+          .in("date_key", [todayKey, yesterdayKey])
           .eq("status", "completed")
           .order("created_at", { ascending: false })
           .limit(1)

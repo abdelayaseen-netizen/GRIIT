@@ -650,7 +650,7 @@ function TaskCompleteScreenInner() {
                     <Image
                       source={{ uri: photoUri || photoUrl }}
                       style={celebStyles.photoImage}
-                      contentFit="cover"
+                      contentFit="contain"
                       accessibilityLabel="Proof photo"
                     />
                     <TouchableOpacity
@@ -1395,10 +1395,11 @@ const celebStyles = StyleSheet.create({
   },
   photoPreview: {
     width: "100%",
-    aspectRatio: 16 / 9,
+    aspectRatio: 3 / 4,
     borderRadius: 14,
     overflow: "hidden",
     position: "relative",
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   photoImage: {
     width: "100%",

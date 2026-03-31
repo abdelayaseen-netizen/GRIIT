@@ -7,7 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "griit",
     "linking": {
-      "prefixes": ["griit://", "https://griit.app/", "https://griit.fit/"]
+      "prefixes": [
+        "griit://",
+        "https://griit.app/",
+        "https://griit.fit/"
+      ]
     },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -24,7 +28,8 @@
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
         "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
         "NSLocationWhenInUseUsageDescription": "GRIIT uses your location to verify outdoor activities like runs and walks.",
-        "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience."
+        "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -70,12 +75,19 @@
           "project": "griit",
           "organization": "your-org-slug"
         }
-      ],
-      "react-native-purchases"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "tsconfigPaths": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://griit.fit"
+      },
+      "eas": {
+        "projectId": "7399b54a-e0d6-47b9-80f4-862d585fb1ca"
+      }
     }
   }
 }

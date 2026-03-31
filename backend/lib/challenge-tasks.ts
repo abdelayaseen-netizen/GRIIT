@@ -96,11 +96,14 @@ export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Ch
   const ruleJson = config.verification_rule_json as { min_avg_bpm?: number } | undefined;
   const hrFromConfig = config.verification_method === "heart_rate";
   const locFromConfig = config.require_location === true;
+  const cfg = config as Record<string, unknown>;
+  const required =
+    typeof row.config === "object" && row.config !== null ? cfg.required !== false : true;
   return {
     id: row.id,
     title: row.title ?? null,
     type,
-    required: config.required ?? true,
+    required,
     duration_minutes: r.min_duration_minutes ?? config.duration_minutes ?? null,
     min_words: config.min_words ?? null,
     photo_required: config.photo_required ?? false,
@@ -150,7 +153,8 @@ export function mapTaskRowsToApi(rows: ChallengeTaskRowRaw[] | null | undefined)
 export function isTaskRequired(row: ChallengeTaskRowRaw | null | undefined): boolean {
   if (!row) return false;
   const config = row.config ?? {};
-  return config.required ?? true;
+  const cfg = config as Record<string, unknown>;
+  return typeof row.config === "object" && row.config !== null ? cfg.required !== false : true;
 }
 
 /** Get task type for verification (timer, journal, etc.). */
