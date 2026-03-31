@@ -121,7 +121,6 @@ export default function PhotoTaskScreen() {
       }
       setShowShareCard(true);
     } catch (error: unknown) {
-      if (__DEV__) console.error("[PhotoTask] submit failed:", error);
       captureError(error, { screen: "task/photo", taskId });
       showError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {

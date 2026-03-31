@@ -134,7 +134,6 @@ export default function JournalTaskScreen() {
           if (parsed.bodyState) setBodyState(parsed.bodyState);
         } catch (e) {
           captureError(e, "JournalTaskParseDraft");
-          if (__DEV__) console.error("[JournalTask] parse draft failed:", e);
         }
       }
       setDraftLoaded(true);
@@ -147,7 +146,6 @@ export default function JournalTaskScreen() {
       const draft = JSON.stringify({ entryText, mood, energy, bodyState });
       AsyncStorage.setItem(draftKey, draft).catch((e) => {
         captureError(e, "JournalTaskSaveDraft");
-        if (__DEV__) console.error("[JournalTask] save draft failed:", e);
       });
     }, 3000);
     return () => {

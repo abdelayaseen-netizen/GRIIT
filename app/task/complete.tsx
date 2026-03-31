@@ -49,6 +49,8 @@ import { captureError } from "@/lib/sentry";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useQueryClient } from "@tanstack/react-query";
+import { shareToInstagramStory } from "@/lib/share";
+import { trackEvent } from "@/lib/analytics";
 
 const JOURNAL_PROMPTS = [
   "What did you learn about yourself today?",
@@ -278,7 +280,6 @@ function TaskCompleteScreenInner() {
       }
     } catch (err) {
       captureError(err, "TaskCompleteCameraUpload");
-      console.error("[TaskComplete] camera upload failed:", err);
       showError("Upload failed. Please try again.");
       setPhotoUri(null);
     } finally {
@@ -313,7 +314,6 @@ function TaskCompleteScreenInner() {
       }
     } catch (err) {
       captureError(err, "TaskCompleteGalleryUpload");
-      console.error("[TaskComplete] gallery upload failed:", err);
       showError("Upload failed. Please try again.");
       setPhotoUri(null);
     } finally {
@@ -332,7 +332,6 @@ function TaskCompleteScreenInner() {
       setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
     } catch (err) {
       captureError(err, "TaskCompleteGetCurrentPosition");
-      console.error("[TaskComplete] getCurrentPosition failed:", err);
       showError("Could not get your location. Please try again.");
     }
   }, [showError]);
@@ -491,7 +490,6 @@ function TaskCompleteScreenInner() {
       }
     } catch (err: unknown) {
       captureError(err, "TaskCompleteCompleteTask");
-      console.error("[TaskComplete] completeTask failed:", err);
       showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -722,6 +720,27 @@ function TaskCompleteScreenInner() {
                 <Text style={celebStyles.shareToFeedText}>Post to GRIIT</Text>
               )}
             </TouchableOpacity>
+
+            {(photoUrl || photoUri) ? (
+              <TouchableOpacity
+                style={celebStyles.shareStoriesBtn}
+                onPress={async () => {
+                  if (!photoUrl && !photoUri) return;
+                  const imageUri = photoUri || photoUrl || "";
+                  try {
+                    await shareToInstagramStory(imageUri);
+                    trackEvent("share_completed", { content_type: "instagram_story_celebration" });
+                  } catch (e) {
+                    captureError(e, "CelebrationShareStory");
+                  }
+                }}
+                disabled={!photoUrl && !photoUri}
+                accessibilityRole="button"
+                accessibilityLabel="Share proof to Instagram Stories"
+              >
+                <Text style={celebStyles.shareStoriesBtnText}>Share to Stories</Text>
+              </TouchableOpacity>
+            ) : null}
 
             <TouchableOpacity
               style={celebStyles.doneBtn}
@@ -1471,4 +1490,19 @@ const celebStyles = StyleSheet.create({
     marginTop: 8,
   },
   shareToFeedText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.WHITE },
+  shareStoriesBtn: {
+    marginTop: 10,
+    alignSelf: "stretch",
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.OVERLAY_WHITE_15,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shareStoriesBtnText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS.TEXT_ON_DARK_60,
+  },
 });

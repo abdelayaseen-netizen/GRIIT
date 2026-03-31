@@ -88,7 +88,6 @@ export default function LoginScreen() {
         router.replace(ROUTES.TABS as never);
       }
     } catch (e) {
-      if (__DEV__) console.error("[Login] email sign-in failed:", e);
       captureError(e, { flow: "login_email" });
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -142,7 +141,6 @@ export default function LoginScreen() {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
       }
-      if (__DEV__) console.error("[Login] Apple sign-in failed:", e);
       captureError(e, { flow: "login_apple" });
       setFormError(e instanceof Error ? e.message : "Sign in failed.");
     } finally {
@@ -156,7 +154,6 @@ export default function LoginScreen() {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
       if (error) setFormError(error.message);
     } catch (e) {
-      if (__DEV__) console.error("[Login] Google OAuth failed:", e);
       captureError(e, { flow: "login_google_oauth" });
       setFormError(e instanceof Error ? e.message : "Sign in failed.");
     }

@@ -168,6 +168,7 @@ export const challengesJoinProcedures = {
           .update({ last_left_at: new Date().toISOString() })
           .eq("user_id", ctx.userId)
           .then(() => {});
+        console.info(`[challenges.leave] user ${ctx.userId} left challenge ${input.challengeId}`);
         return { left: true };
       }
 
@@ -179,6 +180,7 @@ export const challengesJoinProcedures = {
       if (memberErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
       }
+      console.info(`[challenges.leave] user ${ctx.userId} left challenge ${input.challengeId}`);
       return { left: true };
     }),
 

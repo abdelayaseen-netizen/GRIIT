@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform } from "react-native";
+import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
@@ -26,6 +27,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
+import { trackEvent } from "@/lib/analytics";
 
 initialiseSentry();
 
@@ -411,6 +413,16 @@ function RootLayout() {
     }, SPLASH_MAX_MS);
     return () => clearTimeout(t);
   }, [fontsLoaded]);
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const rawType = (response.notification.request.content.data as Record<string, unknown> | undefined)?.type;
+      trackEvent("notification_opened", {
+        notification_type: typeof rawType === "string" ? rawType : "unknown",
+      });
+    });
+    return () => sub.remove();
+  }, []);
 
   if (!fontsLoaded) {
     return null;

@@ -7,6 +7,7 @@ import {
   profileDeepLink,
 } from "@/lib/deep-links";
 import { DEEP_LINK_BASE_URL, APP_STORE_URLS } from "@/lib/config";
+import { trackEvent } from "@/lib/analytics";
 
 const APP_STORE_URL = Platform.select(APP_STORE_URLS);
 
@@ -134,6 +135,7 @@ export async function shareProgressImage(imageUri: string, message: string): Pro
     const available = await Sharing.isAvailableAsync();
     if (available) {
       await Sharing.shareAsync(imageUri, { mimeType: "image/png", dialogTitle: "Share your progress" });
+      trackEvent("share_completed", { content_type: "proof_image" });
     } else {
       await shareOrCopy(message, "GRIIT");
     }
@@ -156,6 +158,7 @@ export async function shareToInstagramStory(imageUri: string): Promise<void> {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
+      trackEvent("share_completed", { content_type: "instagram_story" });
     } else {
       const available = await Sharing.isAvailableAsync();
       if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });

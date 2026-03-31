@@ -569,7 +569,7 @@ export default function ChallengeDetailScreen() {
   useEffect(() => {
     if (!ref || !currentUserId || !id) return;
     trpcMutate(TRPC.referrals.recordOpen, { referrerUserId: ref, challengeId: id }).catch((e) => {
-      console.error("[ChallengeDetail] recordOpen failed:", e);
+      captureError(e, "ChallengeDetailRecordOpen");
     });
   }, [ref, currentUserId, id]);
 
@@ -626,7 +626,6 @@ export default function ChallengeDetailScreen() {
       setSharedRecentLogs(Array.isArray(logs) ? logs : []);
     } catch (error) {
       captureError(error, "ChallengeDetailFetchSharedGoalData");
-      console.error("[ChallengeDetail] fetchSharedGoalData failed:", error);
       setSharedContributions([]);
       setSharedRecentLogs([]);
     } finally {
@@ -704,7 +703,7 @@ export default function ChallengeDetailScreen() {
       await trpcMutate(TRPC.challenges.join, { challengeId: id });
 
       void trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id }).catch((refErr: unknown) => {
-        console.error("[ChallengeDetail] markJoinedChallenge failed:", refErr);
+        captureError(refErr, "ChallengeDetailMarkJoinedChallenge");
       });
 
       setShowCommitmentModal(false);
@@ -715,7 +714,6 @@ export default function ChallengeDetailScreen() {
 
       void refetchAll().catch((e: unknown) => {
         captureError(e, "ChallengeDetailRefetchAfterJoin");
-        console.error("[ChallengeDetail] refetchAll after join failed:", e);
       });
       void queryClient.invalidateQueries({ queryKey: ["home"] });
       void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
@@ -723,7 +721,6 @@ export default function ChallengeDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       void myActiveListQuery.refetch();
     } catch (err: unknown) {
-      if (__DEV__) console.error("[ChallengeDetail] join failed:", err);
       captureError(err, { flow: "challenge_join", challengeId: id });
       const msg = err instanceof Error ? err.message : "";
       const code = (err as { data?: { code?: string } })?.data?.code;
@@ -849,7 +846,6 @@ export default function ChallengeDetailScreen() {
       const message = (error as Error)?.message ?? "";
       if (message !== "User did not share") {
         captureError(error, "ChallengeDetailShare");
-        console.error("[ChallengeDetail] Share failed:", error);
         showError("Couldn't open share options right now. Please try again.");
       }
     }
@@ -885,7 +881,6 @@ export default function ChallengeDetailScreen() {
       .then((conn: unknown) => setStravaConnected(!!conn))
       .catch((err) => {
         captureError(err, "ChallengeDetailGetStravaConnection");
-        console.error("[ChallengeDetail] getStravaConnection failed:", err);
         setStravaConnected(false);
       });
   }, [isThisActiveChallenge, hasStravaTasks]);
@@ -915,6 +910,7 @@ export default function ChallengeDetailScreen() {
     setLeaveConfirmVisible(false);
     try {
       await leaveMutation.mutateAsync({ challengeId: id });
+      trackEvent("challenge_abandoned", { challenge_id: id, day: userCurrentDay });
       await refetchAll();
       await refetchTodayCheckins();
       router.replace(ROUTES.TABS_DISCOVER as never);
@@ -923,7 +919,7 @@ export default function ChallengeDetailScreen() {
       const { title, message } = formatTRPCError(e);
       showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
     }
-  }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router, showError]);
+  }, [id, leavePending, leaveMutation, refetchAll, refetchTodayCheckins, router, showError, userCurrentDay]);
 
   const difficulty = (challenge?.difficulty || "medium") as string;
 
@@ -1100,7 +1096,7 @@ export default function ChallengeDetailScreen() {
                 },
                 currentUserId
               ).catch((e) => {
-                console.error("[ChallengeDetail] shareChallenge failed:", e);
+                captureError(e, "ChallengeDetailShareChallenge");
                 showError("Couldn't open share options right now. Please try again.");
               });
             }}
@@ -1235,7 +1231,6 @@ export default function ChallengeDetailScreen() {
                           await refetchTodayCheckins();
                         } catch (e) {
                           captureError(e, "ChallengeDetailVerifyStravaTask");
-                          console.error("[ChallengeDetail] verifyStravaTask failed:", e);
                           showError("No matching Strava activity found for today.");
                         } finally {
                           setStravaVerifyPending(null);

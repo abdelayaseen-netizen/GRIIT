@@ -182,7 +182,6 @@ export default function ActiveChallengeDetailScreen() {
       router.replace(ROUTES.TABS_HOME as never);
     } catch (err) {
       captureError(err, "ActiveChallengeLeaveChallenge");
-      if (__DEV__) console.error("[ActiveChallengeDetail] leave failed:", err);
       showLeaveError("Something went wrong. Please try again.");
     }
   }, [challengeId, queryClient, router, showLeaveError]);

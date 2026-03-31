@@ -85,7 +85,7 @@ export default function CreateProfileScreen() {
         if (profile?.display_name) setDisplayName(profile.display_name);
       } catch (e) {
         if (!cancelled) {
-          console.error("[CreateProfile] checkProfile failed:", e);
+          captureError(e, "CreateProfileCheckProfile");
           router.replace(ROUTES.AUTH_LOGIN as never);
         }
       } finally {
@@ -135,7 +135,6 @@ export default function CreateProfileScreen() {
       router.replace(ROUTES.TABS as never);
     } catch (e) {
       captureError(e, "CreateProfileSave");
-      console.error("[CreateProfile] save failed:", e);
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setSaving(false);

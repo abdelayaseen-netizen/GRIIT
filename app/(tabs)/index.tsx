@@ -119,7 +119,6 @@ function buildTaskConfigParam(task: ChallengeTaskFromApi | undefined): string {
     });
   } catch (err) {
     captureError(err, "HomeBuildTaskConfigParam");
-    console.error("[Home] buildTaskConfigParam failed:", err);
     return "{}";
   }
 }
@@ -166,15 +165,15 @@ export default function HomeScreen() {
       const activeRaw =
         settled[0].status === "fulfilled"
           ? settled[0].value
-          : (console.error("[Home] listMyActive failed:", settled[0].reason), []);
+          : (captureError(settled[0].reason, "HomeListMyActive"), []);
       const checkinsRaw =
         settled[1].status === "fulfilled"
           ? settled[1].value
-          : (console.error("[Home] getTodayCheckinsForUser failed:", settled[1].reason), []);
+          : (captureError(settled[1].reason, "HomeGetTodayCheckinsForUser"), []);
       const securedRaw =
         settled[2].status === "fulfilled"
           ? settled[2].value
-          : (console.error("[Home] getSecuredDateKeys failed:", settled[2].reason), []);
+          : (captureError(settled[2].reason, "HomeGetSecuredDateKeys"), []);
       const activeList = (Array.isArray(activeRaw) ? activeRaw : []) as ActiveRow[];
       const todayCheckins = Array.isArray(checkinsRaw) ? checkinsRaw : [];
       const securedDateKeys = Array.isArray(securedRaw) ? securedRaw : [];
@@ -331,7 +330,6 @@ export default function HomeScreen() {
       void refetchAll();
     } catch (err) {
       captureError(err, "HomeLeaveChallenge");
-      console.error("[Home] leave challenge failed:", err);
       const msg =
         err instanceof Error ? err.message : "Could not leave this challenge. Try again.";
       setLeaveChallengeError(msg);

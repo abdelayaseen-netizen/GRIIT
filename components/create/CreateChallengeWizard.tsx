@@ -259,7 +259,6 @@ export default function CreateChallengeWizard() {
         if (raw) setResumeBanner(true);
       } catch (e) {
         captureError(e, "CreateChallengeWizardDraftRead");
-        console.error("[CreateChallengeWizard] draft read failed:", e);
       }
     })();
   }, []);
@@ -370,7 +369,6 @@ export default function CreateChallengeWizard() {
       await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftPayload()));
     } catch (e) {
       captureError(e, "CreateChallengeWizardSaveDraft");
-      if (__DEV__) console.error("[CreateChallengeWizard] save draft failed:", e);
     }
     router.back();
   }, [draftPayload, router]);
@@ -410,7 +408,6 @@ export default function CreateChallengeWizard() {
       setResumeBanner(false);
     } catch (e) {
       captureError(e, "CreateChallengeWizardResumeDraft");
-      if (__DEV__) console.error("[CreateChallengeWizard] resume draft failed:", e);
     }
   }, []);
 

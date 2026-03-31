@@ -26,7 +26,7 @@ import { deriveUserRank } from '@/lib/derive-user-rank';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
 import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
-import { setSentryUser } from '@/lib/sentry';
+import { setSentryUser, captureError } from '@/lib/sentry';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 import { showGoalCelebration } from '@/store/celebrationStore';
 import { useProofSharePromptStore } from '@/store/proofSharePromptStore';
@@ -553,6 +553,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     return trpcMutate<{ id?: string }>(TRPC.checkins.complete, params)
       .then((data) => {
+        const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
+        if (currentDay === 7) {
+          trackEvent("day_7_retained", { challenge_id: (activeChallenge as { challenge_id?: string } | null)?.challenge_id });
+        }
+        if (currentDay === 3) {
+          trackEvent("day_3_retained", { challenge_id: (activeChallenge as { challenge_id?: string } | null)?.challenge_id });
+        }
         if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
         void fetchActiveChallenge();
         void fetchStats();
@@ -575,7 +582,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .catch((err: unknown) => {
         setTodayCheckins(previousCheckins);
         const msg = err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
-        console.error("[AppContext] completeTask failed:", msg, err);
+        captureError(err, "AppContextCompleteTask");
         throw new Error(msg);
       });
   }, [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats, queryClient, user?.id]);

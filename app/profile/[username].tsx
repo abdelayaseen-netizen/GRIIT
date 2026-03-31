@@ -35,6 +35,7 @@ import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { captureError } from "@/lib/sentry";
+import { trackEvent } from "@/lib/analytics";
 
 type PublicProfile = {
   user_id: string;
@@ -112,6 +113,14 @@ export default function PublicProfileScreen() {
   const isError = profileQuery.isError;
 
   const profileUserId = profile?.user_id ?? "";
+  const profileViewTracked = useRef(false);
+
+  useEffect(() => {
+    if (profile && !profileViewTracked.current && user?.id && profile.user_id !== user.id) {
+      profileViewTracked.current = true;
+      trackEvent("profile_viewed", { viewed_user_id: profile.user_id });
+    }
+  }, [profile, user?.id]);
 
   const followCountsQuery = useQuery({
     queryKey: ["publicProfile", profileUserId, "followCounts"],

@@ -48,7 +48,6 @@ export default function AccountabilityScreen() {
       setData(result ?? { accepted: [], incomingPending: [], outgoingPending: [] });
     } catch (e) {
       captureError(e, "AccountabilityLoad");
-      if (__DEV__) console.error("[accountability] load failed:", e);
       setLoadError(true);
     } finally {
       setLoading(false);

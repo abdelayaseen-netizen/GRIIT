@@ -29,6 +29,7 @@ import SectionHeader from "@/components/shared/SectionHeader";
 import { ROUTES } from "@/lib/routes";
 import { useDebounce } from "@/hooks/useDebounce";
 import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
+import { trackEvent } from "@/lib/analytics";
 import {
   DiscoverMiniChallengeCard,
   DiscoverChallengeSearchRow,
@@ -313,6 +314,7 @@ export default function DiscoverScreen() {
     (id: string) => {
       if (!id) return;
       if (typeof Haptics.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      trackEvent("discover_challenge_tapped", { challenge_id: id });
       router.push(ROUTES.CHALLENGE_ID(id) as never);
     },
     [router]

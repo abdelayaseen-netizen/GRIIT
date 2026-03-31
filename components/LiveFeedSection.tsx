@@ -28,6 +28,7 @@ import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
 import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
 import { Avatar } from "@/components/Avatar";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
+import { trackEvent } from "@/lib/analytics";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -93,6 +94,15 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
     return post.userId !== arr[i - 1]?.userId;
   });
   const finalFeed = diverseFeed.slice(0, 20);
+  const feedViewTracked = useRef(false);
+
+  useEffect(() => {
+    const postCount = feedQuery.data?.posts?.length ?? 0;
+    if (postCount > 0 && !feedViewTracked.current) {
+      feedViewTracked.current = true;
+      trackEvent("feed_viewed", { post_count: postCount });
+    }
+  }, [feedQuery.data?.posts?.length]);
   const activeChallengesCount = Array.isArray(myActiveQuery.data) ? myActiveQuery.data.length : 0;
 
   const postsWithComments = useMemo(() => finalFeed.filter((p) => p.commentCount > 0), [finalFeed]);
@@ -173,7 +183,6 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
         }));
       } catch (e) {
         captureError(e, "LiveFeedRespect");
-        console.error("[LiveFeedSection] respect failed", e);
         updatePost(post.id, (p) => ({ ...p, reactedByMe: prevR, respectCount: prevC }));
       }
     },
@@ -191,7 +200,6 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
       const msg = (err as Error)?.message ?? "";
       if (msg !== "User did not share") {
         captureError(err, "LiveFeedShare");
-        console.error("[LiveFeedSection] share failed", err);
       }
     }
   }, []);
