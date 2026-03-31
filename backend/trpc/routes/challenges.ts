@@ -476,7 +476,8 @@ export const challengesRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const { data, error } = await ctx.supabase
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const { data, error } = await server
         .from("challenges")
         .select(
           "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, challenge_tasks (id, title, task_type, order_index, config)"

@@ -100,7 +100,7 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
 });
 
 const s = StyleSheet.create({
-  card: { borderRadius: 20, backgroundColor: DS_COLORS.DISCOVER_HERO_DARK_BG, overflow: "hidden", marginTop: 18 },
+  card: { borderRadius: 20, backgroundColor: DS_COLORS.DISCOVER_HERO_DARK_BG, overflow: "hidden", marginTop: 24 },
   glowBottom: { position: "absolute", bottom: -20, right: -20, width: 160, height: 160, borderRadius: 80, backgroundColor: "rgba(232,89,60,0.25)" },
   glowTop: { position: "absolute", top: -10, left: -10, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(232,137,58,0.1)" },
   content: { paddingHorizontal: 22, paddingVertical: 22 },

@@ -1,17 +1,18 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type ViewStyle } from "react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 type Props = {
   title: string;
   actionLabel?: string;
   onPressAction?: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-export default function SectionHeader({ title, actionLabel, onPressAction }: Props) {
+export default function SectionHeader({ title, actionLabel, onPressAction, style }: Props) {
   const seeAllLabel = `See all ${title}`;
   return (
-    <View style={s.row}>
+    <View style={[s.row, style]}>
       <Text style={s.title}>{title}</Text>
       {actionLabel && onPressAction ? (
         <TouchableOpacity

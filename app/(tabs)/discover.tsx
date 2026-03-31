@@ -26,7 +26,6 @@ import { SkeletonHeroCard, SkeletonChallengeCard } from "@/components/skeletons"
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { ROUTES } from "@/lib/routes";
-import { DISCOVER_HPADDING } from "@/styles/discover-styles";
 import { useDebounce } from "@/hooks/useDebounce";
 import { HeroFeaturedCard } from "@/components/challenges/HeroFeaturedCard";
 import {
@@ -105,11 +104,6 @@ function toCompactDifficulty(d?: string | null): "EASY" | "MED" | "HARD" {
   return "MED";
 }
 
-function completionRateHeuristic(c: DiscoverChallenge): number {
-  const p = c.participants_count ?? 0;
-  return Math.min(96, 42 + Math.round(Math.log10(p + 1) * 22));
-}
-
 function badgeForDiscoverChallenge(c: DiscoverChallenge): string | undefined {
   const t = (c.title ?? "").toLowerCase();
   if (t.includes("gratitude") && t.includes("journal")) return "Grateful Heart";
@@ -123,14 +117,6 @@ function badgeForDiscoverChallenge(c: DiscoverChallenge): string | undefined {
   if (t.includes("social media") || t.includes("no phone")) return "Unplugged";
   if (t.includes("step") || t.includes("10k") || t.includes("walk")) return "Road Warrior";
   return undefined;
-}
-
-function teamInviteCopy(participants: number, teamSize?: number): string {
-  const max = Math.max(2, teamSize ?? 4);
-  if (participants >= max) return "Full — waitlist";
-  const need = max - participants;
-  if (participants === 0) return `Looking for ${need} more`;
-  return `Needs ${need} more`;
 }
 
 function teamSizeLabel(teamSize?: number): string {
@@ -201,7 +187,9 @@ export default function DiscoverScreen() {
     queryKey: ["discover", "recommended"],
     queryFn: () =>
       trpcQuery(TRPC.challenges.getRecommended) as Promise<{
-        challenges: Omit<PickedChallenge, "badgeLabel">[];
+        challenges: Array<
+          Omit<PickedChallenge, "badgeLabel"> & { completionRate?: number }
+        >;
       }>,
     staleTime: 60 * 1000,
   });
@@ -229,10 +217,13 @@ export default function DiscoverScreen() {
 
   const pickedForYouData: PickedChallenge[] = useMemo(() => {
     const rows = recommendedQuery.data?.challenges ?? [];
-    return rows.map((r) => ({
-      ...r,
-      badgeLabel: badgeForDiscoverChallenge({ title: r.title } as DiscoverChallenge),
-    }));
+    return rows.map((r) => {
+      const { completionRate: _omit, ...rest } = r;
+      return {
+        ...rest,
+        badgeLabel: badgeForDiscoverChallenge({ title: r.title } as DiscoverChallenge),
+      };
+    });
   }, [recommendedQuery.data?.challenges]);
 
   const trendingHero = useMemo(() => {
@@ -665,6 +656,7 @@ export default function DiscoverScreen() {
                       setSearchFocused(true);
                       setSearchQuery("24h");
                     }}
+                    style={{ marginTop: 24 }}
                   />
                   <FlatList
                     horizontal
@@ -690,32 +682,42 @@ export default function DiscoverScreen() {
                       setSearchFocused(true);
                       setSearchQuery("solo");
                     }}
+                    style={{ marginTop: 24 }}
                   />
-                  <FlatList
-                    data={soloChallenges}
-                    keyExtractor={(c) => c.id}
-                    scrollEnabled={false}
-                    nestedScrollEnabled
-                    contentContainerStyle={{ paddingHorizontal: DISCOVER_HPADDING }}
-                    renderItem={({ item: c }) => (
-                      <CompactChallengeRow
-                        id={c.id}
-                        title={c.title ?? "Challenge"}
-                        duration={c.duration_days ?? 7}
-                        difficulty={toCompactDifficulty(c.difficulty)}
-                        participantCount={c.participants_count ?? 0}
-                        completionRate={completionRateHeuristic(c)}
-                        badgeName={badgeForDiscoverChallenge(c)}
-                        category={c.category ?? undefined}
-                        isTeam={false}
-                        onPressIn={() => prefetchChallengeDetail(c.id)}
-                      />
-                    )}
-                    maxToRenderPerBatch={10}
-                    windowSize={5}
-                    initialNumToRender={8}
-                    removeClippedSubviews={Platform.OS === "android"}
-                  />
+                  <View
+                    style={{
+                      marginHorizontal: 16,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      backgroundColor: DS_COLORS.BORDER,
+                    }}
+                  >
+                    <FlatList
+                      data={soloChallenges}
+                      keyExtractor={(c) => c.id}
+                      scrollEnabled={false}
+                      nestedScrollEnabled
+                      ItemSeparatorComponent={() => (
+                        <View style={{ height: 1, backgroundColor: DS_COLORS.BORDER }} />
+                      )}
+                      renderItem={({ item: c }) => (
+                        <CompactChallengeRow
+                          id={c.id}
+                          title={c.title ?? "Challenge"}
+                          duration={c.duration_days ?? 7}
+                          difficulty={toCompactDifficulty(c.difficulty)}
+                          participantCount={c.participants_count ?? 0}
+                          category={c.category ?? undefined}
+                          isTeam={false}
+                          onPressIn={() => prefetchChallengeDetail(c.id)}
+                        />
+                      )}
+                      maxToRenderPerBatch={10}
+                      windowSize={5}
+                      initialNumToRender={8}
+                      removeClippedSubviews={Platform.OS === "android"}
+                    />
+                  </View>
                 </>
               ) : null}
 
@@ -728,70 +730,84 @@ export default function DiscoverScreen() {
                       setSearchFocused(true);
                       setSearchQuery("Team");
                     }}
+                    style={{ marginTop: 24 }}
                   />
-                  <FlatList
-                    data={teamChallenges}
-                    keyExtractor={(c) => c.id}
-                    scrollEnabled={false}
-                    nestedScrollEnabled
-                    contentContainerStyle={{ paddingHorizontal: DISCOVER_HPADDING }}
-                    renderItem={({ item: c }) => (
-                      <CompactChallengeRow
-                        id={c.id}
-                        title={c.title ?? "Challenge"}
-                        duration={c.duration_days ?? 7}
-                        difficulty={toCompactDifficulty(c.difficulty)}
-                        participantCount={c.participants_count ?? 0}
-                        completionRate={completionRateHeuristic(c)}
-                        category={c.category ?? undefined}
-                        isTeam
-                        teamSize={teamSizeLabel(c.team_size)}
-                        inviteText={teamInviteCopy(c.participants_count ?? 0, c.team_size)}
-                        onPressIn={() => prefetchChallengeDetail(c.id)}
-                      />
-                    )}
-                    maxToRenderPerBatch={10}
-                    windowSize={5}
-                    initialNumToRender={8}
-                    removeClippedSubviews={Platform.OS === "android"}
-                  />
+                  <View
+                    style={{
+                      marginHorizontal: 16,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      backgroundColor: DS_COLORS.BORDER,
+                    }}
+                  >
+                    <FlatList
+                      data={teamChallenges}
+                      keyExtractor={(c) => c.id}
+                      scrollEnabled={false}
+                      nestedScrollEnabled
+                      ItemSeparatorComponent={() => (
+                        <View style={{ height: 1, backgroundColor: DS_COLORS.BORDER }} />
+                      )}
+                      renderItem={({ item: c }) => (
+                        <CompactChallengeRow
+                          id={c.id}
+                          title={c.title ?? "Challenge"}
+                          duration={c.duration_days ?? 7}
+                          difficulty={toCompactDifficulty(c.difficulty)}
+                          participantCount={c.participants_count ?? 0}
+                          category={c.category ?? undefined}
+                          isTeam
+                          teamSize={teamSizeLabel(c.team_size)}
+                          onPressIn={() => prefetchChallengeDetail(c.id)}
+                        />
+                      )}
+                      maxToRenderPerBatch={10}
+                      windowSize={5}
+                      initialNumToRender={8}
+                      removeClippedSubviews={Platform.OS === "android"}
+                    />
+                  </View>
                 </>
               ) : null}
 
               {newThisWeek.length > 0 ? (
                 <>
-                  <SectionHeader title="New this week" />
-                  <FlatList
-                    data={newThisWeek}
-                    keyExtractor={(c) => c.id}
-                    scrollEnabled={false}
-                    nestedScrollEnabled
-                    contentContainerStyle={{ paddingHorizontal: DISCOVER_HPADDING }}
-                    renderItem={({ item: c }) => (
-                      <CompactChallengeRow
-                        id={c.id}
-                        title={c.title ?? "Challenge"}
-                        duration={c.duration_days ?? 7}
-                        difficulty={toCompactDifficulty(c.difficulty)}
-                        participantCount={c.participants_count ?? 0}
-                        completionRate={completionRateHeuristic(c)}
-                        badgeName={isTeamChallenge(c) ? undefined : badgeForDiscoverChallenge(c)}
-                        category={c.category ?? undefined}
-                        isTeam={isTeamChallenge(c)}
-                        teamSize={isTeamChallenge(c) ? teamSizeLabel(c.team_size) : undefined}
-                        inviteText={
-                          isTeamChallenge(c)
-                            ? teamInviteCopy(c.participants_count ?? 0, c.team_size)
-                            : undefined
-                        }
-                        onPressIn={() => prefetchChallengeDetail(c.id)}
-                      />
-                    )}
-                    maxToRenderPerBatch={10}
-                    windowSize={5}
-                    initialNumToRender={8}
-                    removeClippedSubviews={Platform.OS === "android"}
-                  />
+                  <SectionHeader title="New this week" style={{ marginTop: 24 }} />
+                  <View
+                    style={{
+                      marginHorizontal: 16,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      backgroundColor: DS_COLORS.BORDER,
+                    }}
+                  >
+                    <FlatList
+                      data={newThisWeek}
+                      keyExtractor={(c) => c.id}
+                      scrollEnabled={false}
+                      nestedScrollEnabled
+                      ItemSeparatorComponent={() => (
+                        <View style={{ height: 1, backgroundColor: DS_COLORS.BORDER }} />
+                      )}
+                      renderItem={({ item: c }) => (
+                        <CompactChallengeRow
+                          id={c.id}
+                          title={c.title ?? "Challenge"}
+                          duration={c.duration_days ?? 7}
+                          difficulty={toCompactDifficulty(c.difficulty)}
+                          participantCount={c.participants_count ?? 0}
+                          category={c.category ?? undefined}
+                          isTeam={isTeamChallenge(c)}
+                          teamSize={isTeamChallenge(c) ? teamSizeLabel(c.team_size) : undefined}
+                          onPressIn={() => prefetchChallengeDetail(c.id)}
+                        />
+                      )}
+                      maxToRenderPerBatch={10}
+                      windowSize={5}
+                      initialNumToRender={8}
+                      removeClippedSubviews={Platform.OS === "android"}
+                    />
+                  </View>
                 </>
               ) : null}
 
@@ -804,7 +820,7 @@ export default function DiscoverScreen() {
                   alignItems: "center",
                   gap: 14,
                   marginHorizontal: 16,
-                  marginTop: 8,
+                  marginTop: 24,
                   marginBottom: 24,
                   paddingVertical: 18,
                   paddingHorizontal: 20,

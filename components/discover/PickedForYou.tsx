@@ -13,7 +13,6 @@ export type PickedChallenge = {
   difficulty: "EASY" | "MED" | "HARD";
   category: string;
   participantCount: number;
-  completionRate: number;
   previewUsers: { user_id: string; username: string | null; avatar_url: string | null }[];
   badgeLabel?: string;
 };
@@ -57,13 +56,10 @@ export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) 
             <Pressable
               onPress={() => router.push(ROUTES.CHALLENGE_ID(c.id) as never)}
               accessibilityRole="button"
-              accessibilityLabel={`${c.title}, ${c.duration} days, ${diffLabel(c.difficulty)}, ${c.completionRate} percent finish rate`}
+              accessibilityLabel={`${c.title}, ${c.duration} days, ${diffLabel(c.difficulty)}`}
               style={[styles.card, { borderColor: colors.tagBorder }]}
             >
               <View style={[styles.cardTop, { backgroundColor: colors.tagBorder }]}>
-                <View style={styles.finishPill}>
-                  <Text style={styles.finishPillText}>{Math.round(c.completionRate)}% finish</Text>
-                </View>
                 <CategoryIcon category={c.category} />
                 <Text style={styles.matchTag} numberOfLines={1}>
                   Matches: {String(c.category).charAt(0).toUpperCase() + String(c.category).slice(1)}
@@ -104,7 +100,7 @@ export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) 
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: 4,
+    marginTop: 20,
   },
   headerBlock: {
     paddingHorizontal: 20,
@@ -139,18 +135,6 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: "space-between",
   },
-  finishPill: {
-    alignSelf: "flex-start",
-    backgroundColor: DS_COLORS.DIFFICULTY_EASY_BG,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: DS_RADIUS.SM,
-  },
-  finishPillText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: DS_COLORS.DIFFICULTY_EASY_TEXT,
-  },
   cardIconWrap: {
     alignSelf: "center",
     width: 44,
@@ -163,7 +147,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
     color: DS_COLORS.TEXT_PRIMARY,
-    marginTop: 4,
+    marginTop: 5,
   },
   cardTitle: {
     fontSize: 13,
@@ -177,7 +161,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: DS_COLORS.TEXT_SECONDARY,
     paddingHorizontal: 12,
-    marginTop: 4,
+    marginTop: 5,
   },
   avatarRow: {
     flexDirection: "row",

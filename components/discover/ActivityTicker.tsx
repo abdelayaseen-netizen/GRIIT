@@ -28,6 +28,9 @@ export function ActivityTicker() {
 
   if (!completions || completions.length === 0) return null;
 
+  const uniqueUsers = new Set(completions.map((c) => c.userName));
+  if (uniqueUsers.size < 3) return null;
+
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
@@ -85,7 +88,8 @@ export function ActivityTicker() {
 const styles = StyleSheet.create({
   container: {
     paddingLeft: 16,
-    paddingVertical: 8,
+    paddingTop: 20,
+    paddingBottom: 8,
   },
   header: {
     flexDirection: "row",
