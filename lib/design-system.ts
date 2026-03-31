@@ -602,6 +602,40 @@ export const DS_COLORS = {
   /** Daily bonus quest card (home) — borders / timer track; no raw rgba in components */
   DAILY_BONUS_BORDER: 'rgba(245,166,35,0.12)',
   DAILY_BONUS_TIMER_TRACK: 'rgba(245,166,35,0.15)',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RGBA ALIASES (components — no inline rgba outside this file)
+  // ═══════════════════════════════════════════════════════════════════════════
+  OVERLAY_WHITE_4: 'rgba(255,255,255,0.04)',
+  OVERLAY_WHITE_6: 'rgba(255,255,255,0.06)',
+  OVERLAY_WHITE_8: 'rgba(255,255,255,0.08)',
+  OVERLAY_WHITE_15: 'rgba(255,255,255,0.15)',
+  OVERLAY_WHITE_18: 'rgba(255,255,255,0.18)',
+  OVERLAY_WHITE_22: 'rgba(255,255,255,0.22)',
+  TEXT_ON_DARK_40: 'rgba(255,255,255,0.4)',
+  TEXT_ON_DARK_45: 'rgba(255,255,255,0.45)',
+  TEXT_ON_DARK_50: 'rgba(255,255,255,0.5)',
+  TEXT_ON_DARK_60: 'rgba(255,255,255,0.6)',
+  TEXT_ON_DARK_70: 'rgba(255,255,255,0.7)',
+  OVERLAY_BLACK_08: 'rgba(0,0,0,0.08)',
+  OVERLAY_BLACK_10: 'rgba(0,0,0,0.1)',
+  OVERLAY_BLACK_20: 'rgba(0,0,0,0.2)',
+  OVERLAY_BLACK_25: 'rgba(0,0,0,0.25)',
+  OVERLAY_BLACK_30: 'rgba(0,0,0,0.3)',
+  OVERLAY_BLACK_40: 'rgba(0,0,0,0.4)',
+  OVERLAY_BLACK_45: 'rgba(0,0,0,0.45)',
+  OVERLAY_BLACK_85: 'rgba(0,0,0,0.85)',
+  CHALLENGE_HEADER_GREEN_SOFT_6: 'rgba(46,125,50,0.06)',
+  CHALLENGE_HEADER_GREEN_SOFT_12: 'rgba(46,125,50,0.12)',
+  CHALLENGE_HEADER_GREEN_SOFT_15: 'rgba(46,125,50,0.15)',
+  CHALLENGE_HEADER_ORANGE_SOFT_8: 'rgba(232,115,58,0.08)',
+  CHALLENGE_HEADER_ORANGE_SOFT_14: 'rgba(232,115,58,0.14)',
+  CHALLENGE_HEADER_ORANGE_SOFT_15: 'rgba(232,115,58,0.15)',
+  CHALLENGE_HEADER_ORANGE_SOFT_20: 'rgba(232,115,58,0.20)',
+  HERO_CARD_PRIMARY_GLOW_25: 'rgba(232,89,60,0.25)',
+  HERO_CARD_AMBER_GLOW_10: 'rgba(232,137,58,0.1)',
+  CHIP_BG_DARK_ON_LIGHT: 'rgba(0,0,0,0.15)',
+  TIMER_DANGER_OVERLAY_15: 'rgba(239, 68, 68, 0.15)',
 } as const;
 
 /** Brand + screen tokens (challenge detail bg matches app-wide warm page). */

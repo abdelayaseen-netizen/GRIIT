@@ -32,6 +32,8 @@ type PrimaryButtonProps = {
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** Overrides default label (defaults to `title`). */
+  accessibilityLabel?: string;
 };
 
 export function PrimaryButton({
@@ -42,6 +44,7 @@ export function PrimaryButton({
   loading = false,
   style,
   testID,
+  accessibilityLabel: accessibilityLabelProp,
 }: PrimaryButtonProps) {
   const v = variantStyles[variant];
   const isDisabled = disabled || loading;
@@ -60,7 +63,7 @@ export function PrimaryButton({
       disabled={isDisabled}
       activeOpacity={isDisabled ? 1 : 0.8}
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={accessibilityLabelProp ?? title}
       accessibilityState={{ disabled: isDisabled }}
       testID={testID}
     >

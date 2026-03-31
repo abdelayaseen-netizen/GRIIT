@@ -8,6 +8,7 @@ import {
   Pressable,
   Keyboard,
   Platform,
+  StyleSheet,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -347,49 +348,28 @@ export default function DiscoverScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={{ flex: 1, backgroundColor: DS_COLORS.BG_PAGE }} edges={["top"]}>
+      <SafeAreaView style={discoverStyles.safeArea} edges={["top"]}>
         <FlatList
           data={[{ key: "discover-root" }]}
           keyExtractor={(item) => item.key}
           renderItem={() => (
             <View>
-          <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
-            <Text style={{ fontSize: 26, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, letterSpacing: -0.5 }}>Discover</Text>
-            <Text style={{ fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED, marginTop: 4 }}>
-              What are you willing to commit to?
-            </Text>
+          <View style={discoverStyles.headerPad}>
+            <Text style={discoverStyles.title}>Discover</Text>
+            <Text style={discoverStyles.subtitle}>What are you willing to commit to?</Text>
             {!isPremium ? (
               <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "500",
-                  marginTop: 4,
-                  color: activeCount >= 3 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED,
-                }}
+                style={[
+                  discoverStyles.activeLimitText,
+                  { color: activeCount >= 3 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED },
+                ]}
               >
                 {activeCount}/3 challenges active
               </Text>
             ) : null}
           </View>
 
-          <View
-            style={[
-              {
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                backgroundColor: DS_COLORS.WHITE,
-                borderRadius: 14,
-                borderWidth: 0.5,
-                borderColor: DS_COLORS.BORDER,
-                marginHorizontal: 20,
-                marginTop: 14,
-              },
-              searchFocused && { borderColor: DS_COLORS.ACCENT },
-            ]}
-          >
+          <View style={[discoverStyles.searchRow, searchFocused && discoverStyles.searchRowFocused]}>
             <Search size={18} color={searchFocused ? DS_COLORS.ACCENT : DS_COLORS.FEED_META_MUTED} />
             <TextInput
               placeholder="Search challenges or people..."
@@ -402,7 +382,10 @@ export default function DiscoverScreen() {
                 void pushRecentSearch(searchQuery);
                 Keyboard.dismiss();
               }}
-              style={{ flex: 1, fontSize: 14, color: DS_COLORS.TEXT_PRIMARY, paddingVertical: Platform.OS === "ios" ? 8 : 4 }}
+              style={[
+                discoverStyles.searchInputBase,
+                Platform.OS === "ios" ? discoverStyles.searchInputIos : discoverStyles.searchInputAndroid,
+              ]}
             />
             {searchQuery.length > 0 ? (
               <Pressable
@@ -423,20 +406,8 @@ export default function DiscoverScreen() {
           <FilterChips onFilterChange={setChipFilter} />
 
           {showBrowseMode ? (
-            <View style={{ marginTop: 8, paddingBottom: 32 }}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "500",
-                  color: DS_COLORS.FEED_META_MUTED,
-                  letterSpacing: 0.5,
-                  paddingHorizontal: 20,
-                  marginTop: 16,
-                  marginBottom: 8,
-                }}
-              >
-                BROWSE BY CATEGORY
-              </Text>
+            <View style={discoverStyles.browseWrap}>
+              <Text style={discoverStyles.sectionEyebrow}>BROWSE BY CATEGORY</Text>
               {BROWSE_CATEGORIES.map((cat) => (
                 <Pressable
                   key={cat}
@@ -446,51 +417,26 @@ export default function DiscoverScreen() {
                     setSearchQuery(cat);
                     void pushRecentSearch(cat);
                   }}
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingVertical: 14,
-                    paddingHorizontal: 20,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: DS_COLORS.DIVIDER,
-                  }}
+                  style={discoverStyles.browseRow}
                 >
-                  <Text style={{ fontSize: 15, color: DS_COLORS.TEXT_SECONDARY }}>{cat}</Text>
-                  <Text style={{ fontSize: 13, color: DS_COLORS.FEED_META_MUTED }}>
+                  <Text style={discoverStyles.browseCatName}>{cat}</Text>
+                  <Text style={discoverStyles.browseCatCount}>
                     {categoryCounts[cat] ?? 0} challenges ›
                   </Text>
                 </Pressable>
               ))}
               {recentSearches.length > 0 ? (
                 <>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "500",
-                      color: DS_COLORS.FEED_META_MUTED,
-                      letterSpacing: 0.5,
-                      paddingHorizontal: 20,
-                      marginTop: 20,
-                      marginBottom: 8,
-                    }}
-                  >
-                    RECENT SEARCHES
-                  </Text>
+                  <Text style={discoverStyles.recentEyebrow}>RECENT SEARCHES</Text>
                   {recentSearches.slice(0, 3).map((r) => (
                     <Pressable
                       key={r}
                       accessibilityRole="button"
                       accessibilityLabel={`Search for ${r}`}
                       onPress={() => setSearchQuery(r)}
-                      style={{
-                        paddingVertical: 12,
-                        paddingHorizontal: 20,
-                        borderBottomWidth: 0.5,
-                        borderBottomColor: DS_COLORS.DIVIDER,
-                      }}
+                      style={discoverStyles.recentRow}
                     >
-                      <Text style={{ fontSize: 14, color: DS_COLORS.TEXT_PRIMARY }}>{r}</Text>
+                      <Text style={discoverStyles.recentText}>{r}</Text>
                     </Pressable>
                   ))}
                 </>
@@ -499,27 +445,16 @@ export default function DiscoverScreen() {
           ) : null}
 
           {showSearchResults ? (
-            <View style={{ marginTop: 12, paddingBottom: 40 }}>
+            <View style={discoverStyles.searchResultsWrap}>
               {searchPending ? (
-                <Text style={{ paddingHorizontal: 20, color: DS_COLORS.TEXT_MUTED, fontSize: 13, marginBottom: 8 }}>Searching…</Text>
+                <Text style={discoverStyles.searchStatusText}>Searching…</Text>
               ) : null}
               {!isGuest && peopleSearch.isPending && !searchPending ? (
-                <Text style={{ paddingHorizontal: 20, color: DS_COLORS.TEXT_MUTED, fontSize: 13 }}>Searching people…</Text>
+                <Text style={discoverStyles.searchPeoplePending}>Searching people…</Text>
               ) : null}
               {!isGuest && peopleSearch.data && peopleSearch.data.length > 0 ? (
                 <>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "500",
-                      color: DS_COLORS.FEED_META_MUTED,
-                      letterSpacing: 0.5,
-                      paddingHorizontal: 20,
-                      marginBottom: 8,
-                    }}
-                  >
-                    PEOPLE
-                  </Text>
+                  <Text style={discoverStyles.peopleEyebrow}>PEOPLE</Text>
                   <FlatList
                     data={peopleSearch.data}
                     keyExtractor={(u) => u.user_id}
@@ -533,18 +468,12 @@ export default function DiscoverScreen() {
                           void pushRecentSearch(filterQuery);
                           router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
                         }}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 12,
-                          paddingVertical: 10,
-                          paddingHorizontal: 20,
-                        }}
+                        style={discoverStyles.peopleRow}
                       >
                         <Avatar url={u.avatar_url} name={u.username} userId={u.user_id} size={38} />
                         <View>
-                          <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY }}>{u.username}</Text>
-                          <Text style={{ fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 1 }}>
+                          <Text style={discoverStyles.peopleUsername}>{u.username}</Text>
+                          <Text style={discoverStyles.peopleMeta}>
                             {u.current_streak > 0 ? `${u.current_streak}-day streak` : "Active on GRIIT"}
                           </Text>
                         </View>
@@ -558,21 +487,9 @@ export default function DiscoverScreen() {
                 </>
               ) : null}
 
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "500",
-                  color: DS_COLORS.FEED_META_MUTED,
-                  letterSpacing: 0.5,
-                  paddingHorizontal: 20,
-                  marginTop: 12,
-                  marginBottom: 8,
-                }}
-              >
-                CHALLENGES
-              </Text>
+              <Text style={discoverStyles.challengesEyebrow}>CHALLENGES</Text>
               {searchPending ? null : filteredChallengesForSearch.length === 0 ? (
-                <Text style={{ paddingHorizontal: 20, color: DS_COLORS.TEXT_SECONDARY, fontSize: 14 }}>
+                <Text style={discoverStyles.noResultsText}>
                   {!isGuest && (peopleSearch.data?.length ?? 0) > 0
                     ? `No challenges match "${filterQuery}"`
                     : `No results for "${filterQuery}". Try another name or keyword.`}
@@ -607,10 +524,10 @@ export default function DiscoverScreen() {
 
           {showDefaultSections && loading ? (
             <View>
-              <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+              <View style={discoverStyles.skeletonHeroWrap}>
                 <SkeletonHeroCard />
               </View>
-              <View style={{ paddingHorizontal: 16, gap: 10, marginTop: 12 }}>
+              <View style={discoverStyles.skeletonListWrap}>
                 <SkeletonChallengeCard />
                 <SkeletonChallengeCard />
                 <SkeletonChallengeCard />
@@ -624,7 +541,7 @@ export default function DiscoverScreen() {
 
               <ActivityTicker />
 
-              <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
+              <View style={discoverStyles.heroPad}>
                 <HeroFeaturedCard
                   challenge={
                     trendingHero
@@ -656,14 +573,14 @@ export default function DiscoverScreen() {
                       setSearchFocused(true);
                       setSearchQuery("24h");
                     }}
-                    style={{ marginTop: 24 }}
+                    style={discoverStyles.sectionHeaderMargin}
                   />
                   <FlatList
                     horizontal
                     data={twentyFourHour}
                     keyExtractor={(item) => item.id}
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 8 }}
+                    contentContainerStyle={discoverStyles.horizontalListContent}
                     renderItem={renderTwentyFourHourItem}
                     initialNumToRender={10}
                     maxToRenderPerBatch={10}
@@ -682,24 +599,15 @@ export default function DiscoverScreen() {
                       setSearchFocused(true);
                       setSearchQuery("solo");
                     }}
-                    style={{ marginTop: 24 }}
+                    style={discoverStyles.sectionHeaderMargin}
                   />
-                  <View
-                    style={{
-                      marginHorizontal: 16,
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      backgroundColor: DS_COLORS.BORDER,
-                    }}
-                  >
+                  <View style={discoverStyles.groupedListCard}>
                     <FlatList
                       data={soloChallenges}
                       keyExtractor={(c) => c.id}
                       scrollEnabled={false}
                       nestedScrollEnabled
-                      ItemSeparatorComponent={() => (
-                        <View style={{ height: 1, backgroundColor: DS_COLORS.BORDER }} />
-                      )}
+                      ItemSeparatorComponent={() => <View style={discoverStyles.rowSeparator} />}
                       renderItem={({ item: c }) => (
                         <CompactChallengeRow
                           id={c.id}
@@ -730,24 +638,15 @@ export default function DiscoverScreen() {
                       setSearchFocused(true);
                       setSearchQuery("Team");
                     }}
-                    style={{ marginTop: 24 }}
+                    style={discoverStyles.sectionHeaderMargin}
                   />
-                  <View
-                    style={{
-                      marginHorizontal: 16,
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      backgroundColor: DS_COLORS.BORDER,
-                    }}
-                  >
+                  <View style={discoverStyles.groupedListCard}>
                     <FlatList
                       data={teamChallenges}
                       keyExtractor={(c) => c.id}
                       scrollEnabled={false}
                       nestedScrollEnabled
-                      ItemSeparatorComponent={() => (
-                        <View style={{ height: 1, backgroundColor: DS_COLORS.BORDER }} />
-                      )}
+                      ItemSeparatorComponent={() => <View style={discoverStyles.rowSeparator} />}
                       renderItem={({ item: c }) => (
                         <CompactChallengeRow
                           id={c.id}
@@ -772,23 +671,14 @@ export default function DiscoverScreen() {
 
               {newThisWeek.length > 0 ? (
                 <>
-                  <SectionHeader title="New this week" style={{ marginTop: 24 }} />
-                  <View
-                    style={{
-                      marginHorizontal: 16,
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      backgroundColor: DS_COLORS.BORDER,
-                    }}
-                  >
+                  <SectionHeader title="New this week" style={discoverStyles.sectionHeaderMargin} />
+                  <View style={discoverStyles.groupedListCard}>
                     <FlatList
                       data={newThisWeek}
                       keyExtractor={(c) => c.id}
                       scrollEnabled={false}
                       nestedScrollEnabled
-                      ItemSeparatorComponent={() => (
-                        <View style={{ height: 1, backgroundColor: DS_COLORS.BORDER }} />
-                      )}
+                      ItemSeparatorComponent={() => <View style={discoverStyles.rowSeparator} />}
                       renderItem={({ item: c }) => (
                         <CompactChallengeRow
                           id={c.id}
@@ -815,34 +705,14 @@ export default function DiscoverScreen() {
                 onPress={() => router.push(ROUTES.CREATE_WIZARD as never)}
                 accessibilityRole="button"
                 accessibilityLabel="Create a custom challenge"
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 14,
-                  marginHorizontal: 16,
-                  marginTop: 24,
-                  marginBottom: 24,
-                  paddingVertical: 18,
-                  paddingHorizontal: 20,
-                  backgroundColor: DS_COLORS.TEXT_PRIMARY,
-                  borderRadius: 18,
-                }}
+                style={discoverStyles.createCta}
               >
-                <View
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 12,
-                    backgroundColor: DS_COLORS.FEED_CTA_ICON_BG,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+                <View style={discoverStyles.createCtaIconWrap}>
                   <Plus size={20} color={DS_COLORS.ACCENT} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: "500", color: DS_COLORS.WHITE }}>Build your own</Text>
-                  <Text style={{ fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 2 }}>Create a custom challenge</Text>
+                <View style={discoverStyles.createCtaMid}>
+                  <Text style={discoverStyles.createCtaTitle}>Build your own</Text>
+                  <Text style={discoverStyles.createCtaSub}>Create a custom challenge</Text>
                 </View>
                 <ChevronRight size={16} color={DS_COLORS.TEXT_SECONDARY} />
               </Pressable>
@@ -864,3 +734,130 @@ export default function DiscoverScreen() {
     </ErrorBoundary>
   );
 }
+
+const discoverStyles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  headerPad: { paddingHorizontal: 20, paddingTop: 8 },
+  title: { fontSize: 26, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, letterSpacing: -0.5 },
+  subtitle: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
+  activeLimitText: { fontSize: 12, fontWeight: "500", marginTop: 4 },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: 14,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+    marginHorizontal: 20,
+    marginTop: 14,
+  },
+  searchRowFocused: { borderColor: DS_COLORS.ACCENT },
+  searchInputBase: { flex: 1, fontSize: 14, color: DS_COLORS.TEXT_PRIMARY },
+  searchInputIos: { paddingVertical: 8 },
+  searchInputAndroid: { paddingVertical: 4 },
+  browseWrap: { marginTop: 8, paddingBottom: 32 },
+  sectionEyebrow: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: DS_COLORS.FEED_META_MUTED,
+    letterSpacing: 0.5,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  browseRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 0.5,
+    borderBottomColor: DS_COLORS.DIVIDER,
+  },
+  browseCatName: { fontSize: 15, color: DS_COLORS.TEXT_SECONDARY },
+  browseCatCount: { fontSize: 13, color: DS_COLORS.FEED_META_MUTED },
+  recentEyebrow: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: DS_COLORS.FEED_META_MUTED,
+    letterSpacing: 0.5,
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  recentRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderBottomWidth: 0.5,
+    borderBottomColor: DS_COLORS.DIVIDER,
+  },
+  recentText: { fontSize: 14, color: DS_COLORS.TEXT_PRIMARY },
+  searchResultsWrap: { marginTop: 12, paddingBottom: 40 },
+  searchStatusText: { paddingHorizontal: 20, color: DS_COLORS.TEXT_MUTED, fontSize: 13, marginBottom: 8 },
+  searchPeoplePending: { paddingHorizontal: 20, color: DS_COLORS.TEXT_MUTED, fontSize: 13 },
+  peopleEyebrow: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: DS_COLORS.FEED_META_MUTED,
+    letterSpacing: 0.5,
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  peopleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  peopleUsername: { fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
+  peopleMeta: { fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 1 },
+  challengesEyebrow: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: DS_COLORS.FEED_META_MUTED,
+    letterSpacing: 0.5,
+    paddingHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  noResultsText: { paddingHorizontal: 20, color: DS_COLORS.TEXT_SECONDARY, fontSize: 14 },
+  skeletonHeroWrap: { paddingHorizontal: 16, marginTop: 18 },
+  skeletonListWrap: { paddingHorizontal: 16, gap: 10, marginTop: 12 },
+  heroPad: { paddingHorizontal: 16, marginTop: 8 },
+  sectionHeaderMargin: { marginTop: 24 },
+  horizontalListContent: { paddingHorizontal: 16, gap: 10, paddingBottom: 8 },
+  groupedListCard: {
+    marginHorizontal: 16,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: DS_COLORS.BORDER,
+  },
+  rowSeparator: { height: 1, backgroundColor: DS_COLORS.BORDER },
+  createCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginHorizontal: 16,
+    marginTop: 24,
+    marginBottom: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    backgroundColor: DS_COLORS.TEXT_PRIMARY,
+    borderRadius: 18,
+  },
+  createCtaIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: DS_COLORS.FEED_CTA_ICON_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  createCtaMid: { flex: 1 },
+  createCtaTitle: { fontSize: 14, fontWeight: "500", color: DS_COLORS.WHITE },
+  createCtaSub: { fontSize: 12, color: DS_COLORS.FEED_META_MUTED, marginTop: 2 },
+});

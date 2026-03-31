@@ -379,7 +379,7 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
       ) : null}
 
       {feedQuery.isPending ? (
-        <View style={{ gap: 10 }}>
+        <View style={styles.feedSkeletonStack}>
           <SkeletonFeedCard />
           <SkeletonFeedCard />
           <SkeletonFeedCard />
@@ -398,7 +398,7 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
           scrollEnabled={false}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          ItemSeparatorComponent={() => <View style={styles.listItemSeparator} />}
           ListEmptyComponent={listEmpty}
           ListFooterComponent={
             <DiscoverCTA variant="feed" onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
@@ -523,6 +523,8 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED, fontWeight: "500" },
   toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
   listContent: { paddingHorizontal: 10, paddingBottom: 8 },
+  feedSkeletonStack: { gap: 10 },
+  listItemSeparator: { height: 8 },
   empty: { paddingVertical: 32, alignItems: "center" },
   emptyTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY },
@@ -540,7 +542,7 @@ const styles = StyleSheet.create({
   },
   androidMenuBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: DS_COLORS.OVERLAY_BLACK_45,
   },
   androidMenuSheet: {
     backgroundColor: DS_COLORS.BG_CARD,

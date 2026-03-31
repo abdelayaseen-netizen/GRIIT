@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
   },
   deleteModalBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: DS_COLORS.MODAL_BACKDROP,
   },
   deleteModalCenter: {
     flex: 1,

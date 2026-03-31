@@ -331,7 +331,7 @@ function NotificationsBody({
         unread.length === 0 && earlier.length === 0 ? (
           <View style={styles.emptyStateFill}>
             <View style={styles.emptyIconCircle}>
-              <Bell size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+              <Bell size={40} color={DS_COLORS.TEXT_MUTED} style={styles.iconMuted} />
             </View>
             <Text style={styles.emptyTitleStrong}>No notifications yet</Text>
             <Text style={styles.emptyBodyNarrow}>
@@ -601,7 +601,7 @@ function LeaderboardBody({
       </View>
 
       {loading ? (
-        <View style={{ paddingHorizontal: 12, paddingTop: 8 }}>
+        <View style={styles.lbSkeletonPad}>
           <SkeletonLeaderboardRow />
           <SkeletonLeaderboardRow />
           <SkeletonLeaderboardRow />
@@ -625,7 +625,7 @@ function LeaderboardBody({
         globalEntries.length === 0 ? (
           <View style={styles.emptyStateFill}>
             <View style={styles.emptyIconCircle}>
-              <Trophy size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+              <Trophy size={40} color={DS_COLORS.TEXT_MUTED} style={styles.iconMuted} />
             </View>
             <Text style={styles.emptyTitleStrong}>Earn your spot</Text>
             <Text style={styles.emptyBodyNarrow}>
@@ -662,7 +662,7 @@ function LeaderboardBody({
         friendEntries.length <= 1 ? (
           <View style={styles.emptyStateFill}>
             <View style={styles.emptyIconCircle}>
-              <Users size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+              <Users size={40} color={DS_COLORS.TEXT_MUTED} style={styles.iconMuted} />
             </View>
             <Text style={styles.emptyTitleStrong}>No friends on GRIIT yet</Text>
             <Text style={styles.emptyBodyNarrow}>
@@ -700,7 +700,7 @@ function LeaderboardBody({
           {activeList.length === 0 ? (
             <View style={styles.emptyStateFill}>
               <View style={styles.emptyIconCircle}>
-                <Target size={40} color={DS_COLORS.TEXT_MUTED} style={{ opacity: 0.4 }} />
+                <Target size={40} color={DS_COLORS.TEXT_MUTED} style={styles.iconMuted} />
               </View>
               <Text style={styles.emptyTitleStrong}>No active challenges</Text>
               <Text style={styles.emptyBodyNarrow}>
@@ -873,7 +873,7 @@ function LeaderboardBody({
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
-      style={{ flex: 1 }}
+      style={styles.leaderboardFlatFlex}
       keyboardShouldPersistTaps="handled"
     />
   );
@@ -923,7 +923,7 @@ function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[];
     ) : null;
 
   return (
-    <View style={{ marginBottom: 24 }}>
+    <View style={styles.boardListSection}>
       <CrownCard entry={first} viewerId={viewerId} />
       <FlatList
         data={rest}
@@ -965,7 +965,7 @@ function CrownCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string })
         <View style={[styles.crownAvatar, { backgroundColor: colors.bg }]}>
           <Text style={[styles.crownAvatarLetter, { color: colors.letter }]}>{initial}</Text>
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flex1}>
           <View style={styles.nameRow}>
             <Text style={styles.crownName}>{entry.displayName}</Text>
             {isSelf ? (
@@ -980,7 +980,7 @@ function CrownCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string })
             </Text>
           </View>
         </View>
-        <View style={{ alignItems: "flex-end" }}>
+        <View style={styles.alignEnd}>
           <Text style={styles.crownPts}>{entry.points}</Text>
           <View style={styles.crownPtsLabelWrap}>
             <Text style={styles.crownPtsLabel}>pts</Text>
@@ -1017,7 +1017,7 @@ const RegularRow = React.memo(function RegularRow({
       <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
         <Text style={[styles.regAvatarLetter, { color: colors.letter }]}>{initial}</Text>
       </View>
-      <View style={{ flex: 1 }}>
+      <View style={styles.flex1}>
         <View style={styles.nameRow}>
           <Text style={styles.regName}>{entry.displayName}</Text>
           {isSelf ? (
@@ -1036,7 +1036,7 @@ const RegularRow = React.memo(function RegularRow({
           <View style={[styles.regFill, { width: `${pct}%` }]} />
         </View>
       </View>
-      <View style={{ alignItems: "flex-end" }}>
+      <View style={styles.alignEnd}>
         <Text style={styles.regPts}>{entry.points}</Text>
         <Text style={styles.regPtsLabel}>pts</Text>
       </View>
@@ -1062,7 +1062,7 @@ function YourRankCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string
       <View style={[styles.regAvatar, { backgroundColor: colors.bg }]}>
         <Text style={[styles.regAvatarLetter, { color: colors.letter }]}>{initial}</Text>
       </View>
-      <View style={{ flex: 1 }}>
+      <View style={styles.flex1}>
         <View style={styles.nameRow}>
           <Text style={styles.yourName}>{entry.displayName}</Text>
           {isSelf ? (
@@ -1520,4 +1520,10 @@ const styles = StyleSheet.create({
   },
   guestWrap: { padding: 24 },
   guestText: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
+  iconMuted: { opacity: 0.4 },
+  lbSkeletonPad: { paddingHorizontal: 12, paddingTop: 8 },
+  leaderboardFlatFlex: { flex: 1 },
+  boardListSection: { marginBottom: 24 },
+  flex1: { flex: 1 },
+  alignEnd: { alignItems: "flex-end" },
 });

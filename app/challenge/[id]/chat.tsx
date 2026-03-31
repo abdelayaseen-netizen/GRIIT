@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.textMuted,
   },
   messageTimeOwn: {
-    color: "rgba(255,255,255,0.7)",
+    color: DS_COLORS.TEXT_ON_DARK_70,
   },
   messageOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
   reactionChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.1)",
+    backgroundColor: DS_COLORS.OVERLAY_BLACK_10,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   reactionItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.08)",
+    backgroundColor: DS_COLORS.OVERLAY_BLACK_08,
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 8,

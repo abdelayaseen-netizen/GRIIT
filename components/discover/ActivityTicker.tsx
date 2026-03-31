@@ -1,5 +1,6 @@
-import React from "react";
-import { View, FlatList, Text, Pressable, Image, StyleSheet } from "react-native";
+import React, { useCallback } from "react";
+import { View, FlatList, Text, Pressable, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { trpcQuery } from "@/lib/trpc";
@@ -17,6 +18,53 @@ export type RecentCompletionItem = {
   currentDay: number;
 };
 
+function timeAgoLabel(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function ActivityTickerItemInner({
+  item,
+  timeLabel,
+  onOpenChallenge,
+}: {
+  item: RecentCompletionItem;
+  timeLabel: string;
+  onOpenChallenge: (challengeId: string) => void;
+}) {
+  return (
+    <Pressable
+      onPress={() => onOpenChallenge(item.challengeId)}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.userName} completed day ${item.currentDay} of ${item.challengeTitle}, ${timeLabel}`}
+      style={styles.item}
+    >
+      {item.avatarUrl ? (
+        <Image source={{ uri: item.avatarUrl }} style={styles.avatar} contentFit="cover" />
+      ) : (
+        <View style={[styles.avatar, styles.avatarPlaceholder]}>
+          <Text style={styles.avatarInitial}>{item.userName.charAt(0).toUpperCase()}</Text>
+        </View>
+      )}
+      <View style={styles.body}>
+        <Text style={styles.text} numberOfLines={2}>
+          <Text style={styles.textBold}>{item.userName}</Text>
+          {` completed Day ${item.currentDay} of `}
+          <Text style={styles.textHighlight}>{item.challengeTitle}</Text>
+        </Text>
+        <Text style={styles.time}>{timeLabel}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+const ActivityTickerItem = React.memo(ActivityTickerItemInner);
+
 export function ActivityTicker() {
   const router = useRouter();
 
@@ -26,20 +74,17 @@ export function ActivityTicker() {
     staleTime: 30 * 1000,
   });
 
+  const onOpenChallenge = useCallback(
+    (challengeId: string) => {
+      router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
+    },
+    [router]
+  );
+
   if (!completions || completions.length === 0) return null;
 
   const uniqueUsers = new Set(completions.map((c) => c.userName));
   if (uniqueUsers.size < 3) return null;
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  };
 
   return (
     <View style={styles.container}>
@@ -54,28 +99,11 @@ export function ActivityTicker() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
         renderItem={({ item }) => (
-          <Pressable
-            onPress={() => router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
-            accessibilityRole="button"
-            accessibilityLabel={`${item.userName} completed day ${item.currentDay} of ${item.challengeTitle}, ${timeAgo(item.completedAt)}`}
-            style={styles.item}
-          >
-            {item.avatarUrl ? (
-              <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Text style={styles.avatarInitial}>{item.userName.charAt(0).toUpperCase()}</Text>
-              </View>
-            )}
-            <View style={styles.body}>
-              <Text style={styles.text} numberOfLines={2}>
-                <Text style={styles.textBold}>{item.userName}</Text>
-                {` completed Day ${item.currentDay} of `}
-                <Text style={styles.textHighlight}>{item.challengeTitle}</Text>
-              </Text>
-              <Text style={styles.time}>{timeAgo(item.completedAt)}</Text>
-            </View>
-          </Pressable>
+          <ActivityTickerItem
+            item={item}
+            timeLabel={timeAgoLabel(item.completedAt)}
+            onOpenChallenge={onOpenChallenge}
+          />
         )}
         maxToRenderPerBatch={10}
         windowSize={5}

@@ -129,7 +129,7 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: DS_COLORS.OVERLAY_BLACK_40,
     justifyContent: "center",
     padding: 24,
   },

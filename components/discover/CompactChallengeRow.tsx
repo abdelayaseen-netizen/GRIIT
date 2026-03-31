@@ -58,7 +58,7 @@ function getIcon(category?: string, isTeam?: boolean): React.ComponentType<{ siz
   return Icon;
 }
 
-export function CompactChallengeRow({
+function CompactChallengeRowInner({
   id,
   title,
   duration,
@@ -124,6 +124,8 @@ export function CompactChallengeRow({
     </Pressable>
   );
 }
+
+export const CompactChallengeRow = React.memo(CompactChallengeRowInner);
 
 const styles = StyleSheet.create({
   row: {

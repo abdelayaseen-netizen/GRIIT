@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.white,
   },
   strictBanner: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: DS_COLORS.TIMER_DANGER_OVERLAY_15,
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,

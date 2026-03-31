@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { BookOpen, Flame, Target } from "lucide-react-native";
@@ -34,8 +34,63 @@ function diffLabel(d: "EASY" | "MED" | "HARD"): string {
   return "Medium";
 }
 
+function PickedForYouCardInner({
+  c,
+  onOpenChallenge,
+}: {
+  c: PickedChallenge;
+  onOpenChallenge: (id: string) => void;
+}) {
+  const colors = getCategoryColors(String(c.category ?? "discipline").toLowerCase());
+  return (
+    <Pressable
+      onPress={() => onOpenChallenge(c.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`${c.title}, ${c.duration} days, ${diffLabel(c.difficulty)}`}
+      style={[styles.card, { borderColor: colors.tagBorder }]}
+    >
+      <View style={[styles.cardTop, { backgroundColor: colors.tagBorder }]}>
+        <CategoryIcon category={c.category} />
+        <Text style={styles.matchTag} numberOfLines={1}>
+          Matches: {String(c.category).charAt(0).toUpperCase() + String(c.category).slice(1)}
+        </Text>
+      </View>
+      <Text style={styles.cardTitle} numberOfLines={2}>
+        {c.title}
+      </Text>
+      <Text style={styles.cardMeta}>
+        {c.duration}d · {diffLabel(c.difficulty)}
+      </Text>
+      <View style={styles.avatarRow}>
+        {c.previewUsers.slice(0, 3).map((u, i) => (
+          <Avatar
+            key={u.user_id}
+            url={u.avatar_url}
+            name={u.username ?? "?"}
+            userId={u.user_id}
+            size={22}
+            style={{ marginLeft: i > 0 ? -6 : 0, borderWidth: 2, borderColor: DS_COLORS.WHITE }}
+          />
+        ))}
+        {c.participantCount >= 10 ? (
+          <Text style={styles.activeHint}>{`${c.participantCount} active`}</Text>
+        ) : null}
+      </View>
+      {c.badgeLabel ? <Text style={styles.earn}>Earns: {c.badgeLabel}</Text> : null}
+    </Pressable>
+  );
+}
+
+const PickedForYouCard = React.memo(PickedForYouCardInner);
+
 export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) {
   const router = useRouter();
+  const onOpenChallenge = useCallback(
+    (id: string) => {
+      router.push(ROUTES.CHALLENGE_ID(id) as never);
+    },
+    [router]
+  );
   if (!challenges.length) return null;
 
   return (
@@ -50,46 +105,7 @@ export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) 
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
-        renderItem={({ item: c }) => {
-          const colors = getCategoryColors(String(c.category ?? "discipline").toLowerCase());
-          return (
-            <Pressable
-              onPress={() => router.push(ROUTES.CHALLENGE_ID(c.id) as never)}
-              accessibilityRole="button"
-              accessibilityLabel={`${c.title}, ${c.duration} days, ${diffLabel(c.difficulty)}`}
-              style={[styles.card, { borderColor: colors.tagBorder }]}
-            >
-              <View style={[styles.cardTop, { backgroundColor: colors.tagBorder }]}>
-                <CategoryIcon category={c.category} />
-                <Text style={styles.matchTag} numberOfLines={1}>
-                  Matches: {String(c.category).charAt(0).toUpperCase() + String(c.category).slice(1)}
-                </Text>
-              </View>
-              <Text style={styles.cardTitle} numberOfLines={2}>
-                {c.title}
-              </Text>
-              <Text style={styles.cardMeta}>
-                {c.duration}d · {diffLabel(c.difficulty)}
-              </Text>
-              <View style={styles.avatarRow}>
-                {c.previewUsers.slice(0, 3).map((u, i) => (
-                  <Avatar
-                    key={u.user_id}
-                    url={u.avatar_url}
-                    name={u.username ?? "?"}
-                    userId={u.user_id}
-                    size={22}
-                    style={{ marginLeft: i > 0 ? -6 : 0, borderWidth: 2, borderColor: DS_COLORS.WHITE }}
-                  />
-                ))}
-                {c.participantCount >= 10 ? (
-                  <Text style={styles.activeHint}>{`${c.participantCount} active`}</Text>
-                ) : null}
-              </View>
-              {c.badgeLabel ? <Text style={styles.earn}>Earns: {c.badgeLabel}</Text> : null}
-            </Pressable>
-          );
-        }}
+        renderItem={({ item: c }) => <PickedForYouCard c={c} onOpenChallenge={onOpenChallenge} />}
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={5}

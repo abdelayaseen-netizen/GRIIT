@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
   sendDisabled: { opacity: 0.5 },
   sendText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: "600", fontSize: 15 },
   androidMenuRoot: { flex: 1, justifyContent: "flex-end" },
-  androidMenuBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
+  androidMenuBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: DS_COLORS.OVERLAY_BLACK_40 },
   androidMenuSheet: {
     backgroundColor: DS_COLORS.BG_CARD,
     borderTopLeftRadius: 14,

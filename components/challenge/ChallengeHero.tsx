@@ -128,7 +128,7 @@ export const ChallengeHero = React.memo(function ChallengeHero({
                 style={[
                   s.infoChip,
                   s.visibilityChip,
-                  { borderColor: "rgba(255,255,255,0.35)", backgroundColor: "rgba(255,255,255,0.15)" },
+                  { borderColor: DS_COLORS.DISCOVER_HERO_AVATAR_RING, backgroundColor: DS_COLORS.OVERLAY_WHITE_15 },
                 ]}
               >
                 {visibilityIcon}

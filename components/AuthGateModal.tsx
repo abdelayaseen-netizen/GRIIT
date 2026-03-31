@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
+import { DS_COLORS } from "@/lib/design-system";
 import { colors, spacing, radius } from "@/lib/theme/tokens";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
@@ -71,11 +72,14 @@ export function AuthGateModal({ visible, onClose, context: _context }: AuthGateM
             onPress={openLogin}
             variant="black"
             style={styles.primaryBtn}
+            accessibilityLabel="Sign in with email"
           />
           <TouchableOpacity
             style={styles.secondaryBtn}
             onPress={openSignup}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Sign up with email"
           >
             <Text style={styles.secondaryBtnText}>Sign up with email</Text>
           </TouchableOpacity>
@@ -83,6 +87,8 @@ export function AuthGateModal({ visible, onClose, context: _context }: AuthGateM
             style={styles.tertiaryBtn}
             onPress={onClose}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Continue as guest"
           >
             <Text style={styles.tertiaryBtnText}>Not now</Text>
           </TouchableOpacity>
@@ -95,7 +101,7 @@ export function AuthGateModal({ visible, onClose, context: _context }: AuthGateM
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: DS_COLORS.MODAL_BACKDROP,
   },
   centered: {
     flex: 1,

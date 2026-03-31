@@ -27,7 +27,7 @@ type Props = {
   onPressComment: (post: FeedPost) => void;
 };
 
-export default function PostCard({ post, onPressRespect, onPressComment }: Props) {
+function PostCardInner({ post, onPressRespect, onPressComment }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
   const initial = (post.display_name || post.username || "?").trim().charAt(0).toUpperCase();
 
@@ -87,6 +87,8 @@ export default function PostCard({ post, onPressRespect, onPressComment }: Props
     </View>
   );
 }
+
+export default React.memo(PostCardInner);
 
 const styles = StyleSheet.create({
   card: {

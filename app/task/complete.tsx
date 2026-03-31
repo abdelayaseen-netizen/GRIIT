@@ -674,7 +674,7 @@ function TaskCompleteScreenInner() {
                       accessibilityRole="button"
                       accessibilityLabel="Take a photo"
                     >
-                      <Camera size={20} color="rgba(255,255,255,0.6)" />
+                      <Camera size={20} color={DS_COLORS.TEXT_ON_DARK_60} />
                       <Text style={celebStyles.photoPickerText}>Take photo</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -684,7 +684,7 @@ function TaskCompleteScreenInner() {
                       accessibilityRole="button"
                       accessibilityLabel="Choose from gallery"
                     >
-                      <GalleryIcon size={20} color="rgba(255,255,255,0.6)" />
+                      <GalleryIcon size={20} color={DS_COLORS.TEXT_ON_DARK_60} />
                       <Text style={celebStyles.photoPickerText}>Choose photo</Text>
                     </TouchableOpacity>
                   </View>
@@ -699,7 +699,7 @@ function TaskCompleteScreenInner() {
             <TextInput
               style={celebStyles.captionInput}
               placeholder="Just finished my workout 💪"
-              placeholderTextColor="rgba(255,255,255,0.35)"
+              placeholderTextColor={DS_COLORS.DISCOVER_HERO_AVATAR_RING}
               value={postCaption}
               onChangeText={setPostCaption}
               maxLength={500}
@@ -1354,7 +1354,7 @@ const celebStyles = StyleSheet.create({
   },
   fireEmoji: { fontSize: 48, marginBottom: 12 },
   title: { fontSize: 28, fontWeight: "700", color: DS_COLORS.WHITE },
-  subtitle: { fontSize: 14, color: "rgba(255,255,255,0.5)", marginTop: 6 },
+  subtitle: { fontSize: 14, color: DS_COLORS.TEXT_ON_DARK_50, marginTop: 6 },
   rewardPill: {
     marginTop: 16,
     paddingHorizontal: 16,
@@ -1375,16 +1375,16 @@ const celebStyles = StyleSheet.create({
   },
   shareCtaText: { fontSize: 15, fontWeight: "700", color: DS_COLORS.WHITE },
   nextCta: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: DS_COLORS.OVERLAY_WHITE_8,
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 28,
   },
-  nextCtaText: { fontSize: 15, fontWeight: "500", color: "rgba(255,255,255,0.6)" },
+  nextCtaText: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_ON_DARK_60 },
   doneBtn: { marginTop: 20 },
   doneBtnText: {
     fontSize: 14,
-    color: "rgba(255,255,255,0.5)",
+    color: DS_COLORS.TEXT_ON_DARK_50,
     fontWeight: "500",
     paddingVertical: 8,
   },
@@ -1399,7 +1399,7 @@ const celebStyles = StyleSheet.create({
     borderRadius: 14,
     overflow: "hidden",
     position: "relative",
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: DS_COLORS.OVERLAY_BLACK_30,
   },
   photoImage: {
     width: "100%",
@@ -1409,7 +1409,7 @@ const celebStyles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: DS_COLORS.FEED_GRADIENT_END,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -1428,36 +1428,36 @@ const celebStyles = StyleSheet.create({
     height: 80,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: DS_COLORS.OVERLAY_WHITE_15,
     borderStyle: "dashed",
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: DS_COLORS.OVERLAY_WHITE_4,
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
   },
   photoPickerText: {
     fontSize: 11,
-    color: "rgba(255,255,255,0.45)",
+    color: DS_COLORS.TEXT_ON_DARK_45,
     fontWeight: "500",
   },
   captionLabel: {
     alignSelf: "stretch",
     fontSize: 12,
     fontWeight: "600",
-    color: "rgba(255,255,255,0.45)",
+    color: DS_COLORS.TEXT_ON_DARK_45,
     marginTop: 20,
     marginBottom: 8,
   },
   captionInput: {
     alignSelf: "stretch",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
+    borderColor: DS_COLORS.OVERLAY_WHITE_22,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
     color: DS_COLORS.WHITE,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: DS_COLORS.OVERLAY_WHITE_6,
     marginBottom: 12,
   },
   postedOk: { fontSize: 14, fontWeight: "600", color: DS_COLORS.GREEN, marginBottom: 8 },

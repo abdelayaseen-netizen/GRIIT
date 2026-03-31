@@ -32,7 +32,7 @@ export function StreakFreezeModal({
             <TouchableOpacity
               style={styles.freezeButton}
               onPress={onUseFreeze}
-              accessibilityLabel={`Use streak freeze, ${freezesRemaining} remaining this week`}
+              accessibilityLabel={`Use last stand to save your streak, ${freezesRemaining} remaining this week`}
               accessibilityRole="button"
             >
               <Text style={styles.freezeButtonText}>
