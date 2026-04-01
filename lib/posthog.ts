@@ -1,40 +1,36 @@
 /**
- * PostHog analytics client. Uses posthog-js for Expo/React Native compatibility.
+ * PostHog analytics client for React Native.
+ * Uses the React Native PostHog SDK.
  * Set EXPO_PUBLIC_POSTHOG_API_KEY in env. Missing key = no crash, no tracking.
  */
 
-import posthog from "posthog-js";
+import PostHog from "posthog-react-native";
 
 const API_KEY = (process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "").trim();
 const HOST = "https://us.i.posthog.com";
 
-let initialized = false;
+let client: PostHog | null = null;
 
-export function getPostHog() {
+export function getPostHog(): PostHog | null {
   if (!API_KEY) return null;
-  if (!initialized) {
+  if (!client) {
     try {
-      posthog.init(API_KEY, {
-        ...({ host: HOST } as Record<string, unknown>),
-        person_profiles: "identified_only",
-      });
-      initialized = true;
-    } catch (err) {
-      // error swallowed — handle in UI
+      client = new PostHog(API_KEY, { host: HOST });
+    } catch {
       return null;
     }
   }
-  return posthog;
+  return client;
 }
 
 export function isPostHogEnabled(): boolean {
-  return !!API_KEY && initialized;
+  return !!API_KEY && client !== null;
 }
 
 export function resetPostHog(): void {
-  if (initialized) {
+  if (client) {
     try {
-      posthog.reset();
+      client.reset();
     } catch {
       // ignore
     }

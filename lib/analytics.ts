@@ -98,9 +98,10 @@ export function identify(userId: string, props?: UserProperties) {
   const ph = getPostHog();
   if (ph) {
     try {
-      ph.identify(userId);
       if (props && Object.keys(props).length > 0) {
-        ph.people.set(props);
+        ph.identify(userId, { $set: props });
+      } else {
+        ph.identify(userId);
       }
     } catch {
       // ignore
