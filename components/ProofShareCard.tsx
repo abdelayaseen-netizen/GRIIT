@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   proofThumb: {
     width: "100%",
-    height: 160,
+    aspectRatio: 4 / 3,
     borderRadius: 12,
     marginBottom: 16,
     backgroundColor: DS_COLORS.photoThumbBg,

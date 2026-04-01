@@ -1414,7 +1414,7 @@ const celebStyles = StyleSheet.create({
   },
   photoPreview: {
     width: "100%",
-    aspectRatio: 3 / 4,
+    aspectRatio: 4 / 3,
     borderRadius: 14,
     overflow: "hidden",
     position: "relative",

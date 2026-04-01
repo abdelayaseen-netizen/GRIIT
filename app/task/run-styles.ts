@@ -355,7 +355,7 @@ export const styles = StyleSheet.create({
   },
   proofImage: {
     width: "100%",
-    height: 200,
+    aspectRatio: 4 / 3,
     borderRadius: 12,
     backgroundColor: DS_COLORS.surface,
     marginBottom: 12,

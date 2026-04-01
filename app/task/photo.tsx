@@ -19,8 +19,7 @@ import { ROUTES } from "@/lib/routes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const PICKER_OPTIONS = {
-  allowsEditing: true,
-  aspect: [4, 3] as [number, number],
+  allowsEditing: false,
   quality: 0.8,
   base64: true as const,
 };
