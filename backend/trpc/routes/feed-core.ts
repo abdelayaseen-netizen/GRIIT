@@ -58,6 +58,7 @@ async function hydrateActivityEventsToPosts(
     createdAt: string;
     respectCount: number;
     reactedByMe: boolean;
+    lastReactorName: string | null;
     commentCount: number;
     visibility: "public" | "friends" | "private";
   }>
@@ -97,16 +98,44 @@ async function hydrateActivityEventsToPosts(
     filtered.push(ev);
   }
   const eventIds = filtered.map((e) => e.id);
-  const reactionStats = new Map<string, { count: number; reactedByMe: boolean }>();
+  const reactionStats = new Map<string, { count: number; reactedByMe: boolean; lastReactorId: string | null }>();
   const commentCounts = new Map<string, number>();
   if (eventIds.length > 0) {
-    const { data: reactions } = await ctx.supabase.from("feed_reactions").select("event_id, user_id").in("event_id", eventIds);
+    const { data: reactions } = await ctx.supabase
+      .from("feed_reactions")
+      .select("event_id, user_id, created_at")
+      .in("event_id", eventIds)
+      .order("created_at", { ascending: false });
     for (const row of (reactions ?? []) as { event_id: string; user_id: string }[]) {
-      const prev = reactionStats.get(row.event_id) ?? { count: 0, reactedByMe: false };
-      reactionStats.set(row.event_id, { count: prev.count + 1, reactedByMe: prev.reactedByMe || row.user_id === viewerId });
+      const prev = reactionStats.get(row.event_id) ?? { count: 0, reactedByMe: false, lastReactorId: null as string | null };
+      reactionStats.set(row.event_id, {
+        count: prev.count + 1,
+        reactedByMe: prev.reactedByMe || row.user_id === viewerId,
+        lastReactorId: prev.lastReactorId ?? row.user_id,
+      });
     }
     const { data: comments } = await ctx.supabase.from("feed_comments").select("event_id").in("event_id", eventIds);
     for (const row of (comments ?? []) as { event_id: string }[]) commentCounts.set(row.event_id, (commentCounts.get(row.event_id) ?? 0) + 1);
+  }
+  const reactorIds = new Set<string>();
+  for (const [, stat] of reactionStats) {
+    if (stat.lastReactorId && !profileMap.has(stat.lastReactorId)) {
+      reactorIds.add(stat.lastReactorId);
+    }
+  }
+  if (reactorIds.size > 0) {
+    const { data: reactorProfiles } = await server
+      .from("profiles")
+      .select("user_id, display_name, username, avatar_url")
+      .in("user_id", [...reactorIds]);
+    for (const p of (reactorProfiles ?? []) as { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }[]) {
+      profileMap.set(p.user_id, {
+        user_id: p.user_id,
+        display_name: p.display_name ?? undefined,
+        username: p.username ?? undefined,
+        avatar_url: p.avatar_url ?? null,
+      });
+    }
   }
   const streakByUser = new Map<string, number>();
   if (userIds.length > 0) {
@@ -151,6 +180,9 @@ async function hydrateActivityEventsToPosts(
       createdAt: ev.created_at,
       respectCount: stat?.count ?? 0,
       reactedByMe: stat?.reactedByMe ?? false,
+      lastReactorName: stat?.lastReactorId
+        ? (profileMap.get(stat.lastReactorId)?.display_name ?? profileMap.get(stat.lastReactorId)?.username ?? null)
+        : null,
       commentCount: commentCounts.get(ev.id) ?? 0,
       visibility,
     };
@@ -247,12 +279,31 @@ export const feedCoreProcedures = {
     const vis = normalizeChallengeVisibility(ch?.visibility);
     if (vis === "private" && ev.user_id !== viewerId) throw new TRPCError({ code: "FORBIDDEN", message: "You can't view this post" });
     if (vis === "friends" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) throw new TRPCError({ code: "FORBIDDEN", message: "You can't view this post" });
-    const { data: reactions } = await ctx.supabase.from("feed_reactions").select("event_id, user_id").eq("event_id", ev.id);
+    const { data: reactions } = await ctx.supabase
+      .from("feed_reactions")
+      .select("event_id, user_id")
+      .eq("event_id", ev.id)
+      .order("created_at", { ascending: false });
     let reactionCount = 0;
     let reactedByMe = false;
+    let lastReactorId: string | null = null;
     for (const row of (reactions ?? []) as { event_id: string; user_id: string }[]) {
       reactionCount += 1;
       if (row.user_id === viewerId) reactedByMe = true;
+      if (!lastReactorId) lastReactorId = row.user_id;
+    }
+    let lastReactorName: string | null = null;
+    if (lastReactorId) {
+      const existing = profileMap.get(lastReactorId);
+      if (existing) {
+        lastReactorName = existing.display_name ?? existing.username ?? null;
+      } else {
+        const { data: rp } = await server.from("profiles").select("display_name, username").eq("user_id", lastReactorId).maybeSingle();
+        lastReactorName =
+          (rp as { display_name?: string; username?: string } | null)?.display_name ??
+          (rp as { display_name?: string; username?: string } | null)?.username ??
+          null;
+      }
     }
     const { count: commentTotal, error: cErr } = await ctx.supabase.from("feed_comments").select("id", { count: "exact", head: true }).eq("event_id", ev.id);
     if (cErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: cErr.message });
@@ -272,7 +323,13 @@ export const feedCoreProcedures = {
     return {
       id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), totalDays: Math.max(1, durationDays), eventType: ev.event_type,
       isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: typeof md.photo_url === "string" ? md.photo_url : null, proofPhotoUrl: typeof md.proof_photo_url === "string" ? md.proof_photo_url : null, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
-      caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null, createdAt: ev.created_at, respectCount: reactionCount, reactedByMe, commentCount: commentTotal ?? 0, visibility: vis,
+      caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
+      createdAt: ev.created_at,
+      respectCount: reactionCount,
+      reactedByMe,
+      lastReactorName,
+      commentCount: commentTotal ?? 0,
+      visibility: vis,
     };
   }),
 
@@ -294,20 +351,51 @@ export const feedCoreProcedures = {
       return { id: e.id, user_id: e.user_id, event_type: e.event_type, challenge_id: e.challenge_id ?? null, metadata: e.metadata ?? {}, created_at: e.created_at, display_name: profile?.display_name ?? profile?.username ?? "Someone", username: profile?.username ?? "?", avatar_url: profile?.avatar_url ?? null };
     });
     const eventIds = items.map((e) => e.id);
-    const reactionStats = new Map<string, { count: number; reactedByMe: boolean }>();
+    const reactionStats = new Map<string, { count: number; reactedByMe: boolean; lastReactorId: string | null }>();
     const commentCounts = new Map<string, number>();
     if (eventIds.length > 0) {
-      const { data: reactions } = await ctx.supabase.from("feed_reactions").select("event_id, user_id").in("event_id", eventIds);
+      const { data: reactions } = await ctx.supabase
+        .from("feed_reactions")
+        .select("event_id, user_id, created_at")
+        .in("event_id", eventIds)
+        .order("created_at", { ascending: false });
       for (const row of (reactions ?? []) as { event_id: string; user_id: string }[]) {
-        const prev = reactionStats.get(row.event_id) ?? { count: 0, reactedByMe: false };
-        reactionStats.set(row.event_id, { count: prev.count + 1, reactedByMe: prev.reactedByMe || row.user_id === ctx.userId });
+        const prev = reactionStats.get(row.event_id) ?? { count: 0, reactedByMe: false, lastReactorId: null as string | null };
+        reactionStats.set(row.event_id, {
+          count: prev.count + 1,
+          reactedByMe: prev.reactedByMe || row.user_id === ctx.userId,
+          lastReactorId: prev.lastReactorId ?? row.user_id,
+        });
       }
       const { data: comments } = await ctx.supabase.from("feed_comments").select("event_id").in("event_id", eventIds);
       for (const row of (comments ?? []) as { event_id: string }[]) commentCounts.set(row.event_id, (commentCounts.get(row.event_id) ?? 0) + 1);
     }
+    const listReactorIds = new Set<string>();
+    for (const [, stat] of reactionStats) {
+      if (stat.lastReactorId && !profileMap.has(stat.lastReactorId)) {
+        listReactorIds.add(stat.lastReactorId);
+      }
+    }
+    if (listReactorIds.size > 0) {
+      const { data: reactorProfiles } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, display_name, username, avatar_url")
+        .in("user_id", [...listReactorIds]);
+      for (const p of (reactorProfiles ?? []) as { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }[]) {
+        profileMap.set(p.user_id, { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url });
+      }
+    }
     const withReactions = withProfiles.map((item) => {
       const stat = reactionStats.get(item.id);
-      return { ...item, reaction_count: stat?.count ?? 0, reacted_by_me: stat?.reactedByMe ?? false, comment_count: commentCounts.get(item.id) ?? 0 };
+      return {
+        ...item,
+        reaction_count: stat?.count ?? 0,
+        reacted_by_me: stat?.reactedByMe ?? false,
+        comment_count: commentCounts.get(item.id) ?? 0,
+        last_reactor_name: stat?.lastReactorId
+          ? (profileMap.get(stat.lastReactorId)?.display_name ?? profileMap.get(stat.lastReactorId)?.username ?? null)
+          : null,
+      };
     });
     const lastItem = items.length > 0 ? items[items.length - 1] : undefined;
     return { items: withReactions, nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null };

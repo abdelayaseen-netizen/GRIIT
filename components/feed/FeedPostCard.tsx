@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
+import { View, Text, StyleSheet, Pressable, Animated, TextInput } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Camera, CircleCheck, Heart } from "lucide-react-native";
@@ -26,6 +26,7 @@ type Props = {
   onShare: () => void;
   onMenuPress?: () => void;
   previewComment?: FeedCommentPreview | null;
+  onSubmitComment?: (text: string) => Promise<void>;
 };
 
 function FeedPostCardInner({
@@ -36,12 +37,16 @@ function FeedPostCardInner({
   onShare,
   onMenuPress,
   previewComment,
+  onSubmitComment,
 }: Props) {
   const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
   const proofUri = post.proofPhotoUrl || post.photoUrl;
   const showProof = post.hasProof || Boolean(proofUri);
 
   const [showWhoRespected, setShowWhoRespected] = React.useState(false);
+  const [showQuickComment, setShowQuickComment] = React.useState(false);
+  const [quickDraft, setQuickDraft] = React.useState("");
+  const [sending, setSending] = React.useState(false);
 
   const lastTapRef = React.useRef<number>(0);
   const heartScale = React.useRef(new Animated.Value(0)).current;
@@ -74,6 +79,21 @@ function FeedPostCardInner({
     }
     lastTapRef.current = now;
   }, [post.reactedByMe, onRespect, heartScale, heartOpacity]);
+
+  const handleQuickSend = React.useCallback(async () => {
+    const text = quickDraft.trim();
+    if (!text || sending || !onSubmitComment) return;
+    setSending(true);
+    try {
+      await onSubmitComment(text);
+      setQuickDraft("");
+      setShowQuickComment(false);
+    } catch {
+      // Error handled upstream
+    } finally {
+      setSending(false);
+    }
+  }, [quickDraft, sending, onSubmitComment]);
 
   return (
     <View style={styles.card}>
@@ -134,15 +154,52 @@ function FeedPostCardInner({
         </View>
       </View>
 
+      {post.respectCount > 0 && post.lastReactorName ? (
+        <View style={styles.respectedByRow}>
+          <Text style={styles.respectedByText}>
+            <Text style={styles.respectedByBold}>{post.lastReactorName}</Text>
+            {post.respectCount > 1
+              ? ` and ${post.respectCount - 1} other${post.respectCount > 2 ? "s" : ""}`
+              : ""}
+            {" respected this"}
+          </Text>
+        </View>
+      ) : null}
+
       <FeedEngagementRow
         respectCount={post.respectCount}
         reactedByMe={post.reactedByMe}
         commentCount={post.commentCount}
         onRespect={onRespect}
-        onComment={onComment}
+        onComment={onSubmitComment ? () => setShowQuickComment((v) => !v) : onComment}
         onShare={onShare}
         onRespectCountPress={() => setShowWhoRespected(true)}
       />
+
+      {showQuickComment && onSubmitComment ? (
+        <View style={styles.quickCommentRow}>
+          <TextInput
+            style={styles.quickCommentInput}
+            placeholder="Add a comment..."
+            placeholderTextColor={DS_COLORS.TEXT_MUTED}
+            value={quickDraft}
+            onChangeText={setQuickDraft}
+            maxLength={200}
+            autoFocus
+            returnKeyType="send"
+            onSubmitEditing={() => void handleQuickSend()}
+          />
+          <Pressable
+            onPress={() => void handleQuickSend()}
+            disabled={!quickDraft.trim() || sending}
+            style={[styles.quickSendBtn, (!quickDraft.trim() || sending) && styles.quickSendBtnDisabled]}
+            accessibilityRole="button"
+            accessibilityLabel="Send comment"
+          >
+            <Text style={styles.quickSendText}>{sending ? "..." : "Post"}</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {previewComment ? (
         <View style={styles.commentPreview}>
@@ -246,6 +303,52 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 2,
     backgroundColor: DS_COLORS.ACCENT,
+  },
+  respectedByRow: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 2,
+  },
+  respectedByText: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_SECONDARY,
+  },
+  respectedByBold: {
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  quickCommentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DS_COLORS.FEED_COMMENT_BORDER,
+  },
+  quickCommentInput: {
+    flex: 1,
+    fontSize: 13,
+    color: DS_COLORS.TEXT_PRIMARY,
+    backgroundColor: DS_COLORS.INPUT_BG,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minHeight: 36,
+  },
+  quickSendBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: DS_COLORS.ACCENT,
+  },
+  quickSendBtnDisabled: {
+    opacity: 0.4,
+  },
+  quickSendText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_ON_DARK,
   },
   commentPreview: {
     flexDirection: "row",

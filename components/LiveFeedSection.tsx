@@ -204,6 +204,21 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
     }
   }, []);
 
+  const submitComment = useCallback(
+    async (postId: string, text: string) => {
+      try {
+        await trpcMutate(TRPC.feed.comment, { eventId: postId, text });
+        updatePost(postId, (p) => ({ ...p, commentCount: p.commentCount + 1 }));
+        void queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", postId] });
+        void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+      } catch (e) {
+        captureError(e, "LiveFeedQuickComment");
+        throw e;
+      }
+    },
+    [updatePost, queryClient]
+  );
+
   const navigateProfile = useCallback(
     (post: LiveFeedPost) => {
       if (!post.userId) return;
@@ -286,7 +301,7 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
   const renderItem = useCallback(
     ({ item }: { item: LiveFeedPost }) => {
       const preview = previewByPostId.get(item.id) ?? null;
-      const common = {
+      const baseCardProps = {
         post: item,
         onProfilePress: () => navigateProfile(item),
         onRespect: () => void onRespect(item),
@@ -314,11 +329,17 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
         );
       }
       if (item.isCompleted) {
-        return <MilestonePostCard {...common} />;
+        return <MilestonePostCard {...baseCardProps} />;
       }
-      return <FeedPostCard {...common} previewComment={preview} />;
+      return (
+        <FeedPostCard
+          {...baseCardProps}
+          previewComment={preview}
+          onSubmitComment={(text) => submitComment(item.id, text)}
+        />
+      );
     },
-    [navigateProfile, onRespect, onShare, openPost, openPostMenu, previewByPostId]
+    [navigateProfile, onRespect, onShare, openPost, openPostMenu, previewByPostId, submitComment]
   );
 
   const listEmpty = useMemo(() => {

@@ -2,6 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure } from "../create-context";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { sendExpoPush } from "../../lib/push";
 
 type EvRow = {
   id: string;
@@ -60,49 +61,85 @@ export const feedSocialProcedures = {
           const evTyped = evRow as { user_id?: string; challenge_id?: string | null; metadata?: Record<string, unknown> } | null;
           const ownerId = evTyped?.user_id;
           if (ownerId && ownerId !== ctx.userId) {
-            const { data: actorProfile } = await srv
-              .from("profiles")
-              .select("username, display_name, avatar_url")
-              .eq("user_id", ctx.userId)
-              .maybeSingle();
-            const actor = actorProfile as { username?: string; display_name?: string | null; avatar_url?: string | null } | null;
-            const actorUsername = actor?.username ?? "someone";
-            const actorDisplayName = actor?.display_name ?? actorUsername;
-
-            let challengeTitle = "challenge";
-            const evMeta = evTyped?.metadata ?? {};
-            if (typeof evMeta.challenge_name === "string" && evMeta.challenge_name.trim()) {
-              challengeTitle = evMeta.challenge_name.trim();
-            } else if (evTyped?.challenge_id) {
-              const { data: chRow } = await srv.from("challenges").select("title").eq("id", evTyped.challenge_id).maybeSingle();
-              challengeTitle = (chRow as { title?: string } | null)?.title ?? "challenge";
-            }
-            const dayNum =
-              typeof evMeta.day_number === "number"
-                ? evMeta.day_number
-                : typeof evMeta.current_day === "number"
-                  ? evMeta.current_day
-                  : null;
-            const dayLabel = dayNum ? `Day ${dayNum}` : "";
-
-            const anySrv = srv as unknown as {
-              from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
-            };
-            const { error: nErr } = await anySrv.from("in_app_notifications").insert({
-              user_id: ownerId,
-              type: "respect",
-              read: false,
-              data: {
-                actor_id: ctx.userId,
-                actor_username: actorUsername,
-                actor_display_name: actorDisplayName,
-                actor_avatar_url: actor?.avatar_url ?? null,
-                event_id: input.eventId,
-                challenge_title: challengeTitle,
-                day_label: dayLabel,
-              },
+            // Notification batching: skip if there's an unread respect notif for this event in last 5 min
+            const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+            const { data: recentRespectRows } = await srv
+              .from("in_app_notifications")
+              .select("id, data")
+              .eq("user_id", ownerId)
+              .eq("type", "respect")
+              .eq("read", false)
+              .gte("created_at", fiveMinAgo);
+            const skipNotification = (recentRespectRows ?? []).some((r: { data?: unknown }) => {
+              const d = r.data;
+              if (!d || typeof d !== "object" || Array.isArray(d)) return false;
+              return String((d as Record<string, unknown>).event_id ?? "") === input.eventId;
             });
-            if (nErr) console.error("[feed.react] in_app_notifications insert:", nErr);
+
+            if (!skipNotification) {
+              const { data: actorProfile } = await srv
+                .from("profiles")
+                .select("username, display_name, avatar_url")
+                .eq("user_id", ctx.userId)
+                .maybeSingle();
+              const actor = actorProfile as { username?: string; display_name?: string | null; avatar_url?: string | null } | null;
+              const actorUsername = actor?.username ?? "someone";
+              const actorDisplayName = actor?.display_name ?? actorUsername;
+
+              let challengeTitle = "challenge";
+              const evMeta = evTyped?.metadata ?? {};
+              if (typeof evMeta.challenge_name === "string" && evMeta.challenge_name.trim()) {
+                challengeTitle = evMeta.challenge_name.trim();
+              } else if (evTyped?.challenge_id) {
+                const { data: chRow } = await srv.from("challenges").select("title").eq("id", evTyped.challenge_id).maybeSingle();
+                challengeTitle = (chRow as { title?: string } | null)?.title ?? "challenge";
+              }
+              const dayNum =
+                typeof evMeta.day_number === "number"
+                  ? evMeta.day_number
+                  : typeof evMeta.current_day === "number"
+                    ? evMeta.current_day
+                    : null;
+              const dayLabel = dayNum ? `Day ${dayNum}` : "";
+
+              const anySrv = srv as unknown as {
+                from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
+              };
+              const { error: nErr } = await anySrv.from("in_app_notifications").insert({
+                user_id: ownerId,
+                type: "respect",
+                read: false,
+                data: {
+                  actor_id: ctx.userId,
+                  actor_username: actorUsername,
+                  actor_display_name: actorDisplayName,
+                  actor_avatar_url: actor?.avatar_url ?? null,
+                  event_id: input.eventId,
+                  challenge_title: challengeTitle,
+                  day_label: dayLabel,
+                },
+              });
+              if (nErr) console.error("[feed.react] in_app_notifications insert:", nErr);
+
+              try {
+                const [pushTokenResult, ownerProfileResult] = await Promise.all([
+                  srv.from("push_tokens").select("token").eq("user_id", ownerId),
+                  srv.from("profiles").select("expo_push_token").eq("user_id", ownerId).maybeSingle(),
+                ]);
+                const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
+                const profileToken = (ownerProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
+                const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
+                if (allTokens.length > 0) {
+                  const pushTitle = "New respect";
+                  const pushBody = dayLabel
+                    ? `${actorDisplayName} respected your ${dayLabel} ${challengeTitle} post`
+                    : `${actorDisplayName} respected your ${challengeTitle} post`;
+                  await sendExpoPush(allTokens, pushTitle, pushBody);
+                }
+              } catch (pushErr) {
+                console.error("[feed.react] push send error:", pushErr);
+              }
+            }
           }
         }
       }
@@ -214,6 +251,24 @@ export const feedSocialProcedures = {
             },
           });
           if (nErr) console.error("[feed.comment] in_app_notifications insert:", nErr);
+
+          try {
+            const [pushTokenResult, ownerProfileResult] = await Promise.all([
+              srv.from("push_tokens").select("token").eq("user_id", ownerId),
+              srv.from("profiles").select("expo_push_token").eq("user_id", ownerId).maybeSingle(),
+            ]);
+            const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
+            const profileToken = (ownerProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
+            const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
+            if (allTokens.length > 0) {
+              const commentPreview = input.text.trim().slice(0, 60);
+              const pushTitle = "New comment";
+              const pushBody = `${commentActorDisplayName} commented: "${commentPreview}"`;
+              await sendExpoPush(allTokens, pushTitle, pushBody);
+            }
+          } catch (pushErr) {
+            console.error("[feed.comment] push send error:", pushErr);
+          }
         }
       }
 
