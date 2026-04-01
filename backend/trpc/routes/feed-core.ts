@@ -477,7 +477,14 @@ export const feedCoreProcedures = {
       const { data: acRow } = await server.from("active_challenges").select("id").eq("user_id", ctx.userId).eq("challenge_id", input.challengeId).in("status", ["active", "completed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
       const activeChallengeId = (acRow as { id?: string } | null)?.id;
       if (!activeChallengeId) throw new TRPCError({ code: "NOT_FOUND", message: "No active challenge found. Complete a task first." });
-      const { data: cinRow } = await server.from("check_ins").select("task_id, proof_url, completion_image_url, photo_url, created_at").eq("active_challenge_id", activeChallengeId).in("date_key", [todayKey, yesterdayKey]).eq("status", "completed").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
+      const twoDaysAgoKey = twoDaysAgo.toISOString().slice(0, 10);
+      let { data: cinRow } = await server.from("check_ins").select("task_id, proof_url, completion_image_url, photo_url, created_at").eq("active_challenge_id", activeChallengeId).in("date_key", [todayKey, yesterdayKey, twoDaysAgoKey]).eq("status", "completed").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (!cinRow) {
+        const { data: recentCin } = await server.from("check_ins").select("task_id, proof_url, completion_image_url, photo_url, created_at").eq("active_challenge_id", activeChallengeId).eq("status", "completed").order("created_at", { ascending: false }).limit(1).maybeSingle();
+        cinRow = recentCin;
+      }
       const cin = cinRow as { task_id?: string; proof_url?: string | null; completion_image_url?: string | null; photo_url?: string | null } | null;
       if (!cin?.task_id) throw new TRPCError({ code: "NOT_FOUND", message: "No completed task found today. Complete a task first, then share." });
       const { data: taskRow } = await server.from("challenge_tasks").select("title, task_type").eq("id", cin.task_id).maybeSingle();

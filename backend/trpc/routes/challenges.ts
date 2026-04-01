@@ -116,7 +116,14 @@ export const challengesRouter = createTRPCRouter({
         .eq("id", input.id)
         .single();
 
-      if (error) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+      if (error) {
+        const pgCode = (error as { code?: string }).code;
+        if (pgCode === "PGRST116") {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+        }
+        logger.error({ err: error, challengeId: input.id }, "[challenges.getById] query failed");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load challenge." });
+      }
 
       const participationType = (data as { participation_type?: string }).participation_type;
       const runStatus = (data as { run_status?: string }).run_status;

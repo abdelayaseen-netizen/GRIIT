@@ -119,18 +119,26 @@ export const profilesRouter = createTRPCRouter({
         const { logger } = await import("../../lib/logger");
         logger.warn({ error: streakError, userId: p.user_id }, "[profiles.getPublicByUsername] streaks read");
       }
-      const [{ count: activeChal }, { count: doneChal }] = await Promise.all([
-        server
-          .from("active_challenges")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", p.user_id)
-          .eq("status", "active"),
-        server
-          .from("active_challenges")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", p.user_id)
-          .eq("status", "completed"),
-      ]);
+      let activeChal: number | null = 0;
+      let doneChal: number | null = 0;
+      try {
+        const [activeRes, doneRes] = await Promise.all([
+          server
+            .from("active_challenges")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", p.user_id)
+            .eq("status", "active"),
+          server
+            .from("active_challenges")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", p.user_id)
+            .eq("status", "completed"),
+        ]);
+        activeChal = activeRes.count;
+        doneChal = doneRes.count;
+      } catch {
+        // active_challenges RLS may block reading other users' rows — degrade gracefully
+      }
       return {
         user_id: p.user_id,
         username: p.username,
