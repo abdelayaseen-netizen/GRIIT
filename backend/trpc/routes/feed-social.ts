@@ -52,9 +52,39 @@ export const feedSocialProcedures = {
       if (reacted) {
         const srv = getSupabaseServer();
         if (srv) {
-          const { data: evRow } = await srv.from("activity_events").select("user_id").eq("id", input.eventId).maybeSingle();
-          const ownerId = (evRow as { user_id?: string } | null)?.user_id;
+          const { data: evRow } = await srv
+            .from("activity_events")
+            .select("user_id, challenge_id, metadata")
+            .eq("id", input.eventId)
+            .maybeSingle();
+          const evTyped = evRow as { user_id?: string; challenge_id?: string | null; metadata?: Record<string, unknown> } | null;
+          const ownerId = evTyped?.user_id;
           if (ownerId && ownerId !== ctx.userId) {
+            const { data: actorProfile } = await srv
+              .from("profiles")
+              .select("username, display_name, avatar_url")
+              .eq("user_id", ctx.userId)
+              .maybeSingle();
+            const actor = actorProfile as { username?: string; display_name?: string | null; avatar_url?: string | null } | null;
+            const actorUsername = actor?.username ?? "someone";
+            const actorDisplayName = actor?.display_name ?? actorUsername;
+
+            let challengeTitle = "challenge";
+            const evMeta = evTyped?.metadata ?? {};
+            if (typeof evMeta.challenge_name === "string" && evMeta.challenge_name.trim()) {
+              challengeTitle = evMeta.challenge_name.trim();
+            } else if (evTyped?.challenge_id) {
+              const { data: chRow } = await srv.from("challenges").select("title").eq("id", evTyped.challenge_id).maybeSingle();
+              challengeTitle = (chRow as { title?: string } | null)?.title ?? "challenge";
+            }
+            const dayNum =
+              typeof evMeta.day_number === "number"
+                ? evMeta.day_number
+                : typeof evMeta.current_day === "number"
+                  ? evMeta.current_day
+                  : null;
+            const dayLabel = dayNum ? `Day ${dayNum}` : "";
+
             const anySrv = srv as unknown as {
               from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
             };
@@ -62,8 +92,15 @@ export const feedSocialProcedures = {
               user_id: ownerId,
               type: "respect",
               read: false,
-              actor_id: ctx.userId,
-              metadata: { event_id: input.eventId },
+              data: {
+                actor_id: ctx.userId,
+                actor_username: actorUsername,
+                actor_display_name: actorDisplayName,
+                actor_avatar_url: actor?.avatar_url ?? null,
+                event_id: input.eventId,
+                challenge_title: challengeTitle,
+                day_label: dayLabel,
+              },
             });
             if (nErr) console.error("[feed.react] in_app_notifications insert:", nErr);
           }
@@ -139,9 +176,26 @@ export const feedSocialProcedures = {
 
       const srv = getSupabaseServer();
       if (srv) {
-        const { data: evRow } = await srv.from("activity_events").select("user_id").eq("id", input.eventId).maybeSingle();
-        const ownerId = (evRow as { user_id?: string } | null)?.user_id;
+        const { data: evRow } = await srv
+          .from("activity_events")
+          .select("user_id, challenge_id, metadata")
+          .eq("id", input.eventId)
+          .maybeSingle();
+        const evTyped = evRow as { user_id?: string; challenge_id?: string | null; metadata?: Record<string, unknown> } | null;
+        const ownerId = evTyped?.user_id;
         if (ownerId && ownerId !== ctx.userId) {
+          const commentActorUsername = profile?.username ?? "someone";
+          const commentActorDisplayName = profile?.display_name ?? commentActorUsername;
+
+          let commentChallengeTitle = "challenge";
+          const cMeta = evTyped?.metadata ?? {};
+          if (typeof cMeta.challenge_name === "string" && cMeta.challenge_name.trim()) {
+            commentChallengeTitle = cMeta.challenge_name.trim();
+          } else if (evTyped?.challenge_id) {
+            const { data: chRow } = await srv.from("challenges").select("title").eq("id", evTyped.challenge_id).maybeSingle();
+            commentChallengeTitle = (chRow as { title?: string } | null)?.title ?? "challenge";
+          }
+
           const anySrv = srv as unknown as {
             from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
           };
@@ -149,8 +203,15 @@ export const feedSocialProcedures = {
             user_id: ownerId,
             type: "comment",
             read: false,
-            actor_id: ctx.userId,
-            metadata: { event_id: input.eventId, comment_text: input.text.trim().slice(0, 200) },
+            data: {
+              actor_id: ctx.userId,
+              actor_username: commentActorUsername,
+              actor_display_name: commentActorDisplayName,
+              actor_avatar_url: profile?.avatar_url ?? null,
+              event_id: input.eventId,
+              comment_text: input.text.trim().slice(0, 200),
+              challenge_title: commentChallengeTitle,
+            },
           });
           if (nErr) console.error("[feed.comment] in_app_notifications insert:", nErr);
         }

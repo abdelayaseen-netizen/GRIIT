@@ -206,14 +206,17 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
 
   const navigateProfile = useCallback(
     (post: LiveFeedPost) => {
+      if (!post.userId) return;
       if (post.userId === user?.id) {
         router.push(ROUTES.TABS_PROFILE as never);
         return;
       }
       const u = post.username?.trim();
-      if (u && u !== "?" && u !== "Someone" && u.length >= 2 && !/^user_[0-9a-f]+$/i.test(u)) {
+      const hasRealUsername =
+        u && u !== "?" && u !== "Someone" && u.length >= 2 && !/^user_[0-9a-f]+$/i.test(u);
+      if (hasRealUsername) {
         router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
-      } else if (post.userId) {
+      } else {
         router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(post.userId)) as never);
       }
     },

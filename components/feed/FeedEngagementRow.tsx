@@ -27,12 +27,14 @@ function FeedEngagementRowInner({ respectCount, reactedByMe, commentCount, onRes
           color={reactedByMe ? DS_COLORS.FEED_RESPECT_ICON_FILL : DS_COLORS.FEED_ENGAGEMENT_MUTED}
           fill={reactedByMe ? DS_COLORS.FEED_RESPECT_ICON_FILL : "none"}
         />
-        <Text style={[styles.count, reactedByMe && styles.countActive]}>{respectCount}</Text>
+        {respectCount > 0 ? (
+          <Text style={[styles.count, reactedByMe && styles.countActive]}>{respectCount}</Text>
+        ) : null}
       </Pressable>
 
       <Pressable onPress={onComment} style={styles.pill} accessibilityRole="button" accessibilityLabel="Comments">
         <MessageCircle size={16} color={DS_COLORS.FEED_ENGAGEMENT_MUTED} />
-        <Text style={styles.count}>{commentCount}</Text>
+        {commentCount > 0 ? <Text style={styles.count}>{commentCount}</Text> : null}
       </Pressable>
 
       <View style={styles.spacer} />

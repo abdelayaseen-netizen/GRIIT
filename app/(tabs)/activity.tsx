@@ -69,10 +69,15 @@ function getNotifText(n: NotifRow): { bold: string; rest: string } {
   const name = n.actorDisplayName ?? n.actorUsername ?? "Someone";
   const challengeName = String(n.metadata.challenge_title ?? n.metadata.challenge_name ?? "challenge");
   switch (n.type) {
-    case "respect":
-      return { bold: name, rest: ` respected your ${challengeName} check-in` };
-    case "comment":
-      return { bold: name, rest: ` commented — "${String(n.metadata.comment_text ?? "").slice(0, 80)}"` };
+    case "respect": {
+      const dayLabel = typeof n.metadata.day_label === "string" && n.metadata.day_label ? ` ${n.metadata.day_label}` : "";
+      return { bold: name, rest: ` respected your${dayLabel} ${challengeName} post` };
+    }
+    case "comment": {
+      const commentText = String(n.metadata.comment_text ?? "").slice(0, 80);
+      const commentChallenge = String(n.metadata.challenge_title ?? challengeName);
+      return { bold: name, rest: ` commented on your ${commentChallenge} post — "${commentText}"` };
+    }
     case "follow":
       return { bold: name, rest: " started following you" };
     case "follow_request":
@@ -312,9 +317,30 @@ function NotificationsBody({
       item: NotifRow;
       section: { title: string; data: NotifRow[] };
     }) => (
-      <NotificationRow n={item} onFollow={onFollow} unread={section.title === "NEW"} userId={userId} />
+      <NotificationRow
+        n={item}
+        onFollow={onFollow}
+        unread={section.title === "NEW"}
+        userId={userId}
+        onPress={
+          (item.type === "respect" || item.type === "comment") && item.metadata?.event_id
+            ? () => router.push(`/post/${String(item.metadata.event_id)}` as never)
+            : item.type === "follow" || item.type === "follow_request"
+              ? item.actorId
+                ? () => {
+                    const uname = item.actorUsername?.trim();
+                    if (uname && uname !== "?" && uname.length >= 2) {
+                      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(uname)) as never);
+                    } else if (item.actorId) {
+                      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.actorId)) as never);
+                    }
+                  }
+                : undefined
+              : undefined
+        }
+      />
     ),
-    [onFollow, userId]
+    [onFollow, userId, router]
   );
 
   if (query.isPending) return <LoadingState message="Loading notifications..." />;
@@ -367,11 +393,13 @@ const NotificationRow = React.memo(function NotificationRow({
   onFollow,
   unread,
   userId,
+  onPress,
 }: {
   n: NotifRow;
   onFollow: (id: string) => void;
   unread: boolean;
   userId: string;
+  onPress?: () => void;
 }) {
   const qc = useQueryClient();
   const [frDone, setFrDone] = useState<"accepted" | "declined" | null>(null);
@@ -406,7 +434,11 @@ const NotificationRow = React.memo(function NotificationRow({
   }
 
   return (
-    <View style={[styles.notifRow, DS_SHADOWS.cardSubtle, unread ? styles.notifUnread : styles.notifRead]}>
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={[styles.notifRow, DS_SHADOWS.cardSubtle, unread ? styles.notifUnread : styles.notifRead]}
+    >
       <View style={styles.avatarWrap}>
         <View style={[styles.notifAvatar, { backgroundColor: colors.bg }]}>
           <Text style={[styles.notifAvatarLetter, { color: colors.letter }]}>{n.type === "rank" ? "★" : initial}</Text>
@@ -477,7 +509,7 @@ const NotificationRow = React.memo(function NotificationRow({
           <Text style={styles.thumbEmoji}>📸</Text>
         </View>
       ) : null}
-    </View>
+    </Pressable>
   );
 });
 
