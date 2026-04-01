@@ -280,6 +280,41 @@ export const feedSocialProcedures = {
       return { ok: true as const };
     }),
 
+  getReactions: protectedProcedure
+    .input(z.object({ eventId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { data: reactions, error } = await ctx.supabase
+        .from("feed_reactions")
+        .select("user_id, created_at")
+        .eq("event_id", input.eventId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load reactions." });
+      }
+      const userIds = [...new Set((reactions ?? []).map((r: { user_id: string }) => r.user_id))];
+      if (userIds.length === 0) return [];
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", userIds);
+      const profileMap = new Map(
+        (profiles ?? []).map((p: { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }) => [
+          p.user_id,
+          p,
+        ])
+      );
+      return userIds.map((uid) => {
+        const p = profileMap.get(uid);
+        return {
+          userId: uid,
+          username: p?.username ?? "?",
+          displayName: p?.display_name ?? p?.username ?? "Someone",
+          avatarUrl: p?.avatar_url ?? null,
+        };
+      });
+    }),
+
   /** Attach caption to the latest task_completed activity event (feed). Uses service role for update. */
   getRecentCompletions: publicProcedure.query(async ({ ctx }) => {
     const server = getSupabaseServer() ?? ctx.supabase;

@@ -1,11 +1,13 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Camera, CircleCheck } from "lucide-react-native";
+import { Camera, CircleCheck, Heart } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
+import { WhoRespectedSheet } from "./WhoRespectedSheet";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
 import { Avatar } from "@/components/Avatar";
 
@@ -39,6 +41,40 @@ function FeedPostCardInner({
   const proofUri = post.proofPhotoUrl || post.photoUrl;
   const showProof = post.hasProof || Boolean(proofUri);
 
+  const [showWhoRespected, setShowWhoRespected] = React.useState(false);
+
+  const lastTapRef = React.useRef<number>(0);
+  const heartScale = React.useRef(new Animated.Value(0)).current;
+  const heartOpacity = React.useRef(new Animated.Value(0)).current;
+
+  const handleDoubleTap = React.useCallback(() => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      if (!post.reactedByMe) {
+        onRespect();
+      }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      heartScale.setValue(0);
+      heartOpacity.setValue(1);
+      Animated.sequence([
+        Animated.spring(heartScale, {
+          toValue: 1,
+          friction: 3,
+          tension: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartOpacity, {
+          toValue: 0,
+          duration: 400,
+          delay: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+    lastTapRef.current = now;
+  }, [post.reactedByMe, onRespect, heartScale, heartOpacity]);
+
   return (
     <View style={styles.card}>
       <FeedCardHeader post={post} onProfilePress={onProfilePress} onMenuPress={onMenuPress} />
@@ -51,22 +87,37 @@ function FeedPostCardInner({
 
       {showProof ? (
         <View style={styles.proofWrap}>
-          {proofUri ? (
-            <Image
-              source={{ uri: proofUri }}
-              style={styles.proofImage}
-              contentFit="cover"
-              accessibilityRole="image"
-            />
-          ) : (
-            <View style={[styles.placeholder, { backgroundColor: placeholderBg(post.challengeName) }]}>
-              <Camera size={40} color={DS_COLORS.TEXT_PRIMARY} style={{ opacity: 0.35 }} />
-            </View>
-          )}
+          <Pressable onPress={handleDoubleTap} accessibilityRole="button" accessibilityLabel="Double tap to respect">
+            {proofUri ? (
+              <Image
+                source={{ uri: proofUri }}
+                style={styles.proofImage}
+                contentFit="cover"
+                accessibilityRole="image"
+              />
+            ) : (
+              <View style={[styles.placeholder, { backgroundColor: placeholderBg(post.challengeName) }]}>
+                <Camera size={40} color={DS_COLORS.TEXT_PRIMARY} style={{ opacity: 0.35 }} />
+              </View>
+            )}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.heartOverlay,
+                {
+                  opacity: heartOpacity,
+                  transform: [{ scale: heartScale }],
+                },
+              ]}
+            >
+              <Heart size={80} color={DS_COLORS.FEED_RESPECT_ICON_FILL} fill={DS_COLORS.FEED_RESPECT_ICON_FILL} />
+            </Animated.View>
+          </Pressable>
           <View style={styles.proofMeta}>
             <CircleCheck size={12} color={DS_COLORS.ACCENT} />
             <Text style={styles.taskTag}>
-              {post.challengeName}{post.taskName ? ` · ${post.taskName}` : ` · Task ${post.currentDay} of ${post.totalDays}`}
+              {post.challengeName}
+              {post.taskName ? ` · ${post.taskName}` : ` · Task ${post.currentDay} of ${post.totalDays}`}
             </Text>
           </View>
         </View>
@@ -90,6 +141,7 @@ function FeedPostCardInner({
         onRespect={onRespect}
         onComment={onComment}
         onShare={onShare}
+        onRespectCountPress={() => setShowWhoRespected(true)}
       />
 
       {previewComment ? (
@@ -109,6 +161,8 @@ function FeedPostCardInner({
           </View>
         </View>
       ) : null}
+
+      <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
     </View>
   );
 }
@@ -142,6 +196,15 @@ const styles = StyleSheet.create({
   placeholder: {
     width: "100%",
     aspectRatio: 16 / 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heartOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: "center",
     justifyContent: "center",
   },

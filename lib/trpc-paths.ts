@@ -127,6 +127,7 @@ export const TRPC = {
     getComments: 'feed.getComments',
     shareCompletion: 'feed.shareCompletion',
     deletePost: 'feed.deletePost',
+    getReactions: 'feed.getReactions',
     getPost: 'feed.getPost',
     getUserPosts: 'feed.getUserPosts',
     getRecentCompletions: 'feed.getRecentCompletions',

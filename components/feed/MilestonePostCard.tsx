@@ -4,6 +4,7 @@ import { Star } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
+import { WhoRespectedSheet } from "./WhoRespectedSheet";
 import type { LiveFeedPost } from "./feedTypes";
 
 function milestoneCopy(post: LiveFeedPost): { title: string; subtitle: string } {
@@ -32,6 +33,7 @@ function MilestonePostCardInner({
 }: Props) {
   const { title, subtitle } = milestoneCopy(post);
   const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
+  const [showWhoRespected, setShowWhoRespected] = React.useState(false);
 
   return (
     <View style={styles.card}>
@@ -65,7 +67,10 @@ function MilestonePostCardInner({
         onRespect={onRespect}
         onComment={onComment}
         onShare={onShare}
+        onRespectCountPress={() => setShowWhoRespected(true)}
       />
+
+      <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
     </View>
   );
 }
