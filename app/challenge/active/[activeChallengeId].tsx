@@ -27,8 +27,9 @@ import { getTodayDateKey } from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorRetry } from "@/components/ErrorRetry";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
@@ -161,6 +162,7 @@ export default function ActiveChallengeDetailScreen() {
     return null;
   }, [challenge?.duration_type, challenge?.difficulty, challenge]);
   const { stats } = useApp();
+  const { user } = useAuth();
   const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } = useInlineError();
@@ -178,13 +180,13 @@ export default function ActiveChallengeDetailScreen() {
     try {
       await trpcMutate(TRPC.challenges.leave, { challengeId });
       await queryClient.invalidateQueries({ queryKey: ["home"] });
-      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
       router.replace(ROUTES.TABS_HOME as never);
     } catch (err) {
       captureError(err, "ActiveChallengeLeaveChallenge");
       showLeaveError("Something went wrong. Please try again.");
     }
-  }, [challengeId, queryClient, router, showLeaveError]);
+  }, [challengeId, queryClient, router, showLeaveError, user?.id]);
 
   const handleContinueToday = useCallback(() => {
     if (!id || !activeChallenge) return;

@@ -211,19 +211,17 @@ export default function ActivityScreen() {
       </Text>
 
       <View style={styles.mainSwitcher}>
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="tab"
           style={[styles.mainTab, mainTab === "notifications" && styles.mainTabOn]}
           onPress={() => setMainTab("notifications")}
-          accessibilityRole="tab"
           accessibilityLabel="Notifications tab"
           accessibilityState={{ selected: mainTab === "notifications" }}
         >
           <Text style={[styles.mainTabText, mainTab === "notifications" && styles.mainTabTextOn]}>Notifications</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="tab"
           style={[styles.mainTab, mainTab === "leaderboard" && styles.mainTabOn]}
           onPress={() => setMainTab("leaderboard")}
-          accessibilityRole="tab"
           accessibilityLabel="Leaderboard tab"
           accessibilityState={{ selected: mainTab === "leaderboard" }}
         >
@@ -366,10 +364,9 @@ function NotificationsBody({
             <Text style={styles.emptyBodyNarrow}>
               Complete a task or join a challenge to start getting updates from the community.
             </Text>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
               accessibilityLabel="Start a challenge"
-              accessibilityRole="button"
             >
               <Text style={styles.emptyTextCta}>Start a challenge →</Text>
             </TouchableOpacity>
@@ -434,7 +431,7 @@ const NotificationRow = React.memo(function NotificationRow({
   }
 
   return (
-    <Pressable
+    <Pressable accessibilityRole="button"
       onPress={onPress}
       disabled={!onPress}
       style={[styles.notifRow, DS_SHADOWS.cardSubtle, unread ? styles.notifUnread : styles.notifRead]}
@@ -477,18 +474,16 @@ const NotificationRow = React.memo(function NotificationRow({
           <Text style={styles.frAccepted}>Accepted</Text>
         ) : (
           <View style={styles.frActions}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.frAcceptBtn}
               onPress={() => void onAcceptFr()}
-              accessibilityRole="button"
               accessibilityLabel="Accept follow request"
             >
               <Text style={styles.frAcceptTxt}>Accept</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.frDeclineBtn}
               onPress={() => void onDeclineFr()}
-              accessibilityRole="button"
               accessibilityLabel="Decline follow request"
             >
               <Text style={styles.frDeclineTxt}>Decline</Text>
@@ -496,10 +491,9 @@ const NotificationRow = React.memo(function NotificationRow({
           </View>
         )
       ) : n.type === "follow" && n.actorId ? (
-        <TouchableOpacity
+        <TouchableOpacity accessibilityRole="button"
           style={styles.followBtn}
           onPress={() => onFollow(n.actorId!)}
-          accessibilityRole="button"
           accessibilityLabel="Follow back"
         >
           <Text style={styles.followBtnText}>Follow</Text>
@@ -619,11 +613,10 @@ function LeaderboardBody({
         {(["global", "friends", "challenge"] as const).map((s) => {
           const scopeName = s === "global" ? "Global" : s === "friends" ? "Friends" : "Challenges";
           return (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               key={s}
               style={[styles.scopeTab, scope === s && styles.scopeTabOn]}
               onPress={() => setScope(s)}
-              accessibilityRole="button"
               accessibilityLabel={`${scopeName} leaderboard — ${scope === s ? "selected" : "not selected"}`}
               accessibilityState={{ selected: scope === s }}
             >
@@ -667,10 +660,9 @@ function LeaderboardBody({
               Complete a daily check-in to appear on the global leaderboard.
             </Text>
             <Text style={styles.emptyFootnote}>Rankings reset every Monday.</Text>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               onPress={() => router.push(ROUTES.TABS_HOME as never)}
               accessibilityLabel="Go to my challenges"
-              accessibilityRole="button"
             >
               <Text style={styles.emptyTextCta}>Go to my challenges →</Text>
             </TouchableOpacity>
@@ -703,11 +695,10 @@ function LeaderboardBody({
             <Text style={styles.emptyBodyNarrow}>
               Invite friends to compete together on the leaderboard.
             </Text>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.emptyInvitePill}
               onPress={() => void handleInviteFriend()}
               accessibilityLabel="Invite a friend"
-              accessibilityRole="button"
             >
               <Text style={styles.emptyInvitePillText}>Invite a friend</Text>
             </TouchableOpacity>
@@ -741,10 +732,9 @@ function LeaderboardBody({
               <Text style={styles.emptyBodyNarrow}>
                 Join a challenge to start competing on the leaderboard.
               </Text>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
                 accessibilityLabel="Browse challenges"
-                accessibilityRole="button"
               >
                 <Text style={styles.emptyTextCta}>Browse challenges →</Text>
               </TouchableOpacity>
@@ -761,11 +751,10 @@ function LeaderboardBody({
                 const title = item.challenges?.title ?? "Challenge";
                 const sel = cid === selectedChallengeId;
                 return (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     style={[styles.challengePillNew, sel ? styles.challengePillNewOn : styles.challengePillNewOff]}
                     onPress={() => cid && setSelectedChallengeId(cid)}
                     accessibilityLabel={`View leaderboard for ${title}`}
-                    accessibilityRole="button"
                     accessibilityState={{ selected: sel }}
                   >
                     <Text
@@ -781,10 +770,9 @@ function LeaderboardBody({
           )}
           {activeList.length > 0 && selectedChallengeId ? (
             <View style={styles.challengeScopeToggle}>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 onPress={() => setChallengeScope("friends")}
                 accessibilityLabel="Show friends only"
-                accessibilityRole="button"
                 style={[
                   styles.challengeScopeTab,
                   {
@@ -802,10 +790,9 @@ function LeaderboardBody({
                   Friends
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 onPress={() => setChallengeScope("everyone")}
                 accessibilityLabel="Show everyone"
-                accessibilityRole="button"
                 style={[
                   styles.challengeScopeTab,
                   {
@@ -878,10 +865,9 @@ function LeaderboardBody({
                 <View style={styles.soloChallengeHint}>
                   <UserPlus size={20} color={DS_COLORS.TEXT_MUTED} />
                   <Text style={styles.soloChallengeHintText}>Challenge your friends to climb the ranks</Text>
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="button"
                     onPress={() => void handleInviteToThisChallenge()}
                     accessibilityLabel="Invite friends to this challenge"
-                    accessibilityRole="button"
                   >
                     <Text style={styles.emptyTextCta}>Invite friends to this challenge →</Text>
                   </TouchableOpacity>
@@ -984,10 +970,9 @@ function CrownCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string })
   const initial = (entry.displayName || entry.username).charAt(0).toUpperCase();
   const isSelf = entry.userId === viewerId;
   return (
-    <Pressable
+    <Pressable accessibilityRole="button"
       style={styles.crownCard}
       onPress={() => openProfile(viewerId, entry)}
-      accessibilityRole="button"
       accessibilityLabel={`View profile for ${entry.displayName}`}
     >
       {isSelf ? <View style={styles.rowSelfAccent} /> : null}
@@ -1041,10 +1026,9 @@ const RegularRow = React.memo(function RegularRow({
   const openProfile = useOpenLeaderboardProfile();
   const isSelf = entry.userId === viewerId;
   return (
-    <Pressable
+    <Pressable accessibilityRole="button"
       style={[styles.regRow, DS_SHADOWS.cardSubtle]}
       onPress={() => openProfile(viewerId, entry)}
-      accessibilityRole="button"
       accessibilityLabel={`View profile for ${entry.displayName}`}
     >
       {isSelf ? <View style={styles.rowSelfAccent} /> : null}
@@ -1086,10 +1070,9 @@ function YourRankCard({ entry, viewerId }: { entry: BoardEntry; viewerId: string
   const openProfile = useOpenLeaderboardProfile();
   const isSelf = entry.userId === viewerId;
   return (
-    <Pressable
+    <Pressable accessibilityRole="button"
       style={styles.yourCard}
       onPress={() => openProfile(viewerId, entry)}
-      accessibilityRole="button"
       accessibilityLabel="View your profile"
     >
       {isSelf ? <View style={styles.rowSelfAccent} /> : null}

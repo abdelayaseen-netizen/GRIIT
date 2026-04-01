@@ -57,7 +57,7 @@ export default function EditProfileScreen() {
         bio: data.bio,
         avatar_url: data.avatar_url.trim() || undefined,
       });
-      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
       await refetchAll();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);

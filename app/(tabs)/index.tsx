@@ -36,7 +36,7 @@ import WeekStrip from "@/components/home/WeekStrip";
 import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Card from "@/components/shared/Card";
 import { SkeletonHomeChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
@@ -389,11 +389,10 @@ export default function HomeScreen() {
               <Flame size={13} color={DS_COLORS.DISCOVER_CORAL} />
               <Text style={s.pillText}>{showStatDash ? "—" : streakPillLabel}</Text>
             </View>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[s.pill, points > 0 && s.pillPurple]}
               onPress={() => setShowPointsExplainer(true)}
               activeOpacity={0.7}
-              accessibilityRole="button"
               accessibilityLabel={`${points} discipline points. Tap to learn more.`}
             >
               <Zap size={13} color={DS_COLORS.DISCOVER_BLUE} />
@@ -415,11 +414,10 @@ export default function HomeScreen() {
           <View style={s.welcomeCard}>
             <Text style={s.welcomeTitle}>Welcome to GRIIT</Text>
             <Text style={s.welcomeBody}>Your stats will appear here as you build your streak.</Text>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={s.welcomeCta}
               onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
               accessibilityLabel="Start your first challenge"
-              accessibilityRole="button"
             >
               <Text style={s.welcomeCtaText}>Start your first challenge</Text>
             </TouchableOpacity>
@@ -440,11 +438,10 @@ export default function HomeScreen() {
               <Text style={s.statValueNum}>{points}</Text>
               <Text style={s.statLabelLower}>points</Text>
             </Card>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={s.statTouchable}
               activeOpacity={0.85}
               onPress={() => setShowRankModal(true)}
-              accessibilityRole="button"
               accessibilityLabel="View rank ladder"
             >
               <Card padded={false} containerStyle={s.stat}>
@@ -542,10 +539,9 @@ export default function HomeScreen() {
             />
             {completedTodayChallenges.length > 0 ? (
               <>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={s.completedHeader}
                   onPress={() => setCompletedExpanded((v) => !v)}
-                  accessibilityRole="button"
                   accessibilityLabel="Show or hide completed today tasks"
                   accessibilityState={{ expanded: completedExpanded }}
                 >
@@ -653,11 +649,10 @@ export default function HomeScreen() {
         onRequestClose={() => setShowRankModal(false)}
       >
         <View style={s.rankModalRoot}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={s.rankModalBackdrop}
             activeOpacity={1}
             onPress={() => setShowRankModal(false)}
-            accessibilityRole="button"
             accessibilityLabel="Close"
           />
           <View style={s.rankModalSheet}>

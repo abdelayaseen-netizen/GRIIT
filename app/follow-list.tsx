@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Image,
   ActivityIndicator,
   Platform,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
@@ -147,7 +147,7 @@ export default function FollowListScreen() {
             accessibilityRole="button"
           >
             {item.avatar_url?.trim() ? (
-              <Image source={{ uri: item.avatar_url.trim() }} style={styles.avatarImg} accessibilityIgnoresInvertColors />
+              <Image source={{ uri: item.avatar_url.trim() }} style={styles.avatarImg} contentFit="cover" />
             ) : (
               <View style={[styles.avatarFallback, { backgroundColor: getFeedAvatarBgFromUserId(item.user_id) }]}>
                 <Text style={styles.avatarLetter}>{getDisplayInitials(primary)}</Text>

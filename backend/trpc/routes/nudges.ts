@@ -2,6 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { sendExpoPush } from "../../lib/push";
+import { logger } from "../../lib/logger";
 import type { NudgeRow, ProfileRow, ProfileWithExpoRow, PushTokenRow } from "../../types/db";
 
 export const NUDGE_MESSAGES = [
@@ -77,7 +78,7 @@ export const nudgesRouter = createTRPCRouter({
       try {
         await sendExpoPush(allTokens, "Nudge", pushBody);
       } catch (pushErr) {
-        console.error('[PUSH] Failed to send nudge notification:', pushErr);
+        logger.error({ err: pushErr }, "[PUSH] Failed to send nudge notification");
       }
 
       return { success: true, nudgeId: row.id, message };

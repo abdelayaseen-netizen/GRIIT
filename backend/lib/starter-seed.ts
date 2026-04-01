@@ -1,6 +1,6 @@
 /**
  * Starter challenge definitions for onboarding (backend seed + starters.join).
- * Must match lib/onboarding-starters.ts ids.
+ * Starter ids must stay in sync with app onboarding / starters.join.
  */
 export const STARTER_DEFINITIONS = [
   { starter_id: "onboard-water", title: "Water", description: "Drink 2 bottles today", category: "fitness", task_title: "Drink 2 bottles of water", task_type: "checkin" as const },

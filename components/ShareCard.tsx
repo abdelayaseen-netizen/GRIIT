@@ -23,7 +23,7 @@ export interface ShareCardProps {
 /**
  * Shareable progress card for social. Render inside a View with ref for capture via react-native-view-shot.
  */
-export function ShareCard({
+function ShareCardInner({
   type = "progress",
   streakCount,
   challengeName,
@@ -88,6 +88,8 @@ export function ShareCard({
     </View>
   );
 }
+
+export const ShareCard = React.memo(ShareCardInner);
 
 const styles = StyleSheet.create({
   card: {

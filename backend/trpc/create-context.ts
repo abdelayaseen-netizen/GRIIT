@@ -36,7 +36,7 @@ export const createContext = async (opts: { req: Request }) => {
           supabase = createUserSupabase(token);
         }
       } catch (err) {
-        console.error("[createContext] auth.getUser failed", err);
+        logger.error({ err }, "[createContext] auth.getUser failed");
       }
     }
   }

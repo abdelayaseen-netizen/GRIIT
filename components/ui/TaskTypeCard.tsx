@@ -7,7 +7,7 @@ import {
   typography,
 } from "@/lib/theme/tokens";
 
-export function TaskTypeCard(p: {
+function TaskTypeCardInner(p: {
   label: string;
   description?: string;
   selected: boolean;
@@ -57,6 +57,8 @@ export function TaskTypeCard(p: {
     </TouchableOpacity>
   );
 }
+
+export const TaskTypeCard = React.memo(TaskTypeCardInner);
 
 const styles = StyleSheet.create({
   card: {

@@ -9,7 +9,7 @@ interface CardProps {
   noPadding?: boolean;
 }
 
-export function Card({ children, style, variant = 'default', noPadding = false }: CardProps) {
+function Card({ children, style, variant = 'default', noPadding = false }: CardProps) {
   const variantStyles = {
     default: {
       backgroundColor: DS_COLORS.BG_CARD,
@@ -50,4 +50,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Card;
+export default React.memo(Card);

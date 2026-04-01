@@ -242,7 +242,7 @@ export default function ProfileScreen() {
       const outcome = await pickAndUploadAvatar(user.id);
       if (outcome.status === "ok") {
         setAvatarDisplayOverride(outcome.url);
-        await qc.invalidateQueries({ queryKey: ["profile"] });
+        await qc.invalidateQueries({ queryKey: ["profile", user?.id] });
         await refetchAll();
         return;
       }
@@ -325,10 +325,9 @@ export default function ProfileScreen() {
           <View>
         <View style={styles.topBar}>
           <View style={{ width: 22 }} />
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             onPress={() => router.push(ROUTES.SETTINGS as never)}
             accessibilityLabel="Open settings"
-            accessibilityRole="button"
             hitSlop={10}
           >
             <Settings size={22} color={DS_COLORS.PROFILE_TEXT_SECONDARY} />
@@ -343,11 +342,10 @@ export default function ProfileScreen() {
 
         <View style={styles.profileRow}>
           <View style={styles.avatarCol}>
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={() => void handleAvatarPress()}
               disabled={uploading}
               accessibilityLabel="Change profile photo"
-              accessibilityRole="button"
             >
               {avatarUri ? (
                 <View pointerEvents="none">
@@ -384,20 +382,18 @@ export default function ProfileScreen() {
               {profile.bio?.trim() ? profile.bio : "Add a bio…"}
             </Text>
             <View style={styles.followInline}>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.followInlineBtn}
                 onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
                 accessibilityLabel="View followers"
-                accessibilityRole="button"
               >
                 <Text style={styles.followInlineNum}>{fc?.followers ?? 0}</Text>
                 <Text style={styles.followInlineLbl}> followers</Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={styles.followInlineBtn}
                 onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
                 accessibilityLabel="View following"
-                accessibilityRole="button"
               >
                 <Text style={styles.followInlineNum}>{fc?.following ?? 0}</Text>
                 <Text style={styles.followInlineLbl}> following</Text>
@@ -407,19 +403,17 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.actionRow}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.btnOutline}
             onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
             accessibilityLabel="Edit profile"
-            accessibilityRole="button"
           >
             <Text style={styles.btnOutlineText}>Edit profile</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.btnShareCompact}
             onPress={() => void handleShare()}
             accessibilityLabel="Share profile"
-            accessibilityRole="button"
           >
             <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_SECONDARY} strokeWidth={2} />
           </TouchableOpacity>
@@ -466,11 +460,10 @@ export default function ProfileScreen() {
 
         <View style={styles.tabsBar}>
           {(["challenges", "posts", "badges"] as const).map((t) => (
-            <Pressable
+            <Pressable accessibilityRole="tab"
               key={t}
               style={[styles.tabBtn, tab === t && styles.tabBtnOn]}
               onPress={() => setTab(t)}
-              accessibilityRole="tab"
               accessibilityState={{ selected: tab === t }}
               accessibilityLabel={t === "challenges" ? "Challenges tab" : t === "posts" ? "Posts tab" : "Badges tab"}
             >
@@ -494,11 +487,10 @@ export default function ProfileScreen() {
                 renderItem={({ item }) => {
                   const fillColor = item.progressPercent < 50 ? DS_COLORS.PRIMARY : DS_COLORS.PROFILE_SUCCESS;
                   return (
-                    <TouchableOpacity
+                    <TouchableOpacity accessibilityRole="button"
                       style={styles.chCard}
                       onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
                       accessibilityLabel={`Open challenge ${item.title}`}
-                      accessibilityRole="button"
                     >
                       <View style={styles.chTop}>
                         <View style={styles.chIconBox}>
@@ -539,10 +531,9 @@ export default function ProfileScreen() {
               <View style={styles.postsEmpty}>
                 <Text style={styles.postsEmptyTitle}>No posts yet</Text>
                 <Text style={styles.postsEmptySub}>Complete a task to share your first post.</Text>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   onPress={() => router.push(ROUTES.TABS_HOME as never)}
                   accessibilityLabel="Go to my challenges"
-                  accessibilityRole="button"
                 >
                   <Text style={styles.postsEmptyCta}>Go to my challenges →</Text>
                 </TouchableOpacity>
@@ -589,7 +580,7 @@ export default function ProfileScreen() {
                     const IconComp = BADGE_ICONS[b.icon] ?? Zap;
                     const accent = badgeAccentFor(b.color);
                     return (
-                      <Pressable
+                      <Pressable accessibilityRole="button"
                         style={styles.badgeCard}
                         onPress={() =>
                           setSelectedBadge({
@@ -602,7 +593,6 @@ export default function ProfileScreen() {
                           })
                         }
                         accessibilityLabel={`${b.name} badge details`}
-                        accessibilityRole="button"
                       >
                         <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
                           <IconComp size={22} color={accent.stroke} strokeWidth={2} />
@@ -630,7 +620,7 @@ export default function ProfileScreen() {
                   renderItem={({ item: b }) => {
                     const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
                     return (
-                      <Pressable
+                      <Pressable accessibilityRole="button"
                         style={[styles.badgeCard, styles.badgeCardDim]}
                         onPress={() =>
                           setSelectedBadge({
@@ -643,7 +633,6 @@ export default function ProfileScreen() {
                           })
                         }
                         accessibilityLabel={`${b.name} badge details`}
-                        accessibilityRole="button"
                       >
                         <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
                           <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />

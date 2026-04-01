@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { sendExpoPush } from "../../lib/push";
+import { logger } from "../../lib/logger";
 import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow } from "../../types/db";
 
 const MAX_ACCEPTED_PARTNERS = 3;
@@ -148,7 +149,7 @@ export const accountabilityRouter = createTRPCRouter({
           `${inviterName} wants to be your accountability partner`
         );
       } catch (pushErr) {
-        console.error('[PUSH] Failed to send accountability invite notification:', pushErr);
+        logger.error({ err: pushErr }, "[PUSH] Failed to send accountability invite notification");
       }
 
       return { success: true, inviteId: row.id, status: "pending" as const };
@@ -285,7 +286,7 @@ export const accountabilityRouter = createTRPCRouter({
             `${accepterName} accepted your accountability partner request`
           );
         } catch (pushErr) {
-          console.error('[PUSH] Failed to send accountability accept notification:', pushErr);
+          logger.error({ err: pushErr }, "[PUSH] Failed to send accountability accept notification");
         }
 
         return { success: true, status: "accepted" as const };

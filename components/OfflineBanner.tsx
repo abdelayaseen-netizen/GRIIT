@@ -4,7 +4,7 @@ import { WifiOff } from "lucide-react-native";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { DS_COLORS } from "@/lib/design-system";
 
-export function OfflineBanner() {
+function OfflineBannerInner() {
   const isConnected = useNetworkStatus();
   if (isConnected) return null;
 
@@ -15,6 +15,8 @@ export function OfflineBanner() {
     </View>
   );
 }
+
+export const OfflineBanner = React.memo(OfflineBannerInner);
 
 const styles = StyleSheet.create({
   banner: {

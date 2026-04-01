@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import type { PgError, ProfileRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { logger } from "../../lib/logger";
 
 export const profilesSocialProcedures = {
   followUser: protectedProcedure
@@ -55,7 +56,7 @@ export const profilesSocialProcedures = {
         },
       });
       if (nErr && process.env.NODE_ENV !== "test") {
-        console.error("[profiles.followUser] notification insert:", nErr);
+        logger.error({ err: nErr }, "[profiles.followUser] notification insert");
       }
 
       return { success: true as const };
@@ -134,7 +135,7 @@ export const profilesSocialProcedures = {
         },
       });
       if (nErr && process.env.NODE_ENV !== "test") {
-        console.error("[profiles.sendFollowRequest] notification insert:", nErr);
+        logger.error({ err: nErr }, "[profiles.sendFollowRequest] notification insert");
       }
       return { success: true as const };
     }),

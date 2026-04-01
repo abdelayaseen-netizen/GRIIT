@@ -5,6 +5,7 @@ import { protectedProcedure, type Context } from "../create-context";
 import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getTodayDateKey } from "../../lib/date-utils";
+import { logger } from "../../lib/logger";
 
 const LIVE_FEED_TYPES = ["task_completed", "completed_challenge", "joined_challenge", "secured_day"] as const;
 
@@ -459,7 +460,7 @@ export const feedCoreProcedures = {
     const activityEventsWriter = server as unknown as ActivityEventsWriter;
     const { data: existingEvent, error: qErr } = await server.from("activity_events").select("id, metadata").eq("user_id", ctx.userId).eq("challenge_id", input.challengeId).eq("event_type", "task_completed").order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (qErr) {
-      console.error("[shareCompletion] query activity_events failed:", qErr.message);
+      logger.error({ err: qErr }, "[shareCompletion] query activity_events failed");
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: qErr.message });
     }
     let eventId: string;
@@ -487,7 +488,7 @@ export const feedCoreProcedures = {
       const insertMeta = { task_id: cin.task_id, task_name: task?.title ?? "Task", task_type: task?.task_type ?? "manual", challenge_name: ch?.title ?? "Challenge", has_photo: !!proofFromCheckin, photo_url: proofFromCheckin, verification_method: "manual", is_hard_mode: false, heart_rate_verified: false, location_verified: false };
       const { data: inserted, error: insErr } = await activityEventsWriter.from("activity_events").insert({ user_id: ctx.userId, event_type: "task_completed", challenge_id: input.challengeId, metadata: insertMeta }).select("id, metadata").single();
       if (insErr || !inserted) {
-        console.error("[shareCompletion] recovery insert failed:", insErr?.message);
+        logger.error({ err: insErr }, "[shareCompletion] recovery insert failed");
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: insErr?.message ?? "Could not create share event. Try again." });
       }
       const ins = inserted as { id: string; metadata?: Record<string, unknown> };
@@ -497,7 +498,7 @@ export const feedCoreProcedures = {
     const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: input.proofPhotoUrl?.trim() || null, feed_shared: true };
     const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta }).eq("id", eventId);
     if (uErr) {
-      console.error("[shareCompletion] update failed:", uErr.message);
+      logger.error({ err: uErr }, "[shareCompletion] update failed");
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: uErr.message });
     }
     return { ok: true as const };

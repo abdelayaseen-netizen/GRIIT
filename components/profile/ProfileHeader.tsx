@@ -65,7 +65,7 @@ export default React.memo(function ProfileHeader({
       const outcome = await pickAndUploadAvatar(userId);
       if (outcome.status === "ok") {
         setAvatarOverride(outcome.url);
-        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        await queryClient.invalidateQueries({ queryKey: ["profile", userId] });
         onAvatarUpdated?.();
       }
     } catch (error) {

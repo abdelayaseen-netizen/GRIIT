@@ -390,14 +390,13 @@ export default function DiscoverScreen() {
               ]}
             />
             {searchQuery.length > 0 ? (
-              <Pressable
+              <Pressable accessibilityRole="button"
                 onPress={() => {
                   setSearchQuery("");
                   setSearchFocused(false);
                   Keyboard.dismiss();
                 }}
                 hitSlop={8}
-                accessibilityRole="button"
                 accessibilityLabel="Clear search"
               >
                 <X size={16} color={DS_COLORS.FEED_META_MUTED} />
@@ -411,9 +410,8 @@ export default function DiscoverScreen() {
             <View style={discoverStyles.browseWrap}>
               <Text style={discoverStyles.sectionEyebrow}>BROWSE BY CATEGORY</Text>
               {BROWSE_CATEGORIES.map((cat) => (
-                <Pressable
+                <Pressable accessibilityRole="button"
                   key={cat}
-                  accessibilityRole="button"
                   accessibilityLabel={`Browse ${cat} challenges`}
                   onPress={() => {
                     setSearchQuery(cat);
@@ -431,9 +429,8 @@ export default function DiscoverScreen() {
                 <>
                   <Text style={discoverStyles.recentEyebrow}>RECENT SEARCHES</Text>
                   {recentSearches.slice(0, 3).map((r) => (
-                    <Pressable
+                    <Pressable accessibilityRole="button"
                       key={r}
-                      accessibilityRole="button"
                       accessibilityLabel={`Search for ${r}`}
                       onPress={() => setSearchQuery(r)}
                       style={discoverStyles.recentRow}
@@ -463,8 +460,7 @@ export default function DiscoverScreen() {
                     scrollEnabled={false}
                     nestedScrollEnabled
                     renderItem={({ item: u }) => (
-                      <Pressable
-                        accessibilityRole="button"
+                      <Pressable accessibilityRole="button"
                         accessibilityLabel={`Open profile for ${u.display_name || u.username}`}
                         onPress={() => {
                           void pushRecentSearch(filterQuery);
@@ -703,9 +699,8 @@ export default function DiscoverScreen() {
                 </>
               ) : null}
 
-              <Pressable
+              <Pressable accessibilityRole="button"
                 onPress={() => router.push(ROUTES.CREATE_WIZARD as never)}
-                accessibilityRole="button"
                 accessibilityLabel="Create a custom challenge"
                 style={discoverStyles.createCta}
               >

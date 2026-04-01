@@ -36,7 +36,7 @@ type PrimaryButtonProps = {
   accessibilityLabel?: string;
 };
 
-export function PrimaryButton({
+function PrimaryButtonInner({
   title,
   onPress,
   variant = "black",
@@ -77,6 +77,8 @@ export function PrimaryButton({
     </TouchableOpacity>
   );
 }
+
+export const PrimaryButton = React.memo(PrimaryButtonInner);
 
 const styles = StyleSheet.create({
   btn: {

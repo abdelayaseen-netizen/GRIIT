@@ -5,6 +5,7 @@ import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/
 import { getTodayDateKey, daysBetweenKeys, getWeekStartDateKey, getWeekEndDateKey } from "../../lib/date-utils";
 import type { ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { logger } from "../../lib/logger";
 
 export const profilesStatsProcedures = {
   getStats: protectedProcedure
@@ -121,7 +122,7 @@ export const profilesStatsProcedures = {
             try {
               await sendExpoPush(allT, 'Last Stand used', 'Your streak continues.');
             } catch (pushErr) {
-              console.error('[PUSH] Failed to send Last Stand notification:', pushErr);
+              logger.error({ err: pushErr }, "[PUSH] Failed to send Last Stand notification");
             }
           }
         }

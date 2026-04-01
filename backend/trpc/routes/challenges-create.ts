@@ -7,6 +7,7 @@ import {
   buildTaskInsertPayload,
 } from "../../lib/challenge-tasks";
 import { joinChallengeDirect } from "../../lib/join-challenge";
+import { logger } from "../../lib/logger";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -33,7 +34,7 @@ async function autoJoinCreatorAfterCreate(
         metadata: { challenge_name: challengeName },
       })
       .then(({ error: evtErr }) => {
-        if (evtErr) console.error("[challenges.create] joined_challenge event insert failed:", evtErr.message);
+        if (evtErr) logger.error({ err: evtErr }, "[challenges.create] joined_challenge event insert failed");
       });
   }
   return activeChallenge;

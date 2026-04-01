@@ -2,7 +2,7 @@ import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import * as t from "@/lib/theme/tokens";
 
-export function DurationPill({
+function DurationPillInner({
   label,
   selected,
   onPress,
@@ -24,6 +24,8 @@ export function DurationPill({
     </TouchableOpacity>
   );
 }
+
+export const DurationPill = React.memo(DurationPillInner);
 
 const s = StyleSheet.create({
   pill: {

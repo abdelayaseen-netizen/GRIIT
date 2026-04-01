@@ -8,7 +8,7 @@ const HEIGHT = 54;
 
 type InputProps = TextInputProps & { containerStyle?: ViewStyle };
 
-export function Input({
+function InputInner({
   containerStyle,
   style,
   placeholderTextColor = colors.textSubtle,
@@ -24,6 +24,8 @@ export function Input({
     </View>
   );
 }
+
+export const Input = React.memo(InputInner);
 
 const styles = StyleSheet.create({
   wrap: { minHeight: HEIGHT },

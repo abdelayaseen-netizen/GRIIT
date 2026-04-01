@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure } from "../create-context";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { sendExpoPush } from "../../lib/push";
+import { logger } from "../../lib/logger";
 
 type EvRow = {
   id: string;
@@ -119,7 +120,7 @@ export const feedSocialProcedures = {
                   day_label: dayLabel,
                 },
               });
-              if (nErr) console.error("[feed.react] in_app_notifications insert:", nErr);
+              if (nErr) logger.error({ err: nErr }, "[feed.react] in_app_notifications insert");
 
               try {
                 const [pushTokenResult, ownerProfileResult] = await Promise.all([
@@ -137,7 +138,7 @@ export const feedSocialProcedures = {
                   await sendExpoPush(allTokens, pushTitle, pushBody);
                 }
               } catch (pushErr) {
-                console.error("[feed.react] push send error:", pushErr);
+                logger.error({ err: pushErr }, "[feed.react] push send error");
               }
             }
           }
@@ -250,7 +251,7 @@ export const feedSocialProcedures = {
               challenge_title: commentChallengeTitle,
             },
           });
-          if (nErr) console.error("[feed.comment] in_app_notifications insert:", nErr);
+          if (nErr) logger.error({ err: nErr }, "[feed.comment] in_app_notifications insert");
 
           try {
             const [pushTokenResult, ownerProfileResult] = await Promise.all([
@@ -267,7 +268,7 @@ export const feedSocialProcedures = {
               await sendExpoPush(allTokens, pushTitle, pushBody);
             }
           } catch (pushErr) {
-            console.error("[feed.comment] push send error:", pushErr);
+            logger.error({ err: pushErr }, "[feed.comment] push send error");
           }
         }
       }
@@ -380,7 +381,7 @@ export const feedSocialProcedures = {
       .order("created_at", { ascending: false })
       .limit(45);
     if (error) {
-      console.error("[feed.getRecentCompletions] query failed:", error.message);
+      logger.error({ err: error }, "[feed.getRecentCompletions] query failed");
       return [];
     }
     const events = (raw ?? []) as EvRow[];

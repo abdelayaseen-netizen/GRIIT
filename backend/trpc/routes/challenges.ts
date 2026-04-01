@@ -13,6 +13,7 @@ import { getSupabaseServer } from "../../lib/supabase-server";
 import { challengesDiscoverProcedures } from "./challenges-discover";
 import { challengesJoinProcedures } from "./challenges-join";
 import { challengesCreateProcedures } from "./challenges-create";
+import { logger } from "../../lib/logger";
 
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
@@ -290,7 +291,7 @@ export const challengesRouter = createTRPCRouter({
           .limit(50);
 
         if (error) {
-          console.error("[listMyActive] Supabase error:", JSON.stringify(error));
+          logger.error({ err: error }, "[listMyActive] Supabase error");
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenges." });
         }
         const list = (data ?? []) as { challenges?: { challenge_tasks?: ChallengeTaskRowRaw[] } }[];
@@ -303,7 +304,7 @@ export const challengesRouter = createTRPCRouter({
         }
         return list;
       } catch (err) {
-        console.error("[listMyActive] caught:", err);
+        logger.error({ err }, "[listMyActive] caught");
         throw err;
       }
     }),

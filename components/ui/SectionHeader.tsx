@@ -9,7 +9,7 @@ interface SectionHeaderProps {
   caption?: string;
 }
 
-export function SectionHeader({ title, icon, caption }: SectionHeaderProps) {
+function SectionHeaderInner({ title, icon, caption }: SectionHeaderProps) {
   return (
     <View style={styles.container}>
       {icon != null && <View style={styles.iconWrap}>{icon}</View>}
@@ -18,6 +18,8 @@ export function SectionHeader({ title, icon, caption }: SectionHeaderProps) {
     </View>
   );
 }
+
+export const SectionHeader = React.memo(SectionHeaderInner);
 
 const styles = StyleSheet.create({
   container: {

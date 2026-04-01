@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Compass, RefreshCw, ChevronRight } from "lucide-react-native";
+import type { LucideIcon } from "lucide-react-native";
 import {
   colors,
   radius,
@@ -9,45 +10,60 @@ import {
   iconSizes,
 } from "@/lib/theme/tokens";
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
+  /** Custom icon; defaults to Compass when omitted. */
+  icon?: LucideIcon;
   title?: string;
   subtitle?: string;
+  /** Single primary action (legacy API). */
+  action?: { label: string; onPress: () => void };
   primaryCtaLabel?: string;
   onPrimaryCta?: () => void;
   secondaryCtaLabel?: string;
   onSecondaryCta?: () => void;
 }
 
-export function EmptyState({
+function EmptyStateInner({
+  icon: IconProp,
   title = "No challenges found",
-  subtitle = "Try a different search or category",
+  subtitle,
+  action,
   primaryCtaLabel = "Start your first challenge ›",
   onPrimaryCta,
   secondaryCtaLabel = "Refresh",
   onSecondaryCta,
 }: EmptyStateProps) {
+  const Icon = IconProp ?? Compass;
+  const primaryPress = action?.onPress ?? onPrimaryCta;
+  const primaryLabel = action?.label ?? primaryCtaLabel;
+  const showPrimary = Boolean(primaryPress);
+  const displaySubtitle =
+    subtitle !== undefined ? (subtitle.trim() || undefined) : IconProp ? undefined : "Try a different search or category";
+
   return (
     <View style={styles.container}>
       <View style={styles.iconWrap}>
-        <Compass size={iconSizes.emptyIcon} color={colors.textSecondary} />
+        <Icon size={iconSizes.emptyIcon} color={colors.textSecondary} />
       </View>
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
-      {onPrimaryCta && (
-        <TouchableOpacity style={styles.primaryCta} onPress={onPrimaryCta} activeOpacity={0.85}>
-          <Text style={styles.primaryCtaText}>{primaryCtaLabel}</Text>
+      {displaySubtitle ? <Text style={styles.subtitle}>{displaySubtitle}</Text> : null}
+      {showPrimary && primaryPress ? (
+        <TouchableOpacity style={styles.primaryCta} onPress={primaryPress} activeOpacity={0.85}>
+          <Text style={styles.primaryCtaText}>{primaryLabel}</Text>
           <ChevronRight size={18} color={colors.white} />
         </TouchableOpacity>
-      )}
-      {onSecondaryCta && (
+      ) : null}
+      {onSecondaryCta ? (
         <TouchableOpacity style={styles.secondaryCta} onPress={onSecondaryCta} activeOpacity={0.7}>
           <RefreshCw size={16} color={colors.accentOrange} />
           <Text style={styles.secondaryCtaText}>{secondaryCtaLabel}</Text>
         </TouchableOpacity>
-      )}
+      ) : null}
     </View>
   );
 }
+
+export const EmptyState = React.memo(EmptyStateInner);
 
 const styles = StyleSheet.create({
   container: {

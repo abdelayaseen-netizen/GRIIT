@@ -31,7 +31,7 @@ const VARIANT_STYLES = {
   },
 } as const;
 
-export function InlineError({ message, onDismiss, variant = "error", autoDismissMs }: InlineErrorProps) {
+function InlineErrorInner({ message, onDismiss, variant = "error", autoDismissMs }: InlineErrorProps) {
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -66,6 +66,8 @@ export function InlineError({ message, onDismiss, variant = "error", autoDismiss
     </Animated.View>
   );
 }
+
+export const InlineError = React.memo(InlineErrorInner);
 
 const styles = StyleSheet.create({
   container: {

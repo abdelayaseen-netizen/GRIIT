@@ -2,7 +2,7 @@ import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import * as t from "@/lib/theme/tokens";
 
-export function CategoryTag({
+function CategoryTagInner({
   label,
   selected,
   onPress,
@@ -24,6 +24,8 @@ export function CategoryTag({
     </TouchableOpacity>
   );
 }
+
+export const CategoryTag = React.memo(CategoryTagInner);
 
 const s = StyleSheet.create({
   tag: {
