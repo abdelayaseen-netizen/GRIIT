@@ -12,6 +12,7 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "../create
 import { requireNoError } from "../errors";
 import type { PgError, ProfileRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { sanitizeSearchQuery } from "../../lib/sanitize-search";
 import { profilesSocialProcedures } from "./profiles-social";
 import { profilesStatsProcedures } from "./profiles-stats";
 
@@ -312,11 +313,13 @@ export const profilesRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const q = input.query.trim();
       if (!q) return [];
+      const safe = sanitizeSearchQuery(q);
+      if (!safe) return [];
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select("user_id, username, display_name, avatar_url")
         .neq("user_id", ctx.userId)
-        .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+        .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
         .limit(20);
       requireNoError(error, "Failed to search profiles.");
       const rows = (data ?? []) as ProfileRow[];

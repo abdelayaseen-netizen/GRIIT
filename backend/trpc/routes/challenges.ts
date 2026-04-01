@@ -14,6 +14,7 @@ import { challengesDiscoverProcedures } from "./challenges-discover";
 import { challengesJoinProcedures } from "./challenges-join";
 import { challengesCreateProcedures } from "./challenges-create";
 import { logger } from "../../lib/logger";
+import { escapeLikeWildcards } from "../../lib/sanitize-search";
 
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
@@ -79,7 +80,10 @@ export const challengesRouter = createTRPCRouter({
         .range(safeOffset, safeOffset + limit - 1);
 
       const search = input.search?.trim();
-      if (search) query = query.ilike("title", `%${search}%`);
+      if (search) {
+        const safeSearch = escapeLikeWildcards(search);
+        if (safeSearch) query = query.ilike("title", `%${safeSearch}%`);
+      }
 
       const { data, error, count } = await query;
       requireNoError(error, "Failed to load challenges.");

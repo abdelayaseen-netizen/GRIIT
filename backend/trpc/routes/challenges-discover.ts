@@ -9,6 +9,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
+import { escapeLikeWildcards } from "../../lib/sanitize-search";
 
 /** Ensure 24h challenges have ends_at for frontend countdown (derive from live_date if missing). */
 function with24hEndsAt<T extends { duration_type?: string; ends_at?: string | null; live_date?: string | null }>(row: T): T {
@@ -291,7 +292,10 @@ export const challengesDiscoverProcedures = {
       }
 
       const search = input?.search?.trim();
-      if (search) query = query.ilike("title", `%${search}%`);
+      if (search) {
+        const safeSearch = escapeLikeWildcards(search);
+        if (safeSearch) query = query.ilike("title", `%${safeSearch}%`);
+      }
       if (input?.category && input.category !== "all") {
         if (input.category === "team") {
           query = query.in("participation_type", ["duo", "team"]);
