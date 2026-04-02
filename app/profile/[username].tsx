@@ -176,14 +176,18 @@ export default function PublicProfileScreen() {
     return rows.map((row) => {
       const duration = Math.max(1, row.challenges?.duration_days ?? 1);
       const day = Math.min(duration, Math.max(1, row.current_day ?? 1));
-      const progress = row.progress_percent ?? Math.round((day / duration) * 100);
+      const rawProgress =
+        row.progress_percent != null && !Number.isNaN(Number(row.progress_percent))
+          ? Number(row.progress_percent)
+          : (day / duration) * 100;
+      const progressPercent = Math.max(0, Math.min(100, Math.round(rawProgress)));
       return {
         id: row.id ?? row.challenge_id ?? "",
         challengeId: row.challenges?.id ?? row.challenge_id ?? "",
         title: row.challenges?.title ?? "Challenge",
         currentDay: day,
         durationDays: duration,
-        progressPercent: Math.max(0, Math.min(100, progress)),
+        progressPercent,
       };
     });
   }, [challengesQuery.data]);
@@ -562,13 +566,20 @@ export default function PublicProfileScreen() {
                     <Text style={styles.hint}>No active challenges.</Text>
                   ) : (
                     activeItems.map((item) => {
-                      const fillColor = item.progressPercent < 50 ? DS_COLORS.PRIMARY : DS_COLORS.PROFILE_SUCCESS;
+                      const p = item.progressPercent;
+                      const fillColor = p < 50 ? DS_COLORS.PRIMARY : DS_COLORS.PROFILE_SUCCESS;
+                      const a11yLabel =
+                        p === 100
+                          ? `Open challenge ${item.title}, complete`
+                          : p > 0
+                            ? `Open challenge ${item.title}, ${p} percent complete`
+                            : `Open challenge ${item.title}`;
                       return (
                         <TouchableOpacity
                           key={item.id}
                           style={styles.chCard}
                           onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
-                          accessibilityLabel={`Open challenge ${item.title}`}
+                          accessibilityLabel={a11yLabel}
                           accessibilityRole="button"
                         >
                           <View style={styles.chTop}>
@@ -578,17 +589,23 @@ export default function PublicProfileScreen() {
                             <View style={styles.chMid}>
                               <Text style={styles.chTitle}>{item.title}</Text>
                               <Text style={styles.chSub}>
-                                Day {item.currentDay} of {item.durationDays}
+                                {p === 100 ? "Complete" : `Day ${item.currentDay} of ${item.durationDays}`}
                               </Text>
                             </View>
+                            {p > 0 ? (
+                              <Text
+                                style={[
+                                  styles.chPctBadge,
+                                  { color: p === 100 ? DS_COLORS.PROFILE_SUCCESS : DS_COLORS.PRIMARY },
+                                ]}
+                              >
+                                {p === 100 ? "Done" : `${p}%`}
+                              </Text>
+                            ) : null}
                             <ChevronRight size={16} color={DS_COLORS.PROFILE_TEXT_MUTED} />
                           </View>
                           <View style={styles.chTrack}>
-                            <View style={[styles.chFill, { width: `${item.progressPercent}%`, backgroundColor: fillColor }]} />
-                          </View>
-                          <View style={styles.chFoot}>
-                            <Text style={styles.chFootTxt}>{item.progressPercent}% complete</Text>
-                            <Text style={styles.chFootTxt}>{item.durationDays} days</Text>
+                            <View style={[styles.chFill, { width: `${p}%`, backgroundColor: fillColor }]} />
                           </View>
                         </TouchableOpacity>
                       );
@@ -649,7 +666,7 @@ export default function PublicProfileScreen() {
                               </View>
                               <Text style={styles.badgeName}>{b.name}</Text>
                               <Text style={styles.badgeProg}>
-                                {b.progress}/{b.total} days
+                                {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
                               </Text>
                             </Pressable>
                           );
@@ -681,7 +698,7 @@ export default function PublicProfileScreen() {
                               </View>
                               <Text style={styles.badgeName}>{b.name}</Text>
                               <Text style={styles.badgeProg}>
-                                {b.progress}/{b.total} days
+                                {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
                               </Text>
                               <View style={styles.nextBarTrack}>
                                 <View
@@ -854,9 +871,9 @@ const styles = StyleSheet.create({
   tabTxt: { fontSize: 13 },
   tabTxtOn: { fontWeight: "500", color: DS_COLORS.PRIMARY },
   tabTxtOff: { fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
-  tabPad: { paddingHorizontal: 20, paddingTop: 14, gap: 10 },
+  tabPad: { paddingHorizontal: 20, paddingTop: 14, gap: 12 },
   hint: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, textAlign: "center", paddingVertical: 12 },
-  chCard: { backgroundColor: DS_COLORS.BG_CARD, borderRadius: 16, padding: 16, marginBottom: 2 },
+  chCard: { backgroundColor: DS_COLORS.BG_CARD, borderRadius: 16, padding: 16 },
   chTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   chIconBox: {
     width: 36,
@@ -871,8 +888,7 @@ const styles = StyleSheet.create({
   chSub: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, marginTop: 2 },
   chTrack: { height: 4, borderRadius: 2, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 12, overflow: "hidden" },
   chFill: { height: 4, borderRadius: 2 },
-  chFoot: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
-  chFootTxt: { fontSize: 11, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
+  chPctBadge: { fontSize: 13, fontWeight: "500", flexShrink: 0 },
   postsEmpty: { alignItems: "center", paddingVertical: 24 },
   postsEmptyTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   secHead: {
