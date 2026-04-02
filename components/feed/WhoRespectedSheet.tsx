@@ -79,7 +79,7 @@ export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
             </View>
           ) : query.isError ? (
             <View style={styles.center}>
-              <Text style={styles.errorText}>Couldn't load respects</Text>
+              <Text style={styles.errorText}>{"Couldn't load respects"}</Text>
             </View>
           ) : (query.data ?? []).length === 0 ? (
             <View style={styles.center}>

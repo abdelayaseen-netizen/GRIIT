@@ -75,7 +75,8 @@
           "project": "griit",
           "organization": "your-org-slug"
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -9,8 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -1247,7 +1247,9 @@ export default function TaskEditorModal({
                     <Image
                       source={{ uri: taskIllustrationUri }}
                       style={s.photoPreview}
-                      resizeMode="cover"
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                      transition={200}
                     />
                     <TouchableOpacity
                       style={s.removePhoto}

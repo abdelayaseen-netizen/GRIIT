@@ -118,12 +118,28 @@ export const resetAnalytics = reset;
 
 type FunnelProps = Record<string, string | number | boolean | undefined>;
 
+/** PostHog `capture` props: JSON-serializable map (no `undefined` values). */
+type CaptureProps = { [key: string]: string | number | boolean | null | CaptureProps[] | { [key: string]: CaptureProps } };
+
+function funnelPropsForCapture(properties?: FunnelProps): CaptureProps | undefined {
+  if (!properties) return undefined;
+  const out: CaptureProps = {};
+  for (const [k, v] of Object.entries(properties)) {
+    if (v !== undefined) out[k] = v;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+function eventPayloadForCapture(rest: Record<string, unknown>): CaptureProps {
+  return JSON.parse(JSON.stringify(rest)) as CaptureProps;
+}
+
 /** String-key funnel events (exact PostHog event names). Fire-and-forget. */
 export function trackEvent(event: string, properties?: FunnelProps): void {
   try {
     if (!shouldSendPostHog()) return;
     const ph = getPostHog();
-    ph?.capture(event, properties);
+    ph?.capture(event, funnelPropsForCapture(properties));
   } catch {
     /* non-fatal — analytics must not break UX */
   }
@@ -137,8 +153,8 @@ export function track(event: AnalyticsEvent) {
   const ph = getPostHog();
   if (ph) {
     try {
-      const { name, ...properties } = event as { name: string; [k: string]: unknown };
-      ph.capture(name, properties);
+      const { name, ...rest } = event as { name: string; [k: string]: unknown };
+      ph.capture(name, eventPayloadForCapture(rest));
     } catch {
       // ignore
     }

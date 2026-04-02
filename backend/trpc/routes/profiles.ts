@@ -60,7 +60,9 @@ export const profilesRouter = createTRPCRouter({
           cover_url: input.cover_url,
           onboarding_completed: false,
         }, { onConflict: 'user_id' })
-        .select()
+        .select(
+          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed"
+        )
         .single();
 
       if (error) {
@@ -298,7 +300,7 @@ export const profilesRouter = createTRPCRouter({
         const { data } = await ctx.supabase
           .from("profiles")
           .select(
-            "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility"
+            "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed"
           )
           .eq("user_id", ctx.userId)
           .single();
@@ -309,7 +311,9 @@ export const profilesRouter = createTRPCRouter({
         .from('profiles')
         .update(updatePayload)
         .eq('user_id', ctx.userId)
-        .select()
+        .select(
+          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed"
+        )
         .single();
 
       if (error) {

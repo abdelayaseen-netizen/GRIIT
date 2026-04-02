@@ -94,7 +94,7 @@ export const startersRouter = createTRPCRouter({
           current_day: 1,
           progress_percent: 0,
         })
-        .select()
+        .select("id, user_id, challenge_id, status, start_at, end_at, current_day, progress_percent, created_at")
         .single();
 
       if (acError) {

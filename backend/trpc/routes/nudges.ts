@@ -51,7 +51,7 @@ export const nudgesRouter = createTRPCRouter({
           to_user_id: input.toUserId,
           message,
         })
-        .select()
+        .select("id")
         .single();
 
       if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to send nudge." });

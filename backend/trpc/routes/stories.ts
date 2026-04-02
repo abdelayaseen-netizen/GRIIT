@@ -27,7 +27,7 @@ export const storiesRouter = createTRPCRouter({
           caption: input.caption,
           expires_at: expiresAt.toISOString(),
         })
-        .select()
+        .select("id, user_id, media_url, media_type, caption, created_at, expires_at")
         .single();
 
       if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create story." });

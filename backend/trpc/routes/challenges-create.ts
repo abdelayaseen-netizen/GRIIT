@@ -249,7 +249,9 @@ export const challengesCreateProcedures = {
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from("challenges")
         .insert(insertPayload)
-        .select()
+        .select(
+          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status"
+        )
         .single();
 
       if (challengeError) {
@@ -332,7 +334,9 @@ export const challengesCreateProcedures = {
       const { data: tasksRaw, error: tasksError } = await ctx.supabase
         .from("challenge_tasks")
         .insert(tasksToInsert)
-        .select();
+        .select(
+          "id, challenge_id, title, task_type, order_index, config, created_at, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes"
+        );
 
       if (tasksError) {
         const { logger } = await import("../../lib/logger");

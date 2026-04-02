@@ -143,7 +143,13 @@ export const checkinsCoreProcedures = {
       if (input.location_longitude != null) payload.location_longitude = input.location_longitude;
       if (input.timer_seconds_on_screen != null) payload.timer_seconds_on_screen = input.timer_seconds_on_screen;
 
-      const { data, error } = await ctx.supabase.from("check_ins").upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" }).select().single();
+      const { data, error } = await ctx.supabase
+        .from("check_ins")
+        .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
+        .select(
+          "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at"
+        )
+        .single();
       if (error) {
         const { logger } = await import("../../lib/logger");
         const errObj = error as { code?: string; message?: string; details?: string; hint?: string };
@@ -175,7 +181,9 @@ export const checkinsCoreProcedures = {
           location_verified: !!(input.location_latitude != null && input.location_longitude != null && requireLocation),
         },
       };
-      const { error: taskCompletedEventError } = await ctx.supabase.from("activity_events").insert(activityEventPayload);
+      const { error: taskCompletedEventError } = await ctx.supabase
+        .from("activity_events")
+        .insert(activityEventPayload as never);
       if (taskCompletedEventError) {
         logger.error(
           { err: taskCompletedEventError },
@@ -184,7 +192,7 @@ export const checkinsCoreProcedures = {
         const { getSupabaseServer } = await import("../../lib/supabase-server");
         const svc = getSupabaseServer();
         if (svc) {
-          const { error: retryErr } = await svc.from("activity_events").insert(activityEventPayload);
+          const { error: retryErr } = await svc.from("activity_events").insert(activityEventPayload as never);
           if (retryErr) {
             logger.error({ err: retryErr }, "[checkins.complete] task_completed event FAILED on service-role retry too");
           } else {

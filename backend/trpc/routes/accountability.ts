@@ -111,7 +111,7 @@ export const accountabilityRouter = createTRPCRouter({
           },
           { onConflict: "user_id,partner_id" }
         )
-        .select()
+        .select("id")
         .single();
 
       if (error) {
