@@ -181,12 +181,13 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
           reactedByMe: !!result.reacted,
           respectCount: Math.max(0, result.reactionCount ?? nextC),
         }));
+        void queryClient.invalidateQueries({ queryKey: ["whoRespected", post.id] });
       } catch (e) {
         captureError(e, "LiveFeedRespect");
         updatePost(post.id, (p) => ({ ...p, reactedByMe: prevR, respectCount: prevC }));
       }
     },
-    [updatePost]
+    [updatePost, queryClient]
   );
 
   const onShare = useCallback(async (post: LiveFeedPost) => {

@@ -22,19 +22,29 @@ export const feedSocialProcedures = {
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { data: existing } = await ctx.supabase
-        .from("feed_reactions")
-        .select("id")
-        .eq("event_id", input.eventId)
-        .eq("user_id", ctx.userId)
-        .maybeSingle();
+      // Count before toggle, then ±1 — avoids stale post-delete COUNT under PgBouncer pool
+      const [{ data: existing }, { count: countBefore }] = await Promise.all([
+        ctx.supabase
+          .from("feed_reactions")
+          .select("id")
+          .eq("event_id", input.eventId)
+          .eq("user_id", ctx.userId)
+          .maybeSingle(),
+        ctx.supabase
+          .from("feed_reactions")
+          .select("id", { count: "exact", head: true })
+          .eq("event_id", input.eventId),
+      ]);
+      const prevCount = countBefore ?? 0;
       let reacted = false;
+      let count: number;
       if (existing?.id) {
         const { error } = await ctx.supabase
           .from("feed_reactions")
           .delete()
           .eq("id", existing.id);
         if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to remove reaction." });
+        count = Math.max(0, prevCount - 1);
       } else {
         const { error } = await ctx.supabase
           .from("feed_reactions")
@@ -45,11 +55,8 @@ export const feedSocialProcedures = {
           });
         if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to react." });
         reacted = true;
+        count = prevCount + 1;
       }
-      const { count } = await ctx.supabase
-        .from("feed_reactions")
-        .select("id", { count: "exact", head: true })
-        .eq("event_id", input.eventId);
 
       if (reacted) {
         const srv = getSupabaseServer();
