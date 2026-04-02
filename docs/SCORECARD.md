@@ -1,7 +1,7 @@
 # GRIIT Codebase Scorecard
 
 **Date:** April 1, 2026  
-**Commit:** `4086a75f4a58d39d448c6482597c5dc925476038`  
+**Baseline commit (code + scorecard generation):** `3cdd26a833390cdf0947b58aa24c957a9215a286`  
 **Generated after:** Targeted cleanup aligned with Phases 1–3 of the deep-clean playbook; Phase 4 metrics captured from the repo at generation time.
 
 **Scope note:** The full playbook (unused-import sweep every file, all hex/rgba outside `design-system.ts`, broad `React.memo` audit, four separate gate commits) was **not** executed to completion in one pass. This scorecard records **evidence from the current tree** after the changes applied in this session (TypeScript fixes, removal of three unused modules, ESLint fix, explicit Supabase `select` lists, `expo-image` for remaining RN `Image` usages).
