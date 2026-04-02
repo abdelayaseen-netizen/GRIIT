@@ -77,7 +77,8 @@ export const profilesRouter = createTRPCRouter({
   getPublicByUsername: publicProcedure
     .input(z.object({ username: z.string().min(1).max(100) }))
     .query(async ({ input, ctx }) => {
-      const server = getSupabaseServer() ?? ctx.supabase;
+      const unauthService = ctx.userId ? null : getSupabaseServer();
+      const server = ctx.userId ? ctx.supabase : (unauthService ?? ctx.supabase);
       const trimmed = input.username.trim();
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed);
@@ -94,9 +95,14 @@ export const profilesRouter = createTRPCRouter({
             .maybeSingle();
       const { data: profile, error: profileError } = await profileQuery;
       if (profileError) {
+        const errMsg =
+          typeof profileError === "object" && profileError !== null
+            ? (profileError as { message?: string }).message ?? JSON.stringify(profileError)
+            : String(profileError);
+        console.error("[profiles.getPublicByUsername] Supabase error:", errMsg);
         const { logger } = await import("../../lib/logger");
         logger.error({ error: profileError, username: input.username }, "[profiles.getPublicByUsername]");
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Failed to load profile: ${errMsg}` });
       }
       if (!profile) return null;
       const p = profile as {

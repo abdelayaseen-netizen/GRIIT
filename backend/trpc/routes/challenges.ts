@@ -107,7 +107,8 @@ export const challengesRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const server = getSupabaseServer() ?? ctx.supabase;
+      const unauthService = ctx.userId ? null : getSupabaseServer();
+      const server = ctx.userId ? ctx.supabase : (unauthService ?? ctx.supabase);
       const { data, error } = await server
         .from("challenges")
         .select(
@@ -117,6 +118,7 @@ export const challengesRouter = createTRPCRouter({
         .single();
 
       if (error) {
+        console.error("[challenges.getById] Supabase error:", JSON.stringify(error));
         const pgCode = (error as { code?: string }).code;
         if (pgCode === "PGRST116") {
           throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
@@ -164,10 +166,10 @@ export const challengesRouter = createTRPCRouter({
         let statusByUserId: Map<string, { tasks_completed: number; secured_today: boolean }> = new Map();
 
         if (participationType === "team" && memberRows.length > 0 && tasksTotal > 0) {
-          const server = getSupabaseServer();
-          if (server) {
+          const svc = ctx.userId ? ctx.supabase : getSupabaseServer();
+          if (svc) {
             const userIds = memberRows.map((m) => m.user_id);
-            const { data: acRows } = await server
+            const { data: acRows } = await svc
               .from("active_challenges")
               .select("id, user_id")
               .eq("challenge_id", input.id)
@@ -176,7 +178,7 @@ export const challengesRouter = createTRPCRouter({
             const userToAcId = new Map(acList.map((a) => [a.user_id, a.id]));
             const acIds = acList.map((a) => a.id);
             if (acIds.length > 0) {
-              const { data: checkinRows } = await server
+              const { data: checkinRows } = await svc
                 .from("check_ins")
                 .select("active_challenge_id, task_id")
                 .in("active_challenge_id", acIds)
@@ -324,7 +326,7 @@ export const challengesRouter = createTRPCRouter({
   getPublicChallenges: protectedProcedure
     .input(z.object({ userId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const server = getSupabaseServer() ?? ctx.supabase;
+      const server = ctx.supabase;
       let canSee = input.userId === ctx.userId;
       if (!canSee) {
         const { data: pr } = await server
