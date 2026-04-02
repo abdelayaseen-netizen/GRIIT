@@ -474,25 +474,37 @@ export const feedCoreProcedures = {
       const yesterday = new Date();
       yesterday.setUTCDate(yesterday.getUTCDate() - 1);
       const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+      let taskName = "Task";
+      let taskType = "manual";
+      let challengeName = "Challenge";
+      let photoFromCheckin: string | null = null;
+
+      // Try to enrich metadata from check_ins, but don't fail if we can't
       const { data: acRow } = await server.from("active_challenges").select("id").eq("user_id", ctx.userId).eq("challenge_id", input.challengeId).in("status", ["active", "completed"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
       const activeChallengeId = (acRow as { id?: string } | null)?.id;
-      if (!activeChallengeId) throw new TRPCError({ code: "NOT_FOUND", message: "No active challenge found. Complete a task first." });
-      const twoDaysAgo = new Date();
-      twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
-      const twoDaysAgoKey = twoDaysAgo.toISOString().slice(0, 10);
-      let { data: cinRow } = await server.from("check_ins").select("task_id, proof_url, completion_image_url, photo_url, created_at").eq("active_challenge_id", activeChallengeId).in("date_key", [todayKey, yesterdayKey, twoDaysAgoKey]).eq("status", "completed").order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (!cinRow) {
-        const { data: recentCin } = await server.from("check_ins").select("task_id, proof_url, completion_image_url, photo_url, created_at").eq("active_challenge_id", activeChallengeId).eq("status", "completed").order("created_at", { ascending: false }).limit(1).maybeSingle();
-        cinRow = recentCin;
+
+      if (activeChallengeId) {
+        const { data: cinRow } = await server.from("check_ins").select("task_id, proof_url, completion_image_url, photo_url, created_at").eq("active_challenge_id", activeChallengeId).in("date_key", [todayKey, yesterdayKey]).eq("status", "completed").order("created_at", { ascending: false }).limit(1).maybeSingle();
+        const cin = cinRow as { task_id?: string; proof_url?: string | null; completion_image_url?: string | null; photo_url?: string | null } | null;
+        if (cin?.task_id) {
+          const { data: taskRow } = await server.from("challenge_tasks").select("title, task_type").eq("id", cin.task_id).maybeSingle();
+          const task = taskRow as { title?: string; task_type?: string } | null;
+          taskName = task?.title ?? "Task";
+          taskType = task?.task_type ?? "manual";
+          photoFromCheckin = cin.proof_url ?? cin.completion_image_url ?? cin.photo_url ?? null;
+        } else {
+          logger.warn("[shareCompletion] no check_in found for date_key %s or %s — proceeding with defaults", todayKey, yesterdayKey);
+        }
+      } else {
+        logger.warn("[shareCompletion] no active_challenge row found for challenge %s — proceeding with defaults", input.challengeId);
       }
-      const cin = cinRow as { task_id?: string; proof_url?: string | null; completion_image_url?: string | null; photo_url?: string | null } | null;
-      if (!cin?.task_id) throw new TRPCError({ code: "NOT_FOUND", message: "No completed task found today. Complete a task first, then share." });
-      const { data: taskRow } = await server.from("challenge_tasks").select("title, task_type").eq("id", cin.task_id).maybeSingle();
-      const task = taskRow as { title?: string; task_type?: string } | null;
+
+      // Always fetch challenge name regardless
       const { data: chRow } = await server.from("challenges").select("title").eq("id", input.challengeId).maybeSingle();
-      const ch = chRow as { title?: string } | null;
-      const proofFromCheckin = cin.proof_url ?? cin.completion_image_url ?? cin.photo_url ?? null;
-      const insertMeta = { task_id: cin.task_id, task_name: task?.title ?? "Task", task_type: task?.task_type ?? "manual", challenge_name: ch?.title ?? "Challenge", has_photo: !!proofFromCheckin, photo_url: proofFromCheckin, verification_method: "manual", is_hard_mode: false, heart_rate_verified: false, location_verified: false };
+      challengeName = (chRow as { title?: string } | null)?.title ?? "Challenge";
+
+      const insertMeta = { task_name: taskName, task_type: taskType, challenge_name: challengeName, has_photo: !!photoFromCheckin, photo_url: photoFromCheckin, verification_method: "manual", is_hard_mode: false, heart_rate_verified: false, location_verified: false };
       const { data: inserted, error: insErr } = await activityEventsWriter.from("activity_events").insert({ user_id: ctx.userId, event_type: "task_completed", challenge_id: input.challengeId, metadata: insertMeta }).select("id, metadata").single();
       if (insErr || !inserted) {
         logger.error({ err: insErr }, "[shareCompletion] recovery insert failed");

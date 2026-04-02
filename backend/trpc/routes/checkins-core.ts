@@ -158,9 +158,9 @@ export const checkinsCoreProcedures = {
       const hrThreshold = (typeof task?.heart_rate_threshold === "number" ? task.heart_rate_threshold : null) ?? (typeof ruleFromCfg?.min_avg_bpm === "number" ? ruleFromCfg.min_avg_bpm : 100);
       const heartRateVerified = !!(input.heart_rate_avg && input.heart_rate_avg >= hrThreshold);
       const verificationMethod = cfgVm.verification_method ?? (taskType === "photo" || requirePhoto ? "photo" : taskType === "timer" ? "timer" : "manual");
-      const { error: taskCompletedEventError } = await ctx.supabase.from("activity_events").insert({
+      const activityEventPayload = {
         user_id: ctx.userId,
-        event_type: "task_completed",
+        event_type: "task_completed" as const,
         challenge_id,
         metadata: {
           task_id: input.taskId,
@@ -174,12 +174,24 @@ export const checkinsCoreProcedures = {
           heart_rate_verified: requireHeartRate ? heartRateVerified : false,
           location_verified: !!(input.location_latitude != null && input.location_longitude != null && requireLocation),
         },
-      });
-      if (taskCompletedEventError)
+      };
+      const { error: taskCompletedEventError } = await ctx.supabase.from("activity_events").insert(activityEventPayload);
+      if (taskCompletedEventError) {
         logger.error(
           { err: taskCompletedEventError },
-          "[checkins.complete] task_completed event FAILED — shareCompletion will use recovery path"
+          "[checkins.complete] task_completed event FAILED via user client — retrying with service role"
         );
+        const { getSupabaseServer } = await import("../../lib/supabase-server");
+        const svc = getSupabaseServer();
+        if (svc) {
+          const { error: retryErr } = await svc.from("activity_events").insert(activityEventPayload);
+          if (retryErr) {
+            logger.error({ err: retryErr }, "[checkins.complete] task_completed event FAILED on service-role retry too");
+          } else {
+            logger.info("[checkins.complete] task_completed event recovered via service role");
+          }
+        }
+      }
 
       const [{ data: allTasks }, { data: completedCheckins }] = await Promise.all([
         ctx.supabase.from("challenge_tasks").select("id, task_type, config").eq("challenge_id", challenge_id),
