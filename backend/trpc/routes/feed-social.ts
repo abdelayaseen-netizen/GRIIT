@@ -201,7 +201,7 @@ export const feedSocialProcedures = {
     .input(
       z.object({
         eventId: z.string().uuid(),
-        text: z.string().min(1).max(200),
+        text: z.string().trim().min(1).max(200),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -300,7 +300,7 @@ export const feedSocialProcedures = {
     .mutation(async ({ input, ctx }) => {
       const { data: comment, error: qErr } = await ctx.supabase
         .from("feed_comments")
-        .select("id, user_id")
+        .select("id, user_id, event_id")
         .eq("id", input.commentId)
         .maybeSingle();
       if (qErr) {
@@ -309,9 +309,19 @@ export const feedSocialProcedures = {
       if (!comment) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
       }
-      const row = comment as { id: string; user_id: string };
-      if (row.user_id !== ctx.userId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own comments" });
+      const row = comment as { id: string; user_id: string; event_id: string };
+      const isCommentAuthor = row.user_id === ctx.userId;
+      let isPostOwner = false;
+      if (!isCommentAuthor && row.event_id) {
+        const { data: ev } = await ctx.supabase
+          .from("activity_events")
+          .select("user_id")
+          .eq("id", row.event_id)
+          .maybeSingle();
+        isPostOwner = (ev as { user_id?: string } | null)?.user_id === ctx.userId;
+      }
+      if (!isCommentAuthor && !isPostOwner) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own comments or comments on your posts" });
       }
       const { error } = await ctx.supabase.from("feed_comments").delete().eq("id", input.commentId);
       if (error) {

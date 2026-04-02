@@ -203,6 +203,16 @@ export const feedCoreProcedures = {
     const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(150);
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
+    // Load profile visibility for feed filtering
+    const eventUserIds = [...new Set(events.map((e) => e.user_id))];
+    const privateUserIds = new Set<string>();
+    if (eventUserIds.length > 0) {
+      const { data: visRows } = await server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds);
+      for (const r of (visRows ?? []) as { user_id: string; profile_visibility?: string | null }[]) {
+        const v = String(r.profile_visibility ?? "public").toLowerCase();
+        if (v === "private") privateUserIds.add(r.user_id);
+      }
+    }
     const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((id): id is string => !!id))];
     const challengeMap = new Map<string, { id: string; title?: string; visibility?: string; duration_days?: number }>();
     if (challengeIds.length) {
@@ -217,6 +227,7 @@ export const feedCoreProcedures = {
     const preFiltered: EvRow[] = [];
     for (const ev of events) {
       if (preFiltered.length >= input.limit) break;
+      if (input.scope === "everyone" && ev.user_id !== viewerId && privateUserIds.has(ev.user_id)) continue;
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) continue;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
       if (ev.challenge_id && !ch) continue;
