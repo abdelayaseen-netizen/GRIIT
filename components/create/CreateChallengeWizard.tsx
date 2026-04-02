@@ -285,6 +285,19 @@ export default function CreateChallengeWizard() {
     if (id) router.replace(ROUTES.CHALLENGE_ID(id) as never);
   }, [router]);
 
+  const setDifficultyModeAndPropagate = useCallback((mode: DifficultyMode) => {
+    setDifficultyMode(mode);
+    if (mode === "hard") {
+      setPhotoProof("required");
+    }
+    setTasks((prev) =>
+      prev.map((t) => ({
+        ...t,
+        config: { ...t.config, hard_mode: mode === "hard" },
+      }))
+    );
+  }, []);
+
   const applyPhotoPolicyToTasks = useCallback(
     (list: (TaskEditorTask & { wizardType?: string })[]): (TaskEditorTask & { wizardType?: string })[] => {
       if (difficultyMode === "hard") {
@@ -792,9 +805,16 @@ export default function CreateChallengeWizard() {
               ) : (
                 tasks.map((task) => (
                   <View key={task.id} style={styles.taskRow}>
-                    <Text style={styles.taskTitle} numberOfLines={1}>
-                      {task.title}
-                    </Text>
+                    <View style={styles.taskTitleRow}>
+                      <Text style={styles.taskTitle} numberOfLines={1}>
+                        {task.title}
+                      </Text>
+                      {task.config?.hard_mode ? (
+                        <View style={styles.hardBadge} accessibilityLabel="Hard mode task">
+                          <Text style={styles.hardBadgeText}>Hard</Text>
+                        </View>
+                      ) : null}
+                    </View>
                     <TouchableOpacity
                       onPress={() => setTasks((p) => p.filter((x) => x.id !== task.id))}
                       accessibilityRole="button"
@@ -826,9 +846,7 @@ export default function CreateChallengeWizard() {
               <View style={styles.typeRow}>
                 <TouchableOpacity
                   style={[styles.ruleCard, difficultyMode === "standard" && styles.ruleCardSel]}
-                  onPress={() => {
-                    setDifficultyMode("standard");
-                  }}
+                  onPress={() => setDifficultyModeAndPropagate("standard")}
                   accessibilityRole="button"
                   accessibilityLabel="Standard difficulty — self-reported completion, streak freezes allowed — tap to select"
                   accessibilityState={{ selected: difficultyMode === "standard" }}
@@ -863,10 +881,7 @@ export default function CreateChallengeWizard() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.ruleCard, difficultyMode === "hard" && styles.ruleCardSel]}
-                  onPress={() => {
-                    setDifficultyMode("hard");
-                    setPhotoProof("required");
-                  }}
+                  onPress={() => setDifficultyModeAndPropagate("hard")}
                   accessibilityRole="button"
                   accessibilityLabel="Hard mode — photo proof required, no streak freezes, miss a day means Day 1 again — tap to select"
                   accessibilityState={{ selected: difficultyMode === "hard" }}
@@ -1518,7 +1533,16 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.chipFill,
     gap: 8,
   },
-  taskTitle: { flex: 1, fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  taskTitleRow: { flex: 1, flexDirection: "row", alignItems: "center", minWidth: 0, gap: 6 },
+  taskTitle: { flexShrink: 1, fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  hardBadge: {
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    flexShrink: 0,
+  },
+  hardBadgeText: { fontSize: 11, fontWeight: "500", color: DS_COLORS.PRIMARY },
   empty: { alignItems: "center", padding: 24 },
   emptyTitle: { fontSize: 16, fontWeight: "700" },
   emptySub: { fontSize: 13, color: DS_COLORS.TEXT_MUTED, marginTop: 4 },

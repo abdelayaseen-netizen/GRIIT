@@ -92,6 +92,20 @@ function parsePositiveFloat(raw: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+/** Accepts "7:00 AM", "07:00", "7 AM", etc. Returns "07:00" (24h) or original trim if unparsed. */
+function parseTimeToHHMM(timeStr: string): string {
+  const cleaned = timeStr.trim().toUpperCase().replace(/\s+/g, " ");
+  const match = cleaned.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/);
+  if (!match) return timeStr.trim();
+  let hours = parseInt(match[1] ?? "0", 10);
+  const minutes = parseInt(match[2] || "0", 10);
+  const period = match[3];
+  if (period === "PM" && hours !== 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+  if (!Number.isFinite(hours) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return timeStr.trim();
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
 type WorkoutTypeUI = "general" | "cardio" | "strength" | "hiit" | "yoga";
 
 type BuildOpts = {
@@ -307,6 +321,15 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const [timeEnforcementEnabled, setTimeEnforcementEnabled] = useState(false);
   const [anchorTime, setAnchorTime] = useState("06:00");
   const [windowMinutes, setWindowMinutes] = useState("60");
+  const [hardMode, setHardMode] = useState(false);
+  const [scheduleStart, setScheduleStart] = useState("");
+  const [scheduleEnd, setScheduleEnd] = useState("");
+  const [requireLocation, setRequireLocation] = useState(false);
+  const [locationName, setLocationName] = useState("");
+  const [locationLat, setLocationLat] = useState<number | null>(null);
+  const [locationLng, setLocationLng] = useState<number | null>(null);
+  const [requireCameraOnly, setRequireCameraOnly] = useState(false);
+  const [requireStrava, setRequireStrava] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -343,8 +366,19 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       setTimeEnforcementEnabled(false);
       setAnchorTime("06:00");
       setWindowMinutes("60");
+      setHardMode(false);
+      setScheduleStart("");
+      setScheduleEnd("");
+      setRequireLocation(false);
+      setLocationName("");
+      setLocationLat(null);
+      setLocationLng(null);
+      setRequireCameraOnly(false);
+      setRequireStrava(false);
+    } else {
+      setHardMode(!!hardModeGlobal);
     }
-  }, [visible]);
+  }, [visible, hardModeGlobal]);
 
   useEffect(() => {
     setRequirePhotoTimer(false);
@@ -362,6 +396,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     setTimedWorkout(true);
     setCaptureMoodJournal(false);
     setLocationStampPhoto(false);
+    setRequireStrava(false);
   }, [kind]);
 
   const buildOpts = useCallback((): BuildOpts => {
@@ -428,6 +463,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
 
   const canAdd = useMemo(() => {
     if (!name.trim()) return false;
+    if (hardMode && requireLocation && !locationName.trim()) return false;
     switch (kind) {
       case "timer":
         return parsePositiveInt(timerMins, 0) > 0;
@@ -465,7 +501,23 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     readingSessionMins,
     requireLocationWorkout,
     locationNameWorkout,
+    hardMode,
+    requireLocation,
+    locationName,
   ]);
+
+  const handleUseCurrentLocation = useCallback(async () => {
+    try {
+      const Location = await import("expo-location");
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setLocationLat(pos.coords.latitude);
+      setLocationLng(pos.coords.longitude);
+    } catch {
+      /* non-fatal */
+    }
+  }, []);
 
   const handleAdd = useCallback(() => {
     const opts = buildOpts();
@@ -474,6 +526,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     const teEnabled = kind !== "simple" && timeEnforcementEnabled;
     const windowEnd = teEnabled ? parseInt(windowMinutes, 10) || 60 : null;
     const anchor = anchorTime.trim() || "06:00";
+    const hm = hardMode;
+    const scheduleTz = hm ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined;
     onAdd({
       ...task,
       wizardType: kind,
@@ -482,9 +536,41 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       anchorTimeLocal: teEnabled ? anchor : null,
       windowStartOffsetMin: teEnabled ? 0 : null,
       windowEndOffsetMin: teEnabled ? windowEnd : null,
+      config: {
+        hard_mode: hm,
+        schedule_window_start: hm && scheduleStart.trim() ? parseTimeToHHMM(scheduleStart) : undefined,
+        schedule_window_end: hm && scheduleEnd.trim() ? parseTimeToHHMM(scheduleEnd) : undefined,
+        schedule_timezone: hm ? scheduleTz : undefined,
+        require_location: hm ? requireLocation : false,
+        location_name: hm && requireLocation && locationName.trim() ? locationName.trim() : undefined,
+        location_latitude: hm && requireLocation ? locationLat ?? undefined : undefined,
+        location_longitude: hm && requireLocation ? locationLng ?? undefined : undefined,
+        location_radius_meters: hm && requireLocation ? 200 : undefined,
+        require_camera_only: hm ? requireCameraOnly : false,
+        require_strava: hm ? requireStrava : false,
+      },
     } as TaskEditorTask);
     onClose();
-  }, [name, kind, hardModeGlobal, buildOpts, onAdd, onClose, timeEnforcementEnabled, anchorTime, windowMinutes]);
+  }, [
+    name,
+    kind,
+    hardModeGlobal,
+    buildOpts,
+    onAdd,
+    onClose,
+    timeEnforcementEnabled,
+    anchorTime,
+    windowMinutes,
+    hardMode,
+    scheduleStart,
+    scheduleEnd,
+    requireLocation,
+    locationName,
+    locationLat,
+    locationLng,
+    requireCameraOnly,
+    requireStrava,
+  ]);
 
   const configBlock = (() => {
     const row = (label: string, value: boolean, onValue: (v: boolean) => void, a11y: string) => (
@@ -973,6 +1059,129 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             </View>
           )}
           {configBlock}
+          <View style={s.hardModeSection}>
+            <View style={s.hardModeToggleRow}>
+              <View style={s.flex1}>
+                <Text style={s.hardModeTitle}>Hard mode</Text>
+                <Text style={s.hardModeSubtitle}>Enforce verification gates</Text>
+              </View>
+              <Switch
+                value={hardMode}
+                onValueChange={setHardMode}
+                accessibilityRole="switch"
+                trackColor={{ false: DS_COLORS.SWITCH_TRACK_OFF, true: DS_COLORS.SWITCH_TRACK_ON }}
+                thumbColor={DS_COLORS.SWITCH_THUMB}
+                accessibilityLabel="Toggle hard mode for this task"
+              />
+            </View>
+
+            {hardMode && (
+              <>
+                <View style={s.hardModeDivider} />
+                <Text style={s.hardModeExplainer}>
+                  Tasks require proof to complete. No shortcuts, no excuses. Failed verifications count as missed days.
+                </Text>
+
+                <Text style={s.hmConfigLabel}>Schedule window</Text>
+                <Text style={s.hmConfigHint}>Task must be completed within this time range</Text>
+                <View style={s.hmTimeRow}>
+                  <View style={s.hmTimeInput}>
+                    <TextInput
+                      style={s.hmTimeField}
+                      placeholder="7:00 AM"
+                      placeholderTextColor={DS_COLORS.TEXT_HINT}
+                      value={scheduleStart}
+                      onChangeText={setScheduleStart}
+                      accessibilityLabel="Schedule window start time"
+                    />
+                    <Text style={s.hmTimeLabel}>Start</Text>
+                  </View>
+                  <View style={s.hmTimeInput}>
+                    <TextInput
+                      style={s.hmTimeField}
+                      placeholder="8:00 AM"
+                      placeholderTextColor={DS_COLORS.TEXT_HINT}
+                      value={scheduleEnd}
+                      onChangeText={setScheduleEnd}
+                      accessibilityLabel="Schedule window end time"
+                    />
+                    <Text style={s.hmTimeLabel}>End</Text>
+                  </View>
+                </View>
+
+                <View style={s.hardModeToggleRow}>
+                  <View style={s.flex1}>
+                    <Text style={s.hmConfigLabel}>Location required</Text>
+                    <Text style={s.hmConfigHint}>GPS must confirm you are at this location</Text>
+                  </View>
+                  <Switch
+                    value={requireLocation}
+                    onValueChange={setRequireLocation}
+                    accessibilityRole="switch"
+                    trackColor={{ false: DS_COLORS.SWITCH_TRACK_OFF, true: DS_COLORS.SWITCH_TRACK_ON }}
+                    thumbColor={DS_COLORS.SWITCH_THUMB}
+                    accessibilityLabel="Require location verification"
+                  />
+                </View>
+
+                {requireLocation ? (
+                  <>
+                    <TextInput
+                      style={s.hmLocationInput}
+                      placeholder="e.g. Planet Fitness — Ramsey, NJ"
+                      placeholderTextColor={DS_COLORS.TEXT_HINT}
+                      value={locationName}
+                      onChangeText={setLocationName}
+                      accessibilityLabel="Location name for verification"
+                    />
+                    <TouchableOpacity
+                      style={s.hmLocationBtn}
+                      onPress={() => void handleUseCurrentLocation()}
+                      accessibilityRole="button"
+                      accessibilityLabel="Use current GPS location for verification coordinates"
+                    >
+                      <Text style={s.hmLocationBtnText}>Use current location</Text>
+                    </TouchableOpacity>
+                    {locationLat != null && locationLng != null ? (
+                      <Text style={s.hmConfigHint}>GPS saved for this spot</Text>
+                    ) : null}
+                  </>
+                ) : null}
+
+                <View style={s.hardModeToggleRow}>
+                  <View style={s.flex1}>
+                    <Text style={s.hmConfigLabel}>Camera-only proof</Text>
+                    <Text style={s.hmConfigHint}>No gallery uploads — live camera only</Text>
+                  </View>
+                  <Switch
+                    value={requireCameraOnly}
+                    onValueChange={setRequireCameraOnly}
+                    accessibilityRole="switch"
+                    trackColor={{ false: DS_COLORS.SWITCH_TRACK_OFF, true: DS_COLORS.SWITCH_TRACK_ON }}
+                    thumbColor={DS_COLORS.SWITCH_THUMB}
+                    accessibilityLabel="Require camera-only photo proof"
+                  />
+                </View>
+
+                {(kind === "run" || kind === "workout") && (
+                  <View style={s.hardModeToggleRow}>
+                    <View style={s.flex1}>
+                      <Text style={s.hmConfigLabel}>Strava verification</Text>
+                      <Text style={s.hmConfigHint}>Auto-verify via Strava activity data</Text>
+                    </View>
+                    <Switch
+                      value={requireStrava}
+                      onValueChange={setRequireStrava}
+                      accessibilityRole="switch"
+                      trackColor={{ false: DS_COLORS.SWITCH_TRACK_OFF, true: DS_COLORS.SWITCH_TRACK_ON }}
+                      thumbColor={DS_COLORS.SWITCH_THUMB}
+                      accessibilityLabel="Require Strava verification"
+                    />
+                  </View>
+                )}
+              </>
+            )}
+          </View>
           {kind !== "simple" && (
             <View style={s.timeSection}>
               <View style={[s.toggleRow, s.timeToggleRow]}>
@@ -1148,4 +1357,74 @@ const s = StyleSheet.create({
   taskIconText: { fontSize: 17 },
   taskName: { fontSize: 14, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
   taskSubtitle: { fontSize: 12, color: DS_COLORS.TEXT_HINT, marginTop: 1 },
+  hardModeSection: {
+    backgroundColor: DS_COLORS.CARD_BG,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: DS_SPACING.lg,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.border,
+  },
+  hardModeToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
+  hardModeTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
+  hardModeSubtitle: { fontSize: 12, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
+  hardModeDivider: { height: 0.5, backgroundColor: DS_COLORS.BORDER, marginVertical: 10 },
+  hardModeExplainer: {
+    fontSize: 12,
+    fontWeight: "400",
+    color: DS_COLORS.createErrorText,
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  hmConfigLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginTop: 8,
+  },
+  hmConfigHint: {
+    fontSize: 12,
+    fontWeight: "400",
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  hmTimeRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
+  hmTimeInput: {
+    flex: 1,
+    backgroundColor: DS_COLORS.WARM_CREAM,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.BORDER,
+    borderRadius: 12,
+    padding: 12,
+  },
+  hmTimeField: { fontSize: 16, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
+  hmTimeLabel: { fontSize: 11, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
+  hmLocationInput: {
+    backgroundColor: DS_COLORS.WARM_CREAM,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.BORDER,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 14,
+    fontWeight: "400",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: 8,
+  },
+  hmLocationBtn: {
+    alignSelf: "flex-start",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.PRIMARY,
+    marginBottom: 8,
+  },
+  hmLocationBtnText: { fontSize: 14, fontWeight: "500", color: DS_COLORS.PRIMARY },
 });

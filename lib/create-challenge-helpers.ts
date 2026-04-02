@@ -15,6 +15,21 @@ import type {
   JournalCategory,
 } from "@/types";
 
+/** Per-task Hard Mode fields (create wizard → challenges.create config JSONB). */
+export interface TaskWizardHardConfig {
+  hard_mode?: boolean;
+  schedule_window_start?: string;
+  schedule_window_end?: string;
+  schedule_timezone?: string;
+  require_location?: boolean;
+  location_name?: string;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_radius_meters?: number;
+  require_camera_only?: boolean;
+  require_strava?: boolean;
+}
+
 /** Minimal task shape for validation and payload. Aligns with create screen TaskTemplate. */
 export interface CreateTaskDraft {
   id: string;
@@ -64,6 +79,8 @@ export interface CreateTaskDraft {
     griit_illustration_url?: string;
     griit_illustration_caption?: string;
   } | null;
+  /** Hard Mode verification (merged into API task payload). */
+  config?: TaskWizardHardConfig;
 }
 
 export type ParticipationTypeUI = "solo" | "duo" | "team" | "shared_goal";
@@ -250,6 +267,17 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
         task.timeEnforcementEnabled && task.timezoneMode === "CHALLENGE_TIMEZONE" ? task.challengeTimezone : undefined,
       verificationMethod: task.verificationMethod ?? undefined,
       verificationRuleJson: task.verificationRuleJson ?? undefined,
+      hard_mode: task.config?.hard_mode,
+      schedule_window_start: task.config?.schedule_window_start,
+      schedule_window_end: task.config?.schedule_window_end,
+      schedule_timezone: task.config?.schedule_timezone,
+      require_location: task.config?.require_location,
+      location_name: task.config?.location_name,
+      location_latitude: task.config?.location_latitude ?? undefined,
+      location_longitude: task.config?.location_longitude ?? undefined,
+      location_radius_meters: task.config?.location_radius_meters,
+      require_camera_only: task.config?.require_camera_only,
+      require_strava: task.config?.require_strava,
     })),
   };
   if (partType === "shared_goal") {

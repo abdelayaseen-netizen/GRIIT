@@ -57,6 +57,7 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { uploadProofImageFromUri } from "@/lib/uploadProofImage";
+import type { TaskWizardHardConfig } from "@/lib/create-challenge-helpers";
 
 type TaskType =
   | "journal"
@@ -133,6 +134,8 @@ export interface TaskEditorTask {
     griit_illustration_url?: string;
     griit_illustration_caption?: string;
   } | null;
+  /** Hard Mode (create wizard — maps to API task fields). */
+  config?: TaskWizardHardConfig;
 }
 
 interface Props {
