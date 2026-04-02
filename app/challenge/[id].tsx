@@ -1305,7 +1305,7 @@ export default function ChallengeDetailScreen() {
                 {isPending ? <ActivityIndicator color={DS_COLORS.white} /> : <Text style={s.commitCtaInFlowText}>Commit to This Challenge</Text>}
               </TouchableOpacity>
             )}
-            {isJoined && id && (
+            {isJoined && id && challenge.created_by !== currentUserId && (
               <>
                 <TouchableOpacity
                   style={s.leaveBtnInFlow}
