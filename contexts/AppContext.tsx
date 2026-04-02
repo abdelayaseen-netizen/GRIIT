@@ -58,6 +58,7 @@ type AppContextValue = {
     location_latitude?: number;
     location_longitude?: number;
     timer_seconds_on_screen?: number;
+    clocked_in_at?: string;
   }) => Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void>;
   secureDay: () => Promise<{
     newStreakCount: number;
@@ -532,6 +533,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     location_latitude?: number;
     location_longitude?: number;
     timer_seconds_on_screen?: number;
+    clocked_in_at?: string;
   }): Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void> => {
     const requiredTasks = (challenge?.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
     const completedCountBefore = todayCheckins.filter((c: TodayCheckinForUser) =>

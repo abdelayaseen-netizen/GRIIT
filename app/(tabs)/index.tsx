@@ -101,6 +101,9 @@ function buildTaskConfigParam(task: ChallengeTaskFromApi | undefined): string {
   if (!task) return "{}";
   try {
     const t = task as Record<string, unknown>;
+    const cfg =
+      typeof t.config === "object" && t.config !== null ? (t.config as Record<string, unknown>) : {};
+    const requireLoc = t.require_location === true || cfg.require_location === true;
     return JSON.stringify({
       require_photo: t.require_photo ?? t.require_photo_proof,
       min_duration_minutes: t.min_duration_minutes ?? t.duration_minutes,
@@ -110,12 +113,18 @@ function buildTaskConfigParam(task: ChallengeTaskFromApi | undefined): string {
       timer_hard_mode: t.timer_hard_mode ?? t.strict_timer_mode,
       require_heart_rate: t.require_heart_rate,
       heart_rate_threshold: t.heart_rate_threshold,
-      require_location: t.require_location,
-      location_name: t.location_name,
-      location_latitude: t.location_latitude,
-      location_longitude: t.location_longitude,
-      location_radius_meters: t.location_radius_meters,
+      require_location: requireLoc,
+      location_name: t.location_name ?? cfg.location_name,
+      location_latitude: t.location_latitude ?? cfg.location_latitude,
+      location_longitude: t.location_longitude ?? cfg.location_longitude,
+      location_radius_meters: t.location_radius_meters ?? cfg.location_radius_meters,
       journal_prompt: typeof t.journal_prompt === "string" ? t.journal_prompt : undefined,
+      hard_mode: cfg.hard_mode === true,
+      schedule_window_start: typeof cfg.schedule_window_start === "string" ? cfg.schedule_window_start : undefined,
+      schedule_window_end: typeof cfg.schedule_window_end === "string" ? cfg.schedule_window_end : undefined,
+      schedule_timezone: typeof cfg.schedule_timezone === "string" ? cfg.schedule_timezone : undefined,
+      require_camera_only: cfg.require_camera_only === true,
+      require_strava: cfg.require_strava === true,
     });
   } catch (err) {
     captureError(err, "HomeBuildTaskConfigParam");

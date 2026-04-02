@@ -3,7 +3,7 @@
  * verification add-ons, and a clear success state.
  */
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -51,6 +51,8 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useQueryClient } from "@tanstack/react-query";
 import { shareToInstagramStory } from "@/lib/share";
 import { trackEvent } from "@/lib/analytics";
+import { VerificationGates } from "@/components/task/VerificationGates";
+import type { TaskHardVerificationConfig } from "@/lib/task-hard-verification";
 
 const JOURNAL_PROMPTS = [
   "What did you learn about yourself today?",
@@ -92,6 +94,12 @@ export type TaskCompleteConfig = {
   location_longitude?: number;
   location_radius_meters?: number;
   journal_prompt?: string;
+  hard_mode?: boolean;
+  schedule_window_start?: string;
+  schedule_window_end?: string;
+  schedule_timezone?: string;
+  require_camera_only?: boolean;
+  require_strava?: boolean;
 };
 
 function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {
@@ -196,10 +204,51 @@ function TaskCompleteScreenInner() {
   const [shareBusy, setShareBusy] = useState(false);
   const [postedInline, setPostedInline] = useState(false);
   const manualSubmitScheduled = useRef(false);
+  const clockedInAtRef = useRef<string | null>(null);
+  const [hardGatesPassed, setHardGatesPassed] = useState(true);
+  const [timeWindowFailed, setTimeWindowFailed] = useState(false);
+  const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setParamsReady(true), 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  const isHardVerificationTask = config.hard_mode === true;
+  const hardVerificationConfig = useMemo((): TaskHardVerificationConfig => {
+    return {
+      hard_mode: config.hard_mode,
+      schedule_window_start: config.schedule_window_start,
+      schedule_window_end: config.schedule_window_end,
+      schedule_timezone: config.schedule_timezone,
+      require_location: config.require_location,
+      location_latitude: config.location_latitude,
+      location_longitude: config.location_longitude,
+      location_radius_meters: config.location_radius_meters,
+      location_name: config.location_name,
+      require_camera_only: config.require_camera_only,
+      require_strava: config.require_strava,
+    };
+  }, [config]);
+
+  useLayoutEffect(() => {
+    setHardGatesPassed(!isHardVerificationTask);
+    setTimeWindowFailed(false);
+    setGatesLocation(null);
+    if (isHardVerificationTask) {
+      clockedInAtRef.current = new Date().toISOString();
+    } else {
+      clockedInAtRef.current = null;
+    }
+  }, [taskId, isHardVerificationTask, params.taskConfig]);
+
+  const onHardGatesResolved = useCallback((ok: boolean, loc?: { lat: number; lng: number }) => {
+    setHardGatesPassed(ok);
+    if (loc) setGatesLocation(loc);
+  }, []);
+
+  const onHardTimeWindowFailed = useCallback(() => {
+    setTimeWindowFailed(true);
   }, []);
 
   const minDurMinutes = config.min_duration_minutes ?? 0;
@@ -288,6 +337,10 @@ function TaskCompleteScreenInner() {
   }, [showError]);
 
   const handlePickImage = useCallback(async () => {
+    if (config.require_camera_only === true) {
+      showError("This task requires a live camera photo. Use Take photo.");
+      return;
+    }
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       showError("Allow gallery access to choose a photo.");
@@ -319,7 +372,7 @@ function TaskCompleteScreenInner() {
     } finally {
       setPhotoUploading(false);
     }
-  }, [showError]);
+  }, [showError, config.require_camera_only]);
 
   const handleCheckLocation = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -393,6 +446,7 @@ function TaskCompleteScreenInner() {
     !config.require_location;
 
   const canSubmit = useMemo(() => {
+    if (isHardVerificationTask && (!hardGatesPassed || timeWindowFailed)) return false;
     if (taskTypeRaw === "journal" && !journalOk) return false;
     if (showWorkoutTimer && requiredSeconds > 0) {
       if (!timerOk) return false;
@@ -405,6 +459,9 @@ function TaskCompleteScreenInner() {
     if (showWorkoutEntry && !workoutOk) return false;
     return true;
   }, [
+    isHardVerificationTask,
+    hardGatesPassed,
+    timeWindowFailed,
     taskTypeRaw,
     journalOk,
     showWorkoutTimer,
@@ -462,9 +519,10 @@ function TaskCompleteScreenInner() {
         photo_url: photoUrl ?? undefined,
         heart_rate_avg: heartRateData?.avg,
         heart_rate_peak: heartRateData?.peak,
-        location_latitude: userLocation?.lat,
-        location_longitude: userLocation?.lng,
+        location_latitude: gatesLocation?.lat ?? userLocation?.lat,
+        location_longitude: gatesLocation?.lng ?? userLocation?.lng,
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
+        clocked_in_at: isHardVerificationTask ? (clockedInAtRef.current ?? new Date().toISOString()) : undefined,
       });
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -505,7 +563,9 @@ function TaskCompleteScreenInner() {
     photoUrl,
     heartRateData,
     userLocation,
+    gatesLocation,
     isHardMode,
+    isHardVerificationTask,
     showError,
     runDistance,
     runDuration,
@@ -769,6 +829,41 @@ function TaskCompleteScreenInner() {
           <View>
         <InlineError message={error} onDismiss={clearError} />
 
+        {isHardVerificationTask ? (
+          <VerificationGates
+            config={hardVerificationConfig}
+            photoSatisfied={
+              config.require_camera_only !== true || !needsPhotoProof || !!photoUrl
+            }
+            onGatesResolved={onHardGatesResolved}
+            onTimeWindowFailed={onHardTimeWindowFailed}
+          />
+        ) : null}
+
+        {isHardVerificationTask && timeWindowFailed ? (
+          <View style={styles.missedWindowCard} accessibilityLabel="Time window closed, task missed">
+            <XCircle size={40} color={DS_COLORS.BADGE_HARD_RED} accessibilityLabel="Window closed icon" />
+            <Text style={styles.missedWindowTitle}>This task counts as missed today</Text>
+            <Text style={styles.missedWindowSub}>
+              The schedule window has closed. Try again inside the allowed time tomorrow.
+            </Text>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => goBackOrHome(router)}
+              accessibilityRole="button"
+              accessibilityLabel="Go back after missed task window"
+            >
+              <Text style={styles.primaryBtnText}>Go back</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {!(isHardVerificationTask && timeWindowFailed) ? (
+          <>
+        <View
+          pointerEvents={isHardVerificationTask && !hardGatesPassed ? "none" : "auto"}
+          style={isHardVerificationTask && !hardGatesPassed ? styles.hardGatesDimmed : undefined}
+        >
         <Text style={styles.screenTitle}>{taskName}</Text>
         <Text style={styles.headerSubtitle}>
           {headerChallengeName} · Day {headerCurrentDay} of {headerDurationDays}
@@ -787,7 +882,11 @@ function TaskCompleteScreenInner() {
               disabled={!isPureManual || !canSubmit || isSubmitting}
               style={styles.manualPress}
               accessibilityRole="button"
-              accessibilityLabel="Mark task complete"
+              accessibilityLabel={
+                isHardVerificationTask && !hardGatesPassed
+                  ? "Verification gates must pass first"
+                  : "Mark task complete"
+              }
               accessibilityState={{ disabled: !isPureManual || !canSubmit || isSubmitting }}
             >
               <Animated.View style={[styles.manualCircle, { transform: [{ scale: manualScale }] }]}>
@@ -1122,16 +1221,20 @@ function TaskCompleteScreenInner() {
                     </>
                   )}
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.galleryLink}
-                  onPress={handlePickImage}
-                  disabled={photoUploading}
-                  accessibilityRole="button"
-                  accessibilityLabel="Choose from gallery"
-                  accessibilityState={{ disabled: photoUploading }}
-                >
-                  <Text style={styles.link}>Choose from gallery</Text>
-                </TouchableOpacity>
+                {config.require_camera_only !== true ? (
+                  <TouchableOpacity
+                    style={styles.galleryLink}
+                    onPress={handlePickImage}
+                    disabled={photoUploading}
+                    accessibilityRole="button"
+                    accessibilityLabel="Choose from gallery"
+                    accessibilityState={{ disabled: photoUploading }}
+                  >
+                    <Text style={styles.link}>Choose from gallery</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.hintSmall}>Camera only — gallery uploads are disabled for this task.</Text>
+                )}
               </View>
             )}
             {photoUrl ? <Text style={styles.hintSmall}>Uploaded ✓</Text> : null}
@@ -1147,6 +1250,7 @@ function TaskCompleteScreenInner() {
             ) : null}
           </View>
         )}
+        </View>
 
         {/* Submit — hidden for pure manual/simple when ready (circle tap submits) */}
         {!(isPureManual && canSubmit) && (
@@ -1156,17 +1260,25 @@ function TaskCompleteScreenInner() {
               onPress={() => void handleSubmit()}
               disabled={!canSubmit || isSubmitting}
               accessibilityRole="button"
-              accessibilityLabel="Complete task"
+              accessibilityLabel={
+                isHardVerificationTask && !hardGatesPassed
+                  ? "Verification gates must pass first"
+                  : "Complete task"
+              }
               accessibilityState={{ disabled: !canSubmit || isSubmitting }}
             >
               {isSubmitting ? (
                 <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
               ) : (
-                <Text style={styles.primaryBtnText}>Complete task</Text>
+                <Text style={styles.primaryBtnText}>
+                  {isHardVerificationTask && !hardGatesPassed ? "Gates must pass" : "Complete task"}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
         )}
+          </>
+        ) : null}
           </View>
         )}
       />
@@ -1319,6 +1431,31 @@ const styles = StyleSheet.create({
     padding: DS_SPACING.md,
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
     color: DS_COLORS.TEXT_PRIMARY,
+    marginBottom: DS_SPACING.sm,
+  },
+  hardGatesDimmed: { opacity: 0.45 },
+  missedWindowCard: {
+    backgroundColor: DS_COLORS.BADGE_HARD_BG,
+    borderRadius: 16,
+    padding: DS_SPACING.lg,
+    marginTop: DS_SPACING.md,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BADGE_HARD_RED,
+    alignItems: "center",
+    gap: DS_SPACING.sm,
+  },
+  missedWindowTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS.BADGE_HARD_RED,
+    textAlign: "center",
+  },
+  missedWindowSub: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    lineHeight: 20,
     marginBottom: DS_SPACING.sm,
   },
   submitSection: { marginTop: DS_SPACING.xxl, paddingBottom: DS_SPACING.xxl },

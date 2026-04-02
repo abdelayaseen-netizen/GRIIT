@@ -793,8 +793,11 @@ export default function ChallengeDetailScreen() {
       return;
     }
     if (task.type === "run") {
-      const runTask = task as ChallengeTaskFromApi & { tracking_mode?: string | null };
+      const runTask = task as ChallengeTaskFromApi & { tracking_mode?: string | null; config?: Record<string, unknown> };
+      const runCfg =
+        typeof runTask.config === "object" && runTask.config !== null ? runTask.config : {};
       const useUnifiedComplete =
+        runCfg.hard_mode === true ||
         runTask.tracking_mode === "time" ||
         runTask.verification_method === "heart_rate" ||
         runTask.require_location === true ||
@@ -809,6 +812,12 @@ export default function ChallengeDetailScreen() {
     }
 
     // Unified completion screen for manual, simple, journal, timer, photo (with optional advanced verification)
+    const rawTask = task as Record<string, unknown>;
+    const cfg =
+      typeof rawTask.config === "object" && rawTask.config !== null
+        ? (rawTask.config as Record<string, unknown>)
+        : {};
+    const requireLoc = apiTask.require_location === true || cfg.require_location === true;
     const taskConfig = {
       require_photo: needsPhotoProof || apiTask.require_photo === true,
       min_duration_minutes: apiTask.min_duration_minutes ?? apiTask.duration_minutes ?? undefined,
@@ -817,11 +826,18 @@ export default function ChallengeDetailScreen() {
       timer_hard_mode: apiTask.timer_hard_mode === true || apiTask.strict_timer_mode === true,
       require_heart_rate: apiTask.require_heart_rate === true,
       heart_rate_threshold: apiTask.heart_rate_threshold ?? 100,
-      require_location: apiTask.require_location === true,
-      location_name: apiTask.location_name ?? undefined,
-      location_latitude: apiTask.location_latitude ?? undefined,
-      location_longitude: apiTask.location_longitude ?? undefined,
-      location_radius_meters: apiTask.location_radius_meters ?? 200,
+      require_location: requireLoc,
+      location_name: (apiTask.location_name ?? cfg.location_name) as string | undefined,
+      location_latitude: (apiTask.location_latitude ?? cfg.location_latitude) as number | undefined,
+      location_longitude: (apiTask.location_longitude ?? cfg.location_longitude) as number | undefined,
+      location_radius_meters: (apiTask.location_radius_meters ?? cfg.location_radius_meters ?? 200) as number,
+      hard_mode: cfg.hard_mode === true,
+      schedule_window_start: typeof cfg.schedule_window_start === "string" ? cfg.schedule_window_start : undefined,
+      schedule_window_end: typeof cfg.schedule_window_end === "string" ? cfg.schedule_window_end : undefined,
+      schedule_timezone: typeof cfg.schedule_timezone === "string" ? cfg.schedule_timezone : undefined,
+      require_camera_only: cfg.require_camera_only === true,
+      require_strava: cfg.require_strava === true,
+      journal_prompt: typeof cfg.journal_prompt === "string" ? cfg.journal_prompt : undefined,
     };
     router.push({
       pathname: ROUTES.TASK_COMPLETE,
