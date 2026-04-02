@@ -3,6 +3,10 @@
  * This module maps between DB shape and the API shape the frontend expects (type, required, duration_minutes, etc.).
  */
 
+import type { TaskConfig } from "./task-config";
+
+export type { TaskConfig };
+
 /** Strava (or other provider) verification rule stored in config.verification_rule_json */
 export interface VerificationRuleStrava {
   sport?: string;
@@ -11,21 +15,7 @@ export interface VerificationRuleStrava {
 }
 
 /** Config JSONB shape stored in challenge_tasks.config */
-export interface ChallengeTaskConfig {
-  required?: boolean;
-  duration_minutes?: number;
-  tracking_mode?: string;
-  min_words?: number;
-  photo_required?: boolean;
-  require_photo_proof?: boolean;
-  strict_timer_mode?: boolean;
-  timer_hard_mode?: boolean;
-  require_location?: boolean;
-  location_name?: string;
-  location_latitude?: number;
-  location_longitude?: number;
-  location_radius_meters?: number;
-  verification_method?: string;
+export interface ChallengeTaskConfig extends Omit<TaskConfig, "verification_rule_json"> {
   verification_rule_json?: VerificationRuleStrava | Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -206,6 +196,19 @@ export function buildTaskConfigFromInput(task: {
   captureMood?: boolean;
   locationName?: string | null;
   radiusMeters?: number | null;
+  hard_mode?: boolean;
+  schedule_window_start?: string | null;
+  schedule_window_end?: string | null;
+  schedule_timezone?: string | null;
+  require_location?: boolean;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_radius_meters?: number | null;
+  location_name?: string | null;
+  require_camera_only?: boolean;
+  require_strava?: boolean;
+  strava_min_distance_meters?: number | null;
+  strava_activity_type?: string | null;
   [key: string]: unknown;
 }): ChallengeTaskConfig {
   const rawType = task.type ?? "manual";
@@ -283,6 +286,33 @@ export function buildTaskConfigFromInput(task: {
   if (task.radiusMeters != null && typeof task.radiusMeters === "number" && task.radiusMeters > 0) {
     config.location_radius_meters = task.radiusMeters;
   }
+
+  config.hard_mode = task.hard_mode ?? false;
+  if (task.schedule_window_start != null) config.schedule_window_start = task.schedule_window_start;
+  if (task.schedule_window_end != null) config.schedule_window_end = task.schedule_window_end;
+  if (task.schedule_timezone != null) config.schedule_timezone = task.schedule_timezone;
+  if (task.require_location === true) {
+    config.require_location = true;
+  }
+  if (task.location_latitude != null && typeof task.location_latitude === "number") {
+    config.location_latitude = task.location_latitude;
+  }
+  if (task.location_longitude != null && typeof task.location_longitude === "number") {
+    config.location_longitude = task.location_longitude;
+  }
+  if (task.location_radius_meters != null && typeof task.location_radius_meters === "number") {
+    config.location_radius_meters = task.location_radius_meters;
+  }
+  if (typeof task.location_name === "string" && task.location_name.trim()) {
+    config.location_name = task.location_name.trim();
+  }
+  config.require_camera_only = task.require_camera_only ?? false;
+  config.require_strava = task.require_strava ?? false;
+  if (task.strava_min_distance_meters != null && typeof task.strava_min_distance_meters === "number") {
+    config.strava_min_distance_meters = task.strava_min_distance_meters;
+  }
+  if (task.strava_activity_type != null) config.strava_activity_type = task.strava_activity_type;
+
   return config;
 }
 
@@ -323,6 +353,19 @@ export function buildTaskInsertPayload(
     captureMood: t.captureMood === true,
     locationName: typeof t.locationName === "string" ? t.locationName : undefined,
     radiusMeters: typeof t.radiusMeters === "number" ? t.radiusMeters : undefined,
+    hard_mode: typeof t.hard_mode === "boolean" ? t.hard_mode : undefined,
+    schedule_window_start: typeof t.schedule_window_start === "string" ? t.schedule_window_start : undefined,
+    schedule_window_end: typeof t.schedule_window_end === "string" ? t.schedule_window_end : undefined,
+    schedule_timezone: typeof t.schedule_timezone === "string" ? t.schedule_timezone : undefined,
+    require_location: t.require_location === true ? true : undefined,
+    location_latitude: typeof t.location_latitude === "number" ? t.location_latitude : undefined,
+    location_longitude: typeof t.location_longitude === "number" ? t.location_longitude : undefined,
+    location_radius_meters: typeof t.location_radius_meters === "number" ? t.location_radius_meters : undefined,
+    location_name: typeof t.location_name === "string" ? t.location_name : undefined,
+    require_camera_only: t.require_camera_only === true ? true : undefined,
+    require_strava: t.require_strava === true ? true : undefined,
+    strava_min_distance_meters: typeof t.strava_min_distance_meters === "number" ? t.strava_min_distance_meters : undefined,
+    strava_activity_type: typeof t.strava_activity_type === "string" ? t.strava_activity_type : undefined,
   });
   return {
     challenge_id: challengeId,
