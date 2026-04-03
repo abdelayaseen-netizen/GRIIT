@@ -196,7 +196,7 @@ export default function CreateChallengeWizard() {
 
   const { participation, teamSize } = whoToParticipation(who);
   const duration = getDurationFromDraft(challengeType, durationDays, customDur);
-  const hardLocked = difficultyMode === "hard";
+  const hardModeGlobal = difficultyMode === "hard";
   const trimmedTitle = title.trim();
   const isValidChallengeName =
     trimmedTitle.length >= 3 &&
@@ -909,7 +909,8 @@ export default function CreateChallengeWizard() {
               {difficultyMode === "hard" ? (
                 <View style={styles.hardWarningBox}>
                   <Text style={styles.hardWarningText}>
-                    Hard mode requires photo proof on every task. Tasks without it will be updated automatically.
+                    Hard mode adds verification gates (time window, location, etc.). Camera-only enforcement is per task in
+                    the task editor — not forced on every task.
                   </Text>
                 </View>
               ) : null}
@@ -925,17 +926,15 @@ export default function CreateChallengeWizard() {
                   <DurationPill
                     key={p.id}
                     label={p.label}
-                    selected={hardLocked ? p.id === "required" : photoProof === p.id}
-                    disabled={hardLocked}
+                    selected={photoProof === p.id}
                     onPress={() => {
-                      if (!hardLocked) setPhotoProof(p.id);
+                      setPhotoProof(p.id);
                     }}
-                    accessibilityLabel={`Photo proof ${p.label} — ${photoProof === p.id || (hardLocked && p.id === "required") ? "selected" : "tap to select"}`}
+                    accessibilityLabel={`Photo proof ${p.label} — ${photoProof === p.id ? "selected" : "tap to select"}`}
                     style={styles.flex1}
                   />
                 ))}
               </View>
-              {hardLocked ? <Text style={styles.hardNote}>Set by hard mode</Text> : null}
               <Text style={styles.caption}>Photos become shareable proof cards on your feed.</Text>
               <Text style={styles.fieldLabel}>
                 Category <Text style={styles.light}>(select all that apply)</Text>
@@ -1335,7 +1334,7 @@ export default function CreateChallengeWizard() {
       <NewTaskModal
         visible={newTaskOpen}
         onClose={() => setNewTaskOpen(false)}
-        hardModeGlobal={hardLocked}
+        hardModeGlobal={hardModeGlobal}
         onAdd={(t) => setTasks((p) => [...p, t])}
       />
 
@@ -1570,7 +1569,6 @@ const styles = StyleSheet.create({
   ruleCardSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
   ruleTitle: { fontSize: 15, fontWeight: "600", marginBottom: 6, color: DS_COLORS.TEXT_PRIMARY },
   caption: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_HINT, marginTop: 6 },
-  hardNote: { fontSize: 12, color: GRIIT_COLORS.primary, marginTop: 4 },
   outlineBtn: {
     marginTop: 10,
     borderWidth: 1,
