@@ -287,9 +287,6 @@ export default function CreateChallengeWizard() {
 
   const setDifficultyModeAndPropagate = useCallback((mode: DifficultyMode) => {
     setDifficultyMode(mode);
-    if (mode === "hard") {
-      setPhotoProof("required");
-    }
     setTasks((prev) =>
       prev.map((t) => ({
         ...t,
@@ -300,18 +297,16 @@ export default function CreateChallengeWizard() {
 
   const applyPhotoPolicyToTasks = useCallback(
     (list: (TaskEditorTask & { wizardType?: string })[]): (TaskEditorTask & { wizardType?: string })[] => {
-      if (difficultyMode === "hard") {
-        return list.map((t) => ({ ...t, requirePhotoProof: true, photoRequired: true }));
-      }
       if (photoProof === "required") {
         return list.map((t) => ({ ...t, requirePhotoProof: true, photoRequired: true }));
       }
       if (photoProof === "off") {
         return list.map((t) => ({ ...t, requirePhotoProof: false, photoRequired: false }));
       }
+      // "optional" — leave each task's individual photo setting as-is
       return list;
     },
-    [difficultyMode, photoProof]
+    [photoProof]
   );
 
   const onNext1 = () => {
