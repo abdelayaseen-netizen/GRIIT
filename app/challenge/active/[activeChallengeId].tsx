@@ -33,6 +33,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
+import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -45,6 +46,7 @@ type TaskRow = {
   verification_type?: string | null;
   estimated_minutes?: number | null;
   order_index?: number | null;
+  config?: Record<string, unknown> | null;
 };
 
 type ChallengeRow = {
@@ -101,7 +103,7 @@ export default function ActiveChallengeDetailScreen() {
           *,
           challenges (
             id, title, description, duration_days, difficulty, category, duration_type,
-            challenge_tasks ( id, title, task_type, order_index )
+            challenge_tasks ( id, title, task_type, order_index, config )
           )
         `)
         .eq("id", id!)
@@ -207,7 +209,7 @@ export default function ActiveChallengeDetailScreen() {
           taskType: firstIncomplete.task_type ?? "manual",
           taskName: firstIncomplete.title ?? "",
           taskDescription: "",
-          taskConfig: "{}",
+          taskConfig: buildTaskConfigParam(firstIncomplete as Record<string, unknown>),
         },
       } as never);
     } else {
@@ -388,7 +390,7 @@ export default function ActiveChallengeDetailScreen() {
                         taskType: task.task_type ?? "manual",
                         taskName: task.title ?? "",
                         taskDescription: "",
-                        taskConfig: "{}",
+                        taskConfig: buildTaskConfigParam(task as Record<string, unknown>),
                       },
                     } as never);
                   }}

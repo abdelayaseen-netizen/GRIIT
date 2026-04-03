@@ -74,6 +74,8 @@ export interface ChallengeTaskApiShape {
   location_longitude?: number | null;
   location_radius_meters?: number | null;
   min_duration_minutes?: number | null;
+  /** Raw config pass-through so frontend can read hard_mode, schedule, etc. */
+  config?: Record<string, unknown> | null;
   [key: string]: unknown;
 }
 
@@ -130,6 +132,9 @@ export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Ch
     windowStartOffsetMin:
       r.window_start_offset_min ??
       (typeof config.windowStartOffsetMin === "number" ? config.windowStartOffsetMin : null),
+    config: {
+      ...(typeof row.config === "object" && row.config !== null ? row.config : {}),
+    },
   };
 }
 
