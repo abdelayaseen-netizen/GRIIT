@@ -1,260 +1,425 @@
-# GRIIT Master Scorecard v3 — March 29, 2026
+# GRIIT Codebase Scorecard v3 (Post Hard Mode)
 
-This scorecard was produced after a **partial** deep-clean pass (console cleanup, minor error-reporting tweaks, backend dev `console.warn` removal). Full execution of every phase in `GRIIT-DEEP-CLEAN-V3.md` (orphan file deletion, all `select('*')` removals, FlatList refactors, unused-procedure audit) was **not** completed in one shot; counts below reflect **commands run at scorecard time** on the committed tree.
+**Date:** April 3, 2026  
+**Commit:** `3e224ab6bd4e9de2f1026e8e3cea8ed257fc3eb5`
 
-## Executive Summary
+This scorecard is **evidence-gated**: metrics below were produced by running commands on the repo at the commit above (PowerShell on Windows unless noted). **No code was changed** for this audit.
 
-| Pillar | Score /100 | Notes |
-|--------|------------|--------|
-| **Overall** | **62** | Solid product surface; backend wide-selects and a few nav/object patterns remain. |
-| **Frontend** | **64** | Large screens; many `useQuery` with `staleTime`; inline styles high in create flow. |
-| **Backend** | **58** | `select("*, …")` on hot paths; service client typing gaps (`as any` in `feed.shareCompletion` recovery). |
-| **Code Health** | **65** | Console noise reduced; TODOs documented; no `@ts-ignore` in repo grep. |
-| **Performance** | **55** | Lists often `ScrollView` + map; FlatList used in a subset of screens. |
-| **Ship Readiness** | **60** | Critical paths exist; paywall/RevenueCat wiring needs ongoing verification. |
+## Summary
 
----
+| # | Category | Weight | Score (/10) | Weighted |
+|---|----------|--------|-------------|----------|
+| 1 | Frontend Architecture | 7% | 3 | 0.21 |
+| 2 | Backend Architecture | 7% | 6 | 0.42 |
+| 3 | Type Safety | 5% | 8 | 0.40 |
+| 4 | Design System Compliance | 5% | 4 | 0.20 |
+| 5 | Performance | 7% | 6 | 0.42 |
+| 6 | Error Handling | 5% | 7 | 0.35 |
+| 7 | Analytics & Tracking | 5% | 5 | 0.25 |
+| 8 | Security & RLS | 8% | 7 | 0.56 |
+| 9 | Monetization / RevenueCat | 6% | 8 | 0.48 |
+| 10 | Test Coverage | 4% | 5 | 0.20 |
+| 11 | Code Hygiene | 4% | 5 | 0.20 |
+| 12 | Database & Migrations | 5% | 8 | 0.40 |
+| 13 | Navigation & Routing | 5% | 9 | 0.45 |
+| 14 | Launch Readiness | 7% | 8 | 0.56 |
+| — | **WEIGHTED TOTAL** | **80%** | — | **5.10 → ~6.4 / 10** |
 
-## Verification commands (evidence)
-
-Run from repo root (`C:\Users\abdel\OneDrive\Desktop\GRIT-1`):
-
-| Check | Command | Result |
-|-------|---------|--------|
-| TypeScript | `npx tsc --noEmit` | **0 errors** |
-| `console.log` / `console.warn` (app, components, lib, hooks) | `rg "console\.(log\|warn)" app components lib hooks --glob "*.{ts,tsx}"` | **0 matches** (after clean pass) |
-| `console.error` still used | `rg "console\.error" lib/sentry.ts` | **Yes** — `captureError` uses `console.error` in `__DEV__` only (intentional). |
-| Frontend `as any` | `rg "as any" app components lib hooks --glob "*.{ts,tsx}"` | **0** |
-| Backend `as any` | `rg "as any" backend --glob "*.ts"` | **2** (`backend/trpc/routes/feed.ts` shareCompletion recovery insert/update) |
-| `T = any` default (trpc helpers) | `rg "= any" lib --glob "*.ts"` | **2** (`lib/trpc.ts` `trpcQuery` / `trpcMutate` generics) |
-| `@ts-ignore` / `@ts-nocheck` | `rg "@ts-ignore\|@ts-nocheck" app components lib hooks backend` | **0** |
-| Backend `select('*')` / `*, challenge_tasks` | `rg "select\\(['\\\"]?\\*|select\\(\\\"\\*, challenge_tasks"` on `backend/**/*.ts` | **Multiple** — see B2 |
-| Raw `#RRGGBB` in app/components (6-hex) | `rg "#[0-9a-fA-F]{6}" app components --glob "*.tsx"` | **0 matches** (sample grep; rgba may still appear) |
-| FlatList (tsx) | `rg "FlatList" --glob "*.tsx"` | **~15 file hits** (count varies by branch) |
-| `React.memo` / `memo(` in components | `rg "React\\.memo\\|memo\\(" components --glob "*.tsx"` | **~35+** component/skeleton files |
-| Inline `style={{` app | per-file `rg "style=\\{\\{" app --glob "*.tsx" -c` | **~59** total line hits across listed files |
-| Inline `style={{` components | same | **~140+** total line hits (create wizard/modals dominate) |
-| `accessibilityLabel` app | per-file counts | **~180+** occurrences across app |
-| `accessibilityLabel` components | per-file counts | **~150+** occurrences |
-
-**Hardcoded navigation (heuristic):** Many calls use `router.push({ pathname: …, params })` or `router.push(url as never)` where the line does not contain the substring `ROUTES.`. A strict PowerShell `Select-String … -NotMatch "ROUTES"` **over-counts** valid object-style navigation. **Manual spot-check:** most tab flows use `ROUTES.*`; object-style pushes remain for task routes and deep links (`app/challenge/[id].tsx`, `app/challenge/active/[activeChallengeId].tsx`, `app/invite/[code].tsx`, `app/(tabs)/index.tsx` notification URL).
+**Normalized overall:** `5.10 ÷ 0.80 ≈ 6.4/10` on the weighted rubric.  
+*(Remaining 20% = real-device testing, user testing, App Store review — not measurable via grep.)*
 
 ---
 
-## A. FRONTEND SCORECARD (64/100)
+## Detailed Findings
 
-### A1. Screen load status (6/10)
+### Category 1: Frontend Architecture (7%) — **Score: 3/10**
 
-| Screen | Loads | Loading | Error | Empty | Score |
-|--------|-------|---------|-------|-------|------:|
-| Home `app/(tabs)/index.tsx` | Y | Y | Y (boundary) | Y | 6 |
-| Discover `app/(tabs)/discover.tsx` | Y | Y | Y | Y | 7 |
-| Activity `app/(tabs)/activity.tsx` | Y | Y | Y | Y | 6 |
-| Profile `app/(tabs)/profile.tsx` | Y | Y | Y | Y | 6 |
-| Challenge detail `app/challenge/[id].tsx` | Y | Y | Y | Y | 6 |
-| Task complete `app/task/complete.tsx` | Y | Y | Y | Y | 6 |
-| Login / Signup | Y | partial | partial | N/A | 6 |
-| Onboarding / create-profile | Y | partial | partial | varies | 5 |
+**Commands / output**
 
-**Evidence:** Code review + `ErrorBoundary` on Discover; `LoadingState` / `ErrorState` patterns in Activity; large files increase regression risk (**`complete.tsx` ~1400+ lines**, **`activity.tsx` ~1385+ lines** per PowerShell line count on Windows paths without brackets).
+```text
+Total TS/TSX in app,components,contexts,hooks,store,lib,styles,types: 257
 
-### A2. Design system compliance (7/10)
+Files >500 lines (app + components *.tsx):
+1682 lines: CreateChallengeWizard.tsx
+1586 lines: TaskEditorModal.tsx
+1579 lines: complete.tsx
+1498 lines: activity.tsx
+1399 lines: NewTaskModal.tsx
+949 lines: settings.tsx
+838 lines: profile.tsx
+808 lines: index.tsx
+803 lines: discover.tsx
+788 lines: run.tsx
+623 lines: LiveFeedSection.tsx
+572 lines: journal.tsx
+538 lines: paywall.tsx
+535 lines: checkin.tsx
+530 lines: signup.tsx
 
-- **6-digit hex in app/components tsx (sample):** `rg` → **0** matches for `#[0-9a-fA-F]{6}`.
-- **Emoji in UI:** prior Discover work removed emoji from discover/challenge cards; not re-audited file-by-file in this pass.
-- **ROUTES:** Primary navigation uses `lib/routes.ts`; object-style `router.push` still used where expo-router needs params.
+Screens (*.tsx under app): 43
+Components (*.tsx under components): 115
 
-### A3. Accessibility (6/10)
+React.memo matches (components *.tsx): 46
+useCallback matches (app + components *.tsx): 199
+useMemo matches (app + components *.tsx): 88
+```
 
-- **Many** `accessibilityLabel` usages (see counts); not every `Pressable`/`TouchableOpacity` verified in this pass.
+**Justification:** Rubric “3–4 = many >1000”; this repo has **multiple screens/components over 1,000 lines** (wizard, editor, complete, activity, NewTaskModal). Memo/callback usage exists but does not offset monolith risk.
 
-### A4. Performance (5/10)
-
-- **FlatList:** present in accountability add, discover (horizontal), post, follow-list, chat, shared goal — not all long lists migrated off `ScrollView` + `.map()`.
-- **React.memo:** widely used in feed/home/profile components; list `renderItem` memoization not fully audited.
-- **staleTime:** Discover/Home/Profile/Activity queries generally set `staleTime`; not every `useQuery` guaranteed.
-- **Inline styles:** **>100** `style={{` hits — create flow is the main hotspot.
-
-### A5. Error handling (6/10)
-
-- **ErrorBoundary** on key screens (e.g. Discover).
-- **Sentry `captureError`** used in several flows; `captureMessage` no longer logs in dev (silent skip).
-- **Silent empty catches:** strict grep for empty catch bodies not exhaustive.
+**Priority:** **HIGH** — split largest `app/` screens and create-flow modals into hooks + sections.
 
 ---
 
-## B. BACKEND SCORECARD (58/100)
+### Category 2: Backend Architecture (7%) — **Score: 6/10**
 
-### B1. Route coverage (7/10)
+**Commands / output**
 
-**Registered routers** (`backend/trpc/app-router.ts`): `auth`, `user`, `profiles`, `challenges`, `checkins`, `stories`, `starters`, `streaks`, `leaderboard`, `respects`, `nudges`, `notifications`, `accountability`, `meta`, `feed`, `achievements`, `integrations`, `sharedGoal`, `referrals`.
+```text
+Route files (line counts, descending excerpt):
+519 lines: feed-core.ts
+509 lines: checkins-core.ts
+456 lines: profiles.ts
+447 lines: feed-social.ts
+396 lines: challenges.ts
+377 lines: challenges-create.ts
+338 lines: challenges-discover.ts
+327 lines: profiles-stats.ts
+303 lines: leaderboard.ts
+291 lines: accountability.ts
+(... smaller files omitted)
 
-**Note:** Prompt context mentioned `teams` / `team` routers — **not** present in this `app-router.ts` (doc vs repo drift).
+Lib files (top): 365 lines: challenge-tasks.ts
 
-### B2. Security / typing (6/10)
+tRPC .query( / .mutation( matches under backend/trpc: 105
+Zod z.object|z.string|z.number matches under backend/trpc: 198
+TRPCError matches under backend/**/*.ts: 366
+getSupabaseServer matches: 33
+ctx.supabase matches: 287
+```
 
-- **`as any`:** **2** in `feed.ts` (activity_events insert/update via service client).
-- **`select("*, challenge_tasks (*)")` (and similar):** `challenges.ts` (list/getFeatured/getDiscoverFeed/create paths), `starters.ts`, nested selects in `checkins.ts` — **wide reads**; should be narrowed to columns the API actually returns.
-- **Rate limiting:** `create-context.ts` applies route rate limit middleware (verify production config separately).
-- **RLS:** assumed on Supabase; not verified in this pass.
+**Sample `getSupabaseServer` references (first lines from search):** `checkins-core.ts`, `profiles.ts`, `challenges.ts`, `feed-social.ts`, `feed-core.ts`, `challenges-discover.ts` (service client for public feeds / joins — needs ongoing security review).
 
-### B3. Query efficiency (6/10)
+**Empty catch `catch (...) { }`:** no multiline matches in `backend/**/*.ts` from repo search.
 
-- **N+1:** Discover feed batching for joins/previews is reasonable; not all routers audited.
-- **Promise.all:** used in feed hydration and elsewhere; sequential awaits remain in some routes.
+**Justification:** Several route modules **>500 lines** (feed-core, checkins-core). Zod usage is broad (198 pattern hits) but not proof every procedure has ideal `.input()`. Structure is domain-split.
 
-### B4. Type safety (7/10)
-
-- **`@ts-ignore`:** **0** (grep).
-- **Supabase generated types:** partial; service-role client still needs casts for some tables.
-
----
-
-## C. CODE HEALTH (65/100)
-
-### C1. Dead code (5/10)
-
-- **Orphan file script:** not run to completion (PowerShell bracket paths); no mass deletion in this pass.
-- **Console.log/warn:** removed from app/components/lib/hooks and one backend dev warning (`backend/lib/supabase.ts`).
-- **Commented-out blocks:** not systematically stripped.
-
-### C2. Duplication (6/10)
-
-- Challenge/card types still overlap across `app` and `components/discover` (intersection types on Discover).
-- Time-window save logic duplicated between `app/challenge/[id].tsx` and `CreateChallengeWizard` (both had dev logs removed).
-
-### C3. File size (4/10)
-
-**App `.tsx` files &gt; 300 lines (line counts from PowerShell `Get-Content | Measure-Object -Line`, paths without `[brackets]` may skip dynamic routes):**
-
-- `app/task/complete.tsx` **~1404**
-- `app/(tabs)/activity.tsx` **~1385**
-- `app/task/journal.tsx` **~1040**
-- `app/settings.tsx` **~946**
-- `app/(tabs)/index.tsx` **~809**
-- Plus profile, discover, paywall, signup, checkin, `_layout`, login, timer, accountability, photo, follow-list, create-profile — all **&gt;300**.
-
-**Dynamic route files** (`app/challenge/[id].tsx`, etc.) need **literal path** or `-LiteralPath` to measure on Windows.
-
-### C4. TODO / FIXME summary
-
-| File | Line (approx) | Comment | Priority |
-|------|-----------------|---------|----------|
-| `app/(tabs)/profile.tsx` | 1 | Drafts section for creator drafts | Med |
-| `backend/trpc/routes/challenges.ts` | 1, 304 | Split router; personalize getRecommended by goals | Med |
-| `backend/trpc/routes/feed.ts` | 1 | Split router | Med |
-| `backend/trpc/routes/checkins.ts` | 1 | Split router | Med |
-| `backend/trpc/routes/profiles.ts` | 8 | Split router | Med |
+**Priority:** **MEDIUM** — trim `feed-core` / `checkins-core`; audit procedures without Zod input.
 
 ---
 
-## D. PERFORMANCE SCORECARD (55/100)
+### Category 3: Type Safety (5%) — **Score: 8/10**
 
-### D1. Frontend
+**Commands / output**
 
-- Skeletons: Home/Discover use skeleton components in places.
-- Prefetch: Discover uses `prefetchChallengeById` on press-in for several flows.
-- **Gap:** Long vertical lists still often `ScrollView` + map.
+```text
+npx tsc --noEmit
+(exit 0; no stderr lines on success)
 
-### D2. Backend
+as unknown matches (app,components,lib,backend,contexts *.ts/tsx): 52
+```
 
-- **Wide selects** remain on challenge list/discover (see B2).
-- **Suggested indexes (documentation only — do not run blindly):**
-  - `activity_events (event_type, created_at DESC)` for ticker / feed.
-  - `active_challenges (challenge_id, status, created_at)` for join counts and previews.
-  - `check_ins (active_challenge_id, date_key, status)` for share recovery.
+**Workspace ripgrep-style search (IDE):** `as any` in `*.ts` / `*.tsx` — **0** matches; `: any` — **0** matches (no explicit `any` escape hatches found in source globs).
 
-### D3. Bundle
+**Export functions possibly missing return types (heuristic on backend/trpc):** 2 matches (pattern is noisy).
 
-- Not measured in this pass; recommend `npx expo export` / bundle analyzer periodically.
-- Avoid adding `moment`; prefer `date-fns` or native `Intl` if new date deps are needed.
+**Justification:** Typecheck is clean. **`as unknown` appears ~52 times** — acceptable for boundaries but not “zero assertion” tier.
+
+**Priority:** **LOW** — replace high-churn `as unknown` with zod inference or shared DTO types where ROI is clear.
 
 ---
 
-## E. SHIP READINESS (60/100)
+### Category 4: Design System Compliance (5%) — **Score: 4/10**
 
-### E1. Critical paths (code trace)
+**Commands / output**
 
-1. **New user:** signup → onboarding → discover → join → checkin → home — **implemented**; edge cases need device QA.
-2. **Returning user:** login → home → task complete — **implemented**.
-3. **Social:** feed procedures exist; **full E2E** not run in this pass.
+```text
+Raw #hex in components+app *.tsx excluding DS_COLORS/GRIIT_COLORS/design-system/comment/import: 0
+DS_COLORS. matches: 2191
+fontWeight (600|700|800) pattern matches: 399
+borderRadius.*[0-9] excluding DS_RADIUS and common radii (16,14,12,10,8,50,999): 142
 
-### E2. Paywall
+TouchableOpacity|Pressable lines: 850
+accessibilityLabel lines: 464
+Ratio (labeled / touch lines): 55%
+```
 
-- **RevenueCat / `validateSubscription`:** present in codebase (`lib/subscription.ts`, settings/paywall) — **verify** keys and entitlements per build.
+**Justification:** **No raw hex** in the filtered TSX search (strong). However **399 font-weight 600/700/800** hits and **55%** naive label/touch ratio are **far** from the rubric’s 9–10 bar (>90% a11y, zero weight violations). Border radius drift (142) indicates incomplete token use.
 
-### E3. Error recovery
-
-- **401:** `trpc.ts` signs out and clears session on 401.
-- **Offline:** not fully characterized in this pass.
-
----
-
-## F. REVENUE PROJECTIONS
-
-**Benchmarks (industry — use for sensitivity only):**
-
-- Health & fitness trial-to-paid often cited **~8–12%** (subscription economy reports; e.g. RevenueCat “State of Subscription Apps” series).
-- **ARPPU** for fitness subscriptions often **~$10–15/mo** in public summaries.
-- Long-tail: **most apps never reach $10k MRR**; small % scale (often-cited VC/subscription reports).
-
-**GRIIT pricing (from product docs):** Free **3** active challenges; **Pro monthly $9.99** (`griit_pro_monthly`); **Annual $49.99** (`griit_premium_annual`).
-
-### Projection table (illustrative — not financial advice)
-
-Assumptions: **5%** free→paid at steady state; **$9.99** blended MRR per paying user; organic acquisition **slow** unless marketing/UGC kicks in.
-
-| Timeframe | Total users (illus.) | Paying @ 5% | MRR (illus.) | Key assumption | Biggest risk |
-|-----------|------------------------|------------|--------------|----------------|--------------|
-| Now (Mar 2026) | 500 | 25 | ~$250 | early adopters | retention |
-| +3 mo | 2,000 | 100 | ~$1,000 | referrals + ASO | churn |
-| +6 mo | 8,000 | 400 | ~$4,000 | content/UGC | CAC |
-| +1 yr | 25,000 | 1,250 | ~$12,500 | community + teams | competition |
-| +2 yr | 80,000 | 4,000 | ~$40,000 | partnerships | infra cost |
-| +5 yr | 300,000 | 15,000 | ~$150,000 | category growth | pricing pressure |
-
-### Path to ~$1M ARR (~$83k MRR)
-
-- At **$9.99/mo** need **~8,300** paying subscribers.
-- At **5%** conversion → **~166k** MAU or equivalent funnel — requires **distribution** (influencers, challenges going viral, B2B2C, etc.).
-
-### Revenue acceleration levers (ranked)
-
-1. **Habit + social proof in-feed** — benchmark uplift stories on UGC/social features (treat as **hypothesis** until A/B tested).
-2. **Personalized Discover / goals** — `getRecommended` TODO; personalization can lift conversion in some cohorts (high variance).
-3. **Paywall timing** — test after first win vs. at 4th challenge join.
-4. **Annual plan push** — improves LTV if retention holds.
-5. **Strava / health integrations** — retention lever for fitness cohorts.
+**Priority:** **MEDIUM** — introduce typography tokens; raise `accessibilityLabel` on primary actions.
 
 ---
 
-## G. TOP 10 PRIORITIES (revenue / ship impact)
+### Category 5: Performance (7%) — **Score: 6/10**
 
-1. **Ship backend + verify ticker + recommended** on production — Discover v3 depends on it.
-2. **Narrow `select("*, challenge_tasks (*)")`** on discover/list — cost and latency at scale.
-3. **Split `app/task/complete.tsx` and `app/(tabs)/activity.tsx`** — maintainability = fewer bugs = better retention.
-4. **Replace `feed.ts` `as any`** with typed insert/update helper or generated DB types.
-5. **Audit `ScrollView` + `.map()`** for lists &gt;10 rows — move to `FlatList`.
-6. **E2E smoke** on join → complete → feed post for release candidates.
-7. **RevenueCat dashboard** — confirm offerings match `paywall.tsx` / `subscription.ts`.
-8. **Index migration** (activity_events, active_challenges, check_ins) after query profiling in prod.
-9. **Remove `T = any` from `trpcQuery` default** — use `unknown` + call-site generics.
-10. **Align docs** with `app-router` (teams/team routers if planned).
+**Commands / output**
 
----
+```text
+expo-image imports (app+components *.tsx): 15
+react-native Image import pattern: 0
 
-## Phase 11 checklist (this repo state)
+<FlatList: 36
+ScrollView: 93
 
-| Gate | Target | Actual |
-|------|--------|--------|
-| `npx tsc --noEmit` | 0 errors | **PASS** |
-| `console.log` / `console.warn` (app, components, lib, hooks) | 0 | **PASS** (note: `captureError` uses `console.error` in `__DEV__`) |
-| `as any` total &lt; 5 | ideally | **2** backend + **2** generic defaults in `lib/trpc.ts` → **4** if counting `= any` |
-| Hardcoded `router.push` without `ROUTES` substring | 0 | **FAIL** (object-style navigation; needs custom lint rule) |
-| Backend `select('*')` style | 0 | **FAIL** (multiple `*, challenge_tasks (*)` patterns) |
-| `docs/SCORECARD-V3.md` exists | True | **PASS** |
-| `git status` clean | After commit | Run after commit |
+.select('*') / select(`*` ) pattern in backend *.ts: 0 (no star-select matches found)
+staleTime|cacheTime|gcTime (app,hooks,contexts): 28
+React.memo (components): 46 (same as Cat 1)
+```
+
+**Justification:** **Good:** no RN `Image` imports found; no `select('*')` in backend TS. **Gap:** **ScrollView (93) >> FlatList (36)**; cache tuning only **28** hits — not “every query.”
+
+**Priority:** **MEDIUM** — virtualize long lists; standardize `staleTime` on hot queries.
 
 ---
 
-*Generated as part of GRIIT Deep Clean v3 prompt. Re-run greps before trusting counts on future commits.*
+### Category 6: Error Handling (5%) — **Score: 7/10**
+
+**Commands / output**
+
+```text
+Alert.alert (app+components *.tsx): 0
+ErrorBoundary matches (*.tsx): multiple app shells + components/ErrorBoundary.tsx
+captureError|captureException|Sentry. (app,components,lib,backend *.ts/tsx): present across many files
+InlineError|errorMessage|setError(|showError (app+components): widespread
+```
+
+**Intentional empty / ignore catches (examples):** `app/(tabs)/discover.tsx` (`catch { /* ignore */ }` for AsyncStorage); `lib/analytics.ts` (`catch { // ignore }` around PostHog); `follow-list.tsx` / `profile/[username].tsx` — review for logging.
+
+**Justification:** No `Alert.alert`; Sentry + inline errors are used. **Not** “zero empty catches” or ErrorBoundary on literally every leaf screen.
+
+**Priority:** **LOW** — log or Sentry-breadcrumb ignored AsyncStorage/PostHog failures.
+
+---
+
+### Category 7: Analytics & Tracking (5%) — **Score: 5/10**
+
+**Commands / output**
+
+```text
+posthog.capture / trackEvent / analytics. style hits: scattered (see lib/analytics.ts, app/_layout, paywall, etc.)
+
+Literal funnel string counts (app,components,contexts,hooks,lib):
+challenge_created: 0
+challenge_joined: 6
+task_completed: 5
+day_secured: 3
+onboarding_completed: 12
+paywall_viewed: 1
+trial_started: 0
+subscription_started: 0
+share_completed: 3
+feed_posted: 0
+profile_viewed: 1
+signup_completed: 7
+
+useTrackScreen|screen_view|screenView (app *.tsx): 0
+```
+
+**Note:** `lib/analytics.ts` defines a rich **typed** event union (e.g. `paywall_shown`, `purchase_completed`, `challenge_joined`) — **names differ** from the doc’s literal grep list (`paywall_viewed`, `challenge_created`). Funnel coverage in *types* is strong; **literal grep undercounts** real instrumentation.
+
+**Justification:** **No dedicated screen tracking hook** found by pattern. Funnel completeness vs. the doc’s 12 strings is **partial** when measured literally.
+
+**Priority:** **MEDIUM** — add consistent `screen_view` / navigation listener; align event names with dashboard taxonomy.
+
+---
+
+### Category 8: Security & RLS (8%) — **Score: 7/10**
+
+**Commands / output**
+
+```text
+CREATE POLICY | ALTER...ROW LEVEL (supabase/migrations *.sql): 110 matches
+getSupabaseServer usages: 33 (bypass path — must stay scoped)
+ctx.userId|protectedProcedure|isAuthed (backend/trpc): high usage per-file counts (grep sum across routes)
+service_role / SUPABASE_SERVICE in app,lib *.ts/tsx: 0 matches
+Sanitization .trim|z.string().min|z.string().max (backend *.ts): 205
+```
+
+**Justification:** RLS/policy SQL is present; **service client** is used deliberately for public/discover paths — acceptable if audited. No obvious secret literals in app/lib from pattern.
+
+**Priority:** **MEDIUM** — document every `getSupabaseServer()` call path; periodic RLS regression tests.
+
+---
+
+### Category 9: Monetization / RevenueCat (6%) — **Score: 8/10**
+
+**Commands / output**
+
+```text
+RevenueCat|Purchases|paywall|entitlement pattern files: app/paywall.tsx, lib/subscription.ts, lib/revenue-cat.ts, contexts/AppContext.tsx, hooks/useProStatus.ts, types/react-native-purchases.d.ts, etc.
+
+Paywall screen: app/paywall.tsx
+restorePurchases|restore.*purchase: app/paywall.tsx (3), app/settings.tsx (2)
+Product IDs (lib/subscription.ts): monthly: "griit_pro_monthly", annual: "griit_premium_annual"
+```
+
+**Justification:** Wiring, products, restore, and entitlement hooks exist. **Device / store verification** is outside grep scope.
+
+**Priority:** **LOW** — QA purchase flows on TestFlight/Play internal tracks.
+
+---
+
+### Category 10: Test Coverage (4%) — **Score: 5/10**
+
+**Commands / output**
+
+```text
+Test files found (*.test.ts, *.spec.ts, *.test.tsx, *.spec.tsx):
+backend/trpc/routes/nudges.test.ts
+backend/trpc/routes/accountability.test.ts
+tests/flows/edge-cases.test.ts
+tests/flows/critical-paths.test.ts
+lib/trpc-errors.test.ts
+backend/lib/progression.test.ts
+lib/time-enforcement.test.ts
+lib/formatTimeAgo.test.ts
+lib/api.test.ts
+backend/trpc/routes/last-stand.test.ts
+backend/trpc/routes/challenges-create.test.ts
+backend/lib/streak.test.ts
+Count: 12
+
+vitest.config.ts: True
+jest.config.*: not found
+```
+
+**Justification:** Vitest + **12** test files — useful but **not** high coverage of UI or all routes.
+
+**Priority:** **MEDIUM** — add integration tests for check-in / hard-mode gates.
+
+---
+
+### Category 11: Code Hygiene (4%) — **Score: 5/10**
+
+**Commands / output**
+
+```text
+console.log (app+components *.tsx, excluding __DEV__/debug comment): 0
+TODO|FIXME|HACK with word boundaries (app,components,backend,lib): 109
+tsc "declared but never" lines: 0
+```
+
+**Justification:** **No stray console.log** in the filtered search. **109** TODO/FIXME/HACK tokens is elevated for a launch polish bar.
+
+**Priority:** **LOW** — burn down TODOs in hot paths.
+
+---
+
+### Category 12: Database & Migrations (5%) — **Score: 8/10**
+
+**Commands / output**
+
+```text
+Migration SQL files under supabase/migrations: 53
+CREATE INDEX matches: 49
+REFERENCES|FOREIGN KEY matches: 47
+NOTIFY pgrst: 0
+```
+
+**Justification:** Substantial migration history with indexes and FK references. No `NOTIFY pgrst` in migrations (may be fine depending on hosting).
+
+**Priority:** **LOW** — keep migration index doc in sync (`docs/MIGRATIONS.md`).
+
+---
+
+### Category 13: Navigation & Routing (5%) — **Score: 9/10**
+
+**Commands / output**
+
+```text
+ROUTES. usages (app+components *.tsx): 151
+router.push/replace('/...') literal (app+components *.tsx): 0 matches
+
+app.json scheme: "griit"
+linking.prefixes: griit://, https://griit.app/, https://griit.fit/
+
+_layout.tsx files:
+app/_layout.tsx
+app/(tabs)/_layout.tsx
+app/create/_layout.tsx
+app/legal/_layout.tsx
+app/onboarding/_layout.tsx
+app/auth/_layout.tsx
+
+router.back|canGoBack|BackHandler (app *.tsx): 36
+```
+
+**Justification:** Heavy use of **route constants**; **no** `router.push("/...")` literal matches in the searched globs; deep links configured.
+
+**Priority:** **LOW**
+
+---
+
+### Category 14: Launch Readiness (7%) — **Score: 8/10**
+
+**Commands / output**
+
+```text
+app.json: name GRIIT, slug griit-challenge-tracker, version 1.0.0, bundleIdentifier app.griit.challenge-tracker, scheme griit, icon/splash present
+eas.json: present (cli version, build profiles)
+Push-related matches (expo-notifications, pushToken, etc.): multiple backend + lib + app/_layout
+Sentry: lib/sentry.ts Sentry.init with dsn; app/_layout imports @sentry/react-native
+Privacy/terms: app/legal/*, references in settings/paywall/signup
+Cron/daily reset pattern (backend *.ts): hono.ts, daily-reset.ts, cron-reminders.ts, etc.
+
+Hard mode evidence:
+schedule_window_start (backend *.ts): multiple files
+require_location (backend *.ts): multiple files
+haversine (backend): checkins-core.ts, geo.ts
+require_camera_only (backend *.ts): multiple files
+components/task/VerificationGates.tsx: True
+
+Pooler: .env.example comments reference port 6543 / pooler (no secrets committed)
+```
+
+**Justification:** Store metadata, EAS, Sentry, legal, push plumbing, and **hard-mode backend + VerificationGates** are present. **Production readiness** still depends on ops (Railway cron, store review).
+
+**Priority:** **MEDIUM** — verify cron endpoints and push certs in staging.
+
+---
+
+## Top 5 Launch Blockers
+
+1. **Monolith screens (1k–1.7k lines)** — regression and ship risk on core flows (**HIGH**).
+2. **Analytics / screen tracking** — funnel naming vs dashboard + no `screen_view` hook (**MEDIUM**, data risk).
+3. **Accessibility** — ~55% naive touch/label ratio (**MEDIUM**, store review risk).
+4. **Backend god routes** — 500+ line modules (**MEDIUM**, security/bug blast radius).
+5. **Test depth** — 12 files, limited e2e of hard-mode check-in (**MEDIUM**).
+
+## Top 5 Strengths
+
+1. **TypeScript** — `tsc --noEmit` clean at audited commit.
+2. **Navigation** — `ROUTES` constants and deep links; few inline paths.
+3. **Error reporting** — Sentry integrated across app and critical libs.
+4. **Monetization plumbing** — RevenueCat, paywall, restore, product IDs centralized.
+5. **Database discipline** — 53 migrations with indexes and FK references.
+
+## Compared to Previous Scorecard (`docs/SCORECARD.md`, ~Apr 1, 2026)
+
+| Area | Previous (v2 note) | v3 | Delta |
+|------|-------------------|-----|-------|
+| Frontend architecture | 5/10 | 3/10 | Stricter rubric on >1k line files |
+| Backend architecture | 8/10 | 6/10 | Emphasis on 500+ line routes |
+| Type safety | 9/10 | 8/10 | `as unknown` volume noted |
+| Design / a11y | split (6+6) | 4/10 combined | Font-weight + label metrics |
+| Performance | 8/10 | 6/10 | ScrollView vs FlatList reality |
+| Error handling | 7/10 | 7/10 | ~flat |
+| Analytics | 7/10 | 5/10 | Literal funnel grep + no screen hook |
+| Security | 8/10 | 7/10 | Service role count explicit |
+| Monetization | 7/10 | 8/10 | Evidence of full wiring |
+| Tests | 6/10 | 5/10 | Similar, slightly stricter |
+| Hygiene | 6/10 | 5/10 | TODO count |
+| Database | 8/10 | 8/10 | ~flat |
+| Navigation | (under launch) | 9/10 | Strong `ROUTES` usage |
+| Launch readiness | 7/10 | 8/10 | Hard mode + VerificationGates cited |
+
+## Recommendations to Reach 9.0+
+
+1. **Split** `CreateChallengeWizard`, `TaskEditorModal`, `app/task/complete.tsx`, `app/(tabs)/activity.tsx` into testable units (impact **high**, effort **high**).
+2. **Typography + radius tokens** — replace raw `fontWeight` / ad-hoc `borderRadius` (impact **medium**, effort **medium**).
+3. **Screen analytics** — one navigation integration + name alignment with PostHog (impact **high**, effort **low**).
+4. **Virtualize** feed/activity lists with `FlatList` / FlashList (impact **high**, effort **medium**).
+5. **Accessibility pass** — `accessibilityLabel` on every primary `TouchableOpacity` / `Pressable` (impact **high**, effort **medium**).
+
+---
+
+*Generated per internal audit playbook GRIIT_Scorecard_V3_Full.md. Commands run from repo root: `c:\Users\abdel\OneDrive\Desktop\GRIT-1`.*
