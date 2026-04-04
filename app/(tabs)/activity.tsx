@@ -19,7 +19,7 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
-import { DS_COLORS, DS_SHADOWS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { getAvatarColor } from "@/lib/avatar";
 import { consistencyScore } from "@/lib/scoring";
 import { relativeTime } from "@/lib/utils/relativeTime";
@@ -403,6 +403,15 @@ const NotificationRow = React.memo(function NotificationRow({
   const text = getNotifText(n);
   const colors = n.actorId ? getAvatarColor(n.actorId) : getAvatarColor(n.id);
   const initial = (n.actorDisplayName ?? n.actorUsername ?? "?").charAt(0).toUpperCase();
+  const notifA11yLabel = (() => {
+    if (!onPress) return "Notification";
+    if ((n.type === "respect" || n.type === "comment") && n.metadata?.event_id) return "View related post";
+    if (n.type === "follow" || n.type === "follow_request") {
+      const who = n.actorDisplayName ?? n.actorUsername ?? "user";
+      return `View profile for ${who}`;
+    }
+    return "Open notification";
+  })();
 
   const onAcceptFr = useCallback(async () => {
     if (!n.actorId) return;
@@ -434,6 +443,8 @@ const NotificationRow = React.memo(function NotificationRow({
     <Pressable accessibilityRole="button"
       onPress={onPress}
       disabled={!onPress}
+      accessibilityLabel={notifA11yLabel}
+      accessibilityState={{ disabled: !onPress }}
       style={[styles.notifRow, DS_SHADOWS.cardSubtle, unread ? styles.notifUnread : styles.notifRead]}
     >
       <View style={styles.avatarWrap}>
@@ -1107,7 +1118,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 32 },
   screenTitle: {
     fontSize: 26,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     letterSpacing: -0.5,
     paddingHorizontal: 18,
@@ -1118,18 +1129,18 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginBottom: 14,
     backgroundColor: DS_COLORS.ONBOARDING_BORDER,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 3,
     flexDirection: "row",
     gap: 3,
   },
-  mainTab: { flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: "center" },
+  mainTab: { flex: 1, paddingVertical: 8, borderRadius: DS_RADIUS.MD, alignItems: "center" },
   mainTabOn: { backgroundColor: DS_COLORS.WHITE },
-  mainTabText: { fontSize: 13, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  mainTabText: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_MUTED },
   mainTabTextOn: { color: DS_COLORS.TEXT_PRIMARY },
   groupLabel: {
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TAB_INACTIVE,
     letterSpacing: 1.2,
     paddingHorizontal: 16,
@@ -1140,7 +1151,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.WHITE,
     marginHorizontal: 12,
     marginBottom: 6,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     paddingVertical: 12,
     paddingRight: 13,
     flexDirection: "row",
@@ -1153,40 +1164,40 @@ const styles = StyleSheet.create({
   notifAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     alignItems: "center",
     justifyContent: "center",
   },
-  notifAvatarLetter: { fontSize: 13, fontWeight: "700" },
+  notifAvatarLetter: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   typeBadge: {
     position: "absolute",
     bottom: -2,
     right: -2,
     width: 16,
     height: 16,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     borderWidth: 1.5,
     borderColor: DS_COLORS.BG_PAGE,
     alignItems: "center",
     justifyContent: "center",
   },
-  typeBadgeText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.WHITE },
-  typeBadgeFollow: { color: DS_COLORS.WHITE, fontWeight: "700" },
+  typeBadgeText: { fontSize: 9, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
+  typeBadgeFollow: { color: DS_COLORS.WHITE, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   notifBody: { flex: 1 },
   notifMain: { fontSize: 12, color: DS_COLORS.grayDarker, lineHeight: 17 },
-  notifBold: { fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
-  notifTime: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 2, fontWeight: "600" },
+  notifBold: { fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
+  notifTime: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 2, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   followBtn: {
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    borderRadius: 99,
+    borderRadius: DS_RADIUS.PILL,
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
-  followBtnText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.WHITE },
+  followBtnText: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
   frActions: { flexDirection: "row", gap: 8, flexShrink: 0 },
   frAcceptBtn: {
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
@@ -1194,7 +1205,7 @@ const styles = StyleSheet.create({
   frDeclineBtn: {
     borderWidth: 1,
     borderColor: DS_COLORS.BORDER,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
@@ -1203,7 +1214,7 @@ const styles = StyleSheet.create({
   thumbPlaceholder: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.BG_DARK,
     alignItems: "center",
     justifyContent: "center",
@@ -1213,18 +1224,18 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginBottom: 14,
     backgroundColor: DS_COLORS.ONBOARDING_BORDER,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 3,
     flexDirection: "row",
     gap: 3,
   },
-  scopeTab: { flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: "center" },
+  scopeTab: { flex: 1, paddingVertical: 8, borderRadius: DS_RADIUS.MD, alignItems: "center" },
   scopeTabOn: { backgroundColor: DS_COLORS.WHITE },
-  scopeTabText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  scopeTabText: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_MUTED },
   scopeTabTextOn: { color: DS_COLORS.TEXT_PRIMARY },
   scoreNote: {
     backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     marginHorizontal: 12,
     marginBottom: 12,
     paddingHorizontal: 13,
@@ -1235,7 +1246,7 @@ const styles = StyleSheet.create({
   },
   scoreNoteWarm: {
     backgroundColor: DS_COLORS.FEATURED_BG,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     marginHorizontal: DS_SPACING.MD,
     marginBottom: 12,
     padding: 12,
@@ -1245,10 +1256,10 @@ const styles = StyleSheet.create({
   },
   scoreNoteIcon: { fontSize: 14, marginTop: 1 },
   scoreNoteText: { flex: 1, fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 18 },
-  scoreNoteBold: { fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  scoreNoteBold: { fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   crownCard: {
     backgroundColor: DS_COLORS.TEXT_PRIMARY,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     marginHorizontal: 12,
     marginBottom: 8,
     padding: 16,
@@ -1259,32 +1270,32 @@ const styles = StyleSheet.create({
   crownDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: DS_COLORS.CELEB_BONUS_AMBER },
   crownEyebrowText: {
     fontSize: 9,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.CELEB_BONUS_AMBER,
     letterSpacing: 1.2,
   },
   crownMainRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
-  crownRank: { fontSize: 22, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER, width: 28 },
-  crownAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  crownAvatarLetter: { fontSize: 15, fontWeight: "700" },
-  crownName: { fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE },
+  crownRank: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.CELEB_BONUS_AMBER, width: 28 },
+  crownAvatar: { width: 38, height: 38, borderRadius: DS_RADIUS.XL, alignItems: "center", justifyContent: "center" },
+  crownAvatarLetter: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
+  crownName: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
   crownStreakPill: {
     backgroundColor: DS_COLORS.CELEB_BONUS_AMBER_BG,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 99,
+    borderRadius: DS_RADIUS.PILL,
     opacity: 0.45,
   },
-  crownStreakText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER },
+  crownStreakText: { fontSize: 9, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.CELEB_BONUS_AMBER },
   crownSubWrap: { marginTop: 2, opacity: 0.55 },
   crownSub: { fontSize: 11, color: DS_COLORS.TEXT_ON_DARK, lineHeight: 15 },
-  crownPts: { fontSize: 20, fontWeight: "700", color: DS_COLORS.CELEB_BONUS_AMBER, lineHeight: 20 },
+  crownPts: { fontSize: 20, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.CELEB_BONUS_AMBER, lineHeight: 20 },
   crownPtsLabelWrap: { opacity: 0.45 },
-  crownPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_ON_DARK, fontWeight: "600" },
+  crownPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   regRow: {
     position: "relative",
     backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     marginHorizontal: 12,
     marginBottom: 6,
     paddingHorizontal: 13,
@@ -1300,32 +1311,32 @@ const styles = StyleSheet.create({
     top: 4,
     bottom: 4,
     width: 3,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
   },
-  regRank: { width: 24, textAlign: "center", fontSize: 16, fontWeight: "700" },
-  regAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  regAvatarLetter: { fontSize: 13, fontWeight: "700" },
-  regName: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  regRank: { width: 24, textAlign: "center", fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
+  regAvatar: { width: 36, height: 36, borderRadius: DS_RADIUS.XL, alignItems: "center", justifyContent: "center" },
+  regAvatarLetter: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
+  regName: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   regStreakPill: {
     backgroundColor: DS_COLORS.ACCENT_TINT,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 99,
+    borderRadius: DS_RADIUS.PILL,
   },
-  regStreakText: { fontSize: 9, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  regStreakText: { fontSize: 9, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_CORAL },
   regSub: { fontSize: 10, color: DS_COLORS.TAB_INACTIVE, marginTop: 1 },
   regSubMuted: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 2, lineHeight: 14 },
   regTrack: {
     height: 2,
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
-    borderRadius: 99,
+    borderRadius: DS_RADIUS.PILL,
     marginTop: 6,
     overflow: "hidden",
   },
-  regFill: { height: 2, backgroundColor: DS_COLORS.DISCOVER_CORAL, borderRadius: 99 },
-  regPts: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
-  regPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_MUTED, fontWeight: "600" },
+  regFill: { height: 2, backgroundColor: DS_COLORS.DISCOVER_CORAL, borderRadius: DS_RADIUS.PILL },
+  regPts: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
+  regPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   yourRankDivider: {
     flexDirection: "row",
@@ -1335,7 +1346,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   dividerLine: { flex: 1, height: 1, backgroundColor: DS_COLORS.DIVIDER },
-  yourRankLabel: { fontSize: 10, fontWeight: "700", color: DS_COLORS.TEXT_MUTED },
+  yourRankLabel: { fontSize: 10, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_MUTED },
   yourCard: {
     position: "relative",
     flexDirection: "row",
@@ -1345,17 +1356,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 13,
     paddingVertical: 11,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.ACCENT_TINT,
     borderWidth: 1.5,
     borderColor: DS_COLORS.ACCENT_TINT_BORDER,
     overflow: "hidden",
   },
-  yourRankNum: { width: 24, textAlign: "center", fontSize: 13, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
-  yourName: { fontSize: 12, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  yourRankNum: { width: 24, textAlign: "center", fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_CORAL },
+  yourName: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_CORAL },
   yourSub: { fontSize: 10, color: DS_COLORS.TEXT_SECONDARY, marginTop: 1 },
   yourSubMuted: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 2, lineHeight: 14 },
-  yourPts: { fontSize: 14, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  yourPts: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_CORAL },
   challengePills: { paddingHorizontal: 12, paddingBottom: 12, gap: 8 },
   challengePillsRow: {
     paddingHorizontal: DS_SPACING.MD,
@@ -1367,7 +1378,7 @@ const styles = StyleSheet.create({
   challengePillNew: {
     paddingVertical: 6,
     paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     marginRight: 8,
     maxWidth: 220,
   },
@@ -1399,7 +1410,7 @@ const styles = StyleSheet.create({
   soloChallengeHintText: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
   youBadge: {
     backgroundColor: DS_COLORS.ACCENT_TINT,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     paddingHorizontal: 5,
     paddingVertical: 1,
     marginLeft: 4,
@@ -1407,7 +1418,7 @@ const styles = StyleSheet.create({
   youBadgeText: { fontSize: 10, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "500" },
   youBadgeDark: {
     backgroundColor: DS_COLORS.CELEB_BONUS_AMBER_BG,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     paddingHorizontal: 5,
     paddingVertical: 1,
     marginLeft: 4,
@@ -1417,7 +1428,7 @@ const styles = StyleSheet.create({
   challengePill: {
     paddingVertical: 7,
     paddingHorizontal: 14,
-    borderRadius: 99,
+    borderRadius: DS_RADIUS.PILL,
     marginRight: 8,
     maxWidth: 200,
   },
@@ -1427,7 +1438,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: DS_COLORS.TEXT_SECONDARY,
   },
-  challengePillText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TEXT_SECONDARY },
+  challengePillText: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_SECONDARY },
   challengePillTextOn: { color: DS_COLORS.WHITE },
   privacyPill: {
     marginHorizontal: 12,
@@ -1435,23 +1446,23 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     paddingVertical: 3,
     paddingHorizontal: 9,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
   },
-  privacyPillText: { fontSize: 10, fontWeight: "700" },
+  privacyPillText: { fontSize: 10, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   teamEmpty: { paddingVertical: 40, alignItems: "center", paddingHorizontal: 24 },
   teamEmptyEmoji: { fontSize: 36, opacity: 0.25, marginBottom: 12 },
   teamEmptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center", lineHeight: 18 },
   findTeamBtn: {
     marginTop: 16,
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    borderRadius: 99,
+    borderRadius: DS_RADIUS.PILL,
     paddingVertical: 10,
     paddingHorizontal: 22,
   },
-  findTeamBtnText: { fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE },
+  findTeamBtnText: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
   teamTitle: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginHorizontal: 16,
     marginBottom: 8,
@@ -1469,14 +1480,14 @@ const styles = StyleSheet.create({
   emptyIconCircle: {
     width: 72,
     height: 72,
-    borderRadius: 36,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyTitleStrong: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginTop: 16,
     textAlign: "center",
@@ -1498,17 +1509,17 @@ const styles = StyleSheet.create({
   emptyTextCta: {
     marginTop: 20,
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
   emptyInvitePill: {
     marginTop: 20,
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 10,
     paddingHorizontal: 28,
   },
-  emptyInvitePillText: { color: DS_COLORS.WHITE, fontSize: 14, fontWeight: "600" },
+  emptyInvitePillText: { color: DS_COLORS.WHITE, fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   emptyTitle: {
     fontSize: 16,
     fontWeight: "500",
@@ -1529,7 +1540,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
   },
   emptyButtonText: {
     color: DS_COLORS.WHITE,

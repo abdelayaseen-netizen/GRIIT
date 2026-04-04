@@ -86,7 +86,12 @@ export default function JoinCelebrationModal({
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={handleBackdropDismiss}>
-      <Pressable style={styles.backdrop} onPress={handleBackdropDismiss} accessibilityLabel="Dismiss celebration">
+      <Pressable
+        style={styles.backdrop}
+        onPress={handleBackdropDismiss}
+        accessibilityRole="button"
+        accessibilityLabel="Dismiss celebration"
+      >
         <View style={styles.confettiLayer} pointerEvents="none">
           <ConfettiCannon
             count={180}
@@ -106,7 +111,7 @@ export default function JoinCelebrationModal({
           ]}
           pointerEvents="box-none"
         >
-          <Pressable onPress={(e) => e.stopPropagation()}>
+          <Pressable onPress={(e) => e.stopPropagation()} accessible={false}>
             <View style={styles.inner} accessibilityRole="summary">
               <ShieldCheck size={64} color={DS_COLORS.accent} strokeWidth={2} />
               <Text style={styles.headline}>You&apos;re in!</Text>

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { Share2 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 import { shareProfile } from "@/lib/share";
 import { captureError } from "@/lib/sentry";
 
@@ -51,7 +51,13 @@ export default function ShareDisciplineCard({
           <Text style={styles.previewValue}>{currentStreak} days</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
+      <TouchableOpacity
+        style={styles.shareButton}
+        onPress={handleShare}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Share profile"
+      >
         <Share2 size={18} color={DS_COLORS.white} />
         <Text style={styles.shareButtonText}>Share profile</Text>
       </TouchableOpacity>
@@ -78,7 +84,7 @@ const styles = StyleSheet.create({
   },
   previewName: {
     fontSize: DS_TYPOGRAPHY.body.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   previewTier: {
@@ -97,7 +103,7 @@ const styles = StyleSheet.create({
   },
   previewValue: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   shareButton: {
@@ -111,7 +117,7 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     fontSize: DS_TYPOGRAPHY.body.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 });

@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { Avatar } from "@/components/Avatar";
-import { DS_COLORS, DS_RADIUS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -90,11 +90,15 @@ export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
               style={styles.list}
               data={query.data}
               keyExtractor={(item) => item.userId}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={5}
               renderItem={({ item }) => (
                 <Pressable
                   style={styles.row}
                   onPress={() => navigateToProfile(item)}
                   accessibilityRole="button"
+                  accessibilityLabel={`View profile for ${item.displayName || item.username || "member"}`}
                 >
                   <Avatar
                     url={item.avatarUrl}
@@ -153,7 +157,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   center: {

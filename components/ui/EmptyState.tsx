@@ -1,3 +1,4 @@
+import { DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Compass, RefreshCw, ChevronRight } from "lucide-react-native";
@@ -48,13 +49,25 @@ function EmptyStateInner({
       <Text style={styles.title}>{title}</Text>
       {displaySubtitle ? <Text style={styles.subtitle}>{displaySubtitle}</Text> : null}
       {showPrimary && primaryPress ? (
-        <TouchableOpacity style={styles.primaryCta} onPress={primaryPress} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.primaryCta}
+          onPress={primaryPress}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={primaryLabel}
+        >
           <Text style={styles.primaryCtaText}>{primaryLabel}</Text>
           <ChevronRight size={18} color={colors.white} />
         </TouchableOpacity>
       ) : null}
       {onSecondaryCta ? (
-        <TouchableOpacity style={styles.secondaryCta} onPress={onSecondaryCta} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.secondaryCta}
+          onPress={onSecondaryCta}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={secondaryCtaLabel}
+        >
           <RefreshCw size={16} color={colors.accentOrange} />
           <Text style={styles.secondaryCtaText}>{secondaryCtaLabel}</Text>
         </TouchableOpacity>
@@ -107,7 +120,7 @@ const styles = StyleSheet.create({
   },
   primaryCtaText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.white,
   },
   secondaryCta: {
@@ -119,7 +132,7 @@ const styles = StyleSheet.create({
   },
   secondaryCtaText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.accentOrange,
   },
 });

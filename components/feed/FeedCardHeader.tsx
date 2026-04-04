@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Check, MoreHorizontal } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import type { LiveFeedPost } from "./feedTypes";
@@ -64,7 +64,12 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
         ) : null}
       </Pressable>
 
-      <Pressable onPress={onProfilePress} style={styles.headerMid} accessibilityRole="button">
+      <Pressable
+        onPress={onProfilePress}
+        style={styles.headerMid}
+        accessibilityRole="button"
+        accessibilityLabel={`View profile for ${displayUser}`}
+      >
         <View style={styles.nameRow}>
           <Text style={styles.username} numberOfLines={1}>
             {displayUser}
@@ -114,7 +119,7 @@ const styles = StyleSheet.create({
     bottom: -2,
     width: 16,
     height: 16,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.FEED_AVATAR_RING,
     alignItems: "center",
     justifyContent: "center",
@@ -122,7 +127,7 @@ const styles = StyleSheet.create({
   badgeGreen: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     backgroundColor: DS_COLORS.FEED_BADGE_GREEN,
     alignItems: "center",
     justifyContent: "center",
@@ -130,14 +135,14 @@ const styles = StyleSheet.create({
   badgeStreak: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     backgroundColor: DS_COLORS.FEED_STREAK_BADGE,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeStreakText: {
     fontSize: 9,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
   headerMid: { flex: 1, marginLeft: 10, minWidth: 0 },
@@ -152,7 +157,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.FEED_DAY_PILL_BG,
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   dayPillText: {
     fontSize: 10,

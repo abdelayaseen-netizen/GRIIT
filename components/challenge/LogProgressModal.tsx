@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 
 interface LogProgressModalProps {
@@ -83,6 +83,7 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
                 value={amountStr}
                 onChangeText={setAmountStr}
                 keyboardType="decimal-pad"
+                accessibilityLabel={`Amount in ${unit}`}
               />
               <Text style={[styles.label, { color: colors.text.secondary, marginTop: 12 }]}>Add a note (optional)</Text>
               <TextInput
@@ -92,6 +93,7 @@ export default function LogProgressModal({ visible, unit, onClose, onSubmit }: L
                 value={note}
                 onChangeText={setNote}
                 multiline
+                accessibilityLabel="Progress note"
               />
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
               <View style={styles.actions}>
@@ -137,22 +139,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dialog: {
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
   },
   title: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     marginBottom: 16,
   },
   label: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
@@ -173,23 +175,23 @@ color: DS_COLORS.dangerDark,
   cancelBtn: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     alignItems: "center",
   },
   cancelText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   logBtn: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
   },
   logBtnText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
   },
 });

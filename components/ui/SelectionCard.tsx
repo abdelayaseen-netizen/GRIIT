@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from "react-native";
 import { Check } from "lucide-react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_RADIUS, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_RADIUS, DS_BORDERS } from "@/lib/design-system"
 
 type SelectionCardProps = {
   title: string;
@@ -28,6 +28,7 @@ export function SelectionCard({
       onPress={onPress}
       activeOpacity={0.8}
       accessibilityRole="radio"
+      accessibilityLabel={title}
       accessibilityState={{ checked: selected }}
     >
       {leftIcon ? <View style={styles.iconWrap}>{leftIcon}</View> : null}
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
   checkWrap: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",

@@ -51,6 +51,7 @@ export function OnboardingCTA({
       disabled={isDisabled}
       activeOpacity={0.85}
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled }}
     >
       {loading ? (

@@ -18,7 +18,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 import { SkeletonFeedCard } from "@/components/skeletons";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
@@ -457,7 +457,12 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
         onRequestClose={() => setAndroidMenuPost(null)}
       >
         <View style={styles.androidMenuRoot}>
-          <Pressable style={styles.androidMenuBackdrop} onPress={() => setAndroidMenuPost(null)} />
+          <Pressable
+            style={styles.androidMenuBackdrop}
+            onPress={() => setAndroidMenuPost(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss post actions menu"
+          />
           <View style={styles.androidMenuSheet}>
             {androidMenuPost && androidMenuPost.userId === user.id ? (
               <>
@@ -467,10 +472,17 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
                     setAndroidMenuPost(null);
                     void handleDeletePost(androidMenuPost);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete post"
                 >
                   <Text style={styles.androidMenuDestructive}>Delete post</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.androidMenuRow} onPress={() => setAndroidMenuPost(null)}>
+                <TouchableOpacity
+                  style={styles.androidMenuRow}
+                  onPress={() => setAndroidMenuPost(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close menu"
+                >
                   <Text style={styles.androidMenuCancel}>Cancel</Text>
                 </TouchableOpacity>
               </>
@@ -483,6 +495,8 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
                     setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
                     setTimeout(() => setFeedSnack(null), 2500);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Report post"
                 >
                   <Text style={styles.androidMenuDefault}>Report</Text>
                 </TouchableOpacity>
@@ -493,10 +507,17 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
                     setAndroidMenuPost(null);
                     setHiddenPostIds((prev) => (prev.includes(p.id) ? prev : [...prev, p.id]));
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Hide post"
                 >
                   <Text style={styles.androidMenuDefault}>Hide post</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.androidMenuRow} onPress={() => setAndroidMenuPost(null)}>
+                <TouchableOpacity
+                  style={styles.androidMenuRow}
+                  onPress={() => setAndroidMenuPost(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close menu"
+                >
                   <Text style={styles.androidMenuCancel}>Cancel</Text>
                 </TouchableOpacity>
               </>
@@ -534,20 +555,20 @@ const styles = StyleSheet.create({
   liveDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.FEED_BADGE_GREEN,
   },
   liveCountMeta: { fontSize: 11, color: DS_COLORS.FEED_LIVE_LABEL, fontWeight: "500" },
   feedToggle: {
     flexDirection: "row",
     backgroundColor: DS_COLORS.FEED_TAB_INACTIVE_BG,
-    borderRadius: 22,
+    borderRadius: DS_RADIUS.iconButton,
     padding: 3,
   },
   togglePill: {
     paddingVertical: 6,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.TRANSPARENT,
   },
   togglePillActive: {
@@ -559,9 +580,9 @@ const styles = StyleSheet.create({
   feedSkeletonStack: { gap: 10 },
   listItemSeparator: { height: 8 },
   empty: { paddingVertical: 32, alignItems: "center" },
-  emptyTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
+  emptyTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY },
-  retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600", marginTop: 8 },
+  retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginTop: 8 },
   feedSnack: {
     textAlign: "center",
     fontSize: 13,
@@ -590,7 +611,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   androidMenuDefault: { fontSize: 17, color: DS_COLORS.TEXT_PRIMARY, fontWeight: "500" },
-  androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: "600" },
+  androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   androidMenuCancel: { fontSize: 17, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "500" },
   digestCard: {
     marginHorizontal: DS_SPACING.sm,
@@ -609,7 +630,7 @@ const styles = StyleSheet.create({
     marginLeft: -10,
     borderWidth: 2,
     borderColor: DS_COLORS.WHITE,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
   },
   digestText: {
     flex: 1,
@@ -620,13 +641,13 @@ const styles = StyleSheet.create({
   },
   thoughtCard: {
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     overflow: "hidden",
     paddingBottom: DS_SPACING.sm,
   },
   thoughtEyebrow: {
     fontSize: 9,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.5,
