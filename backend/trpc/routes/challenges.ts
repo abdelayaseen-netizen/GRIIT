@@ -1,4 +1,4 @@
-// TODO: Split into sub-routers — see docs/ARCHITECTURE.md
+// NOTE(architecture): Split into sub-routers — see docs/ARCHITECTURE.md
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";

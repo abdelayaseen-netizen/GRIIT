@@ -144,7 +144,7 @@ export const challengesDiscoverProcedures = {
   /** Discover “Picked for you”: popular published solo challenges. */
   getRecommended: publicProcedure.query(async ({ ctx }) => {
     const server = getSupabaseServer() ?? ctx.supabase;
-    // TODO: personalize by user goals when goal data is available
+    // NOTE(v2): Personalize by user goals when goal data is available
     const { data: rows, error } = await server
       .from("challenges")
       .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status")
