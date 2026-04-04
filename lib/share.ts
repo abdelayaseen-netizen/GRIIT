@@ -135,7 +135,11 @@ export async function shareProgressImage(imageUri: string, message: string): Pro
     const available = await Sharing.isAvailableAsync();
     if (available) {
       await Sharing.shareAsync(imageUri, { mimeType: "image/png", dialogTitle: "Share your progress" });
-      trackEvent("share_completed", { content_type: "proof_image" });
+      try {
+        trackEvent("share_completed", { content_type: "proof_image" });
+      } catch {
+        /* non-fatal */
+      }
     } else {
       await shareOrCopy(message, "GRIIT");
     }
@@ -158,7 +162,11 @@ export async function shareToInstagramStory(imageUri: string): Promise<void> {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
-      trackEvent("share_completed", { content_type: "instagram_story" });
+      try {
+        trackEvent("share_completed", { content_type: "instagram_story" });
+      } catch {
+        /* non-fatal */
+      }
     } else {
       const available = await Sharing.isAvailableAsync();
       if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });

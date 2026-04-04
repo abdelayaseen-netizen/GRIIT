@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from 'expo-haptics';
@@ -122,6 +122,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [stories, setStories] = useState<unknown[]>([]);
   const [todayCheckins, setTodayCheckins] = useState<TodayCheckinForUser[]>([]);
   const [isPremium, setIsPremium] = useState(false);
+  const prevPremiumForAnalytics = useRef<boolean | null>(null);
 
   const [hardTimeout, setHardTimeout] = useState(false);
 
@@ -471,6 +472,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setStories([]);
       setTodayCheckins([]);
       setIsPremium(false);
+      prevPremiumForAnalytics.current = null;
     }
   }, [user]);
 
@@ -479,6 +481,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const unsub = addSubscriptionChangeListener((premium) => setIsPremium(premium));
     return unsub;
   }, [user]);
+
+  useEffect(() => {
+    if (prevPremiumForAnalytics.current === true && !isPremium) {
+      try {
+        trackEvent("subscription_cancelled");
+      } catch {
+        /* non-fatal */
+      }
+    }
+    prevPremiumForAnalytics.current = isPremium;
+  }, [isPremium]);
 
   useEffect(() => {
     if (!user?.id || !profileFetched) return;
@@ -556,11 +569,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return trpcMutate<{ id?: string }>(TRPC.checkins.complete, params)
       .then((data) => {
         const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
-        if (currentDay === 7) {
-          trackEvent("day_7_retained", { challenge_id: (activeChallenge as { challenge_id?: string } | null)?.challenge_id });
+        const challengeIdForRetention = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
+        if (currentDay >= 7 && challengeIdForRetention) {
+          try {
+            trackEvent("day_7_retained", { challenge_id: challengeIdForRetention, day_number: currentDay });
+          } catch {
+            /* non-fatal */
+          }
         }
-        if (currentDay === 3) {
-          trackEvent("day_3_retained", { challenge_id: (activeChallenge as { challenge_id?: string } | null)?.challenge_id });
+        if (currentDay === 3 && challengeIdForRetention) {
+          try {
+            trackEvent("day_3_retained", { challenge_id: challengeIdForRetention });
+          } catch {
+            /* non-fatal */
+          }
         }
         if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
         void fetchActiveChallenge();
@@ -577,7 +599,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? 'unknown';
         const cid = (activeChallenge as ActiveChallengeFromApi | null)?.challenge_id;
         if (cid) {
-          trackEvent('task_completed', { challenge_id: cid, task_type: String(taskType) });
+          try {
+            trackEvent("task_completed", { challenge_id: cid, task_type: String(taskType) });
+          } catch {
+            /* non-fatal */
+          }
         }
         return { firstTaskOfDay, completionId: data?.id };
       })
@@ -609,6 +635,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         challengeName?: string;
         totalDays?: number;
       };
+      const securedChallengeId =
+        result.challengeId ?? (activeChallenge as { challenge_id?: string }).challenge_id ?? "";
+      const dayNum = result.challengeDay ?? (activeChallenge as { current_day?: number }).current_day ?? 0;
+      if (securedChallengeId) {
+        try {
+          trackEvent("day_secured", { challenge_id: securedChallengeId, day_number: dayNum });
+        } catch {
+          /* non-fatal */
+        }
+      }
       const dayN = result.challengeDay;
       if (typeof dayN === 'number' && MILESTONE_SHARE_DAYS.has(dayN)) {
         const prof = profile || fallbackProfile;

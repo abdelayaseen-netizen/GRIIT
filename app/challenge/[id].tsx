@@ -926,7 +926,15 @@ export default function ChallengeDetailScreen() {
     setLeaveConfirmVisible(false);
     try {
       await leaveMutation.mutateAsync({ challengeId: id });
-      trackEvent("challenge_abandoned", { challenge_id: id, day: userCurrentDay });
+      try {
+        trackEvent("challenge_abandoned", {
+          challenge_id: id,
+          day: userCurrentDay,
+          day_number: userCurrentDay ?? 0,
+        });
+      } catch {
+        /* non-fatal */
+      }
       await refetchAll();
       await refetchTodayCheckins();
       router.replace(ROUTES.TABS_DISCOVER as never);

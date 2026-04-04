@@ -28,6 +28,7 @@ import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
 import { trackEvent } from "@/lib/analytics";
+import { useScreenTracker } from "@/hooks/useScreenTracker";
 
 initialiseSentry();
 
@@ -406,6 +407,8 @@ function RootLayout() {
   });
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
 
+  useScreenTracker();
+
   useEffect(() => {
     if (!fontsLoaded) return;
     const t = setTimeout(() => {
@@ -416,10 +419,14 @@ function RootLayout() {
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const rawType = (response.notification.request.content.data as Record<string, unknown> | undefined)?.type;
-      trackEvent("notification_opened", {
-        notification_type: typeof rawType === "string" ? rawType : "unknown",
-      });
+      try {
+        const rawType = (response.notification.request.content.data as Record<string, unknown> | undefined)?.type;
+        trackEvent("notification_opened", {
+          notification_type: typeof rawType === "string" ? rawType : "unknown",
+        });
+      } catch {
+        /* non-fatal */
+      }
     });
     return () => sub.remove();
   }, []);

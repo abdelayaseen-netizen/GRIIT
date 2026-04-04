@@ -626,6 +626,14 @@ function TaskCompleteScreenInner() {
         caption: postCaption.trim() || undefined,
         proofPhotoUrl: proofForFeed,
       });
+      try {
+        trackEvent("feed_posted", {
+          challenge_id: challengeIdForFeed,
+          has_photo: !!(proofForFeed ?? photoUri ?? photoUrl),
+        });
+      } catch {
+        /* non-fatal */
+      }
       setPostedInline(true);
       void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
     } catch (e) {

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from "react";
+import React, { useMemo, useCallback, useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -38,6 +38,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { trackEvent } from "@/lib/analytics";
 
 type TaskRow = {
   id: string;
@@ -67,6 +68,7 @@ type ActiveChallengeRow = {
   start_at?: string | null;
   started_at?: string | null;
   created_at?: string | null;
+  current_day?: number | null;
   challenges?: ChallengeRow | null;
 };
 
@@ -142,6 +144,31 @@ export default function ActiveChallengeDetailScreen() {
 
   const challenge = activeChallenge?.challenges;
   const challengeId = challenge?.id ?? activeChallenge?.challenge_id ?? "";
+
+  const taskSkippedTracked = useRef(false);
+  useEffect(() => {
+    if (!activeChallenge || taskSkippedTracked.current) return;
+    const joinedAt = new Date(
+      activeChallenge.started_at ?? activeChallenge.start_at ?? activeChallenge.created_at ?? 0
+    );
+    if (Number.isNaN(joinedAt.getTime())) return;
+    const daysSinceJoin = Math.floor((Date.now() - joinedAt.getTime()) / (1000 * 60 * 60 * 24));
+    const dbDay =
+      typeof activeChallenge.current_day === "number" && activeChallenge.current_day > 0
+        ? activeChallenge.current_day
+        : currentDay;
+    if (daysSinceJoin > dbDay) {
+      taskSkippedTracked.current = true;
+      try {
+        trackEvent("task_skipped", {
+          challenge_id: challengeId || activeChallenge.challenge_id,
+          missed_days: Math.max(0, daysSinceJoin - dbDay),
+        });
+      } catch {
+        /* non-fatal */
+      }
+    }
+  }, [activeChallenge, currentDay, challengeId]);
   const tasks = useMemo(() => {
     const raw = challenge?.challenge_tasks ?? [];
     return [...raw].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));

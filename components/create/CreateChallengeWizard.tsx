@@ -36,6 +36,7 @@ import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
+import { trackEvent } from "@/lib/analytics";
 import { sharePlainMessage } from "@/lib/share";
 import type { ChallengeType, ChallengeVisibility, ReplayPolicy } from "@/types";
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
@@ -475,6 +476,17 @@ export default function CreateChallengeWizard() {
         }
 
         const newId = challenge?.id;
+        if (newId) {
+          try {
+            trackEvent("challenge_created", {
+              challenge_id: newId,
+              duration_days: typeof durationDays === "number" ? durationDays : 0,
+              is_hard_mode: difficultyMode === "hard",
+            });
+          } catch {
+            /* non-fatal */
+          }
+        }
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
@@ -524,6 +536,7 @@ export default function CreateChallengeWizard() {
       clearWizardError,
       showWizardError,
       difficultyMode,
+      durationDays,
     ]
   );
 

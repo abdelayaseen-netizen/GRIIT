@@ -1,7 +1,7 @@
 /**
  * Premium Paywall Screen — GRIIT Pro subscription with RevenueCat offerings.
  */
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -50,10 +50,17 @@ export default function PaywallScreen() {
   const [purchasing, setPurchasing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const paywallViewedTracked = useRef(false);
 
   useEffect(() => {
-    const source = typeof params.source === "string" ? params.source : "app";
-    trackEvent("paywall_viewed", { source });
+    if (paywallViewedTracked.current) return;
+    paywallViewedTracked.current = true;
+    try {
+      const source = typeof params.source === "string" ? params.source : "unknown";
+      trackEvent("paywall_viewed", { source });
+    } catch {
+      /* non-fatal */
+    }
   }, [params.source]);
 
   useEffect(() => {
@@ -84,14 +91,22 @@ export default function PaywallScreen() {
       const result = await purchasePackage(pkg);
       setPurchasing(false);
       if (result.success) {
-        trackEvent("purchase_completed", {
-          plan: pkg.identifier,
-          price: pkg.product?.priceString ?? "",
-        });
+        try {
+          trackEvent("purchase_completed", {
+            plan: pkg.identifier,
+            price: pkg.product?.priceString ?? "",
+          });
+        } catch {
+          /* non-fatal */
+        }
         await refetchPro();
         router.replace(ROUTES.TABS as never);
       } else if (!result.cancelled) {
-        trackEvent("purchase_failed", { error: result.error ?? "unknown" });
+        try {
+          trackEvent("purchase_failed", { error: result.error ?? "unknown" });
+        } catch {
+          /* non-fatal */
+        }
         setErrorMessage(result.error ?? "Purchase failed. Please try again.");
       }
     },
@@ -112,11 +127,19 @@ export default function PaywallScreen() {
     const result = await restorePurchases();
     setPurchasing(false);
     if (result.success) {
-      trackEvent("purchase_completed", { source: "restore" });
+      try {
+        trackEvent("purchase_completed", { source: "restore" });
+      } catch {
+        /* non-fatal */
+      }
       await refetchPro();
       router.replace(ROUTES.TABS as never);
     } else {
-      trackEvent("purchase_failed", { error: "restore" });
+      try {
+        trackEvent("purchase_failed", { error: "restore" });
+      } catch {
+        /* non-fatal */
+      }
       setErrorMessage(result.error ?? "No purchases found to restore.");
     }
   }, [router, refetchPro]);
@@ -195,7 +218,11 @@ export default function PaywallScreen() {
                   style={[styles.planCard, isSelected && styles.planCardSelected]}
                   onPress={() => {
                     setSelectedPackage(pkg);
-                    trackEvent("paywall_plan_selected", { plan: pkg.identifier });
+                    try {
+                      trackEvent("paywall_plan_selected", { plan: pkg.identifier });
+                    } catch {
+                      /* non-fatal */
+                    }
                   }}
                   activeOpacity={0.85}
                   disabled={purchasing}

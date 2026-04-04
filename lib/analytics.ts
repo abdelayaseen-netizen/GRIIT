@@ -21,7 +21,21 @@ export type AnalyticsEvent =
   | { name: "challenge_joined"; challenge_id: string }
   | { name: "challenge_left"; challenge_id: string }
   | { name: "task_completed"; challenge_id?: string; task_type?: string; verification_type?: string }
-  | { name: "day_secured"; streak_count?: number }
+  | { name: "day_secured"; streak_count?: number; challenge_id?: string; day_number?: number }
+  | { name: "day_3_retained"; challenge_id?: string }
+  | { name: "day_7_retained"; challenge_id?: string; day_number?: number }
+  | { name: "screen_viewed"; screen_name?: string; screen_pattern?: string }
+  | { name: "paywall_viewed"; source?: string }
+  | { name: "trial_started"; product_id?: string }
+  | { name: "subscription_started"; product_id?: string }
+  | { name: "subscription_cancelled" }
+  | { name: "task_skipped"; challenge_id?: string; missed_days?: number }
+  | { name: "challenge_abandoned"; challenge_id?: string; day?: number; day_number?: number }
+  | { name: "challenge_created"; challenge_id?: string; duration_days?: number; is_hard_mode?: boolean }
+  | { name: "feed_posted"; challenge_id?: string; has_photo?: boolean }
+  | { name: "discover_challenge_tapped"; challenge_id?: string }
+  | { name: "share_completed"; content_type?: string }
+  | { name: "notification_opened"; notification_type?: string }
   | { name: "nudge_sent"; toUserId?: string }
   | { name: "respect_sent"; toUserId?: string }
   | { name: "streak_lost" }

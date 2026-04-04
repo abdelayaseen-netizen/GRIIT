@@ -10,6 +10,7 @@ import { setSubscriptionState } from "./premium";
 import { supabase } from "./supabase";
 import { trpcMutate } from "./trpc";
 import { TRPC } from "./trpc-paths";
+import { trackEvent } from "./analytics";
 
 const ENTITLEMENT_ID = "GRIIT Pro";
 
@@ -18,7 +19,9 @@ let purchaserInfoListener: (() => void) | null = null;
 
 /** Minimal types for RevenueCat (avoid importing full SDK in Expo Go). */
 export type CustomerInfo = {
-  entitlements: { active: Record<string, { expirationDate?: string | null }> };
+  entitlements: {
+    active: Record<string, { expirationDate?: string | null; periodType?: string }>;
+  };
 };
 export type PurchasesPackage = {
   identifier: string;
@@ -156,6 +159,20 @@ export async function purchasePackage(
     const customerInfo = result?.customerInfo;
     const isPremium = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID] != null;
     if (isPremium) {
+      try {
+        const ent = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID];
+        const pt = String(ent?.periodType ?? "").toLowerCase();
+        const isTrial = pt === "trial" || pt === "intro";
+        const productIdentifier =
+          (pkg as { product?: { identifier?: string } }).product?.identifier ?? pkg.identifier ?? "unknown";
+        if (isTrial) {
+          trackEvent("trial_started", { product_id: productIdentifier });
+        } else {
+          trackEvent("subscription_started", { product_id: productIdentifier });
+        }
+      } catch {
+        /* non-fatal */
+      }
       void trpcMutate(TRPC.profiles.validateSubscription, {}).catch(() => {
         // Best-effort — client entitlement already synced via listener / premium state
       });

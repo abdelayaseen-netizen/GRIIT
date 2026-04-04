@@ -314,7 +314,11 @@ export default function DiscoverScreen() {
     (id: string) => {
       if (!id) return;
       if (typeof Haptics.impactAsync === "function") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      trackEvent("discover_challenge_tapped", { challenge_id: id });
+      try {
+        trackEvent("discover_challenge_tapped", { challenge_id: id });
+      } catch {
+        /* non-fatal */
+      }
       router.push(ROUTES.CHALLENGE_ID(id) as never);
     },
     [router]
