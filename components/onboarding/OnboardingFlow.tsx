@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ChevronLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { ONBOARDING_COLORS as C } from "@/components/onboarding/onboarding-theme";
-import { GRIIT_COLORS } from "@/lib/design-system";
+import { GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     minWidth: 44,
     minHeight: 44,
     justifyContent: "center",
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: C.WHITE,
     alignItems: "center",
   },

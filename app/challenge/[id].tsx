@@ -61,13 +61,7 @@ import type {
   ActiveChallengeFromApi,
   CheckinFromApi,
 } from "@/types";
-import {
-  DS_COLORS,
-  DS_SPACING,
-  DS_SHADOWS,
-  GRIIT_COLORS,
-  getCategoryColors,
-} from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_SHADOWS, GRIIT_COLORS, getCategoryColors, DS_TYPOGRAPHY } from "@/lib/design-system"
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
 import { TimeWindowPrompt } from "@/components/TimeWindowPrompt";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -1303,7 +1297,7 @@ export default function ChallengeDetailScreen() {
                   >
                     <Text style={s.aboutDetailLabel}>{row.label}</Text>
                     <Text
-                      style={[s.aboutDetailValue, row.valueAccent && { color: DS_COLORS.accent, fontWeight: "600" as const }]}
+                      style={[s.aboutDetailValue, row.valueAccent && { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD }]}
                     >
                       {row.value}
                     </Text>
@@ -1393,7 +1387,7 @@ export default function ChallengeDetailScreen() {
               </View>
               <View style={s.commitmentRow}>
                 <Text style={s.commitmentLabel}>Mode</Text>
-                <Text style={[s.commitmentValue, { color: DS_COLORS.accent, fontWeight: "600" }]}>
+                <Text style={[s.commitmentValue, { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD }]}>
                   {difficultyLabel}{difficulty === "hard" || difficulty === "extreme" ? " Mode" : ""}
                 </Text>
               </View>

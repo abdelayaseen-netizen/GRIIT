@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   Switch,
   Platform,
@@ -23,7 +23,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { InitialCircle } from "@/components/ui";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -109,7 +109,16 @@ export default function ChallengeChatInfoScreen() {
           ),
         }}
       />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <FlatList
+        style={styles.container}
+        data={[{ key: "chat-info-body" }]}
+        keyExtractor={(item) => item.key}
+        contentContainerStyle={styles.content}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={2}
+        renderItem={() => (
+          <>
         <InlineError
           message={reportThanks}
           variant="success"
@@ -251,7 +260,9 @@ export default function ChallengeChatInfoScreen() {
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
-      </ScrollView>
+          </>
+        )}
+      />
     </>
   );
 }
@@ -283,19 +294,19 @@ const styles = StyleSheet.create({
   challengeIcon: {
     width: 72,
     height: 72,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 12,
   },
   challengeIconText: {
     fontSize: 28,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   challengeTitle: {
     fontSize: 20,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
@@ -314,7 +325,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     flex: 1,
   },
@@ -324,7 +335,7 @@ const styles = StyleSheet.create({
   },
   rulesCard: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     gap: 12,
   },
@@ -336,7 +347,7 @@ const styles = StyleSheet.create({
   ruleBullet: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.textMuted,
     marginTop: 6,
   },
@@ -350,7 +361,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 14,
     gap: 12,
   },
@@ -360,7 +371,7 @@ const styles = StyleSheet.create({
   stackAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     borderWidth: 2,
     borderColor: DS_COLORS.surface,
   },
@@ -371,7 +382,7 @@ const styles = StyleSheet.create({
   },
   moreAvatarText: {
     fontSize: 10,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
   },
   membersText: {
@@ -379,7 +390,7 @@ const styles = StyleSheet.create({
   },
   membersTitle: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   membersSubtitle: {
@@ -389,7 +400,7 @@ const styles = StyleSheet.create({
   },
   settingsCard: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 4,
   },
   settingRow: {

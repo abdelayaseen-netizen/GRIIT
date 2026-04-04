@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Search, ChevronRight } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 type Props = {
   onPress: () => void;
@@ -35,7 +35,7 @@ const s = StyleSheet.create({
   card: {
     marginTop: 12,
     marginHorizontal: 24,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: DS_COLORS.DISCOVER_HERO_DARK_BG,
     padding: 16,
     flexDirection: "row",
@@ -46,14 +46,14 @@ const s = StyleSheet.create({
     marginTop: 4,
     marginHorizontal: 10,
     marginBottom: 0,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     paddingVertical: 18,
     paddingHorizontal: 20,
   },
   icon: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.FEED_CTA_ICON_BG,
     alignItems: "center",
     justifyContent: "center",
@@ -61,10 +61,10 @@ const s = StyleSheet.create({
   iconFeed: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
   },
   mid: { flex: 1 },
-  title: { fontSize: 13, fontWeight: "700", color: DS_COLORS.WHITE },
+  title: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
   titleFeed: { fontSize: 14, fontWeight: "500", color: DS_COLORS.FEED_TAB_ACTIVE_TEXT },
   sub: { marginTop: 2, fontSize: 11, color: DS_COLORS.FEED_ENGAGEMENT_MUTED },
   subFeed: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED },

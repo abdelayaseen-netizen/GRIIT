@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type ViewStyle } from "react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 type Props = {
   message: string;
@@ -42,7 +42,7 @@ const s = StyleSheet.create({
   },
   btnText: {
     color: DS_COLORS.TEXT_PRIMARY,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
   },
 });

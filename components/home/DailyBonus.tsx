@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Gift } from "lucide-react-native";
-import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 function noonProgressAndLabel(now: Date): { pct: number; label: string; expired: boolean } {
   const noon = new Date(now);
@@ -72,19 +72,19 @@ const s = StyleSheet.create({
   mid: { flex: 1, minWidth: 0 },
   title: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.amberDarkText,
   },
   barBg: {
     marginTop: DS_SPACING.sm,
     height: DS_MEASURES.PROGRESS_BAR_HEIGHT,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.DAILY_BONUS_TIMER_TRACK,
     overflow: "hidden",
   },
   barFill: {
     height: DS_MEASURES.PROGRESS_BAR_HEIGHT,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.WARNING,
   },
   metaRow: {
@@ -100,7 +100,7 @@ const s = StyleSheet.create({
   },
   points: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.amberDarkText,
   },
 });

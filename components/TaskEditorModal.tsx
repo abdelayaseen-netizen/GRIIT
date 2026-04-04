@@ -30,7 +30,7 @@ import {
   Image as ImageIcon,
   X,
 } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import {
   CreateFlowHeader,
   CreateFlowInput,
@@ -1426,7 +1426,7 @@ const s = StyleSheet.create({
   verificationPill: {
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: tokenColors.cardBg,
     borderWidth: 1.5,
     borderColor: tokenColors.borderLight,
@@ -1459,7 +1459,7 @@ const s = StyleSheet.create({
   },
   collapsibleTitle: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: tokenColors.textSecondaryCreate,
   },
   collapsibleBody: {
@@ -1479,7 +1479,7 @@ const s = StyleSheet.create({
   offsetInput: {
     height: 48,
     backgroundColor: tokenColors.cardBg,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     borderWidth: 1.5,
     borderColor: tokenColors.borderLight,
     paddingHorizontal: 12,
@@ -1489,7 +1489,7 @@ const s = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.silverRank,
     letterSpacing: 1,
     textTransform: "uppercase",
@@ -1497,7 +1497,7 @@ const s = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.silverRank,
     marginBottom: 8,
     textTransform: "uppercase",
@@ -1513,7 +1513,7 @@ const s = StyleSheet.create({
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: DS_COLORS.surfaceAlt,
     borderWidth: 1.5,
     borderColor: "transparent",
@@ -1538,7 +1538,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: 4,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: tokenColors.cardBg,
     borderWidth: 1.5,
     borderColor: tokenColors.borderLight,
@@ -1549,7 +1549,7 @@ const s = StyleSheet.create({
   },
   presetNum: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: tokenColors.textSecondaryCreate,
     marginBottom: 2,
   },
@@ -1561,7 +1561,7 @@ const s = StyleSheet.create({
   lockedText: { fontSize: 14, color: tokenColors.textSecondaryCreate },
   previewCard: {
     backgroundColor: tokenColors.cardBg,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     padding: 20,
     borderWidth: 1,
     borderColor: tokenColors.borderLight,
@@ -1571,14 +1571,14 @@ const s = StyleSheet.create({
   previewIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     justifyContent: "center",
   },
   previewContent: { flex: 1, gap: 3 },
   previewTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: tokenColors.textPrimary,
   },
   previewMeta: {
@@ -1592,12 +1592,12 @@ const s = StyleSheet.create({
     fontStyle: "normal",
   },
   previewBadge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  previewBadgeText: { fontSize: 12, fontWeight: "600" },
+  previewBadgeText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   taskPhotoSection: { marginTop: 20, marginBottom: 8 },
   descriptionSection: { marginBottom: 8 },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
@@ -1616,20 +1616,20 @@ const s = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: DS_COLORS.border,
     borderStyle: "dashed",
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 20,
     backgroundColor: DS_COLORS.surfaceMuted,
   },
   addPhotoText: { fontSize: 14, color: DS_COLORS.TEXT_TERTIARY, fontWeight: "500" },
-  photoPreviewWrapper: { position: "relative", borderRadius: 12, overflow: "hidden" },
-  photoPreview: { width: "100%", height: 160, borderRadius: 12 },
+  photoPreviewWrapper: { position: "relative", borderRadius: DS_RADIUS.MD, overflow: "hidden" },
+  photoPreview: { width: "100%", height: 160, borderRadius: DS_RADIUS.MD },
   removePhoto: {
     position: "absolute",
     top: 8,
     right: 8,
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.overlayDark,
     alignItems: "center",
     justifyContent: "center",
@@ -1637,7 +1637,7 @@ const s = StyleSheet.create({
   descriptionInput: {
     borderWidth: 0.5,
     borderColor: DS_COLORS.border,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     padding: 12,
     fontSize: 14,
     color: DS_COLORS.textPrimary,

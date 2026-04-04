@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { Image } from "expo-image";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { getDisplayInitials, getFeedAvatarBgFromUserId } from "@/lib/utils";
 
 type Props = {
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   letter: {
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
 });

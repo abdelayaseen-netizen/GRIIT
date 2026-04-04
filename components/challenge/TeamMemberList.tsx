@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { Check, Clock, XCircle } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export interface TeamMemberForList {
   id: string;
@@ -130,14 +130,14 @@ export default function TeamMemberList({ members, currentUserId, runStatus }: Te
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1,
     padding: 16,
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     marginBottom: 12,
   },
   emptyWrap: {
@@ -162,18 +162,18 @@ const styles = StyleSheet.create({
   avatar: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
   },
   avatarPlaceholder: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarLetter: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   info: {
     flex: 1,
@@ -185,17 +185,17 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     flex: 1,
   },
   creatorBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   creatorText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   statusRow: {
     flexDirection: "row",

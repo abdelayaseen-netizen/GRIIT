@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 /** Fixed size for consistent image capture (e.g. 1080x1080 for stories). */
 export const SHARE_CARD_WIDTH = 400;
@@ -94,7 +94,7 @@ export const ShareCard = React.memo(ShareCardInner);
 const styles = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.BG_PRIMARY,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     padding: 32,
     borderWidth: 2,
     borderColor: DS_COLORS.border,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.textPrimary,
     letterSpacing: 1,
     marginBottom: 24,
@@ -114,18 +114,18 @@ const styles = StyleSheet.create({
   },
   streakNumber: {
     fontSize: 72,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.accent,
   },
   streakLabel: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
     marginTop: 4,
   },
   challengeName: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 8,
@@ -138,17 +138,17 @@ const styles = StyleSheet.create({
   tierBadge: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     marginBottom: 24,
   },
   tierText: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.WHITE,
   },
   cta: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.accent,
     marginBottom: 8,
   },
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   challengeNameCompletion: {
     fontSize: 22,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 16,

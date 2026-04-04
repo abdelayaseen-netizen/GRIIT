@@ -23,7 +23,7 @@ import { useApp } from "@/contexts/AppContext";
 import { formatTimeAgo } from "@/lib/formatTimeAgo";
 import { FLAGS } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ChatMessage } from "@/types";
 
 const REACTION_EMOJIS = ["🔥", "⚡", "🙌", "💯", "❤️"];
@@ -426,12 +426,12 @@ const styles = StyleSheet.create({
   },
   chatDisabledBackText: {
     fontSize: 16,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   chatDisabledTitle: {
     fontSize: 20,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 12,
   },
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   headerTitleText: {
     fontSize: 16,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   headerSubtitle: {
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.chipFill,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     overflow: "hidden",
   },
   messageRow: {
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     marginRight: 8,
   },
   avatarPlaceholder: {
@@ -505,13 +505,13 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholderText: {
     color: DS_COLORS.textSecondary,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     fontSize: 14,
   },
   messageBubble: {
     maxWidth: "75%",
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     borderBottomLeftRadius: 4,
     padding: 12,
     position: "relative",
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   },
   senderName: {
     fontSize: 12,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
     marginBottom: 4,
   },
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
   proofImage: {
     width: 200,
     height: 150,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 8,
   },
   messageFooter: {
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   },
   messageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
   },
   reactionsRow: {
     flexDirection: "row",
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.OVERLAY_BLACK_10,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     gap: 2,
   },
   reactionEmoji: {
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     left: 0,
     flexDirection: "row",
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     padding: 6,
     gap: 2,
     shadowColor: DS_COLORS.shadowBlack,
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.chipFill,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     overflow: "hidden",
     textAlign: "center",
   },
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.successSoft,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     gap: 6,
     marginVertical: 8,
     flexWrap: "wrap",
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.OVERLAY_BLACK_08,
     paddingHorizontal: 4,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     gap: 2,
   },
   composerContainer: {
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
   actionButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.successSoft,
     justifyContent: "center",
     alignItems: "center",
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   composerInput: {
     flex: 1,
     backgroundColor: DS_COLORS.chipFill,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.accent,
     justifyContent: "center",
     alignItems: "center",

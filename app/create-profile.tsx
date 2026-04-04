@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trackEvent } from "@/lib/analytics";
 import FormInput from "@/components/shared/FormInput";
 import { captureError } from "@/lib/sentry";
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: PADDING_H, paddingTop: 16, paddingBottom: 48 },
   sectionLabel: {
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     letterSpacing: 1.2,
     color: DS_COLORS.accent,
     textTransform: "uppercase",
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: DS_COLORS.card,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     height: 52,
     paddingHorizontal: 16,
     fontSize: 15,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     height: 56,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   ctaTextDisabled: {

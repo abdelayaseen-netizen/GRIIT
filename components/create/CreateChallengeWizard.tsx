@@ -20,7 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { User, Users, UsersRound, Trash2 } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { DS_COLORS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, GRIIT_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { CREATE_SELECTION } from "@/lib/create-selection";
 import { CHALLENGE_PACKS, tasksFromPack } from "@/lib/challenge-packs";
 import {
@@ -90,7 +90,7 @@ function DurationPill({
       style={[
         {
           height: 44,
-          borderRadius: 22,
+          borderRadius: DS_RADIUS.iconButton,
           borderWidth: 1.5,
           borderColor: selected ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
           backgroundColor: selected ? DS_COLORS.ACCENT_TINT : DS_COLORS.CARD_BG,
@@ -1031,7 +1031,7 @@ export default function CreateChallengeWizard() {
               <View
                 style={{
                   backgroundColor: DS_COLORS.CARD_BG,
-                  borderRadius: 20,
+                  borderRadius: DS_RADIUS.XL,
                   padding: 20,
                   borderLeftWidth: 4,
                   borderLeftColor: DS_COLORS.PRIMARY,
@@ -1047,7 +1047,7 @@ export default function CreateChallengeWizard() {
                     <Text
                       style={{
                         fontSize: 24,
-                        fontWeight: "700",
+                        fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
                         color: DS_COLORS.TEXT_PRIMARY,
                         letterSpacing: -0.3,
                       }}
@@ -1065,7 +1065,7 @@ export default function CreateChallengeWizard() {
                       backgroundColor: DS_COLORS.ACCENT_TINT,
                       paddingHorizontal: 12,
                       paddingVertical: 5,
-                      borderRadius: 10,
+                      borderRadius: DS_RADIUS.MD,
                     }}
                   >
                     <Text style={styles.text13SemiboldPrimary}>
@@ -1086,7 +1086,7 @@ export default function CreateChallengeWizard() {
                               backgroundColor: DS_COLORS.WARM_CREAM,
                               paddingHorizontal: 14,
                               paddingVertical: 5,
-                              borderRadius: 12,
+                              borderRadius: DS_RADIUS.MD,
                               alignItems: "center",
                             }}
                           >
@@ -1121,7 +1121,7 @@ export default function CreateChallengeWizard() {
               <View
                 style={{
                   backgroundColor: DS_COLORS.CARD_BG,
-                  borderRadius: 16,
+                  borderRadius: DS_RADIUS.LG,
                   borderWidth: 1.5,
                   borderColor: DS_COLORS.BORDER_LIGHT,
                   overflow: "hidden",
@@ -1144,7 +1144,7 @@ export default function CreateChallengeWizard() {
                       style={{
                         width: 40,
                         height: 40,
-                        borderRadius: 12,
+                        borderRadius: DS_RADIUS.MD,
                         backgroundColor: DS_COLORS.ACCENT_TINT,
                         alignItems: "center",
                         justifyContent: "center",
@@ -1166,7 +1166,7 @@ export default function CreateChallengeWizard() {
                   backgroundColor: DS_COLORS.CARD_BG,
                   borderWidth: 1.5,
                   borderColor: DS_COLORS.BORDER,
-                  borderRadius: 14,
+                  borderRadius: DS_RADIUS.button,
                   overflow: "hidden",
                 }}
               >
@@ -1199,7 +1199,7 @@ export default function CreateChallengeWizard() {
                     <Text
                       style={{
                         fontSize: 14,
-                        fontWeight: visibility === v.key ? "600" : "400",
+                        fontWeight: visibility === v.key ? DS_TYPOGRAPHY.WEIGHT_SEMIBOLD : "400",
                         color: visibility === v.key ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
                       }}
                     >
@@ -1446,8 +1446,8 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.ACCENT_TINT,
   },
   bannerText: { fontSize: 13, color: DS_COLORS.TEXT_PRIMARY, flex: 1 },
-  bannerBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: GRIIT_COLORS.primary },
-  bannerBtnText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: "700", fontSize: 12 },
+  bannerBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: DS_RADIUS.SM, backgroundColor: GRIIT_COLORS.primary },
+  bannerBtnText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, fontSize: 12 },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -1456,29 +1456,29 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   cancel: { fontSize: 16, color: DS_COLORS.TEXT_SECONDARY },
-  topTitle: { fontSize: 17, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  topTitle: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
   stepperRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 8, gap: 4 },
   stepperItem: { flexDirection: "row", alignItems: "center" },
-  stepDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: DS_COLORS.border },
+  stepDot: { width: 10, height: 10, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.border },
   stepDotOn: { backgroundColor: GRIIT_COLORS.primary },
   stepLine: { width: 24, height: 2, backgroundColor: DS_COLORS.border },
   stepLineOn: { backgroundColor: GRIIT_COLORS.primary },
   scroll: { paddingHorizontal: DS_SPACING.lg },
   h1: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     letterSpacing: -0.5,
     color: DS_COLORS.TEXT_PRIMARY,
     marginBottom: 4,
   },
   sub: { fontSize: 16, fontWeight: "400", color: DS_COLORS.textSecondary, marginBottom: 20 },
-  fieldLabel: { fontSize: 15, fontWeight: "600", color: DS_COLORS.textSecondary, marginBottom: 8 },
+  fieldLabel: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textSecondary, marginBottom: 8 },
   light: { color: DS_COLORS.TEXT_MUTED, fontWeight: "400" },
   input: {
     backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
     borderColor: DS_COLORS.border,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 15,
@@ -1492,7 +1492,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
     borderColor: DS_COLORS.border,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     paddingVertical: 14,
     paddingHorizontal: 8,
     alignItems: "center",
@@ -1501,7 +1501,7 @@ const styles = StyleSheet.create({
     borderColor: CREATE_SELECTION.border,
     backgroundColor: CREATE_SELECTION.background,
   },
-  whoTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 6 },
+  whoTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 6 },
   whoSub: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, textAlign: "center", marginTop: 4 },
   customRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
   daysLabel: { fontSize: 15, color: DS_COLORS.TEXT_SECONDARY },
@@ -1509,28 +1509,28 @@ const styles = StyleSheet.create({
   typeCard: {
     flex: 1,
     padding: 12,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     borderWidth: 1.5,
     borderColor: DS_COLORS.border,
     backgroundColor: DS_COLORS.surface,
   },
   typeCardSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
-  typeCardTitle: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  typeCardTitle: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   typeCardSub: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
-  packsHead: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_MUTED, marginBottom: 8 },
+  packsHead: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_MUTED, marginBottom: 8 },
   packCard: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     padding: 12,
   },
   packCardSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
   packEmoji: { fontSize: 24, marginBottom: 6 },
-  packName: { fontSize: 14, fontWeight: "700", color: GRIIT_COLORS.primary },
+  packName: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: GRIIT_COLORS.primary },
   packDesc: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
   packCount: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, marginTop: 6 },
-  listHead: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 8 },
+  listHead: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 8 },
   taskRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1541,23 +1541,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   taskTitleRow: { flex: 1, flexDirection: "row", alignItems: "center", minWidth: 0, gap: 6 },
-  taskTitle: { flexShrink: 1, fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  taskTitle: { flexShrink: 1, fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
   hardBadge: {
     backgroundColor: DS_COLORS.ACCENT_TINT,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     flexShrink: 0,
   },
   hardBadgeText: { fontSize: 11, fontWeight: "500", color: DS_COLORS.PRIMARY },
   empty: { alignItems: "center", padding: 24 },
-  emptyTitle: { fontSize: 16, fontWeight: "700" },
+  emptyTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   emptySub: { fontSize: 13, color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
   dashedAdd: {
     borderWidth: 1.5,
     borderStyle: "dashed",
     borderColor: DS_COLORS.border,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     padding: 14,
     alignItems: "center",
     marginTop: 12,
@@ -1565,7 +1565,7 @@ const styles = StyleSheet.create({
   dashedAddErr: { borderColor: DS_COLORS.errorText },
   dashedAddText: { color: GRIIT_COLORS.primary, fontWeight: "500" },
   catPillWrap: {
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1.5,
     borderColor: "transparent",
     padding: 0,
@@ -1574,23 +1574,23 @@ const styles = StyleSheet.create({
   ruleCard: {
     flex: 1,
     padding: 10,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1.5,
     borderColor: DS_COLORS.border,
     backgroundColor: DS_COLORS.surface,
   },
   ruleCardSel: { borderColor: CREATE_SELECTION.border, backgroundColor: CREATE_SELECTION.background },
-  ruleTitle: { fontSize: 15, fontWeight: "600", marginBottom: 6, color: DS_COLORS.TEXT_PRIMARY },
+  ruleTitle: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginBottom: 6, color: DS_COLORS.TEXT_PRIMARY },
   caption: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_HINT, marginTop: 6 },
   outlineBtn: {
     marginTop: 10,
     borderWidth: 1,
     borderColor: GRIIT_COLORS.primary,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 12,
     alignItems: "center",
   },
-  outlineBtnTxt: { color: GRIIT_COLORS.primary, fontWeight: "600" },
+  outlineBtnTxt: { color: GRIIT_COLORS.primary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   lockHint: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_HINT, textAlign: "center", marginTop: 16 },
   footer: {
     paddingHorizontal: DS_SPACING.lg,
@@ -1601,12 +1601,12 @@ const styles = StyleSheet.create({
   primary: {
     backgroundColor: GRIIT_COLORS.primary,
     height: 52,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 8,
   },
-  primaryTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 17, fontWeight: "600" },
+  primaryTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   primaryDisabled: { backgroundColor: DS_COLORS.buttonDisabledBg },
   primaryTxtDisabled: { color: DS_COLORS.buttonDisabledText },
   charCount: {
@@ -1618,7 +1618,7 @@ const styles = StyleSheet.create({
   backOut: {
     height: 54,
     paddingHorizontal: 24,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     borderWidth: 1.5,
     borderColor: DS_COLORS.BORDER,
     backgroundColor: DS_COLORS.CARD_BG,
@@ -1632,11 +1632,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DS_COLORS.TEXT_PRIMARY,
     height: 54,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     alignItems: "center",
     justifyContent: "center",
   },
-  launchTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 17, fontWeight: "600" },
+  launchTxt: { color: DS_COLORS.TEXT_ON_DARK, fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   topBarSpacer: { width: 56 },
   inviteSection: { marginTop: 16 },
   draftExitBackdrop: {
@@ -1647,28 +1647,28 @@ const styles = StyleSheet.create({
   },
   draftExitCard: {
     backgroundColor: DS_COLORS.card,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
   draftExitTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginBottom: 16,
     textAlign: "center",
   },
   draftExitPrimary: {
     backgroundColor: DS_COLORS.accent,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: 10,
   },
-  draftExitPrimaryTxt: { fontSize: 16, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  draftExitPrimaryTxt: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   draftExitDanger: {
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: 10,
@@ -1676,15 +1676,15 @@ const styles = StyleSheet.create({
     borderColor: DS_COLORS.alertRedBorder,
     backgroundColor: DS_COLORS.dangerLight,
   },
-  draftExitDangerTxt: { fontSize: 16, fontWeight: "600", color: DS_COLORS.dangerDark },
+  draftExitDangerTxt: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.dangerDark },
   draftExitSecondary: {
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
-  draftExitSecondaryTxt: { fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  draftExitSecondaryTxt: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
   flex1: { flex: 1 },
   shakeWrap: {},
   saveDraftText: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
@@ -1696,17 +1696,17 @@ const styles = StyleSheet.create({
   mt2: { marginTop: 2 },
   rowBetweenStartMb8: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
   text14SecondaryMt4: { fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, marginTop: 4 },
-  text13SemiboldPrimary: { fontSize: 13, fontWeight: "600", color: DS_COLORS.PRIMARY },
+  text13SemiboldPrimary: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.PRIMARY },
   mt12ColGap6: { marginTop: 12, flexDirection: "column", gap: 6 },
   rowGap6: { flexDirection: "row", gap: 6 },
   text13MediumSecondary: { fontSize: 13, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY },
   dividerMv16: { height: 1, backgroundColor: DS_COLORS.DIVIDER, marginVertical: 16 },
   rowBetweenCenter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   text13Hint: { fontSize: 13, color: DS_COLORS.TEXT_HINT },
-  text18BoldPrimaryMt2: { fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },
+  text18BoldPrimaryMt2: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },
   itemsEnd: { alignItems: "flex-end" },
   text18: { fontSize: 18 },
-  text16SemiboldPrimary: { fontSize: 16, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  text16SemiboldPrimary: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
   text13HintMt2: { fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 2 },
   text13: { fontSize: 13 },
   text13HintMt8Lh20: { fontSize: 13, color: DS_COLORS.TEXT_HINT, marginTop: 8, lineHeight: 20 },
@@ -1714,7 +1714,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.CREATE_HARD_WARNING_BG,
     borderWidth: 1.5,
     borderColor: DS_COLORS.CREATE_HARD_WARNING_BORDER,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 16,
@@ -1724,7 +1724,7 @@ const styles = StyleSheet.create({
   saveDraftBtn: {
     width: "100%",
     height: 48,
-    borderRadius: 24,
+    borderRadius: DS_RADIUS.modal,
     borderWidth: 1.5,
     borderColor: DS_COLORS.BORDER,
     backgroundColor: DS_COLORS.CARD_BG,

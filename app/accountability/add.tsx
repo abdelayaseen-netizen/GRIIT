@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { sharedStyles } from "@/lib/theme";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -199,15 +199,15 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   backBtn: {},
-  backText: { fontSize: 16, color: DS_COLORS.accent, fontWeight: "600" },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: DS_COLORS.textPrimary },
+  backText: { fontSize: 16, color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  headerTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   headerSpacer: { width: 56 },
   inputWrap: { padding: 16, position: "relative" },
   input: {
     backgroundColor: DS_COLORS.surface,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
@@ -226,15 +226,15 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
   rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
   inviteBtn: {
     backgroundColor: DS_COLORS.accent,
     paddingVertical: 10,
     paddingHorizontal: 18,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     minWidth: 80,
     alignItems: "center",
   },
-  inviteBtnText: { fontSize: 15, fontWeight: "700", color: DS_COLORS.white },
+  inviteBtnText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
 });

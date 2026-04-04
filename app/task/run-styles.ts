@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export const styles = StyleSheet.create({
   container: {
@@ -19,7 +19,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
@@ -32,7 +32,7 @@ export const styles = StyleSheet.create({
   modeSelector: {
     flexDirection: "row",
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 4,
     marginBottom: 16,
   },
@@ -43,14 +43,14 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
   },
   modeButtonActive: {
     backgroundColor: DS_COLORS.accent,
   },
   modeButtonText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
   },
   modeButtonTextActive: {
@@ -63,12 +63,12 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 12,
   },
   requirementText: {
     fontSize: 13,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
     flex: 1,
   },
@@ -79,7 +79,7 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.warningLight,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 20,
   },
   warningText: {
@@ -97,7 +97,7 @@ export const styles = StyleSheet.create({
   },
   distanceValue: {
     fontSize: 64,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   distanceComplete: {
@@ -113,7 +113,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
     marginBottom: 24,
     width: "100%",
@@ -125,7 +125,7 @@ export const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   statLabel: {
@@ -146,14 +146,14 @@ export const styles = StyleSheet.create({
   progressBar: {
     height: 8,
     backgroundColor: DS_COLORS.grayLight,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
     marginBottom: 8,
   },
   progressFill: {
     height: "100%",
     backgroundColor: DS_COLORS.accent,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
   progressFillComplete: {
     backgroundColor: DS_COLORS.success,
@@ -163,7 +163,7 @@ export const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
     textAlign: "center",
   },
@@ -178,7 +178,7 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.accent,
     paddingVertical: 20,
     paddingHorizontal: 40,
-    borderRadius: 30,
+    borderRadius: DS_RADIUS.joinCta,
   },
   startButtonComplete: {
     backgroundColor: DS_COLORS.success,
@@ -188,7 +188,7 @@ export const styles = StyleSheet.create({
   },
   startButtonText: {
     fontSize: 18,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   stopButton: {
@@ -198,11 +198,11 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.dangerMid,
     paddingVertical: 20,
     paddingHorizontal: 40,
-    borderRadius: 30,
+    borderRadius: DS_RADIUS.joinCta,
   },
   stopButtonText: {
     fontSize: 18,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   resetButton: {
@@ -212,7 +212,7 @@ export const styles = StyleSheet.create({
   },
   resetButtonText: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
   },
   trackingIndicator: {
@@ -224,7 +224,7 @@ export const styles = StyleSheet.create({
   trackingDot: {
     width: 10,
     height: 10,
-    borderRadius: 5,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.success,
   },
   trackingDotTimer: {
@@ -232,7 +232,7 @@ export const styles = StyleSheet.create({
   },
   trackingText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.success,
   },
   trackingTextTimer: {
@@ -250,7 +250,7 @@ export const styles = StyleSheet.create({
   stepDot: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     backgroundColor: DS_COLORS.grayLight,
   },
   stepDotActive: {
@@ -280,7 +280,7 @@ export const styles = StyleSheet.create({
   },
   stepLabelActive: {
     color: DS_COLORS.accent,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   timerSection: {
     alignItems: "center",
@@ -292,13 +292,13 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.dangerLightBg,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 16,
     width: "100%",
   },
   violationText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.dangerMid,
   },
   lockNotice: {
@@ -308,12 +308,12 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.warningLight,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 16,
   },
   lockNoticeText: {
     fontSize: 13,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.amberDarkText,
     textAlign: "center",
   },
@@ -322,7 +322,7 @@ export const styles = StyleSheet.create({
   },
   proofTitle: {
     fontSize: 20,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -341,11 +341,11 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.accent,
     paddingVertical: 20,
     paddingHorizontal: 40,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
   },
   captureButtonText: {
     fontSize: 18,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   proofPreview: {
@@ -356,7 +356,7 @@ export const styles = StyleSheet.create({
   proofImage: {
     width: "100%",
     aspectRatio: 4 / 3,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.surface,
     marginBottom: 12,
   },
@@ -366,13 +366,13 @@ export const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
   retakeButtonText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   continueButton: {
@@ -382,11 +382,11 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.accent,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
   },
   continueButtonText: {
     fontSize: 16,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   distanceSection: {
@@ -399,7 +399,7 @@ export const styles = StyleSheet.create({
   thumbnailImage: {
     width: 80,
     height: 80,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.surface,
   },
   proofCheck: {
@@ -408,7 +408,7 @@ export const styles = StyleSheet.create({
     right: -6,
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.success,
     alignItems: "center",
     justifyContent: "center",
@@ -419,13 +419,13 @@ export const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
   input: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -445,13 +445,13 @@ export const styles = StyleSheet.create({
   summaryCard: {
     width: "100%",
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 16,
     marginTop: 8,
   },
   summaryTitle: {
     fontSize: 14,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 12,
   },
@@ -473,7 +473,7 @@ export const styles = StyleSheet.create({
   },
   summaryValueText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   footer: {
@@ -486,7 +486,7 @@ export const styles = StyleSheet.create({
   verifyButton: {
     backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 18,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     alignItems: "center",
   },
   verifyButtonDisabled: {
@@ -494,7 +494,7 @@ export const styles = StyleSheet.create({
   },
   verifyButtonText: {
     fontSize: 15,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     letterSpacing: 0.5,
   },
@@ -510,7 +510,7 @@ export const styles = StyleSheet.create({
   verifiedBadge: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.successSoft,
     alignItems: "center",
     justifyContent: "center",
@@ -518,7 +518,7 @@ export const styles = StyleSheet.create({
   },
   verifiedTitle: {
     fontSize: 24,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -533,13 +533,13 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.surface,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
   backButtonText: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
 });

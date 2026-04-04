@@ -21,7 +21,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkeletonHeroCard, SkeletonChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
@@ -739,7 +739,7 @@ export default function DiscoverScreen() {
 const discoverStyles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
   headerPad: { paddingHorizontal: 20, paddingTop: 8 },
-  title: { fontSize: 26, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, letterSpacing: -0.5 },
+  title: { fontSize: 26, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, letterSpacing: -0.5 },
   subtitle: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
   activeLimitText: { fontSize: 12, fontWeight: "500", marginTop: 4 },
   searchRow: {
@@ -749,7 +749,7 @@ const discoverStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 0.5,
     borderColor: DS_COLORS.BORDER,
     marginHorizontal: 20,
@@ -833,7 +833,7 @@ const discoverStyles = StyleSheet.create({
   horizontalListContent: { paddingHorizontal: 16, gap: 10, paddingBottom: 8 },
   groupedListCard: {
     marginHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     overflow: "hidden",
     backgroundColor: DS_COLORS.BORDER,
   },
@@ -848,12 +848,12 @@ const discoverStyles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 20,
     backgroundColor: DS_COLORS.TEXT_PRIMARY,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
   },
   createCtaIconWrap: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.FEED_CTA_ICON_BG,
     alignItems: "center",
     justifyContent: "center",

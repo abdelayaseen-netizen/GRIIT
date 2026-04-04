@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { CheckCircle2, Circle } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 
 export interface ProfileCompletionCardProps {
   bioAdded: boolean;
@@ -68,25 +68,25 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: DS_TYPOGRAPHY.body.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   percent: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
   },
   barTrack: {
     height: 6,
     backgroundColor: DS_COLORS.chipFill,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
     marginBottom: DS_SPACING.lg,
   },
   barFill: {
     height: "100%",
     backgroundColor: DS_COLORS.accent,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
   },
   list: {
     gap: DS_SPACING.sm,

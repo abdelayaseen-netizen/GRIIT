@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export function FilterChip({
   label,
@@ -35,7 +35,7 @@ const s = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.BG_CARD,
     borderWidth: 0.5,
     borderColor: DS_COLORS.BORDER,
@@ -51,6 +51,6 @@ const s = StyleSheet.create({
   },
   textActive: {
     color: DS_COLORS.WHITE,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
 });

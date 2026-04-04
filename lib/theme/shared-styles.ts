@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system"
 
 /**
  * Shared style objects for cards, buttons, section headers, and screen containers.
@@ -22,16 +22,16 @@ export const sharedStyles = StyleSheet.create({
   pillButtonText: {
     color: DS_COLORS.white,
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   sectionHeader: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   sectionHeaderSmall: {
     fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     textTransform: "uppercase" as const,
     letterSpacing: DS_TYPOGRAPHY.eyebrow.letterSpacing,

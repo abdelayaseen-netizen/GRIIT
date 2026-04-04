@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Flame } from "lucide-react-native";
-import { DS_COLORS, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 
 interface StreakFreezeModalProps {
   visible: boolean;
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     padding: 24,
     alignItems: "center",
   },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   },
   freezeButton: {
     backgroundColor: GRIIT_COLORS.primary,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: "center",
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   noFreezeBox: {
     backgroundColor: DS_COLORS.surfaceMuted,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     padding: 12,
     marginBottom: 4,
     width: "100%",

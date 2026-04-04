@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList } from "react-native";
 import { X, Flame, Zap, Target, Star, Shield } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const POINT_RULES = [
   { action: "Secure a day", points: "+5", icon: Flame, color: DS_COLORS.DISCOVER_CORAL },
@@ -40,29 +40,39 @@ export default function PointsExplainer({ visible, onClose, currentPoints, curre
             <X size={20} color={DS_COLORS.TEXT_PRIMARY} />
           </TouchableOpacity>
         </View>
-        <ScrollView contentContainerStyle={s.scroll}>
-          <View style={s.statusCard}>
-            <Text style={s.statusPoints}>{currentPoints}</Text>
-            <Text style={s.statusLabel}>points</Text>
-            <View style={[s.rankBadge, { backgroundColor: currentRankData?.color ?? DS_COLORS.DISCOVER_CORAL }]}>
-              <Text style={s.rankBadgeText}>{currentRank}</Text>
-            </View>
-            {nextRank ? (
-              <Text style={s.nextRankHint}>
-                {pointsToNext} points to {nextRank.name}
-              </Text>
-            ) : null}
-          </View>
+        <FlatList
+          data={POINT_RULES}
+          keyExtractor={(r) => r.action}
+          contentContainerStyle={s.scroll}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={5}
+          ListHeaderComponent={
+            <>
+              <View style={s.statusCard}>
+                <Text style={s.statusPoints}>{currentPoints}</Text>
+                <Text style={s.statusLabel}>points</Text>
+                <View style={[s.rankBadge, { backgroundColor: currentRankData?.color ?? DS_COLORS.DISCOVER_CORAL }]}>
+                  <Text style={s.rankBadgeText}>{currentRank}</Text>
+                </View>
+                {nextRank ? (
+                  <Text style={s.nextRankHint}>
+                    {pointsToNext} points to {nextRank.name}
+                  </Text>
+                ) : null}
+              </View>
 
-          <Text style={s.sectionTitle}>How points work</Text>
-          <Text style={s.sectionHint}>
-            Points reward consistency. You earn them for showing up, and lose them for skipping. This isn&apos;t about
-            perfection — it&apos;s about not quitting.
-          </Text>
-          {POINT_RULES.map((rule) => {
+              <Text style={s.sectionTitle}>How points work</Text>
+              <Text style={s.sectionHint}>
+                Points reward consistency. You earn them for showing up, and lose them for skipping. This isn&apos;t about
+                perfection — it&apos;s about not quitting.
+              </Text>
+            </>
+          }
+          renderItem={({ item: rule }) => {
             const Icon = rule.icon;
             return (
-              <View key={rule.action} style={s.ruleRow}>
+              <View style={s.ruleRow}>
                 <Icon size={16} color={rule.color} />
                 <Text style={s.ruleAction}>{rule.action}</Text>
                 <Text
@@ -75,25 +85,28 @@ export default function PointsExplainer({ visible, onClose, currentPoints, curre
                 </Text>
               </View>
             );
-          })}
+          }}
+          ListFooterComponent={
+            <>
+              <Text style={[s.sectionTitle, { marginTop: 24 }]}>Rank ladder</Text>
+              {RANKS.map((rank) => {
+                const isCurrent = rank.name === currentRank;
+                return (
+                  <View key={rank.name} style={[s.rankRow, isCurrent && s.rankRowCurrent]}>
+                    <View style={[s.rankDot, { backgroundColor: rank.color }]} />
+                    <Text style={[s.rankName, isCurrent && { fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD }]}>{rank.name}</Text>
+                    <Text style={s.rankMin}>{rank.min}+ pts</Text>
+                  </View>
+                );
+              })}
 
-          <Text style={[s.sectionTitle, { marginTop: 24 }]}>Rank ladder</Text>
-          {RANKS.map((rank) => {
-            const isCurrent = rank.name === currentRank;
-            return (
-              <View key={rank.name} style={[s.rankRow, isCurrent && s.rankRowCurrent]}>
-                <View style={[s.rankDot, { backgroundColor: rank.color }]} />
-                <Text style={[s.rankName, isCurrent && { fontWeight: "700" }]}>{rank.name}</Text>
-                <Text style={s.rankMin}>{rank.min}+ pts</Text>
-              </View>
-            );
-          })}
-
-          <Text style={s.footnote}>
-            Points reset to 0 if you abandon all challenges. Your rank is permanent once earned — you keep the highest
-            rank you&apos;ve reached.
-          </Text>
-        </ScrollView>
+              <Text style={s.footnote}>
+                Points reset to 0 if you abandon all challenges. Your rank is permanent once earned — you keep the highest
+                rank you&apos;ve reached.
+              </Text>
+            </>
+          }
+        />
       </View>
     </Modal>
   );
@@ -109,11 +122,11 @@ const s = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
-  title: { fontSize: 18, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  title: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   closeBtn: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: DS_COLORS.WHITE,
     alignItems: "center",
     justifyContent: "center",
@@ -126,12 +139,12 @@ const s = StyleSheet.create({
     alignItems: "center",
     marginBottom: 24,
   },
-  statusPoints: { fontSize: 48, fontWeight: "800", color: DS_COLORS.TEXT_PRIMARY },
+  statusPoints: { fontSize: 48, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, color: DS_COLORS.TEXT_PRIMARY },
   statusLabel: { fontSize: 14, color: DS_COLORS.TEXT_MUTED, marginTop: 2 },
-  rankBadge: { marginTop: 12, paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
-  rankBadgeText: { fontSize: 13, fontWeight: "700", color: DS_COLORS.TEXT_ON_DARK },
+  rankBadge: { marginTop: 12, paddingHorizontal: 16, paddingVertical: 6, borderRadius: DS_RADIUS.XL },
+  rankBadgeText: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_ON_DARK },
   nextRankHint: { marginTop: 8, fontSize: 12, color: DS_COLORS.TEXT_MUTED },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 8 },
   sectionHint: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 20, marginBottom: 12 },
   ruleRow: {
     flexDirection: "row",
@@ -142,7 +155,7 @@ const s = StyleSheet.create({
     borderBottomColor: DS_COLORS.chipFill,
   },
   ruleAction: { flex: 1, fontSize: 14, color: DS_COLORS.TEXT_PRIMARY },
-  rulePoints: { fontSize: 14, fontWeight: "700" },
+  rulePoints: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   rankRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -155,9 +168,9 @@ const s = StyleSheet.create({
     backgroundColor: DS_COLORS.ACCENT_TINT,
     marginHorizontal: -8,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
   },
-  rankDot: { width: 8, height: 8, borderRadius: 4 },
+  rankDot: { width: 8, height: 8, borderRadius: DS_RADIUS.SM },
   rankName: { flex: 1, fontSize: 14, color: DS_COLORS.TEXT_PRIMARY },
   rankMin: { fontSize: 12, color: DS_COLORS.TEXT_MUTED },
   footnote: { marginTop: 20, fontSize: 11, color: DS_COLORS.TEXT_MUTED, lineHeight: 16 },

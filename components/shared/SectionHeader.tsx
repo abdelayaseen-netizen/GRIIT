@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type ViewStyle } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 type Props = {
   title: string;
@@ -37,13 +37,13 @@ const s = StyleSheet.create({
   },
   title: {
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   action: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
     color: DS_COLORS.DISCOVER_CORAL,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
 });
 

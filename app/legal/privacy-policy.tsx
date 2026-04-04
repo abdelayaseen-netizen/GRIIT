@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const CONTENT = [
   { heading: "Information We Collect", body: "Account information (email, username, display name); challenge activity and progress data; device information for push notifications; usage analytics (anonymized)." },
@@ -34,9 +34,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: DS_COLORS.background },
   scroll: { flex: 1 },
   content: { padding: DS_SPACING.screenHorizontal, paddingBottom: DS_SPACING.xxxl },
-  title: { fontSize: 22, fontWeight: "700", color: DS_COLORS.textPrimary, marginBottom: 4 },
+  title: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary, marginBottom: 4 },
   updated: { fontSize: 13, color: DS_COLORS.textMuted, marginBottom: DS_SPACING.xl },
   section: { marginBottom: DS_SPACING.xl },
-  heading: { fontSize: 16, fontWeight: "700", color: DS_COLORS.textPrimary, marginBottom: 6 },
+  heading: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary, marginBottom: 6 },
   body: { fontSize: 14, color: DS_COLORS.textSecondary, lineHeight: 22 },
 });

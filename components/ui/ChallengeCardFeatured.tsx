@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Calendar, ListTodo, Users } from "lucide-react-native";
-import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 const DIFF_STYLES_DEFAULT = { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT };
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {
@@ -130,7 +130,7 @@ const s = StyleSheet.create({
   card: {
     flexDirection: "row",
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     overflow: "hidden",
     borderWidth: 0.5,
     borderColor: DS_COLORS.BORDER,
@@ -170,7 +170,7 @@ const s = StyleSheet.create({
   eyebrowSpacer: { width: 0 },
   eyebrowText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     letterSpacing: 1,
   },
   diffPill: {
@@ -180,11 +180,11 @@ const s = StyleSheet.create({
   },
   diffText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   title: {
     fontSize: 20,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginTop: 8,
     marginBottom: 4,
@@ -244,7 +244,7 @@ const s = StyleSheet.create({
   },
   joinLink: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.ACCENT_PRIMARY,
   },
 });

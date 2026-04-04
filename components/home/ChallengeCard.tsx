@@ -5,7 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, getCategoryColors } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, getCategoryColors } from "@/lib/design-system"
 import { prefetchChallengeById } from "@/lib/prefetch-queries";
 
 export interface TodayTaskItem {
@@ -140,19 +140,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: DS_SPACING.md,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   challengeName: {
     fontSize: DS_TYPOGRAPHY.body.fontSize + 1,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.WHITE,
     flex: 1,
   },
   progressBadge: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.accent,
     marginLeft: DS_SPACING.sm,
   },
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   typeBadgeText: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.accent,
   },
   taskList: {
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
   openButtonText: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.accent,
   },
 });

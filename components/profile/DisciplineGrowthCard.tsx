@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { TrendingUp } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 
 export interface DisciplineGrowthCardProps {
   /** Value 30 days ago (e.g. 0) */
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: DS_TYPOGRAPHY.body.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   periodPill: {
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   periodPillText: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   row: {
@@ -95,13 +95,13 @@ const styles = StyleSheet.create({
   },
   uppercase: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textMuted,
     letterSpacing: 1,
   },
   value: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginTop: 2,
   },
@@ -124,12 +124,12 @@ const styles = StyleSheet.create({
   },
   deltaText: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   barTrack: {
     height: 8,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.chipFill,
     overflow: "hidden",
     flexDirection: "row",
@@ -137,6 +137,6 @@ const styles = StyleSheet.create({
   barFill: {
     height: "100%",
     backgroundColor: DS_COLORS.success,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
 });

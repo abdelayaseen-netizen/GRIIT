@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { CheckCircle2, Shield } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 
 export type DailyStatusState = "NOT_SECURED" | "SECURED";
 
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   securedTextWrap: { flex: 1 },
   securedTitle: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   securedSub: {
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   streakBadge: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     marginTop: DS_SPACING.sm,
   },
   notSecuredRow: {
@@ -116,20 +116,20 @@ const styles = StyleSheet.create({
   amberCircle: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.warning,
     alignItems: "center",
     justifyContent: "center",
   },
   amberCircleText: {
     fontSize: 18,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.white,
   },
   notSecuredTextWrap: { flex: 1 },
   notSecuredTitle: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   notSecuredSub: {
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   secureButtonText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 });

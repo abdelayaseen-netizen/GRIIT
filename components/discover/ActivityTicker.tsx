@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 
 export type RecentCompletionItem = {
@@ -128,12 +128,12 @@ const styles = StyleSheet.create({
   liveDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.DISCOVER_GREEN,
   },
   headerText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   scroll: {
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     backgroundColor: DS_COLORS.SURFACE,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 8,
     paddingRight: 12,
     minWidth: 220,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
   },
   avatarPlaceholder: {
     backgroundColor: DS_COLORS.BORDER,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_SECONDARY,
   },
   body: {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   textBold: {
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   textHighlight: {
     color: DS_COLORS.PRIMARY,

@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export const checkinStyles = StyleSheet.create({
   container: {
@@ -16,7 +16,7 @@ export const checkinStyles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },
@@ -33,12 +33,12 @@ export const checkinStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 20,
   },
   requirementText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
     flex: 1,
   },
@@ -50,14 +50,14 @@ export const checkinStyles = StyleSheet.create({
   statusCard: {
     flex: 1,
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     padding: 16,
     alignItems: "center",
   },
   statusIcon: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: DS_RADIUS.iconButton,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
@@ -74,16 +74,16 @@ export const checkinStyles = StyleSheet.create({
     gap: 6,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
   },
   statusDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
   statusChipText: {
     fontSize: 12,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   violationBanner: {
     flexDirection: "row",
@@ -92,18 +92,18 @@ export const checkinStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.dangerLightBg,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 20,
   },
   violationText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.dangerMid,
     flex: 1,
   },
   sessionContainer: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
     marginBottom: 20,
   },
@@ -121,12 +121,12 @@ export const checkinStyles = StyleSheet.create({
   liveDot: {
     width: 10,
     height: 10,
-    borderRadius: 5,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.success,
   },
   liveText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.success,
   },
   lockWarning: {
@@ -140,7 +140,7 @@ export const checkinStyles = StyleSheet.create({
   },
   timerValue: {
     fontSize: 56,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   timerComplete: {
@@ -158,13 +158,13 @@ export const checkinStyles = StyleSheet.create({
   progressBar: {
     height: 8,
     backgroundColor: DS_COLORS.grayLight,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
     backgroundColor: DS_COLORS.accent,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
   progressFillComplete: {
     backgroundColor: DS_COLORS.success,
@@ -192,14 +192,14 @@ export const checkinStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.accent,
     paddingVertical: 20,
     paddingHorizontal: 40,
-    borderRadius: 30,
+    borderRadius: DS_RADIUS.joinCta,
   },
   startButtonDisabled: {
     backgroundColor: DS_COLORS.silverRank,
   },
   startButtonText: {
     fontSize: 18,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   startHint: {
@@ -221,13 +221,13 @@ export const checkinStyles = StyleSheet.create({
   },
   infoSection: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     padding: 16,
     marginTop: 8,
   },
   infoTitle: {
     fontSize: 14,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 12,
   },
@@ -240,14 +240,14 @@ export const checkinStyles = StyleSheet.create({
   infoNumber: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.accentSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   infoNumberText: {
     fontSize: 12,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
   },
   infoText: {
@@ -266,7 +266,7 @@ export const checkinStyles = StyleSheet.create({
   verifyButton: {
     backgroundColor: DS_COLORS.darkSurface,
     paddingVertical: 18,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     alignItems: "center",
   },
   verifyButtonDisabled: {
@@ -274,7 +274,7 @@ export const checkinStyles = StyleSheet.create({
   },
   verifyButtonText: {
     fontSize: 15,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     letterSpacing: 0.5,
   },
@@ -290,7 +290,7 @@ export const checkinStyles = StyleSheet.create({
   verifiedBadge: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.successSoft,
     alignItems: "center",
     justifyContent: "center",
@@ -298,7 +298,7 @@ export const checkinStyles = StyleSheet.create({
   },
   verifiedTitle: {
     fontSize: 24,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -313,13 +313,13 @@ export const checkinStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.surface,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
   backButtonText: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
 });

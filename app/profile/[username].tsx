@@ -25,7 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { shareProfile } from "@/lib/share";
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
   centered: { justifyContent: "center", alignItems: "center", paddingHorizontal: 24 },
   muted: { fontSize: 15, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, textAlign: "center" },
-  retry: { marginTop: 16, paddingHorizontal: 22, paddingVertical: 10, borderRadius: 12, backgroundColor: DS_COLORS.PRIMARY },
+  retry: { marginTop: 16, paddingHorizontal: 22, paddingVertical: 10, borderRadius: DS_RADIUS.MD, backgroundColor: DS_COLORS.PRIMARY },
   retryTxt: { color: DS_COLORS.WHITE, fontWeight: "500", fontSize: 14 },
   header: {
     flexDirection: "row",
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
   username: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, letterSpacing: -0.3 },
   handleAt: { marginTop: 2, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
   tierRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 6 },
-  tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 },
+  tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: DS_RADIUS.MD },
   tierPillText: { fontSize: 11, fontWeight: "500" },
   joined: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
   bio: { marginTop: 8, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, lineHeight: 18 },
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginBottom: 16, alignItems: "center" },
   btnPrimary: {
     flex: 2,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.PRIMARY,
     paddingVertical: 12,
     alignItems: "center",
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
   shareSq: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1.5,
     borderColor: DS_COLORS.PROFILE_BORDER_ALT,
     backgroundColor: DS_COLORS.BG_CARD,
@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.dangerLight,
     borderWidth: 1,
     borderColor: DS_COLORS.alertRedBorder,
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
   gateIcon: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.SURFACE,
     alignItems: "center",
     justifyContent: "center",
@@ -846,14 +846,14 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     paddingVertical: 14,
     alignItems: "center",
   },
   statIconWrap: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 6,
@@ -873,12 +873,12 @@ const styles = StyleSheet.create({
   tabTxtOff: { fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
   tabPad: { paddingHorizontal: 20, paddingTop: 14, gap: 12 },
   hint: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, textAlign: "center", paddingVertical: 12 },
-  chCard: { backgroundColor: DS_COLORS.BG_CARD, borderRadius: 16, padding: 16 },
+  chCard: { backgroundColor: DS_COLORS.BG_CARD, borderRadius: DS_RADIUS.LG, padding: 16 },
   chTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   chIconBox: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.PROFILE_STAT_TEAL_BG,
     alignItems: "center",
     justifyContent: "center",
@@ -886,8 +886,8 @@ const styles = StyleSheet.create({
   chMid: { flex: 1, minWidth: 0 },
   chTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   chSub: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, marginTop: 2 },
-  chTrack: { height: 4, borderRadius: 2, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 12, overflow: "hidden" },
-  chFill: { height: 4, borderRadius: 2 },
+  chTrack: { height: 4, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 12, overflow: "hidden" },
+  chFill: { height: 4, borderRadius: DS_RADIUS.SM },
   chPctBadge: { fontSize: 13, fontWeight: "500", flexShrink: 0 },
   postsEmpty: { alignItems: "center", paddingVertical: 24 },
   postsEmptyTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
@@ -905,7 +905,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
     flexGrow: 1,
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     paddingVertical: 16,
     paddingHorizontal: 8,
     alignItems: "center",
@@ -914,13 +914,13 @@ const styles = StyleSheet.create({
   badgeIconOuter: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: DS_RADIUS.iconButton,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
   },
   badgeName: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, textAlign: "center" },
   badgeProg: { fontSize: 11, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED, marginTop: 4 },
-  nextBarTrack: { width: "100%", height: 3, borderRadius: 2, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 8, overflow: "hidden" },
-  nextBarFill: { height: 3, borderRadius: 2, backgroundColor: DS_COLORS.PRIMARY },
+  nextBarTrack: { width: "100%", height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 8, overflow: "hidden" },
+  nextBarFill: { height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PRIMARY },
 });

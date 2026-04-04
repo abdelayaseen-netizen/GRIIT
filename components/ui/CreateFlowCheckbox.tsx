@@ -1,3 +1,4 @@
+import { DS_RADIUS } from "@/lib/design-system";
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
   box: {
     width: BOX_SIZE,
     height: BOX_SIZE,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     backgroundColor: colors.cardBg,
     borderWidth: 1.5,
     borderColor: colors.borderLight,

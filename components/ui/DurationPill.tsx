@@ -1,3 +1,4 @@
+import { DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import * as t from "@/lib/theme/tokens";
@@ -43,7 +44,7 @@ const s = StyleSheet.create({
   },
   text: {
     fontSize: t.typography.primaryBody.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: t.colors.textPrimary,
   },
   textSelected: { color: t.colors.accentOrangeCreate },

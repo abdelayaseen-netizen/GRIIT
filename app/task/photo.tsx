@@ -8,7 +8,7 @@ import { Camera, Check, ImagePlus } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useApp } from "@/contexts/AppContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { useInlineError } from "@/hooks/useInlineError";
 import { trackEvent } from "@/lib/analytics";
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     marginBottom: 16,
@@ -270,21 +270,21 @@ const styles = StyleSheet.create({
   preview: {
     width: "100%",
     height: 240,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: DS_COLORS.black,
   },
   retakeButton: {
     backgroundColor: DS_COLORS.white,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 16,
     alignItems: 'center',
     marginTop: 12,
   },
   retakeButtonText: {
     fontSize: 15,
-    fontWeight: '600' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   buttonRow: {
@@ -296,12 +296,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: DS_COLORS.taskEmerald,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 16,
   },
   captureButtonText: {
     fontSize: 16,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   galleryButton: {
@@ -312,12 +312,12 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.surface,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 16,
   },
   galleryButtonText: {
     fontSize: 16,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   submitButton: {
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: DS_COLORS.black,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 16,
   },
   submitButtonDisabled: {
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 16,
-    fontWeight: '700' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 });

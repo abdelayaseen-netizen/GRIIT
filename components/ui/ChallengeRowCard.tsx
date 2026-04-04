@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, Calendar } from "lucide-react-native";
-import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 function getStripeColorByCategory(category?: string): string {
   const cat = (category ?? "").toUpperCase();
@@ -98,7 +98,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     overflow: "hidden",
     borderWidth: 0.5,
     borderColor: DS_COLORS.BORDER,
@@ -120,7 +120,7 @@ const s = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     flex: 1,
   },
@@ -132,7 +132,7 @@ const s = StyleSheet.create({
   },
   diffText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   desc: {
     fontSize: 12,

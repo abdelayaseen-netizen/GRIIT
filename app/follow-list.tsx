@@ -16,7 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system"
 import { useAuth } from "@/contexts/AuthContext";
 import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.dangerLight,
     borderWidth: 1,
     borderColor: DS_COLORS.alertRedBorder,
@@ -293,11 +293,11 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.BORDER,
   },
   rowMain: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, minWidth: 0 },
-  avatarImg: { width: 44, height: 44, borderRadius: 22, backgroundColor: DS_COLORS.photoThumbBg },
+  avatarImg: { width: 44, height: 44, borderRadius: DS_RADIUS.iconButton, backgroundColor: DS_COLORS.photoThumbBg },
   avatarFallback: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: DS_RADIUS.iconButton,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   followBtn: {
     paddingVertical: 6,
     paddingHorizontal: 16,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.PRIMARY,
     minWidth: 92,
     alignItems: "center",

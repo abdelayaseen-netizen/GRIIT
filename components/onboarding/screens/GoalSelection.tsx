@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
 import { ONBOARDING_COLORS as C, ONBOARDING_TYPOGRAPHY as T, ONBOARDING_SPACING as S, GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
-import { DS_RADIUS } from "@/lib/design-system";
+import { DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { track } from "@/lib/analytics";
 
@@ -80,8 +80,8 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.background, paddingHorizontal: S.screenPadding, paddingTop: 20, paddingBottom: 40 },
   header: { marginBottom: 20 },
-  stepLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
-  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
+  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
+  title: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
   subtitle: { fontSize: T.bodySize, fontWeight: "400", lineHeight: 24, color: C.textSecondary },
   scroll: { flex: 1 },
   grid: { gap: S.cardGap, paddingBottom: 12 },
@@ -98,18 +98,18 @@ const styles = StyleSheet.create({
   goalCardSelected: { borderWidth: 2, borderColor: C.borderActive, backgroundColor: C.surface },
   goalEmoji: { fontSize: 28, width: 40, textAlign: "center" },
   goalTextContainer: { flex: 1 },
-  goalTitle: { fontSize: T.bodySize, fontWeight: "600", color: C.textPrimary, marginBottom: 2 },
+  goalTitle: { fontSize: T.bodySize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.textPrimary, marginBottom: 2 },
   goalTitleSelected: { color: C.textPrimary },
   goalSubtitle: { fontSize: T.captionSize, color: C.textTertiary },
   checkMark: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: C.borderActive,
     justifyContent: "center",
     alignItems: "center",
   },
-  checkMarkText: { color: C.WHITE, fontSize: 12, fontWeight: "700" },
+  checkMarkText: { color: C.WHITE, fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   ctaContainer: { paddingTop: 16 },
   primaryButton: {
     backgroundColor: C.darkCta,
@@ -119,6 +119,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryButtonDisabled: { backgroundColor: C.DISABLED_BG },
-  primaryButtonText: { fontSize: 17, fontWeight: "700", lineHeight: 22, color: C.textOnAccent },
+  primaryButtonText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 22, color: C.textOnAccent },
   primaryButtonTextDisabled: { color: C.WHITE },
 });

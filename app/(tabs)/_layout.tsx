@@ -3,7 +3,7 @@ import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Sentry from "@sentry/react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_MEASURES, DS_SHADOWS, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_MEASURES, DS_SHADOWS, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 
 export default function TabLayout() {
   void usePathname();
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     backgroundColor: GRIIT_COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
   },
   errorBoundaryButtonText: {
     color: DS_COLORS.WHITE,

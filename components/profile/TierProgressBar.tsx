@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 export interface TierProgressBarProps {
   currentPoints: number;
@@ -57,19 +57,19 @@ const styles = StyleSheet.create({
   },
   pillText: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   track: {
     height: 6,
     backgroundColor: DS_COLORS.borderAlt,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
   },
   fill: {
     height: "100%",
     backgroundColor: DS_COLORS.black,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
   },
   ptsText: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,

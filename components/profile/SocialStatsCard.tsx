@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Users, Target, Award } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 
 export interface SocialStatsCardProps {
   friendRank?: number | null;
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize - 2,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   row: {
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginTop: DS_SPACING.xs,
   },

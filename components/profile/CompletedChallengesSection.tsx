@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Award, ChevronRight } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 import { formatShortDate } from "@/lib/date-utils";
 
 export interface CompletedChallengeItem {
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize - 2,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   loading: {
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   emptySub: {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   challengeName: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   completedAt: {

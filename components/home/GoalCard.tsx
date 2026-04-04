@@ -11,7 +11,7 @@ import {
   MapPin,
   ChevronDown,
 } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system"
 import { formatTimeHHMM } from "@/lib/time-enforcement";
 
 function taskTypeIcon(type?: string): React.ReactNode {
@@ -249,7 +249,7 @@ const s = StyleSheet.create({
     width: 34,
     height: 34,
     backgroundColor: DS_COLORS.GREEN_BG,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -259,25 +259,25 @@ const s = StyleSheet.create({
   challengeMid: { flex: 1 },
   challengeName: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginBottom: 2,
   },
   progressBg: {
     height: 3,
     backgroundColor: DS_COLORS.CARD_ALT_BG,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
   },
-  progressFill: { height: 3, backgroundColor: DS_COLORS.DISCOVER_GREEN, borderRadius: 2 },
+  progressFill: { height: 3, backgroundColor: DS_COLORS.DISCOVER_GREEN, borderRadius: DS_RADIUS.SM },
   progressFillCompleted: { backgroundColor: DS_COLORS.GREEN },
-  count: { fontSize: 12, fontWeight: "700", color: DS_COLORS.DISCOVER_CORAL },
+  count: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_CORAL },
   countCompleted: { color: DS_COLORS.GREEN },
   doneRow: {
     backgroundColor: DS_COLORS.GREEN_BG,
     borderWidth: 1,
     borderColor: DS_COLORS.COMPLETED_BORDER,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     padding: 10,
     marginBottom: 6,
     flexDirection: "row",
@@ -286,7 +286,7 @@ const s = StyleSheet.create({
   },
   todoRow: {
     backgroundColor: DS_COLORS.chipFill,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     padding: 10,
     marginBottom: 6,
     flexDirection: "row",
@@ -298,7 +298,7 @@ const s = StyleSheet.create({
   doneCircle: {
     width: 18,
     height: 18,
-    borderRadius: 9,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.DISCOVER_GREEN,
     alignItems: "center",
     justifyContent: "center",
@@ -306,7 +306,7 @@ const s = StyleSheet.create({
   todoCircle: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 2,
     borderColor: DS_COLORS.BORDER,
     alignItems: "center",
@@ -321,16 +321,16 @@ const s = StyleSheet.create({
   },
   todoText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.grayDarker },
   taskTimeSub: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 1 },
-  doneRight: { fontSize: 10, fontWeight: "600", color: DS_COLORS.DISCOVER_GREEN },
+  doneRight: { fontSize: 10, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.DISCOVER_GREEN },
   startBtn: {
     backgroundColor: DS_COLORS.TEXT_PRIMARY,
     paddingHorizontal: 14,
     paddingVertical: 5,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
   },
   startBtnText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
   empty: {
@@ -342,7 +342,7 @@ const s = StyleSheet.create({
   emptyTitle: {
     marginTop: DS_SPACING.md,
     fontSize: DS_TYPOGRAPHY.SIZE_MD,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     textAlign: "center",
   },
@@ -359,12 +359,12 @@ const s = StyleSheet.create({
     backgroundColor: GRIIT_COLORS.primary,
     paddingVertical: 14,
     paddingHorizontal: DS_SPACING.lg,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     alignItems: "center",
   },
   emptyCtaText: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
 });

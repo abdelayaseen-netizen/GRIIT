@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Shield, Trophy } from "lucide-react-native";
-import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const STREAK_MILESTONES = [
   { days: 3, name: "3-Day Streak badge", icon: "Flame" },
@@ -53,8 +53,8 @@ const s = StyleSheet.create({
     borderLeftColor: DS_COLORS.ACCENT,
   },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  head: { fontSize: 13, fontWeight: "700", color: DS_COLORS.DISCOVER_INK },
-  away: { fontSize: 11, fontWeight: "600", color: DS_COLORS.ACCENT },
+  head: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_INK },
+  away: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.ACCENT },
   row: { marginTop: 10, flexDirection: "row", alignItems: "center", gap: 10 },
   iconBox: {
     width: 32,
@@ -65,16 +65,16 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   mid: { flex: 1 },
-  title: { fontSize: 14, fontWeight: "700", color: DS_COLORS.DISCOVER_INK, marginBottom: 6 },
+  title: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_INK, marginBottom: 6 },
   barBg: {
     height: DS_MEASURES.PROGRESS_BAR_HEIGHT,
     backgroundColor: DS_COLORS.PROGRESS_TRACK_WARM,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
   },
   barFill: {
     height: DS_MEASURES.PROGRESS_BAR_HEIGHT,
     backgroundColor: DS_COLORS.ACCENT,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
   },
 });

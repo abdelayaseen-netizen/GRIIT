@@ -4,7 +4,7 @@ import { Target } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system"
 
 export default function EmptyChallengesCard() {
   const router = useRouter();
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: DS_TYPOGRAPHY.body.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginTop: DS_SPACING.md,
     textAlign: "center",
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 });

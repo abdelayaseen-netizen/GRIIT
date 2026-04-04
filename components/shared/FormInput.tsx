@@ -77,7 +77,7 @@ export default function FormInput({
 
 const s = StyleSheet.create({
   wrap: { marginBottom: DS_SPACING.md },
-  label: { marginBottom: DS_SPACING.xs, color: DS_COLORS.TEXT_PRIMARY, fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: "600" },
+  label: { marginBottom: DS_SPACING.xs, color: DS_COLORS.TEXT_PRIMARY, fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   input: {
     borderWidth: 1,
     borderColor: DS_COLORS.BORDER,

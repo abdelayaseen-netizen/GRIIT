@@ -6,16 +6,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   Linking,
   Pressable,
+  Platform,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { X, Flame, Zap, BarChart2, Users } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system"
 import { getOfferings, purchasePackage, restorePurchases } from "@/lib/revenue-cat";
 import type { PurchasesPackage } from "react-native-purchases";
 import { trackEvent } from "@/lib/analytics";
@@ -146,6 +147,49 @@ export default function PaywallScreen() {
 
   const packages = [...(offering?.availablePackages ?? [])].sort((a, b) => packageSortKey(a) - packageSortKey(b));
 
+  const renderPlanItem = useCallback(
+    ({ item: pkg }: { item: PurchasesPackage }) => {
+      const isSelected = selectedPackage?.identifier === pkg.identifier;
+      const title = pkg.product?.title ?? pkg.identifier;
+      const price = pkg.product?.priceString ?? "—";
+      const subtitle = pkg.product?.description?.trim() || pkg.packageType.replace(/_/g, " ");
+      return (
+        <TouchableOpacity
+          style={[styles.planCard, isSelected && styles.planCardSelected]}
+          onPress={() => {
+            setSelectedPackage(pkg);
+            try {
+              trackEvent("paywall_plan_selected", { plan: pkg.identifier });
+            } catch {
+              /* non-fatal */
+            }
+          }}
+          activeOpacity={0.85}
+          disabled={purchasing}
+          accessibilityLabel={`Select ${title}`}
+          accessibilityRole="button"
+          accessibilityState={{ selected: isSelected, disabled: purchasing }}
+        >
+          <View style={styles.planRow}>
+            <View style={[styles.radio, isSelected && styles.radioSelected]}>
+              {isSelected && <View style={styles.radioInner} />}
+            </View>
+            <View style={styles.planMiddle}>
+              <Text style={styles.planLabel}>{title}</Text>
+              <Text style={styles.planBillingNote} numberOfLines={2}>
+                {subtitle}
+              </Text>
+            </View>
+            <View style={styles.planRight}>
+              <Text style={styles.planPrice}>{price}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [selectedPackage?.identifier, purchasing]
+  );
+
   const selectedTitle = selectedPackage?.product?.title ?? selectedPackage?.identifier ?? "Premium";
   const selectedPrice = selectedPackage?.product?.priceString ?? "—";
 
@@ -170,103 +214,78 @@ export default function PaywallScreen() {
         <X size={18} color={DS_COLORS.TEXT_SECONDARY} />
       </TouchableOpacity>
 
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 160 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.heroSection}>
-          <View style={styles.iconBadge}>
-            <Flame size={36} color={DS_COLORS.WHITE} />
-          </View>
-          <Text style={styles.headline}>Unlock GRIIT Premium</Text>
-          <Text style={styles.subheadline}>Build discipline without limits.</Text>
-        </View>
-
-        <View style={styles.valueCard}>
-          {VALUE_PROPS.map((prop, index) => (
-            <View key={prop.title}>
-              <View style={styles.valueRow}>
-                <prop.icon size={20} color={DS_COLORS.ACCENT_PRIMARY} />
-                <View style={styles.valueTextContainer}>
-                  <Text style={styles.valueTitle}>{prop.title}</Text>
-                  <Text style={styles.valueSubtitle}>{prop.subtitle}</Text>
-                </View>
+      <FlatList
+        data={loading ? [] : packages}
+        keyExtractor={(pkg) => pkg.identifier}
+        extraData={selectedPackage?.identifier}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        renderItem={renderPlanItem}
+        ListHeaderComponent={
+          <>
+            <View style={styles.heroSection}>
+              <View style={styles.iconBadge}>
+                <Flame size={36} color={DS_COLORS.WHITE} />
               </View>
-              {index < VALUE_PROPS.length - 1 && <View style={styles.valueDivider} />}
+              <Text style={styles.headline}>Unlock GRIIT Premium</Text>
+              <Text style={styles.subheadline}>Build discipline without limits.</Text>
             </View>
-          ))}
-        </View>
 
-        <Text style={styles.planSectionLabel}>CHOOSE YOUR PLAN</Text>
-
-        {loading ? (
-          <View style={styles.loadingPlans}>
-            <ActivityIndicator color={GRIIT_COLORS.primary} size="large" accessibilityLabel="Loading plans" />
-          </View>
-        ) : packages.length === 0 ? (
-          <Text style={styles.noPlansText}>Subscription plans are unavailable. Check your connection or try again later.</Text>
-        ) : (
-          <View style={styles.planContainer}>
-            {packages.map((pkg) => {
-              const isSelected = selectedPackage?.identifier === pkg.identifier;
-              const title = pkg.product?.title ?? pkg.identifier;
-              const price = pkg.product?.priceString ?? "—";
-              const subtitle = pkg.product?.description?.trim() || pkg.packageType.replace(/_/g, " ");
-              return (
-                <TouchableOpacity
-                  key={pkg.identifier}
-                  style={[styles.planCard, isSelected && styles.planCardSelected]}
-                  onPress={() => {
-                    setSelectedPackage(pkg);
-                    try {
-                      trackEvent("paywall_plan_selected", { plan: pkg.identifier });
-                    } catch {
-                      /* non-fatal */
-                    }
-                  }}
-                  activeOpacity={0.85}
-                  disabled={purchasing}
-                  accessibilityLabel={`Select ${title}`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isSelected, disabled: purchasing }}
-                >
-                  <View style={styles.planRow}>
-                    <View style={[styles.radio, isSelected && styles.radioSelected]}>
-                      {isSelected && <View style={styles.radioInner} />}
-                    </View>
-                    <View style={styles.planMiddle}>
-                      <Text style={styles.planLabel}>{title}</Text>
-                      <Text style={styles.planBillingNote} numberOfLines={2}>
-                        {subtitle}
-                      </Text>
-                    </View>
-                    <View style={styles.planRight}>
-                      <Text style={styles.planPrice}>{price}</Text>
+            <View style={styles.valueCard}>
+              {VALUE_PROPS.map((prop, index) => (
+                <View key={prop.title}>
+                  <View style={styles.valueRow}>
+                    <prop.icon size={20} color={DS_COLORS.ACCENT_PRIMARY} />
+                    <View style={styles.valueTextContainer}>
+                      <Text style={styles.valueTitle}>{prop.title}</Text>
+                      <Text style={styles.valueSubtitle}>{prop.subtitle}</Text>
                     </View>
                   </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
+                  {index < VALUE_PROPS.length - 1 && <View style={styles.valueDivider} />}
+                </View>
+              ))}
+            </View>
 
-        <View style={styles.socialProofRow}>
-          <View style={styles.avatarStack}>
-            {[DS_COLORS.AVATAR_COLOR_1, DS_COLORS.AVATAR_COLOR_2, DS_COLORS.AVATAR_COLOR_3].map((color, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.avatar,
-                  { backgroundColor: color, marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i },
-                ]}
-              >
-                <Text style={styles.avatarText}>{["A", "M", "J"][i]}</Text>
-              </View>
-            ))}
+            <Text style={styles.planSectionLabel}>CHOOSE YOUR PLAN</Text>
+          </>
+        }
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loadingPlans}>
+              <ActivityIndicator color={GRIIT_COLORS.primary} size="large" accessibilityLabel="Loading plans" />
+            </View>
+          ) : (
+            <Text style={styles.noPlansText}>
+              Subscription plans are unavailable. Check your connection or try again later.
+            </Text>
+          )
+        }
+        ListFooterComponent={
+          <View style={{ marginTop: 10, marginBottom: 20 }}>
+          <View style={styles.socialProofRow}>
+            <View style={styles.avatarStack}>
+              {[DS_COLORS.AVATAR_COLOR_1, DS_COLORS.AVATAR_COLOR_2, DS_COLORS.AVATAR_COLOR_3].map((color, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.avatar,
+                    { backgroundColor: color, marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i },
+                  ]}
+                >
+                  <Text style={styles.avatarText}>{["A", "M", "J"][i]}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.socialProofText}>Join 2,800+ people building discipline</Text>
           </View>
-          <Text style={styles.socialProofText}>Join 2,800+ people building discipline</Text>
-        </View>
-      </ScrollView>
+          </View>
+        }
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 160 }]}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === "android"}
+      />
 
       <View style={[styles.stickyBar, { paddingBottom: insets.bottom + 12 }]}>
         {errorMessage ? (
@@ -339,7 +358,7 @@ const styles = StyleSheet.create({
     right: 20,
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.BG_CARD,
     borderWidth: 1,
     borderColor: DS_COLORS.BORDER_CARD,
@@ -358,7 +377,7 @@ const styles = StyleSheet.create({
   iconBadge: {
     width: 72,
     height: 72,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.ACCENT_PRIMARY,
     alignItems: "center",
     justifyContent: "center",
@@ -454,7 +473,7 @@ const styles = StyleSheet.create({
   radio: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1.5,
     borderColor: DS_COLORS.BORDER_CARD,
     alignItems: "center",
@@ -467,7 +486,7 @@ const styles = StyleSheet.create({
   radioInner: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.WHITE,
   },
   planMiddle: {
@@ -504,7 +523,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,

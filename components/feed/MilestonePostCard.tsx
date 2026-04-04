@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Star } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
@@ -80,7 +80,7 @@ export const MilestonePostCard = React.memo(MilestonePostCardInner);
 const styles = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     overflow: "hidden",
   },
   banner: {
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.FEED_MILESTONE_ICON_SURFACE,
     alignItems: "center",
     justifyContent: "center",
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
   },
   track: {
     height: 3,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
     overflow: "hidden",
   },
   fill: {
     height: 3,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
   },
 });

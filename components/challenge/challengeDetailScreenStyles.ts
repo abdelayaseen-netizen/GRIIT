@@ -1,5 +1,5 @@
 import { Platform, StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_MEASURES } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_MEASURES } from "@/lib/design-system"
 
 export const challengeDetailStyles = StyleSheet.create({
   container: {
@@ -76,7 +76,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   emptyBtnText: {
     fontSize: DS_TYPOGRAPHY.buttonSmall.fontSize,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
   },
 
@@ -104,7 +104,7 @@ export const challengeDetailStyles = StyleSheet.create({
   backPill: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: "rgba(255,255,255,0.1)",
     alignItems: "center",
     justifyContent: "center",
@@ -112,11 +112,11 @@ export const challengeDetailStyles = StyleSheet.create({
   backPill24h: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
   },
   topNavTitle: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
     letterSpacing: 0.5,
   },
@@ -127,7 +127,7 @@ export const challengeDetailStyles = StyleSheet.create({
   morePill: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: "rgba(255,255,255,0.1)",
     alignItems: "center",
     justifyContent: "center",
@@ -145,7 +145,7 @@ export const challengeDetailStyles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     backgroundColor: "rgba(232,89,60,0.2)",
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 4,
     paddingHorizontal: 12,
     marginBottom: 10,
@@ -154,12 +154,12 @@ export const challengeDetailStyles = StyleSheet.create({
   activeDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.accent,
   },
   activeBadgeText: {
     fontSize: 11,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.accentMuted,
     letterSpacing: 0.5,
   },
@@ -178,14 +178,14 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   dailyLabelText: {
     fontSize: 11,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: "rgba(255,255,255,0.9)",
     letterSpacing: 1.5,
     textTransform: "uppercase" as const,
   },
   heroTitle: {
     fontSize: 28,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     letterSpacing: -0.3,
     lineHeight: 34,
@@ -220,12 +220,12 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   difficultyPillText: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   infoChip: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.08)",
   },
@@ -254,14 +254,14 @@ export const challengeDetailStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.surface,
     marginTop: -14,
     marginHorizontal: 0,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 14,
   },
   socialProofTitle: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.challengeHeaderDark,
   },
   socialProofSub: {
@@ -271,7 +271,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   todayGoalCard: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     borderWidth: 1.5,
     borderColor: "rgba(232,89,60,0.12)",
@@ -279,7 +279,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   dayCounterText: {
     fontSize: 12,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.accent,
     marginBottom: 10,
   },
@@ -291,7 +291,7 @@ export const challengeDetailStyles = StyleSheet.create({
   todayGoalCircle: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: DS_RADIUS.iconButton,
     borderWidth: 2.5,
     borderColor: DS_COLORS.accent,
     alignItems: "center",
@@ -300,7 +300,7 @@ export const challengeDetailStyles = StyleSheet.create({
   todayGoalCircleInner: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: "rgba(232,89,60,0.08)",
   },
   todayGoalTextWrap: {
@@ -308,7 +308,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   todayGoalTitle: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.challengeHeaderDark,
   },
   todayGoalSubtitle: {
@@ -319,26 +319,26 @@ export const challengeDetailStyles = StyleSheet.create({
   todayGoalArrowWrap: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(232,89,60,0.08)",
   },
   progressSectionCard: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginBottom: 16,
   },
   progressTrack: {
     height: 8,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     backgroundColor: DS_COLORS.surfaceMuted,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     backgroundColor: DS_COLORS.accent,
   },
   progressDotsRow: {
@@ -349,7 +349,7 @@ export const challengeDetailStyles = StyleSheet.create({
   progressDot: {
     width: 10,
     height: 10,
-    borderRadius: 5,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.surfaceMuted,
     borderWidth: 2,
     borderColor: DS_COLORS.border,
@@ -370,7 +370,7 @@ export const challengeDetailStyles = StyleSheet.create({
   progressLabelStart: {
     fontSize: 10,
     color: DS_COLORS.accent,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
 
   countdownCard: {
@@ -378,7 +378,7 @@ export const challengeDetailStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: DS_COLORS.white,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: DS_SPACING.lg,
@@ -393,7 +393,7 @@ export const challengeDetailStyles = StyleSheet.create({
   liveDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
   countdownLabel: {
     fontSize: 15,
@@ -402,7 +402,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   countdownValue: {
     fontSize: 24,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     fontVariant: ["tabular-nums"] as const,
     letterSpacing: 0.5,
   },
@@ -414,7 +414,7 @@ export const challengeDetailStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.dangerSoft,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 16,
   },
   expiredText: {
@@ -424,7 +424,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
 
   progressSimpleCard: {
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 16,
     marginBottom: 12,
   },
@@ -442,12 +442,12 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   progressValue: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     fontVariant: ["tabular-nums"] as const,
   },
@@ -459,7 +459,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   progressBarFill: {
     height: "100%",
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
   streakAlert: {
     flexDirection: "row",
@@ -467,7 +467,7 @@ export const challengeDetailStyles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     marginBottom: 6,
   },
@@ -481,17 +481,17 @@ export const challengeDetailStyles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     marginTop: 4,
   },
   failAlertText: {
     fontSize: 13,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.dangerDark,
   },
   failCtaWrap: {
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1,
     padding: 16,
     marginBottom: 16,
@@ -504,12 +504,12 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   failCtaBtn: {
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
   },
   failCtaBtnText: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
   },
 
@@ -525,7 +525,7 @@ export const challengeDetailStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: DS_COLORS.surfaceMuted,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     padding: 16,
     marginBottom: DS_SPACING.lg,
     borderWidth: 0,
@@ -536,7 +536,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   statsRowValue: {
     fontSize: 24,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
     marginBottom: DS_SPACING.xs,
   },
@@ -555,7 +555,7 @@ export const challengeDetailStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: DS_SPACING.cardPadding,
     marginBottom: DS_SPACING.lg,
     borderWidth: DS_BORDERS.width,
@@ -567,7 +567,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   progressStatValue: {
     fontSize: 24,
-    fontWeight: "800" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.accent,
     marginBottom: DS_SPACING.xs,
   },
@@ -594,7 +594,7 @@ export const challengeDetailStyles = StyleSheet.create({
   stackAvatar: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     borderWidth: 2,
     borderColor: DS_COLORS.white,
   },
@@ -603,7 +603,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   socialPrimary: {
     fontSize: 15,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     letterSpacing: -0.1,
   },
@@ -626,7 +626,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   statNumber: {
     fontSize: DS_TYPOGRAPHY.statValue.fontSize,
-    fontWeight: "800" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     letterSpacing: -0.5,
     marginBottom: DS_SPACING.xs,
   },
@@ -649,7 +649,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   missionsCard: {
     backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     overflow: "hidden" as const,
     borderWidth: DS_BORDERS.width,
     borderColor: DS_COLORS.border,
@@ -669,7 +669,7 @@ export const challengeDetailStyles = StyleSheet.create({
   missionIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -685,11 +685,11 @@ export const challengeDetailStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.ACCENT_TINT,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   journalPillText: {
     fontSize: 10,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
   timePill: {
@@ -699,27 +699,27 @@ export const challengeDetailStyles = StyleSheet.create({
     backgroundColor: "rgba(14,165,233,0.10)",
     paddingHorizontal: 7,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   timePillText: {
     fontSize: 10,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.linkBlue,
   },
   proBadge: {
     backgroundColor: DS_COLORS.ACCENT_PRIMARY,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
   proBadgeText: {
     fontSize: 10,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.WHITE,
   },
   missionTitle: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     letterSpacing: -0.1,
   },
@@ -755,7 +755,7 @@ export const challengeDetailStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.CARD_ALT_BG,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   reqChipText: {
     fontSize: 10,
@@ -768,7 +768,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   startActionText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   completedBadge: {
     flexDirection: "row",
@@ -777,11 +777,11 @@ export const challengeDetailStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.successSoft,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
   },
   completedBadgeText: {
     fontSize: 12,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.success,
   },
 
@@ -809,7 +809,7 @@ export const challengeDetailStyles = StyleSheet.create({
   ruleBullet: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.successSoft,
     alignItems: "center",
     justifyContent: "center",
@@ -829,7 +829,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   ruleTextWarning: {
     color: DS_COLORS.danger,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   aboutSection: {
     marginBottom: DS_SPACING.lg,
@@ -869,7 +869,7 @@ export const challengeDetailStyles = StyleSheet.create({
   aboutDetailValue: {
     flex: 1,
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "right" as const,
   },
@@ -890,7 +890,7 @@ export const challengeDetailStyles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 52,
     paddingVertical: 15,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     borderWidth: 1.5,
     borderColor: DS_COLORS.border,
     backgroundColor: "transparent",
@@ -898,13 +898,13 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   leaveBtnInFlowText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
   },
   commitCtaInFlow: {
     marginTop: 8,
     minHeight: 56,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
@@ -912,7 +912,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   commitCtaInFlowText: {
     fontSize: 16,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.surface,
   },
   ctaMicroInFlow: {
@@ -948,7 +948,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   ctaText: {
     fontSize: 17,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   inviteLink: {
@@ -959,7 +959,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   inviteLinkText: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.accent,
   },
   ctaMicro: {
@@ -979,7 +979,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   disabledCtaText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textMuted,
   },
 
@@ -995,7 +995,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   commitmentCard: {
     backgroundColor: DS_COLORS.BG_PRIMARY,
-    borderRadius: 24,
+    borderRadius: DS_RADIUS.modal,
     padding: 24,
     width: "100%",
     maxWidth: 360,
@@ -1012,12 +1012,12 @@ export const challengeDetailStyles = StyleSheet.create({
   commitmentCloseText: {
     fontSize: 20,
     color: DS_COLORS.textMuted,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   commitmentShieldWrap: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.GRAY_CARD_BG,
     alignItems: "center",
     justifyContent: "center",
@@ -1025,7 +1025,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   commitmentTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginTop: DS_SPACING.xl,
@@ -1035,7 +1035,7 @@ export const challengeDetailStyles = StyleSheet.create({
     width: "100%",
     marginTop: DS_SPACING.xl,
     backgroundColor: DS_COLORS.BG_PRIMARY,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
@@ -1054,14 +1054,14 @@ export const challengeDetailStyles = StyleSheet.create({
     width: "100%",
     marginTop: DS_SPACING.xl,
     backgroundColor: DS_COLORS.surfaceSubtle,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: DS_SPACING.cardPadding,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
   commitmentCheckCardTitle: {
     fontSize: 11,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textMuted,
     letterSpacing: 1,
     marginBottom: DS_SPACING.md,
@@ -1088,7 +1088,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   commitmentValue: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "right",
     flex: 1,
@@ -1098,7 +1098,7 @@ export const challengeDetailStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: DS_COLORS.ERROR_BG,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: DS_SPACING.lg,
     marginTop: DS_SPACING.xl,
     width: "100%",
@@ -1119,7 +1119,7 @@ export const challengeDetailStyles = StyleSheet.create({
   commitmentCheckbox: {
     width: 22,
     height: 22,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
     borderWidth: 2,
     borderColor: DS_COLORS.border,
     alignItems: "center",
@@ -1137,7 +1137,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   commitmentConfirmBtn: {
     backgroundColor: DS_COLORS.PRESSED_ORANGE,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 16,
     minHeight: 50,
     alignItems: "center",
@@ -1150,7 +1150,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   commitmentConfirmText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   commitmentCancelBtn: {

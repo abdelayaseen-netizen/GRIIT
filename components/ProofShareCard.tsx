@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Image } from "expo-image";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
-import { GRIIT_COLORS, DS_RADIUS, DS_COLORS } from "@/lib/design-system";
+import { GRIIT_COLORS, DS_RADIUS, DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 
 interface ProofShareCardProps {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 6,
     color: GRIIT_COLORS.primaryAccent,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     marginBottom: 20,
   },
   dayBadge: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   dayNumber: {
     fontSize: 52,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     lineHeight: 56,
   },
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   },
   challengeTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
     textAlign: "center",
     marginBottom: 6,
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   proofThumb: {
     width: "100%",
     aspectRatio: 4 / 3,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     marginBottom: 16,
     backgroundColor: DS_COLORS.photoThumbBg,
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   streakCount: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: GRIIT_COLORS.primaryAccent,
   },
   cta: {
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   shareBtn: {
     width: "100%",
     backgroundColor: GRIIT_COLORS.primaryAccent,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 16,
     alignItems: "center",
     marginBottom: 10,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   shareBtnText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
   },
   skipBtn: {

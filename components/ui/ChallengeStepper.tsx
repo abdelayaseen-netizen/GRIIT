@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const STEPPER_CIRCLE = 28;
 const CONNECTOR_HEIGHT = 2;
@@ -92,7 +92,7 @@ const s = StyleSheet.create({
   },
   circleText: {
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   circleTextActive: {

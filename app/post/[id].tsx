@@ -22,7 +22,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { captureError } from "@/lib/sentry";
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   topTitle: {
     flex: 1,
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.FEED_USERNAME,
     textAlign: "center",
   },
@@ -493,14 +493,14 @@ const styles = StyleSheet.create({
   commentBlock: { marginBottom: 16 },
   commentRow: { flexDirection: "row", gap: 10 },
   commentMain: { flex: 1 },
-  commentName: { fontSize: 14, fontWeight: "600", color: DS_COLORS.FEED_USERNAME },
+  commentName: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.FEED_USERNAME },
   commentBody: { fontSize: 14, color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },
   commentTime: { fontSize: 11, color: DS_COLORS.FEED_META_MUTED, marginTop: 4 },
   deleteCommentBar: {
     marginTop: 8,
     marginLeft: 46,
     padding: 10,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.INPUT_BG,
     borderWidth: 1,
     borderColor: DS_COLORS.INPUT_BORDER,
@@ -508,8 +508,8 @@ const styles = StyleSheet.create({
   deleteCommentQuestion: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 8 },
   deleteCommentActions: { flexDirection: "row", alignItems: "center", gap: 16 },
   deleteCommentBtn: { paddingVertical: 4, paddingHorizontal: 4, minWidth: 64, alignItems: "center" },
-  deleteCommentCancel: { fontSize: 14, color: DS_COLORS.TEXT_MUTED, fontWeight: "600" },
-  deleteCommentConfirm: { fontSize: 14, color: DS_COLORS.errorText, fontWeight: "600" },
+  deleteCommentCancel: { fontSize: 14, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  deleteCommentConfirm: { fontSize: 14, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 40,
     maxHeight: 100,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: DS_COLORS.INPUT_BG,
@@ -536,10 +536,10 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
   },
   sendDisabled: { opacity: 0.5 },
-  sendText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: "600", fontSize: 15 },
+  sendText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, fontSize: 15 },
   androidMenuRoot: { flex: 1, justifyContent: "flex-end" },
   androidMenuBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: DS_COLORS.OVERLAY_BLACK_40 },
   androidMenuSheet: {
@@ -550,6 +550,6 @@ const styles = StyleSheet.create({
   },
   androidMenuRow: { paddingVertical: 16, paddingHorizontal: 20 },
   androidMenuDefault: { fontSize: 16, color: DS_COLORS.TEXT_PRIMARY },
-  androidMenuDestructive: { fontSize: 16, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600" },
+  androidMenuDestructive: { fontSize: 16, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   androidMenuCancel: { fontSize: 16, color: DS_COLORS.TEXT_MUTED, textAlign: "center" },
 });

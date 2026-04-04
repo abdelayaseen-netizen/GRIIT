@@ -14,7 +14,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { ChevronLeft, UserPlus, UserMinus, Check, X, Users } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { sharedStyles } from "@/lib/theme";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -356,18 +356,18 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: DS_COLORS.textPrimary },
+  headerTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   headerSpacer: { width: 32 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   scroll: { flex: 1 },
   scrollContent: { padding: 16 },
   countRow: { marginBottom: 16 },
-  countText: { fontSize: 15, color: DS_COLORS.textSecondary, fontWeight: "600" },
+  countText: { fontSize: 15, color: DS_COLORS.textSecondary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: DS_COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.5 },
   card: {
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     padding: 12,
@@ -381,15 +381,15 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
   rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
   removeBtn: { padding: 8 },
   actions: { flexDirection: "row", gap: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  iconBtn: { width: 40, height: 40, borderRadius: DS_RADIUS.XL, alignItems: "center", justifyContent: "center" },
   acceptBtn: { backgroundColor: DS_COLORS.acceptGreen },
   declineBtn: { backgroundColor: DS_COLORS.border },
-  cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, backgroundColor: DS_COLORS.border },
-  cancelBtnText: { fontSize: 14, fontWeight: "600", color: DS_COLORS.textPrimary },
+  cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.border },
+  cancelBtnText: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -397,9 +397,9 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: DS_COLORS.accent,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     marginTop: 8,
   },
-  addBtnText: { fontSize: 17, fontWeight: "700", color: DS_COLORS.white },
+  addBtnText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
   bottomSpacer: { height: 32 },
 });

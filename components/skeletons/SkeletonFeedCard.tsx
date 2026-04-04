@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SHADOWS, DS_RADIUS } from "@/lib/design-system"
 import { SkeletonBase } from "./SkeletonBase";
 
 export const SkeletonFeedCard = React.memo(function SkeletonFeedCard() {
@@ -28,7 +28,7 @@ export const SkeletonFeedCard = React.memo(function SkeletonFeedCard() {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.card,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginBottom: 0,
   },

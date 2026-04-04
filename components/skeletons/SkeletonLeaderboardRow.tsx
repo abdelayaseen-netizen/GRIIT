@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { SkeletonBase } from "./SkeletonBase";
 
 export const SkeletonLeaderboardRow = React.memo(function SkeletonLeaderboardRow() {
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: DS_COLORS.card,
     marginBottom: 6,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
   },
   nameBlock: {
     flex: 1,

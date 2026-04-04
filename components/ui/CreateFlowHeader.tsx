@@ -1,3 +1,4 @@
+import { DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { colors, measures } from "@/lib/theme/tokens";
@@ -70,16 +71,16 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.textPrimary,
     flex: 1,
     textAlign: "center",
   },
-  titleEditTask: { fontSize: 18, fontWeight: "700" },
+  titleEditTask: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   rightBtn: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: colors.accentOrangeCreate,
     minWidth: 60,
     height: 38,
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   rightBtnPill: {
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     paddingHorizontal: 20,
     height: 40,
   },
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
   rightBtnDisabled: { opacity: 0.5 },
   rightText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.white,
   },
   rightTextSoft: {

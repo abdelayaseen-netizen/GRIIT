@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, View, Text, StyleSheet, Pressable, TouchableOpacity } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { getBadgeDescription } from "@/lib/badge-descriptions";
 import { Zap } from "lucide-react-native";
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 72,
     height: 72,
-    borderRadius: 36,
+    borderRadius: DS_RADIUS.LG,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -106,13 +106,13 @@ const styles = StyleSheet.create({
     maxWidth: 200,
     height: 6,
     backgroundColor: DS_COLORS.BORDER,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
     marginBottom: 24,
   },
   barFill: {
     height: "100%",
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
   },
   gotItWrap: {
     paddingVertical: 8,

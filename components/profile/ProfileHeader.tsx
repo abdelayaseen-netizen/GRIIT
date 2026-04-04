@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Share2, Camera } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { pickAndUploadAvatar } from "@/lib/avatar";
 import { Avatar } from "@/components/Avatar";
 import { captureError } from "@/lib/sentry";
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 30,
     height: 30,
-    borderRadius: 15,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: DS_COLORS.FEED_USERNAME,
     alignItems: "center",
     justifyContent: "center",
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   fullName: {
     marginTop: DS_SPACING.md,
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     textAlign: "center",
   },
@@ -195,29 +195,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_SPACING.md,
     borderRadius: DS_SPACING.md,
   },
-  rankDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  pillText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  rankDot: { width: 6, height: 6, borderRadius: DS_RADIUS.SM, marginRight: 6 },
+  pillText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
   joinedText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_MUTED },
   actions: { flexDirection: "row", justifyContent: "center", gap: DS_SPACING.sm, marginTop: DS_SPACING.md },
   editBtn: {
     borderWidth: 1,
     borderColor: DS_COLORS.DISCOVER_CORAL,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     paddingVertical: DS_SPACING.sm,
     paddingHorizontal: DS_SPACING.xl,
   },
-  editBtnText: { fontSize: 12, fontWeight: "600", color: DS_COLORS.DISCOVER_CORAL },
+  editBtnText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.DISCOVER_CORAL },
   shareBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     borderWidth: 1,
     borderColor: DS_COLORS.BORDER,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     paddingVertical: DS_SPACING.sm,
     paddingHorizontal: DS_SPACING.xl,
   },
-  shareBtnText: { fontSize: 12, fontWeight: "600", color: DS_COLORS.buttonDisabledText },
+  shareBtnText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.buttonDisabledText },
   socialRow: { flexDirection: "row", justifyContent: "center", marginTop: 10 },
   socialText: { fontSize: 12, color: DS_COLORS.TEXT_MUTED },
 });

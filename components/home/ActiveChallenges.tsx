@@ -4,7 +4,7 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import ChallengeCard, { TodayTaskItem } from "./ChallengeCard";
 import EmptyChallengesCard from "./EmptyChallengesCard";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import type { TodayCheckinForUser } from "@/types";
 import { captureError } from "@/lib/sentry";
 
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize - 2,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: DS_SPACING.md,
   },

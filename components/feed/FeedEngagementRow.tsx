@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Heart, MessageCircle, ArrowUpRight } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 
 type Props = {
   respectCount: number;
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 24,
+    borderRadius: DS_RADIUS.modal,
     backgroundColor: DS_COLORS.TRANSPARENT,
   },
   pillActive: {

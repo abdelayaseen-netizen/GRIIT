@@ -1,3 +1,4 @@
+import { DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, StyleProp } from "react-native";
 import { colors } from "@/lib/theme/colors";
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
   },
   text: {
     ...typography.body2,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   selected: {
     borderWidth: 1,

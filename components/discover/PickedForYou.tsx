@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { BookOpen, Flame, Target } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS, getCategoryColors } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, getCategoryColors, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 import { Avatar } from "@/components/Avatar";
 
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   sectionSub: {
@@ -155,19 +155,19 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     justifyContent: "center",
   },
   matchTag: {
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginTop: 5,
   },
   cardTitle: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     paddingHorizontal: 12,
     marginTop: 10,

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, FlatList, Platform } from "react-native";
 import { Trophy, Lock } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { formatShortDate } from "@/lib/date-utils";
 
 export type AchievementCategory = "consistency" | "challenge" | "discipline";
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize - 2,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   loadingText: {
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   badgeIcon: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: DS_RADIUS.modal,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: DS_SPACING.sm,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   badgeTitle: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   badgeTitleLocked: {

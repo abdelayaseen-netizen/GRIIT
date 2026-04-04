@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Pressable } from "react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 export type ConfirmDialogProps = {
   visible: boolean;
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: DS_SPACING.sm,
     textAlign: "center",
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   btnSecondaryText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   btnPrimary: {
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   },
   btnPrimaryText: {
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   btnDestructive: {

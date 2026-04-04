@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Clock } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_SHADOWS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 function getStripeColorByCategory(category?: string): string {
   const cat = (category ?? "").toUpperCase();
@@ -117,7 +117,7 @@ export const ChallengeCard24h = React.memo(ChallengeCard24hInner);
 const s = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     overflow: "hidden",
     borderWidth: 0.5,
     borderColor: DS_COLORS.BORDER,
@@ -151,13 +151,13 @@ const s = StyleSheet.create({
     gap: 4,
     paddingHorizontal: DS_SPACING.SM,
     paddingVertical: DS_SPACING.XS,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.TIMER_BG,
   },
-  countdownText: { fontSize: 11, fontWeight: "700", color: DS_COLORS.TIMER_TEXT },
+  countdownText: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TIMER_TEXT },
   diffPill: { paddingHorizontal: DS_SPACING.SM, paddingVertical: 3, borderRadius: 100 },
-  diffText: { fontSize: 11, fontWeight: "600" },
-  title: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 8, marginBottom: 4 },
+  diffText: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  title: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 8, marginBottom: 4 },
   desc: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, lineHeight: 18, marginBottom: 8 },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 },
   taskChip: {
@@ -173,5 +173,5 @@ const s = StyleSheet.create({
   participants: { flexDirection: "row", alignItems: "center", gap: 4 },
   participantsEmoji: { fontSize: 12 },
   participantsText: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED },
-  chevron: { fontSize: 14, fontWeight: "600", color: DS_COLORS.ACCENT_PRIMARY },
+  chevron: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.ACCENT_PRIMARY },
 });

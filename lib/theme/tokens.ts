@@ -3,7 +3,7 @@
  * Colors re-export from design-system for single source of truth.
  */
 
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 // ─── COLORS (Rork) ──────────────────────────────────────────────────────────
 export const colors = {
@@ -59,32 +59,32 @@ export const colors = {
 
 // ─── TYPOGRAPHY (Rork) ──────────────────────────────────────────────────────
 export const typography = {
-  discoverTitle: { fontSize: 30, fontWeight: "800" as const, letterSpacing: -0.5, lineHeight: 36 },
+  discoverTitle: { fontSize: 30, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 36 },
   subtitle: { fontSize: 15, fontWeight: "400" as const, lineHeight: 22 },
-  sectionHeader: { fontSize: 17, fontWeight: "700" as const, lineHeight: 22 },
-  cardTitle: { fontSize: 18, fontWeight: "700" as const, lineHeight: 24 },
-  cardTitleLarge: { fontSize: 18, fontWeight: "700" as const, lineHeight: 24 },
+  sectionHeader: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 22 },
+  cardTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 24 },
+  cardTitleLarge: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 24 },
   cardDescription: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
   metaRow: { fontSize: 12, fontWeight: "400" as const, lineHeight: 18 },
   chipLabel: { fontSize: 15, fontWeight: "400" as const },
-  badgeLabel: { fontSize: 12, fontWeight: "600" as const },
-  compactTitle: { fontSize: 16, fontWeight: "700" as const, lineHeight: 22 },
+  badgeLabel: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  compactTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 22 },
   compactDesc: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
-  emptyTitle: { fontSize: 17, fontWeight: "700" as const, lineHeight: 24 },
+  emptyTitle: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 24 },
   emptySub: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
   tabLabel: { fontSize: 10, fontWeight: "400" as const },
 
-  pageTitle: { fontSize: 32, fontWeight: "700" as const, lineHeight: 40 },
-  sectionTitle: { fontSize: 20, fontWeight: "600" as const, lineHeight: 28 },
-  label: { fontSize: 12, fontWeight: "600" as const, lineHeight: 16 },
+  pageTitle: { fontSize: 32, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 40 },
+  sectionTitle: { fontSize: 20, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, lineHeight: 28 },
+  label: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, lineHeight: 16 },
   primaryBody: { fontSize: 16, fontWeight: "500" as const, lineHeight: 22 },
   secondaryText: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
   smallHelper: { fontSize: 12, fontWeight: "400" as const, lineHeight: 16 },
-  challengeCardTitle: { fontSize: 18, fontWeight: "600" as const, lineHeight: 24 },
+  challengeCardTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, lineHeight: 24 },
   challengeCardDesc: { fontSize: 14, fontWeight: "400" as const, lineHeight: 20 },
-  previewCardTitle: { fontSize: 22, fontWeight: "600" as const, lineHeight: 28 },
+  previewCardTitle: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, lineHeight: 28 },
   previewCardSubtitle: { fontSize: 16, fontWeight: "400" as const, lineHeight: 22 },
-  dailyTaskTitle: { fontSize: 16, fontWeight: "600" as const },
+  dailyTaskTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   dailyTaskMeta: { fontSize: 14, fontWeight: "400" as const },
 } as const;
 

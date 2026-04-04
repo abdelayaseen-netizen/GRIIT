@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
-import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
+import { DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -249,8 +249,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: C.background, gap: 16 },
   loadingText: { fontSize: 14, color: C.textSecondary },
   header: { marginBottom: 20 },
-  stepLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
-  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
+  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
+  title: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
   subtitle: { fontSize: 15, fontWeight: "400", lineHeight: 24, color: C.textSecondary },
   card: {
     backgroundColor: C.WHITE,
@@ -265,31 +265,31 @@ const styles = StyleSheet.create({
   badgePopular: {
     alignSelf: "flex-start",
     fontSize: 9,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     overflow: "hidden",
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: C.badgePopularBg,
     color: C.badgePopularText,
   },
   badgeStarter: {
     alignSelf: "flex-start",
     fontSize: 9,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     overflow: "hidden",
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: C.badgeStarterBg,
     color: C.badgeStarterText,
   },
-  cardTitle: { fontSize: 17, fontWeight: "700", letterSpacing: -0.2, color: C.textPrimary, marginBottom: 6 },
+  cardTitle: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, letterSpacing: -0.2, color: C.textPrimary, marginBottom: 6 },
   cardHook: { fontSize: 13, fontWeight: "400", lineHeight: 20, color: C.textSecondary, marginBottom: 10 },
   metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 },
   metaPill: {
     backgroundColor: C.metaPillBg,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     paddingVertical: 4,
     paddingHorizontal: 10,
     fontSize: 11,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  orangeCtaText: { fontSize: 17, fontWeight: "700", color: C.WHITE },
+  orangeCtaText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.WHITE },
   outlineCta: {
     height: DS_MEASURES.CTA_HEIGHT_COMPACT,
     borderRadius: DS_RADIUS.button,
@@ -313,13 +313,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
   },
-  outlineCtaText: { fontSize: 17, fontWeight: "600", color: C.textSecondary },
+  outlineCtaText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.textSecondary },
   ctaDisabled: { opacity: 0.7 },
   inlineRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: 8 },
-  linkCoral: { fontSize: 15, fontWeight: "700", color: C.coral },
+  linkCoral: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.coral },
   inlineOr: { fontSize: 15, color: C.textSecondary },
   linkMuted: { fontSize: 15, color: C.textSecondary },
   errorBlock: { marginTop: 16, alignItems: "center", gap: 8 },
   errorText: { fontSize: 13, color: C.accent, textAlign: "center" },
-  errorLink: { fontSize: 15, fontWeight: "600", color: C.coral },
+  errorLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.coral },
 });

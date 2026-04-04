@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { getRandomQuote } from "@/lib/quotes";
-import { GRIIT_COLORS, DS_COLORS } from "@/lib/design-system";
+import { GRIIT_COLORS, DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 
 export default React.memo(function DailyQuote() {
   const [quote, setQuote] = useState(() => getRandomQuote());
@@ -32,7 +32,7 @@ const s = StyleSheet.create({
   },
   quoteAccent: {
     width: 3,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: GRIIT_COLORS.primary,
     marginRight: 12,
   },

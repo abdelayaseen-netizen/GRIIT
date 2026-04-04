@@ -25,7 +25,7 @@ import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorRetry } from "@/components/ErrorRetry";
@@ -515,9 +515,9 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
   safeTop: { backgroundColor: "transparent" },
   centerWrap: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  notFoundText: { fontSize: 18, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 16 },
-  retryBtn: { paddingVertical: 12, paddingHorizontal: 24, borderRadius: 14, backgroundColor: DS_COLORS.ACCENT_PRIMARY },
-  retryBtnText: { fontSize: 16, fontWeight: "700", color: DS_COLORS.WHITE },
+  notFoundText: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 16 },
+  retryBtn: { paddingVertical: 12, paddingHorizontal: 24, borderRadius: DS_RADIUS.button, backgroundColor: DS_COLORS.ACCENT_PRIMARY },
+  retryBtnText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
   loadingBody: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
   loadingText: { fontSize: 15, color: DS_COLORS.WHITE, marginTop: 12 },
   header: {
@@ -535,7 +535,7 @@ const s = StyleSheet.create({
   headerCircleBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.OVERLAY_BLACK_20,
     alignItems: "center",
     justifyContent: "center",
@@ -543,7 +543,7 @@ const s = StyleSheet.create({
   headerCenterTitle: { fontSize: 16, fontWeight: "500", color: DS_COLORS.WHITE },
   eyebrow: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     letterSpacing: 1.5,
     color: DS_COLORS.WHITE,
     opacity: 0.8,
@@ -551,7 +551,7 @@ const s = StyleSheet.create({
   },
   challengeTitle: {
     fontSize: 32,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.WHITE,
     lineHeight: 38,
     marginTop: 6,
@@ -564,13 +564,13 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  pillText: { color: DS_COLORS.WHITE, fontSize: 13, fontWeight: "600" },
+  pillText: { color: DS_COLORS.WHITE, fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 16 },
   body: {},
   card: {
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginBottom: 12,
     shadowColor: DS_COLORS.SHADOW,
@@ -584,22 +584,22 @@ const s = StyleSheet.create({
   avatarCircle: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     borderWidth: 2,
     borderColor: DS_COLORS.WHITE,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarInitial: { fontSize: 11, fontWeight: "700", color: DS_COLORS.WHITE },
+  avatarInitial: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
   membersText: { marginLeft: 12, flex: 1 },
-  membersPrimary: { fontSize: 15, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  membersPrimary: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   membersSecondary: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
   statsRow: { flexDirection: "row", alignItems: "stretch" },
   statsCol: { flex: 1, alignItems: "center", justifyContent: "center" },
-  statsValue: { fontSize: 28, fontWeight: "700" },
+  statsValue: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   statsLabel: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, marginTop: 4 },
   statsDivider: { width: 1, backgroundColor: DS_COLORS.DIVIDER, alignSelf: "stretch", marginVertical: 4 },
-  sectionTitle: { fontSize: 20, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 8, marginBottom: 12 },
+  sectionTitle: { fontSize: 20, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 8, marginBottom: 12 },
   missionCard: { overflow: "hidden" },
   missionRow: {
     flexDirection: "row",
@@ -610,7 +610,7 @@ const s = StyleSheet.create({
   missionIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.ACCENT_TINT,
     alignItems: "center",
     justifyContent: "center",
@@ -618,18 +618,18 @@ const s = StyleSheet.create({
   },
   missionIconWrapDone: { backgroundColor: DS_COLORS.ACCENT_GREEN_BG },
   missionContent: { flex: 1 },
-  missionTaskTitle: { fontSize: 15, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY },
+  missionTaskTitle: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
   missionTaskTitleDone: { textDecorationLine: "line-through", color: DS_COLORS.TEXT_MUTED },
   missionTaskSub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
   startLink: { fontSize: 14, fontWeight: "500", color: DS_COLORS.DISCOVER_CORAL },
-  sectionTitleRules: { fontSize: 20, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 12 },
+  sectionTitleRules: { fontSize: 20, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 12 },
   rulesCard: { overflow: "hidden" },
   ruleRow: { flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 16, paddingVertical: 14 },
   ruleRowBorder: { borderBottomWidth: 0.5, borderBottomColor: DS_COLORS.DIVIDER, marginHorizontal: 16 },
   ruleCheck: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.ACCENT_GREEN_BG,
     alignItems: "center",
     justifyContent: "center",
@@ -637,11 +637,11 @@ const s = StyleSheet.create({
     marginTop: 1,
   },
   ruleText: { flex: 1, fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 20 },
-  sectionTitleAbout: { fontSize: 20, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 12 },
+  sectionTitleAbout: { fontSize: 20, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 12 },
   aboutText: { fontSize: 15, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 24, marginBottom: 32 },
   celebrationCard: {
     backgroundColor: DS_COLORS.GREEN_BG,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
     alignItems: "center",
     marginHorizontal: 0,
@@ -650,7 +650,7 @@ const s = StyleSheet.create({
   celebrationEmoji: { fontSize: 32 },
   celebrationTitle: {
     fontSize: 24,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.ACCENT_GREEN,
     marginTop: 8,
   },
@@ -662,7 +662,7 @@ const s = StyleSheet.create({
   },
   celebrationStreak: {
     fontSize: 32,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.ACCENT_GREEN,
     marginTop: 8,
   },
@@ -677,7 +677,7 @@ const s = StyleSheet.create({
     borderTopWidth: 0.5,
     borderTopColor: DS_COLORS.DIVIDER,
   },
-  ctaButton: { borderRadius: 14, height: 56, width: "100%", alignItems: "center", justifyContent: "center" },
-  ctaText: { color: DS_COLORS.WHITE, fontSize: 17, fontWeight: "700" },
+  ctaButton: { borderRadius: DS_RADIUS.button, height: 56, width: "100%", alignItems: "center", justifyContent: "center" },
+  ctaText: { color: DS_COLORS.WHITE, fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   ctaMicro: { fontSize: 12, color: DS_COLORS.TEXT_MUTED, textAlign: "center", marginTop: 8 },
 });

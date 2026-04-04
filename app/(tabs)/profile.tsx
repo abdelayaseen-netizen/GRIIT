@@ -1,4 +1,4 @@
-// TODO: Add "Drafts" section to profile — filter challenges where status === 'draft' && creator_id === user.id
+// NOTE(post-launch): Add "Drafts" section — filter challenges where status === 'draft' && creator_id === user.id
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
@@ -41,7 +41,7 @@ import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { SkeletonProfile } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
@@ -710,7 +710,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.dangerLight,
     borderWidth: 1,
     borderColor: DS_COLORS.alertRedBorder,
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.photoThumbBg,
   },
   cameraBadge: {
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
     bottom: -2,
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.PRIMARY,
     borderWidth: 3,
     borderColor: DS_COLORS.BG_PAGE,
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   username: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, letterSpacing: -0.3 },
   handleAt: { marginTop: 2, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
   tierRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 6 },
-  tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 },
+  tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: DS_RADIUS.MD },
   tierPillText: { fontSize: 11, fontWeight: "500" },
   joined: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
   bio: { marginTop: 8, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, lineHeight: 18 },
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginTop: 14, marginBottom: 14 },
   btnOutline: {
     flex: 1,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     borderWidth: 1.5,
     borderColor: DS_COLORS.PRIMARY,
     paddingVertical: 11,
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
   btnOutlineText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PRIMARY },
   btnShareCompact: {
     width: 44,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     borderWidth: 1.5,
     borderColor: DS_COLORS.PROFILE_BORDER_ALT,
     paddingVertical: 11,
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     width: "48%",
     flexGrow: 1,
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 12,
     flexDirection: "row",
     alignItems: "center",
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
   statGridIconWrap: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
   emptyHint: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, textAlign: "center", paddingVertical: 16 },
   chCard: {
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginBottom: 0,
   },
@@ -823,7 +823,7 @@ const styles = StyleSheet.create({
   chIconBox: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.PROFILE_STAT_TEAL_BG,
     alignItems: "center",
     justifyContent: "center",
@@ -831,8 +831,8 @@ const styles = StyleSheet.create({
   chMid: { flex: 1, minWidth: 0 },
   chTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   chSub: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, marginTop: 2 },
-  chTrack: { height: 4, borderRadius: 2, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 12, overflow: "hidden" },
-  chFill: { height: 4, borderRadius: 2 },
+  chTrack: { height: 4, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 12, overflow: "hidden" },
+  chFill: { height: 4, borderRadius: DS_RADIUS.SM },
   chPctBadge: { fontSize: 13, fontWeight: "500", flexShrink: 0 },
   postsEmpty: { alignItems: "center", paddingVertical: 32 },
   postsEmptyTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
@@ -853,7 +853,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
     flexGrow: 1,
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     paddingVertical: 16,
     paddingHorizontal: 8,
     alignItems: "center",
@@ -862,13 +862,13 @@ const styles = StyleSheet.create({
   badgeIconOuter: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: DS_RADIUS.iconButton,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
   },
   badgeName: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, textAlign: "center" },
   badgeProg: { fontSize: 11, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED, marginTop: 4 },
-  nextBarTrack: { width: "100%", height: 3, borderRadius: 2, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 8, overflow: "hidden" },
-  nextBarFill: { height: 3, borderRadius: 2, backgroundColor: DS_COLORS.PRIMARY },
+  nextBarTrack: { width: "100%", height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 8, overflow: "hidden" },
+  nextBarFill: { height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PRIMARY },
 });

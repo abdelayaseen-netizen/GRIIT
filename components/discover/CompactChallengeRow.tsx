@@ -13,7 +13,7 @@ import {
   Users,
   ChevronRight,
 } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 
 export interface CompactChallengeRowProps {
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
     alignItems: "center",
     justifyContent: "center",
@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
   joinButton: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     backgroundColor: DS_COLORS.ACCENT_TINT,
   },
   joinText: {
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.PRIMARY,
   },
 });

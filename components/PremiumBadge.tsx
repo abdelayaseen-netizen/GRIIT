@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Crown } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 interface PremiumBadgeProps {
   /** Icon size when not using label. */
@@ -37,19 +37,19 @@ const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     alignSelf: "flex-start",
   },
   pill: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: DS_RADIUS.SM,
     alignSelf: "flex-start",
   },
   pillText: {
     color: DS_COLORS.WHITE,
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     letterSpacing: 0.5,
   },
 });

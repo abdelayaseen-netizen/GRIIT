@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, Animated, TextInput } from "react-na
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Camera, CircleCheck, Heart } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
@@ -229,7 +229,7 @@ export const FeedPostCard = React.memo(FeedPostCardInner);
 const styles = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     overflow: "hidden",
   },
   captionBody: {
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   proofWrap: {
     marginHorizontal: 14,
     marginTop: 8,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     overflow: "hidden",
     backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
   },
@@ -295,13 +295,13 @@ const styles = StyleSheet.create({
   },
   track: {
     height: 3,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
     overflow: "hidden",
   },
   fill: {
     height: 3,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.ACCENT,
   },
   respectedByRow: {
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     color: DS_COLORS.TEXT_SECONDARY,
   },
   respectedByBold: {
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   quickCommentRow: {
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: DS_COLORS.TEXT_PRIMARY,
     backgroundColor: DS_COLORS.INPUT_BG,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     paddingHorizontal: 14,
     paddingVertical: 8,
     minHeight: 36,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   quickSendBtn: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.ACCENT,
   },
   quickSendBtnDisabled: {
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   quickSendText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
   commentPreview: {

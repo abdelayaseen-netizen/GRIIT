@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { SkeletonBase } from "./SkeletonBase";
 
 export const SkeletonChallengeCard = React.memo(function SkeletonChallengeCard() {
@@ -24,7 +24,7 @@ export const SkeletonChallengeCard = React.memo(function SkeletonChallengeCard()
 const styles = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.card,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginBottom: 10,
   },

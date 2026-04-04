@@ -7,7 +7,7 @@ import {
   Platform,
   AccessibilityInfo,
 } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -275,13 +275,13 @@ const styles = StyleSheet.create({
   },
   streakText: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.borderDark,
     marginBottom: 4,
   },
   tierText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.grayDarker,
   },
 });

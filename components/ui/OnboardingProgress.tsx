@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING } from "@/lib/design-system"
 
 type OnboardingProgressProps = { step: number; total: number };
 
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textSecondary,
     letterSpacing: 0.3,
   },

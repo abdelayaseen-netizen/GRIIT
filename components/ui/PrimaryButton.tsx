@@ -1,3 +1,4 @@
+import { DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import {
   TouchableOpacity,
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
   },
   text: {
     ...typography.body,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   disabled: {
     opacity: 0.45,

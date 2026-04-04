@@ -13,7 +13,7 @@ import {
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
 import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
-import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
+import { DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
@@ -270,8 +270,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.background },
   scroll: { paddingHorizontal: S.screenPadding, paddingTop: 20, paddingBottom: 40 },
   header: { marginBottom: 28 },
-  stepLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
-  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
+  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
+  title: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
   subtitle: { fontSize: 15, fontWeight: "500", lineHeight: 24, color: C.textSecondary },
   authContainer: { gap: 12 },
   appleButton: {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  appleButtonText: { fontSize: 17, fontWeight: "600", color: C.WHITE },
+  appleButtonText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.WHITE },
   dividerRow: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 4 },
   dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: C.border },
   dividerText: { fontSize: 13, color: C.textTertiary },
@@ -303,10 +303,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
-  primaryButtonText: { fontSize: 17, fontWeight: "700", lineHeight: 22, color: C.textOnAccent },
+  primaryButtonText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, lineHeight: 22, color: C.textOnAccent },
   loginRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: 8 },
   loginMuted: { fontSize: 15, color: C.textSecondary },
-  loginLink: { fontSize: 15, fontWeight: "700", color: C.coral },
+  loginLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.coral },
   errorText: { fontSize: 13, color: C.accent, textAlign: "center", marginTop: 8 },
   footer: { paddingTop: 24 },
   termsText: { fontSize: 11, color: C.textTertiary, textAlign: "center", lineHeight: 16 },

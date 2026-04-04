@@ -11,7 +11,7 @@ import {
   Easing,
 } from "react-native";
 import { CheckCircle2, Flame, Trophy, Share2 } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { useCelebrationStore, type CelebrationType } from "@/store/celebrationStore";
 import { captureError } from "@/lib/sentry";
 import { sharePlainMessage } from "@/lib/share";
@@ -275,14 +275,14 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 340,
     backgroundColor: DS_COLORS.surface,
-    borderRadius: 24,
+    borderRadius: DS_RADIUS.modal,
     padding: 32,
     alignItems: "center",
   },
   title: {
     marginTop: 16,
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "center",
   },
@@ -297,13 +297,13 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     backgroundColor: GRIIT_COLORS.primary,
     height: 48,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     alignItems: "center",
     justifyContent: "center",
   },
   btnText: {
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
   shareButton: {
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: GRIIT_COLORS.primary,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 14,
     marginTop: 16,
     width: "100%",
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   keepGoingButton: {
     borderWidth: 0.5,
     borderColor: DS_COLORS.border,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 14,
     alignItems: "center",
     marginTop: 10,
@@ -338,6 +338,6 @@ const styles = StyleSheet.create({
   particle: {
     position: "absolute",
     top: 0,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
   },
 });

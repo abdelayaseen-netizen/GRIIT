@@ -3,6 +3,7 @@
  * Use tokens only; no hardcoded colors/radii.
  */
 
+import { DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system";
 import { StyleSheet } from "react-native";
 import { colors, radius, spacing } from "./tokens";
 
@@ -20,7 +21,7 @@ export const createFlowStyles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.textPrimary,
     letterSpacing: 0.5,
     marginBottom: spacing.gridS,
@@ -36,7 +37,7 @@ export const createFlowStyles = StyleSheet.create({
   },
   settingsTitle: {
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.textPrimary,
     marginBottom: spacing.gridM,
   },
@@ -48,11 +49,11 @@ export const createFlowStyles = StyleSheet.create({
     backgroundColor: colors.accentGreenSoft,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
   },
   allowedPillText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.accentGreen,
   },
   hardPill: {
@@ -60,11 +61,11 @@ export const createFlowStyles = StyleSheet.create({
     backgroundColor: colors.accentRedSoft,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
   },
   hardPillText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.accentRed,
   },
 });

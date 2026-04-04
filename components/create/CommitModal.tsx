@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 interface CommitModalProps {
   visible: boolean;
@@ -39,7 +39,7 @@ export default function CommitModal({
         <View
           style={{
             backgroundColor: DS_COLORS.CARD_BG,
-            borderRadius: 24,
+            borderRadius: DS_RADIUS.modal,
             paddingVertical: 32,
             paddingHorizontal: 24,
           }}
@@ -48,7 +48,7 @@ export default function CommitModal({
           <Text
             style={{
               fontSize: 24,
-              fontWeight: "700",
+              fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
               color: DS_COLORS.TEXT_PRIMARY,
               textAlign: "center",
               marginBottom: 8,
@@ -66,19 +66,19 @@ export default function CommitModal({
             }}
           >
             You&apos;re about to start{" "}
-            <Text style={{ fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY }}>{challengeName}</Text>. Show up every day
+            <Text style={{ fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY }}>{challengeName}</Text>. Show up every day
             — no excuses, no shortcuts.
           </Text>
 
           <View
             style={{
               backgroundColor: DS_COLORS.WARM_CREAM,
-              borderRadius: 14,
+              borderRadius: DS_RADIUS.button,
               padding: 16,
               marginBottom: 24,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "600", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10 }}>
+            <Text style={{ fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10 }}>
               Your commitment:
             </Text>
             {[
@@ -91,7 +91,7 @@ export default function CommitModal({
                   style={{
                     width: 6,
                     height: 6,
-                    borderRadius: 3,
+                    borderRadius: DS_RADIUS.SM,
                     backgroundColor: DS_COLORS.PRIMARY,
                     marginTop: 7,
                   }}
@@ -112,7 +112,7 @@ export default function CommitModal({
               style={{
                 width: 24,
                 height: 24,
-                borderRadius: 8,
+                borderRadius: DS_RADIUS.SM,
                 borderWidth: 2,
                 borderColor: agreed ? DS_COLORS.PRIMARY : DS_COLORS.BORDER,
                 backgroundColor: agreed ? DS_COLORS.PRIMARY : DS_COLORS.TRANSPARENT,
@@ -136,7 +136,7 @@ export default function CommitModal({
             style={{
               width: "100%",
               height: 54,
-              borderRadius: 28,
+              borderRadius: DS_RADIUS.joinCta,
               backgroundColor: agreed ? DS_COLORS.TEXT_PRIMARY : DS_COLORS.DISABLED_BG,
               flexDirection: "row",
               alignItems: "center",
@@ -145,7 +145,7 @@ export default function CommitModal({
             }}
           >
             <Ionicons name="send" size={16} color={DS_COLORS.TEXT_ON_DARK} />
-            <Text style={{ fontSize: 17, fontWeight: "600", color: DS_COLORS.TEXT_ON_DARK }}>I&apos;m in. Launch it.</Text>
+            <Text style={{ fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_ON_DARK }}>I&apos;m in. Launch it.</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

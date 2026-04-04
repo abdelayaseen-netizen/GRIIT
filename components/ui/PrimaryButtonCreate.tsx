@@ -1,3 +1,4 @@
+import { DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
 import * as t from "@/lib/theme/tokens";
@@ -67,7 +68,7 @@ const s = StyleSheet.create({
   },
   text: {
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: t.colors.white,
   },
 });

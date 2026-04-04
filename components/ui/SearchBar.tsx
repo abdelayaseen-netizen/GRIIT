@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Search, X } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 
 export function SearchBar(props: {
   value: string;
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 44,
     backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 14,
     borderWidth: 0,
     gap: 10,

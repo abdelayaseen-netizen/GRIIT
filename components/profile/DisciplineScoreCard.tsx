@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_SHADOWS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_SHADOWS, DS_RADIUS } from "@/lib/design-system"
 
 export interface DisciplineScoreCardProps {
   disciplineScore: number;
@@ -51,7 +51,7 @@ export default React.memo(function DisciplineScoreCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 12,
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textMuted,
     letterSpacing: 2,
     textTransform: "uppercase",
@@ -84,17 +84,17 @@ const styles = StyleSheet.create({
   tierDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.accent,
   },
   tierText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   score: {
     fontSize: 36,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.textPrimary,
   },
   divider: {
@@ -109,13 +109,13 @@ const styles = StyleSheet.create({
   },
   daysValue: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   footerLabels: {},
   daysLabel: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase",

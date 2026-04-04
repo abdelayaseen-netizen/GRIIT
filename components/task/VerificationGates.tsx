@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import * as Location from "expo-location";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import type { TaskHardVerificationConfig } from "@/lib/task-hard-verification";
 
 export type GateStatusKind = "locked" | "checking" | "passed" | "failed" | "pending";
@@ -328,7 +328,7 @@ export function VerificationGates({ config, photoSatisfied = false, onGatesResol
 const s = StyleSheet.create({
   container: {
     backgroundColor: DS_COLORS.CARD_BG,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -349,7 +349,7 @@ const s = StyleSheet.create({
     backgroundColor: DS_COLORS.PROFILE_STAT_CORAL_BG,
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
   },
   badgeText: {
     fontSize: 11,
@@ -369,7 +369,7 @@ const s = StyleSheet.create({
   gateIcon: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -393,7 +393,7 @@ const s = StyleSheet.create({
     maxWidth: "38%",
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
   },
   statusText: {
     fontSize: 11,

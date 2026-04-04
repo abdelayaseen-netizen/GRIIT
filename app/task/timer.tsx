@@ -8,7 +8,7 @@ import { Play, Pause, Check, Camera, ImagePlus } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useApp } from "@/contexts/AppContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import type { ChallengeTaskFromApi } from "@/types";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: 72,
-    fontWeight: '700' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
     backgroundColor: DS_COLORS.taskEmerald,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
     marginBottom: 16,
   },
@@ -363,20 +363,20 @@ const styles = StyleSheet.create({
   },
   controlButtonText: {
     fontSize: 18,
-    fontWeight: '700' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   photoSection: { marginBottom: 20 },
-  photoLabel: { fontSize: 13, fontWeight: "600", color: DS_COLORS.textSecondary, marginBottom: 10 },
+  photoLabel: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textSecondary, marginBottom: 10 },
   photoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  photoThumb: { width: 80, height: 60, borderRadius: 8, backgroundColor: DS_COLORS.photoThumbBg },
+  photoThumb: { width: 80, height: 60, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.photoThumbBg },
   photoActions: { flexDirection: "row", gap: 10 },
-  photoBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: DS_COLORS.white, borderRadius: 10, borderWidth: 1, borderColor: DS_COLORS.border },
-  photoBtnText: { fontSize: 13, fontWeight: "600", color: DS_COLORS.textPrimary },
+  photoBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: DS_COLORS.white, borderRadius: DS_RADIUS.MD, borderWidth: 1, borderColor: DS_COLORS.border },
+  photoBtnText: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
   photoEmpty: { gap: 10 },
-  photoPrimaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: DS_COLORS.taskIndigo, borderRadius: 12, paddingVertical: 12 },
-  photoPrimaryBtnText: { fontSize: 14, fontWeight: "600", color: DS_COLORS.white },
-  photoSecondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: DS_COLORS.border, backgroundColor: DS_COLORS.white },
+  photoPrimaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: DS_COLORS.taskIndigo, borderRadius: DS_RADIUS.MD, paddingVertical: 12 },
+  photoPrimaryBtnText: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.white },
+  photoSecondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: DS_RADIUS.MD, borderWidth: 1, borderColor: DS_COLORS.border, backgroundColor: DS_COLORS.white },
   photoSecondaryBtnText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.textSecondary },
   submitButton: {
     flexDirection: 'row',
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: DS_COLORS.black,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 16,
   },
   submitButtonDisabled: {
@@ -392,12 +392,12 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 16,
-    fontWeight: '700' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   strictBanner: {
     backgroundColor: DS_COLORS.TIMER_DANGER_OVERLAY_15,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     padding: 12,
     marginBottom: 16,
   },

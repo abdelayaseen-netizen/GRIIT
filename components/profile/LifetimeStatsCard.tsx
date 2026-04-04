@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Flame, Trophy, Target, Award } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export interface LifetimeStatsCardProps {
   currentStreak?: number;
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginHorizontal: 20,
     marginBottom: 16,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     backgroundColor: DS_COLORS.surface,
@@ -84,12 +84,12 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   label: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textMuted,
     letterSpacing: 1,
     textTransform: "uppercase",

@@ -1,3 +1,4 @@
+import { DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import {
@@ -44,7 +45,7 @@ function TaskTypeCardInner(p: {
       <Text
         style={[
           styles.label,
-          p.selected && { color: p.accentColor, fontWeight: "600" },
+          p.selected && { color: p.accentColor, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
         ]}
       >
         {p.label}

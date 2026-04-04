@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 
 export default function ForgotPasswordScreen() {
@@ -145,20 +145,20 @@ const styles = StyleSheet.create({
   keyboardView: { flex: 1 },
   scrollContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24 },
   header: { alignItems: "center", marginBottom: 32 },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 8 },
+  title: { fontSize: 24, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, marginBottom: 8 },
   subtitle: { fontSize: 15, textAlign: "center", paddingHorizontal: 8 },
   form: { width: "100%" },
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginBottom: 8 },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
   },
   button: {
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 8,
@@ -170,16 +170,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
   },
-  buttonText: { fontSize: 15, fontWeight: "700", color: DS_COLORS.white },
+  buttonText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
   backLink: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 16,
   },
-  backLinkText: { fontSize: 15, fontWeight: "600" },
+  backLinkText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   sentBlock: { paddingHorizontal: 24, alignItems: "center" },
-  sentTitle: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
+  sentTitle: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, marginBottom: 12 },
   sentBody: { fontSize: 15, textAlign: "center", marginBottom: 24 },
 });

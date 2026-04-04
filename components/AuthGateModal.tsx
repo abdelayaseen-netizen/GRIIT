@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { colors, spacing, radius } from "@/lib/theme/tokens";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: colors.textPrimary,
     textAlign: "center",
     marginBottom: 8,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: colors.textPrimary,
   },
   tertiaryBtn: {

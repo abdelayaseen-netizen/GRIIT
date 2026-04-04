@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export const journalScreenStyles = StyleSheet.create({
   container: {
@@ -17,14 +17,14 @@ export const journalScreenStyles = StyleSheet.create({
   },
   draftExitCard: {
     backgroundColor: DS_COLORS.card,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
   draftExitTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
     textAlign: "center",
@@ -37,14 +37,14 @@ export const journalScreenStyles = StyleSheet.create({
   },
   draftExitBtnPrimary: {
     backgroundColor: DS_COLORS.accent,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: 10,
   },
-  draftExitBtnPrimaryText: { fontSize: 16, fontWeight: "700", color: DS_COLORS.textPrimary },
+  draftExitBtnPrimaryText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   draftExitBtnDanger: {
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: 10,
@@ -52,15 +52,15 @@ export const journalScreenStyles = StyleSheet.create({
     borderColor: DS_COLORS.alertRedBorder,
     backgroundColor: DS_COLORS.dangerLight,
   },
-  draftExitBtnDangerText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.dangerDark },
+  draftExitBtnDangerText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.dangerDark },
   draftExitBtnSecondary: {
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
-  draftExitBtnSecondaryText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  draftExitBtnSecondaryText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
 
   header: {
     flexDirection: "row",
@@ -74,7 +74,7 @@ export const journalScreenStyles = StyleSheet.create({
   backBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.white,
     alignItems: "center",
     justifyContent: "center",
@@ -91,7 +91,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   headerTag: {
@@ -101,11 +101,11 @@ export const journalScreenStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.taskIndigoBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   headerTagText: {
     fontSize: 10,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.taskIndigo,
   },
   headerRight: {
@@ -122,7 +122,7 @@ export const journalScreenStyles = StyleSheet.create({
 
   promptCard: {
     backgroundColor: DS_COLORS.white,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 20,
     marginBottom: 20,
     shadowColor: DS_COLORS.shadowBlack,
@@ -135,7 +135,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   promptLabel: {
     fontSize: 11,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.taskIndigo,
     textTransform: "uppercase" as const,
     letterSpacing: 0.8,
@@ -157,7 +157,7 @@ export const journalScreenStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.taskIndigoAlpha,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   typeChipText: {
     fontSize: 12,
@@ -170,7 +170,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   checkinLabel: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 10,
   },
@@ -183,7 +183,7 @@ export const journalScreenStyles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 4,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.white,
     borderWidth: 1.5,
     borderColor: "transparent",
@@ -208,7 +208,7 @@ export const journalScreenStyles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.white,
     borderWidth: 1.5,
     borderColor: "transparent",
@@ -220,7 +220,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   energyNumber: {
     fontSize: 14,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textMuted,
     marginTop: 4,
   },
@@ -233,7 +233,7 @@ export const journalScreenStyles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.white,
     borderWidth: 1.5,
     borderColor: "transparent",
@@ -245,7 +245,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   bodyChipText: {
     fontSize: 13,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textMuted,
   },
 
@@ -254,7 +254,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   entryLabel: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 10,
   },
@@ -262,7 +262,7 @@ export const journalScreenStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.white,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     padding: 16,
     fontSize: 15,
     color: DS_COLORS.textPrimary,
@@ -297,12 +297,12 @@ export const journalScreenStyles = StyleSheet.create({
   },
   limitReached: {
     fontSize: 11,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.taskAmber,
     backgroundColor: DS_COLORS.taskAmberAlpha,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
   },
   charCount: {
     fontSize: 12,
@@ -326,7 +326,7 @@ export const journalScreenStyles = StyleSheet.create({
   photoProofThumb: {
     width: "100%",
     aspectRatio: 4 / 3,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     backgroundColor: DS_COLORS.photoThumbBg,
   },
   photoProofActions: {
@@ -340,13 +340,13 @@ export const journalScreenStyles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     backgroundColor: DS_COLORS.white,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
   },
   photoProofBtnText: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   photoProofEmpty: {
@@ -359,12 +359,12 @@ export const journalScreenStyles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: DS_COLORS.taskIndigo,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 14,
   },
   photoProofPrimaryBtnText: {
     fontSize: 15,
-    fontWeight: "600" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.white,
   },
   photoProofSecondaryBtn: {
@@ -373,7 +373,7 @@ export const journalScreenStyles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
     backgroundColor: DS_COLORS.white,
@@ -385,7 +385,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   submitBtn: {
     backgroundColor: DS_COLORS.taskIndigo,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -406,7 +406,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   submitBtnText: {
     fontSize: 16,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 
@@ -423,7 +423,7 @@ export const journalScreenStyles = StyleSheet.create({
   successIconWrap: {
     width: 72,
     height: 72,
-    borderRadius: 36,
+    borderRadius: DS_RADIUS.LG,
     backgroundColor: DS_COLORS.acceptGreen,
     alignItems: "center",
     justifyContent: "center",
@@ -436,7 +436,7 @@ export const journalScreenStyles = StyleSheet.create({
   },
   successTitle: {
     fontSize: 24,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -451,13 +451,13 @@ export const journalScreenStyles = StyleSheet.create({
   },
   successPrimaryBtn: {
     backgroundColor: DS_COLORS.textPrimary,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     paddingVertical: 16,
     alignItems: "center",
   },
   successPrimaryBtnText: {
     fontSize: 16,
-    fontWeight: "700" as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 });

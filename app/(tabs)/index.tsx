@@ -2,7 +2,6 @@ import React, { useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
-  ScrollView,
   FlatList,
   StyleSheet,
   RefreshControl,
@@ -42,7 +41,7 @@ import Card from "@/components/shared/Card";
 import { SkeletonHomeChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -331,12 +330,26 @@ export default function HomeScreen() {
   if (isGuest) {
     return (
       <SafeAreaView style={s.container}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          <View style={s.header}><Text style={s.greeting}>{getGreeting()}</Text><Text style={s.word}>GRIIT</Text></View>
-          <DailyQuote />
-          <GoalCard goals={[]} onPressGoal={() => {}} onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)} />
-          <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
-        </ScrollView>
+        <FlatList
+          data={[{ key: "guest-home" }]}
+          keyExtractor={(item) => item.key}
+          renderItem={() => (
+            <>
+              <View style={s.header}>
+                <Text style={s.greeting}>{getGreeting()}</Text>
+                <Text style={s.word}>GRIIT</Text>
+              </View>
+              <DailyQuote />
+              <GoalCard goals={[]} onPressGoal={() => {}} onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)} />
+              <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
+            </>
+          )}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={1}
+          maxToRenderPerBatch={1}
+          windowSize={2}
+        />
       </SafeAreaView>
     );
   }
@@ -591,6 +604,9 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
       <PointsExplainer
         visible={showPointsExplainer}
@@ -663,7 +679,7 @@ const s = StyleSheet.create({
   word: {
     marginTop: 2,
     fontSize: DS_TYPOGRAPHY.SIZE_LG,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     letterSpacing: -0.3,
   },
@@ -679,13 +695,13 @@ const s = StyleSheet.create({
   },
   pillWarm: { backgroundColor: DS_COLORS.ACCENT_TINT },
   pillPurple: { backgroundColor: DS_COLORS.purpleTintWarm },
-  pillText: { fontSize: 12, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  pillText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   statsRow: { marginTop: DS_SPACING.md, marginHorizontal: DS_SPACING.xl, flexDirection: "row", gap: DS_SPACING.sm },
   statTouchable: { flex: 1 },
   stat: {
     flex: 1,
     backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     paddingVertical: 14,
     paddingHorizontal: DS_SPACING.sm,
     alignItems: "center",
@@ -700,14 +716,14 @@ const s = StyleSheet.create({
   },
   statValueNum: {
     fontSize: 22,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     lineHeight: 26,
   },
   statLabelLower: {
     marginTop: 2,
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -737,7 +753,7 @@ const s = StyleSheet.create({
   },
   rankModalTitle: {
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginBottom: DS_SPACING.md,
   },
@@ -750,24 +766,24 @@ const s = StyleSheet.create({
   rankDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.ACCENT,
   },
   rankDotPlaceholder: { width: 8, height: 8 },
-  rankRowName: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "600" },
+  rankRowName: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_SECONDARY, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   rankRowNameActive: { color: DS_COLORS.TEXT_PRIMARY },
-  rankRowDays: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_MUTED, fontWeight: "600" },
+  rankRowDays: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   welcomeCard: {
     marginTop: DS_SPACING.md,
     marginHorizontal: DS_SPACING.xl,
     backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     padding: DS_SPACING.lg,
     alignItems: "center",
   },
   welcomeTitle: {
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   welcomeBody: {
@@ -786,7 +802,7 @@ const s = StyleSheet.create({
   welcomeCtaText: {
     color: DS_COLORS.WHITE,
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   goalsSection: { paddingTop: 14 },
   goalsSectionHeader: {
@@ -798,12 +814,12 @@ const s = StyleSheet.create({
   },
   goalsSectionTitle: {
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   goalsSectionCount: {
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
   completedHeader: {
@@ -816,24 +832,24 @@ const s = StyleSheet.create({
   },
   completedHeaderText: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_SECONDARY,
   },
   completedHeaderCount: {
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
     color: DS_COLORS.TEXT_MUTED,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   allDoneBanner: {
     marginHorizontal: DS_SPACING.xl,
     marginBottom: DS_SPACING.sm,
     padding: DS_SPACING.lg,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.ACCENT_TINT,
   },
   allDoneTitle: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   allDoneSubtitle: {

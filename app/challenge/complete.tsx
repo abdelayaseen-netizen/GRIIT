@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
-  ScrollView,
+  FlatList,
 } from "react-native";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,7 +15,7 @@ import ViewShot from "react-native-view-shot";
 import Celebration from "@/components/Celebration";
 import { ShareCard } from "@/components/ShareCard";
 import { shareProgressImage, shareChallengeComplete } from "@/lib/share";
-import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 import { track, trackEvent } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
@@ -94,11 +94,17 @@ export default function ChallengeCompleteScreen() {
         streakCount={streakCount}
       />
 
-      <ScrollView
+      <FlatList
         style={styles.scroll}
+        data={[{ key: "complete-body" }]}
+        keyExtractor={(item) => item.key}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-      >
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={2}
+        renderItem={() => (
+          <>
         <View style={styles.badgeWrap}>
           <View style={styles.badgeOuter}>
             <View style={styles.badgeInner}>
@@ -180,7 +186,9 @@ export default function ChallengeCompleteScreen() {
           <Home size={16} color={DS_COLORS.textMuted} />
           <Text style={styles.backHomeText}>Back to Home</Text>
         </TouchableOpacity>
-      </ScrollView>
+          </>
+        )}
+      />
     </SafeAreaView>
   );
 }
@@ -197,7 +205,7 @@ const styles = StyleSheet.create({
   badgeOuter: {
     width: 120,
     height: 120,
-    borderRadius: 60,
+    borderRadius: DS_RADIUS.PILL,
     backgroundColor: DS_COLORS.success + "20",
     alignItems: "center",
     justifyContent: "center",
@@ -205,14 +213,14 @@ const styles = StyleSheet.create({
   badgeInner: {
     width: 88,
     height: 88,
-    borderRadius: 44,
+    borderRadius: DS_RADIUS.modal,
     backgroundColor: DS_COLORS.success,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
     fontSize: 26,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 24,
@@ -233,8 +241,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  statLabel: { fontSize: 15, fontWeight: "600", color: DS_COLORS.textSecondary },
-  statValue: { fontSize: 17, fontWeight: "800", color: DS_COLORS.textPrimary },
+  statLabel: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textSecondary },
+  statValue: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, color: DS_COLORS.textPrimary },
   divider: {
     height: 1,
     backgroundColor: DS_COLORS.border,
@@ -261,7 +269,7 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   whatsNextButton: {
@@ -278,7 +286,7 @@ const styles = StyleSheet.create({
   },
   whatsNextText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
     textAlign: "center",
   },

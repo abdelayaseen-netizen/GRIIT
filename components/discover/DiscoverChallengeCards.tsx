@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Flame, Target, BookOpen } from "lucide-react-native";
-import { DS_COLORS, getCategoryColors } from "@/lib/design-system";
+import { DS_COLORS, getCategoryColors, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { Avatar } from "@/components/Avatar";
 
 function difficultyBorder(d?: string | null): { border: string; badgeBg: string; badgeText: string; label: string } {
@@ -130,7 +130,7 @@ export function DiscoverChallengeSearchRow({
         style={{
           width: 38,
           height: 38,
-          borderRadius: 12,
+          borderRadius: DS_RADIUS.MD,
           backgroundColor: colors.tagBorder,
           alignItems: "center",
           justifyContent: "center",
@@ -239,14 +239,14 @@ const s = StyleSheet.create({
   catIcon: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     justifyContent: "center",
   },
   miniRoot: {
     width: 160,
     backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     borderLeftWidth: 3,
     position: "relative",
@@ -259,10 +259,10 @@ const s = StyleSheet.create({
   },
   miniBadgeTxt: {
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     overflow: "hidden",
   },
   miniTop: { flexDirection: "row", marginBottom: 8 },
@@ -277,12 +277,12 @@ const s = StyleSheet.create({
   },
   miniNew: { fontSize: 11, color: DS_COLORS.TEXT_MUTED },
   miniMeta24: { fontSize: 11, color: DS_COLORS.TEXT_SECONDARY, flex: 1 },
-  miniGo: { fontSize: 12, fontWeight: "700", color: DS_COLORS.ACCENT },
+  miniGo: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.ACCENT },
   fullRoot: {
     marginHorizontal: 16,
     marginBottom: 10,
     backgroundColor: DS_COLORS.WHITE,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     paddingHorizontal: 18,
     paddingVertical: 16,
     borderLeftWidth: 3,
@@ -292,7 +292,7 @@ const s = StyleSheet.create({
     marginBottom: 8,
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
   },
   badgeNew: { backgroundColor: DS_COLORS.CELEB_BONUS_GREEN_BG },
   badgePopular: { backgroundColor: DS_COLORS.FEED_DAY_PILL_BG },
@@ -301,7 +301,7 @@ const s = StyleSheet.create({
   fullTop: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
   fullMid: { flex: 1 },
   fullTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
-  fullMeta: { fontSize: 12, marginTop: 4, fontWeight: "600" },
+  fullMeta: { fontSize: 12, marginTop: 4, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   fullDesc: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 20, marginTop: 10 },
   statsMuted: { fontSize: 11, color: DS_COLORS.FEED_META_MUTED, marginTop: 10 },
   avatarRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },

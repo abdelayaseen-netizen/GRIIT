@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
-import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
+import { DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { GRIITWordmark } from "@/components/ui/GRIITWordmark";
 import { track } from "@/lib/analytics";
 
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     marginTop: 20,
     fontSize: HERO_TITLE_SIZE,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: C.WHITE,
     letterSpacing: -1,
     lineHeight: HERO_TITLE_SIZE * 1.15,
@@ -148,14 +148,14 @@ const styles = StyleSheet.create({
   statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: C.border, marginVertical: 4 },
   statNum: {
     fontSize: 24,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: C.coral,
     letterSpacing: -0.5,
   },
   statLbl: {
     marginTop: 6,
     fontSize: 9,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: C.textTertiary,
     letterSpacing: 0.8,
     textTransform: "uppercase",
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     lineHeight: 22,
     color: C.WHITE,
   },

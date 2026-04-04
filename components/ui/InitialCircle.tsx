@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const INITIAL_CIRCLE_COLORS = [
   DS_COLORS.AVATAR_COLOR_1,
@@ -35,6 +35,6 @@ const s = StyleSheet.create({
   },
   text: {
     color: DS_COLORS.WHITE,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
 });

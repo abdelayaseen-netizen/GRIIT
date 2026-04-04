@@ -19,7 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import { trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
-import { DS_COLORS } from '@/lib/design-system';
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { captureError } from '@/lib/sentry';
 import { ROUTES } from '@/lib/routes';
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -191,28 +191,28 @@ const styles = StyleSheet.create({
   closeBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topTitle: {
     fontSize: 17,
-    fontWeight: '600' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   saveBtn: {
     backgroundColor: DS_COLORS.black,
     paddingHorizontal: 18,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     minWidth: 64,
     alignItems: 'center',
   },
   saveBtnText: {
     color: DS_COLORS.white,
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 88,
     height: 88,
-    borderRadius: 44,
+    borderRadius: DS_RADIUS.modal,
     backgroundColor: DS_COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 36,
-    fontWeight: '700' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   usernameLabel: {
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   inputGroup: {},
   label: {
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.white,
     borderWidth: 1,
     borderColor: DS_COLORS.border,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,

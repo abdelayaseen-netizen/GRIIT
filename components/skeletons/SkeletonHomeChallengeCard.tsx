@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { SkeletonBase } from "./SkeletonBase";
 
 export const SkeletonHomeChallengeCard = React.memo(function SkeletonHomeChallengeCard() {
@@ -27,7 +27,7 @@ export const SkeletonHomeChallengeCard = React.memo(function SkeletonHomeChallen
 const styles = StyleSheet.create({
   card: {
     backgroundColor: DS_COLORS.card,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
     marginBottom: 12,
     borderWidth: 0.5,
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 10,
     backgroundColor: DS_COLORS.surfaceMuted,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
   },
   mt4: { marginTop: 4 },
   mt10: { marginTop: 10 },

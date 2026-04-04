@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const RING_SIZE = 64;
 const R = 28;
@@ -117,12 +117,12 @@ const s = StyleSheet.create({
   },
   streakNum: {
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   dayLabel: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_SECONDARY,
     marginBottom: 2,
   },
@@ -135,7 +135,7 @@ const s = StyleSheet.create({
   timer: {
     marginTop: 4,
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
   cta: {
@@ -147,7 +147,7 @@ const s = StyleSheet.create({
   },
   ctaText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
 });

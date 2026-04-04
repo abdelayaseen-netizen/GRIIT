@@ -17,7 +17,7 @@ import { useRouter } from "expo-router";
 import { ChevronLeft, Crown, User, LogOut, FileText } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
@@ -111,7 +111,7 @@ const visibilityStyles = StyleSheet.create({
   wrap: { marginBottom: DS_SPACING.lg },
   label: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     marginBottom: DS_SPACING.sm,
   },
   pillRow: { flexDirection: "row", gap: DS_SPACING.sm },
@@ -792,14 +792,14 @@ const styles = StyleSheet.create({
   backBtnCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: DS_COLORS.settingsBackCircle,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   headerSpacer: { width: 40 },
@@ -820,18 +820,18 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   sectionTitleLarge: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: DS_SPACING.sm,
   },
   sectionTitleFriends: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: DS_SPACING.md,
   },
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  deleteConfirmBtnText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.white },
+  deleteConfirmBtnText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.white },
   deleteCancelBtn: {
     borderWidth: 1,
     borderRadius: DS_RADIUS.button,
@@ -896,12 +896,12 @@ const styles = StyleSheet.create({
   },
   friendsNum: {
     fontSize: DS_TYPOGRAPHY.statValue.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   friendsLabel: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     letterSpacing: 0.5,
     marginTop: 2,
   },
@@ -943,14 +943,14 @@ const styles = StyleSheet.create({
   bullet: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: DS_RADIUS.featuredBadge,
     marginTop: 4,
     marginRight: DS_SPACING.md,
   },
   consequenceTextWrap: { flex: 1 },
   consequenceTitle: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.textPrimary,
   },
   reminderPill: {
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   },
   reminderPillTextActive: {
     color: DS_COLORS.white,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   consequenceSub: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,

@@ -5,7 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import LogProgressModal from "./LogProgressModal";
 import { formatShortDate } from "@/lib/date-utils";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export interface SharedGoalLogEntry {
   id: string;
@@ -198,7 +198,7 @@ export default function SharedGoalProgress({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     borderWidth: 1,
     padding: 16,
     marginBottom: 16,
@@ -211,21 +211,21 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 22,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
   },
   progressBarBg: {
     height: 10,
-    borderRadius: 5,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
     marginBottom: 8,
   },
   progressBarFill: {
     height: "100%",
-    borderRadius: 5,
+    borderRadius: DS_RADIUS.SM,
   },
   percent: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   remaining: {
     fontSize: 13,
@@ -237,18 +237,18 @@ const styles = StyleSheet.create({
   },
   logCta: {
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     alignItems: "center",
     marginBottom: 16,
   },
   logCtaText: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     marginBottom: 12,
   },
   contributionRow: {
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   },
   contributionName: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   contributionValue: {
     fontSize: 13,
@@ -272,16 +272,16 @@ const styles = StyleSheet.create({
   contributionBarBg: {
     flex: 1,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
   },
   contributionBarFill: {
     height: "100%",
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
   },
   contributionPct: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     minWidth: 32,
   },
   loader: {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   logName: {
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   logTime: {
     fontSize: 12,

@@ -5,7 +5,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 
 export default function TeamsTabScreen() {
@@ -33,8 +33,8 @@ export default function TeamsTabScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: DS_COLORS.white },
   inner: { flex: 1, padding: DS_SPACING.lg, justifyContent: "center" },
-  title: { fontSize: 22, fontWeight: "700", color: DS_COLORS.challengeHeaderDark, marginBottom: 12 },
+  title: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.challengeHeaderDark, marginBottom: 12 },
   body: { fontSize: 15, color: DS_COLORS.textSecondary, lineHeight: 22 },
-  btn: { marginTop: 24, backgroundColor: DS_COLORS.challengeHeaderDark, paddingVertical: 14, borderRadius: 12, alignItems: "center" },
-  btnText: { color: DS_COLORS.white, fontWeight: "600", fontSize: 16 },
+  btn: { marginTop: 24, backgroundColor: DS_COLORS.challengeHeaderDark, paddingVertical: 14, borderRadius: DS_RADIUS.MD, alignItems: "center" },
+  btnText: { color: DS_COLORS.white, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, fontSize: 16 },
 });

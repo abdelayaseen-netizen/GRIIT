@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { Clock } from "lucide-react-native";
-import { DS_COLORS, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 
 interface Task {
   id: string;
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   timePill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: DS_RADIUS.XL,
     borderWidth: 0.5,
     borderColor: DS_COLORS.border,
   },
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: GRIIT_COLORS.primary,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     paddingVertical: 14,
     alignItems: "center",
     marginTop: 20,

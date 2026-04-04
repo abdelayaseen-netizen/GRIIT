@@ -1,3 +1,4 @@
+import { DS_RADIUS } from "@/lib/design-system";
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { ONBOARDING_COLORS as C } from "@/components/onboarding/onboarding-theme";
@@ -31,13 +32,13 @@ const styles = StyleSheet.create({
   dot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: C.border,
   },
   dotActive: {
     width: 20,
     height: 6,
-    borderRadius: 3,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: C.coral,
   },
   dotCompleted: {

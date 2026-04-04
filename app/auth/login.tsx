@@ -17,7 +17,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 import FormInput from "@/components/shared/FormInput";
 
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.textPrimary,
     marginTop: 32,
     marginBottom: 8,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: DS_COLORS.card,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     height: 52,
     paddingHorizontal: 16,
     fontSize: 15,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: DS_COLORS.card,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: DS_RADIUS.MD,
     height: 52,
     paddingHorizontal: 16,
     marginBottom: 8,
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   forgotText: { fontSize: 13, color: DS_COLORS.accent, fontWeight: "500" },
   cta: {
     height: 56,
-    borderRadius: 28,
+    borderRadius: DS_RADIUS.joinCta,
     backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   ctaTextDisabled: {
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   dividerText: { fontSize: 13, color: DS_COLORS.textSecondary, marginHorizontal: 12 },
   btnApple: {
     height: 52,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.card,
     borderWidth: 1,
     borderColor: DS_COLORS.textPrimary,
@@ -422,20 +422,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  btnAppleText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.textPrimary },
+  btnAppleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
   btnGoogle: {
     height: 52,
-    borderRadius: 14,
+    borderRadius: DS_RADIUS.button,
     backgroundColor: DS_COLORS.textPrimary,
     alignItems: "center",
     justifyContent: "center",
   },
-  btnGoogleText: { fontSize: 16, fontWeight: "600", color: DS_COLORS.white },
+  btnGoogleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.white },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
   },
   footerText: { fontSize: 15, color: DS_COLORS.textSecondary },
-  footerLink: { fontSize: 15, fontWeight: "600", color: DS_COLORS.accent },
+  footerLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.accent },
 });

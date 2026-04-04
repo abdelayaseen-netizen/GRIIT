@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system"
 import { formatMonthShort } from "@/lib/date-utils";
 export interface DisciplineCalendarProps {
   securedDateKeys: string[];
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: DS_TYPOGRAPHY.body.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   subtitle: {
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   cell: {
     width: 12,
     height: 12,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_COLORS.borderAlt,
   },
   cellFilled: {
@@ -179,6 +179,6 @@ const styles = StyleSheet.create({
   legendSquare: {
     width: 12,
     height: 12,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
   },
 });

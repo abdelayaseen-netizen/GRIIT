@@ -18,14 +18,7 @@ import { supabase } from "@/lib/supabase";
 import { track, trackEvent } from "@/lib/analytics";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { trpcQuery } from "@/lib/trpc";
-import {
-  DS_COLORS,
-  DS_SPACING,
-  DS_RADIUS,
-  DS_TYPOGRAPHY,
-  DS_BORDERS,
-  DS_SHADOWS,
-} from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system"
 import { GRIITWordmark } from "@/components/ui";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -469,7 +462,7 @@ const styles = StyleSheet.create({
   logoArea: { alignItems: "center", marginBottom: DS_SPACING.xxxl },
   formTitle: {
     fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.textPrimary,
     marginTop: DS_SPACING.xxxl,
     marginBottom: DS_SPACING.xxl,
@@ -477,7 +470,7 @@ const styles = StyleSheet.create({
   form: { width: "100%" },
   label: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: "600",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     marginBottom: DS_SPACING.sm,
   },
   input: {
@@ -514,7 +507,7 @@ const styles = StyleSheet.create({
   strengthBar: {
     width: 48,
     height: 4,
-    borderRadius: 2,
+    borderRadius: DS_RADIUS.SM,
   },
   strengthBarInactive: { opacity: 0.25 },
   strengthWeak: { backgroundColor: DS_COLORS.danger },
@@ -539,7 +532,7 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.5 },
   buttonText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: "700",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   footer: {
@@ -549,12 +542,12 @@ const styles = StyleSheet.create({
     marginTop: DS_SPACING.lg,
   },
   footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
-  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: "600", color: DS_COLORS.accent },
+  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.accent },
   termsText: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginTop: DS_SPACING.xxl,
   },
-  termsLink: { color: DS_COLORS.accent, fontWeight: "600" },
+  termsLink: { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
 });

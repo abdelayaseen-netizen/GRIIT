@@ -15,7 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Camera } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { ONBOARDING_COLORS as C, ONBOARDING_SPACING as S } from "@/components/onboarding/onboarding-theme";
-import { DS_MEASURES, DS_RADIUS } from "@/lib/design-system";
+import { DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
@@ -270,20 +270,20 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.background },
   scroll: { paddingHorizontal: S.screenPadding, paddingBottom: 40, paddingTop: 8 },
   header: { marginBottom: 20 },
-  stepLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
-  title: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
+  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
+  title: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
   subtitle: { fontSize: 15, fontWeight: "500", lineHeight: 24, color: C.textSecondary },
   avatarWrap: { alignSelf: "center", marginBottom: 24 },
-  avatarImg: { width: 80, height: 80, borderRadius: 40 },
+  avatarImg: { width: 80, height: 80, borderRadius: DS_RADIUS.XL },
   avatarPlaceholder: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: DS_RADIUS.XL,
     backgroundColor: C.border,
     justifyContent: "center",
     alignItems: "center",
   },
-  fieldLabel: { fontSize: 13, fontWeight: "600", color: C.textSecondary, marginBottom: 6 },
+  fieldLabel: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.textSecondary, marginBottom: 6 },
   inputRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   at: { fontSize: 15, color: C.textSecondary, marginRight: 6 },
   inputFlex: { flex: 1 },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   primaryButtonDisabled: { opacity: 0.5 },
-  primaryButtonText: { fontSize: 17, fontWeight: "700", color: C.textOnAccent },
+  primaryButtonText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.textOnAccent },
   skip: { paddingVertical: 16, alignItems: "center" },
   skipText: { fontSize: 15, color: C.textSecondary },
   errorText: { fontSize: 13, color: C.accent, marginBottom: 8, textAlign: "center" },

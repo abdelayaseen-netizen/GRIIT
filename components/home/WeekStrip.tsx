@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Check, Flame, Shield, X } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
@@ -104,7 +104,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: DS_SPACING.sm,
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
-    borderRadius: 16,
+    borderRadius: DS_RADIUS.LG,
     padding: 16,
   },
   firstGoalText: {
@@ -122,43 +122,43 @@ const s = StyleSheet.create({
     padding: DS_SPACING.lg,
   },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  title: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: "700", color: DS_COLORS.TEXT_PRIMARY },
+  title: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   freezeRow: {
     flexDirection: "row",
     gap: DS_SPACING.xs,
     alignItems: "center",
     backgroundColor: DS_COLORS.GREEN_BG,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 3,
     paddingHorizontal: DS_SPACING.sm,
   },
-  freezeText: { fontSize: 11, color: DS_COLORS.GREEN, fontWeight: "600" },
+  freezeText: { fontSize: 11, color: DS_COLORS.GREEN, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   getFreezePill: {
     flexDirection: "row",
     gap: DS_SPACING.xs,
     alignItems: "center",
     backgroundColor: DS_COLORS.ACCENT_TINT,
-    borderRadius: 10,
+    borderRadius: DS_RADIUS.MD,
     paddingVertical: 3,
     paddingHorizontal: DS_SPACING.sm,
   },
-  getFreeze: { fontSize: 11, color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600" },
+  getFreeze: { fontSize: 11, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   daysRow: { flexDirection: "row", justifyContent: "space-between" },
   dayCol: { alignItems: "center" },
-  circle: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  circle: { width: 28, height: 28, borderRadius: DS_RADIUS.button, alignItems: "center", justifyContent: "center" },
   done: { backgroundColor: DS_COLORS.DISCOVER_GREEN },
   todayDone: { backgroundColor: DS_COLORS.DISCOVER_CORAL },
   missed: { backgroundColor: DS_COLORS.dangerLightBg },
   todayOpen: { backgroundColor: DS_COLORS.WHITE, borderWidth: 2, borderColor: DS_COLORS.DISCOVER_CORAL },
-  todayDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: DS_COLORS.DISCOVER_CORAL },
+  todayDot: { width: 8, height: 8, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.DISCOVER_CORAL },
   dayLabel: { marginTop: 5, fontSize: 9, color: DS_COLORS.grayMuted },
-  todayLabel: { color: DS_COLORS.DISCOVER_CORAL, fontWeight: "600" },
+  todayLabel: { color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   streak: {
     textAlign: "center",
     marginTop: 10,
     fontSize: DS_TYPOGRAPHY.SIZE_2XL,
-    fontWeight: "800",
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
-  note: { marginTop: 2, textAlign: "center", fontSize: 11, fontWeight: "600" },
+  note: { marginTop: 2, textAlign: "center", fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
 });
