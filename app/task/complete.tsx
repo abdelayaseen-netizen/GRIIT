@@ -26,7 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { Camera, Lock, CheckCircle, XCircle, MapPin, Check, Image as GalleryIcon } from "lucide-react-native";
+import { Camera, Lock, CheckCircle, XCircle, MapPin, Check, Image as GalleryIcon, Share2 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { haversineDistance } from "@/lib/geo";
@@ -42,8 +42,21 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useQueryClient } from "@tanstack/react-query";
 import { shareToInstagramStory } from "@/lib/share";
 import { trackEvent } from "@/lib/analytics";
+import { deriveUserRank } from "@/lib/derive-user-rank";
 import { VerificationGates } from "@/components/task/VerificationGates";
 import type { TaskHardVerificationConfig } from "@/lib/task-hard-verification";
+import type { ChallengeTaskFromApi, StatsFromApi, TodayCheckinForUser } from "@/types";
+import ViewShot from "react-native-view-shot";
+import { ShareSheetModal } from "@/components/share/ShareSheetModal";
+import {
+  StatementCard,
+  TransparentCard,
+  ProofPhotoCard,
+  DayRecapCard,
+  ChallengeCompleteCard,
+  MinimalStreakCard,
+  SHARE_CARD_DIMENSIONS,
+} from "@/components/share/ShareCards";
 
 const JOURNAL_PROMPTS = [
   "What did you learn about yourself today?",
@@ -135,6 +148,16 @@ function goBackOrHome(router: ReturnType<typeof useRouter>) {
   }
 }
 
+function formatCheckinTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
 function TaskCompleteScreenInner() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -149,7 +172,7 @@ function TaskCompleteScreenInner() {
     durationDays?: string;
   }>();
   const queryClient = useQueryClient();
-  const { activeChallenge, completeTask, challenge } = useApp();
+  const { activeChallenge, completeTask, challenge, stats, computeProgress, todayCheckins } = useApp();
   const showCelebration = useCelebrationStore((s) => s.show);
   const [submitted, setSubmitted] = useState(false);
   const [shareFeedErr, setShareFeedErr] = useState("");
@@ -199,6 +222,20 @@ function TaskCompleteScreenInner() {
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
   const [timeWindowFailed, setTimeWindowFailed] = useState(false);
   const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [completionMeta, setCompletionMeta] = useState<{
+    taskId: string;
+    details: string;
+    timeLabel: string;
+  } | null>(null);
+  const [completionIdForShare, setCompletionIdForShare] = useState<string | undefined>(undefined);
+
+  const shareRef = useRef<ViewShot>(null);
+  const transparentCardRef = useRef<ViewShot>(null);
+  const proofCardRef = useRef<ViewShot>(null);
+  const recapCardRef = useRef<ViewShot>(null);
+  const completeCardRef = useRef<ViewShot>(null);
+  const minimalStreakCardRef = useRef<ViewShot>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setParamsReady(true), 100);
@@ -501,7 +538,8 @@ function TaskCompleteScreenInner() {
       } else {
         valueOut = undefined;
       }
-      await completeTask({
+      const timeLabel = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      const completionResult = await completeTask({
         activeChallengeId,
         taskId,
         noteText: noteTextOut,
@@ -515,6 +553,12 @@ function TaskCompleteScreenInner() {
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
         clocked_in_at: isHardVerificationTask ? (clockedInAtRef.current ?? new Date().toISOString()) : undefined,
       });
+      setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
+      setCompletionIdForShare(
+        completionResult && typeof completionResult === "object" && "completionId" in completionResult
+          ? (completionResult as { completionId?: string }).completionId
+          : undefined
+      );
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -634,6 +678,158 @@ function TaskCompleteScreenInner() {
       setShareBusy(false);
     }
   }, [challengeIdForFeed, postCaption, photoUrl, photoUri, queryClient]);
+
+  const durationDaysShare = Math.max(
+    1,
+    (challenge as { duration_days?: number } | null)?.duration_days ?? headerDurationDays
+  );
+  const challengeDayShare = Math.max(
+    1,
+    (activeChallenge as { current_day?: number } | null)?.current_day ?? headerCurrentDay
+  );
+
+  const isAllDayComplete = useMemo(
+    () =>
+      submitted &&
+      computeProgress.totalRequired > 0 &&
+      computeProgress.verifiedCount >= computeProgress.totalRequired,
+    [submitted, computeProgress.totalRequired, computeProgress.verifiedCount]
+  );
+
+  const isChallengeCompleteShare = useMemo(
+    () => submitted && isAllDayComplete && challengeDayShare >= durationDaysShare,
+    [submitted, isAllDayComplete, challengeDayShare, durationDaysShare]
+  );
+
+  const shareStreak = useMemo(() => {
+    const fromStats = (stats as StatsFromApi | null)?.activeStreak ?? 0;
+    const fromHeader = headerCurrentDay > 1 ? headerCurrentDay - 1 : 0;
+    return Math.max(fromStats, fromHeader);
+  }, [stats, headerCurrentDay]);
+
+  const shareRank = useMemo(() => deriveUserRank(stats as StatsFromApi | null), [stats]);
+
+  const recapTasksForShare = useMemo(() => {
+    const required =
+      (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined)?.filter((t) => t.required) ?? [];
+    return required.map((t) => {
+      const checkin = todayCheckins.find(
+        (c: TodayCheckinForUser) =>
+          c.task_id === t.id && c.active_challenge_id === activeChallengeId && c.status === "completed"
+      );
+      const isJustDone = Boolean(completionMeta && t.id === taskId && completionMeta.taskId === taskId);
+      const details = isJustDone
+        ? (completionMeta?.details ?? "")
+        : (checkin?.note_text?.trim() ?? "");
+      const timestamp = isJustDone
+        ? (completionMeta?.timeLabel ?? "")
+        : checkin?.created_at
+          ? formatCheckinTime(checkin.created_at)
+          : "";
+      const name = (t.title && String(t.title).trim()) || "Task";
+      return { name, details, timestamp };
+    });
+  }, [challenge, todayCheckins, activeChallengeId, taskId, completionMeta]);
+
+  const requiredTaskCount = useMemo(() => {
+    const n = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined)?.filter((t) => t.required)
+      .length;
+    return Math.max(1, n || 1);
+  }, [challenge]);
+
+  const totalTasksForComplete = durationDaysShare * requiredTaskCount;
+
+  const proofPhotoUriForShare = photoUri || photoUrl || "";
+  const hasPhotoForShare = Boolean(photoUri || photoUrl);
+
+  const proofCheckin = useMemo(
+    () =>
+      todayCheckins.find(
+        (c: TodayCheckinForUser) =>
+          c.task_id === taskId &&
+          c.active_challenge_id === activeChallengeId &&
+          c.status === "completed"
+      ),
+    [todayCheckins, taskId, activeChallengeId]
+  );
+
+  const statementShareProps = useMemo(
+    () => ({
+      challengeName: headerChallengeName,
+      dayNumber: headerCurrentDay,
+      totalDays: headerDurationDays,
+      streak: shareStreak,
+      taskName,
+      completionTime: completionMeta?.timeLabel,
+      rank: shareRank,
+    }),
+    [headerChallengeName, headerCurrentDay, headerDurationDays, shareStreak, taskName, completionMeta?.timeLabel, shareRank]
+  );
+
+  const transparentShareProps = useMemo(
+    () => ({
+      challengeName: headerChallengeName,
+      dayNumber: headerCurrentDay,
+      totalDays: headerDurationDays,
+      streak: shareStreak,
+      taskName,
+      completionTime: completionMeta?.timeLabel,
+    }),
+    [headerChallengeName, headerCurrentDay, headerDurationDays, shareStreak, taskName, completionMeta?.timeLabel]
+  );
+
+  const proofShareProps = useMemo(
+    () => ({
+      challengeName: headerChallengeName,
+      dayNumber: headerCurrentDay,
+      totalDays: headerDurationDays,
+      streak: shareStreak,
+      taskName,
+      proofPhotoUri: proofPhotoUriForShare,
+      completionTime: completionMeta?.timeLabel,
+      isHardMode: isHardMode,
+      isVerified: proofCheckin?.verification_status === "verified",
+    }),
+    [
+      headerChallengeName,
+      headerCurrentDay,
+      headerDurationDays,
+      shareStreak,
+      taskName,
+      proofPhotoUriForShare,
+      completionMeta?.timeLabel,
+      isHardMode,
+      proofCheckin?.verification_status,
+    ]
+  );
+
+  const recapShareProps = useMemo(
+    () => ({
+      challengeName: headerChallengeName,
+      dayNumber: headerCurrentDay,
+      streak: shareStreak,
+      rank: shareRank,
+      tasks: recapTasksForShare,
+    }),
+    [headerChallengeName, headerCurrentDay, shareStreak, shareRank, recapTasksForShare]
+  );
+
+  const completeShareProps = useMemo(
+    () => ({
+      challengeName: headerChallengeName,
+      totalDays: durationDaysShare,
+      totalTasks: totalTasksForComplete,
+    }),
+    [headerChallengeName, durationDaysShare, totalTasksForComplete]
+  );
+
+  const minimalShareProps = useMemo(
+    () => ({
+      streak: shareStreak,
+      challengeName: headerChallengeName,
+    }),
+    [shareStreak, headerChallengeName]
+  );
 
   if (!taskId.trim() || !activeChallengeId.trim()) {
     if (!paramsReady) {
@@ -780,6 +976,18 @@ function TaskCompleteScreenInner() {
               )}
             </TouchableOpacity>
 
+            {Platform.OS !== "web" ? (
+              <TouchableOpacity
+                style={celebStyles.shareCardBtn}
+                onPress={() => setShowShareSheet(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Share a GRIIT card"
+              >
+                <Share2 size={20} color={DS_COLORS.WHITE} />
+                <Text style={celebStyles.shareCardBtnText}>Share card</Text>
+              </TouchableOpacity>
+            ) : null}
+
             {(photoUrl || photoUri) ? (
               <TouchableOpacity
                 style={celebStyles.shareStoriesBtn}
@@ -811,6 +1019,81 @@ function TaskCompleteScreenInner() {
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
+
+        {Platform.OS !== "web" ? (
+          <>
+            <ShareSheetModal
+              visible={showShareSheet}
+              onClose={() => setShowShareSheet(false)}
+              shareRef={shareRef}
+              transparentCardRef={transparentCardRef}
+              proofCardRef={proofCardRef}
+              recapCardRef={recapCardRef}
+              completeCardRef={completeCardRef}
+              minimalStreakCardRef={minimalStreakCardRef}
+              hasPhoto={hasPhotoForShare}
+              isAllDayComplete={isAllDayComplete}
+              isChallengeComplete={isChallengeCompleteShare}
+              statementProps={statementShareProps}
+              transparentProps={transparentShareProps}
+              proofProps={proofShareProps}
+              recapProps={recapShareProps}
+              completeProps={completeShareProps}
+              minimalProps={minimalShareProps}
+              completionId={completionIdForShare}
+            />
+            <View style={styles.offscreenCapture} pointerEvents="none" collapsable={false}>
+              <ViewShot
+                ref={shareRef}
+                options={{ format: "png", quality: 1, result: "tmpfile" }}
+                style={{ width: SHARE_CARD_DIMENSIONS.width, height: SHARE_CARD_DIMENSIONS.height }}
+              >
+                <StatementCard {...statementShareProps} />
+              </ViewShot>
+              <ViewShot
+                ref={transparentCardRef}
+                options={{ format: "png", quality: 1, result: "tmpfile" }}
+                style={{ width: SHARE_CARD_DIMENSIONS.width, height: SHARE_CARD_DIMENSIONS.height }}
+              >
+                <TransparentCard {...transparentShareProps} />
+              </ViewShot>
+              {hasPhotoForShare ? (
+                <ViewShot
+                  ref={proofCardRef}
+                  options={{ format: "png", quality: 1, result: "tmpfile" }}
+                  style={{ width: SHARE_CARD_DIMENSIONS.width, height: SHARE_CARD_DIMENSIONS.height }}
+                >
+                  <ProofPhotoCard {...proofShareProps} />
+                </ViewShot>
+              ) : null}
+              {isAllDayComplete ? (
+                <ViewShot
+                  ref={recapCardRef}
+                  options={{ format: "png", quality: 1, result: "tmpfile" }}
+                  style={{ width: SHARE_CARD_DIMENSIONS.width, height: SHARE_CARD_DIMENSIONS.height }}
+                >
+                  <DayRecapCard {...recapShareProps} />
+                </ViewShot>
+              ) : null}
+              {isChallengeCompleteShare ? (
+                <ViewShot
+                  ref={completeCardRef}
+                  options={{ format: "png", quality: 1, result: "tmpfile" }}
+                  style={{ width: SHARE_CARD_DIMENSIONS.width, height: SHARE_CARD_DIMENSIONS.height }}
+                >
+                  <ChallengeCompleteCard {...completeShareProps} />
+                </ViewShot>
+              ) : null}
+              <ViewShot
+                ref={minimalStreakCardRef}
+                options={{ format: "png", quality: 1, result: "tmpfile" }}
+                style={{ width: SHARE_CARD_DIMENSIONS.width, height: SHARE_CARD_DIMENSIONS.height }}
+              >
+                <MinimalStreakCard {...minimalShareProps} />
+              </ViewShot>
+            </View>
+          </>
+        ) : null}
       </SafeAreaView>
     );
   }
@@ -840,20 +1123,26 @@ function TaskCompleteScreenInner() {
         ) : null}
 
         {isHardVerificationTask && timeWindowFailed ? (
-          <View style={styles.missedWindowCard} accessibilityLabel="Time window closed, task missed">
-            <XCircle size={40} color={DS_COLORS.BADGE_HARD_RED} accessibilityLabel="Window closed icon" />
-            <Text style={styles.missedWindowTitle}>This task counts as missed today</Text>
-            <Text style={styles.missedWindowSub}>
-              The schedule window has closed. Try again inside the allowed time tomorrow.
-            </Text>
-            <TouchableOpacity
-              style={styles.primaryBtn}
-              onPress={() => goBackOrHome(router)}
-              accessibilityRole="button"
-              accessibilityLabel="Go back after missed task window"
-            >
-              <Text style={styles.primaryBtnText}>Go back</Text>
-            </TouchableOpacity>
+          <View accessibilityLabel="Time window closed, task missed">
+            <View style={styles.missedWindowCard}>
+              <XCircle size={40} color={DS_COLORS.BADGE_HARD_RED} accessibilityLabel="Window closed icon" />
+              <Text style={styles.missedWindowTitle}>Missed today</Text>
+              <Text style={styles.missedWindowSub}>
+                Window closed. Set an alarm and come back stronger tomorrow.
+              </Text>
+              <TouchableOpacity
+                style={styles.primaryBtn}
+                onPress={() => goBackOrHome(router)}
+                accessibilityRole="button"
+                accessibilityLabel="Go back after missed task window"
+              >
+                <Text style={styles.primaryBtnText}>Go back</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.missedRedirectCard} accessibilityLabel="You still have other tasks">
+              <Text style={styles.missedRedirectTitle}>You still have other tasks today.</Text>
+              <Text style={styles.missedRedirectSub}>Complete them to keep your streak alive.</Text>
+            </View>
           </View>
         ) : null}
 
@@ -864,15 +1153,26 @@ function TaskCompleteScreenInner() {
           style={isHardVerificationTask && !hardGatesPassed ? styles.hardGatesDimmed : undefined}
         >
         <Text style={styles.screenTitle}>{taskName}</Text>
-        <Text style={styles.headerSubtitle}>
-          {headerChallengeName} · Day {headerCurrentDay} of {headerDurationDays}
-        </Text>
+        <View style={styles.taskMetaRow}>
+          <View style={styles.pillDay}>
+            <Text style={styles.pillDayText}>
+              {headerChallengeName} · Day {headerCurrentDay} of {headerDurationDays}
+            </Text>
+          </View>
+          {headerDurationDays > 1 && headerCurrentDay > 1 ? (
+            <View style={styles.pillStreak}>
+              <Text style={styles.pillStreakText}>
+                {headerCurrentDay - 1} day streak
+              </Text>
+            </View>
+          ) : null}
+        </View>
         {firstString(params.taskDescription) ? <Text style={styles.muted}>{firstString(params.taskDescription)}</Text> : null}
 
         {/* Manual / simple — honor tap */}
         {(taskTypeRaw === "manual" || taskTypeRaw === "simple") && (
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Complete: {taskName}</Text>
+            <Text style={styles.sectionLabel}>Mark as done</Text>
             <Pressable
               onPress={() => {
                 if (!isPureManual || !canSubmit) return;
@@ -1067,14 +1367,9 @@ function TaskCompleteScreenInner() {
                 Pace: {(runMin / runKm).toFixed(2)} min/km
               </Text>
             ) : null}
-            <TouchableOpacity
-              style={styles.stravaBtn}
-              onPress={() => router.push(ROUTES.SETTINGS as never)}
-              accessibilityRole="button"
-              accessibilityLabel="Open settings for integrations"
-            >
-              <Text style={styles.stravaBtnText}>Connect Strava (Settings)</Text>
-            </TouchableOpacity>
+            <View style={styles.stravaNote} accessibilityLabel="Strava integration coming soon">
+              <Text style={styles.stravaNoteText}>Strava auto-import coming soon</Text>
+            </View>
           </View>
         )}
 
@@ -1203,37 +1498,41 @@ function TaskCompleteScreenInner() {
               </View>
             ) : (
               <View>
-                <TouchableOpacity
-                  style={styles.photoBig}
-                  onPress={handleTakePhoto}
-                  disabled={photoUploading}
-                  accessibilityRole="button"
-                  accessibilityLabel="Take photo"
-                  accessibilityState={{ disabled: photoUploading }}
-                >
-                  {photoUploading ? (
-                    <ActivityIndicator color={GRIIT_COLORS.primary} />
-                  ) : (
-                    <>
-                      <Camera size={40} color={DS_COLORS.TEXT_MUTED} />
-                      <Text style={styles.photoBigText}>Take photo</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-                {config.require_camera_only !== true ? (
+                <View style={styles.photoGrid}>
                   <TouchableOpacity
-                    style={styles.galleryLink}
-                    onPress={handlePickImage}
+                    style={styles.photoGridBtn}
+                    onPress={handleTakePhoto}
                     disabled={photoUploading}
                     accessibilityRole="button"
-                    accessibilityLabel="Choose from gallery"
+                    accessibilityLabel="Take photo"
                     accessibilityState={{ disabled: photoUploading }}
                   >
-                    <Text style={styles.link}>Choose from gallery</Text>
+                    {photoUploading ? (
+                      <ActivityIndicator color={GRIIT_COLORS.primary} />
+                    ) : (
+                      <>
+                        <Camera size={22} color={DS_COLORS.TEXT_SECONDARY} />
+                        <Text style={styles.photoGridLabel}>Take photo</Text>
+                      </>
+                    )}
                   </TouchableOpacity>
-                ) : (
+                  {config.require_camera_only !== true ? (
+                    <TouchableOpacity
+                      style={styles.photoGridBtn}
+                      onPress={handlePickImage}
+                      disabled={photoUploading}
+                      accessibilityRole="button"
+                      accessibilityLabel="Choose from gallery"
+                      accessibilityState={{ disabled: photoUploading }}
+                    >
+                      <GalleryIcon size={22} color={DS_COLORS.TEXT_SECONDARY} />
+                      <Text style={styles.photoGridLabel}>Gallery</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+                {config.require_camera_only === true ? (
                   <Text style={styles.hintSmall}>Camera only — gallery uploads are disabled for this task.</Text>
-                )}
+                ) : null}
               </View>
             )}
             {photoUrl ? <Text style={styles.hintSmall}>Uploaded ✓</Text> : null}
@@ -1270,7 +1569,11 @@ function TaskCompleteScreenInner() {
                 <ActivityIndicator color={DS_COLORS.WHITE} size="small" />
               ) : (
                 <Text style={styles.primaryBtnText}>
-                  {isHardVerificationTask && !hardGatesPassed ? "Gates must pass" : "Complete task"}
+                  {isHardVerificationTask && !hardGatesPassed
+                    ? "Gates must pass"
+                    : showWorkoutTimer && requiredSeconds > 0 && !timerOk
+                      ? `${Math.floor(Math.max(0, requiredSeconds - timerSeconds) / 60)}:${String(Math.max(0, requiredSeconds - timerSeconds) % 60).padStart(2, "0")} remaining`
+                      : "Complete task"}
                 </Text>
               )}
             </TouchableOpacity>
@@ -1305,6 +1608,35 @@ const styles = StyleSheet.create({
     marginBottom: DS_SPACING.xs,
   },
   headerSubtitle: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, marginBottom: DS_SPACING.md },
+  taskMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+    marginBottom: DS_SPACING.md,
+  },
+  pillDay: {
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  pillDayText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: DS_COLORS.TEXT_SECONDARY,
+  },
+  pillStreak: {
+    backgroundColor: DS_COLORS.amberLightBg,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  pillStreakText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: DS_COLORS.amberDarkText,
+  },
   muted: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, marginBottom: DS_SPACING.md },
   mutedCenter: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED, textAlign: "center", marginTop: DS_SPACING.sm },
   card: {
@@ -1395,6 +1727,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   stravaBtnText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_MUTED },
+  stravaNote: {
+    marginTop: DS_SPACING.md,
+    padding: DS_SPACING.md,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  stravaNoteText: {
+    fontSize: 11,
+    color: DS_COLORS.TEXT_MUTED,
+  },
   hrBox: { alignItems: "center", gap: DS_SPACING.sm },
   hrRow: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
   hrValue: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, textAlign: "center" },
@@ -1421,6 +1764,27 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
   },
   photoBigText: { marginTop: DS_SPACING.sm, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_SECONDARY },
+  photoGrid: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  photoGridBtn: {
+    flex: 1,
+    height: 80,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.BORDER,
+    borderStyle: "dashed",
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  photoGridLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: DS_COLORS.TEXT_SECONDARY,
+  },
   galleryLink: { marginTop: DS_SPACING.md, alignItems: "center" },
   link: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: GRIIT_COLORS.primary, marginTop: DS_SPACING.sm },
   textField: {
@@ -1457,7 +1821,31 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: DS_SPACING.sm,
   },
+  missedRedirectCard: {
+    backgroundColor: DS_COLORS.GREEN_BG,
+    borderRadius: 12,
+    padding: DS_SPACING.md,
+    marginTop: DS_SPACING.lg,
+    alignItems: "center",
+  },
+  missedRedirectTitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: DS_COLORS.GREEN,
+  },
+  missedRedirectSub: {
+    fontSize: 11,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 2,
+  },
   submitSection: { marginTop: DS_SPACING.xxl, paddingBottom: DS_SPACING.xxl },
+  offscreenCapture: {
+    position: "absolute",
+    left: -9999,
+    top: 0,
+    width: 1080,
+    opacity: 0,
+  },
   primaryBtn: {
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
     borderRadius: DS_RADIUS.joinCta,
@@ -1640,5 +2028,21 @@ const celebStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: DS_COLORS.TEXT_ON_DARK_60,
+  },
+  shareCardBtn: {
+    marginTop: 12,
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: DS_RADIUS.joinCta,
+    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+    paddingVertical: 16,
+  },
+  shareCardBtnText: {
+    fontSize: 16,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.WHITE,
   },
 });
