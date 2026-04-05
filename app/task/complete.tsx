@@ -1844,7 +1844,6 @@ const styles = StyleSheet.create({
     left: -9999,
     top: 0,
     width: 1080,
-    opacity: 0,
   },
   primaryBtn: {
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
