@@ -76,7 +76,7 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
         }
       } catch (err) {
         captureError(err, "ActiveChallengesLoad");
-        console.error("[ActiveChallenges] load failed:", err);
+        if (__DEV__) console.error("[ActiveChallenges] load failed:", err);
         if (!cancelled) setActiveList([]);
       } finally {
         if (!cancelled) setIsLoading(false);

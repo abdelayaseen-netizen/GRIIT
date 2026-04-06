@@ -1,8 +1,17 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Animated, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Animated,
+  TextInput,
+  Modal,
+  TouchableOpacity,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Camera, CircleCheck, Heart } from "lucide-react-native";
+import { Camera, CircleCheck, Heart, X } from "lucide-react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
@@ -47,15 +56,31 @@ function FeedPostCardInner({
   const [showQuickComment, setShowQuickComment] = React.useState(false);
   const [quickDraft, setQuickDraft] = React.useState("");
   const [sending, setSending] = React.useState(false);
+  const [lightboxVisible, setLightboxVisible] = React.useState(false);
 
   const lastTapRef = React.useRef<number>(0);
+  const tapTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const heartScale = React.useRef(new Animated.Value(0)).current;
   const heartOpacity = React.useRef(new Animated.Value(0)).current;
 
-  const handleDoubleTap = React.useCallback(() => {
+  React.useEffect(() => {
+    return () => {
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleImagePress = React.useCallback(() => {
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
+
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
       if (!post.reactedByMe) {
         onRespect();
       }
@@ -76,9 +101,17 @@ function FeedPostCardInner({
           useNativeDriver: true,
         }),
       ]).start();
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+      tapTimeoutRef.current = setTimeout(() => {
+        if (proofUri) {
+          setLightboxVisible(true);
+        }
+        tapTimeoutRef.current = null;
+      }, DOUBLE_TAP_DELAY);
     }
-    lastTapRef.current = now;
-  }, [post.reactedByMe, onRespect, heartScale, heartOpacity]);
+  }, [post.reactedByMe, onRespect, heartScale, heartOpacity, proofUri]);
 
   const handleQuickSend = React.useCallback(async () => {
     const text = quickDraft.trim();
@@ -107,7 +140,11 @@ function FeedPostCardInner({
 
       {showProof ? (
         <View style={styles.proofWrap}>
-          <Pressable onPress={handleDoubleTap} accessibilityRole="button" accessibilityLabel="Double tap to respect">
+          <Pressable
+            onPress={handleImagePress}
+            accessibilityRole="button"
+            accessibilityLabel="Tap to view full image, double tap to respect"
+          >
             {proofUri ? (
               <Image
                 source={{ uri: proofUri }}
@@ -220,6 +257,46 @@ function FeedPostCardInner({
       ) : null}
 
       <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
+
+      {proofUri ? (
+        <Modal
+          visible={lightboxVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setLightboxVisible(false)}
+          statusBarTranslucent
+        >
+          <View style={styles.lightboxOverlay}>
+            <Pressable
+              style={StyleSheet.absoluteFillObject}
+              onPress={() => setLightboxVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close full image"
+            />
+            <View
+              pointerEvents="box-none"
+              style={[StyleSheet.absoluteFillObject, styles.lightboxImageCenter]}
+            >
+              <Pressable onPress={() => {}} accessibilityRole="image" accessibilityLabel="Full size proof photo">
+                <Image
+                  source={{ uri: proofUri }}
+                  style={styles.lightboxImage}
+                  contentFit="contain"
+                />
+              </Pressable>
+            </View>
+            <TouchableOpacity
+              style={styles.lightboxClose}
+              onPress={() => setLightboxVisible(false)}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
+              <X size={24} color={DS_COLORS.WHITE} />
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      ) : null}
     </View>
   );
 }
@@ -373,5 +450,31 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 11,
     color: DS_COLORS.FEED_META_MUTED,
+  },
+  lightboxOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.92)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lightboxImageCenter: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lightboxClose: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: DS_COLORS.OVERLAY_WHITE_15,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
+  lightboxImage: {
+    width: "100%",
+    height: "80%",
   },
 });

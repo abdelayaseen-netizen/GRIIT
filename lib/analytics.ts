@@ -1,7 +1,9 @@
 /**
  * Analytics events for activation and retention. Forwarded to PostHog when configured.
  */
-export type AnalyticsEvent =
+import { getPostHog, resetPostHog } from "./posthog";
+
+type AnalyticsEvent =
   | { name: "app_opened"; streak_count?: number; isPremium?: boolean }
   | { name: "guest_view_screen"; screen: string }
   | { name: "gate_modal_shown"; context: "join" | "secure" | "respect" | "nudge" | "create" | "team" | "other" }
@@ -76,7 +78,7 @@ export type AnalyticsEvent =
   | { name: "milestone_approaching_notification_scheduled"; milestone_day: number }
   | { name: "review_prompted"; total_days_secured: number; trigger: string };
 
-export type UserProperties = {
+type UserProperties = {
   days_since_signup?: number;
   current_streak?: number;
   discipline_score?: number;
@@ -87,27 +89,13 @@ export type UserProperties = {
   tier?: string;
 };
 
-import { getPostHog, resetPostHog } from "./posthog";
-
 /** PostHog sends only in production unless `EXPO_PUBLIC_POSTHOG_ENABLE_DEV=true`. */
 function shouldSendPostHog(): boolean {
   if (!__DEV__) return true;
   return (process.env.EXPO_PUBLIC_POSTHOG_ENABLE_DEV ?? "").trim() === "true";
 }
 
-let _handler: ((e: AnalyticsEvent) => void) | null = null;
-let _identify: ((userId: string, props?: UserProperties) => void) | null = null;
-
-export function setAnalyticsHandler(handler: (e: AnalyticsEvent) => void) {
-  _handler = handler;
-}
-
-export function setIdentify(identify: (userId: string, props?: UserProperties) => void) {
-  _identify = identify;
-}
-
 export function identify(userId: string, props?: UserProperties) {
-  _identify?.(userId, props);
   if (!shouldSendPostHog()) return;
   const ph = getPostHog();
   if (ph) {
@@ -159,10 +147,7 @@ export function trackEvent(event: string, properties?: FunnelProps): void {
   }
 }
 
-export const identifyUser = identify;
-
 export function track(event: AnalyticsEvent) {
-  _handler?.(event);
   if (!shouldSendPostHog()) return;
   const ph = getPostHog();
   if (ph) {

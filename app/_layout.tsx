@@ -336,38 +336,6 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen 
-        name="task/journal" 
-        options={{ 
-          headerShown: true,
-          title: "Journal Entry",
-          presentation: "card"
-        }} 
-      />
-      <Stack.Screen 
-        name="task/timer" 
-        options={{ 
-          headerShown: true,
-          title: "Timer Task",
-          presentation: "card"
-        }} 
-      />
-      <Stack.Screen 
-        name="task/photo" 
-        options={{ 
-          headerShown: true,
-          title: "Photo Verification",
-          presentation: "card"
-        }} 
-      />
-      <Stack.Screen 
-        name="task/manual" 
-        options={{ 
-          headerShown: true,
-          title: "Complete Task",
-          presentation: "card"
-        }} 
-      />
-      <Stack.Screen 
         name="task/complete" 
         options={{ 
           headerShown: true,

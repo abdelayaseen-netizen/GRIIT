@@ -9,7 +9,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
-import { escapeLikeWildcards } from "../../lib/sanitize-search";
+import { escapeLikeWildcards, requireUuidForPostgrestOr } from "../../lib/sanitize-search";
 
 /** Ensure 24h challenges have ends_at for frontend countdown (derive from live_date if missing). */
 function with24hEndsAt<T extends { duration_type?: string; ends_at?: string | null; live_date?: string | null }>(row: T): T {
@@ -33,10 +33,11 @@ export const challengesDiscoverProcedures = {
       )
       .eq("status", "published")
       .order("created_at", { ascending: false })
-      .limit(350);
+      .limit(50);
 
     if (ctx.userId) {
-      q = q.or(`visibility.eq.PUBLIC,creator_id.eq.${ctx.userId}`);
+      const safeUserId = requireUuidForPostgrestOr(ctx.userId);
+      q = q.or(`visibility.eq.PUBLIC,creator_id.eq.${safeUserId}`);
     } else {
       q = q.eq("visibility", "PUBLIC");
     }
@@ -92,7 +93,7 @@ export const challengesDiscoverProcedures = {
         .select("challenge_id, user_id")
         .in("challenge_id", teamChallengeIds)
         .eq("status", "active")
-        .limit(600);
+        .limit(50);
 
       const userIds = [...new Set((acPart ?? []).map((r: { user_id: string }) => r.user_id))];
       const { data: profs } =
@@ -286,7 +287,8 @@ export const challengesDiscoverProcedures = {
         .range(safeOffset, safeOffset + limit - 1);
 
       if (ctx.userId) {
-        query = query.or(`visibility.eq.PUBLIC,creator_id.eq.${ctx.userId}`);
+        const safeUserId = requireUuidForPostgrestOr(ctx.userId);
+        query = query.or(`visibility.eq.PUBLIC,creator_id.eq.${safeUserId}`);
       } else {
         query = query.eq("visibility", "PUBLIC");
       }

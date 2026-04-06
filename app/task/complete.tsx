@@ -19,6 +19,8 @@ import {
   Animated,
   Pressable,
   KeyboardAvoidingView,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from "react-native";
 import { Image } from "expo-image";
 import { useCelebrationStore } from "@/store/celebrationStore";
@@ -140,6 +142,87 @@ function inferRunOrWorkout(taskType: string, taskName: string): "run" | "workout
 
 const WORKOUT_KINDS = ["Gym", "HIIT", "Yoga", "Calisthenics", "Other"] as const;
 
+const RUN_PICKER_ITEM_H = 40;
+const RUN_PICKER_PAD = 40;
+
+const RUN_WHOLE_KM = Array.from({ length: 51 }, (_, i) => String(i));
+const RUN_DEC_KM = Array.from({ length: 10 }, (_, i) => String(i));
+const RUN_DURATION_ITEMS = Array.from({ length: 181 }, (_, i) => String(i));
+
+function parseRunKmParts(s: string): { whole: number; dec: number } {
+  const t = s.replace(",", ".").trim();
+  if (!t) return { whole: 0, dec: 0 };
+  const [w, d = "0"] = t.split(".");
+  let whole = parseInt(w || "0", 10);
+  if (!Number.isFinite(whole)) whole = 0;
+  whole = Math.min(50, Math.max(0, whole));
+  let dec = parseInt(String(d).slice(0, 1) || "0", 10);
+  if (!Number.isFinite(dec)) dec = 0;
+  dec = Math.min(9, Math.max(0, dec));
+  return { whole, dec };
+}
+
+function RunPickerColumn({
+  data,
+  selectedIndex,
+  onSelectIndex,
+}: {
+  data: string[];
+  selectedIndex: number;
+  onSelectIndex: (index: number) => void;
+}) {
+  const scrollRef = useRef<ScrollView>(null);
+  const safeIdx = Math.max(0, Math.min(data.length - 1, selectedIndex));
+
+  useLayoutEffect(() => {
+    scrollRef.current?.scrollTo({ y: safeIdx * RUN_PICKER_ITEM_H, animated: false });
+  }, [safeIdx, data.length]);
+
+  return (
+    <ScrollView
+      ref={scrollRef}
+      style={{ flex: 1, height: 120 }}
+      showsVerticalScrollIndicator={false}
+      snapToInterval={RUN_PICKER_ITEM_H}
+      snapToAlignment="start"
+      decelerationRate="fast"
+      nestedScrollEnabled
+      contentContainerStyle={{ paddingVertical: RUN_PICKER_PAD }}
+      onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const y = e.nativeEvent.contentOffset.y;
+        let i = Math.round(y / RUN_PICKER_ITEM_H);
+        i = Math.max(0, Math.min(data.length - 1, i));
+        onSelectIndex(i);
+      }}
+    >
+      {data.map((label, index) => (
+        <View
+          key={`${label}-${index}`}
+          style={{
+            height: RUN_PICKER_ITEM_H,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={
+              index === safeIdx
+                ? {
+                    fontSize: 20,
+                    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
+                    color: DS_COLORS.TEXT_PRIMARY,
+                  }
+                : { fontSize: 16, fontWeight: "400", color: DS_COLORS.TEXT_MUTED }
+            }
+          >
+            {label}
+          </Text>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
 function goBackOrHome(router: ReturnType<typeof useRouter>) {
   if (router.canGoBack()) {
     router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
@@ -206,10 +289,10 @@ function TaskCompleteScreenInner() {
   const { error, showError, clearError } = useInlineError();
   const [paramsReady, setParamsReady] = useState(false);
   const manualScale = useRef(new Animated.Value(1)).current;
-  const runDistanceKm = useRef("");
-  const runDurationMin = useRef("");
-  const [runDistance, setRunDistance] = useState("");
-  const [runDuration, setRunDuration] = useState("");
+  const runDistanceKm = useRef("0.0");
+  const runDurationMin = useRef("0");
+  const [runDistance, setRunDistance] = useState("0.0");
+  const [runDuration, setRunDuration] = useState("0");
   const [workoutDuration, setWorkoutDuration] = useState("");
   const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Gym");
   const [workoutNotes, setWorkoutNotes] = useState("");
@@ -1131,12 +1214,12 @@ function TaskCompleteScreenInner() {
                 Window closed. Set an alarm and come back stronger tomorrow.
               </Text>
               <TouchableOpacity
-                style={styles.primaryBtn}
+                style={styles.missedGoBackBtn}
                 onPress={() => goBackOrHome(router)}
                 accessibilityRole="button"
                 accessibilityLabel="Go back after missed task window"
               >
-                <Text style={styles.primaryBtnText}>Go back</Text>
+                <Text style={styles.missedGoBackBtnText}>Go back</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.missedRedirectCard} accessibilityLabel="You still have other tasks">
@@ -1340,28 +1423,51 @@ function TaskCompleteScreenInner() {
                   ? `Log at least ${minDurMinutes} minutes (duration required). Distance optional unless your challenge expects it.`
                   : "Distance and duration are required. Photo proof if your challenge requires it."}
             </Text>
-            <TextInput
-              style={styles.textField}
-              placeholder="Distance (km)"
-              placeholderTextColor={DS_COLORS.inputPlaceholder}
-              keyboardType="decimal-pad"
-              value={runDistance}
-              onChangeText={(t) => {
-                setRunDistance(t);
-                runDistanceKm.current = t;
-              }}
-            />
-            <TextInput
-              style={styles.textField}
-              placeholder="Duration (minutes)"
-              placeholderTextColor={DS_COLORS.inputPlaceholder}
-              keyboardType="number-pad"
-              value={runDuration}
-              onChangeText={(t) => {
-                setRunDuration(t);
-                runDurationMin.current = t;
-              }}
-            />
+            <Text style={styles.pickerLabel}>Distance (km)</Text>
+            <View style={styles.runPickerContainer}>
+              <View style={styles.runPickerHighlightBand} pointerEvents="none" />
+              <View style={styles.runPickerColumns}>
+                <RunPickerColumn
+                  data={RUN_WHOLE_KM}
+                  selectedIndex={parseRunKmParts(runDistance || "0.0").whole}
+                  onSelectIndex={(i) => {
+                    const d = parseRunKmParts(runDistance || "0.0").dec;
+                    const next = `${i}.${d}`;
+                    setRunDistance(next);
+                    runDistanceKm.current = next;
+                  }}
+                />
+                <RunPickerColumn
+                  data={RUN_DEC_KM}
+                  selectedIndex={parseRunKmParts(runDistance || "0.0").dec}
+                  onSelectIndex={(i) => {
+                    const w = parseRunKmParts(runDistance || "0.0").whole;
+                    const next = `${w}.${i}`;
+                    setRunDistance(next);
+                    runDistanceKm.current = next;
+                  }}
+                />
+              </View>
+            </View>
+
+            <Text style={styles.pickerLabel}>Duration (minutes)</Text>
+            <View style={styles.runPickerContainer}>
+              <View style={styles.runPickerHighlightBand} pointerEvents="none" />
+              <View style={styles.runPickerColumnsSingle}>
+                <RunPickerColumn
+                  data={RUN_DURATION_ITEMS}
+                  selectedIndex={(() => {
+                    const n = parseInt((runDuration || "0").trim(), 10);
+                    return Number.isFinite(n) ? Math.min(180, Math.max(0, n)) : 0;
+                  })()}
+                  onSelectIndex={(i) => {
+                    const next = String(i);
+                    setRunDuration(next);
+                    runDurationMin.current = next;
+                  }}
+                />
+              </View>
+            </View>
             {!Number.isNaN(runKm) && runKm > 0 && !Number.isNaN(runMin) && runMin > 0 ? (
               <Text style={styles.paceHint}>
                 Pace: {(runMin / runKm).toFixed(2)} min/km
@@ -1838,6 +1944,21 @@ const styles = StyleSheet.create({
     color: DS_COLORS.TEXT_SECONDARY,
     marginTop: 2,
   },
+  missedGoBackBtn: {
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.joinCta,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    paddingVertical: DS_SPACING.md,
+    paddingHorizontal: DS_SPACING.xxl,
+    alignItems: "center",
+    marginTop: DS_SPACING.sm,
+  },
+  missedGoBackBtnText: {
+    color: DS_COLORS.TEXT_SECONDARY,
+    fontSize: 14,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+  },
   submitSection: { marginTop: DS_SPACING.xxl, paddingBottom: DS_SPACING.xxl },
   offscreenCapture: {
     position: "absolute",
@@ -1854,6 +1975,35 @@ const styles = StyleSheet.create({
   },
   primaryBtnDisabled: { opacity: 0.4 },
   primaryBtnText: { color: DS_COLORS.WHITE, fontSize: 16, fontWeight: "500" },
+  pickerLabel: {
+    fontSize: 13,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginBottom: 6,
+    marginTop: DS_SPACING.sm,
+  },
+  runPickerContainer: {
+    height: 120,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    borderRadius: DS_RADIUS.input,
+    overflow: "hidden",
+    marginBottom: DS_SPACING.sm,
+    position: "relative",
+  },
+  runPickerHighlightBand: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 40,
+    height: 40,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    zIndex: 1,
+  },
+  runPickerColumns: { flexDirection: "row", height: 120, zIndex: 2 },
+  runPickerColumnsSingle: { flexDirection: "row", height: 120, zIndex: 2 },
   paceHint: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, marginBottom: DS_SPACING.sm },
   kindChip: {
     paddingVertical: 8,

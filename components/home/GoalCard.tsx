@@ -87,7 +87,7 @@ export default React.memo(function GoalCard({
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   useEffect(() => {
-    if (isError) {
+    if (isError && __DEV__) {
       console.error("[GoalCard] Home goals query failed; showing browse challenges empty state.");
     }
   }, [isError]);

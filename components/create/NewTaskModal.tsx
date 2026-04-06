@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -104,6 +104,142 @@ function parseTimeToHHMM(timeStr: string): string {
   if (period === "AM" && hours === 12) hours = 0;
   if (!Number.isFinite(hours) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return timeStr.trim();
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+const HM_SCHEDULE_MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+const HM_HOURS_12 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+const HM_PICKER_ITEM = 33;
+const HM_PICKER_PAD = 33;
+const HM_PICKER_H = 99;
+
+function parseScheduleDisplay(s: string, fallback: string): { h: number; m: number; pm: boolean } {
+  const raw = (s && s.trim() ? s : fallback).trim().toUpperCase().replace(/\s+/g, " ");
+  const match = raw.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!match) return { h: 7, m: 0, pm: false };
+  let h = parseInt(match[1] ?? "0", 10);
+  const minRaw = parseInt(match[2] ?? "0", 10);
+  const pm = match[3] === "PM";
+  if (!Number.isFinite(h) || h < 1 || h > 12) h = 7;
+  if (!Number.isFinite(minRaw)) return { h, m: 0, pm };
+  let nearest = 0;
+  HM_SCHEDULE_MINUTES.forEach((val, i) => {
+    const d = Math.abs(val - minRaw);
+    const prev = HM_SCHEDULE_MINUTES[nearest];
+    const bd = prev === undefined ? Infinity : Math.abs(prev - minRaw);
+    if (d < bd) nearest = i;
+  });
+  const mSnap = HM_SCHEDULE_MINUTES[nearest] ?? 0;
+  return { h, m: mSnap, pm };
+}
+
+function HMTimeColumn({
+  labels,
+  selectedIndex,
+  onSelectIndex,
+  columnWidth,
+}: {
+  labels: string[];
+  selectedIndex: number;
+  onSelectIndex: (i: number) => void;
+  columnWidth: number;
+}) {
+  const scrollRef = useRef<ScrollView>(null);
+  const safeIdx = Math.max(0, Math.min(labels.length - 1, selectedIndex));
+
+  useLayoutEffect(() => {
+    scrollRef.current?.scrollTo({ y: safeIdx * HM_PICKER_ITEM, animated: false });
+  }, [safeIdx, labels.length]);
+
+  return (
+    <ScrollView
+      ref={scrollRef}
+      style={{ width: columnWidth, height: HM_PICKER_H }}
+      showsVerticalScrollIndicator={false}
+      snapToInterval={HM_PICKER_ITEM}
+      snapToAlignment="start"
+      decelerationRate="fast"
+      nestedScrollEnabled
+      contentContainerStyle={{ paddingVertical: HM_PICKER_PAD }}
+      onMomentumScrollEnd={(e) => {
+        const y = e.nativeEvent.contentOffset.y;
+        let i = Math.round(y / HM_PICKER_ITEM);
+        i = Math.max(0, Math.min(labels.length - 1, i));
+        onSelectIndex(i);
+      }}
+    >
+      {labels.map((label, index) => (
+        <View
+          key={`${label}-${index}`}
+          style={{
+            height: HM_PICKER_ITEM,
+            width: columnWidth,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text style={index === safeIdx ? s.hmPickerTextSelected : s.hmPickerTextMuted}>{label}</Text>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+function ScheduleTimeScrollPicker({
+  value,
+  onChange,
+  label,
+  accessibilityLabel,
+  fallbackTime,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  accessibilityLabel: string;
+  fallbackTime: string;
+}) {
+  const { h, m, pm } = parseScheduleDisplay(value, fallbackTime);
+  const hourIdx = Math.max(0, Math.min(11, h - 1));
+  const minIdx = Math.max(0, HM_SCHEDULE_MINUTES.indexOf(m));
+  const ampmIdx = pm ? 1 : 0;
+
+  const commit = (next: { hi?: number; mi?: number; ai?: number }) => {
+    const hi = next.hi ?? hourIdx;
+    const mi = next.mi ?? minIdx;
+    const ai = next.ai ?? ampmIdx;
+    const hour = HM_HOURS_12[hi] ?? 7;
+    const minute = HM_SCHEDULE_MINUTES[mi] ?? 0;
+    const isPm = ai === 1;
+    onChange(`${hour}:${String(minute).padStart(2, "0")} ${isPm ? "PM" : "AM"}`);
+  };
+
+  return (
+    <View style={s.hmTimeInput} accessibilityLabel={accessibilityLabel}>
+      <Text style={s.hmTimeLabel}>{label}</Text>
+      <View style={s.hmPickerShell}>
+        <View style={s.hmPickerHighlight} pointerEvents="none" />
+        <View style={s.hmPickerColumns}>
+          <HMTimeColumn
+            labels={HM_HOURS_12.map(String)}
+            selectedIndex={hourIdx}
+            onSelectIndex={(i) => commit({ hi: i })}
+            columnWidth={50}
+          />
+          <HMTimeColumn
+            labels={HM_SCHEDULE_MINUTES.map((n) => String(n).padStart(2, "0"))}
+            selectedIndex={minIdx}
+            onSelectIndex={(i) => commit({ mi: i })}
+            columnWidth={50}
+          />
+          <HMTimeColumn
+            labels={["AM", "PM"]}
+            selectedIndex={ampmIdx}
+            onSelectIndex={(i) => commit({ ai: i })}
+            columnWidth={45}
+          />
+        </View>
+      </View>
+    </View>
+  );
 }
 
 type WorkoutTypeUI = "general" | "cardio" | "strength" | "hiit" | "yoga";
@@ -322,8 +458,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const [anchorTime, setAnchorTime] = useState("06:00");
   const [windowMinutes, setWindowMinutes] = useState("60");
   const [hardMode, setHardMode] = useState(false);
-  const [scheduleStart, setScheduleStart] = useState("");
-  const [scheduleEnd, setScheduleEnd] = useState("");
+  const [scheduleStart, setScheduleStart] = useState("7:00 AM");
+  const [scheduleEnd, setScheduleEnd] = useState("8:00 AM");
   const [requireLocation, setRequireLocation] = useState(false);
   const [locationName, setLocationName] = useState("");
   const [locationLat, setLocationLat] = useState<number | null>(null);
@@ -367,8 +503,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       setAnchorTime("06:00");
       setWindowMinutes("60");
       setHardMode(false);
-      setScheduleStart("");
-      setScheduleEnd("");
+      setScheduleStart("7:00 AM");
+      setScheduleEnd("8:00 AM");
       setRequireLocation(false);
       setLocationName("");
       setLocationLat(null);
@@ -1085,28 +1221,20 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                 <Text style={s.hmConfigLabel}>Schedule window</Text>
                 <Text style={s.hmConfigHint}>Task must be completed within this time range</Text>
                 <View style={s.hmTimeRow}>
-                  <View style={s.hmTimeInput}>
-                    <TextInput
-                      style={s.hmTimeField}
-                      placeholder="7:00 AM"
-                      placeholderTextColor={DS_COLORS.TEXT_HINT}
-                      value={scheduleStart}
-                      onChangeText={setScheduleStart}
-                      accessibilityLabel="Schedule window start time"
-                    />
-                    <Text style={s.hmTimeLabel}>Start</Text>
-                  </View>
-                  <View style={s.hmTimeInput}>
-                    <TextInput
-                      style={s.hmTimeField}
-                      placeholder="8:00 AM"
-                      placeholderTextColor={DS_COLORS.TEXT_HINT}
-                      value={scheduleEnd}
-                      onChangeText={setScheduleEnd}
-                      accessibilityLabel="Schedule window end time"
-                    />
-                    <Text style={s.hmTimeLabel}>End</Text>
-                  </View>
+                  <ScheduleTimeScrollPicker
+                    value={scheduleStart}
+                    onChange={setScheduleStart}
+                    label="Start"
+                    fallbackTime="7:00 AM"
+                    accessibilityLabel="Schedule window start time"
+                  />
+                  <ScheduleTimeScrollPicker
+                    value={scheduleEnd}
+                    onChange={setScheduleEnd}
+                    label="End"
+                    fallbackTime="8:00 AM"
+                    accessibilityLabel="Schedule window end time"
+                  />
                 </View>
 
                 <View style={s.hardModeToggleRow}>
@@ -1404,7 +1532,38 @@ const s = StyleSheet.create({
     padding: 12,
   },
   hmTimeField: { fontSize: 16, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
-  hmTimeLabel: { fontSize: 11, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
+  hmTimeLabel: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginBottom: 6,
+  },
+  hmPickerShell: {
+    height: HM_PICKER_H,
+    borderRadius: DS_RADIUS.SM,
+    overflow: "hidden",
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    position: "relative",
+  },
+  hmPickerHighlight: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: HM_PICKER_PAD,
+    height: HM_PICKER_ITEM,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    zIndex: 1,
+  },
+  hmPickerColumns: { flexDirection: "row", height: HM_PICKER_H, zIndex: 2 },
+  hmPickerTextSelected: {
+    fontSize: 18,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  hmPickerTextMuted: { fontSize: 14, fontWeight: "400", color: DS_COLORS.TEXT_MUTED },
   hmLocationInput: {
     backgroundColor: DS_COLORS.WARM_CREAM,
     borderWidth: 1.5,

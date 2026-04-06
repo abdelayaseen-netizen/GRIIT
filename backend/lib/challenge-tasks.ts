@@ -338,7 +338,14 @@ export function buildTaskInsertPayload(
   },
   challengeId: string,
   orderIndex: number
-): { challenge_id: string; title: string; task_type: string; order_index: number; config: ChallengeTaskConfig } {
+): {
+  challenge_id: string;
+  title: string;
+  task_type: string;
+  order_index: number;
+  config: ChallengeTaskConfig;
+  require_photo?: boolean;
+} {
   const task_type = toTaskType(task.type ?? "manual");
   const t = task as Record<string, unknown>;
   const config = buildTaskConfigFromInput({
@@ -378,5 +385,6 @@ export function buildTaskInsertPayload(
     task_type,
     order_index: orderIndex,
     config,
+    ...(task.photoRequired === true || task.requirePhotoProof === true ? { require_photo: true } : {}),
   };
 }

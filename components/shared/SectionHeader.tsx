@@ -9,7 +9,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-export default function SectionHeader({ title, actionLabel, onPressAction, style }: Props) {
+function SectionHeaderInner({ title, actionLabel, onPressAction, style }: Props) {
   const seeAllLabel = `See all ${title}`;
   return (
     <View style={[s.row, style]}>
@@ -26,6 +26,8 @@ export default function SectionHeader({ title, actionLabel, onPressAction, style
     </View>
   );
 }
+
+export default React.memo(SectionHeaderInner);
 
 const s = StyleSheet.create({
   row: {

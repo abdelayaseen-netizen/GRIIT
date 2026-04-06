@@ -118,7 +118,6 @@ export const challengesRouter = createTRPCRouter({
         .single();
 
       if (error) {
-        console.error("[challenges.getById] Supabase error:", JSON.stringify(error));
         const pgCode = (error as { code?: string }).code;
         if (pgCode === "PGRST116") {
           throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });

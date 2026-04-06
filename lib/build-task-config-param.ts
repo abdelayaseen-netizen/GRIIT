@@ -9,7 +9,11 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
       typeof t.config === "object" && t.config !== null ? (t.config as Record<string, unknown>) : {};
     const requireLoc = t.require_location === true || cfg.require_location === true;
     return JSON.stringify({
-      require_photo: t.require_photo ?? t.require_photo_proof,
+      require_photo:
+        t.require_photo === true ||
+        t.require_photo_proof === true ||
+        cfg.photo_required === true ||
+        cfg.require_photo_proof === true,
       min_duration_minutes: t.min_duration_minutes ?? t.duration_minutes,
       scheduled_time: typeof t.scheduled_time === "string" ? t.scheduled_time : undefined,
       min_words: t.min_words,

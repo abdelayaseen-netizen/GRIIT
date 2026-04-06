@@ -23,24 +23,31 @@ export const feedCoreProcedures = {
     const followingIds = new Set<string>();
     const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
-    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(150);
+    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(60);
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
     // Load profile visibility for feed filtering
     const eventUserIds = [...new Set(events.map((e) => e.user_id))];
-    const privateUserIds = new Set<string>();
-    if (eventUserIds.length > 0) {
-      const { data: visRows } = await server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds);
-      for (const r of (visRows ?? []) as { user_id: string; profile_visibility?: string | null }[]) {
-        const v = String(r.profile_visibility ?? "public").toLowerCase();
-        if (v === "private") privateUserIds.add(r.user_id);
-      }
-    }
     const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((id): id is string => !!id))];
+
+    // Parallelize visibility + challenge lookups
+    const [visResult, chResult] = await Promise.all([
+      eventUserIds.length > 0
+        ? server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds)
+        : Promise.resolve({ data: [] }),
+      challengeIds.length > 0
+        ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const privateUserIds = new Set<string>();
+    for (const r of ((visResult.data ?? []) as { user_id: string; profile_visibility?: string | null }[])) {
+      const v = String(r.profile_visibility ?? "public").toLowerCase();
+      if (v === "private") privateUserIds.add(r.user_id);
+    }
     const challengeMap = new Map<string, { id: string; title?: string; visibility?: string; duration_days?: number }>();
-    if (challengeIds.length) {
-      const { data: chs } = await server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds);
-      for (const c of (chs ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[]) challengeMap.set(c.id, c);
+    for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
+      challengeMap.set(c.id, c);
     }
     const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean => {
       if (vis === "private" && ev.user_id !== viewerId) return false;

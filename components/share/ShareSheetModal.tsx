@@ -9,7 +9,6 @@ import {
   Dimensions,
   ActivityIndicator,
   Platform,
-  Alert,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import * as FileSystem from "expo-file-system/legacy";
@@ -123,6 +122,13 @@ export function ShareSheetModal({
 }: ShareSheetModalProps) {
   const [selected, setSelected] = useState<ShareSheetCardKey>("Statement");
   const [busy, setBusy] = useState(false);
+  const [inlineMsg, setInlineMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  useEffect(() => {
+    if (!inlineMsg) return;
+    const t = setTimeout(() => setInlineMsg(null), 3000);
+    return () => clearTimeout(t);
+  }, [inlineMsg]);
 
   const cards: CardOption[] = useMemo(
     () =>
@@ -202,7 +208,7 @@ export function ShareSheetModal({
       }
     } catch (e) {
       captureError(e, "ShareSheetModalInstagram");
-      Alert.alert("Couldn't share", "Try Save, then share from your photos.");
+      setInlineMsg({ text: "Try Save, then share from your photos.", type: "error" });
     } finally {
       setBusy(false);
     }
@@ -210,7 +216,7 @@ export function ShareSheetModal({
 
   const handleCopy = useCallback(async () => {
     if (Platform.OS === "web") {
-      Alert.alert("Not available", "Copy image works in the mobile app.");
+      setInlineMsg({ text: "Copy image works in the mobile app.", type: "error" });
       return;
     }
     setBusy(true);
@@ -224,10 +230,10 @@ export function ShareSheetModal({
       } catch {
         /* non-fatal */
       }
-      Alert.alert("Copied", "Image copied. Paste in Instagram Stories or another app.");
+      setInlineMsg({ text: "Image copied. Paste in Instagram Stories or another app.", type: "success" });
     } catch (e) {
       captureError(e, "ShareSheetModalCopy");
-      Alert.alert("Copy failed", "Try Save instead.");
+      setInlineMsg({ text: "Try Save instead.", type: "error" });
     } finally {
       setBusy(false);
     }
@@ -235,7 +241,7 @@ export function ShareSheetModal({
 
   const handleSave = useCallback(async () => {
     if (Platform.OS === "web") {
-      Alert.alert("Not available", "Save works in the mobile app.");
+      setInlineMsg({ text: "Save works in the mobile app.", type: "error" });
       return;
     }
     setBusy(true);
@@ -244,7 +250,7 @@ export function ShareSheetModal({
       if (!uri) throw new Error("capture_failed");
       const perm = await MediaLibrary.requestPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("Permission needed", "Allow photo library access to save.");
+        setInlineMsg({ text: "Allow photo library access to save.", type: "error" });
         return;
       }
       await MediaLibrary.saveToLibraryAsync(uri);
@@ -253,10 +259,10 @@ export function ShareSheetModal({
       } catch {
         /* non-fatal */
       }
-      Alert.alert("Saved", "Image saved to your library.");
+      setInlineMsg({ text: "Image saved to your library.", type: "success" });
     } catch (e) {
       captureError(e, "ShareSheetModalSave");
-      Alert.alert("Save failed", "Try again or use the system share sheet.");
+      setInlineMsg({ text: "Try again or use the system share sheet.", type: "error" });
     } finally {
       setBusy(false);
     }
@@ -292,6 +298,25 @@ export function ShareSheetModal({
             <Text style={styles.closeText}>Done</Text>
           </Pressable>
         </View>
+
+        {inlineMsg ? (
+          <View
+            style={[
+              styles.inlineMsg,
+              inlineMsg.type === "error" ? styles.inlineMsgError : styles.inlineMsgSuccess,
+            ]}
+            accessibilityRole="alert"
+          >
+            <Text
+              style={[
+                styles.inlineMsgText,
+                inlineMsg.type === "error" ? styles.inlineMsgTextError : styles.inlineMsgTextSuccess,
+              ]}
+            >
+              {inlineMsg.text}
+            </Text>
+          </View>
+        ) : null}
 
         <Text style={styles.hint}>{hints[selected]}</Text>
 
@@ -381,6 +406,26 @@ const styles = StyleSheet.create({
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
+  inlineMsg: {
+    marginHorizontal: DS_SPACING.lg,
+    marginBottom: DS_SPACING.sm,
+    paddingVertical: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.md,
+    borderRadius: DS_RADIUS.MD,
+  },
+  inlineMsgSuccess: {
+    backgroundColor: DS_COLORS.GREEN_BG,
+  },
+  inlineMsgError: {
+    backgroundColor: DS_COLORS.BADGE_HARD_BG,
+  },
+  inlineMsgText: {
+    fontSize: 13,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    textAlign: "center",
+  },
+  inlineMsgTextSuccess: { color: DS_COLORS.GREEN },
+  inlineMsgTextError: { color: DS_COLORS.BADGE_HARD_RED },
   hint: {
     fontSize: 13,
     color: DS_COLORS.TEXT_MUTED,

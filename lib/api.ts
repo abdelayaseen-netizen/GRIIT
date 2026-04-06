@@ -7,8 +7,8 @@ import { captureError } from '@/lib/sentry';
  * - app.get("/api/health", ...) and app.get("/health", ...)
  * - app.use("/api/trpc/*", trpcServer({ endpoint: "/api/trpc", ... }))
  */
-export const TRPC_PATH = '/api/trpc';
-export const HEALTH_PATH = '/api/health';
+const TRPC_PATH = '/api/trpc';
+const HEALTH_PATH = '/api/health';
 
 let _baseUrl: string | null = null;
 
@@ -31,7 +31,7 @@ export function getApiBaseUrl(): string {
   return _baseUrl;
 }
 
-export function getHealthUrl(): string {
+function getHealthUrl(): string {
   const base = getApiBaseUrl();
   if (base) return `${base}${HEALTH_PATH}`;
   return HEALTH_PATH;
@@ -183,7 +183,7 @@ export function formatError(error: unknown): string {
   return String(error);
 }
 
-export interface DbSanityResult {
+interface DbSanityResult {
   ok: boolean;
   missingTables: string[];
   errorMessage?: string;

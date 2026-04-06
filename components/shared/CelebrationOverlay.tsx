@@ -67,7 +67,7 @@ export default function CelebrationOverlay() {
       await sharePlainMessage(msg, "Join my GRIIT challenge");
     } catch (error) {
       captureError(error, "CelebrationOverlayShare");
-      console.error("[Share] Error:", error);
+      if (__DEV__) console.error("[Share] Error:", error);
     }
   };
 

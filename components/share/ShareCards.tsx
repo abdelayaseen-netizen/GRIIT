@@ -228,22 +228,22 @@ export function TransparentCard({
         </Text>
       </View>
 
-      <Text style={transparentStyles.challengeName}>{challengeName}</Text>
-      <Text style={transparentStyles.taskName}>{taskName}</Text>
+      <Text style={transparentStyles.challengeName}>{challengeName.toUpperCase()}</Text>
+      <Text style={transparentStyles.taskName}>{taskName.toUpperCase()}</Text>
 
-      <Text style={transparentStyles.label}>STREAK</Text>
+      <Text style={transparentStyles.streakLabel}>STREAK</Text>
       <Text style={transparentStyles.streakNumber}>{streak}</Text>
 
       <View style={transparentStyles.divider} />
 
       {completionTime ? (
         <>
-          <Text style={transparentStyles.label}>TIME</Text>
+          <Text style={transparentStyles.timeLabel}>TIME</Text>
           <Text style={transparentStyles.timeValue}>{completionTime}</Text>
         </>
       ) : null}
 
-      <Text style={transparentStyles.watermark}>GRIIT</Text>
+      <Text style={transparentStyles.brand}>GRIIT</Text>
     </View>
   );
 }
@@ -258,7 +258,7 @@ const transparentStyles = StyleSheet.create({
     paddingHorizontal: 48,
   },
   dayPill: {
-    backgroundColor: COLORS.accentDim,
+    backgroundColor: "rgba(232, 89, 60, 0.3)",
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 40,
@@ -266,60 +266,95 @@ const transparentStyles = StyleSheet.create({
   },
   dayPillText: {
     fontSize: 48,
-    fontWeight: "600",
-    color: COLORS.accent,
-    ...textShadowReadable,
+    fontWeight: "900",
+    color: "#FF6B4A",
+    letterSpacing: 2,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   challengeName: {
-    fontSize: 72,
-    fontWeight: "600",
+    fontSize: 96,
+    fontWeight: "900",
     color: COLORS.white,
     textAlign: "center",
+    letterSpacing: 2,
     marginBottom: 12,
-    ...textShadowReadable,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 16,
   },
   taskName: {
     fontSize: 48,
-    color: COLORS.whiteMuted,
+    fontWeight: "600",
+    color: COLORS.white,
+    opacity: 0.65,
     textAlign: "center",
+    letterSpacing: 1,
     marginBottom: 40,
-    ...textShadowReadable,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
   },
-  label: {
+  streakLabel: {
     fontSize: 42,
-    color: COLORS.whiteMuted,
-    letterSpacing: 2,
+    fontWeight: "800",
+    color: COLORS.accent,
+    opacity: 0.7,
+    letterSpacing: 6,
     marginBottom: 8,
-    ...textShadowReadable,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   streakNumber: {
-    fontSize: 200,
-    fontWeight: "800",
+    fontSize: 340,
+    fontWeight: "900",
     color: COLORS.white,
-    marginBottom: 32,
-    ...textShadowReadable,
+    marginBottom: 24,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 24,
   },
   divider: {
     width: 120,
-    height: 4,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    height: 8,
+    backgroundColor: COLORS.accent,
+    opacity: 0.7,
+    borderRadius: 4,
     marginBottom: 32,
   },
-  timeValue: {
-    fontSize: 72,
-    fontWeight: "600",
-    color: COLORS.white,
-    marginTop: 8,
-    ...textShadowReadable,
-  },
-  watermark: {
-    position: "absolute",
-    bottom: 120,
+  timeLabel: {
     fontSize: 42,
-    fontWeight: "700",
+    fontWeight: "800",
+    color: COLORS.accent,
+    opacity: 0.7,
     letterSpacing: 6,
-    color: COLORS.watermark,
-    ...textShadowReadable,
+    marginBottom: 8,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  timeValue: {
+    fontSize: 80,
+    fontWeight: "800",
+    color: COLORS.white,
+    opacity: 0.85,
+    marginTop: 8,
+    marginBottom: 40,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+  },
+  brand: {
+    fontSize: 72,
+    fontWeight: "900",
+    letterSpacing: 16,
+    color: COLORS.white,
+    opacity: 0.5,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
   },
 });
 

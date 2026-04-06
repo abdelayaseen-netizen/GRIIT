@@ -81,10 +81,10 @@ export const challengeDetailStyles = StyleSheet.create({
   },
 
   heroHeader: {
-    minHeight: 280,
-    paddingBottom: DS_SPACING.xxl + DS_SPACING.lg,
-    borderBottomLeftRadius: DS_RADIUS.card,
-    borderBottomRightRadius: DS_RADIUS.card,
+    minHeight: 300,
+    paddingBottom: DS_SPACING.xxl + DS_SPACING.xl,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   heroHeader24h: {
     backgroundColor: DS_COLORS.challenge24hHeaderBg,
@@ -99,7 +99,7 @@ export const challengeDetailStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingTop: DS_SPACING.sm,
-    marginBottom: DS_SPACING.xxl,
+    marginBottom: DS_SPACING.lg,
   },
   backPill: {
     width: 36,
@@ -144,7 +144,7 @@ export const challengeDetailStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "rgba(232,89,60,0.2)",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderRadius: DS_RADIUS.MD,
     paddingVertical: 4,
     paddingHorizontal: 12,
@@ -160,8 +160,8 @@ export const challengeDetailStyles = StyleSheet.create({
   activeBadgeText: {
     fontSize: 11,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.accentMuted,
-    letterSpacing: 0.5,
+    color: "rgba(255,255,255,0.85)",
+    letterSpacing: 1,
   },
   heroEyebrow: {
     fontSize: DS_TYPOGRAPHY.eyebrow.fontSize,
@@ -184,18 +184,19 @@ export const challengeDetailStyles = StyleSheet.create({
     textTransform: "uppercase" as const,
   },
   heroTitle: {
-    fontSize: 28,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
+    fontSize: 32,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.white,
-    letterSpacing: -0.3,
-    lineHeight: 34,
-    marginBottom: DS_SPACING.sm,
+    letterSpacing: -0.5,
+    lineHeight: 38,
+    marginBottom: DS_SPACING.md,
   },
   heroTagline: {
     fontSize: 14,
     fontWeight: "400" as const,
-    lineHeight: 20,
+    lineHeight: 21,
     marginBottom: DS_SPACING.lg,
+    opacity: 0.8,
   },
   referrerLabel: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
@@ -206,7 +207,8 @@ export const challengeDetailStyles = StyleSheet.create({
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: DS_SPACING.sm,
+    gap: 8,
+    marginTop: DS_SPACING.xs,
   },
   visibilityChip: {
     flexDirection: "row" as const,

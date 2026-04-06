@@ -60,7 +60,7 @@ export const leaderboardRouter = createTRPCRouter({
         .select("user_id, date_key")
         .gte("date_key", weekStartKey)
         .lte("date_key", todayKey)
-        .limit(10000);
+        .limit(2000);
       if (securesErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: securesErr.message });
       }
@@ -96,7 +96,7 @@ export const leaderboardRouter = createTRPCRouter({
           .from("day_secures")
           .select("user_id")
           .eq("date_key", todayKey)
-          .limit(5000),
+          .limit(1000),
         server
           .from("respects")
           .select("recipient_id")

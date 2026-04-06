@@ -1,4 +1,4 @@
-import { FREE_LIMITS, PREMIUM_FEATURES } from "./feature-flags";
+import { FREE_LIMITS } from "./feature-flags";
 
 /** In-memory subscription state set by the app when profile is loaded. */
 let _subscriptionStatus: string | null = null;
@@ -36,33 +36,4 @@ export function canJoinChallenge(currentActiveCount: number): { allowed: boolean
     allowed: currentActiveCount < FREE_LIMITS.MAX_ACTIVE_CHALLENGES,
     limit: FREE_LIMITS.MAX_ACTIVE_CHALLENGES,
   };
-}
-
-export function canCreateChallenge(currentCreatedCount: number): { allowed: boolean; limit: number } {
-  if (isPremium()) return { allowed: true, limit: Infinity };
-  return {
-    allowed: currentCreatedCount < FREE_LIMITS.MAX_CREATED_CHALLENGES,
-    limit: FREE_LIMITS.MAX_CREATED_CHALLENGES,
-  };
-}
-
-export function canSendRespect(dailySentCount: number): { allowed: boolean; limit: number } {
-  if (isPremium()) return { allowed: true, limit: Infinity };
-  return {
-    allowed: dailySentCount < FREE_LIMITS.MAX_DAILY_RESPECTS,
-    limit: FREE_LIMITS.MAX_DAILY_RESPECTS,
-  };
-}
-
-export function canSendNudge(dailySentCount: number): { allowed: boolean; limit: number } {
-  if (isPremium()) return { allowed: true, limit: Infinity };
-  return {
-    allowed: dailySentCount < FREE_LIMITS.MAX_DAILY_NUDGES,
-    limit: FREE_LIMITS.MAX_DAILY_NUDGES,
-  };
-}
-
-export function isFeatureAvailable(feature: keyof typeof PREMIUM_FEATURES): boolean {
-  if (isPremium()) return true;
-  return PREMIUM_FEATURES[feature];
 }

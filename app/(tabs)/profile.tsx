@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Pressable,
   Platform,
+  Linking,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -339,9 +340,25 @@ export default function ProfileScreen() {
         </View>
 
         {avatarInlineError ? (
-          <View style={styles.avatarErrorBanner} accessibilityRole="alert">
+          <TouchableOpacity
+            style={styles.avatarErrorBanner}
+            accessibilityRole="alert"
+            accessibilityLabel={avatarInlineError}
+            accessibilityHint={
+              avatarInlineError.includes("Settings") ? "Tap to open Settings" : undefined
+            }
+            onPress={() => {
+              if (avatarInlineError.includes("Settings")) {
+                Linking.openSettings();
+              }
+            }}
+            activeOpacity={avatarInlineError.includes("Settings") ? 0.7 : 1}
+          >
             <Text style={styles.avatarErrorText}>{avatarInlineError}</Text>
-          </View>
+            {avatarInlineError.includes("Settings") ? (
+              <Text style={styles.avatarErrorLink}>Tap to open Settings →</Text>
+            ) : null}
+          </TouchableOpacity>
         ) : null}
 
         <View style={styles.profileRow}>
@@ -716,6 +733,13 @@ const styles = StyleSheet.create({
     borderColor: DS_COLORS.alertRedBorder,
   },
   avatarErrorText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.dangerDark, textAlign: "center" },
+  avatarErrorLink: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: DS_COLORS.DISCOVER_CORAL,
+    textAlign: "center",
+    marginTop: 4,
+  },
   profileRow: { flexDirection: "row", paddingHorizontal: 20, gap: 14, alignItems: "flex-start" },
   avatarCol: { position: "relative" },
   avatarImage: {
@@ -817,7 +841,10 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.BG_CARD,
     borderRadius: DS_RADIUS.LG,
     padding: 16,
+    paddingBottom: 14,
     marginBottom: 0,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
   },
   chTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   chIconBox: {

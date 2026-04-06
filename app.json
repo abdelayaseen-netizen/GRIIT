@@ -68,14 +68,6 @@
       "expo-font",
       "expo-web-browser",
       "expo-apple-authentication",
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "griit",
-          "organization": "your-org-slug"
-        }
-      ],
       "expo-localization"
     ],
     "experiments": {

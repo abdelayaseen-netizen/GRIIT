@@ -33,13 +33,9 @@ export const ROUTES = {
   /** Feed post / comment thread */
   POST_ID: (id: string) => `/post/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
-  TASK_JOURNAL: "/task/journal",
-  TASK_PHOTO: "/task/photo",
-  TASK_MANUAL: "/task/manual",
   TASK_COMPLETE: "/task/complete",
   TASK_CHECKIN: "/task/checkin",
   TASK_RUN: "/task/run",
-  TASK_TIMER: "/task/timer",
   CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
   CHALLENGE_COMPLETE: "/challenge/complete",
   PAYWALL: "/paywall",

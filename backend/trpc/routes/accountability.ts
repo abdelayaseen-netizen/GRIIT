@@ -4,16 +4,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { sendExpoPush } from "../../lib/push";
 import { logger } from "../../lib/logger";
+import { requireUuidForPostgrestOr } from "../../lib/sanitize-search";
 import type { PgError, ProfileRow, ProfileWithExpoRow, PushTokenRow } from "../../types/db";
 
 const MAX_ACCEPTED_PARTNERS = 3;
 const INVITES_PER_DAY_LIMIT = 10;
 
 async function getAcceptedCount(supabase: SupabaseClient, userId: string): Promise<number> {
+  const safeId = requireUuidForPostgrestOr(userId);
   const { data } = await supabase
     .from("accountability_pairs")
     .select("id")
-    .or(`and(user_id.eq.${userId},status.eq.accepted),and(partner_id.eq.${userId},status.eq.accepted)`);
+    .or(`and(user_id.eq.${safeId},status.eq.accepted),and(partner_id.eq.${safeId},status.eq.accepted)`);
   return data?.length ?? 0;
 }
 
@@ -156,10 +158,11 @@ export const accountabilityRouter = createTRPCRouter({
     }),
 
   listMine: protectedProcedure.query(async ({ ctx }) => {
+    const safeId = requireUuidForPostgrestOr(ctx.userId);
     const { data: rows, error } = await ctx.supabase
       .from("accountability_pairs")
       .select("id, user_id, partner_id, status, created_at")
-      .or(`user_id.eq.${ctx.userId},partner_id.eq.${ctx.userId}`)
+      .or(`user_id.eq.${safeId},partner_id.eq.${safeId}`)
       .order("created_at", { ascending: false });
 
     if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load partnerships." });

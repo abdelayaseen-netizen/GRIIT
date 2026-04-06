@@ -783,26 +783,6 @@ export default function ChallengeDetailScreen() {
         showError("Location check-in verification is not available yet. Use another task type for now.");
         return;
       }
-      router.push({ pathname: ROUTES.TASK_CHECKIN, params: { taskId: task.id } } as never);
-      return;
-    }
-    if (task.type === "run") {
-      const runTask = task as ChallengeTaskFromApi & { tracking_mode?: string | null; config?: Record<string, unknown> };
-      const runCfg =
-        typeof runTask.config === "object" && runTask.config !== null ? runTask.config : {};
-      const useUnifiedComplete =
-        runCfg.hard_mode === true ||
-        runTask.tracking_mode === "time" ||
-        runTask.verification_method === "heart_rate" ||
-        runTask.require_location === true ||
-        runTask.strict_timer_mode === true ||
-        (runTask as { timer_hard_mode?: boolean }).timer_hard_mode === true ||
-        runTask.require_photo_proof === true ||
-        (runTask as { require_photo?: boolean }).require_photo === true;
-      if (!useUnifiedComplete) {
-        router.push({ pathname: ROUTES.TASK_RUN, params: { taskId: task.id } } as never);
-        return;
-      }
     }
 
     // Unified completion screen for manual, simple, journal, timer, photo (with optional advanced verification)

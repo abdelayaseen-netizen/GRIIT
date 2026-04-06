@@ -101,7 +101,6 @@ export const profilesRouter = createTRPCRouter({
           typeof profileError === "object" && profileError !== null
             ? (profileError as { message?: string }).message ?? JSON.stringify(profileError)
             : String(profileError);
-        console.error("[profiles.getPublicByUsername] Supabase error:", errMsg);
         const { logger } = await import("../../lib/logger");
         logger.error({ error: profileError, username: input.username }, "[profiles.getPublicByUsername]");
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Failed to load profile: ${errMsg}` });
@@ -331,13 +330,13 @@ export const profilesRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const q = input.query.trim();
       if (!q) return [];
-      const safe = sanitizeSearchQuery(q);
-      if (!safe) return [];
+      const escapedSafe = sanitizeSearchQuery(q);
+      if (!escapedSafe) return [];
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select("user_id, username, display_name, avatar_url")
         .neq("user_id", ctx.userId)
-        .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
+        .or(`username.ilike.%${escapedSafe}%,display_name.ilike.%${escapedSafe}%`)
         .limit(20);
       requireNoError(error, "Failed to search profiles.");
       const rows = (data ?? []) as ProfileRow[];
