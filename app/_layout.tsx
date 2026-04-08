@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments, Redirect } from "expo-router";
+import { Stack, useRouter, useSegments, Redirect, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
@@ -388,10 +388,14 @@ function RootLayout() {
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       try {
-        const rawType = (response.notification.request.content.data as Record<string, unknown> | undefined)?.type;
+        const data = response.notification.request.content.data as Record<string, unknown> | undefined;
+        const rawType = data?.type;
         trackEvent("notification_opened", {
           notification_type: typeof rawType === "string" ? rawType : "unknown",
         });
+        if (data?.type === "active_task_timer" && typeof data.route === "string") {
+          router.push(data.route as never);
+        }
       } catch {
         /* non-fatal */
       }

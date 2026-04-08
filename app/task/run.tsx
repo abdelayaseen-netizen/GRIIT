@@ -38,6 +38,11 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ROUTES } from "@/lib/routes";
+import {
+  startActiveTaskNotification,
+  updateActiveTaskNotification,
+  clearActiveTaskNotification,
+} from "@/lib/active-task-timer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface GpsPoint {
@@ -82,6 +87,7 @@ export default function RunTaskScreen() {
   const [durationInput, setDurationInput] = useState<string>("");
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const notifUpdateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const appStateRef = useRef(AppState.currentState);
 
@@ -123,6 +129,8 @@ export default function RunTaskScreen() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (locationSubscription.current) locationSubscription.current.remove();
+      if (notifUpdateRef.current) clearInterval(notifUpdateRef.current);
+      clearActiveTaskNotification();
       subscription.remove();
     };
   }, [runMode, timerRunning, showError]);
@@ -198,6 +206,22 @@ export default function RunTaskScreen() {
         setElapsedSeconds((prev) => prev + 1);
         setDistanceMiles((prev) => prev + 0.01);
       }, 1000);
+
+      // Lock screen notification — GPS run count-up
+      const gpsNotifPayload = {
+        taskId: task?.id ?? "",
+        taskTitle: task?.title ?? "Run",
+        timerType: "run_gps" as const,
+        startedAtMs: Date.now(),
+        route: `${ROUTES.TASK_RUN}?taskId=${task?.id ?? ""}`,
+      };
+      startActiveTaskNotification(gpsNotifPayload);
+      notifUpdateRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => {
+          updateActiveTaskNotification(gpsNotifPayload, prev);
+          return prev;
+        });
+      }, 30000);
       return;
     }
 
@@ -216,6 +240,22 @@ export default function RunTaskScreen() {
     timerRef.current = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
+
+    // Lock screen notification — GPS run count-up
+    const gpsNotifPayload = {
+      taskId: task?.id ?? "",
+      taskTitle: task?.title ?? "Run",
+      timerType: "run_gps" as const,
+      startedAtMs: Date.now(),
+      route: `${ROUTES.TASK_RUN}?taskId=${task?.id ?? ""}`,
+    };
+    startActiveTaskNotification(gpsNotifPayload);
+    notifUpdateRef.current = setInterval(() => {
+      setElapsedSeconds((prev) => {
+        updateActiveTaskNotification(gpsNotifPayload, prev);
+        return prev;
+      });
+    }, 30000);
 
     locationSubscription.current = await Location.watchPositionAsync(
       {
@@ -261,7 +301,12 @@ export default function RunTaskScreen() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
+    if (notifUpdateRef.current) {
+      clearInterval(notifUpdateRef.current);
+      notifUpdateRef.current = null;
+    }
+    clearActiveTaskNotification();
+
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
@@ -281,6 +326,23 @@ export default function RunTaskScreen() {
     timerRef.current = setInterval(() => {
       setTimerSeconds((prev) => prev + 1);
     }, 1000);
+
+    // Lock screen notification — treadmill countdown
+    const treadmillNotifPayload = {
+      taskId: task?.id ?? "",
+      taskTitle: task?.title ?? "Timer",
+      timerType: "run_treadmill" as const,
+      startedAtMs: Date.now(),
+      targetSeconds: minTimerSeconds,
+      route: `${ROUTES.TASK_RUN}?taskId=${task?.id ?? ""}`,
+    };
+    startActiveTaskNotification(treadmillNotifPayload);
+    notifUpdateRef.current = setInterval(() => {
+      setTimerSeconds((prev) => {
+        updateActiveTaskNotification(treadmillNotifPayload, prev);
+        return prev;
+      });
+    }, 30000);
   };
 
   const stopTreadmillTimer = () => {
@@ -290,6 +352,11 @@ export default function RunTaskScreen() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (notifUpdateRef.current) {
+      clearInterval(notifUpdateRef.current);
+      notifUpdateRef.current = null;
+    }
+    clearActiveTaskNotification();
   };
 
   const finishTreadmillTimer = () => {

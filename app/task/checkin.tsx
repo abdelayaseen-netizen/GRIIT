@@ -32,6 +32,11 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
+import {
+  startActiveTaskNotification,
+  updateActiveTaskNotification,
+  clearActiveTaskNotification,
+} from "@/lib/active-task-timer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
@@ -83,6 +88,7 @@ export default function CheckinTaskScreen() {
   const [startLocation, setStartLocation] = useState<CurrentLocation | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const notifUpdateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const appStateRef = useRef(AppState.currentState);
   const backgroundStartRef = useRef<number | null>(null);
@@ -125,6 +131,8 @@ export default function CheckinTaskScreen() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (locationSubscription.current) locationSubscription.current.remove();
+      if (notifUpdateRef.current) clearInterval(notifUpdateRef.current);
+      clearActiveTaskNotification();
       clearInterval(interval);
       subscription.remove();
     };
@@ -294,6 +302,23 @@ export default function CheckinTaskScreen() {
     timerRef.current = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
+
+    // Start lock screen timer notification
+    const notifPayload = {
+      taskId: task?.id ?? taskId ?? "",
+      taskTitle: task?.title ?? "Check-in",
+      timerType: "checkin" as const,
+      startedAtMs: Date.now(),
+      targetSeconds: minSessionSeconds,
+      route: `${ROUTES.TASK_CHECKIN}?taskId=${task?.id ?? taskId}`,
+    };
+    startActiveTaskNotification(notifPayload);
+    notifUpdateRef.current = setInterval(() => {
+      setElapsedSeconds((prev) => {
+        updateActiveTaskNotification(notifPayload, prev);
+        return prev;
+      });
+    }, 30000);
   };
 
   const stopSession = () => {
@@ -302,6 +327,11 @@ export default function CheckinTaskScreen() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (notifUpdateRef.current) {
+      clearInterval(notifUpdateRef.current);
+      notifUpdateRef.current = null;
+    }
+    clearActiveTaskNotification();
   };
 
   const handleFinish = async () => {
