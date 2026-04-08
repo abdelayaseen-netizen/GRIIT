@@ -5,6 +5,7 @@ import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getTodayDateKey } from "../../lib/date-utils";
 import { logger } from "../../lib/logger";
+import { moderateContent } from "../../lib/content-moderation";
 import {
   LIVE_FEED_TYPES,
   followRowAccepted,
@@ -292,6 +293,15 @@ export const feedCoreProcedures = {
   shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(500).optional(), proofPhotoUrl: z.string().url().optional() })).mutation(async ({ input, ctx }) => {
     const server = getSupabaseServer();
     if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
+    if (input.caption?.trim()) {
+      const captionCheck = moderateContent(input.caption.trim());
+      if (!captionCheck.allowed) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: captionCheck.reason ?? "Caption content is not allowed.",
+        });
+      }
+    }
     type ActivityEventsWriter = {
       from: (table: "activity_events") => {
         insert: (row: { user_id: string; event_type: string; challenge_id: string; metadata: Record<string, unknown> }) => { select: (cols: "id, metadata") => { single: () => Promise<{ data: { id: string; metadata?: Record<string, unknown> } | null; error: { message: string } | null }> } };

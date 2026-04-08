@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -19,6 +20,8 @@ import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
 import { Avatar } from "@/components/Avatar";
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 function placeholderBg(challengeName: string): string {
   const s = challengeName.toLowerCase();
@@ -273,18 +276,12 @@ function FeedPostCardInner({
               accessibilityRole="button"
               accessibilityLabel="Close full image"
             />
-            <View
-              pointerEvents="box-none"
-              style={[StyleSheet.absoluteFillObject, styles.lightboxImageCenter]}
-            >
-              <Pressable onPress={() => {}} accessibilityRole="image" accessibilityLabel="Full size proof photo">
-                <Image
-                  source={{ uri: proofUri }}
-                  style={styles.lightboxImage}
-                  contentFit="contain"
-                />
-              </Pressable>
-            </View>
+            <Image
+              source={{ uri: proofUri }}
+              style={styles.lightboxImage}
+              contentFit="contain"
+              accessibilityLabel="Full size proof photo"
+            />
             <TouchableOpacity
               style={styles.lightboxClose}
               onPress={() => setLightboxVisible(false)}
@@ -453,11 +450,7 @@ const styles = StyleSheet.create({
   },
   lightboxOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.92)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  lightboxImageCenter: {
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -474,7 +467,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   lightboxImage: {
-    width: "100%",
-    height: "80%",
+    width: SCREEN_W,
+    height: SCREEN_H * 0.8,
   },
 });

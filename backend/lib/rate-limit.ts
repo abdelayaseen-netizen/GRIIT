@@ -129,6 +129,12 @@ export async function checkRouteRateLimit(
       const res = await limiters.auth.limit(`ip:${opts.ip}`);
       return { allowed: res.success, resetAt: res.reset };
     }
+    // Tighter limit for check-in completions: 10 per minute
+    if (path === "checkins.complete") {
+      const key = opts.userId ? `checkin:${opts.userId}` : `checkin:${opts.ip}`;
+      const r = memoryLimit(key, 10);
+      return { allowed: r.allowed, resetAt: r.resetAt };
+    }
     if (writePaths.includes(path)) {
       const key = opts.userId ? `user:${opts.userId}` : `ip:${opts.ip}`;
       const res = await limiters.write.limit(key);
@@ -139,6 +145,11 @@ export async function checkRouteRateLimit(
 
   if (authPaths.includes(path)) {
     const r = memoryLimit(`auth:${opts.ip}`, AUTH_MAX_PER_MIN);
+    return { allowed: r.allowed, resetAt: r.resetAt };
+  }
+  if (path === "checkins.complete") {
+    const k = opts.userId ? `checkin:${opts.userId}` : `checkin:${opts.ip}`;
+    const r = memoryLimit(k, 10);
     return { allowed: r.allowed, resetAt: r.resetAt };
   }
   if (writePaths.includes(path)) {

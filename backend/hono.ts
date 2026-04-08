@@ -105,7 +105,8 @@ app.post("/internal/daily-reset", async (c) => {
   }
   try {
     const { runDailyReset } = await import("./lib/daily-reset");
-    const { supabase } = await import("./lib/supabase");
+    const { getSupabaseAdmin, hasSupabaseAdmin } = await import("./lib/supabase-admin");
+    const supabase = hasSupabaseAdmin() ? getSupabaseAdmin() : (await import("./lib/supabase")).supabase;
     const result = await runDailyReset(supabase);
     const { logger } = await import("./lib/logger");
     if (result.errors.length > 0) {

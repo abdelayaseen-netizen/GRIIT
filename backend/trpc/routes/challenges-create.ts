@@ -8,6 +8,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import { logger } from "../../lib/logger";
+import { moderateContent, moderateTaskTitle } from "../../lib/content-moderation";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -215,6 +216,24 @@ export const challengesCreateProcedures = {
               throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target count is required` });
             }
             break;
+        }
+      }
+
+      const titleCheck = moderateContent(input.title, input.description);
+      if (!titleCheck.allowed) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: titleCheck.reason ?? "Challenge content is not allowed.",
+        });
+      }
+
+      for (const task of input.tasks) {
+        const taskCheck = moderateTaskTitle(task.title);
+        if (!taskCheck.allowed) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: taskCheck.reason ?? "Task content is not allowed.",
+          });
         }
       }
 

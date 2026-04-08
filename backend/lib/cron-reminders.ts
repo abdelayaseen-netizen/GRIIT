@@ -9,6 +9,7 @@ import {
   shouldSendMorningReminder,
   shouldSendStreakAtRiskReminder,
   sendSecureReminder,
+  sendComebackPush,
 } from "./push-reminder";
 
 interface ProfileRow {
@@ -27,6 +28,7 @@ interface StreakRow {
 export async function runReminderCron(supabase: SupabaseClient): Promise<{
   morning: number;
   streakAtRisk: number;
+  comeback: number;
   errors: string[];
 }> {
   const now = new Date();
@@ -40,62 +42,134 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
 
   if (profileError) {
     errors.push(`profiles: ${profileError.message}`);
-    return { morning: 0, streakAtRisk: 0, errors };
+    return { morning: 0, streakAtRisk: 0, comeback: 0, errors };
   }
 
   const rows = (profiles ?? []) as ProfileRow[];
   const withToken = rows.filter(
     (r) => r.expo_push_token && (r.expo_push_token.startsWith("ExponentPushToken") || r.expo_push_token.startsWith("ExpoPushToken"))
   );
-  if (withToken.length === 0) return { morning: 0, streakAtRisk: 0, errors };
-
-  const userIds = withToken.map((r) => r.user_id);
-  const [{ data: securedTodayRows }, { data: streakRows }] = await Promise.all([
-    supabase.from("day_secures").select("user_id").eq("date_key", todayKey),
-    supabase.from("streaks").select("user_id, active_streak_count").in("user_id", userIds),
-  ]);
-
-  const securedUserIds = new Set((securedTodayRows ?? []).map((r: { user_id: string }) => r.user_id));
-  const streakByUser = new Map<string, number>(
-    (streakRows ?? []).map((r: StreakRow) => [r.user_id, Math.max(0, r.active_streak_count ?? 0)])
-  );
 
   let morningSent = 0;
   let streakAtRiskSent = 0;
 
-  for (const row of withToken) {
-    const hasSecuredToday = securedUserIds.has(row.user_id);
-    const timezone = row.reminder_timezone?.trim() || "UTC";
-    const reminderTime = (row.reminder_time ?? "09:00").trim() || "09:00";
-    const ctx = {
-      userId: row.user_id,
-      reminderTime,
-      timezone,
-      hasSecuredToday,
-      now,
-    };
+  if (withToken.length > 0) {
+    const userIds = withToken.map((r) => r.user_id);
+    const [{ data: securedTodayRows }, { data: streakRows }] = await Promise.all([
+      supabase.from("day_secures").select("user_id").eq("date_key", todayKey),
+      supabase.from("streaks").select("user_id, active_streak_count").in("user_id", userIds),
+    ]);
 
-    try {
-      if (shouldSendMorningReminder(ctx)) {
-        await sendSecureReminder(row.user_id, {
-          type: "morning",
-          pushToken: row.expo_push_token,
-          streak: streakByUser.get(row.user_id) ?? 0,
-        });
-        morningSent++;
+    const securedUserIds = new Set((securedTodayRows ?? []).map((r: { user_id: string }) => r.user_id));
+    const streakByUser = new Map<string, number>(
+      (streakRows ?? []).map((r: StreakRow) => [r.user_id, Math.max(0, r.active_streak_count ?? 0)])
+    );
+
+    for (const row of withToken) {
+      const hasSecuredToday = securedUserIds.has(row.user_id);
+      const timezone = row.reminder_timezone?.trim() || "UTC";
+      const reminderTime = (row.reminder_time ?? "09:00").trim() || "09:00";
+      const ctx = {
+        userId: row.user_id,
+        reminderTime,
+        timezone,
+        hasSecuredToday,
+        now,
+      };
+
+      try {
+        if (shouldSendMorningReminder(ctx)) {
+          await sendSecureReminder(row.user_id, {
+            type: "morning",
+            pushToken: row.expo_push_token,
+            streak: streakByUser.get(row.user_id) ?? 0,
+          });
+          morningSent++;
+        }
+        if (shouldSendStreakAtRiskReminder(ctx)) {
+          await sendSecureReminder(row.user_id, {
+            type: "streak_at_risk",
+            pushToken: row.expo_push_token,
+            streak: streakByUser.get(row.user_id) ?? 0,
+          });
+          streakAtRiskSent++;
+        }
+      } catch (e) {
+        errors.push(`${row.user_id}: ${(e as Error).message}`);
       }
-      if (shouldSendStreakAtRiskReminder(ctx)) {
-        await sendSecureReminder(row.user_id, {
-          type: "streak_at_risk",
-          pushToken: row.expo_push_token,
-          streak: streakByUser.get(row.user_id) ?? 0,
-        });
-        streakAtRiskSent++;
-      }
-    } catch (e) {
-      errors.push(`${row.user_id}: ${(e as Error).message}`);
     }
   }
 
-  return { morning: morningSent, streakAtRisk: streakAtRiskSent, errors };
+  // --- Comeback pushes for inactive users (3+ days since last secure) ---
+  let comebackSent = 0;
+  try {
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: inactiveUsers, error: inactiveErr } = await supabase
+      .from("streaks")
+      .select("user_id, last_completed_date_key")
+      .not("last_completed_date_key", "is", null)
+      .lte("last_completed_date_key", threeDaysAgo);
+
+    if (inactiveErr) {
+      errors.push(`comeback streaks query: ${inactiveErr.message}`);
+    } else {
+      const inactiveUserIds = (inactiveUsers ?? []).map((r: { user_id: string }) => r.user_id);
+
+      if (inactiveUserIds.length > 0) {
+        const { data: comebackProfiles, error: cpErr } = await supabase
+          .from("profiles")
+          .select("user_id, expo_push_token, last_comeback_push_at")
+          .in("user_id", inactiveUserIds);
+
+        if (cpErr) {
+          errors.push(`comeback profiles query: ${cpErr.message}`);
+        } else {
+          const eligibleUsers = (comebackProfiles ?? []).filter((p: {
+            user_id: string;
+            expo_push_token: string | null;
+            last_comeback_push_at: string | null;
+          }) => {
+            const token = p.expo_push_token?.trim() ?? "";
+            if (!token || (!token.startsWith("ExponentPushToken") && !token.startsWith("ExpoPushToken"))) {
+              return false;
+            }
+            if (p.last_comeback_push_at) {
+              const lastPush = new Date(p.last_comeback_push_at);
+              if (lastPush.toISOString() > sevenDaysAgo) {
+                return false;
+              }
+            }
+            return true;
+          });
+
+          const currentHourUTC = now.getUTCHours();
+          const isDaytime = currentHourUTC >= 10 && currentHourUTC <= 20;
+
+          if (isDaytime) {
+            for (const user of eligibleUsers) {
+              try {
+                const typedUser = user as { user_id: string; expo_push_token: string };
+                await sendComebackPush(typedUser.expo_push_token);
+
+                await supabase
+                  .from("profiles")
+                  .update({ last_comeback_push_at: now.toISOString() })
+                  .eq("user_id", typedUser.user_id);
+
+                comebackSent++;
+              } catch (e) {
+                errors.push(`comeback send ${(user as { user_id: string }).user_id}: ${(e as Error).message}`);
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    errors.push(`comeback unexpected: ${(e as Error).message}`);
+  }
+
+  return { morning: morningSent, streakAtRisk: streakAtRiskSent, comeback: comebackSent, errors };
 }

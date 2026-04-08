@@ -4,6 +4,7 @@ import { publicProcedure, protectedProcedure } from "../create-context";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { sendExpoPush } from "../../lib/push";
 import { logger } from "../../lib/logger";
+import { moderateContent } from "../../lib/content-moderation";
 
 type EvRow = {
   id: string;
@@ -205,6 +206,13 @@ export const feedSocialProcedures = {
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const commentCheck = moderateContent(input.text);
+      if (!commentCheck.allowed) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: commentCheck.reason ?? "Comment content is not allowed.",
+        });
+      }
       const { data: inserted, error } = await ctx.supabase.from("feed_comments").insert({
         user_id: ctx.userId,
         event_id: input.eventId,

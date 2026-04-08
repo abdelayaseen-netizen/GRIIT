@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import type { PgError, ProfileRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { sendExpoPush } from "../../lib/push";
 import { logger } from "../../lib/logger";
 
 export const profilesSocialProcedures = {
@@ -57,6 +58,22 @@ export const profilesSocialProcedures = {
       });
       if (nErr && process.env.NODE_ENV !== "test") {
         logger.error({ err: nErr }, "[profiles.followUser] notification insert");
+      }
+
+      try {
+        const srv = getSupabaseServer() ?? ctx.supabase;
+        const [pushTokenResult, targetProfileResult] = await Promise.all([
+          srv.from("push_tokens").select("token").eq("user_id", input.userId),
+          srv.from("profiles").select("expo_push_token").eq("user_id", input.userId).maybeSingle(),
+        ]);
+        const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
+        const profileToken = (targetProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
+        const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
+        if (allTokens.length > 0) {
+          await sendExpoPush(allTokens, "New follower", `${dname} started following you`);
+        }
+      } catch (pushErr) {
+        logger.error({ err: pushErr }, "[profiles.followUser] push send error");
       }
 
       return { success: true as const };
@@ -137,6 +154,23 @@ export const profilesSocialProcedures = {
       if (nErr && process.env.NODE_ENV !== "test") {
         logger.error({ err: nErr }, "[profiles.sendFollowRequest] notification insert");
       }
+
+      try {
+        const srv = getSupabaseServer() ?? ctx.supabase;
+        const [pushTokenResult, targetProfileResult] = await Promise.all([
+          srv.from("push_tokens").select("token").eq("user_id", input.userId),
+          srv.from("profiles").select("expo_push_token").eq("user_id", input.userId).maybeSingle(),
+        ]);
+        const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
+        const profileToken = (targetProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
+        const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
+        if (allTokens.length > 0) {
+          await sendExpoPush(allTokens, "Follow request", `${uname} wants to follow you`);
+        }
+      } catch (pushErr) {
+        logger.error({ err: pushErr }, "[profiles.sendFollowRequest] push send error");
+      }
+
       return { success: true as const };
     }),
 
@@ -171,6 +205,23 @@ export const profilesSocialProcedures = {
         read: false,
         data: { accepterId: ctx.userId, accepterUsername: uname },
       });
+
+      try {
+        const srv = getSupabaseServer() ?? ctx.supabase;
+        const [pushTokenResult, targetProfileResult] = await Promise.all([
+          srv.from("push_tokens").select("token").eq("user_id", input.requesterId),
+          srv.from("profiles").select("expo_push_token").eq("user_id", input.requesterId).maybeSingle(),
+        ]);
+        const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
+        const profileToken = (targetProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
+        const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
+        if (allTokens.length > 0) {
+          await sendExpoPush(allTokens, "Request accepted", `${uname} accepted your follow request`);
+        }
+      } catch (pushErr) {
+        logger.error({ err: pushErr }, "[profiles.acceptFollowRequest] push send error");
+      }
+
       return { success: true as const };
     }),
 

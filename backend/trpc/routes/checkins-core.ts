@@ -66,6 +66,28 @@ export const checkinsCoreProcedures = {
         if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
       }
 
+      // --- Anti-cheat: prevent rapid-fire completions ---
+      // Reject if the user completed ANY task less than 10 seconds ago
+      const TEN_SECONDS_AGO = new Date(Date.now() - 10_000).toISOString();
+      const { data: recentCheckins } = await ctx.supabase
+        .from("check_ins")
+        .select("id, created_at")
+        .eq("user_id", ctx.userId)
+        .eq("date_key", dateKey)
+        .gte("created_at", TEN_SECONDS_AGO)
+        .neq("task_id", input.taskId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (recentCheckins && recentCheckins.length > 0) {
+        const lastCheckinTime = new Date((recentCheckins[0] as { created_at: string }).created_at);
+        const secondsAgo = Math.round((Date.now() - lastCheckinTime.getTime()) / 1000);
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: `Take a moment between tasks. You completed another task ${secondsAgo} second${secondsAgo === 1 ? "" : "s"} ago.`,
+        });
+      }
+
       const { data: taskRow, error: taskFetchError } = await ctx.supabase
         .from("challenge_tasks")
         .select("id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes")
@@ -192,6 +214,25 @@ export const checkinsCoreProcedures = {
         const errObj = error as { code?: string; message?: string; details?: string; hint?: string };
         logger.error({ supabaseError: error, code: errObj.code, message: errObj.message, details: errObj.details, hint: errObj.hint, payload }, "[checkins.complete] check_ins upsert FAILED");
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save check-in." });
+      }
+
+      // --- Suspicious speed logging ---
+      if (input.clocked_in_at) {
+        const clockedInTime = new Date(input.clocked_in_at).getTime();
+        const submittedTime = Date.now();
+        const durationSeconds = (submittedTime - clockedInTime) / 1000;
+        if (durationSeconds < 3 && taskType !== "photo") {
+          logger.warn(
+            {
+              userId: ctx.userId,
+              taskId: input.taskId,
+              taskType,
+              durationSeconds: Math.round(durationSeconds * 10) / 10,
+              activeChallengeId: input.activeChallengeId,
+            },
+            "[checkins.complete] Suspiciously fast completion"
+          );
+        }
       }
 
       const { data: chForEvent } = await ctx.supabase.from("challenges").select("title").eq("id", challenge_id).maybeSingle();

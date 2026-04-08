@@ -140,3 +140,20 @@ export async function sendSecureReminder(
 
   await sendPushToUser(token, copy.title, copy.body);
 }
+
+/**
+ * Send a comeback push to an inactive user.
+ * Picks a random template for variable reinforcement.
+ */
+export async function sendComebackPush(pushToken: string): Promise<void> {
+  const token = typeof pushToken === "string" ? pushToken.trim() : "";
+  if (!token || (!token.startsWith("ExponentPushToken") && !token.startsWith("ExpoPushToken"))) {
+    return;
+  }
+
+  const i = Math.floor(Math.random() * COMEBACK_TEMPLATES.length);
+  const template = COMEBACK_TEMPLATES[i] ?? COMEBACK_TEMPLATES[0];
+  if (!template) return;
+
+  await sendPushToUser(token, template.title, template.body);
+}

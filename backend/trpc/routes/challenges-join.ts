@@ -2,6 +2,16 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import { joinChallengeDirect } from "../../lib/join-challenge";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
+  const { count: realCount } = await supabase
+    .from("active_challenges")
+    .select("id", { count: "exact", head: true })
+    .eq("challenge_id", challengeId)
+    .eq("status", "active");
+  await supabase.from("challenges").update({ participants_count: realCount ?? 0 }).eq("id", challengeId);
+}
 
 export const challengesJoinProcedures = {
   join: protectedProcedure
@@ -124,6 +134,8 @@ export const challengesJoinProcedures = {
           challenge_id: input.challengeId,
           metadata: { challenge_name: (ch as { title?: string })?.title ?? "Challenge" },
         });
+        // participants_count: sync to active join count after successful join
+        await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
         logger.info({ activeChallengeId: activeChallenge.id }, "[JOIN-BACKEND] Join SUCCESS");
         return activeChallenge;
       } catch (e) {
@@ -163,6 +175,8 @@ export const challengesJoinProcedures = {
         if (delErr) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
         }
+        // participants_count: sync after leaving (active_challenges row removed)
+        await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
         await ctx.supabase
           .from("profiles")
           .update({ last_left_at: new Date().toISOString() })
@@ -180,6 +194,8 @@ export const challengesJoinProcedures = {
       if (memberErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
       }
+      // participants_count: sync after removing challenge_members row
+      await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
       console.info(`[challenges.leave] user ${ctx.userId} left challenge ${input.challengeId}`);
       return { left: true };
     }),
