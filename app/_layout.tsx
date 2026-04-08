@@ -397,7 +397,9 @@ function RootLayout() {
         });
         if (data?.type === "active_task_timer" && typeof data.route === "string") {
           router.push(data.route as never);
+          return;
         }
+        router.push(ROUTES.ACTIVITY as never);
       } catch {
         /* non-fatal */
       }

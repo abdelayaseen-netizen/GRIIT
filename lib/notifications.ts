@@ -23,7 +23,6 @@ import * as Notifications from "expo-notifications";
 import { SchedulableTriggerInputTypes } from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-import { Platform } from "react-native";
 import { captureError } from "@/lib/sentry";
 import { DS_COLORS } from "@/lib/design-system";
 import {
@@ -34,9 +33,10 @@ import {
   normalizeTaskTypeForPrep,
 } from "@/lib/notification-copy";
 
-// Foreground: show banner + sound (Expo handler)
+// Foreground: banner/alert + sound (also set in registerForPushNotificationsAsync)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
+    shouldShowAlert: true,
     shouldShowBanner: true,
     shouldShowList: true,
     shouldPlaySound: true,
@@ -563,10 +563,22 @@ export async function scheduleChallengeCountdowns(
 // ─── Sprint 2: push registration, daily task/streak reminders, parse helpers ───
 
 /**
- * Request permission and return the Expo push token.
+ * Request permission and return the Expo push token for remote (server) notifications.
  * Returns null if permission denied or not on a physical device.
+ *
+ * Sets foreground notification behavior, Android default channel, and returns the token.
  */
-export async function registerForPushNotifications(): Promise<string | null> {
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+
   if (!Device.isDevice) {
     return null;
   }
@@ -585,25 +597,31 @@ export async function registerForPushNotifications(): Promise<string | null> {
     }
 
     const projectId =
-      Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-
-    const tokenData = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "GRIIT",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: DS_COLORS.DISCOVER_CORAL,
-      });
+      (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ??
+      Constants.easConfig?.projectId;
+    if (!projectId) {
+      captureError(new Error("Missing EAS projectId for push token"), "registerForPushNotificationsAsync");
+      return null;
     }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: DS_COLORS.DISCOVER_CORAL,
+    });
 
     return tokenData.data;
   } catch (error) {
-    captureError(error, "registerForPushNotifications");
+    captureError(error, "registerForPushNotificationsAsync");
     return null;
   }
 }
+
+/** @deprecated Use registerForPushNotificationsAsync */
+export const registerForPushNotifications = registerForPushNotificationsAsync;
 
 /**
  * Schedule a local notification at a specific time every day.

@@ -2,7 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure } from "../create-context";
 import { getSupabaseServer } from "../../lib/supabase-server";
-import { sendExpoPush } from "../../lib/push";
+import { sendPushToProfile } from "../../lib/sendPush";
 import { logger } from "../../lib/logger";
 import { moderateContent } from "../../lib/content-moderation";
 
@@ -131,20 +131,11 @@ export const feedSocialProcedures = {
               if (nErr) logger.error({ err: nErr }, "[feed.react] in_app_notifications insert");
 
               try {
-                const [pushTokenResult, ownerProfileResult] = await Promise.all([
-                  srv.from("push_tokens").select("token").eq("user_id", ownerId),
-                  srv.from("profiles").select("expo_push_token").eq("user_id", ownerId).maybeSingle(),
-                ]);
-                const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
-                const profileToken = (ownerProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
-                const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
-                if (allTokens.length > 0) {
-                  const pushTitle = "New respect";
-                  const pushBody = dayLabel
-                    ? `${actorDisplayName} respected your ${dayLabel} ${challengeTitle} post`
-                    : `${actorDisplayName} respected your ${challengeTitle} post`;
-                  await sendExpoPush(allTokens, pushTitle, pushBody);
-                }
+                await sendPushToProfile(srv, ownerId, {
+                  title: "GRIIT",
+                  body: `${actorUsername} respected your ${challengeTitle} post`,
+                  data: { type: "respect", postId: input.eventId },
+                });
               } catch (pushErr) {
                 logger.error({ err: pushErr }, "[feed.react] push send error");
               }
@@ -269,19 +260,16 @@ export const feedSocialProcedures = {
           if (nErr) logger.error({ err: nErr }, "[feed.comment] in_app_notifications insert");
 
           try {
-            const [pushTokenResult, ownerProfileResult] = await Promise.all([
-              srv.from("push_tokens").select("token").eq("user_id", ownerId),
-              srv.from("profiles").select("expo_push_token").eq("user_id", ownerId).maybeSingle(),
-            ]);
-            const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
-            const profileToken = (ownerProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
-            const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
-            if (allTokens.length > 0) {
-              const commentPreview = input.text.trim().slice(0, 60);
-              const pushTitle = "New comment";
-              const pushBody = `${commentActorDisplayName} commented: "${commentPreview}"`;
-              await sendExpoPush(allTokens, pushTitle, pushBody);
-            }
+            const commentPreview = input.text.trim().slice(0, 60);
+            await sendPushToProfile(srv, ownerId, {
+              title: "GRIIT",
+              body: `${commentActorUsername} commented: "${commentPreview}"`,
+              data: {
+                type: "comment",
+                postId: input.eventId,
+                commentId: inserted?.id ?? "",
+              },
+            });
           } catch (pushErr) {
             logger.error({ err: pushErr }, "[feed.comment] push send error");
           }

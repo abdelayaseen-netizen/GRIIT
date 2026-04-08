@@ -140,7 +140,10 @@ export const notificationsRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to register push token." });
       }
 
-      await ctx.supabase.from("profiles").update({ expo_push_token: token }).eq("user_id", ctx.userId);
+      await ctx.supabase
+        .from("profiles")
+        .update({ expo_push_token: token, push_token: token })
+        .eq("user_id", ctx.userId);
 
       return { success: true };
     }),

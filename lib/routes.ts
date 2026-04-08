@@ -18,6 +18,8 @@ export const ROUTES = {
   CREATE_WIZARD: "/create",
   TABS_PROFILE: "/(tabs)/profile",
   TABS_ACTIVITY: "/(tabs)/activity",
+  /** Activity tab (notifications); alias for push / deep links */
+  ACTIVITY: "/(tabs)/activity",
   TABS_SETTINGS: "/settings",
   EDIT_PROFILE: "/edit-profile",
   SETTINGS: "/settings",

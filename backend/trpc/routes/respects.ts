@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import type { PgError, ProfileRow, RespectRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
-import { sendExpoPush } from "../../lib/push";
+import { sendPushToProfile } from "../../lib/sendPush";
 import { logger } from "../../lib/logger";
 
 const RESPECTS_PAGE_MAX = 50;
@@ -55,16 +55,11 @@ export const respectsRouter = createTRPCRouter({
         if (nErr) logger.error({ err: nErr }, "[respects.give] in_app_notifications insert");
 
         try {
-          const [pushTokenResult, ownerProfileResult] = await Promise.all([
-            srv.from("push_tokens").select("token").eq("user_id", input.recipientId),
-            srv.from("profiles").select("expo_push_token").eq("user_id", input.recipientId).maybeSingle(),
-          ]);
-          const tokensFromTable = (pushTokenResult.data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
-          const profileToken = (ownerProfileResult.data as { expo_push_token?: string | null } | null)?.expo_push_token ?? null;
-          const allTokens = [...new Set([...tokensFromTable, profileToken].filter(Boolean))].filter((t): t is string => typeof t === "string");
-          if (allTokens.length > 0) {
-            await sendExpoPush(allTokens, "New respect", `${actorDisplayName} gave you respect`);
-          }
+          await sendPushToProfile(srv, input.recipientId, {
+            title: "GRIIT",
+            body: `${actorUsername} respected your profile post`,
+            data: { type: "respect", postId: "" },
+          });
         } catch (pushErr) {
           logger.error({ err: pushErr }, "[respects.give] push send error");
         }

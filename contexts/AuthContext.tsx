@@ -1,4 +1,5 @@
 import { createContext, useContext, ReactNode, useEffect, useState, useMemo } from 'react';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -52,6 +53,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' || !user?.id) return;
+    let cancelled = false;
+    void (async () => {
+      const { registerForPushNotificationsAsync } = await import('@/lib/notifications');
+      const { trpcMutate } = await import('@/lib/trpc');
+      const { TRPC } = await import('@/lib/trpc-paths');
+      const token = await registerForPushNotificationsAsync();
+      if (cancelled || !token) return;
+      try {
+        await trpcMutate(TRPC.profiles.updatePushToken, { pushToken: token });
+        await trpcMutate(TRPC.notifications.registerToken, { token });
+      } catch {
+        /* non-fatal */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const isGuest = !user;
   const contextValue = useMemo(

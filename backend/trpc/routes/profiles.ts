@@ -163,6 +163,23 @@ export const profilesRouter = createTRPCRouter({
       };
     }),
 
+  /**
+   * Native push: persist Expo token on `profiles.push_token`.
+   * REQUIRES (run manually in Supabase SQL editor — Yaseen): `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS push_token text;`
+   */
+  updatePushToken: protectedProcedure
+    .input(z.object({ pushToken: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const { error } = await ctx.supabase
+        .from("profiles")
+        .update({ push_token: input.pushToken })
+        .eq("user_id", ctx.userId);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save push token." });
+      }
+      return { success: true as const };
+    }),
+
   get: protectedProcedure
     .query(async ({ ctx }) => {
       // Only columns present in shipped Supabase migrations — avoids 500 when optional columns are missing.

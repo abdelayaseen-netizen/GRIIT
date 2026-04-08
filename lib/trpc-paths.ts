@@ -14,6 +14,7 @@ export const TRPC = {
     getPublicByUsername: 'profiles.getPublicByUsername',
     create: 'profiles.create',
     update: 'profiles.update',
+    updatePushToken: 'profiles.updatePushToken',
     validateSubscription: 'profiles.validateSubscription',
     getStats: 'profiles.getStats',
     getCompletedChallenges: 'profiles.getCompletedChallenges',
