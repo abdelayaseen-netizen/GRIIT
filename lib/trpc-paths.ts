@@ -68,11 +68,6 @@ export const TRPC = {
     setMilestoneShared: 'checkins.setMilestoneShared',
     getMilestoneShared: 'checkins.getMilestoneShared',
   },
-  stories: {
-    list: 'stories.list',
-    create: 'stories.create',
-    markViewed: 'stories.markViewed',
-  },
   starters: {
     getChallengeIdByStarterId: 'starters.getChallengeIdByStarterId',
     join: 'starters.join',

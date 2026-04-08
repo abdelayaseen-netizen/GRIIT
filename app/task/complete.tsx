@@ -986,7 +986,7 @@ function TaskCompleteScreenInner() {
                     <Image
                       source={{ uri: photoUri || photoUrl }}
                       style={celebStyles.photoImage}
-                      contentFit="contain"
+                      contentFit="cover"
                       accessibilityLabel="Proof photo"
                     />
                     <TouchableOpacity
@@ -1588,6 +1588,7 @@ function TaskCompleteScreenInner() {
                 <Image
                   source={{ uri: photoUri }}
                   style={styles.photoPreview}
+                  contentFit="cover"
                   cachePolicy="memory-disk"
                   accessibilityLabel="Photo proof preview"
                 />

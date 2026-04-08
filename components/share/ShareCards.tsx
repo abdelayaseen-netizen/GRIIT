@@ -1,26 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { DS_COLORS } from "@/lib/design-system";
 
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
-
-const COLORS = {
-  dark: "#111111",
-  cream: "#F5F0E8",
-  accent: "#E8593C",
-  accentDim: "rgba(232, 89, 60, 0.15)",
-  green: "#3D7A5A",
-  greenDim: "rgba(61, 122, 90, 0.15)",
-  white: "#FFFFFF",
-  whiteMuted: "rgba(255, 255, 255, 0.5)",
-  whiteDim: "rgba(255, 255, 255, 0.35)",
-  whiteSubtle: "rgba(255, 255, 255, 0.08)",
-  watermark: "rgba(255, 255, 255, 0.25)",
-  watermarkDark: "rgba(0, 0, 0, 0.12)",
-  darkText: "#1a1a1a",
-  darkTextMuted: "#999999",
-} as const;
 
 export interface BaseCardProps {
   challengeName: string;
@@ -70,7 +54,7 @@ export interface MinimalStreakCardProps {
 }
 
 const textShadowReadable = {
-  textShadowColor: "rgba(0, 0, 0, 0.3)",
+  textShadowColor: DS_COLORS.OVERLAY_BLACK_30,
   textShadowOffset: { width: 0, height: 2 },
   textShadowRadius: 8,
 } as const;
@@ -121,7 +105,7 @@ const statementStyles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    backgroundColor: COLORS.dark,
+    backgroundColor: DS_COLORS.BG_DARK,
   },
   watermark: {
     position: "absolute",
@@ -130,7 +114,7 @@ const statementStyles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "700",
     letterSpacing: 2,
-    color: COLORS.watermark,
+    color: DS_COLORS.SHARE_WATERMARK_MUTED,
   },
   center: {
     flex: 1,
@@ -141,20 +125,20 @@ const statementStyles = StyleSheet.create({
   dayNumber: {
     fontSize: 320,
     fontWeight: "800",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     lineHeight: 340,
   },
   daysIn: {
     fontSize: 56,
     fontWeight: "600",
     letterSpacing: 8,
-    color: COLORS.whiteDim,
+    color: DS_COLORS.TEXT_ON_DARK_35,
     marginTop: 8,
   },
   accentBar: {
     width: 160,
     height: 10,
-    backgroundColor: COLORS.accent,
+    backgroundColor: DS_COLORS.PRIMARY,
     borderRadius: 5,
     marginTop: 24,
     marginBottom: 24,
@@ -162,12 +146,12 @@ const statementStyles = StyleSheet.create({
   challengeName: {
     fontSize: 72,
     fontWeight: "600",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     textAlign: "center",
   },
   taskSubtitle: {
     fontSize: 48,
-    color: COLORS.whiteDim,
+    color: DS_COLORS.TEXT_ON_DARK_35,
     textAlign: "center",
     marginTop: 16,
   },
@@ -183,13 +167,13 @@ const statementStyles = StyleSheet.create({
   },
   streakLabel: {
     fontSize: 42,
-    color: COLORS.whiteDim,
+    color: DS_COLORS.TEXT_ON_DARK_35,
     marginBottom: 4,
   },
   streakValue: {
     fontSize: 96,
     fontWeight: "700",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
   },
   bottomRight: {
     alignItems: "flex-end",
@@ -197,10 +181,10 @@ const statementStyles = StyleSheet.create({
   },
   timeText: {
     fontSize: 42,
-    color: "rgba(255,255,255,0.3)",
+    color: DS_COLORS.TEXT_ON_DARK_30,
   },
   rankPill: {
-    backgroundColor: COLORS.whiteSubtle,
+    backgroundColor: DS_COLORS.OVERLAY_WHITE_8,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 32,
@@ -208,7 +192,7 @@ const statementStyles = StyleSheet.create({
   rankText: {
     fontSize: 36,
     fontWeight: "600",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
   },
 });
 
@@ -258,7 +242,7 @@ const transparentStyles = StyleSheet.create({
     paddingHorizontal: 48,
   },
   dayPill: {
-    backgroundColor: "rgba(232, 89, 60, 0.3)",
+    backgroundColor: DS_COLORS.SHARE_DAY_PILL_ORANGE_30,
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 40,
@@ -267,59 +251,59 @@ const transparentStyles = StyleSheet.create({
   dayPillText: {
     fontSize: 48,
     fontWeight: "900",
-    color: "#FF6B4A",
+    color: DS_COLORS.SHARE_TRANSPARENT_DAY_TEXT,
     letterSpacing: 2,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
   challengeName: {
     fontSize: 96,
     fontWeight: "900",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     textAlign: "center",
     letterSpacing: 2,
     marginBottom: 12,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 16,
   },
   taskName: {
     fontSize: 48,
     fontWeight: "600",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     opacity: 0.65,
     textAlign: "center",
     letterSpacing: 1,
     marginBottom: 40,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 8,
   },
   streakLabel: {
     fontSize: 42,
     fontWeight: "800",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
     opacity: 0.7,
     letterSpacing: 6,
     marginBottom: 8,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
   streakNumber: {
     fontSize: 340,
     fontWeight: "900",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     marginBottom: 24,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 24,
   },
   divider: {
     width: 120,
     height: 8,
-    backgroundColor: COLORS.accent,
+    backgroundColor: DS_COLORS.PRIMARY,
     opacity: 0.7,
     borderRadius: 4,
     marginBottom: 32,
@@ -327,22 +311,22 @@ const transparentStyles = StyleSheet.create({
   timeLabel: {
     fontSize: 42,
     fontWeight: "800",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
     opacity: 0.7,
     letterSpacing: 6,
     marginBottom: 8,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
   timeValue: {
     fontSize: 80,
     fontWeight: "800",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     opacity: 0.85,
     marginTop: 8,
     marginBottom: 40,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
   },
@@ -350,9 +334,9 @@ const transparentStyles = StyleSheet.create({
     fontSize: 72,
     fontWeight: "900",
     letterSpacing: 16,
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     opacity: 0.5,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowColor: DS_COLORS.OVERLAY_BLACK_50,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 12,
   },
@@ -377,7 +361,7 @@ export function ProofPhotoCard({
         </View>
       ) : null}
 
-      <LinearGradient colors={["transparent", "rgba(0,0,0,0.85)"]} style={proofStyles.gradient}>
+      <LinearGradient colors={["transparent", DS_COLORS.OVERLAY_BLACK_85]} style={proofStyles.gradient}>
         <Text style={proofStyles.taskSubtitle}>{taskName} completed</Text>
         <View style={proofStyles.bottomMainRow}>
           <Text style={proofStyles.dayChallenge}>
@@ -412,7 +396,7 @@ const proofStyles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "700",
     letterSpacing: 2,
-    color: COLORS.watermark,
+    color: DS_COLORS.SHARE_WATERMARK_MUTED,
     ...textShadowReadable,
     zIndex: 2,
   },
@@ -420,7 +404,7 @@ const proofStyles = StyleSheet.create({
     position: "absolute",
     top: 80,
     right: 80,
-    backgroundColor: COLORS.greenDim,
+    backgroundColor: DS_COLORS.SHARE_GREEN_15,
     paddingHorizontal: 28,
     paddingVertical: 12,
     borderRadius: 28,
@@ -429,7 +413,7 @@ const proofStyles = StyleSheet.create({
   verifiedText: {
     fontSize: 36,
     fontWeight: "600",
-    color: COLORS.green,
+    color: DS_COLORS.GREEN,
   },
   gradient: {
     position: "absolute",
@@ -443,7 +427,7 @@ const proofStyles = StyleSheet.create({
   },
   taskSubtitle: {
     fontSize: 48,
-    color: COLORS.whiteMuted,
+    color: DS_COLORS.TEXT_ON_DARK_50,
     marginBottom: 12,
   },
   bottomMainRow: {
@@ -457,11 +441,11 @@ const proofStyles = StyleSheet.create({
     flex: 1,
     fontSize: 72,
     fontWeight: "600",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
   },
   time: {
     fontSize: 48,
-    color: COLORS.whiteDim,
+    color: DS_COLORS.TEXT_ON_DARK_35,
   },
   badgeRow: {
     flexDirection: "row",
@@ -469,7 +453,7 @@ const proofStyles = StyleSheet.create({
     gap: 16,
   },
   orangePill: {
-    backgroundColor: COLORS.accentDim,
+    backgroundColor: DS_COLORS.SHARE_ACCENT_15,
     paddingVertical: 8,
     paddingHorizontal: 28,
     borderRadius: 24,
@@ -477,10 +461,10 @@ const proofStyles = StyleSheet.create({
   orangePillText: {
     fontSize: 36,
     fontWeight: "600",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
   },
   greenPill: {
-    backgroundColor: COLORS.greenDim,
+    backgroundColor: DS_COLORS.SHARE_GREEN_15,
     paddingVertical: 8,
     paddingHorizontal: 28,
     borderRadius: 24,
@@ -488,7 +472,7 @@ const proofStyles = StyleSheet.create({
   greenPillText: {
     fontSize: 36,
     fontWeight: "600",
-    color: COLORS.green,
+    color: DS_COLORS.GREEN,
   },
 });
 
@@ -544,7 +528,7 @@ const recapStyles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    backgroundColor: COLORS.cream,
+    backgroundColor: DS_COLORS.SHARE_CARD_CREAM,
     padding: 80,
     flexDirection: "column",
   },
@@ -558,12 +542,12 @@ const recapStyles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "700",
     letterSpacing: 2,
-    color: "rgba(232,89,60,0.3)",
+    color: DS_COLORS.SHARE_RECAP_ACCENT_30,
   },
   daySecured: {
     fontSize: 48,
     fontWeight: "600",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
     letterSpacing: 4,
     marginTop: 40,
     marginBottom: 12,
@@ -571,17 +555,17 @@ const recapStyles = StyleSheet.create({
   challengeName: {
     fontSize: 84,
     fontWeight: "700",
-    color: COLORS.darkText,
+    color: DS_COLORS.DISCOVER_INK,
     marginBottom: 12,
   },
   allTasks: {
     fontSize: 42,
-    color: COLORS.darkTextMuted,
+    color: DS_COLORS.TEXT_MUTED,
     marginBottom: 8,
   },
   separator: {
     height: 3,
-    backgroundColor: "rgba(0,0,0,0.08)",
+    backgroundColor: DS_COLORS.SHARE_SEPARATOR_08,
     marginVertical: 40,
   },
   taskRow: {
@@ -594,13 +578,13 @@ const recapStyles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: COLORS.green,
+    backgroundColor: DS_COLORS.GREEN,
     alignItems: "center",
     justifyContent: "center",
   },
   checkMark: {
     fontSize: 32,
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     fontWeight: "700",
   },
   taskInfo: {
@@ -609,11 +593,11 @@ const recapStyles = StyleSheet.create({
   taskName: {
     fontSize: 48,
     fontWeight: "500",
-    color: COLORS.darkText,
+    color: DS_COLORS.DISCOVER_INK,
   },
   taskDetails: {
     fontSize: 42,
-    color: COLORS.darkTextMuted,
+    color: DS_COLORS.TEXT_MUTED,
     marginTop: 6,
   },
   bottomRow: {
@@ -625,14 +609,14 @@ const recapStyles = StyleSheet.create({
   streakNumber: {
     fontSize: 108,
     fontWeight: "800",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
   },
   streakLabel: {
     fontSize: 42,
-    color: COLORS.darkTextMuted,
+    color: DS_COLORS.TEXT_MUTED,
   },
   rankPill: {
-    backgroundColor: COLORS.accentDim,
+    backgroundColor: DS_COLORS.SHARE_ACCENT_15,
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 32,
@@ -640,13 +624,13 @@ const recapStyles = StyleSheet.create({
   rankText: {
     fontSize: 36,
     fontWeight: "600",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
   },
 });
 
 export function ChallengeCompleteCard({ challengeName, totalDays, totalTasks }: ChallengeCompleteCardProps) {
   return (
-    <LinearGradient colors={["#1a0e08", COLORS.dark]} style={completeStyles.container}>
+    <LinearGradient colors={[DS_COLORS.SHARE_GRADIENT_START, DS_COLORS.BG_DARK]} style={completeStyles.container}>
       <Text style={completeStyles.watermark}>GRIIT</Text>
 
       <View style={completeStyles.center}>
@@ -662,7 +646,7 @@ export function ChallengeCompleteCard({ challengeName, totalDays, totalTasks }: 
       </View>
 
       <LinearGradient
-        colors={["transparent", COLORS.accent, "transparent"]}
+        colors={["transparent", DS_COLORS.PRIMARY, "transparent"]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={completeStyles.bottomLine}
@@ -683,7 +667,7 @@ const completeStyles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "700",
     letterSpacing: 2,
-    color: COLORS.whiteDim,
+    color: DS_COLORS.TEXT_ON_DARK_35,
   },
   center: {
     flex: 1,
@@ -693,7 +677,7 @@ const completeStyles = StyleSheet.create({
   },
   justFinished: {
     fontSize: 42,
-    color: "rgba(255,255,255,0.35)",
+    color: DS_COLORS.TEXT_ON_DARK_35,
     letterSpacing: 6,
     textTransform: "uppercase",
     marginBottom: 24,
@@ -701,7 +685,7 @@ const completeStyles = StyleSheet.create({
   challengeName: {
     fontSize: 160,
     fontWeight: "800",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     textAlign: "center",
     textTransform: "uppercase",
     lineHeight: 168,
@@ -709,13 +693,13 @@ const completeStyles = StyleSheet.create({
   accentBar: {
     width: 200,
     height: 12,
-    backgroundColor: COLORS.accent,
+    backgroundColor: DS_COLORS.PRIMARY,
     borderRadius: 6,
     marginVertical: 32,
   },
   stats: {
     fontSize: 48,
-    color: "rgba(255,255,255,0.4)",
+    color: DS_COLORS.TEXT_ON_DARK_40,
     textAlign: "center",
     lineHeight: 72,
     marginBottom: 40,
@@ -723,7 +707,7 @@ const completeStyles = StyleSheet.create({
   cta: {
     fontSize: 56,
     fontWeight: "600",
-    color: COLORS.accent,
+    color: DS_COLORS.PRIMARY,
     letterSpacing: 4,
     textAlign: "center",
   },
@@ -760,7 +744,7 @@ const minimalStyles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    backgroundColor: COLORS.dark,
+    backgroundColor: DS_COLORS.BG_DARK,
   },
   watermark: {
     position: "absolute",
@@ -769,7 +753,7 @@ const minimalStyles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "700",
     letterSpacing: 2,
-    color: COLORS.watermark,
+    color: DS_COLORS.SHARE_WATERMARK_MUTED,
   },
   center: {
     flex: 1,
@@ -779,26 +763,26 @@ const minimalStyles = StyleSheet.create({
   },
   currentStreak: {
     fontSize: 42,
-    color: "rgba(255,255,255,0.3)",
+    color: DS_COLORS.TEXT_ON_DARK_30,
     letterSpacing: 6,
     marginBottom: 16,
   },
   streakNumber: {
     fontSize: 400,
     fontWeight: "800",
-    color: COLORS.white,
+    color: DS_COLORS.WHITE,
     lineHeight: 420,
   },
   daysLabel: {
     fontSize: 48,
-    color: "rgba(255,255,255,0.3)",
+    color: DS_COLORS.TEXT_ON_DARK_30,
     letterSpacing: 4,
     marginTop: 8,
   },
   accentBar: {
     width: 160,
     height: 10,
-    backgroundColor: COLORS.accent,
+    backgroundColor: DS_COLORS.PRIMARY,
     borderRadius: 5,
     marginTop: 32,
     marginBottom: 32,
@@ -806,7 +790,7 @@ const minimalStyles = StyleSheet.create({
   challengeName: {
     fontSize: 56,
     fontWeight: "500",
-    color: COLORS.whiteMuted,
+    color: DS_COLORS.TEXT_ON_DARK_50,
     textAlign: "center",
   },
   bottomWatermark: {
@@ -818,7 +802,7 @@ const minimalStyles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "700",
     letterSpacing: 8,
-    color: "rgba(255,255,255,0.15)",
+    color: DS_COLORS.OVERLAY_WHITE_15,
   },
 });
 

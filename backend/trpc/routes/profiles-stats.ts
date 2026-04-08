@@ -295,13 +295,8 @@ export const profilesStatsProcedures = {
   getBadges: protectedProcedure
     .input(z.object({ userId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
+      const { getAchievementsByDimension } = await import("../../lib/achievement-definitions");
       const server = getSupabaseServer() ?? ctx.supabase;
-      const { data: streakRow } = await server
-        .from("streaks")
-        .select("longest_streak_count")
-        .eq("user_id", input.userId)
-        .maybeSingle();
-      const bestStreak = (streakRow as { longest_streak_count?: number } | null)?.longest_streak_count ?? 0;
 
       let canSee = input.userId === ctx.userId;
       if (!canSee) {
@@ -324,24 +319,66 @@ export const profilesStatsProcedures = {
         }
       }
       if (!canSee) {
-        return { earned: [] as { id: string; name: string; icon: string; color: string; progress: number; total: number }[], next: [] };
+        return { earned: [], next: [] };
       }
 
-      const allBadges = [
-        { id: "3day", name: "3-Day Fire", icon: "Zap", color: "coral", requirement: 3, type: "streak" as const },
-        { id: "7day", name: "Week Warrior", icon: "Star", color: "amber", requirement: 7, type: "streak" as const },
-        { id: "14day", name: "Fortnight", icon: "Trophy", color: "purple", requirement: 14, type: "streak" as const },
-        { id: "30day", name: "Month Master", icon: "Target", color: "teal", requirement: 30, type: "streak" as const },
-        { id: "60day", name: "Iron Will", icon: "Zap", color: "coral", requirement: 60, type: "streak" as const },
-      ];
+      const { data: unlockedRows } = await server
+        .from("user_achievements")
+        .select("achievement_key")
+        .eq("user_id", input.userId);
+      const unlockedKeys = new Set((unlockedRows ?? []).map((r: { achievement_key: string }) => r.achievement_key));
 
-      const earned = allBadges
-        .filter((b) => bestStreak >= b.requirement)
-        .map((b) => ({ ...b, progress: b.requirement, total: b.requirement }));
-      const next = allBadges
-        .filter((b) => bestStreak < b.requirement)
-        .slice(0, 3)
-        .map((b) => ({ ...b, progress: bestStreak, total: b.requirement }));
+      const { data: streakRow } = await server
+        .from("streaks")
+        .select("active_streak_count, longest_streak_count")
+        .eq("user_id", input.userId)
+        .maybeSingle();
+      const longestStreak = (streakRow as { longest_streak_count?: number } | null)?.longest_streak_count ?? 0;
+
+      const { data: profileRow } = await server
+        .from("profiles")
+        .select("total_days_secured")
+        .eq("user_id", input.userId)
+        .maybeSingle();
+      const totalDays = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
+
+      const allDefs = getAchievementsByDimension();
+
+      const earned = allDefs
+        .filter((b) => unlockedKeys.has(b.key))
+        .map((b) => ({
+          id: b.key,
+          name: b.label,
+          icon: b.icon,
+          color: b.color,
+          dimension: b.dimension,
+          description: b.description,
+          progress: b.threshold ?? 1,
+          total: b.threshold ?? 1,
+        }));
+
+      const next = allDefs
+        .filter((b) => !unlockedKeys.has(b.key))
+        .slice(0, 5)
+        .map((b) => {
+          let progress = 0;
+          if (b.dimension === "discipline" && b.threshold) {
+            progress = Math.min(longestStreak, b.threshold);
+          } else if (b.key === "total_days_50" || b.key === "total_days_100") {
+            progress = Math.min(totalDays, b.threshold ?? 0);
+          }
+          return {
+            id: b.key,
+            name: b.label,
+            icon: b.icon,
+            color: b.color,
+            dimension: b.dimension,
+            description: b.description,
+            progress,
+            total: b.threshold ?? 1,
+          };
+        });
+
       return { earned, next };
     }),
 

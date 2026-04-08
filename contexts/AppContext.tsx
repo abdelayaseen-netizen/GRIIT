@@ -41,7 +41,6 @@ type AppContextValue = {
   stats: StatsFromApi | null;
   activeChallenge: ActiveChallengeFromApi | null;
   challenge: Record<string, unknown> | null;
-  stories: unknown[];
   todayCheckins: TodayCheckinForUser[];
   todayDateLocal: string;
   computeProgress: { verifiedCount: number; totalRequired: number; progress: number };
@@ -119,7 +118,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeChallenge, setActiveChallenge] = useState<ActiveChallengeFromApi | null>(null);
   const [, setActiveChallengeError] = useState(false);
   const [activeChallengeLoaded, setActiveChallengeLoaded] = useState(false);
-  const [stories, setStories] = useState<unknown[]>([]);
   const [todayCheckins, setTodayCheckins] = useState<TodayCheckinForUser[]>([]);
   const [isPremium, setIsPremium] = useState(false);
   const prevPremiumForAnalytics = useRef<boolean | null>(null);
@@ -180,16 +178,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const fetchStories = useCallback(async () => {
-    if (!user) return;
-    try {
-      const data = await trpcQuery<unknown[]>(TRPC.stories.list);
-      setStories(data || []);
-    } catch {
-      // Stories fetch failed — non-blocking
-    }
-  }, [user]);
-
   const fetchTodayCheckins = useCallback(async (activeChallengeId: string) => {
     try {
       const data = await trpcQuery<TodayCheckinForUser[]>(TRPC.checkins.getTodayCheckins, { activeChallengeId });
@@ -211,8 +199,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchProfile();
     fetchStats();
     fetchActiveChallenge();
-    fetchStories();
-  }, [user, fetchProfile, fetchStats, fetchActiveChallenge, fetchStories]);
+  }, [user, fetchProfile, fetchStats, fetchActiveChallenge]);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !user || !stats) return;
@@ -469,7 +456,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setStats(null);
       setActiveChallenge(null);
       setActiveChallengeLoaded(false);
-      setStories([]);
       setTodayCheckins([]);
       setIsPremium(false);
       prevPremiumForAnalytics.current = null;
@@ -706,13 +692,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       fetchProfile(),
       fetchStats(),
       fetchActiveChallenge(),
-      fetchStories(),
     ]);
     const activeResult = results[2];
     const activeData = activeResult.status === 'fulfilled' ? activeResult.value : null;
     const ac = activeData as { id?: string } | null | undefined;
     if (ac?.id) await fetchTodayCheckins(ac.id);
-  }, [fetchProfile, fetchStats, fetchActiveChallenge, fetchStories, fetchTodayCheckins]);
+  }, [fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
 
   const refetchTodayCheckins = useCallback(async () => {
     if (activeChallenge?.id) await fetchTodayCheckins(activeChallenge.id);
@@ -741,7 +726,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     stats,
     activeChallenge,
     challenge,
-    stories,
     todayCheckins,
     todayDateLocal,
     computeProgress,
@@ -780,7 +764,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     stats,
     activeChallenge,
     challenge,
-    stories,
     todayCheckins,
     todayDateLocal,
     computeProgress,

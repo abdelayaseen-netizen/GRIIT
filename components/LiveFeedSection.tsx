@@ -38,7 +38,7 @@ type LiveFeedSectionProps = {
   onScrollToFeed?: () => void;
 };
 
-export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
+function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -431,15 +431,15 @@ export default function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps
           scrollEnabled={false}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={styles.listItemSeparator} />}
+          ItemSeparatorComponent={FeedSeparator}
           ListEmptyComponent={listEmpty}
           ListFooterComponent={
             <DiscoverCTA variant="feed" onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
           }
-          removeClippedSubviews={Platform.OS === "android"}
+          removeClippedSubviews={false}
           initialNumToRender={5}
-          maxToRenderPerBatch={3}
-          windowSize={10}
+          maxToRenderPerBatch={8}
+          windowSize={5}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -675,3 +675,9 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 });
+
+const FeedSeparator = React.memo(function FeedSeparator() {
+  return <View style={styles.listItemSeparator} />;
+});
+
+export default React.memo(LiveFeedSection);

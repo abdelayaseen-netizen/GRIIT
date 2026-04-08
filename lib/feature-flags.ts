@@ -13,8 +13,6 @@ export const FLAGS = {
   IS_BETA: true,
   /** When false, location check-in task shows "Coming soon" and does not navigate to task/checkin. */
   LOCATION_CHECKIN_ENABLED: false,
-  /** When false, challenge chat screen shows "Not available" and is hidden from normal navigation. */
-  CHAT_ENABLED: false,
   PREMIUM_ENABLED: true,
   PREMIUM_CHALLENGE_PACKS: true,
   PREMIUM_ANALYTICS: true,
@@ -46,5 +44,4 @@ export const PREMIUM_FEATURES = {
   UNLIMITED_SOCIAL: true,
   PREMIUM_BADGE: true,
   INTEGRATIONS: false,
-  CHAT: false,
 } as const;

@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { reportClientError } from "@/lib/client-error-reporting";
+import { logger } from "@/lib/logger";
 
 function logError(error: Error, componentStack: string | null | undefined) {
   if (__DEV__) {
@@ -22,9 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    if (__DEV__) {
-      console.error("[ErrorBoundary] Render error:", error.message, error.stack);
-    }
+    logger.error("ErrorBoundary", error.message, error);
     logError(error, errorInfo.componentStack);
   }
 

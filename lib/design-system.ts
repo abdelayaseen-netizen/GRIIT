@@ -636,6 +636,25 @@ export const DS_COLORS = {
   HERO_CARD_AMBER_GLOW_10: 'rgba(232,137,58,0.1)',
   CHIP_BG_DARK_ON_LIGHT: 'rgba(0,0,0,0.15)',
   TIMER_DANGER_OVERLAY_15: 'rgba(239, 68, 68, 0.15)',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SHARE CARDS / SHEET (components/share — no raw hex in share UI)
+  // ═══════════════════════════════════════════════════════════════════════════
+  SHARE_CARD_CREAM: '#F5F0E8',
+  SHARE_GRADIENT_START: '#1A0E08',
+  SHARE_TRANSPARENT_DAY_TEXT: '#FF6B4A',
+  SHARE_SHEET_CHECKER_LIGHT: '#E8E8E8',
+  SHARE_SHEET_CHECKER_DARK: '#CFCFCF',
+  SHARE_WATERMARK_MUTED: 'rgba(255,255,255,0.25)',
+  SHARE_ACCENT_15: 'rgba(232, 89, 60, 0.15)',
+  SHARE_GREEN_15: 'rgba(61, 122, 90, 0.15)',
+  SHARE_DAY_PILL_ORANGE_30: 'rgba(232, 89, 60, 0.3)',
+  SHARE_RECAP_ACCENT_30: 'rgba(232,89,60,0.3)',
+  SHARE_SEPARATOR_08: 'rgba(0,0,0,0.08)',
+  TEXT_ON_DARK_30: 'rgba(255,255,255,0.3)',
+  TEXT_ON_DARK_35: 'rgba(255,255,255,0.35)',
+  OVERLAY_BLACK_50: 'rgba(0,0,0,0.5)',
+  OVERLAY_BLACK_12: 'rgba(0, 0, 0, 0.12)',
 } as const;
 
 /** Brand + screen tokens (challenge detail bg matches app-wide warm page). */

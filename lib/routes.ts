@@ -36,7 +36,6 @@ export const ROUTES = {
   TASK_COMPLETE: "/task/complete",
   TASK_CHECKIN: "/task/checkin",
   TASK_RUN: "/task/run",
-  CHAT_INFO: (id: string) => `/challenge/${id}/chat-info` as const,
   CHALLENGE_COMPLETE: "/challenge/complete",
   PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",

@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Zap, Star, Trophy, Target, Check, Users } from "lucide-react-native";
+import { Zap, Star, Trophy, Target, Check, Users, Heart, MessageCircle, Hammer, Flag } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 
 export type BadgeLucideProps = { size?: number; color?: string; strokeWidth?: number };
@@ -11,6 +11,10 @@ export const BADGE_ICONS: Record<string, ComponentType<BadgeLucideProps>> = {
   Target,
   Check,
   Users,
+  Heart,
+  MessageCircle,
+  Hammer,
+  Flag,
 };
 
 export function badgeAccentFor(color: string): { bg: string; stroke: string } {

@@ -279,6 +279,17 @@ export const checkinsCoreProcedures = {
         }
       }
 
+      try {
+        const { data: profileForAch } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();
+        const totalDaysForAch = (profileForAch as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
+        const { data: streakForAch } = await ctx.supabase.from("streaks").select("active_streak_count").eq("user_id", ctx.userId).maybeSingle();
+        const currentStreakForAch = (streakForAch as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
+        const isHardMode = timerHardMode || cfg.hard_mode === true;
+        await checkAndUnlockAchievements(ctx.supabase, ctx.userId, currentStreakForAch, totalDaysForAch, false, isHardMode);
+      } catch {
+        /* non-fatal */
+      }
+
       const [{ data: allTasks }, { data: completedCheckins }] = await Promise.all([
         ctx.supabase.from("challenge_tasks").select("id, task_type, config").eq("challenge_id", challenge_id),
         ctx.supabase.from("check_ins").select("task_id").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).eq("status", "completed"),
@@ -350,7 +361,22 @@ export const checkinsCoreProcedures = {
       const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
       await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: currentDayAfter, streak_count: row.new_streak_count } });
       if (row.last_stand_earned) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "last_stand", metadata: { streak_count: row.new_streak_count } });
-      const { newUnlockKeys } = await checkAndUnlockAchievements(ctx.supabase, ctx.userId, row.new_streak_count, totalDaysSecured, challengeJustCompleted);
+      if (challengeJustCompleted) {
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "completed_challenge",
+          challenge_id: challengeId ?? null,
+          metadata: { challenge_name: challengeName, duration_days: durationDays },
+        });
+      }
+      const { newUnlockKeys } = await checkAndUnlockAchievements(
+        ctx.supabase,
+        ctx.userId,
+        row.new_streak_count,
+        totalDaysSecured,
+        challengeJustCompleted,
+        false
+      );
       if (newUnlockKeys.length > 0) {
         const achievementRows = newUnlockKeys.map((key) => ({
           user_id: ctx.userId,
@@ -360,7 +386,6 @@ export const checkinsCoreProcedures = {
         const { error: achErr } = await ctx.supabase.from("activity_events").insert(achievementRows);
         if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
       }
-      if (challengeJustCompleted) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "completed_challenge", challenge_id: challengeId ?? null, metadata: { challenge_name: challengeName, duration_days: durationDays } });
       return {
         success: true,
         newStreakCount: row.new_streak_count,
@@ -449,7 +474,22 @@ export const checkinsCoreProcedures = {
     if (lastStandEarned) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "last_stand", metadata: { streak_count: newStreakCount } });
     const prevStreakCount = (streak as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
     if (newStreakCount === 0 && prevStreakCount > 0) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "lost_streak", metadata: { previous_streak: prevStreakCount } });
-    const { newUnlockKeys } = await checkAndUnlockAchievements(ctx.supabase, ctx.userId, newStreakCount, totalDays, challengeJustCompleted);
+    if (challengeJustCompleted) {
+      await ctx.supabase.from("activity_events").insert({
+        user_id: ctx.userId,
+        event_type: "completed_challenge",
+        challenge_id: challengeId ?? null,
+        metadata: { challenge_name: challengeName, duration_days: durationDays },
+      });
+    }
+    const { newUnlockKeys } = await checkAndUnlockAchievements(
+      ctx.supabase,
+      ctx.userId,
+      newStreakCount,
+      totalDays,
+      challengeJustCompleted,
+      false
+    );
     if (newUnlockKeys.length > 0) {
       const achievementRows = newUnlockKeys.map((key) => ({
         user_id: ctx.userId,
@@ -459,7 +499,6 @@ export const checkinsCoreProcedures = {
       const { error: achErr } = await ctx.supabase.from("activity_events").insert(achievementRows);
       if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
     }
-    if (challengeJustCompleted) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "completed_challenge", challenge_id: challengeId ?? null, metadata: { challenge_name: challengeName, duration_days: durationDays } });
     return { success: true, newStreakCount, lastStandEarned, challengeDay: newCurrentDay };
   }),
 

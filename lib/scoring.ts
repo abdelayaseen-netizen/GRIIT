@@ -1,4 +1,7 @@
-/** Same formula as backend `consistencyScore` (for UI copy / tooling). */
-export function consistencyScore(checkIns: number, streak: number): number {
-  return Math.round(checkIns * 20 * (1 + streak * 0.1));
+/**
+ * Same formula as backend `consistencyScore` (for UI copy / tooling).
+ * Primary: weekly secured days × 100; tiebreaker: streak (capped at 99).
+ */
+export function consistencyScore(weeklySecuredDays: number, currentStreak: number): number {
+  return weeklySecuredDays * 100 + Math.min(currentStreak, 99);
 }

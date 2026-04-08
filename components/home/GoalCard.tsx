@@ -12,6 +12,7 @@ import {
   ChevronDown,
 } from "lucide-react-native";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system"
+import { logger } from "@/lib/logger";
 import { formatTimeHHMM } from "@/lib/time-enforcement";
 
 function taskTypeIcon(type?: string): React.ReactNode {
@@ -87,8 +88,8 @@ export default React.memo(function GoalCard({
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   useEffect(() => {
-    if (isError && __DEV__) {
-      console.error("[GoalCard] Home goals query failed; showing browse challenges empty state.");
+    if (isError) {
+      logger.warn("GoalCard", "Home goals query failed; showing browse challenges empty state.");
     }
   }, [isError]);
 

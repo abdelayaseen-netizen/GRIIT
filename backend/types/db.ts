@@ -112,13 +112,6 @@ export interface RespectRow {
   created_at: string;
 }
 
-export interface StoryWithViews {
-  id: string;
-  user_id: string;
-  story_views?: { user_id: string }[] | null;
-  [key: string]: unknown;
-}
-
 export interface PushTokenRow {
   token: string;
 }

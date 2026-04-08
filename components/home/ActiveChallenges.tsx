@@ -7,6 +7,7 @@ import EmptyChallengesCard from "./EmptyChallengesCard";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import type { TodayCheckinForUser } from "@/types";
 import { captureError } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 
 interface TaskFromApi {
   id: string;
@@ -76,7 +77,7 @@ export default function ActiveChallenges({ challengesWithProgress: controlledLis
         }
       } catch (err) {
         captureError(err, "ActiveChallengesLoad");
-        if (__DEV__) console.error("[ActiveChallenges] load failed:", err);
+        logger.debug("ActiveChallenges", "load failed", err);
         if (!cancelled) setActiveList([]);
       } finally {
         if (!cancelled) setIsLoading(false);

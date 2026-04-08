@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import logger from "../../lib/logger";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
   const { count: realCount } = await supabase
@@ -18,7 +19,6 @@ export const challengesJoinProcedures = {
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
       const MAX_FREE_CHALLENGES = 3;
-      const { logger } = await import("../../lib/logger");
       logger.info({ input, userId: ctx.userId }, "[JOIN-BACKEND] Join procedure called");
       const { data: profile } = await ctx.supabase
         .from("profiles")
@@ -182,7 +182,7 @@ export const challengesJoinProcedures = {
           .update({ last_left_at: new Date().toISOString() })
           .eq("user_id", ctx.userId)
           .then(() => {});
-        console.info(`[challenges.leave] user ${ctx.userId} left challenge ${input.challengeId}`);
+        logger.info({ userId: ctx.userId, challengeId: input.challengeId }, "user left challenge");
         return { left: true };
       }
 
@@ -196,7 +196,7 @@ export const challengesJoinProcedures = {
       }
       // participants_count: sync after removing challenge_members row
       await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
-      console.info(`[challenges.leave] user ${ctx.userId} left challenge ${input.challengeId}`);
+      logger.info({ userId: ctx.userId, challengeId: input.challengeId }, "user left challenge");
       return { left: true };
     }),
 

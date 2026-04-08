@@ -10,7 +10,6 @@ import { userRouter } from "./routes/user";
 import { profilesRouter } from "./routes/profiles";
 import { challengesRouter } from "./routes/challenges";
 import { checkinsRouter } from "./routes/checkins";
-import { storiesRouter } from "./routes/stories";
 import { startersRouter } from "./routes/starters";
 import { streaksRouter } from "./routes/streaks";
 import { leaderboardRouter } from "./routes/leaderboard";
@@ -31,7 +30,6 @@ export const appRouter = createTRPCRouter({
   profiles: profilesRouter,
   challenges: challengesRouter,
   checkins: checkinsRouter,
-  stories: storiesRouter,
   starters: startersRouter,
   streaks: streaksRouter,
   leaderboard: leaderboardRouter,

@@ -69,7 +69,7 @@ function CheckerBackground() {
             {
               left: c * CHECKER,
               top: r * CHECKER,
-              backgroundColor: light ? "#e8e8e8" : "#cfcfcf",
+              backgroundColor: light ? DS_COLORS.SHARE_SHEET_CHECKER_LIGHT : DS_COLORS.SHARE_SHEET_CHECKER_DARK,
             },
           ]}
         />

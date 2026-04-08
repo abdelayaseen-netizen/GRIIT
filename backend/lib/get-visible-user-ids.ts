@@ -1,5 +1,5 @@
 /**
- * Get the list of user IDs whose activity/stories the current user can see.
+ * Get the list of user IDs whose activity feed the current user can see.
  * Returns: current user + co-participants from shared challenges.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';

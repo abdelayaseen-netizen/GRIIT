@@ -10,6 +10,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
 import { captureError } from "@/lib/sentry";
+import { logger } from "@/lib/logger";
 import { ROUTES } from "@/lib/routes";
 
 import ValueSplash from "./screens/ValueSplash";
@@ -55,7 +56,7 @@ export default function OnboardingFlow() {
       await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
     } catch (e) {
       captureError(e, "OnboardingFlowPersistFlag");
-      if (__DEV__) console.error("[OnboardingFlow] persist onboarding flag failed:", e);
+      logger.debug("OnboardingFlow", "persist onboarding flag failed", e);
     }
     router.replace(ROUTES.TABS as never);
   }, [completeOnboarding, router, setProfileSetupHints]);

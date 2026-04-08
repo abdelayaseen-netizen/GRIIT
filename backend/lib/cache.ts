@@ -2,6 +2,7 @@
  * Optional Redis response cache (Upstash). No-op when env vars unset.
  */
 import { Redis } from "@upstash/redis";
+import logger from "./logger";
 
 let redis: Redis | null | undefined;
 
@@ -24,7 +25,7 @@ export async function getCached<T>(key: string): Promise<T | null> {
     const val = await r.get<T>(key);
     return val ?? null;
   } catch (e) {
-    if (process.env.NODE_ENV !== "production") console.error("[Cache] get failed:", e);
+    logger.error({ err: e }, "Cache get failed");
     return null;
   }
 }
@@ -35,7 +36,7 @@ export async function setCached<T>(key: string, value: T, ttlSeconds: number): P
   try {
     await r.set(key, value, { ex: ttlSeconds });
   } catch (e) {
-    if (process.env.NODE_ENV !== "production") console.error("[Cache] set failed:", e);
+    logger.error({ err: e }, "Cache set failed");
   }
 }
 
@@ -45,6 +46,6 @@ export async function invalidateCache(key: string): Promise<void> {
   try {
     await r.del(key);
   } catch (e) {
-    if (process.env.NODE_ENV !== "production") console.error("[Cache] invalidate failed:", e);
+    logger.error({ err: e }, "Cache invalidate failed");
   }
 }

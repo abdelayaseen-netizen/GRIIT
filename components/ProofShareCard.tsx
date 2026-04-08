@@ -80,6 +80,7 @@ export default function ProofShareCard({
               <Image
                 source={{ uri: proofPhotoUri }}
                 style={styles.proofThumb}
+                contentFit="cover"
                 cachePolicy="memory-disk"
                 accessibilityLabel="Proof photo"
                 accessibilityIgnoresInvertColors

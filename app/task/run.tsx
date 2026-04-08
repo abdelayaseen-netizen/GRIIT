@@ -694,6 +694,7 @@ export default function RunTaskScreen() {
                       <Image
                         source={{ uri: proofUri }}
                         style={styles.proofImage}
+                        contentFit="cover"
                         cachePolicy="memory-disk"
                         accessibilityLabel="Treadmill proof photo"
                       />
@@ -740,6 +741,7 @@ export default function RunTaskScreen() {
                       <Image
                         source={{ uri: proofUri }}
                         style={styles.thumbnailImage}
+                        contentFit="cover"
                         cachePolicy="memory-disk"
                         accessibilityLabel="Treadmill proof thumbnail"
                       />

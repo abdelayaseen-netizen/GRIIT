@@ -10,6 +10,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { track } from "@/lib/analytics";
 import { registerForPushNotifications } from "@/lib/notifications";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { logger } from "@/lib/logger";
 
 export async function registerPushTokenWithBackend(): Promise<boolean> {
   if (Platform.OS === "web") return false;
@@ -26,9 +27,10 @@ export async function registerPushTokenWithBackend(): Promise<boolean> {
     });
     return true;
   } catch (error) {
-    console.warn(
-      "[registerPushTokenWithBackend] Push token registration skipped:",
-      error instanceof Error ? error.message : "unknown"
+    logger.warn(
+      "PushToken",
+      `Push token registration skipped: ${error instanceof Error ? error.message : "unknown"}`,
+      error
     );
     return false;
   }
@@ -43,9 +45,10 @@ export async function requestNotificationPermissionAfterFirstJoin(): Promise<voi
     if (!hasJoined) return;
     await registerPushTokenWithBackend();
   } catch (error) {
-    console.warn(
-      "[requestNotificationPermissionAfterFirstJoin]",
-      error instanceof Error ? error.message : "unknown"
+    logger.warn(
+      "PushToken",
+      error instanceof Error ? error.message : "unknown",
+      error
     );
   }
 }
