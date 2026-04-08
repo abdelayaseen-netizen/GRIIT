@@ -47,12 +47,14 @@ function useSessionExpired() {
   return ctx;
 }
 
-/** Gated push registration after first challenge join (see STORAGE_KEYS.HAS_JOINED_CHALLENGE). */
 function PushRegistrationBootstrap() {
   const { user } = useAuth();
   useEffect(() => {
     if (Platform.OS === "web" || !user) return;
     void requestNotificationPermissionAfterFirstJoin();
+    void import("@/lib/notifications").then(({ requestNotificationPermissions }) => {
+      void requestNotificationPermissions();
+    });
   }, [user]);
   return null;
 }
