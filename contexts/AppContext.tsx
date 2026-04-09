@@ -1,37 +1,17 @@
 import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { Platform } from 'react-native';
 import { useQueryClient } from "@tanstack/react-query";
-import * as Haptics from 'expo-haptics';
 import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
 import { supabase } from '@/lib/supabase';
-import {
-  scheduleNextSecureReminder,
-  cancelSecureReminders,
-  scheduleLapsedUserReminders,
-  cancelLapsedUserReminders,
-  scheduleMilestoneApproachingIfNeeded,
-  scheduleMorningMotivation,
-  cancelMorningMotivation,
-  scheduleWeeklySummary,
-  cancelWeeklySummary,
-  scheduleChallengeCountdowns,
-  scheduleTaskWindowAlerts,
-  fireStreakCelebration,
-  isStreakCelebrationMilestone,
-} from '@/lib/notifications';
-import { getTodayDateKey, countSecuredLast7Days } from '@/lib/date-utils';
-import { deriveUserRank } from '@/lib/derive-user-rank';
+import { getTodayDateKey } from '@/lib/date-utils';
+import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
+import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
 import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
-import { setSentryUser, captureError } from '@/lib/sentry';
+import { setSentryUser } from '@/lib/sentry';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
-import { showGoalCelebration } from '@/store/celebrationStore';
-import { useProofSharePromptStore } from '@/store/proofSharePromptStore';
-
-const MILESTONE_SHARE_DAYS = new Set([7, 14, 21, 30, 45, 60, 75]);
 
 type AppContextValue = {
   profile: ProfileFromApi | null;
@@ -205,160 +185,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [user, fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
 
-  useEffect(() => {
-    if (Platform.OS === 'web' || !user || !stats) return;
-    const todayKey = getTodayDateKey();
-    const lastKey = stats.lastCompletedDateKey ?? null;
-    const preferred = (stats as StatsFromApi)?.preferredSecureTime ?? '20:00';
-    const lastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
-    const streakCount = (stats as StatsFromApi)?.activeStreak ?? 0;
-    if (lastKey === todayKey) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount).catch(() => {
-        // error swallowed — handle in UI
-      });
-    } else {
-      scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount).catch(() => {
-        // error swallowed — handle in UI
-      });
-    }
-    const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
-    scheduleLapsedUserReminders({ streakCount, challengeName }).catch(() => {
-      // error swallowed — handle in UI
-    });
-
-    let cancelled = false;
-    const runExtended = async () => {
-      const settings = (await trpcQuery(TRPC.notifications.getReminderSettings).catch(() => null)) as {
-        morning_kickoff_enabled?: boolean;
-        weekly_summary_enabled?: boolean;
-      } | null;
-      if (cancelled) return;
-
-      const ch = activeChallenge?.challenges as Record<string, unknown> | null | undefined;
-      const taskRows = (ch?.challenge_tasks as unknown[] | undefined) ?? [];
-      const taskCount = taskRows.length;
-      const currentDay = (activeChallenge as { current_day?: number })?.current_day ?? 1;
-      const challengeTitle = typeof ch?.title === 'string' ? ch.title : undefined;
-
-      if (settings?.morning_kickoff_enabled !== false) {
-        scheduleMorningMotivation({
-          morningTime: '07:00',
-          streakCount,
-          taskCount,
-          currentDay,
-          challengeName: challengeTitle,
-        }).catch(() => {});
-      } else {
-        await cancelMorningMotivation();
-      }
-
-      const securedKeys = (await trpcQuery(TRPC.profiles.getSecuredDateKeys).catch(() => [])) as string[];
-      if (cancelled) return;
-
-      const daysSecuredThisWeek = countSecuredLast7Days(Array.isArray(securedKeys) ? securedKeys : []);
-      const basePoints = ((stats as StatsFromApi)?.totalDaysSecured ?? 0) * 5;
-
-      if (settings?.weekly_summary_enabled !== false) {
-        scheduleWeeklySummary({
-          daysSecuredThisWeek,
-          totalDaysThisWeek: 7,
-          points: basePoints,
-          rank: deriveUserRank(stats as StatsFromApi),
-          streakCount,
-        }).catch(() => {});
-      } else {
-        await cancelWeeklySummary();
-      }
-
-      const myActive = (await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as {
-        id?: string;
-        current_day?: number;
-        challenges?: {
-          duration_days?: number;
-          title?: string;
-          challenge_tasks?: Record<string, unknown>[];
-        };
-      }[];
-      if (cancelled) return;
-
-      const countdownData = (Array.isArray(myActive) ? myActive : [])
-        .filter((ac) => ac.challenges?.duration_days != null && ac.current_day != null)
-        .map((ac) => ({
-          id: ac.id ?? '',
-          name: ac.challenges?.title ?? 'Challenge',
-          currentDay: ac.current_day ?? 1,
-          totalDays: ac.challenges?.duration_days ?? 1,
-        }))
-        .filter((d) => d.id);
-      scheduleChallengeCountdowns(countdownData).catch(() => {});
-
-      const winTasks: {
-        id: string;
-        taskType?: string;
-        anchorTimeLocal?: string | null;
-        windowStartOffsetMin?: number | null;
-        challengeName?: string;
-      }[] = [];
-      for (const ac of Array.isArray(myActive) ? myActive : []) {
-        const ch = ac.challenges;
-        const title = ch?.title ?? 'Challenge';
-        const tasks = ch?.challenge_tasks ?? [];
-        for (const t of tasks) {
-          const cfg = (t as { config?: Record<string, unknown> }).config;
-          if (cfg && cfg.timeEnforcementEnabled === false) continue;
-
-          const anchorFromCfg = typeof cfg?.anchorTimeLocal === 'string' ? cfg.anchorTimeLocal : null;
-          const anchor =
-            anchorFromCfg ??
-            (typeof (t as { anchorTimeLocal?: string }).anchorTimeLocal === 'string'
-              ? (t as { anchorTimeLocal: string }).anchorTimeLocal
-              : null) ??
-            (typeof (t as { anchor_time_local?: string }).anchor_time_local === 'string'
-              ? (t as { anchor_time_local: string }).anchor_time_local
-              : null);
-          if (!anchor?.trim()) continue;
-
-          const w =
-            typeof (t as { windowStartOffsetMin?: number }).windowStartOffsetMin === 'number'
-              ? (t as { windowStartOffsetMin: number }).windowStartOffsetMin
-              : typeof (t as { window_start_offset_min?: number }).window_start_offset_min === 'number'
-                ? (t as { window_start_offset_min: number }).window_start_offset_min
-              : typeof cfg?.windowStartOffsetMin === 'number'
-                ? (cfg.windowStartOffsetMin as number)
-                : 0;
-
-          const rawType = (t as { type?: string }).type;
-          winTasks.push({
-            id: `${ac.id ?? 'ac'}-${String((t as { id?: string }).id)}`,
-            taskType: typeof rawType === 'string' ? rawType : undefined,
-            anchorTimeLocal: anchor,
-            windowStartOffsetMin: w,
-            challengeName: title,
-          });
-        }
-      }
-      scheduleTaskWindowAlerts(winTasks).catch(() => {});
-    };
-    void runExtended();
-
-    return () => {
-      cancelled = true;
-      cancelSecureReminders();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- deps derived from stats; listing stats would re-run on any stats change
-  }, [
-    user,
-    stats?.lastCompletedDateKey,
-    (stats as StatsFromApi)?.preferredSecureTime,
-    (stats as StatsFromApi)?.lastStandsAvailable,
-    (stats as StatsFromApi)?.totalDaysSecured,
-    (stats as StatsFromApi)?.activeStreak,
-    (stats as StatsFromApi)?.tier,
-    activeChallenge?.id,
-    activeChallenge?.challenges,
-  ]);
+  useNotificationScheduler({ user, stats, activeChallenge });
 
   useEffect(() => {
     if (activeChallenge?.id) {
@@ -524,161 +351,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return computeProgress.progress === 100 && computeProgress.totalRequired > 0;
   }, [computeProgress]);
 
-  const completeTask = useCallback((params: {
-    activeChallengeId: string;
-    taskId: string;
-    value?: number;
-    noteText?: string;
-    proofUrl?: string;
-    photo_url?: string;
-    heart_rate_avg?: number;
-    heart_rate_peak?: number;
-    location_latitude?: number;
-    location_longitude?: number;
-    timer_seconds_on_screen?: number;
-    clocked_in_at?: string;
-  }): Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void> => {
-    const requiredTasks = (challenge?.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
-    const completedCountBefore = todayCheckins.filter((c: TodayCheckinForUser) =>
-      c.status === 'completed' && requiredTasks.some((rt: { id: string }) => rt.id === c.task_id)
-    ).length;
-    const firstTaskOfDay = completedCountBefore === 0 && requiredTasks.length > 1;
-
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-
-    const previousCheckins = todayCheckins.slice();
-    const optimisticCheckin = {
-      active_challenge_id: params.activeChallengeId,
-      task_id: params.taskId,
-      status: "completed" as const,
-    };
-    setTodayCheckins((prev) => [...prev, optimisticCheckin]);
-
-    return trpcMutate<{ id?: string }>(TRPC.checkins.complete, params)
-      .then((data) => {
-        const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
-        const challengeIdForRetention = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
-        if (currentDay >= 7 && challengeIdForRetention) {
-          try {
-            trackEvent("day_7_retained", { challenge_id: challengeIdForRetention, day_number: currentDay });
-          } catch {
-            /* non-fatal */
-          }
-        }
-        if (currentDay === 3 && challengeIdForRetention) {
-          try {
-            trackEvent("day_3_retained", { challenge_id: challengeIdForRetention });
-          } catch {
-            /* non-fatal */
-          }
-        }
-        if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
-        void fetchActiveChallenge();
-        void fetchStats();
-        void queryClient.invalidateQueries({ queryKey: ["home"] });
-        void queryClient.invalidateQueries({ queryKey: ["home", "v2", user?.id ?? ""] });
-        void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
-        void queryClient.invalidateQueries({ queryKey: ["discover", "completed", user?.id ?? ""] });
-        void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
-        void queryClient.invalidateQueries({ queryKey: ["community", "feed", user?.id] });
-        void queryClient.invalidateQueries({ queryKey: ["profile"] });
-        showGoalCelebration(5);
-        const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
-        const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? 'unknown';
-        const cid = (activeChallenge as ActiveChallengeFromApi | null)?.challenge_id;
-        if (cid) {
-          try {
-            trackEvent("task_completed", { challenge_id: cid, task_type: String(taskType) });
-          } catch {
-            /* non-fatal */
-          }
-        }
-        return { firstTaskOfDay, completionId: data?.id };
-      })
-      .catch((err: unknown) => {
-        setTodayCheckins(previousCheckins);
-        const msg = err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
-        captureError(err, "AppContextCompleteTask");
-        throw new Error(msg);
-      });
-  }, [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats, queryClient, user?.id]);
-
-  const secureDay = useCallback(async (): Promise<{
-    newStreakCount: number;
-    lastStandEarned?: boolean;
-    challengeCompleted?: boolean;
-    challengeId?: string;
-    challengeName?: string;
-    totalDays?: number;
-  } | undefined> => {
-    if (!activeChallenge?.id || !canSecureDay) return undefined;
-    try {
-      const result = await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id }) as {
-        success: boolean;
-        newStreakCount: number;
-        lastStandEarned?: boolean;
-        challengeDay?: number;
-        challengeCompleted?: boolean;
-        challengeId?: string;
-        challengeName?: string;
-        totalDays?: number;
-      };
-      const securedChallengeId =
-        result.challengeId ?? (activeChallenge as { challenge_id?: string }).challenge_id ?? "";
-      const dayNum = result.challengeDay ?? (activeChallenge as { current_day?: number }).current_day ?? 0;
-      if (securedChallengeId) {
-        try {
-          trackEvent("day_secured", { challenge_id: securedChallengeId, day_number: dayNum });
-        } catch {
-          /* non-fatal */
-        }
-      }
-      const dayN = result.challengeDay;
-      if (typeof dayN === 'number' && MILESTONE_SHARE_DAYS.has(dayN)) {
-        const prof = profile || fallbackProfile;
-        const uname = String((prof as { username?: string } | null)?.username ?? 'user').replace(/^@+/, '');
-        const nested = (activeChallenge as { challenges?: { title?: string; duration_days?: number } } | null)?.challenges;
-        useProofSharePromptStore.getState().show({
-          userName: uname,
-          challengeTitle: nested?.title ?? 'Challenge',
-          dayNumber: dayN,
-          totalDays: nested?.duration_days ?? 75,
-          streakCount: result.newStreakCount ?? 0,
-        });
-      }
-      void fetchActiveChallenge();
-      void fetchStats();
-      const streakN = result?.newStreakCount;
-      if (typeof streakN === 'number' && [7, 14, 30, 75].includes(streakN)) {
-        trackEvent('streak_milestone', { days: streakN });
-      }
-      if (Platform.OS !== 'web') {
-        const preferred = (stats as StatsFromApi)?.preferredSecureTime ?? '20:00';
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
-        const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
-        const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch(() => {
-          // error swallowed — handle in UI
-        });
-        await cancelLapsedUserReminders();
-        const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
-        await scheduleLapsedUserReminders({ streakCount: newStreakCount, challengeName });
-        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch(() => {
-          // error swallowed — handle in UI
-        });
-        if (isStreakCelebrationMilestone(newStreakCount)) {
-          fireStreakCelebration(newStreakCount).catch(() => {});
-        }
-      }
-      return result;
-    } catch {
-      return undefined;
-    }
-  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats, profile, fallbackProfile]);
+  const { completeTask, secureDay } = useAppChallengeMutations({
+    user,
+    queryClient,
+    activeChallenge,
+    challenge,
+    todayCheckins,
+    setTodayCheckins,
+    fetchTodayCheckins,
+    fetchActiveChallenge,
+    fetchStats,
+    stats,
+    profile,
+    fallbackProfile,
+    canSecureDay,
+  });
 
   const resolvedProfile = profile || fallbackProfile;
   const profileHasLoaded = (profileFetched && profile !== null) || profileError || !!fallbackProfile;
