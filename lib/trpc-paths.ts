@@ -105,9 +105,6 @@ export const TRPC = {
   user: {
     completeOnboarding: 'user.completeOnboarding',
   },
-  meta: {
-    version: 'meta.version',
-  },
   referrals: {
     recordOpen: 'referrals.recordOpen',
     markJoinedChallenge: 'referrals.markJoinedChallenge',

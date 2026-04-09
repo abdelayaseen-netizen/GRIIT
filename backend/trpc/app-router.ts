@@ -2,7 +2,7 @@ import { createTRPCRouter } from "./create-context";
 /**
  * Public procedures (no auth): auth.signUp, auth.signIn, auth.getSession;
  *   challenges.list, challenges.getFeatured, challenges.getStarterPack, challenges.getById;
- *   leaderboard.getWeekly; meta.version; feed.list (public read path if configured).
+ *   leaderboard.getWeekly; feed.list (public read path if configured).
  * All other procedures are protected (require Authorization: Bearer <token>).
  */
 import { authRouter } from "./routes/auth";
@@ -17,7 +17,6 @@ import { respectsRouter } from "./routes/respects";
 import { nudgesRouter } from "./routes/nudges";
 import { notificationsRouter } from "./routes/notifications";
 import { accountabilityRouter } from "./routes/accountability";
-import { metaRouter } from "./routes/meta";
 import { feedRouter } from "./routes/feed";
 import { achievementsRouter } from "./routes/achievements";
 import { integrationsRouter } from "./routes/integrations";
@@ -37,7 +36,6 @@ export const appRouter = createTRPCRouter({
   nudges: nudgesRouter,
   notifications: notificationsRouter,
   accountability: accountabilityRouter,
-  meta: metaRouter,
   feed: feedRouter,
   achievements: achievementsRouter,
   integrations: integrationsRouter,

@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { formatError, formatTRPCError } from './api';
 
-// Avoid loading React Native and Supabase when importing api (api re-exports from here)
+// Avoid loading React Native / Sentry native stack when importing api.ts
+vi.mock('@/lib/sentry', () => ({ captureError: vi.fn() }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 vi.mock('react-native', () => ({ Platform: { OS: 'web' } }));
+
+import { formatError, formatTRPCError } from './api';
 
 describe('formatError', () => {
   it('returns "Unknown error" for null and undefined', () => {

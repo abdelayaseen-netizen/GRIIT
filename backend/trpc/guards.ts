@@ -1,8 +1,5 @@
 import { TRPCError } from "@trpc/server";
-
-type SupabaseClient = {
-  from: (table: string) => any;
-};
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ActiveChallengeRow = {
   id: string;
