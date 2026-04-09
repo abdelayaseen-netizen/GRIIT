@@ -196,10 +196,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       resetAnalytics();
       return;
     }
-    fetchProfile();
-    fetchStats();
-    fetchActiveChallenge();
-  }, [user, fetchProfile, fetchStats, fetchActiveChallenge]);
+    void Promise.allSettled([fetchProfile(), fetchStats(), fetchActiveChallenge()]).then((results) => {
+      const activeResult = results[2];
+      if (activeResult.status === "fulfilled") {
+        const ac = activeResult.value as { id?: string } | null;
+        if (ac?.id) void fetchTodayCheckins(ac.id);
+      }
+    });
+  }, [user, fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !user || !stats) return;

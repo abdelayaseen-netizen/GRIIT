@@ -360,7 +360,7 @@ export const profilesRouter = createTRPCRouter({
       const ids = rows.map((r) => r.user_id);
       const { data: streakRows } =
         ids.length > 0
-          ? await ctx.supabase.from("streaks").select("user_id, active_streak_count").in("user_id", ids)
+          ? await ctx.supabase.from("streaks").select("user_id, active_streak_count").in("user_id", ids).limit(200)
           : { data: [] as { user_id: string; active_streak_count: number | null }[] };
       const streakMap = new Map((streakRows ?? []).map((s) => [s.user_id, s.active_streak_count ?? 0]));
       return rows.map((r) => ({
@@ -379,7 +379,8 @@ export const profilesRouter = createTRPCRouter({
         .from("user_follows")
         .select("follower_id")
         .eq("following_id", input.userId)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
+        .limit(50);
       if (error || !rows?.length) {
         return [] as {
           user_id: string;
@@ -393,7 +394,8 @@ export const profilesRouter = createTRPCRouter({
       const { data: profiles } = await ctx.supabase
         .from("profiles")
         .select("user_id, username, display_name, avatar_url")
-        .in("user_id", ids);
+        .in("user_id", ids)
+        .limit(50);
       const pmap = new Map((profiles ?? []).map((p: { user_id: string }) => [p.user_id, p]));
 
       let followingSet = new Set<string>();
@@ -403,7 +405,8 @@ export const profilesRouter = createTRPCRouter({
           .select("following_id")
           .eq("follower_id", ctx.userId)
           .eq("status", "accepted")
-          .in("following_id", ids);
+          .in("following_id", ids)
+          .limit(50);
         followingSet = new Set((my ?? []).map((m: { following_id: string }) => m.following_id));
       }
 
@@ -426,7 +429,8 @@ export const profilesRouter = createTRPCRouter({
         .from("user_follows")
         .select("following_id")
         .eq("follower_id", input.userId)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
+        .limit(50);
       if (error || !rows?.length) {
         return [] as {
           user_id: string;
@@ -440,7 +444,8 @@ export const profilesRouter = createTRPCRouter({
       const { data: profiles } = await ctx.supabase
         .from("profiles")
         .select("user_id, username, display_name, avatar_url")
-        .in("user_id", ids);
+        .in("user_id", ids)
+        .limit(50);
       const pmap = new Map((profiles ?? []).map((p: { user_id: string }) => [p.user_id, p]));
 
       let followingSet = new Set<string>();
@@ -450,7 +455,8 @@ export const profilesRouter = createTRPCRouter({
           .select("following_id")
           .eq("follower_id", ctx.userId)
           .eq("status", "accepted")
-          .in("following_id", ids);
+          .in("following_id", ids)
+          .limit(50);
         followingSet = new Set((my ?? []).map((m: { following_id: string }) => m.following_id));
       }
 

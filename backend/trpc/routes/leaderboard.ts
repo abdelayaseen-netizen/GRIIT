@@ -14,12 +14,12 @@ function followRowAcceptedLb(row: { status?: string | null }): boolean {
 }
 
 async function mutualFriendUserIds(ctx: Context, viewerId: string): Promise<Set<string>> {
-  const { data: out } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId);
+  const { data: out } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
   const iFollow = new Set<string>();
   for (const r of (out ?? []) as { following_id: string; status?: string | null }[]) {
     if (followRowAcceptedLb(r)) iFollow.add(r.following_id);
   }
-  const { data: inc } = await ctx.supabase.from("user_follows").select("follower_id, status").eq("following_id", viewerId);
+  const { data: inc } = await ctx.supabase.from("user_follows").select("follower_id, status").eq("following_id", viewerId).limit(200);
   const mutual = new Set<string>();
   for (const r of (inc ?? []) as { follower_id: string; status?: string | null }[]) {
     if (followRowAcceptedLb(r) && iFollow.has(r.follower_id)) mutual.add(r.follower_id);
@@ -87,11 +87,13 @@ export const leaderboardRouter = createTRPCRouter({
         server
           .from("profiles")
           .select("user_id, username, display_name, avatar_url")
-          .in("user_id", sortedUserIds),
+          .in("user_id", sortedUserIds)
+          .limit(200),
         server
           .from("streaks")
           .select("user_id, active_streak_count")
-          .in("user_id", sortedUserIds),
+          .in("user_id", sortedUserIds)
+          .limit(200),
         server
           .from("day_secures")
           .select("user_id")
@@ -100,7 +102,8 @@ export const leaderboardRouter = createTRPCRouter({
         server
           .from("respects")
           .select("recipient_id")
-          .in("recipient_id", sortedUserIds),
+          .in("recipient_id", sortedUserIds)
+          .limit(10000),
       ]);
       const profiles = profilesResult.data;
       const streaks = streaksResult.data;
@@ -166,7 +169,8 @@ export const leaderboardRouter = createTRPCRouter({
       .select("user_id")
       .in("user_id", candidateIds)
       .gte("date_key", weekStartKey)
-      .lte("date_key", todayKey);
+      .lte("date_key", todayKey)
+      .limit(5000);
     if (sErr) {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: sErr.message });
     }
@@ -176,7 +180,7 @@ export const leaderboardRouter = createTRPCRouter({
       checkInCount.set(uid, (checkInCount.get(uid) ?? 0) + 1);
     }
 
-    const { data: streakRows } = await server.from("streaks").select("user_id, active_streak_count").in("user_id", candidateIds);
+    const { data: streakRows } = await server.from("streaks").select("user_id, active_streak_count").in("user_id", candidateIds).limit(200);
     const streakMap = new Map<string, number>();
     for (const s of (streakRows ?? []) as { user_id: string; active_streak_count?: number }[]) {
       streakMap.set(s.user_id, s.active_streak_count ?? 0);
@@ -185,7 +189,8 @@ export const leaderboardRouter = createTRPCRouter({
     const { data: profiles } = await server
       .from("profiles")
       .select("user_id, username, display_name, avatar_url")
-      .in("user_id", candidateIds);
+      .in("user_id", candidateIds)
+      .limit(200);
 
     const profileMap = new Map((profiles ?? []).map((p: LeaderboardProfileRow) => [p.user_id, p]));
 
@@ -259,7 +264,8 @@ export const leaderboardRouter = createTRPCRouter({
         .from("active_challenges")
         .select("user_id")
         .eq("challenge_id", input.challengeId)
-        .eq("status", "active");
+        .eq("status", "active")
+        .limit(500);
       if (pErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: pErr.message });
 
       let userIds = [...new Set((participants ?? []).map((r: { user_id: string }) => r.user_id))];
@@ -282,14 +288,15 @@ export const leaderboardRouter = createTRPCRouter({
         .select("user_id")
         .in("user_id", userIds)
         .gte("date_key", weekStartKey)
-        .lte("date_key", todayKey);
+        .lte("date_key", todayKey)
+        .limit(5000);
       const checkInCount = new Map<string, number>();
       for (const row of secures ?? []) {
         const uid = (row as { user_id: string }).user_id;
         checkInCount.set(uid, (checkInCount.get(uid) ?? 0) + 1);
       }
 
-      const { data: streakRows } = await server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds);
+      const { data: streakRows } = await server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds).limit(200);
       const streakMap = new Map<string, number>();
       for (const s of (streakRows ?? []) as { user_id: string; active_streak_count?: number }[]) {
         streakMap.set(s.user_id, s.active_streak_count ?? 0);
@@ -298,7 +305,8 @@ export const leaderboardRouter = createTRPCRouter({
       const { data: profiles } = await server
         .from("profiles")
         .select("user_id, username, display_name, avatar_url")
-        .in("user_id", userIds);
+        .in("user_id", userIds)
+        .limit(200);
       const profileMap = new Map((profiles ?? []).map((p: LeaderboardProfileRow) => [p.user_id, p]));
 
       const rows = userIds.map((uid) => {

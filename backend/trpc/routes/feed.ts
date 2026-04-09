@@ -20,10 +20,10 @@ export const feedRouter = createTRPCRouter({
     const server = getSupabaseServer() ?? ctx.supabase;
     const viewerId = ctx.userId;
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
-    const { data: recentMovers } = await server.from("activity_events").select("user_id").gte("created_at", dayAgo);
+    const { data: recentMovers } = await server.from("activity_events").select("user_id").gte("created_at", dayAgo).limit(500);
     const movingUserCount = new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id)).size;
     const followingIds = new Set<string>();
-    const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId);
+    const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
     const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(60);
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
@@ -35,10 +35,10 @@ export const feedRouter = createTRPCRouter({
     // Parallelize visibility + challenge lookups
     const [visResult, chResult] = await Promise.all([
       eventUserIds.length > 0
-        ? server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds)
+        ? server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds).limit(200)
         : Promise.resolve({ data: [] }),
       challengeIds.length > 0
-        ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds)
+        ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
         : Promise.resolve({ data: [] }),
     ]);
 
@@ -85,7 +85,7 @@ export const feedRouter = createTRPCRouter({
     }
     if (!canSee) return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     const followingIds = new Set<string>();
-    const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId);
+    const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
     const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").eq("user_id", input.userId).in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(Math.min(80, input.limit * 3));
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
@@ -103,13 +103,13 @@ export const feedRouter = createTRPCRouter({
     const ev = raw as EvRow;
     if (!LIVE_FEED_TYPES.includes(ev.event_type as (typeof LIVE_FEED_TYPES)[number])) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     const followingIds = new Set<string>();
-    const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId);
+    const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
     const challengeIds = ev.challenge_id ? [ev.challenge_id] : [];
     const [chRes, acRes, profRes] = await Promise.all([
-      challengeIds.length ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds) : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
-      challengeIds.length ? server.from("active_challenges").select("user_id, challenge_id, current_day, status").in("challenge_id", challengeIds).eq("status", "active") : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; current_day?: number }[] }),
-      server.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", [ev.user_id]),
+      challengeIds.length ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200) : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
+      challengeIds.length ? server.from("active_challenges").select("user_id, challenge_id, current_day, status").in("challenge_id", challengeIds).eq("status", "active").limit(200) : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; current_day?: number }[] }),
+      server.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", [ev.user_id]).limit(200),
     ]);
     const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
     const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; current_day?: number }[];
@@ -127,7 +127,8 @@ export const feedRouter = createTRPCRouter({
       .from("feed_reactions")
       .select("event_id, user_id")
       .eq("event_id", ev.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(500);
     let reactionCount = 0;
     let reactedByMe = false;
     let lastReactorId: string | null = null;
@@ -187,7 +188,7 @@ export const feedRouter = createTRPCRouter({
     const userIds = [...new Set(items.map((e: { user_id: string }) => e.user_id))];
     let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null }>();
     if (userIds.length > 0) {
-      const { data: profiles } = await ctx.supabase.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", userIds);
+      const { data: profiles } = await ctx.supabase.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", userIds).limit(200);
       profileMap = new Map((profiles ?? []).map((p: { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }) => [p.user_id, { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url }]));
     }
     const withProfiles = items.map((e: { id: string; user_id: string; event_type: string; challenge_id?: string | null; metadata?: Record<string, unknown>; created_at: string }) => {
@@ -202,7 +203,8 @@ export const feedRouter = createTRPCRouter({
         .from("feed_reactions")
         .select("event_id, user_id, created_at")
         .in("event_id", eventIds)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(500);
       for (const row of (reactions ?? []) as { event_id: string; user_id: string }[]) {
         const prev = reactionStats.get(row.event_id) ?? { count: 0, reactedByMe: false, lastReactorId: null as string | null };
         reactionStats.set(row.event_id, {
@@ -211,7 +213,7 @@ export const feedRouter = createTRPCRouter({
           lastReactorId: prev.lastReactorId ?? row.user_id,
         });
       }
-      const { data: comments } = await ctx.supabase.from("feed_comments").select("event_id").in("event_id", eventIds);
+      const { data: comments } = await ctx.supabase.from("feed_comments").select("event_id").in("event_id", eventIds).limit(500);
       for (const row of (comments ?? []) as { event_id: string }[]) commentCounts.set(row.event_id, (commentCounts.get(row.event_id) ?? 0) + 1);
     }
     const listReactorIds = new Set<string>();
@@ -224,7 +226,8 @@ export const feedRouter = createTRPCRouter({
       const { data: reactorProfiles } = await ctx.supabase
         .from("profiles")
         .select("user_id, display_name, username, avatar_url")
-        .in("user_id", [...listReactorIds]);
+        .in("user_id", [...listReactorIds])
+        .limit(200);
       for (const p of (reactorProfiles ?? []) as { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }[]) {
         profileMap.set(p.user_id, { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url });
       }
@@ -254,7 +257,7 @@ export const feedRouter = createTRPCRouter({
     const challengeIds = [...new Set(items.map((e) => e.challenge_id).filter((id): id is string => !!id))];
     let challengeMap = new Map<string, { title: string; category: string | null }>();
     if (challengeIds.length > 0) {
-      const { data: challenges } = await ctx.supabase.from("challenges").select("id, title, category").in("id", challengeIds);
+      const { data: challenges } = await ctx.supabase.from("challenges").select("id, title, category").in("id", challengeIds).limit(200);
       challengeMap = new Map((challenges ?? []).map((c: { id: string; title?: string | null; category?: string | null }) => [c.id, { title: c.title ?? "Challenge", category: c.category ?? null }]));
     }
     const out = items.map((event) => {
@@ -437,7 +440,8 @@ export const feedRouter = createTRPCRouter({
               .eq("user_id", ownerId)
               .eq("type", "respect")
               .eq("read", false)
-              .gte("created_at", fiveMinAgo);
+              .gte("created_at", fiveMinAgo)
+              .limit(200);
             const skipNotification = (recentRespectRows ?? []).some((r: { data?: unknown }) => {
               const d = r.data;
               if (!d || typeof d !== "object" || Array.isArray(d)) return false;
@@ -529,6 +533,7 @@ export const feedRouter = createTRPCRouter({
             .from("profiles")
             .select("user_id, display_name, username, avatar_url")
             .in("user_id", userIds)
+            .limit(200)
         : { data: [] as { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }[] };
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.user_id, p])
@@ -760,7 +765,7 @@ export const feedRouter = createTRPCRouter({
     const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((x): x is string => !!x))];
     if (challengeIds.length === 0) return [];
 
-    const { data: chRows } = await server.from("challenges").select("id, title, visibility").in("id", challengeIds);
+    const { data: chRows } = await server.from("challenges").select("id, title, visibility").in("id", challengeIds).limit(200);
     const publicIds = new Set(
       (chRows ?? [])
         .filter((c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() === "PUBLIC")
@@ -772,7 +777,8 @@ export const feedRouter = createTRPCRouter({
     const { data: profRows } = await server
       .from("profiles")
       .select("user_id, display_name, username, avatar_url")
-      .in("user_id", userIds);
+      .in("user_id", userIds)
+      .limit(200);
     const profMap = new Map(
       (profRows ?? []).map((p: { user_id: string; display_name?: string | null; username?: string | null; avatar_url?: string | null }) => [
         p.user_id,
@@ -796,7 +802,8 @@ export const feedRouter = createTRPCRouter({
       .select("user_id, challenge_id, current_day")
       .in("challenge_id", cids)
       .in("user_id", uids)
-      .eq("status", "active");
+      .eq("status", "active")
+      .limit(500);
     const dayMap = new Map<string, number>();
     for (const r of acRows ?? []) {
       const row = r as { user_id: string; challenge_id: string; current_day?: number | null };

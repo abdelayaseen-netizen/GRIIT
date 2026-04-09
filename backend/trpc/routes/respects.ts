@@ -95,7 +95,7 @@ export const respectsRouter = createTRPCRouter({
       const count = list.length;
       const recent = list.slice(0, 10).map((r) => ({ id: r.id, actorId: r.actor_id, at: r.created_at }));
       const actorIds = [...new Set(list.map((r) => r.actor_id))];
-      const { data: profiles } = await ctx.supabase.from("profiles").select("user_id, username, display_name").in("user_id", actorIds);
+      const { data: profiles } = await ctx.supabase.from("profiles").select("user_id, username, display_name").in("user_id", actorIds).limit(100);
       const profileMap = new Map(((profiles ?? []) as ProfileRow[]).map((p) => [p.user_id, p]));
       const recentWithNames = recent.map((r) => ({
         ...r,

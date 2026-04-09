@@ -15,7 +15,8 @@ async function getAcceptedCount(supabase: SupabaseClient, userId: string): Promi
   const { data } = await supabase
     .from("accountability_pairs")
     .select("id")
-    .or(`and(user_id.eq.${safeId},status.eq.accepted),and(partner_id.eq.${safeId},status.eq.accepted)`);
+    .or(`and(user_id.eq.${safeId},status.eq.accepted),and(partner_id.eq.${safeId},status.eq.accepted)`)
+    .limit(20);
   return data?.length ?? 0;
 }
 
@@ -27,7 +28,8 @@ async function getInvitesSentToday(supabase: SupabaseClient, userId: string): Pr
     .select("id")
     .eq("user_id", userId)
     .eq("status", "pending")
-    .gte("created_at", startOfDay.toISOString());
+    .gte("created_at", startOfDay.toISOString())
+    .limit(20);
   return data?.length ?? 0;
 }
 
@@ -132,7 +134,7 @@ export const accountabilityRouter = createTRPCRouter({
           .select("display_name, username")
           .eq("user_id", ctx.userId)
           .single(),
-        ctx.supabase.from("push_tokens").select("token").eq("user_id", input.partnerId),
+        ctx.supabase.from("push_tokens").select("token").eq("user_id", input.partnerId).limit(20),
         ctx.supabase
           .from("profiles")
           .select("expo_push_token")
@@ -163,7 +165,8 @@ export const accountabilityRouter = createTRPCRouter({
       .from("accountability_pairs")
       .select("id, user_id, partner_id, status, created_at")
       .or(`user_id.eq.${safeId},partner_id.eq.${safeId}`)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(20);
 
     if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load partnerships." });
 
@@ -181,7 +184,8 @@ export const accountabilityRouter = createTRPCRouter({
       const { data: profiles } = await ctx.supabase
         .from("profiles")
         .select("user_id, username, display_name")
-        .in("user_id", [...otherIds]);
+        .in("user_id", [...otherIds])
+        .limit(20);
 
       const profileMap = new Map(((profiles ?? []) as ProfileRow[]).map((p) => [p.user_id, p]));
 
@@ -270,7 +274,7 @@ export const accountabilityRouter = createTRPCRouter({
             .select("display_name, username")
             .eq("user_id", ctx.userId)
             .single(),
-          ctx.supabase.from("push_tokens").select("token").eq("user_id", row.user_id),
+          ctx.supabase.from("push_tokens").select("token").eq("user_id", row.user_id).limit(20),
           ctx.supabase
             .from("profiles")
             .select("expo_push_token")
@@ -314,7 +318,8 @@ export const accountabilityRouter = createTRPCRouter({
         .select("id")
         .or(
           `and(user_id.eq.${ctx.userId},partner_id.eq.${input.partnerId}),and(user_id.eq.${input.partnerId},partner_id.eq.${ctx.userId})`
-        );
+        )
+        .limit(20);
 
       if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to remove partnership." });
       if (!rows?.length) {

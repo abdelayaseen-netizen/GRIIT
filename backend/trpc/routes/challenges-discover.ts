@@ -59,13 +59,15 @@ export const challengesDiscoverProcedures = {
       .from("active_challenges")
       .select("challenge_id")
       .in("challenge_id", challengeIds)
-      .gte("created_at", weekAgo);
+      .gte("created_at", weekAgo)
+      .limit(500);
 
     const { data: joinToday } = await server
       .from("active_challenges")
       .select("challenge_id")
       .in("challenge_id", challengeIds)
-      .gte("created_at", dayStartIso);
+      .gte("created_at", dayStartIso)
+      .limit(500);
 
     const recent7 = new Map<string, number>();
     for (const r of joinWeek ?? []) {
@@ -98,7 +100,7 @@ export const challengesDiscoverProcedures = {
       const userIds = [...new Set((acPart ?? []).map((r: { user_id: string }) => r.user_id))];
       const { data: profs } =
         userIds.length > 0
-          ? await server.from("profiles").select("user_id, username, avatar_url").in("user_id", userIds)
+          ? await server.from("profiles").select("user_id, username, avatar_url").in("user_id", userIds).limit(50)
           : { data: [] as { user_id: string; username: string | null; avatar_url: string | null }[] };
       const profMap = new Map((profs ?? []).map((p) => [p.user_id, p]));
 
@@ -185,7 +187,7 @@ export const challengesDiscoverProcedures = {
     const allU = [...new Set((acPart ?? []).map((r: { user_id: string }) => r.user_id))];
     const { data: profs } =
       allU.length > 0
-        ? await server.from("profiles").select("user_id, username, avatar_url").in("user_id", allU)
+        ? await server.from("profiles").select("user_id, username, avatar_url").in("user_id", allU).limit(50)
         : { data: [] as { user_id: string; username: string | null; avatar_url: string | null }[] };
     const profMap = new Map((profs ?? []).map((p) => [p.user_id, p]));
 
@@ -230,7 +232,8 @@ export const challengesDiscoverProcedures = {
       .from("challenges")
       .select("category, participation_type")
       .eq("status", "published")
-      .eq("visibility", "PUBLIC");
+      .eq("visibility", "PUBLIC")
+      .limit(5000);
     requireNoError(error, "Failed to load category counts.");
     const counts: Record<string, number> = {
       Fitness: 0,
@@ -353,7 +356,8 @@ export const challengesDiscoverProcedures = {
         `)
         .not('source_starter_id', 'is', null)
         .eq('visibility', 'PUBLIC')
-        .eq('status', 'published');
+        .eq('status', 'published')
+        .limit(50);
 
       requireNoError(error, "Failed to load starter pack.");
       const list = (rows ?? []).map((c: { challenge_tasks?: ChallengeTaskRowRaw[] } & Record<string, unknown>) => ({

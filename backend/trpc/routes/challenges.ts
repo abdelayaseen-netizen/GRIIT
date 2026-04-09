@@ -156,7 +156,8 @@ export const challengesRouter = createTRPCRouter({
           .from("challenge_members")
           .select("id, user_id, role, status, joined_at")
           .eq("challenge_id", input.id)
-          .order("joined_at", { ascending: true });
+          .order("joined_at", { ascending: true })
+          .limit(200);
         const memberRows = (members ?? []) as { id: string; user_id: string; role: string; status: string; joined_at: string }[];
         const taskRows = (data.challenge_tasks ?? []) as ChallengeTaskRowRaw[];
         const requiredTaskIds = new Set(taskRows.filter((t) => isTaskRequired(t)).map((t) => t.id));
@@ -172,7 +173,8 @@ export const challengesRouter = createTRPCRouter({
               .from("active_challenges")
               .select("id, user_id")
               .eq("challenge_id", input.id)
-              .in("user_id", userIds);
+              .in("user_id", userIds)
+              .limit(200);
             const acList = (acRows ?? []) as { id: string; user_id: string }[];
             const userToAcId = new Map(acList.map((a) => [a.user_id, a.id]));
             const acIds = acList.map((a) => a.id);
@@ -182,7 +184,8 @@ export const challengesRouter = createTRPCRouter({
                 .select("active_challenge_id, task_id")
                 .in("active_challenge_id", acIds)
                 .eq("date_key", today)
-                .eq("status", "completed");
+                .eq("status", "completed")
+                .limit(500);
               const rows = (checkinRows ?? []) as { active_challenge_id: string; task_id: string }[];
               const completedByAcId = new Map<string, Set<string>>();
               for (const r of rows) {
@@ -208,7 +211,8 @@ export const challengesRouter = createTRPCRouter({
           const { data: profiles } = await ctx.supabase
             .from("profiles")
             .select("user_id, username, display_name, avatar_url")
-            .in("user_id", memberRows.map((m) => m.user_id));
+            .in("user_id", memberRows.map((m) => m.user_id))
+            .limit(200);
           const profileMap = new Map((profiles ?? []).map((p: { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }) => [p.user_id, p]));
           teamMembers = memberRows.map((m) => {
             const base: TeamMemberOut = {
@@ -239,7 +243,8 @@ export const challengesRouter = createTRPCRouter({
         const { data: sumRow } = await ctx.supabase
           .from("shared_goal_logs")
           .select("amount")
-          .eq("challenge_id", input.id);
+          .eq("challenge_id", input.id)
+          .limit(10000);
         const rows = (sumRow ?? []) as { amount: number }[];
         sharedGoalTotal = rows.reduce((acc, r) => acc + Number(r.amount), 0);
       }

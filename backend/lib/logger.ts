@@ -9,7 +9,7 @@ export const logger = pino({
   level,
   timestamp: pino.stdTimeFunctions.isoTime,
   formatters: {
-    level: (label) => ({ level: label }),
+    level: (label: string) => ({ level: label }),
   },
 });
 

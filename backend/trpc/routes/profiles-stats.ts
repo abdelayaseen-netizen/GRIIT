@@ -15,12 +15,14 @@ export const profilesStatsProcedures = {
           .from('active_challenges')
           .select('id')
           .eq('user_id', ctx.userId)
-          .eq('status', 'active'),
+          .eq('status', 'active')
+          .limit(200),
         ctx.supabase
           .from('active_challenges')
           .select('id')
           .eq('user_id', ctx.userId)
-          .eq('status', 'completed'),
+          .eq('status', 'completed')
+          .limit(200),
         ctx.supabase
           .from('streaks')
           .select('user_id, active_streak_count, longest_streak_count, last_completed_date_key, last_stands_available')
@@ -34,11 +36,13 @@ export const profilesStatsProcedures = {
         ctx.supabase
           .from('streak_freezes')
           .select('date_key')
-          .eq('user_id', ctx.userId),
+          .eq('user_id', ctx.userId)
+          .limit(365),
         ctx.supabase
           .from('last_stand_uses')
           .select('date_key')
-          .eq('user_id', ctx.userId),
+          .eq('user_id', ctx.userId)
+          .limit(365),
       ]);
 
       const profileRow = profileResult?.error ? { data: null } : profileResult;
@@ -113,7 +117,7 @@ export const profilesStatsProcedures = {
             lastStandUsedThisSession = true;
             const { sendExpoPush } = await import('../../lib/push');
             const [pushRes, profileTokenRes] = await Promise.all([
-              ctx.supabase.from('push_tokens').select('token').eq('user_id', ctx.userId),
+              ctx.supabase.from('push_tokens').select('token').eq('user_id', ctx.userId).limit(200),
               ctx.supabase.from('profiles').select('expo_push_token').eq('user_id', ctx.userId).single(),
             ]);
             const tokens = (pushRes?.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
@@ -190,7 +194,8 @@ export const profilesStatsProcedures = {
       const { data: challenges } = await ctx.supabase
         .from("challenges")
         .select("id, title")
-        .in("id", challengeIds);
+        .in("id", challengeIds)
+        .limit(200);
       const titleMap = new Map((challenges ?? []).map((c: { id: string; title?: string }) => [c.id, c.title ?? "Challenge"]));
       return rows.map((r) => ({
         id: r.id,
@@ -213,7 +218,8 @@ export const profilesStatsProcedures = {
         .eq("user_id", ctx.userId)
         .gte("date_key", startKey)
         .lte("date_key", todayKey)
-        .order("date_key", { ascending: false });
+        .order("date_key", { ascending: false })
+        .limit(366);
 
       if (error) {
         const { logger } = await import("../../lib/logger");
@@ -241,7 +247,8 @@ export const profilesStatsProcedures = {
         .select("date_key")
         .eq("user_id", ctx.userId)
         .gte("date_key", weekStart)
-        .lte("date_key", todayKey);
+        .lte("date_key", todayKey)
+        .limit(14);
       const completed = (secures ?? []).length;
       const remaining = Math.max(0, goal - completed);
       return { goal, completed, remaining };
@@ -267,7 +274,8 @@ export const profilesStatsProcedures = {
           .select("date_key")
           .eq("user_id", ctx.userId)
           .gte("date_key", weekStart)
-          .lte("date_key", weekEnd);
+          .lte("date_key", weekEnd)
+          .limit(14);
         result.push({
           weekStart,
           daysSecured: (secures ?? []).length,
@@ -325,7 +333,8 @@ export const profilesStatsProcedures = {
       const { data: unlockedRows } = await server
         .from("user_achievements")
         .select("achievement_key")
-        .eq("user_id", input.userId);
+        .eq("user_id", input.userId)
+        .limit(500);
       const unlockedKeys = new Set((unlockedRows ?? []).map((r: { achievement_key: string }) => r.achievement_key));
 
       const { data: streakRow } = await server

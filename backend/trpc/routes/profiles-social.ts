@@ -276,14 +276,15 @@ export const profilesSocialProcedures = {
       .select("follower_id, created_at")
       .eq("following_id", ctx.userId)
       .eq("status", "pending")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(50);
     if (error) {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
     }
     const ids = [...new Set((rows ?? []).map((r: { follower_id: string }) => r.follower_id))];
     if (ids.length === 0) return [];
     const server = getSupabaseServer() ?? ctx.supabase;
-    const { data: profs } = await server.from("profiles").select("user_id, username, display_name, avatar_url").in("user_id", ids);
+    const { data: profs } = await server.from("profiles").select("user_id, username, display_name, avatar_url").in("user_id", ids).limit(50);
     const pmap = new Map((profs ?? []).map((p: ProfileRow) => [p.user_id, p]));
     return (rows ?? []).map((r: { follower_id: string; created_at: string }) => {
       const p = pmap.get(r.follower_id);

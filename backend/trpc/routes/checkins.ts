@@ -291,8 +291,8 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const [{ data: allTasks }, { data: completedCheckins }] = await Promise.all([
-        ctx.supabase.from("challenge_tasks").select("id, task_type, config").eq("challenge_id", challenge_id),
-        ctx.supabase.from("check_ins").select("task_id").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).eq("status", "completed"),
+        ctx.supabase.from("challenge_tasks").select("id, task_type, config").eq("challenge_id", challenge_id).limit(200),
+        ctx.supabase.from("check_ins").select("task_id").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).eq("status", "completed").limit(100),
       ]);
       const requiredTasks = (allTasks ?? []).filter((t) => isTaskRequired(t as ChallengeTaskRowRaw));
       const completedRequired = completedCheckins?.filter((c) => requiredTasks.some((rt) => rt.id === c.task_id)) || [];
@@ -304,7 +304,7 @@ export const checkinsRouter = createTRPCRouter({
   getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
     await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
     const dateKey = getTodayDateKey();
-    const { data, error } = await ctx.supabase.from("check_ins").select("id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey);
+    const { data, error } = await ctx.supabase.from("check_ins").select("id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).limit(100);
     requireNoError(error, "Failed to load check-ins.");
     return data ?? [];
   }),
@@ -316,7 +316,7 @@ export const checkinsRouter = createTRPCRouter({
     const acIds = (acList ?? []).map((r: { id: string }) => r.id);
     if (acIds.length === 0) return [];
     const rows = await Promise.all(
-      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status").eq("active_challenge_id", acId).eq("date_key", dateKey))
+      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
     );
     const merged: NonNullable<(typeof rows)[0]["data"]> = [];
     for (const { data, error } of rows) {
@@ -422,7 +422,7 @@ export const checkinsRouter = createTRPCRouter({
     const ac = activeChallenge as ActiveChallengeWithTasks;
     const challengeTasksRaw = ac?.challenges?.challenge_tasks as ChallengeTaskRowRaw[] | null | undefined;
     if (!Array.isArray(challengeTasksRaw)) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
-    const { data: completedCheckins } = await ctx.supabase.from("check_ins").select("task_id").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).eq("status", "completed");
+    const { data: completedCheckins } = await ctx.supabase.from("check_ins").select("task_id").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).eq("status", "completed").limit(100);
     const requiredTasks = challengeTasksRaw.filter((t) => isTaskRequired(t));
     const allRequiredCompleted = requiredTasks.every((rt: { id: string }) => completedCheckins?.some((c: { task_id: string }) => c.task_id === rt.id));
     if (!allRequiredCompleted) throw new TRPCError({ code: "BAD_REQUEST", message: "Not all required tasks completed." });
@@ -434,7 +434,7 @@ export const checkinsRouter = createTRPCRouter({
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     const startKey = sevenDaysAgo.toISOString().split("T")[0];
-    const { data: securesLast7 } = await ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).gte("date_key", startKey).lte("date_key", dateKey);
+    const { data: securesLast7 } = await ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).gte("date_key", startKey).lte("date_key", dateKey).limit(365);
     const securedDaysLast7 = new Set((securesLast7 ?? []).map((r: DaySecureRow) => r.date_key));
     if (dateKey) securedDaysLast7.add(dateKey);
     const countLast7 = securedDaysLast7.size;
@@ -512,7 +512,7 @@ export const checkinsRouter = createTRPCRouter({
   }),
 
   getShareStats: protectedProcedure.query(async ({ ctx }) => {
-    const { data: acList } = await ctx.supabase.from("active_challenges").select("id").eq("user_id", ctx.userId);
+    const { data: acList } = await ctx.supabase.from("active_challenges").select("id").eq("user_id", ctx.userId).limit(100);
     const acIds = (acList ?? []).map((r: { id: string }) => r.id);
     if (acIds.length === 0) return { totalShared: 0 };
     const { count } = await ctx.supabase.from("check_ins").select("id", { count: "exact", head: true }).eq("status", "completed").eq("shared", true).in("active_challenge_id", acIds);
