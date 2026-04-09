@@ -189,9 +189,7 @@ export default function DiscoverScreen() {
     queryKey: ["discover", "recommended"],
     queryFn: () =>
       trpcQuery(TRPC.challenges.getRecommended) as Promise<{
-        challenges: Array<
-          Omit<PickedChallenge, "badgeLabel"> & { completionRate?: number }
-        >;
+        challenges: (Omit<PickedChallenge, "badgeLabel"> & { completionRate?: number })[];
       }>,
     staleTime: 60 * 1000,
   });
@@ -342,7 +340,104 @@ export default function DiscoverScreen() {
     [openChallenge, prefetchChallengeDetail]
   );
 
-  const categoryCounts = categoryCountsQuery.data ?? {};
+  const keyExtractorDiscoverRoot = useCallback((item: { key: string }) => item.key, []);
+  const keyExtractorPeople = useCallback((u: SearchUser) => u.user_id, []);
+  const keyExtractorChallengeId = useCallback((c: DiscoverChallenge) => c.id, []);
+
+  const renderPeopleSearchItem = useCallback(
+    ({ item: u }: { item: SearchUser }) => (
+      <Pressable accessibilityRole="button"
+        accessibilityLabel={`Open profile for ${u.display_name || u.username}`}
+        onPress={() => {
+          void pushRecentSearch(filterQuery);
+          router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
+        }}
+        style={discoverStyles.peopleRow}
+      >
+        <Avatar url={u.avatar_url} name={u.username} userId={u.user_id} size={38} />
+        <View>
+          <Text style={discoverStyles.peopleUsername}>{u.username}</Text>
+          <Text style={discoverStyles.peopleMeta}>
+            {u.current_streak > 0 ? `${u.current_streak}-day streak` : "Active on GRIIT"}
+          </Text>
+        </View>
+      </Pressable>
+    ),
+    [router, pushRecentSearch, filterQuery]
+  );
+
+  const renderSearchChallengeRow = useCallback(
+    ({ item: c }: { item: DiscoverChallenge }) => (
+      <DiscoverChallengeSearchRow
+        challenge={c}
+        onPress={() => {
+          void pushRecentSearch(filterQuery);
+          openChallenge(c.id);
+        }}
+      />
+    ),
+    [pushRecentSearch, filterQuery, openChallenge]
+  );
+
+  const renderSoloCompactItem = useCallback(
+    ({ item: c }: { item: DiscoverChallenge }) => (
+      <CompactChallengeRow
+        id={c.id}
+        title={c.title ?? "Challenge"}
+        duration={c.duration_days ?? 7}
+        difficulty={toCompactDifficulty(c.difficulty)}
+        participantCount={c.participants_count ?? 0}
+        category={c.category ?? undefined}
+        isTeam={false}
+        onPressIn={() => prefetchChallengeDetail(c.id)}
+      />
+    ),
+    [prefetchChallengeDetail]
+  );
+
+  const renderTeamCompactItem = useCallback(
+    ({ item: c }: { item: DiscoverChallenge }) => (
+      <CompactChallengeRow
+        id={c.id}
+        title={c.title ?? "Challenge"}
+        duration={c.duration_days ?? 7}
+        difficulty={toCompactDifficulty(c.difficulty)}
+        participantCount={c.participants_count ?? 0}
+        category={c.category ?? undefined}
+        isTeam
+        teamSize={teamSizeLabel(c.team_size)}
+        onPressIn={() => prefetchChallengeDetail(c.id)}
+      />
+    ),
+    [prefetchChallengeDetail]
+  );
+
+  const renderNewWeekCompactItem = useCallback(
+    ({ item: c }: { item: DiscoverChallenge }) => (
+      <CompactChallengeRow
+        id={c.id}
+        title={c.title ?? "Challenge"}
+        duration={c.duration_days ?? 7}
+        difficulty={toCompactDifficulty(c.difficulty)}
+        participantCount={c.participants_count ?? 0}
+        category={c.category ?? undefined}
+        isTeam={isTeamChallenge(c)}
+        teamSize={isTeamChallenge(c) ? teamSizeLabel(c.team_size) : undefined}
+        onPressIn={() => prefetchChallengeDetail(c.id)}
+      />
+    ),
+    [prefetchChallengeDetail]
+  );
+
+  const discoverRowSeparator = useCallback(
+    () => <View style={discoverStyles.rowSeparator} />,
+    []
+  );
+
+  const categoryCounts = useMemo(
+    () => categoryCountsQuery.data ?? {},
+    [categoryCountsQuery.data]
+  );
 
   const loading = discoverFeed.isPending;
   const err = discoverFeed.isError;
@@ -352,13 +447,8 @@ export default function DiscoverScreen() {
   const showSearchResults = searchFocused && searchQuery.trim().length > 0;
   const searchPending = searchQuery.trim() !== debouncedQuery.trim() && searchQuery.trim().length > 0;
 
-  return (
-    <ErrorBoundary>
-      <SafeAreaView style={discoverStyles.safeArea} edges={["top"]}>
-        <FlatList
-          data={[{ key: "discover-root" }]}
-          keyExtractor={(item) => item.key}
-          renderItem={() => (
+  const discoverRootContent = useMemo(
+    () => (
             <View>
           <View style={discoverStyles.headerPad}>
             <Text style={discoverStyles.title}>Discover</Text>
@@ -460,27 +550,10 @@ export default function DiscoverScreen() {
                   <Text style={discoverStyles.peopleEyebrow}>PEOPLE</Text>
                   <FlatList
                     data={peopleSearch.data}
-                    keyExtractor={(u) => u.user_id}
+                    keyExtractor={keyExtractorPeople}
                     scrollEnabled={false}
                     nestedScrollEnabled
-                    renderItem={({ item: u }) => (
-                      <Pressable accessibilityRole="button"
-                        accessibilityLabel={`Open profile for ${u.display_name || u.username}`}
-                        onPress={() => {
-                          void pushRecentSearch(filterQuery);
-                          router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u.username)) as never);
-                        }}
-                        style={discoverStyles.peopleRow}
-                      >
-                        <Avatar url={u.avatar_url} name={u.username} userId={u.user_id} size={38} />
-                        <View>
-                          <Text style={discoverStyles.peopleUsername}>{u.username}</Text>
-                          <Text style={discoverStyles.peopleMeta}>
-                            {u.current_streak > 0 ? `${u.current_streak}-day streak` : "Active on GRIIT"}
-                          </Text>
-                        </View>
-                      </Pressable>
-                    )}
+                    renderItem={renderPeopleSearchItem}
                     maxToRenderPerBatch={10}
                     windowSize={5}
                     initialNumToRender={8}
@@ -499,18 +572,10 @@ export default function DiscoverScreen() {
               ) : (
                 <FlatList
                   data={filteredChallengesForSearch}
-                  keyExtractor={(c) => c.id}
+                  keyExtractor={keyExtractorChallengeId}
                   scrollEnabled={false}
                   nestedScrollEnabled
-                  renderItem={({ item: c }) => (
-                    <DiscoverChallengeSearchRow
-                      challenge={c}
-                      onPress={() => {
-                        void pushRecentSearch(filterQuery);
-                        openChallenge(c.id);
-                      }}
-                    />
-                  )}
+                  renderItem={renderSearchChallengeRow}
                   maxToRenderPerBatch={10}
                   windowSize={5}
                   initialNumToRender={8}
@@ -580,7 +645,7 @@ export default function DiscoverScreen() {
                   <FlatList
                     horizontal
                     data={twentyFourHour}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={keyExtractorChallengeId}
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={discoverStyles.horizontalListContent}
                     renderItem={renderTwentyFourHourItem}
@@ -606,22 +671,11 @@ export default function DiscoverScreen() {
                   <View style={discoverStyles.groupedListCard}>
                     <FlatList
                       data={soloChallenges}
-                      keyExtractor={(c) => c.id}
+                      keyExtractor={keyExtractorChallengeId}
                       scrollEnabled={false}
                       nestedScrollEnabled
-                      ItemSeparatorComponent={() => <View style={discoverStyles.rowSeparator} />}
-                      renderItem={({ item: c }) => (
-                        <CompactChallengeRow
-                          id={c.id}
-                          title={c.title ?? "Challenge"}
-                          duration={c.duration_days ?? 7}
-                          difficulty={toCompactDifficulty(c.difficulty)}
-                          participantCount={c.participants_count ?? 0}
-                          category={c.category ?? undefined}
-                          isTeam={false}
-                          onPressIn={() => prefetchChallengeDetail(c.id)}
-                        />
-                      )}
+                      ItemSeparatorComponent={discoverRowSeparator}
+                      renderItem={renderSoloCompactItem}
                       maxToRenderPerBatch={10}
                       windowSize={5}
                       initialNumToRender={8}
@@ -645,23 +699,11 @@ export default function DiscoverScreen() {
                   <View style={discoverStyles.groupedListCard}>
                     <FlatList
                       data={teamChallenges}
-                      keyExtractor={(c) => c.id}
+                      keyExtractor={keyExtractorChallengeId}
                       scrollEnabled={false}
                       nestedScrollEnabled
-                      ItemSeparatorComponent={() => <View style={discoverStyles.rowSeparator} />}
-                      renderItem={({ item: c }) => (
-                        <CompactChallengeRow
-                          id={c.id}
-                          title={c.title ?? "Challenge"}
-                          duration={c.duration_days ?? 7}
-                          difficulty={toCompactDifficulty(c.difficulty)}
-                          participantCount={c.participants_count ?? 0}
-                          category={c.category ?? undefined}
-                          isTeam
-                          teamSize={teamSizeLabel(c.team_size)}
-                          onPressIn={() => prefetchChallengeDetail(c.id)}
-                        />
-                      )}
+                      ItemSeparatorComponent={discoverRowSeparator}
+                      renderItem={renderTeamCompactItem}
                       maxToRenderPerBatch={10}
                       windowSize={5}
                       initialNumToRender={8}
@@ -677,23 +719,11 @@ export default function DiscoverScreen() {
                   <View style={discoverStyles.groupedListCard}>
                     <FlatList
                       data={newThisWeek}
-                      keyExtractor={(c) => c.id}
+                      keyExtractor={keyExtractorChallengeId}
                       scrollEnabled={false}
                       nestedScrollEnabled
-                      ItemSeparatorComponent={() => <View style={discoverStyles.rowSeparator} />}
-                      renderItem={({ item: c }) => (
-                        <CompactChallengeRow
-                          id={c.id}
-                          title={c.title ?? "Challenge"}
-                          duration={c.duration_days ?? 7}
-                          difficulty={toCompactDifficulty(c.difficulty)}
-                          participantCount={c.participants_count ?? 0}
-                          category={c.category ?? undefined}
-                          isTeam={isTeamChallenge(c)}
-                          teamSize={isTeamChallenge(c) ? teamSizeLabel(c.team_size) : undefined}
-                          onPressIn={() => prefetchChallengeDetail(c.id)}
-                        />
-                      )}
+                      ItemSeparatorComponent={discoverRowSeparator}
+                      renderItem={renderNewWeekCompactItem}
                       maxToRenderPerBatch={10}
                       windowSize={5}
                       initialNumToRender={8}
@@ -720,7 +750,59 @@ export default function DiscoverScreen() {
             </>
           ) : null}
             </View>
-          )}
+    ),
+    [
+      isPremium,
+      activeCount,
+      searchFocused,
+      searchQuery,
+      categoryCounts,
+      recentSearches,
+      showBrowseMode,
+      showSearchResults,
+      searchPending,
+      isGuest,
+      peopleSearch,
+      filterQuery,
+      filteredChallengesForSearch,
+      discoverFeed,
+      loading,
+      err,
+      showDefaultSections,
+      pickedForYouData,
+      trendingHero,
+      heroIsActive,
+      openChallenge,
+      prefetchChallengeDetail,
+      twentyFourHour,
+      soloChallenges,
+      teamChallenges,
+      newThisWeek,
+      router,
+      setSearchFocused,
+      setSearchQuery,
+      setChipFilter,
+      pushRecentSearch,
+      keyExtractorPeople,
+      renderPeopleSearchItem,
+      keyExtractorChallengeId,
+      renderSearchChallengeRow,
+      renderTwentyFourHourItem,
+      renderSoloCompactItem,
+      renderTeamCompactItem,
+      renderNewWeekCompactItem,
+      discoverRowSeparator,
+    ]
+  );
+  const renderDiscoverRootItem = useCallback(() => discoverRootContent, [discoverRootContent]);
+
+  return (
+    <ErrorBoundary>
+      <SafeAreaView style={discoverStyles.safeArea} edges={["top"]}>
+        <FlatList
+          data={[{ key: "discover-root" }]}
+          keyExtractor={keyExtractorDiscoverRoot}
+          renderItem={renderDiscoverRootItem}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           refreshControl={

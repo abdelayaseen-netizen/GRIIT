@@ -23,18 +23,15 @@ export default React.memo(function WeekStrip({
 }) {
   const now = new Date();
   const todayIndex = mondayFirstDayIndex(now);
-  const dateKeys = useMemo(() => {
-    const d = new Date(now);
-    const idx = mondayFirstDayIndex(d);
-    d.setDate(d.getDate() - idx);
-    const out: string[] = [];
-    for (let i = 0; i < 7; i++) {
-      const x = new Date(d);
-      x.setDate(d.getDate() + i);
-      out.push(x.toISOString().slice(0, 10));
-    }
-    return out;
-  }, [now]);
+  const d = new Date(now);
+  const idxStart = mondayFirstDayIndex(d);
+  d.setDate(d.getDate() - idxStart);
+  const dateKeys: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const x = new Date(d);
+    x.setDate(d.getDate() + i);
+    dateKeys.push(x.toISOString().slice(0, 10));
+  }
   const set = useMemo(() => new Set(securedDateKeys), [securedDateKeys]);
 
   if (!hasEverSecured) {

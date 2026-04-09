@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
+import { AnalyticsBootstrap } from '@/components/AnalyticsBootstrap';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
 import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
@@ -471,5 +472,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     user,
   ]);
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      <AnalyticsBootstrap />
+      {children}
+    </AppContext.Provider>
+  );
 }

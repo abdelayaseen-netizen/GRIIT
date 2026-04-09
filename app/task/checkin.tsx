@@ -392,7 +392,11 @@ export default function CheckinTaskScreen() {
       if (result.success) {
         await triggerCelebration(task.id);
         setTimeout(() => {
-          router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace(ROUTES.TABS_HOME as never);
+          }
         }, 1000);
       } else {
         showError(result.failureReason || "Verification failed.");

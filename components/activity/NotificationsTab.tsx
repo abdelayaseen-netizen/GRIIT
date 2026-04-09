@@ -107,7 +107,7 @@ function NotificationsBody({
         userId={userId}
         onPress={
           (item.type === "respect" || item.type === "comment") && item.metadata?.event_id
-            ? () => router.push(`/post/${String(item.metadata.event_id)}` as never)
+            ? () => router.push(ROUTES.POST_ID(String(item.metadata.event_id)) as never)
             : item.type === "follow" || item.type === "follow_request"
               ? item.actorId
                 ? () => {

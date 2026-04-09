@@ -166,7 +166,16 @@ export default function PostThreadScreen() {
           reactedByMe: !!result.reacted,
           respectCount: Math.max(0, result.reactionCount ?? nextC),
         }));
-        track({ name: "respect_sent", toUserId: post.userId ?? undefined });
+        if (!prevR) {
+          try {
+            track({
+              name: "respect_sent",
+              toUserId: post.userId ?? (post as { user_id?: string }).user_id,
+            });
+          } catch {
+            /* non-fatal */
+          }
+        }
         await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
       } catch (e) {
         captureError(e, "PostThreadRespect");
@@ -183,6 +192,11 @@ export default function PostThreadScreen() {
         message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT! 💪`,
         ...(post.photoUrl ? { url: post.photoUrl } : {}),
       });
+      try {
+        track({ name: "share_completed", content_type: "post" });
+      } catch {
+        /* non-fatal */
+      }
     } catch (err) {
       const msg = (err as Error)?.message ?? "";
       if (msg !== "User did not share") {

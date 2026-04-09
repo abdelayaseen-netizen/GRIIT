@@ -115,6 +115,11 @@ export default function AutoSuggestChallengeScreen({
       await setOnboardingCompleteAndContinue(onBrowseMore);
       return;
     }
+    try {
+      track({ name: "starter_challenge_selected", challengeId });
+    } catch {
+      /* non-fatal */
+    }
     setJoiningId(challengeId);
     setError("");
     try {

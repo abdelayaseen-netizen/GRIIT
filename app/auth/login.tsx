@@ -74,7 +74,6 @@ export default function LoginScreen() {
         setFormError("Sign in failed. Please try again.");
         return;
       }
-      track({ name: "login_completed", method: "email" });
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -83,8 +82,18 @@ export default function LoginScreen() {
         .single();
 
       if (profileError || !profile?.username) {
+        try {
+          track({ name: "login_completed", method: "email" });
+        } catch {
+          /* non-fatal */
+        }
         router.replace(ROUTES.CREATE_PROFILE as never);
       } else {
+        try {
+          track({ name: "login_completed", method: "email" });
+        } catch {
+          /* non-fatal */
+        }
         router.replace(ROUTES.TABS as never);
       }
     } catch (e) {
@@ -126,11 +135,20 @@ export default function LoginScreen() {
           setFormError("Sign in failed. Please try again.");
           return;
         }
-        track({ name: "login_completed", method: "apple" });
         const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", data.user.id).single();
         if (!profile?.username) {
+          try {
+            track({ name: "login_completed", method: "apple" });
+          } catch {
+            /* non-fatal */
+          }
           router.replace(ROUTES.CREATE_PROFILE as never);
         } else {
+          try {
+            track({ name: "login_completed", method: "apple" });
+          } catch {
+            /* non-fatal */
+          }
           router.replace(ROUTES.TABS as never);
         }
       } else {
@@ -164,7 +182,11 @@ export default function LoginScreen() {
   }, [router]);
 
   const handleBack = useCallback(() => {
-    router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(ROUTES.TABS_HOME as never);
+    }
   }, [router]);
 
   return (

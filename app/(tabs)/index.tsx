@@ -49,6 +49,7 @@ import { StreakFreezeModal } from "@/components/StreakFreezeModal";
 import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { track } from "@/lib/analytics";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -236,7 +237,10 @@ export default function HomeScreen() {
   const activeCount = homeQuery.data?.activeList.length ?? 0;
   const points = activeCount > 0 ? Math.max(7, basePoints) : basePoints;
   const rank = deriveRank(stats ?? null);
-  const securedKeys = homeQuery.data?.securedDateKeys ?? [];
+  const securedKeys = useMemo(
+    () => homeQuery.data?.securedDateKeys ?? [],
+    [homeQuery.data?.securedDateKeys]
+  );
   const hasEverSecured = securedKeys.length > 0 || (stats?.totalDaysSecured ?? 0) > 0;
   const completedChallengesCount = stats?.completedChallenges ?? 0;
   const statsAllZero = streak === 0 && points === 0 && completedChallengesCount === 0;
@@ -247,6 +251,7 @@ export default function HomeScreen() {
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
+    // Intentionally depend on profile?.username only — full profile object changes reference often.
     if (!profile || streak <= 0) return;
     const keys = [...(homeQuery.data?.securedDateKeys ?? [])].sort();
     if (keys.length === 0) return;
@@ -257,6 +262,7 @@ export default function HomeScreen() {
     if (missedWindow) {
       setShowFreezeModal(true);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- profile identity covered via profile?.username
   }, [isGuest, user?.id, profile?.username, streak, homeQuery.data?.securedDateKeys]);
 
   React.useEffect(() => {
@@ -299,6 +305,11 @@ export default function HomeScreen() {
     if (!challengeId) return;
     try {
       await trpcMutate(TRPC.challenges.leave, { challengeId });
+      try {
+        track({ name: "challenge_left", challenge_id: challengeId });
+      } catch {
+        /* non-fatal */
+      }
       void homeQuery.refetch();
       void refetchAll();
     } catch (err) {
@@ -321,48 +332,95 @@ export default function HomeScreen() {
       durationDays: number
     ) => {
       if (goalId === "__commit__") return;
-      const url = `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(goalId)}&activeChallengeId=${encodeURIComponent(activeChallengeId)}&taskType=${encodeURIComponent(taskType)}&taskName=${encodeURIComponent(taskName)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(taskConfig)}&challengeName=${encodeURIComponent(challengeTitle)}&currentDay=${String(currentDay)}&durationDays=${String(durationDays)}`;
-      router.push(url as never);
+      router.push(`${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(goalId)}&activeChallengeId=${encodeURIComponent(activeChallengeId)}&taskType=${encodeURIComponent(taskType)}&taskName=${encodeURIComponent(taskName)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(taskConfig)}&challengeName=${encodeURIComponent(challengeTitle)}&currentDay=${String(currentDay)}&durationDays=${String(durationDays)}` as never);
     },
     [router]
   );
 
-  if (isGuest) {
-    return (
-      <SafeAreaView style={s.container}>
-        <FlatList
-          data={[{ key: "guest-home" }]}
-          keyExtractor={(item) => item.key}
-          renderItem={() => (
-            <>
-              <View style={s.header}>
-                <Text style={s.greeting}>{getGreeting()}</Text>
-                <Text style={s.word}>GRIIT</Text>
-              </View>
-              <DailyQuote />
-              <GoalCard goals={[]} onPressGoal={() => {}} onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)} />
-              <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
-            </>
-          )}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={1}
-          maxToRenderPerBatch={1}
-          windowSize={2}
-        />
-      </SafeAreaView>
-    );
-  }
+  const keyExtractorHomeKey = useCallback((item: { key: string }) => item.key, []);
+  const keyExtractorIncompleteGroup = useCallback((group: ChallengeGoalGroup) => group.activeChallengeId, []);
+  const keyExtractorCompletedGroup = useCallback(
+    (group: ChallengeGoalGroup) => `${group.activeChallengeId}-completed`,
+    []
+  );
 
-  return (
-    <ErrorBoundary>
-    <SafeAreaView style={s.container}>
-      <FlatList
-        ref={scrollRef}
-        data={[{ key: "home-root" }]}
-        keyExtractor={(item) => item.key}
-        renderItem={() => (
-          <View>
+  const renderIncompleteGoalGroup = useCallback(
+    ({ item: group, index }: { item: ChallengeGoalGroup; index: number }) => (
+      <GoalCard
+        defaultExpanded={index === 0}
+        challengeName={group.challengeName}
+        goals={group.goals}
+        currentDay={group.currentDay}
+        durationDays={group.durationDays}
+        onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
+        onPressGoal={(goalId: string) => {
+          const goal = group.goals.find((gl) => gl.id === goalId);
+          if (!goal) return;
+          onPressGoal(
+            goalId,
+            group.activeChallengeId,
+            goal.taskType,
+            goal.title,
+            goal.taskConfig,
+            group.challengeName,
+            group.currentDay,
+            group.durationDays
+          );
+        }}
+        onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+        onPressInActiveChallenge={() => {
+          void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
+        }}
+        onLongPressChallenge={() => {
+          setLeaveChallengeError(null);
+          setLeaveConfirmChallengeId(group.challengeId);
+        }}
+        isError={homeQuery.isError}
+      />
+    ),
+    [router, onPressGoal, queryClient, homeQuery.isError]
+  );
+
+  const renderCompletedGoalGroup = useCallback(
+    ({ item: group }: { item: ChallengeGoalGroup }) => (
+      <GoalCard
+        defaultExpanded={false}
+        challengeName={group.challengeName}
+        goals={group.goals}
+        currentDay={group.currentDay}
+        durationDays={group.durationDays}
+        completedSection
+        onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
+        onPressGoal={() => {}}
+        onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+        onPressInActiveChallenge={() => {
+          void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
+        }}
+        onLongPressChallenge={undefined}
+        isError={homeQuery.isError}
+      />
+    ),
+    [router, queryClient, homeQuery.isError]
+  );
+
+  const renderGuestHomeItem = useCallback(
+    () => (
+      <>
+        <View style={s.header}>
+          <Text style={s.greeting}>{getGreeting()}</Text>
+          <Text style={s.word}>GRIIT</Text>
+        </View>
+        <DailyQuote />
+        <GoalCard goals={[]} onPressGoal={() => {}} onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)} />
+        <DiscoverCTA onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
+      </>
+    ),
+    [router]
+  );
+
+  const homeRootContent = useMemo(
+    () => (
+      <View>
         {leaveChallengeError ? (
           <InlineError message={leaveChallengeError} onDismiss={() => setLeaveChallengeError(null)} />
         ) : null}
@@ -483,42 +541,10 @@ export default function HomeScreen() {
             />
             <FlatList
               data={incompleteChallenges}
-              keyExtractor={(group) => group.activeChallengeId}
+              keyExtractor={keyExtractorIncompleteGroup}
               scrollEnabled={false}
               nestedScrollEnabled
-              renderItem={({ item: group, index }) => (
-                <GoalCard
-                  defaultExpanded={index === 0}
-                  challengeName={group.challengeName}
-                  goals={group.goals}
-                  currentDay={group.currentDay}
-                  durationDays={group.durationDays}
-                  onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
-                  onPressGoal={(goalId: string) => {
-                    const goal = group.goals.find((gl) => gl.id === goalId);
-                    if (!goal) return;
-                    onPressGoal(
-                      goalId,
-                      group.activeChallengeId,
-                      goal.taskType,
-                      goal.title,
-                      goal.taskConfig,
-                      group.challengeName,
-                      group.currentDay,
-                      group.durationDays
-                    );
-                  }}
-                  onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
-                  onPressInActiveChallenge={() => {
-                    void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
-                  }}
-                  onLongPressChallenge={() => {
-                    setLeaveChallengeError(null);
-                    setLeaveConfirmChallengeId(group.challengeId);
-                  }}
-                  isError={homeQuery.isError}
-                />
-              )}
+              renderItem={renderIncompleteGoalGroup}
               maxToRenderPerBatch={10}
               windowSize={5}
               initialNumToRender={8}
@@ -540,27 +566,10 @@ export default function HomeScreen() {
                 {completedExpanded ? (
                   <FlatList
                     data={completedTodayChallenges}
-                    keyExtractor={(group) => `${group.activeChallengeId}-completed`}
+                    keyExtractor={keyExtractorCompletedGroup}
                     scrollEnabled={false}
                     nestedScrollEnabled
-                    renderItem={({ item: group }) => (
-                      <GoalCard
-                        defaultExpanded={false}
-                        challengeName={group.challengeName}
-                        goals={group.goals}
-                        currentDay={group.currentDay}
-                        durationDays={group.durationDays}
-                        completedSection
-                        onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
-                        onPressGoal={() => {}}
-                        onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
-                        onPressInActiveChallenge={() => {
-                          void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
-                        }}
-                        onLongPressChallenge={undefined}
-                        isError={homeQuery.isError}
-                      />
-                    )}
+                    renderItem={renderCompletedGoalGroup}
                     maxToRenderPerBatch={10}
                     windowSize={5}
                     initialNumToRender={8}
@@ -592,8 +601,62 @@ export default function HomeScreen() {
         </View>
 
         <DailyQuote />
-          </View>
-        )}
+      </View>
+    ),
+    [
+      leaveChallengeError,
+      streak,
+      showStatDash,
+      streakPillLabel,
+      points,
+      ringProgress,
+      displayStreak,
+      securedKeys,
+      hasEverSecured,
+      statsAllZero,
+      router,
+      stats,
+      homeQuery,
+      challengeGroups.length,
+      incompleteChallenges,
+      completedTodayChallenges,
+      completedExpanded,
+      rank,
+      scrollToGoalsSection,
+      renderIncompleteGoalGroup,
+      renderCompletedGoalGroup,
+      keyExtractorIncompleteGroup,
+      keyExtractorCompletedGroup,
+    ]
+  );
+
+  const renderHomeRootItem = useCallback(() => homeRootContent, [homeRootContent]);
+
+  if (isGuest) {
+    return (
+      <SafeAreaView style={s.container}>
+        <FlatList
+          data={[{ key: "guest-home" }]}
+          keyExtractor={keyExtractorHomeKey}
+          renderItem={renderGuestHomeItem}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={1}
+          maxToRenderPerBatch={1}
+          windowSize={2}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+    <SafeAreaView style={s.container}>
+      <FlatList
+        ref={scrollRef}
+        data={[{ key: "home-root" }]}
+        keyExtractor={keyExtractorHomeKey}
+        renderItem={renderHomeRootItem}
         refreshControl={
           <RefreshControl
             refreshing={homeQuery.isRefetching}

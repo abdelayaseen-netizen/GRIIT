@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList } from "react-native";
 import { X, Flame, Zap, Target, Star, Shield } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
@@ -25,6 +25,27 @@ export default function PointsExplainer({ visible, onClose, currentPoints, curre
   const currentRankData = RANKS.find((r) => r.name === currentRank) ?? RANKS[0];
   const nextRank = RANKS.find((r) => r.min > currentPoints);
   const pointsToNext = nextRank ? nextRank.min - currentPoints : 0;
+
+  const renderPointRule = useCallback(
+    ({ item: rule }: { item: (typeof POINT_RULES)[number] }) => {
+      const Icon = rule.icon;
+      return (
+        <View style={s.ruleRow}>
+          <Icon size={16} color={rule.color} />
+          <Text style={s.ruleAction}>{rule.action}</Text>
+          <Text
+            style={[
+              s.rulePoints,
+              { color: rule.points.startsWith("-") ? DS_COLORS.danger : DS_COLORS.DISCOVER_GREEN },
+            ]}
+          >
+            {rule.points}
+          </Text>
+        </View>
+      );
+    },
+    []
+  );
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -69,23 +90,7 @@ export default function PointsExplainer({ visible, onClose, currentPoints, curre
               </Text>
             </>
           }
-          renderItem={({ item: rule }) => {
-            const Icon = rule.icon;
-            return (
-              <View style={s.ruleRow}>
-                <Icon size={16} color={rule.color} />
-                <Text style={s.ruleAction}>{rule.action}</Text>
-                <Text
-                  style={[
-                    s.rulePoints,
-                    { color: rule.points.startsWith("-") ? DS_COLORS.danger : DS_COLORS.DISCOVER_GREEN },
-                  ]}
-                >
-                  {rule.points}
-                </Text>
-              </View>
-            );
-          }}
+          renderItem={renderPointRule}
           ListFooterComponent={
             <>
               <Text style={[s.sectionTitle, { marginTop: 24 }]}>Rank ladder</Text>

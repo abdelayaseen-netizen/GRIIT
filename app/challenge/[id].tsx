@@ -532,7 +532,7 @@ export default function ChallengeDetailScreen() {
   const [showCommitmentModal, setShowCommitmentModal] = useState(false);
   const [showJoinCelebration, setShowJoinCelebration] = useState(false);
   const [showTimePrompt, setShowTimePrompt] = useState(false);
-  const [promptTasks, setPromptTasks] = useState<Array<{ id: string; name: string }>>([]);
+  const [promptTasks, setPromptTasks] = useState<{ id: string; name: string }[]>([]);
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
   const [startingTeam, setStartingTeam] = useState(false);
@@ -705,7 +705,24 @@ export default function ChallengeDetailScreen() {
       setShowJoinCelebration(true);
       await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
       trackEvent("challenge_joined", { challenge_id: id });
-      track({ name: "challenge_joined", challenge_id: id });
+      try {
+        track({ name: "challenge_joined", challenge_id: id });
+      } catch {
+        /* non-fatal */
+      }
+      try {
+        const isFirst = !(await AsyncStorage.getItem("griit_has_ever_joined"));
+        if (isFirst) {
+          try {
+            track({ name: "first_challenge_joined", challengeId: id });
+          } catch {
+            /* non-fatal */
+          }
+          await AsyncStorage.setItem("griit_has_ever_joined", "true");
+        }
+      } catch {
+        /* non-fatal */
+      }
 
       void refetchAll().catch((e: unknown) => {
         captureError(e, "ChallengeDetailRefetchAfterJoin");
@@ -832,17 +849,7 @@ export default function ChallengeDetailScreen() {
       require_strava: cfg.require_strava === true,
       journal_prompt: typeof cfg.journal_prompt === "string" ? cfg.journal_prompt : undefined,
     };
-    router.push({
-      pathname: ROUTES.TASK_COMPLETE,
-      params: {
-        taskId: task.id,
-        activeChallengeId: activeChallengeId ?? "",
-        taskType: task.type,
-        taskName: task.title ?? "",
-        taskDescription: (task as { description?: string }).description ?? "",
-        taskConfig: JSON.stringify(taskConfig),
-      },
-    } as never);
+    router.push({ pathname: ROUTES.TASK_COMPLETE, params: { taskId: task.id, activeChallengeId: activeChallengeId ?? "", taskType: task.type, taskName: task.title ?? "", taskDescription: (task as { description?: string }).description ?? "", taskConfig: JSON.stringify(taskConfig) } } as never);
   }, [router, activeChallengeId, showError]);
 
   const handleShare = useCallback(async () => {
@@ -851,6 +858,11 @@ export default function ChallengeDetailScreen() {
         message: `I'm taking on the ${challenge?.title ?? "this"} challenge on GRIIT! ${challenge?.description ?? challenge?.about ?? ""}`,
         ...(Platform.OS === "ios" ? { url: "" } : {}),
       });
+      try {
+        track({ name: "share_completed", content_type: "challenge" });
+      } catch {
+        /* non-fatal */
+      }
     } catch (error) {
       const message = (error as Error)?.message ?? "";
       if (message !== "User did not share") {
@@ -860,7 +872,10 @@ export default function ChallengeDetailScreen() {
     }
   }, [challenge?.title, challenge?.description, challenge?.about, showError]);
 
-  const allTasks = (challenge?.tasks ?? []) as ChallengeTaskFromApi[];
+  const allTasks = useMemo(
+    () => (challenge?.tasks ?? []) as ChallengeTaskFromApi[],
+    [challenge?.tasks]
+  );
   const todayTasksWithCompletion = useMemo(() => {
     return allTasks.map((task) => {
       const isCompleted =
@@ -920,6 +935,11 @@ export default function ChallengeDetailScreen() {
     try {
       await leaveMutation.mutateAsync({ challengeId: id });
       try {
+        track({ name: "challenge_left", challenge_id: id });
+      } catch {
+        /* non-fatal */
+      }
+      try {
         trackEvent("challenge_abandoned", {
           challenge_id: id,
           day: userCurrentDay,
@@ -950,7 +970,7 @@ export default function ChallengeDetailScreen() {
       return `🔥 ${formatCount(challenge?.participants_count ?? 0)} active today`;
     if (challenge?.difficulty === "extreme") return "💀 EXTREME CHALLENGE";
     return null;
-  }, [challenge?.is_featured, challenge?.duration_type, challenge?.participants_count, challenge?.difficulty, isDaily]);
+  }, [challenge, isDaily]);
 
   const difficultyPillStyle = useMemo(() => {
     const defaultPill = { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT };

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,8 +20,9 @@ import { ROUTES } from "@/lib/routes";
 import { track, trackEvent } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
 import { captureError } from "@/lib/sentry";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-export default function ChallengeCompleteScreen() {
+function ChallengeCompleteScreenInner() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const challengeIdParam =
@@ -52,8 +53,8 @@ export default function ChallengeCompleteScreen() {
     }
   }, [totalDaysSecured]);
 
-  const handleShare = async () => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleShare = useCallback(async () => {
+    if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShareError(false);
     try {
       const uri = await shareCardRef.current?.capture?.();
@@ -71,40 +72,21 @@ export default function ChallengeCompleteScreen() {
       captureError(e, "ChallengeCompleteShare");
       setShareError(true);
     }
-  };
+  }, [challengeName, totalDays]);
 
-  const handleWhatsNext = () => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleWhatsNext = useCallback(() => {
+    if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace(ROUTES.TABS_DISCOVER as never);
-  };
+  }, [router]);
 
-  const handleBackToHome = () => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleBackToHome = useCallback(() => {
+    if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace(ROUTES.TABS_HOME as never);
-  };
+  }, [router]);
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <Stack.Screen options={{ headerShown: false }} />
-
-      <Celebration
-        visible={showCelebration}
-        onComplete={() => setShowCelebration(false)}
-        titleText="CHALLENGE COMPLETE"
-        streakCount={streakCount}
-      />
-
-      <FlatList
-        style={styles.scroll}
-        data={[{ key: "complete-body" }]}
-        keyExtractor={(item) => item.key}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={1}
-        maxToRenderPerBatch={1}
-        windowSize={2}
-        renderItem={() => (
-          <>
+  const renderCompleteBody = useCallback(
+    () => (
+      <>
         <View style={styles.badgeWrap}>
           <View style={styles.badgeOuter}>
             <View style={styles.badgeInner}>
@@ -186,10 +168,51 @@ export default function ChallengeCompleteScreen() {
           <Home size={16} color={DS_COLORS.textMuted} />
           <Text style={styles.backHomeText}>Back to Home</Text>
         </TouchableOpacity>
-          </>
-        )}
+      </>
+    ),
+    [
+      challengeName,
+      totalDays,
+      streakCount,
+      tier,
+      shareError,
+      handleShare,
+      handleWhatsNext,
+      handleBackToHome,
+    ]
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <Celebration
+        visible={showCelebration}
+        onComplete={() => setShowCelebration(false)}
+        titleText="CHALLENGE COMPLETE"
+        streakCount={streakCount}
+      />
+
+      <FlatList
+        style={styles.scroll}
+        data={[{ key: "complete-body" }]}
+        keyExtractor={(item) => item.key}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={2}
+        renderItem={renderCompleteBody}
       />
     </SafeAreaView>
+  );
+}
+
+export default function ChallengeCompleteScreen() {
+  return (
+    <ErrorBoundary>
+      <ChallengeCompleteScreenInner />
+    </ErrorBoundary>
   );
 }
 

@@ -267,67 +267,168 @@ export default function ProfileScreen() {
     }
   }, [user?.id, qc, refetchAll]);
 
-  if (isGuest) {
-    return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
-        <View style={styles.centerGuest}>
-          <Card containerStyle={{ width: "100%" }}>
-            <Text style={styles.guestTitle}>Sign in to view your profile</Text>
-            <Text style={styles.guestSub}>Track streaks, rank, and activity in one place.</Text>
-          </Card>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if ((profileLoading && !profile) || (!profile && !isError)) {
-    return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
-        <SkeletonProfile />
-      </SafeAreaView>
-    );
-  }
-
-  if ((isError || profileMissing) && !profile) {
-    return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
-        <View style={[styles.centerGuest, { paddingHorizontal: 24 }]}>
-          <ErrorState
-            message="Couldn't load profile"
-            onRetry={() => {
-              void refetchAll();
-              void activeListQuery.refetch();
-            }}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!profile || !user?.id) return null;
-
-  const emailLocal = user.email?.includes("@") ? user.email.split("@")[0] : undefined;
-  const primaryLine = profilePrimaryName(profile, emailLocal);
-  const handleAt = profileHandleAt(profile);
+  const emailLocal = user?.email?.includes("@") ? user.email.split("@")[0] : undefined;
+  const primaryLine = profile ? profilePrimaryName(profile, emailLocal) : "";
+  const handleAt = profile ? profileHandleAt(profile) : null;
   const showHandleRow =
+    Boolean(profile) &&
     Boolean(handleAt) &&
-    Boolean(profile.display_name?.trim()) &&
-    Boolean(profile.username?.trim()) &&
-    profile.display_name!.trim() !== profile.username!.trim();
-  const listUsername = profile.username?.trim() || primaryLine;
+    Boolean(profile!.display_name?.trim()) &&
+    Boolean(profile!.username?.trim()) &&
+    profile!.display_name!.trim() !== profile!.username!.trim();
+  const listUsername = profile ? profile.username?.trim() || primaryLine : "";
   const tier = stats?.tier ?? "Starter";
   const tierColors = tierPillStyle(tier);
   const fc = followCountsQuery.data;
-  const avatarUri = (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "";
+  const avatarUri = profile ? (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "" : "";
 
-  return (
-    <ErrorBoundary>
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      <FlatList
-        data={[{ key: "profile-root" }]}
-        keyExtractor={(item) => item.key}
-        renderItem={() => (
-          <View>
+  type ProfileActiveChallengeRow = {
+    id: string;
+    challengeId: string;
+    title: string;
+    currentDay: number;
+    durationDays: number;
+    progressPercent: number;
+  };
+
+  const keyExtractorProfileRoot = useCallback((item: { key: string }) => item.key, []);
+  const keyExtractorActiveChallenge = useCallback((item: ProfileActiveChallengeRow) => item.id, []);
+  const keyExtractorPost = useCallback((post: LiveFeedPost) => post.id, []);
+  const keyExtractorBadge = useCallback((b: BadgeDef) => b.id, []);
+
+  const renderActiveChallengeItem = useCallback(
+    ({ item }: { item: ProfileActiveChallengeRow }) => {
+      const p = item.progressPercent;
+      const fillColor = p < 50 ? DS_COLORS.PRIMARY : DS_COLORS.PROFILE_SUCCESS;
+      const a11yLabel =
+        p === 100
+          ? `Open challenge ${item.title}, complete`
+          : p > 0
+            ? `Open challenge ${item.title}, ${p} percent complete`
+            : `Open challenge ${item.title}`;
+      return (
+        <TouchableOpacity accessibilityRole="button"
+          style={styles.chCard}
+          onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
+          accessibilityLabel={a11yLabel}
+        >
+          <View style={styles.chTop}>
+            <View style={styles.chIconBox}>
+              <CheckCircle size={18} color={DS_COLORS.PROFILE_STAT_TEAL_ICON} strokeWidth={2} />
+            </View>
+            <View style={styles.chMid}>
+              <Text style={styles.chTitle}>{item.title}</Text>
+              <Text style={styles.chSub}>
+                {p === 100 ? "Complete" : `Day ${item.currentDay} of ${item.durationDays}`}
+              </Text>
+            </View>
+            {p > 0 ? (
+              <Text
+                style={[
+                  styles.chPctBadge,
+                  { color: p === 100 ? DS_COLORS.PROFILE_SUCCESS : DS_COLORS.PRIMARY },
+                ]}
+              >
+                {p === 100 ? "Done" : `${p}%`}
+              </Text>
+            ) : null}
+            <ChevronRight size={16} color={DS_COLORS.PROFILE_TEXT_MUTED} />
+          </View>
+          <View style={styles.chTrack}>
+            <View style={[styles.chFill, { width: `${p}%`, backgroundColor: fillColor }]} />
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [router]
+  );
+
+  const renderProfilePostRow = useCallback(
+    ({ item: post }: { item: LiveFeedPost }) => (
+      <FeedPostCard
+        post={post}
+        onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
+        onRespect={() => void onPostRespect(post)}
+        onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
+        onShare={() => {}}
+      />
+    ),
+    [router, onPostRespect]
+  );
+
+  const renderEarnedBadgeItem = useCallback(
+    ({ item: b }: { item: BadgeDef }) => {
+      const IconComp = BADGE_ICONS[b.icon] ?? Zap;
+      const accent = badgeAccentFor(b.color);
+      return (
+        <Pressable accessibilityRole="button"
+          style={styles.badgeCard}
+          onPress={() =>
+            setSelectedBadge({
+              id: b.id,
+              name: b.name,
+              icon: b.icon,
+              color: b.color,
+              progress: b.progress,
+              total: b.total,
+            })
+          }
+          accessibilityLabel={`${b.name} badge details`}
+        >
+          <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
+            <IconComp size={22} color={accent.stroke} strokeWidth={2} />
+          </View>
+          <Text style={styles.badgeName}>{b.name}</Text>
+          <Text style={styles.badgeProg}>
+            {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
+          </Text>
+        </Pressable>
+      );
+    },
+    [setSelectedBadge]
+  );
+
+  const renderNextBadgeItem = useCallback(
+    ({ item: b }: { item: BadgeDef }) => {
+      const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
+      return (
+        <Pressable accessibilityRole="button"
+          style={[styles.badgeCard, styles.badgeCardDim]}
+          onPress={() =>
+            setSelectedBadge({
+              id: b.id,
+              name: b.name,
+              icon: b.icon,
+              color: b.color,
+              progress: b.progress,
+              total: b.total,
+            })
+          }
+          accessibilityLabel={`${b.name} badge details`}
+        >
+          <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
+            <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
+          </View>
+          <Text style={styles.badgeName}>{b.name}</Text>
+          <Text style={styles.badgeProg}>
+            {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
+          </Text>
+          <View style={styles.nextBarTrack}>
+            <View style={[styles.nextBarFill, { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` }]} />
+          </View>
+        </Pressable>
+      );
+    },
+    [setSelectedBadge]
+  );
+
+  const profileRootContent = useMemo(
+    () => {
+      if (!profile || !user?.id) {
+        return <View />;
+      }
+      return (
+      <View>
         <View style={styles.topBar}>
           <View style={{ width: 22 }} />
           <TouchableOpacity accessibilityRole="button"
@@ -505,53 +606,11 @@ export default function ProfileScreen() {
             ) : (
               <FlatList
                 data={activeItems}
-                keyExtractor={(item) => item.id}
+                keyExtractor={keyExtractorActiveChallenge}
                 scrollEnabled={false}
                 nestedScrollEnabled
                 contentContainerStyle={styles.chListContent}
-                renderItem={({ item }) => {
-                  const p = item.progressPercent;
-                  const fillColor = p < 50 ? DS_COLORS.PRIMARY : DS_COLORS.PROFILE_SUCCESS;
-                  const a11yLabel =
-                    p === 100
-                      ? `Open challenge ${item.title}, complete`
-                      : p > 0
-                        ? `Open challenge ${item.title}, ${p} percent complete`
-                        : `Open challenge ${item.title}`;
-                  return (
-                    <TouchableOpacity accessibilityRole="button"
-                      style={styles.chCard}
-                      onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
-                      accessibilityLabel={a11yLabel}
-                    >
-                      <View style={styles.chTop}>
-                        <View style={styles.chIconBox}>
-                          <CheckCircle size={18} color={DS_COLORS.PROFILE_STAT_TEAL_ICON} strokeWidth={2} />
-                        </View>
-                        <View style={styles.chMid}>
-                          <Text style={styles.chTitle}>{item.title}</Text>
-                          <Text style={styles.chSub}>
-                            {p === 100 ? "Complete" : `Day ${item.currentDay} of ${item.durationDays}`}
-                          </Text>
-                        </View>
-                        {p > 0 ? (
-                          <Text
-                            style={[
-                              styles.chPctBadge,
-                              { color: p === 100 ? DS_COLORS.PROFILE_SUCCESS : DS_COLORS.PRIMARY },
-                            ]}
-                          >
-                            {p === 100 ? "Done" : `${p}%`}
-                          </Text>
-                        ) : null}
-                        <ChevronRight size={16} color={DS_COLORS.PROFILE_TEXT_MUTED} />
-                      </View>
-                      <View style={styles.chTrack}>
-                        <View style={[styles.chFill, { width: `${p}%`, backgroundColor: fillColor }]} />
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }}
+                renderItem={renderActiveChallengeItem}
                 maxToRenderPerBatch={10}
                 windowSize={5}
                 initialNumToRender={8}
@@ -579,18 +638,10 @@ export default function ProfileScreen() {
             ) : (
               <FlatList
                 data={postsQuery.data?.posts ?? []}
-                keyExtractor={(post) => post.id}
+                keyExtractor={keyExtractorPost}
                 scrollEnabled={false}
                 nestedScrollEnabled
-                renderItem={({ item: post }) => (
-                  <FeedPostCard
-                    post={post}
-                    onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
-                    onRespect={() => void onPostRespect(post)}
-                    onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
-                    onShare={() => {}}
-                  />
-                )}
+                renderItem={renderProfilePostRow}
                 maxToRenderPerBatch={10}
                 windowSize={5}
                 initialNumToRender={8}
@@ -609,39 +660,12 @@ export default function ProfileScreen() {
                 <Text style={styles.secHead}>EARNED ({badgesQuery.data?.earned.length ?? 0})</Text>
                 <FlatList
                   data={badgesQuery.data?.earned ?? []}
-                  keyExtractor={(b) => b.id}
+                  keyExtractor={keyExtractorBadge}
                   numColumns={3}
                   scrollEnabled={false}
                   nestedScrollEnabled
                   columnWrapperStyle={styles.badgeGridRow}
-                  renderItem={({ item: b }) => {
-                    const IconComp = BADGE_ICONS[b.icon] ?? Zap;
-                    const accent = badgeAccentFor(b.color);
-                    return (
-                      <Pressable accessibilityRole="button"
-                        style={styles.badgeCard}
-                        onPress={() =>
-                          setSelectedBadge({
-                            id: b.id,
-                            name: b.name,
-                            icon: b.icon,
-                            color: b.color,
-                            progress: b.progress,
-                            total: b.total,
-                          })
-                        }
-                        accessibilityLabel={`${b.name} badge details`}
-                      >
-                        <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
-                          <IconComp size={22} color={accent.stroke} strokeWidth={2} />
-                        </View>
-                        <Text style={styles.badgeName}>{b.name}</Text>
-                        <Text style={styles.badgeProg}>
-                          {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
-                        </Text>
-                      </Pressable>
-                    );
-                  }}
+                  renderItem={renderEarnedBadgeItem}
                   maxToRenderPerBatch={12}
                   windowSize={5}
                   initialNumToRender={12}
@@ -650,41 +674,12 @@ export default function ProfileScreen() {
                 <Text style={[styles.secHead, { marginTop: 20 }]}>NEXT UP ({badgesQuery.data?.next.length ?? 0})</Text>
                 <FlatList
                   data={badgesQuery.data?.next ?? []}
-                  keyExtractor={(b) => b.id}
+                  keyExtractor={keyExtractorBadge}
                   numColumns={3}
                   scrollEnabled={false}
                   nestedScrollEnabled
                   columnWrapperStyle={styles.badgeGridRow}
-                  renderItem={({ item: b }) => {
-                    const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
-                    return (
-                      <Pressable accessibilityRole="button"
-                        style={[styles.badgeCard, styles.badgeCardDim]}
-                        onPress={() =>
-                          setSelectedBadge({
-                            id: b.id,
-                            name: b.name,
-                            icon: b.icon,
-                            color: b.color,
-                            progress: b.progress,
-                            total: b.total,
-                          })
-                        }
-                        accessibilityLabel={`${b.name} badge details`}
-                      >
-                        <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
-                          <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
-                        </View>
-                        <Text style={styles.badgeName}>{b.name}</Text>
-                        <Text style={styles.badgeProg}>
-                          {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
-                        </Text>
-                        <View style={styles.nextBarTrack}>
-                          <View style={[styles.nextBarFill, { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` }]} />
-                        </View>
-                      </Pressable>
-                    );
-                  }}
+                  renderItem={renderNextBadgeItem}
                   maxToRenderPerBatch={12}
                   windowSize={5}
                   initialNumToRender={12}
@@ -696,8 +691,95 @@ export default function ProfileScreen() {
         ) : null}
 
         <View style={{ height: 32 }} />
-          </View>
-        )}
+      </View>
+      );
+    },
+    [
+      profile,
+      user?.id,
+      avatarInlineError,
+      avatarUri,
+      primaryLine,
+      showHandleRow,
+      handleAt,
+      tierColors,
+      tier,
+      fc,
+      listUsername,
+      router,
+      handleAvatarPress,
+      uploading,
+      handleShare,
+      streak,
+      best,
+      active,
+      done,
+      tab,
+      setTab,
+      activeItems,
+      postsQuery.isPending,
+      postsQuery.data?.posts,
+      badgesQuery.isPending,
+      badgesQuery.data?.earned,
+      badgesQuery.data?.next,
+      keyExtractorActiveChallenge,
+      renderActiveChallengeItem,
+      keyExtractorPost,
+      renderProfilePostRow,
+      keyExtractorBadge,
+      renderEarnedBadgeItem,
+      renderNextBadgeItem,
+    ]
+  );
+
+  const renderProfileRootItem = useCallback(() => profileRootContent, [profileRootContent]);
+
+  if (isGuest) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <View style={styles.centerGuest}>
+          <Card containerStyle={{ width: "100%" }}>
+            <Text style={styles.guestTitle}>Sign in to view your profile</Text>
+            <Text style={styles.guestSub}>Track streaks, rank, and activity in one place.</Text>
+          </Card>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if ((profileLoading && !profile) || (!profile && !isError)) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <SkeletonProfile />
+      </SafeAreaView>
+    );
+  }
+
+  if ((isError || profileMissing) && !profile) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <View style={[styles.centerGuest, { paddingHorizontal: 24 }]}>
+          <ErrorState
+            message="Couldn't load profile"
+            onRetry={() => {
+              void refetchAll();
+              void activeListQuery.refetch();
+            }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!profile || !user?.id) return null;
+
+  return (
+    <ErrorBoundary>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <FlatList
+        data={[{ key: "profile-root" }]}
+        keyExtractor={keyExtractorProfileRoot}
+        renderItem={renderProfileRootItem}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.PRIMARY} />}
         contentContainerStyle={styles.scroll}

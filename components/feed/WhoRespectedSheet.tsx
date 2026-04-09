@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
@@ -42,19 +42,51 @@ export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
     staleTime: 30_000,
   });
 
-  const navigateToProfile = (item: RespectedUser) => {
-    onClose();
-    if (item.userId === user?.id) {
-      router.push(ROUTES.TABS_PROFILE as never);
-      return;
-    }
-    const u = item.username?.trim();
-    if (u && u !== "?" && u.length >= 2) {
-      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
-    } else {
-      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.userId)) as never);
-    }
-  };
+  const navigateToProfile = useCallback(
+    (item: RespectedUser) => {
+      onClose();
+      if (item.userId === user?.id) {
+        router.push(ROUTES.TABS_PROFILE as never);
+        return;
+      }
+      const u = item.username?.trim();
+      if (u && u !== "?" && u.length >= 2) {
+        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+      } else {
+        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.userId)) as never);
+      }
+    },
+    [onClose, router, user?.id]
+  );
+
+  const renderRespectedRow = useCallback(
+    ({ item }: { item: RespectedUser }) => (
+      <Pressable
+        style={styles.row}
+        onPress={() => navigateToProfile(item)}
+        accessibilityRole="button"
+        accessibilityLabel={`View profile for ${item.displayName || item.username || "member"}`}
+      >
+        <Avatar
+          url={item.avatarUrl}
+          name={item.displayName || item.username || "?"}
+          userId={item.userId}
+          size={36}
+        />
+        <View style={styles.rowText}>
+          <Text style={styles.displayName} numberOfLines={1}>
+            {item.displayName || item.username}
+          </Text>
+          {item.username ? (
+            <Text style={styles.username} numberOfLines={1}>
+              @{item.username}
+            </Text>
+          ) : null}
+        </View>
+      </Pressable>
+    ),
+    [navigateToProfile]
+  );
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -93,31 +125,7 @@ export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
               initialNumToRender={10}
               maxToRenderPerBatch={10}
               windowSize={5}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.row}
-                  onPress={() => navigateToProfile(item)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`View profile for ${item.displayName || item.username || "member"}`}
-                >
-                  <Avatar
-                    url={item.avatarUrl}
-                    name={item.displayName || item.username || "?"}
-                    userId={item.userId}
-                    size={36}
-                  />
-                  <View style={styles.rowText}>
-                    <Text style={styles.displayName} numberOfLines={1}>
-                      {item.displayName || item.username}
-                    </Text>
-                    {item.username ? (
-                      <Text style={styles.username} numberOfLines={1}>
-                        @{item.username}
-                      </Text>
-                    ) : null}
-                  </View>
-                </Pressable>
-              )}
+              renderItem={renderRespectedRow}
               contentContainerStyle={styles.listContent}
             />
           )}

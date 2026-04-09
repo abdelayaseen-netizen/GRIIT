@@ -91,6 +91,12 @@ export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) 
     },
     [router]
   );
+
+  const renderPickedCard = useCallback(
+    ({ item: c }: { item: PickedChallenge }) => <PickedForYouCard c={c} onOpenChallenge={onOpenChallenge} />,
+    [onOpenChallenge]
+  );
+
   if (!challenges.length) return null;
 
   return (
@@ -105,7 +111,7 @@ export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) 
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
-        renderItem={({ item: c }) => <PickedForYouCard c={c} onOpenChallenge={onOpenChallenge} />}
+        renderItem={renderPickedCard}
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={5}

@@ -1,5 +1,6 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import type { QueryClient } from "@tanstack/react-query";
 import { trpcMutate } from "@/lib/trpc";
@@ -12,7 +13,7 @@ import {
   fireStreakCelebration,
   isStreakCelebrationMilestone,
 } from "@/lib/notifications";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { showGoalCelebration } from "@/store/celebrationStore";
 import { useProofSharePromptStore } from "@/store/proofSharePromptStore";
@@ -94,7 +95,7 @@ export function useAppChallengeMutations({
       setTodayCheckins((prev) => [...prev, optimisticCheckin]);
 
       return trpcMutate<{ id?: string }>(TRPC.checkins.complete, params)
-        .then((data) => {
+        .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
           const challengeIdForRetention = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
           if (currentDay >= 7 && challengeIdForRetention) {
@@ -128,6 +129,35 @@ export function useAppChallengeMutations({
           if (cid) {
             try {
               trackEvent("task_completed", { challenge_id: cid, task_type: String(taskType) });
+            } catch {
+              /* non-fatal */
+            }
+          }
+          try {
+            if (firstTaskOfDay && cid) {
+              const isFirstEver = !(await AsyncStorage.getItem("griit_has_completed_task"));
+              if (isFirstEver) {
+                try {
+                  track({ name: "first_task_completed", challengeId: cid });
+                } catch {
+                  /* non-fatal */
+                }
+                await AsyncStorage.setItem("griit_has_completed_task", "true");
+              }
+            }
+          } catch {
+            /* non-fatal */
+          }
+          if (currentDay === 1 && cid) {
+            try {
+              track({
+                name: "day1_task_completed",
+                challengeId: cid,
+                ttfv_seconds: undefined,
+                starter_id: undefined,
+                primary_goal: undefined,
+                daily_time_budget: undefined,
+              });
             } catch {
               /* non-fatal */
             }
@@ -171,6 +201,20 @@ export function useAppChallengeMutations({
       if (securedChallengeId) {
         try {
           trackEvent("day_secured", { challenge_id: securedChallengeId, day_number: dayNum });
+        } catch {
+          /* non-fatal */
+        }
+      }
+      if (result.challengeDay === 1 && securedChallengeId) {
+        try {
+          track({
+            name: "day1_secured",
+            challengeId: securedChallengeId,
+            ttfv_seconds: undefined,
+            starter_id: undefined,
+            primary_goal: undefined,
+            daily_time_budget: undefined,
+          });
         } catch {
           /* non-fatal */
         }

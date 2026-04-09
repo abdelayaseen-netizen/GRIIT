@@ -396,7 +396,8 @@ function RootLayout() {
           notification_type: typeof rawType === "string" ? rawType : "unknown",
         });
         if (data?.type === "active_task_timer" && typeof data.route === "string") {
-          router.push(data.route as never);
+          const r = data.route;
+          router.push((r.startsWith(ROUTES.TASK_RUN) || r.startsWith(ROUTES.TASK_CHECKIN) ? r : ROUTES.TASK_RUN) as never);
           return;
         }
         router.push(ROUTES.ACTIVITY as never);

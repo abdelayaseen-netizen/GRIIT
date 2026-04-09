@@ -4,14 +4,15 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ChevronLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { ONBOARDING_COLORS as C } from "@/components/onboarding/onboarding-theme";
+import { ONBOARDING_COLORS as C , GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
 import { GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
-import { GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
+
 import { captureError } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
 import { ROUTES } from "@/lib/routes";
+import { track } from "@/lib/analytics";
 
 import ValueSplash from "./screens/ValueSplash";
 import GoalSelection from "./screens/GoalSelection";
@@ -35,17 +36,26 @@ export default function OnboardingFlow() {
 
   const showTopBar = currentStep >= 1 && currentStep <= 4;
 
+  const advanceStep = useCallback(() => {
+    try {
+      track({ name: "onboarding_step_completed", step: currentStep, total: 4 });
+    } catch {
+      /* non-fatal */
+    }
+    nextStep();
+  }, [currentStep, nextStep]);
+
   const handleSignUpComplete = useCallback(
     (userId: string) => {
       setAuthUserId(userId);
-      nextStep();
+      advanceStep();
     },
-    [nextStep]
+    [advanceStep]
   );
 
   const handleProfileComplete = useCallback(() => {
-    nextStep();
-  }, [nextStep]);
+    advanceStep();
+  }, [advanceStep]);
 
   const finishOnboarding = useCallback(async () => {
     const { track } = await import("@/lib/analytics");
@@ -69,9 +79,9 @@ export default function OnboardingFlow() {
   const renderScreen = () => {
     switch (currentStep) {
       case 0:
-        return <ValueSplash onContinue={nextStep} />;
+        return <ValueSplash onContinue={advanceStep} />;
       case 1:
-        return <GoalSelection onContinue={nextStep} />;
+        return <GoalSelection onContinue={advanceStep} />;
       case 2:
         return <SignUpScreen onAuthSuccess={handleSignUpComplete} />;
       case 3:
@@ -81,7 +91,7 @@ export default function OnboardingFlow() {
           <AutoSuggestChallengeScreen onJoinComplete={finishOnboarding} onBrowseMore={finishOnboarding} />
         );
       default:
-        return <ValueSplash onContinue={nextStep} />;
+        return <ValueSplash onContinue={advanceStep} />;
     }
   };
 

@@ -52,7 +52,7 @@ function LeaderboardBody({
   friendsBoard: ReturnType<typeof useQuery<{ leaderPoints: number; entries: BoardEntry[] }>>;
   globalLeaderboard: ReturnType<
     typeof useQuery<{
-      entries: Array<{
+      entries: {
         userId: string;
         username: string;
         displayName: string;
@@ -60,7 +60,7 @@ function LeaderboardBody({
         securedDaysThisWeek: number;
         currentStreak: number;
         rank: number;
-      }>;
+      }[];
     }>
   >;
   challengeBoard: ReturnType<
@@ -77,6 +77,38 @@ function LeaderboardBody({
 }) {
   const router = useRouter();
   const activeList = myActive.data ?? [];
+
+  const renderChallengePill = useCallback(
+    ({
+      item,
+    }: {
+      item: {
+        challenge_id?: string;
+        challenges?: { id?: string; title?: string };
+      };
+    }) => {
+      const cid = item.challenge_id ?? item.challenges?.id ?? "";
+      const title = item.challenges?.title ?? "Challenge";
+      const sel = cid === selectedChallengeId;
+      return (
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={[styles.challengePillNew, sel ? styles.challengePillNewOn : styles.challengePillNewOff]}
+          onPress={() => cid && setSelectedChallengeId(cid)}
+          accessibilityLabel={`View leaderboard for ${title}`}
+          accessibilityState={{ selected: sel }}
+        >
+          <Text
+            style={[styles.challengePillNewText, sel ? styles.challengePillNewTextOn : styles.challengePillNewTextOff]}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+        </TouchableOpacity>
+      );
+    },
+    [selectedChallengeId, setSelectedChallengeId]
+  );
   const friendEntries = friendsBoard.data?.entries ?? [];
   const challengeEntries = challengeBoard.data?.entries ?? [];
   const globalEntries: BoardEntry[] = useMemo(() => {
@@ -269,26 +301,7 @@ function LeaderboardBody({
               keyExtractor={(item, i) => item.challenge_id ?? item.challenges?.id ?? `ch-${i}`}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.challengePillsRow}
-              renderItem={({ item }) => {
-                const cid = item.challenge_id ?? item.challenges?.id ?? "";
-                const title = item.challenges?.title ?? "Challenge";
-                const sel = cid === selectedChallengeId;
-                return (
-                  <TouchableOpacity accessibilityRole="button"
-                    style={[styles.challengePillNew, sel ? styles.challengePillNewOn : styles.challengePillNewOff]}
-                    onPress={() => cid && setSelectedChallengeId(cid)}
-                    accessibilityLabel={`View leaderboard for ${title}`}
-                    accessibilityState={{ selected: sel }}
-                  >
-                    <Text
-                      style={[styles.challengePillNewText, sel ? styles.challengePillNewTextOn : styles.challengePillNewTextOff]}
-                      numberOfLines={1}
-                    >
-                      {title}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              }}
+              renderItem={renderChallengePill}
             />
           )}
           {activeList.length > 0 && selectedChallengeId ? (
@@ -403,11 +416,13 @@ function LeaderboardBody({
     </View>
   );
 
+  const renderLeaderboardPaddingNull = useCallback(() => null, []);
+
   return (
     <FlatList
       data={[]}
       keyExtractor={(_, i) => `lb-pad-${i}`}
-      renderItem={() => null}
+      renderItem={renderLeaderboardPaddingNull}
       ListHeaderComponent={
         <>
           {listHeader}
@@ -442,6 +457,14 @@ function useOpenLeaderboardProfile() {
 
 function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[]; leaderPoints: number; viewerId: string }) {
   const viewer = entries.find((e) => e.userId === viewerId);
+
+  const renderRegularRow = useCallback(
+    ({ item }: { item: BoardEntry }) => (
+      <RegularRow entry={item} leaderPoints={leaderPoints} viewerId={viewerId} />
+    ),
+    [leaderPoints, viewerId]
+  );
+
   if (entries.length === 0) {
     return (
       <View style={styles.emptyLb}>
@@ -472,9 +495,7 @@ function BoardList({ entries, leaderPoints, viewerId }: { entries: BoardEntry[];
       <FlatList
         data={rest}
         keyExtractor={(e) => e.userId}
-        renderItem={({ item }) => (
-          <RegularRow entry={item} leaderPoints={leaderPoints} viewerId={viewerId} />
-        )}
+        renderItem={renderRegularRow}
         scrollEnabled={false}
         nestedScrollEnabled
         maxToRenderPerBatch={10}
@@ -646,7 +667,7 @@ export function LeaderboardTab({ userId, listHeader }: LeaderboardTabProps) {
     queryKey: ["activity", "leaderboard", "global", userId],
     queryFn: () =>
       trpcQuery(TRPC.leaderboard.getWeekly, { limit: 20 }) as Promise<{
-        entries: Array<{
+        entries: {
           userId: string;
           username: string;
           displayName: string;
@@ -654,7 +675,7 @@ export function LeaderboardTab({ userId, listHeader }: LeaderboardTabProps) {
           securedDaysThisWeek: number;
           currentStreak: number;
           rank: number;
-        }>;
+        }[];
       }>,
     enabled: !!userId,
     staleTime: 60 * 1000,

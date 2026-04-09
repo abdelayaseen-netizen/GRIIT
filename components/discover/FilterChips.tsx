@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { FlatList, Pressable, Text, StyleSheet } from "react-native";
 import { DS_COLORS, DS_RADIUS } from "@/lib/design-system";
 
@@ -13,10 +13,28 @@ const FILTERS: DiscoverFilterId[] = ["All", "Easy", "7 days", "Physical", "Menta
 export function FilterChips({ onFilterChange }: FilterChipsProps) {
   const [active, setActive] = useState<DiscoverFilterId>("All");
 
-  const handlePress = (filter: DiscoverFilterId) => {
-    setActive(filter);
-    onFilterChange(filter);
-  };
+  const handlePress = useCallback(
+    (filter: DiscoverFilterId) => {
+      setActive(filter);
+      onFilterChange(filter);
+    },
+    [onFilterChange]
+  );
+
+  const renderFilterChip = useCallback(
+    ({ item: filter }: { item: DiscoverFilterId }) => (
+      <Pressable
+        onPress={() => handlePress(filter)}
+        accessibilityRole="button"
+        accessibilityLabel={`Filter by ${filter}`}
+        accessibilityState={{ selected: active === filter }}
+        style={[styles.chip, active === filter && styles.chipActive]}
+      >
+        <Text style={[styles.chipText, active === filter && styles.chipTextActive]}>{filter}</Text>
+      </Pressable>
+    ),
+    [active, handlePress]
+  );
 
   return (
     <FlatList
@@ -25,17 +43,7 @@ export function FilterChips({ onFilterChange }: FilterChipsProps) {
       keyExtractor={(item) => item}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
-      renderItem={({ item: filter }) => (
-        <Pressable
-          onPress={() => handlePress(filter)}
-          accessibilityRole="button"
-          accessibilityLabel={`Filter by ${filter}`}
-          accessibilityState={{ selected: active === filter }}
-          style={[styles.chip, active === filter && styles.chipActive]}
-        >
-          <Text style={[styles.chipText, active === filter && styles.chipTextActive]}>{filter}</Text>
-        </Pressable>
-      )}
+      renderItem={renderFilterChip}
       maxToRenderPerBatch={10}
       windowSize={5}
       initialNumToRender={6}

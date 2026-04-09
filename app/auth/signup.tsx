@@ -193,7 +193,11 @@ export default function SignupScreen() {
         captureError(profileError, "SignupProfileUpsert");
       }
 
-      track({ name: "signup_completed" });
+      try {
+        track({ name: "signup_completed", method: "email" });
+      } catch {
+        /* non-fatal */
+      }
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
       captureError(err, { flow: "signup" });

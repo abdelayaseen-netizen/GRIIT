@@ -7,8 +7,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-export default function TeamsTabScreen() {
+function TeamsTabScreenInner() {
   const router = useRouter();
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -27,6 +28,14 @@ export default function TeamsTabScreen() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+  );
+}
+
+export default function TeamsTabScreen() {
+  return (
+    <ErrorBoundary>
+      <TeamsTabScreenInner />
+    </ErrorBoundary>
   );
 }
 

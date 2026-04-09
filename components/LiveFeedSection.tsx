@@ -111,14 +111,14 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
     queries: postsWithComments.map((p) => ({
       queryKey: ["feedCommentPreview", p.id],
       queryFn: async () => {
-        const rows = (await trpcQuery(TRPC.feed.getComments, { eventId: p.id, limit: 100 })) as Array<{
+        const rows = (await trpcQuery(TRPC.feed.getComments, { eventId: p.id, limit: 100 })) as {
           user_id: string;
           text: string;
           created_at: string;
           display_name: string;
           username: string;
           avatar_url: string | null;
-        }>;
+        }[];
         const last = rows[rows.length - 1];
         if (!last) return null;
         return {
@@ -181,7 +181,16 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
           reactedByMe: !!result.reacted,
           respectCount: Math.max(0, result.reactionCount ?? nextC),
         }));
-        track({ name: "respect_sent", toUserId: post.userId ?? undefined });
+        if (!prevR) {
+          try {
+            track({
+              name: "respect_sent",
+              toUserId: post.userId ?? (post as { user_id?: string }).user_id,
+            });
+          } catch {
+            /* non-fatal */
+          }
+        }
         void queryClient.invalidateQueries({ queryKey: ["whoRespected", post.id] });
       } catch (e) {
         captureError(e, "LiveFeedRespect");
@@ -198,6 +207,11 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
         message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT! 💪`,
         ...(post.photoUrl ? { url: post.photoUrl } : {}),
       });
+      try {
+        track({ name: "share_completed", content_type: "feed" });
+      } catch {
+        /* non-fatal */
+      }
     } catch (err) {
       const msg = (err as Error)?.message ?? "";
       if (msg !== "User did not share") {

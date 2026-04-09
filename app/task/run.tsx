@@ -105,9 +105,23 @@ export default function RunTaskScreen() {
     isTreadmillDistanceValid &&
     (taskState as { status?: string } | null)?.status !== "verified";
 
+  const checkPermissions = React.useCallback(async () => {
+    if (Platform.OS === "web") {
+      setHasPermission(true);
+      return;
+    }
+
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    setHasPermission(status === "granted");
+
+    if (status !== "granted") {
+      showError("GPS tracking requires location permission to verify your run.");
+    }
+  }, [showError]);
+
   useEffect(() => {
     if (runMode === "outdoor_gps") {
-      checkPermissions();
+      void checkPermissions();
     }
     
     const handleAppState = (nextAppState: typeof AppState.currentState) => {
@@ -133,21 +147,7 @@ export default function RunTaskScreen() {
       clearActiveTaskNotification();
       subscription.remove();
     };
-  }, [runMode, timerRunning, showError]);
-
-  const checkPermissions = async () => {
-    if (Platform.OS === "web") {
-      setHasPermission(true);
-      return;
-    }
-    
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    setHasPermission(status === "granted");
-    
-    if (status !== "granted") {
-      showError("GPS tracking requires location permission to verify your run.");
-    }
-  };
+  }, [runMode, timerRunning, showError, checkPermissions]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const R = 3959;

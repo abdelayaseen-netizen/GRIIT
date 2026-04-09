@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { captureError } from "@/lib/sentry";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ListData = {
   accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[];
@@ -31,7 +32,7 @@ type ListData = {
   outgoingPending: { id: string; partner_id: string; username: string; display_name: string }[];
 };
 
-export default function AccountabilityScreen() {
+function AccountabilityScreenInner() {
   const router = useRouter();
   const { error, showError, clearError } = useInlineError();
   const [data, setData] = useState<ListData | null>(null);
@@ -68,8 +69,12 @@ export default function AccountabilityScreen() {
   }, [load]);
 
   const handleBack = () => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
+    if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(ROUTES.TABS_HOME as never);
+    }
   };
 
   const handleRemove = useCallback((partnerId: string) => {
@@ -124,44 +129,103 @@ export default function AccountabilityScreen() {
     [load, showError]
   );
 
-  if (loading && !data) {
-    return (
-      <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
-            <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Accountability Circle</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={DS_COLORS.accent} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const list = data ?? { accepted: [], incomingPending: [], outgoingPending: [] };
   const acceptedCount = list.accepted.length;
 
-  return (
-    <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
-          <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Accountability Circle</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+  const keyExtractorAccountabilityRoot = useCallback((item: { key: string }) => item.key, []);
+  const keyExtractorAccepted = useCallback((p: ListData["accepted"][number]) => p.id, []);
+  const keyExtractorIncoming = useCallback((inv: ListData["incomingPending"][number]) => inv.id, []);
+  const keyExtractorOutgoing = useCallback((inv: ListData["outgoingPending"][number]) => inv.id, []);
 
-      <FlatList
-        data={[{ key: "accountability-root" }]}
-        keyExtractor={(item) => item.key}
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        renderItem={() => (
-          <View>
+  const renderAcceptedPartner = useCallback(
+    ({ item: p }: { item: ListData["accepted"][number] }) => (
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>{p.partner_display_name || p.partner_username || "Partner"}</Text>
+          <Text style={styles.rowSub}>@{p.partner_username}</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => handleRemove(p.partner_id)}
+          disabled={actingId === p.partner_id}
+          style={styles.removeBtn}
+          accessibilityLabel={`Remove ${p.partner_display_name || p.partner_username || "partner"}`}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: actingId === p.partner_id }}
+        >
+          {actingId === p.partner_id ? (
+            <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
+          ) : (
+            <UserMinus size={20} color={DS_COLORS.textSecondary} />
+          )}
+        </TouchableOpacity>
+      </View>
+    ),
+    [actingId, handleRemove]
+  );
+
+  const renderIncomingInvite = useCallback(
+    ({ item: inv }: { item: ListData["incomingPending"][number] }) => (
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
+          <Text style={styles.rowSub}>@{inv.username}</Text>
+        </View>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            onPress={() => handleRespond(inv.id, "accept")}
+            disabled={actingId === inv.id}
+            style={[styles.iconBtn, styles.acceptBtn]}
+            accessibilityLabel={`Accept invite from ${inv.display_name || inv.username}`}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: actingId === inv.id }}
+          >
+            {actingId === inv.id ? (
+              <ActivityIndicator size="small" color={DS_COLORS.white} />
+            ) : (
+              <Check size={20} color={DS_COLORS.white} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleRespond(inv.id, "decline")}
+            disabled={actingId === inv.id}
+            style={[styles.iconBtn, styles.declineBtn]}
+            accessibilityLabel={`Decline invite from ${inv.display_name || inv.username}`}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: actingId === inv.id }}
+          >
+            <X size={20} color={DS_COLORS.textPrimary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    ),
+    [actingId, handleRespond]
+  );
+
+  const renderOutgoingInvite = useCallback(
+    ({ item: inv }: { item: ListData["outgoingPending"][number] }) => (
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
+          <Text style={styles.rowSub}>@{inv.username} · Pending</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => handleCancelOutgoing(inv.partner_id)}
+          disabled={actingId === inv.partner_id}
+          style={styles.cancelBtn}
+          accessibilityLabel={`Cancel invite to ${inv.display_name || inv.username}`}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: actingId === inv.partner_id }}
+        >
+          <Text style={styles.cancelBtnText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    ),
+    [actingId, handleCancelOutgoing]
+  );
+
+  const accountabilityRootContent = useMemo(
+    () => (
+      <View>
         <InlineError message={error} onDismiss={clearError} />
         <View style={styles.countRow}>
           <Text style={styles.countText}>{acceptedCount}/3 partners</Text>
@@ -192,31 +256,10 @@ export default function AccountabilityScreen() {
             <View style={styles.card}>
               <FlatList
                 data={list.accepted}
-                keyExtractor={(p) => p.id}
+                keyExtractor={keyExtractorAccepted}
                 scrollEnabled={false}
                 nestedScrollEnabled
-                renderItem={({ item: p }) => (
-                  <View style={styles.row}>
-                    <View style={styles.rowText}>
-                      <Text style={styles.rowTitle}>{p.partner_display_name || p.partner_username || "Partner"}</Text>
-                      <Text style={styles.rowSub}>@{p.partner_username}</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleRemove(p.partner_id)}
-                      disabled={actingId === p.partner_id}
-                      style={styles.removeBtn}
-                      accessibilityLabel={`Remove ${p.partner_display_name || p.partner_username || "partner"}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: actingId === p.partner_id }}
-                    >
-                      {actingId === p.partner_id ? (
-                        <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
-                      ) : (
-                        <UserMinus size={20} color={DS_COLORS.textSecondary} />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                )}
+                renderItem={renderAcceptedPartner}
                 maxToRenderPerBatch={10}
                 windowSize={5}
                 initialNumToRender={8}
@@ -232,43 +275,10 @@ export default function AccountabilityScreen() {
             <View style={styles.card}>
               <FlatList
                 data={list.incomingPending}
-                keyExtractor={(inv) => inv.id}
+                keyExtractor={keyExtractorIncoming}
                 scrollEnabled={false}
                 nestedScrollEnabled
-                renderItem={({ item: inv }) => (
-                  <View style={styles.row}>
-                    <View style={styles.rowText}>
-                      <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
-                      <Text style={styles.rowSub}>@{inv.username}</Text>
-                    </View>
-                    <View style={styles.actions}>
-                      <TouchableOpacity
-                        onPress={() => handleRespond(inv.id, "accept")}
-                        disabled={actingId === inv.id}
-                        style={[styles.iconBtn, styles.acceptBtn]}
-                        accessibilityLabel={`Accept invite from ${inv.display_name || inv.username}`}
-                        accessibilityRole="button"
-                        accessibilityState={{ disabled: actingId === inv.id }}
-                      >
-                        {actingId === inv.id ? (
-                          <ActivityIndicator size="small" color={DS_COLORS.white} />
-                        ) : (
-                          <Check size={20} color={DS_COLORS.white} />
-                        )}
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleRespond(inv.id, "decline")}
-                        disabled={actingId === inv.id}
-                        style={[styles.iconBtn, styles.declineBtn]}
-                        accessibilityLabel={`Decline invite from ${inv.display_name || inv.username}`}
-                        accessibilityRole="button"
-                        accessibilityState={{ disabled: actingId === inv.id }}
-                      >
-                        <X size={20} color={DS_COLORS.textPrimary} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
+                renderItem={renderIncomingInvite}
                 maxToRenderPerBatch={10}
                 windowSize={5}
                 initialNumToRender={8}
@@ -284,27 +294,10 @@ export default function AccountabilityScreen() {
             <View style={styles.card}>
               <FlatList
                 data={list.outgoingPending}
-                keyExtractor={(inv) => inv.id}
+                keyExtractor={keyExtractorOutgoing}
                 scrollEnabled={false}
                 nestedScrollEnabled
-                renderItem={({ item: inv }) => (
-                  <View style={styles.row}>
-                    <View style={styles.rowText}>
-                      <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
-                      <Text style={styles.rowSub}>@{inv.username} · Pending</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleCancelOutgoing(inv.partner_id)}
-                      disabled={actingId === inv.partner_id}
-                      style={styles.cancelBtn}
-                      accessibilityLabel={`Cancel invite to ${inv.display_name || inv.username}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: actingId === inv.partner_id }}
-                    >
-                      <Text style={styles.cancelBtnText}>Cancel</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                renderItem={renderOutgoingInvite}
                 maxToRenderPerBatch={10}
                 windowSize={5}
                 initialNumToRender={8}
@@ -326,8 +319,63 @@ export default function AccountabilityScreen() {
         </TouchableOpacity>
 
         <View style={styles.bottomSpacer} />
-          </View>
-        )}
+      </View>
+    ),
+    [
+      error,
+      clearError,
+      acceptedCount,
+      loadError,
+      load,
+      list.accepted,
+      list.incomingPending,
+      list.outgoingPending,
+      router,
+      keyExtractorAccepted,
+      renderAcceptedPartner,
+      keyExtractorIncoming,
+      renderIncomingInvite,
+      keyExtractorOutgoing,
+      renderOutgoingInvite,
+    ]
+  );
+
+  const renderAccountabilityRootItem = useCallback(() => accountabilityRootContent, [accountabilityRootContent]);
+
+  if (loading && !data) {
+    return (
+      <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
+            <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Accountability Circle</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={DS_COLORS.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
+          <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Accountability Circle</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <FlatList
+        data={[{ key: "accountability-root" }]}
+        keyExtractor={keyExtractorAccountabilityRoot}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        renderItem={renderAccountabilityRootItem}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       />
@@ -342,6 +390,14 @@ export default function AccountabilityScreen() {
         onConfirm={() => void confirmRemovePartner()}
       />
     </SafeAreaView>
+  );
+}
+
+export default function AccountabilityScreen() {
+  return (
+    <ErrorBoundary>
+      <AccountabilityScreenInner />
+    </ErrorBoundary>
   );
 }
 

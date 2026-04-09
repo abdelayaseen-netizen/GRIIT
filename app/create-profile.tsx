@@ -16,6 +16,7 @@ import { trackEvent } from "@/lib/analytics";
 import FormInput from "@/components/shared/FormInput";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const PADDING_H = 20;
 
@@ -31,7 +32,7 @@ function validateUsername(normalized: string): boolean {
   return normalized.length >= 3 && normalized.length <= 20;
 }
 
-export default function CreateProfileScreen() {
+function CreateProfileScreenInner() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState<string>("");
@@ -251,6 +252,14 @@ export default function CreateProfileScreen() {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+export default function CreateProfileScreen() {
+  return (
+    <ErrorBoundary>
+      <CreateProfileScreenInner />
+    </ErrorBoundary>
   );
 }
 

@@ -92,7 +92,7 @@ export default function CelebrationOverlay() {
       });
     }
     return list;
-  }, [visible]);
+  }, []);
 
   useEffect(() => {
     if (!visible) return;

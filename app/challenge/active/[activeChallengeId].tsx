@@ -38,7 +38,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 
 type TaskRow = {
   id: string;
@@ -173,8 +173,9 @@ export default function ActiveChallengeDetailScreen() {
     const raw = challenge?.challenge_tasks ?? [];
     return [...raw].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
   }, [challenge?.challenge_tasks]);
-  const completedTaskIds = new Set(
-    checkins.filter((c) => c.status === "completed").map((c) => c.task_id)
+  const completedTaskIds = useMemo(
+    () => new Set(checkins.filter((c) => c.status === "completed").map((c) => c.task_id)),
+    [checkins]
   );
   const allDoneToday = tasks.length > 0 && tasks.every((t) => completedTaskIds.has(t.id));
   const memberCount = (challenge as { participants_count?: number })?.participants_count ?? 0;
@@ -189,7 +190,7 @@ export default function ActiveChallengeDetailScreen() {
     if (pc > 100) return `🔥 ${pc} active today`;
     if (challenge?.difficulty === "extreme") return "💀 EXTREME CHALLENGE";
     return null;
-  }, [challenge?.duration_type, challenge?.difficulty, challenge]);
+  }, [challenge]);
   const { stats } = useApp();
   const { user } = useAuth();
   const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
@@ -208,6 +209,11 @@ export default function ActiveChallengeDetailScreen() {
     setLeaveConfirmVisible(false);
     try {
       await trpcMutate(TRPC.challenges.leave, { challengeId });
+      try {
+        track({ name: "challenge_left", challenge_id: challengeId });
+      } catch {
+        /* non-fatal */
+      }
       await queryClient.invalidateQueries({ queryKey: ["home"] });
       await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
       router.replace(ROUTES.TABS_HOME as never);
@@ -228,17 +234,7 @@ export default function ActiveChallengeDetailScreen() {
     }
     const firstIncomplete = tasks.find((t) => !completedTaskIds.has(t.id));
     if (firstIncomplete) {
-      router.push({
-        pathname: ROUTES.TASK_COMPLETE,
-        params: {
-          taskId: firstIncomplete.id,
-          activeChallengeId: id,
-          taskType: firstIncomplete.task_type ?? "manual",
-          taskName: firstIncomplete.title ?? "",
-          taskDescription: "",
-          taskConfig: buildTaskConfigParam(firstIncomplete as Record<string, unknown>),
-        },
-      } as never);
+      router.push({ pathname: ROUTES.TASK_COMPLETE, params: { taskId: firstIncomplete.id, activeChallengeId: id, taskType: firstIncomplete.task_type ?? "manual", taskName: firstIncomplete.title ?? "", taskDescription: "", taskConfig: buildTaskConfigParam(firstIncomplete as Record<string, unknown>) } } as never);
     } else {
       router.push(ROUTES.TABS_HOME as never);
     }
@@ -409,17 +405,7 @@ export default function ActiveChallengeDetailScreen() {
                   style={s.missionRow}
                   onPress={() => {
                     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    router.push({
-                      pathname: ROUTES.TASK_COMPLETE,
-                      params: {
-                        taskId: task.id,
-                        activeChallengeId: id,
-                        taskType: task.task_type ?? "manual",
-                        taskName: task.title ?? "",
-                        taskDescription: "",
-                        taskConfig: buildTaskConfigParam(task as Record<string, unknown>),
-                      },
-                    } as never);
+                    router.push({ pathname: ROUTES.TASK_COMPLETE, params: { taskId: task.id, activeChallengeId: id, taskType: task.task_type ?? "manual", taskName: task.title ?? "", taskDescription: "", taskConfig: buildTaskConfigParam(task as Record<string, unknown>) } } as never);
                   }}
                   activeOpacity={0.7}
                   accessibilityRole="button"

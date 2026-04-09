@@ -19,10 +19,7 @@ export default function InviteRedirectScreen() {
     const challengeId = decodeURIComponent(code);
     const params: Record<string, string> = { id: challengeId, openJoin: "1" };
     if (refParam) params.ref = typeof refParam === "string" ? refParam : refParam[0] ?? "";
-    router.replace({
-      pathname: ROUTES.CHALLENGE_ID(challengeId),
-      params,
-    } as never);
+    router.replace({ pathname: ROUTES.CHALLENGE_ID(challengeId), params } as never);
   }, [code, refParam, router]);
 
   return (

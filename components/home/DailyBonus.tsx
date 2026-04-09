@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Gift } from "lucide-react-native";
 import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
@@ -26,7 +26,8 @@ export default React.memo(function DailyBonus() {
     return () => clearInterval(id);
   }, []);
 
-  const { pct, label, expired } = useMemo(() => noonProgressAndLabel(new Date()), [tick]);
+  void tick;
+  const { pct, label, expired } = noonProgressAndLabel(new Date());
 
   return (
     <View style={s.wrap}>

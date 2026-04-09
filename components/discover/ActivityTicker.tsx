@@ -81,6 +81,17 @@ export function ActivityTicker() {
     [router]
   );
 
+  const renderTickerItem = useCallback(
+    ({ item }: { item: RecentCompletionItem }) => (
+      <ActivityTickerItem
+        item={item}
+        timeLabel={timeAgoLabel(item.completedAt)}
+        onOpenChallenge={onOpenChallenge}
+      />
+    ),
+    [onOpenChallenge]
+  );
+
   if (!completions || completions.length === 0) return null;
 
   const uniqueUsers = new Set(completions.map((c) => c.userName));
@@ -98,13 +109,7 @@ export function ActivityTicker() {
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
-        renderItem={({ item }) => (
-          <ActivityTickerItem
-            item={item}
-            timeLabel={timeAgoLabel(item.completedAt)}
-            onOpenChallenge={onOpenChallenge}
-          />
-        )}
+        renderItem={renderTickerItem}
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={8}

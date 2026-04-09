@@ -59,8 +59,12 @@ export default function EditProfileScreen() {
       });
       await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
       await refetchAll();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace(ROUTES.TABS_HOME as never);
+      }
     } catch (err: unknown) {
       captureError(err, 'EditProfileUpdate');
       setFormError(err instanceof Error ? err.message : 'Something went wrong');

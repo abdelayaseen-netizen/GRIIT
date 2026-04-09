@@ -1,10 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { View, Text, StyleSheet, FlatList, Platform } from "react-native";
 import { Trophy, Lock } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { formatShortDate } from "@/lib/date-utils";
 
 export type AchievementCategory = "consistency" | "challenge" | "discipline";
+
+const ACHIEVEMENT_CATEGORY_ORDER: AchievementCategory[] = ["consistency", "challenge", "discipline"];
 
 export interface AchievementItem {
   id: string;
@@ -29,8 +31,41 @@ export default React.memo(function AchievementsSection({ achievements, loading }
     },
     {} as Record<AchievementCategory, AchievementItem[]>
   );
-  const order: AchievementCategory[] = ["consistency", "challenge", "discipline"];
-  const flatBadges = useMemo(() => order.flatMap((cat) => byCategory[cat] ?? []), [byCategory]);
+  const flatBadges = useMemo(
+    () => ACHIEVEMENT_CATEGORY_ORDER.flatMap((cat) => byCategory[cat] ?? []),
+    [byCategory]
+  );
+
+  const renderBadgeItem = useCallback(
+    ({ item: a }: { item: AchievementItem }) => (
+      <View style={[styles.badge, a.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}>
+        <View
+          style={[
+            styles.badgeIcon,
+            { backgroundColor: a.unlocked ? DS_COLORS.accent + "18" : DS_COLORS.surfaceMuted },
+          ]}
+        >
+          {a.unlocked ? (
+            <Trophy size={16} color={DS_COLORS.accent} />
+          ) : (
+            <Lock size={16} color={DS_COLORS.textMuted} />
+          )}
+        </View>
+        <Text style={[styles.badgeTitle, !a.unlocked && styles.badgeTitleLocked]} numberOfLines={2}>
+          {a.title}
+        </Text>
+        {a.description ? (
+          <Text style={styles.badgeDesc} numberOfLines={1}>
+            {a.description}
+          </Text>
+        ) : null}
+        {a.unlocked && a.unlockDate ? (
+          <Text style={styles.badgeDate}>{formatShortDate(a.unlockDate)}</Text>
+        ) : null}
+      </View>
+    ),
+    []
+  );
 
   if (loading) {
     return (
@@ -55,33 +90,7 @@ export default React.memo(function AchievementsSection({ achievements, loading }
         keyExtractor={(a) => a.id}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        renderItem={({ item: a }) => (
-          <View style={[styles.badge, a.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}>
-            <View
-              style={[
-                styles.badgeIcon,
-                { backgroundColor: a.unlocked ? DS_COLORS.accent + "18" : DS_COLORS.surfaceMuted },
-              ]}
-            >
-              {a.unlocked ? (
-                <Trophy size={16} color={DS_COLORS.accent} />
-              ) : (
-                <Lock size={16} color={DS_COLORS.textMuted} />
-              )}
-            </View>
-            <Text style={[styles.badgeTitle, !a.unlocked && styles.badgeTitleLocked]} numberOfLines={2}>
-              {a.title}
-            </Text>
-            {a.description ? (
-              <Text style={styles.badgeDesc} numberOfLines={1}>
-                {a.description}
-              </Text>
-            ) : null}
-            {a.unlocked && a.unlockDate ? (
-              <Text style={styles.badgeDate}>{formatShortDate(a.unlockDate)}</Text>
-            ) : null}
-          </View>
-        )}
+        renderItem={renderBadgeItem}
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={8}

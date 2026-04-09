@@ -163,7 +163,7 @@ export function ShareSheetModal({
     const sx = maxW / SHARE_CARD_DIMENSIONS.width;
     const sy = maxH / SHARE_CARD_DIMENSIONS.height;
     return Math.min(sx, sy, 0.22);
-  }, [visible]);
+  }, []);
 
   const renderPreviewCard = () => {
     switch (selected) {
@@ -184,16 +184,12 @@ export function ShareSheetModal({
     }
   };
 
-  const getRefForSelected = (): React.RefObject<ViewShot | null> | null => {
+  const captureSelectedUri = useCallback(async (): Promise<string | null> => {
     const opt = cards.find((c) => c.key === selected);
-    return opt?.ref ?? null;
-  };
-
-  const captureSelectedUri = async (): Promise<string | null> => {
-    const ref = getRefForSelected();
+    const ref = opt?.ref ?? null;
     const uri = await ref?.current?.capture?.();
     return uri ?? null;
-  };
+  }, [selected, cards]);
 
   const handleInstagram = useCallback(async () => {
     setBusy(true);
@@ -212,7 +208,7 @@ export function ShareSheetModal({
     } finally {
       setBusy(false);
     }
-  }, [selected, completionId, cards]);
+  }, [selected, completionId, captureSelectedUri]);
 
   const handleCopy = useCallback(async () => {
     if (Platform.OS === "web") {
@@ -237,7 +233,7 @@ export function ShareSheetModal({
     } finally {
       setBusy(false);
     }
-  }, [selected, completionId, cards]);
+  }, [selected, completionId, captureSelectedUri]);
 
   const handleSave = useCallback(async () => {
     if (Platform.OS === "web") {
@@ -266,7 +262,7 @@ export function ShareSheetModal({
     } finally {
       setBusy(false);
     }
-  }, [selected, completionId, cards]);
+  }, [selected, completionId, captureSelectedUri]);
 
   const handleShareSheet = useCallback(async () => {
     setBusy(true);
@@ -287,7 +283,7 @@ export function ShareSheetModal({
     } finally {
       setBusy(false);
     }
-  }, [selected, completionId, cards]);
+  }, [selected, completionId, captureSelectedUri]);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>

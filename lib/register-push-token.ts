@@ -5,6 +5,7 @@
 
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { track } from "@/lib/analytics";
@@ -16,11 +17,33 @@ export async function registerPushTokenWithBackend(): Promise<boolean> {
   if (Platform.OS === "web") return false;
   try {
     const token = await registerForPushNotificationsAsync();
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === "granted") {
+      try {
+        track({ name: "notification_permission_granted" });
+      } catch {
+        /* non-fatal */
+      }
+    } else {
+      try {
+        track({ name: "notification_permission_denied" });
+      } catch {
+        /* non-fatal */
+      }
+    }
     if (!token) {
-      track({ name: "push_permission_denied" });
+      try {
+        track({ name: "push_permission_denied" });
+      } catch {
+        /* non-fatal */
+      }
       return false;
     }
-    track({ name: "push_permission_granted" });
+    try {
+      track({ name: "push_permission_granted" });
+    } catch {
+      /* non-fatal */
+    }
 
     await trpcMutate(TRPC.profiles.updatePushToken, { pushToken: token });
     await trpcMutate(TRPC.notifications.registerToken, {

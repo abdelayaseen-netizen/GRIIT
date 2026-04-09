@@ -34,7 +34,8 @@ export default React.memo(function StreakHero({ streak, ringProgress, onStartFir
     return () => clearInterval(id);
   }, []);
 
-  const timerLabel = useMemo(() => midnightCountdownText(), [tick]);
+  void tick;
+  const timerLabel = midnightCountdownText();
 
   const message = useMemo(() => {
     if (streak <= 1) return "Complete your first task to start the clock.";

@@ -19,7 +19,7 @@ import { X, Flame, Zap, BarChart2, Users } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system"
 import { getOfferings, purchasePackage, restorePurchases } from "@/lib/revenue-cat";
 import type { PurchasesPackage } from "react-native-purchases";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { useProStatus } from "@/hooks/useProStatus";
 import { ROUTES } from "@/lib/routes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -59,6 +59,11 @@ export default function PaywallScreen() {
     try {
       const source = typeof params.source === "string" ? params.source : "unknown";
       trackEvent("paywall_viewed", { source });
+      try {
+        track({ name: "paywall_shown", source });
+      } catch {
+        /* non-fatal */
+      }
     } catch {
       /* non-fatal */
     }
@@ -89,6 +94,12 @@ export default function PaywallScreen() {
     async (pkg: PurchasesPackage) => {
       setPurchasing(true);
       setErrorMessage(null);
+      try {
+        const pkgType = pkg.identifier.toLowerCase().includes("annual") ? ("annual" as const) : ("monthly" as const);
+        track({ name: "purchase_started", package_type: pkgType });
+      } catch {
+        /* non-fatal */
+      }
       const result = await purchasePackage(pkg);
       setPurchasing(false);
       if (result.success) {
@@ -103,6 +114,11 @@ export default function PaywallScreen() {
         await refetchPro();
         router.replace(ROUTES.TABS as never);
       } else if (!result.cancelled) {
+        try {
+          track({ name: "purchase_failed", package_type: pkg.identifier, error: "purchase_cancelled_or_failed" });
+        } catch {
+          /* non-fatal */
+        }
         try {
           trackEvent("purchase_failed", { error: result.error ?? "unknown" });
         } catch {
@@ -123,11 +139,21 @@ export default function PaywallScreen() {
   }, [selectedPackage, handlePurchase]);
 
   const handleRestore = useCallback(async () => {
+    try {
+      track({ name: "restore_attempted" });
+    } catch {
+      /* non-fatal */
+    }
     setPurchasing(true);
     setErrorMessage(null);
     const result = await restorePurchases();
     setPurchasing(false);
     if (result.success) {
+      try {
+        track({ name: "restore_succeeded" });
+      } catch {
+        /* non-fatal */
+      }
       try {
         trackEvent("purchase_completed", { source: "restore" });
       } catch {
@@ -205,7 +231,21 @@ export default function PaywallScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <TouchableOpacity
         style={styles.closeButton}
-        onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
+        onPress={() => {
+          try {
+            track({
+              name: "paywall_dismissed",
+              source: typeof params.source === "string" ? params.source : "unknown",
+            });
+          } catch {
+            /* non-fatal */
+          }
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace(ROUTES.TABS_HOME as never);
+          }
+        }}
         activeOpacity={0.7}
         accessibilityLabel="Close"
         accessibilityRole="button"

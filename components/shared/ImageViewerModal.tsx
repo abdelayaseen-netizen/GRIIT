@@ -43,6 +43,8 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
       translateX.value = 0;
       translateY.value = 0;
     }
+    // Reanimated shared values are mutable refs; listing them would not change effect semantics.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const animatedImageContainerStyle = useAnimatedStyle(() => ({

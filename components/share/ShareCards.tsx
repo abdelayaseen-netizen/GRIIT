@@ -35,11 +35,11 @@ export interface DayRecapCardProps {
   dayNumber: number;
   streak: number;
   rank?: string;
-  tasks: Array<{
+  tasks: {
     name: string;
     details: string;
     timestamp: string;
-  }>;
+  }[];
 }
 
 export interface ChallengeCompleteCardProps {
