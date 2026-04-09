@@ -385,7 +385,7 @@ export default function RunTaskScreen() {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
-      allowsEditing: false,
+      allowsEditing: true,
     });
 
     if (!result.canceled && result.assets[0]) {

@@ -49,7 +49,7 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
       onError("Allow camera access to submit photo proof.");
       return;
     }
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: false, base64: true });
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, base64: true });
     if (result.canceled || !result.assets[0]) return;
     await upload(result.assets[0]);
   }, [onError, upload]);
