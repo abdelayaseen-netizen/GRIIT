@@ -33,6 +33,7 @@ import { Avatar } from "@/components/Avatar";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
@@ -72,7 +73,7 @@ function tierPillStyle(tier: string): { bg: string; fg: string } {
   return { bg: DS_COLORS.PROFILE_TIER_WARRIOR_BG, fg: DS_COLORS.PROFILE_TIER_WARRIOR_TEXT };
 }
 
-export default function PublicProfileScreen() {
+function PublicProfileScreenInner() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -734,6 +735,14 @@ export default function PublicProfileScreen() {
         onConfirm={() => void handleConfirmUnfollow()}
       />
     </>
+  );
+}
+
+export default function PublicProfileScreen() {
+  return (
+    <ErrorBoundary>
+      <PublicProfileScreenInner />
+    </ErrorBoundary>
   );
 }
 

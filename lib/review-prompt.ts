@@ -44,7 +44,7 @@ export async function maybePromptForReview(
     track({ name: "review_prompted", total_days_secured: totalDaysSecured, trigger });
     await StoreReview.requestReview();
     await AsyncStorage.setItem(REVIEW_PROMPT_KEY, Date.now().toString());
-  } catch (error) {
+  } catch {
     // error swallowed — handle in UI
   }
 }

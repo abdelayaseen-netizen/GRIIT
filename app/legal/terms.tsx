@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const CONTENT = [
   { heading: "Acceptance of Terms", body: "By using GRIIT you agree to these Terms of Service. If you do not agree, do not use the app." },
@@ -14,7 +15,7 @@ const CONTENT = [
   { heading: "Contact", body: "griit.health@gmail.com" },
 ];
 
-export default function TermsScreen() {
+function TermsScreenInner() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -28,6 +29,14 @@ export default function TermsScreen() {
         ))}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+export default function TermsScreen() {
+  return (
+    <ErrorBoundary>
+      <TermsScreenInner />
+    </ErrorBoundary>
   );
 }
 

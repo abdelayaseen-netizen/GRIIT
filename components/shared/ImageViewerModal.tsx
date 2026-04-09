@@ -134,7 +134,7 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: DS_COLORS.BG_DARK,
   },
   backdropInner: {
     flex: 1,

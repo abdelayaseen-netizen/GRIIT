@@ -24,6 +24,7 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import FormInput from "@/components/shared/FormInput";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
@@ -44,7 +45,7 @@ function isValidEmail(s: string): boolean {
   return t.includes("@") && t.includes(".") && t.length > 5;
 }
 
-export default function SignupScreen() {
+function SignupScreenInner() {
   const router = useRouter();
   const { error, showError, clearError } = useInlineError();
   const [displayName, setDisplayName] = useState("");
@@ -451,6 +452,14 @@ export default function SignupScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+export default function SignupScreen() {
+  return (
+    <ErrorBoundary>
+      <SignupScreenInner />
+    </ErrorBoundary>
   );
 }
 

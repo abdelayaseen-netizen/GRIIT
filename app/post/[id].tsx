@@ -31,6 +31,7 @@ import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -46,7 +47,7 @@ type CommentRow = {
 
 const RESPECT_DEBOUNCE_MS = 300;
 
-export default function PostThreadScreen() {
+function PostThreadScreenInner() {
   const router = useRouter();
   const { user } = useAuth();
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
@@ -481,6 +482,14 @@ export default function PostThreadScreen() {
         </View>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+export default function PostThreadScreen() {
+  return (
+    <ErrorBoundary>
+      <PostThreadScreenInner />
+    </ErrorBoundary>
   );
 }
 

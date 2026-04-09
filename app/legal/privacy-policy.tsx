@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const CONTENT = [
   { heading: "Information We Collect", body: "Account information (email, username, display name); challenge activity and progress data; device information for push notifications; usage analytics (anonymized)." },
@@ -13,7 +14,7 @@ const CONTENT = [
   { heading: "Contact", body: "griit.health@gmail.com" },
 ];
 
-export default function PrivacyPolicyScreen() {
+function PrivacyPolicyScreenInner() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -27,6 +28,14 @@ export default function PrivacyPolicyScreen() {
         ))}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+export default function PrivacyPolicyScreen() {
+  return (
+    <ErrorBoundary>
+      <PrivacyPolicyScreenInner />
+    </ErrorBoundary>
   );
 }
 

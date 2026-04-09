@@ -1,6 +1,15 @@
-import React from 'react';
-import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
+import React from "react";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
+function OnboardingPageInner() {
+  return <OnboardingFlow />;
+}
 
 export default function OnboardingPage() {
-  return <OnboardingFlow />;
+  return (
+    <ErrorBoundary>
+      <OnboardingPageInner />
+    </ErrorBoundary>
+  );
 }

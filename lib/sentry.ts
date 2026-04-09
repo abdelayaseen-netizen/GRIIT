@@ -36,7 +36,7 @@ export function clearSentryUser(): void {
 export function captureError(error: unknown, context?: string | Record<string, unknown>): void {
   if (__DEV__) {
     const label = typeof context === "string" ? context : JSON.stringify(context ?? {});
-    console.error(`[${label}]`, error);
+    if (__DEV__) console.error(`[${label}]`, error);
     return;
   }
   if (!SENTRY_DSN) return;

@@ -2,12 +2,13 @@ import React, { useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { ActivityIndicator, View } from "react-native";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * Deep link: /invite/[code]?ref=userId
  * Redirects to challenge detail with join prompt. Ref is preserved for attribution.
  */
-export default function InviteRedirectScreen() {
+function InviteRedirectScreenInner() {
   const { code, ref: refParam } = useLocalSearchParams<{ code: string; ref?: string }>();
   const router = useRouter();
 
@@ -26,5 +27,13 @@ export default function InviteRedirectScreen() {
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <ActivityIndicator size="large" />
     </View>
+  );
+}
+
+export default function InviteRedirectScreen() {
+  return (
+    <ErrorBoundary>
+      <InviteRedirectScreenInner />
+    </ErrorBoundary>
   );
 }

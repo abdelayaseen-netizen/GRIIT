@@ -1,11 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 
+/* eslint-disable import/first -- vi.mock must precede the imports it intercepts */
 // Avoid loading React Native / Sentry native stack when importing api.ts
 vi.mock('@/lib/sentry', () => ({ captureError: vi.fn() }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 vi.mock('react-native', () => ({ Platform: { OS: 'web' } }));
 
 import { formatError, formatTRPCError } from './api';
+/* eslint-enable import/first */
 
 describe('formatError', () => {
   it('returns "Unknown error" for null and undefined', () => {

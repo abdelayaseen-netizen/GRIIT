@@ -91,7 +91,7 @@ type RouterLike = {
 
 export function goBackOrHome(router: RouterLike) {
   if (router.canGoBack()) {
-    router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never);
+    router.back();
   } else {
     router.replace(ROUTES.TABS_HOME as never);
   }

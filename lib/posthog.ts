@@ -16,7 +16,7 @@ export function getPostHog(): PostHog | null {
   if (!client) {
     try {
       client = new PostHog(API_KEY, { host: HOST });
-      console.log("[PostHog] Initialized with key:", API_KEY?.slice(0, 8) + "...", "host:", HOST);
+      if (__DEV__) console.log("[PostHog] Initialized with key:", API_KEY?.slice(0, 8) + "...", "host:", HOST);
     } catch {
       return null;
     }

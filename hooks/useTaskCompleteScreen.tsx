@@ -273,7 +273,6 @@ export function TaskCompleteScreenInner() {
     showRunEntry,
     showWorkoutEntry,
     workoutOk,
-    timerSeconds,
   ]);
 
   const handleSubmit = useCallback(async () => {
@@ -380,6 +379,7 @@ export function TaskCompleteScreenInner() {
     workoutKind,
     workoutNotes,
     photoCaption,
+    onScreenSecondsRef,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -466,77 +466,6 @@ export function TaskCompleteScreenInner() {
     photoUrl,
     isHardMode,
   });
-
-  if (!taskId.trim() || !activeChallengeId.trim()) {
-    if (!paramsReady) {
-      return (
-        <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
-          <Stack.Screen options={{ title: "Loading…", headerBackVisible: true }} />
-          <View style={styles.centered}>
-            <ActivityIndicator size="large" color={GRIIT_COLORS.primary} accessibilityLabel="Loading task" />
-          </View>
-        </SafeAreaView>
-      );
-    }
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
-        <Stack.Screen options={{ title: "Task", headerBackVisible: true }} />
-        <View style={{ padding: DS_SPACING.xl }}>
-          <Text style={styles.screenTitle}>Couldn&apos;t open this task</Text>
-          <Text style={styles.muted}>Go back and tap Start again from Home.</Text>
-          <TouchableOpacity
-            style={[styles.primaryBtn, { marginTop: DS_SPACING.lg }]}
-            onPress={() => goBackOrHome(router)}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.primaryBtnText}>Go back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <TaskCompleteCelebration
-        taskName={taskName}
-        isHardMode={isHardMode}
-        variableReward={variableReward}
-        postedInline={postedInline}
-        postCaption={postCaption}
-        setPostCaption={setPostCaption}
-        shareFeedErr={shareFeedErr}
-        photoUrl={photoUrl}
-        photoUri={photoUri}
-        photoUploading={photoUploading}
-        handleTakePhoto={handleTakePhoto}
-        handlePickImage={handlePickImage}
-        clearPhoto={clearPhoto}
-        handleShareToFeed={handleShareToFeed}
-        shareBusy={shareBusy}
-        showShareSheet={showShareSheet}
-        setShowShareSheet={setShowShareSheet}
-        onDone={() => goBackOrHome(router)}
-        shareRef={shareRef}
-        transparentCardRef={transparentCardRef}
-        proofCardRef={proofCardRef}
-        recapCardRef={recapCardRef}
-        completeCardRef={completeCardRef}
-        minimalStreakCardRef={minimalStreakCardRef}
-        completionIdForShare={completionIdForShare}
-        hasPhotoForShare={hasPhotoForShare}
-        isAllDayComplete={isAllDayComplete}
-        isChallengeCompleteShare={isChallengeCompleteShare}
-        statementShareProps={statementShareProps}
-        transparentShareProps={transparentShareProps}
-        proofShareProps={proofShareProps}
-        recapShareProps={recapShareProps}
-        completeShareProps={completeShareProps}
-        minimalShareProps={minimalShareProps}
-      />
-    );
-  }
 
   const renderTaskCompleteFormItem = useCallback(
     () => (
@@ -692,6 +621,77 @@ export function TaskCompleteScreenInner() {
       handleCheckLocation,
     ]
   );
+
+  if (!taskId.trim() || !activeChallengeId.trim()) {
+    if (!paramsReady) {
+      return (
+        <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
+          <Stack.Screen options={{ title: "Loading…", headerBackVisible: true }} />
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={GRIIT_COLORS.primary} accessibilityLabel="Loading task" />
+          </View>
+        </SafeAreaView>
+      );
+    }
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
+        <Stack.Screen options={{ title: "Task", headerBackVisible: true }} />
+        <View style={{ padding: DS_SPACING.xl }}>
+          <Text style={styles.screenTitle}>Couldn&apos;t open this task</Text>
+          <Text style={styles.muted}>Go back and tap Start again from Home.</Text>
+          <TouchableOpacity
+            style={[styles.primaryBtn, { marginTop: DS_SPACING.lg }]}
+            onPress={() => goBackOrHome(router)}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Text style={styles.primaryBtnText}>Go back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <TaskCompleteCelebration
+        taskName={taskName}
+        isHardMode={isHardMode}
+        variableReward={variableReward}
+        postedInline={postedInline}
+        postCaption={postCaption}
+        setPostCaption={setPostCaption}
+        shareFeedErr={shareFeedErr}
+        photoUrl={photoUrl}
+        photoUri={photoUri}
+        photoUploading={photoUploading}
+        handleTakePhoto={handleTakePhoto}
+        handlePickImage={handlePickImage}
+        clearPhoto={clearPhoto}
+        handleShareToFeed={handleShareToFeed}
+        shareBusy={shareBusy}
+        showShareSheet={showShareSheet}
+        setShowShareSheet={setShowShareSheet}
+        onDone={() => goBackOrHome(router)}
+        shareRef={shareRef}
+        transparentCardRef={transparentCardRef}
+        proofCardRef={proofCardRef}
+        recapCardRef={recapCardRef}
+        completeCardRef={completeCardRef}
+        minimalStreakCardRef={minimalStreakCardRef}
+        completionIdForShare={completionIdForShare}
+        hasPhotoForShare={hasPhotoForShare}
+        isAllDayComplete={isAllDayComplete}
+        isChallengeCompleteShare={isChallengeCompleteShare}
+        statementShareProps={statementShareProps}
+        transparentShareProps={transparentShareProps}
+        proofShareProps={proofShareProps}
+        recapShareProps={recapShareProps}
+        completeShareProps={completeShareProps}
+        minimalShareProps={minimalShareProps}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>

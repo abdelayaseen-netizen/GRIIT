@@ -21,12 +21,13 @@ import { ROUTES } from "@/lib/routes";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type SearchHit = { user_id: string; username: string; display_name: string };
 
 const DEBOUNCE_MS = 400;
 
-export default function AddAccountabilityPartnerScreen() {
+function AddAccountabilityPartnerScreenInner() {
   const router = useRouter();
   const params = useLocalSearchParams<{ from?: string }>();
   const { error, showError, clearError } = useInlineError();
@@ -192,6 +193,14 @@ export default function AddAccountabilityPartnerScreen() {
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+export default function AddAccountabilityPartnerScreen() {
+  return (
+    <ErrorBoundary>
+      <AddAccountabilityPartnerScreenInner />
+    </ErrorBoundary>
   );
 }
 

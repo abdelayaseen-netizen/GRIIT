@@ -17,8 +17,9 @@ import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-export default function ForgotPasswordScreen() {
+function ForgotPasswordScreenInner() {
   const router = useRouter();
   const { colors: themeColors } = useTheme();
   const [email, setEmail] = useState<string>("");
@@ -137,6 +138,14 @@ export default function ForgotPasswordScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+export default function ForgotPasswordScreen() {
+  return (
+    <ErrorBoundary>
+      <ForgotPasswordScreenInner />
+    </ErrorBoundary>
   );
 }
 

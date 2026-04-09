@@ -20,10 +20,11 @@ import { track } from "@/lib/analytics";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 import FormInput from "@/components/shared/FormInput";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const PADDING_H = 20;
 
-export default function LoginScreen() {
+function LoginScreenInner() {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -342,6 +343,14 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+export default function LoginScreen() {
+  return (
+    <ErrorBoundary>
+      <LoginScreenInner />
+    </ErrorBoundary>
   );
 }
 

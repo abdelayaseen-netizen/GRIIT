@@ -172,6 +172,7 @@ export function useAppChallengeMutations({
           throw new Error(msg);
         });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setTodayCheckins is a stable setState dispatch
     [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats, queryClient, user?.id]
   );
 

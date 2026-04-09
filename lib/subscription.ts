@@ -37,6 +37,7 @@ function getPurchases(): typeof import("react-native-purchases") | null {
   if (Platform.OS === "web") return null;
   if (Constants.appOwnership === "expo") return null;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- conditional native module load for Expo Go compatibility
     return require("react-native-purchases");
   } catch {
     return null;
@@ -93,7 +94,7 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
         // Best-effort — DB already has client-side values from syncSubscriptionToSupabase
       });
     });
-  } catch (err) {
+  } catch {
     if (__DEV__) {
       // error swallowed — handle in UI
     }
@@ -115,7 +116,7 @@ export async function syncSubscriptionToSupabase(userId: string, customerInfo: C
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", userId);
-  } catch (err) {
+  } catch {
     if (__DEV__) {
       // error swallowed — handle in UI
     }
