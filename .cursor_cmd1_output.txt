@@ -1,0 +1,32 @@
+﻿
+app\legal\privacy-policy.tsx:11:  { heading: "Third-Party Services", body: "Supabase (database and authentication), 
+RevenueCat (subscription management), PostHog (anonymized analytics), Expo (app infrastructure)." },
+hooks\useScreenTracker.ts:6: * Automatic screen tracking for PostHog.
+lib\analytics.ts:2: * Analytics events for activation and retention. Forwarded to PostHog when configured.
+lib\analytics.ts:4:import { getPostHog, resetPostHog } from "./posthog";
+lib\analytics.ts:92:/** PostHog sends only in production unless `EXPO_PUBLIC_POSTHOG_ENABLE_DEV=true`. */
+lib\analytics.ts:93:function shouldSendPostHog(): boolean {
+lib\analytics.ts:99:  if (!shouldSendPostHog()) return;
+lib\analytics.ts:100:  const ph = getPostHog();
+lib\analytics.ts:116:  resetPostHog();
+lib\analytics.ts:123:/** PostHog `capture` props: JSON-serializable map (no `undefined` values). */
+lib\analytics.ts:139:/** String-key funnel events (exact PostHog event names). Fire-and-forget. */
+lib\analytics.ts:142:    if (!shouldSendPostHog()) return;
+lib\analytics.ts:143:    const ph = getPostHog();
+lib\analytics.ts:151:  if (!shouldSendPostHog()) return;
+lib\analytics.ts:152:  const ph = getPostHog();
+lib\posthog.ts:2: * PostHog analytics client for React Native.
+lib\posthog.ts:3: * Uses the React Native PostHog SDK.
+lib\posthog.ts:4: * Set EXPO_PUBLIC_POSTHOG_API_KEY in env. Missing key = no crash, no tracking.
+lib\posthog.ts:7:import PostHog from "posthog-react-native";
+lib\posthog.ts:10:const HOST = "https://us.i.posthog.com";
+lib\posthog.ts:12:let client: PostHog | null = null;
+lib\posthog.ts:14:export function getPostHog(): PostHog | null {
+lib\posthog.ts:18:      client = new PostHog(API_KEY, { host: HOST });
+lib\posthog.ts:26:export function isPostHogEnabled(): boolean {
+lib\posthog.ts:30:export function resetPostHog(): void {
+lib\signout-cleanup.ts:6:/** Run after `supabase.auth.signOut()` (or with session cleared). Clears React Query, Sentry 
+user, PostHog session, and scheduled notifications. */
+node_modules\@revenuecat\purchases-js\dist\Purchases.es.d.ts:1737:                 * The PostHog user ID of the 
+customer.
+node_modules\@revenuecat\purchases-js\dist\Purchases.es.d.ts:1739:                PosthogUserId = "$posthogUserId",

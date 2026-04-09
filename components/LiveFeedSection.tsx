@@ -28,7 +28,7 @@ import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
 import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
 import { Avatar } from "@/components/Avatar";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -181,6 +181,7 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
           reactedByMe: !!result.reacted,
           respectCount: Math.max(0, result.reactionCount ?? nextC),
         }));
+        track({ name: "respect_sent", toUserId: post.userId ?? undefined });
         void queryClient.invalidateQueries({ queryKey: ["whoRespected", post.id] });
       } catch (e) {
         captureError(e, "LiveFeedRespect");

@@ -4,7 +4,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
-import { getTodayDateKey } from "./date-utils";
+import { getTodayDateKey, getTomorrowDateKey } from "./date-utils";
 
 export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string; completed_at?: string | null };
 
@@ -39,8 +39,55 @@ export async function joinChallengeDirect(
     throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
   }
 
-  const startAt = new Date();
-  const endAt = new Date();
+  // Fetch tasks to check if all time windows have already passed today
+  const { data: tasksForWindowCheck } = await supabase
+    .from("challenge_tasks")
+    .select("id, time_window_end, hard_mode")
+    .eq("challenge_id", challengeId);
+
+  const taskWindowList = (tasksForWindowCheck ?? []) as {
+    id: string;
+    time_window_end?: string | null;
+    hard_mode?: boolean;
+  }[];
+
+  const now = new Date();
+  const timedTasks = taskWindowList.filter(
+    (t) => t.hard_mode && t.time_window_end
+  );
+  const allWindowsExpired =
+    timedTasks.length > 0 &&
+    timedTasks.every((t) => {
+      // time_window_end is "HH:MM" — compare against current UTC time
+      const [hStr, mStr] = (t.time_window_end ?? "").split(":");
+      const h = parseInt(hStr ?? "0", 10);
+      const m = parseInt(mStr ?? "0", 10);
+      const windowEnd = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          h,
+          m,
+          0
+        )
+      );
+      return now >= windowEnd;
+    });
+
+  const startAt = allWindowsExpired
+    ? new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() + 1,
+          0,
+          0,
+          0
+        )
+      )
+    : now;
+  const endAt = new Date(startAt);
   const durationType = (challenge as { duration_type?: string }).duration_type;
   const durationDays = (challenge as { duration_days?: number }).duration_days ?? 1;
   if (durationType === "24h") {
@@ -81,7 +128,9 @@ export async function joinChallengeDirect(
       .eq("challenge_id", challengeId);
     const taskList = (tasks ?? []) as { id: string }[];
     if (taskList.length > 0) {
-      const dateKey = getTodayDateKey();
+      const dateKey = allWindowsExpired
+        ? getTomorrowDateKey()
+        : getTodayDateKey();
       const checkIns = taskList.map((t) => ({
         user_id: userId,
         active_challenge_id: activeChallenge.id,

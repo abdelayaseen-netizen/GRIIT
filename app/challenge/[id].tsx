@@ -47,7 +47,7 @@ import { useProStatus } from "@/hooks/useProStatus";
 import { canJoinChallenge } from "@/lib/premium";
 import { FLAGS } from "@/lib/feature-flags";
 import { useAuthGate } from "@/contexts/AuthGateContext";
-import { type TeamMemberForList } from "@/components/challenge/TeamMemberList";
+import TeamMemberList, { type TeamMemberForList } from "@/components/challenge/TeamMemberList";
 import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track, trackEvent } from "@/lib/analytics";
 import { useLeaveChallenge } from "@/lib/mutations";
@@ -61,7 +61,7 @@ import type {
   ActiveChallengeFromApi,
   CheckinFromApi,
 } from "@/types";
-import { DS_COLORS, DS_SPACING, DS_SHADOWS, GRIIT_COLORS, getCategoryColors, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_COLORS, DS_SPACING, DS_SHADOWS, DS_RADIUS, GRIIT_COLORS, getCategoryColors, DS_TYPOGRAPHY } from "@/lib/design-system"
 import JoinCelebrationModal from "@/components/challenges/JoinCelebrationModal";
 import { TimeWindowPrompt } from "@/components/TimeWindowPrompt";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -535,6 +535,7 @@ export default function ChallengeDetailScreen() {
   const [promptTasks, setPromptTasks] = useState<Array<{ id: string; name: string }>>([]);
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [commitmentJoining, setCommitmentJoining] = useState<boolean>(false);
+  const [startingTeam, setStartingTeam] = useState(false);
   const [commitmentUnderstood, setCommitmentUnderstood] = useState(false);
   const insets = useSafeAreaInsets();
   const { error, showError, clearError } = useInlineError();
@@ -729,6 +730,24 @@ export default function ChallengeDetailScreen() {
       setCommitmentJoining(false);
     }
   }, [id, commitmentJoining, user?.id, refetchAll, router, queryClient, myActiveListQuery, showError]);
+
+  const handleStartTeamChallenge = useCallback(async () => {
+    if (!id || startingTeam) return;
+    setStartingTeam(true);
+    try {
+      await trpcMutate(TRPC.challenges.startTeamChallenge, { challengeId: id });
+      trackEvent("team_challenge_started", { challenge_id: id });
+      await challengeQuery.refetch();
+      await refetchAll();
+      void queryClient.invalidateQueries({ queryKey: ["home"] });
+    } catch (e: unknown) {
+      captureError(e, "ChallengeDetailStartTeamChallenge");
+      const { title, message } = formatTRPCError(e);
+      showError(typeof message === "string" && message.trim() ? `${title}: ${message}` : title);
+    } finally {
+      setStartingTeam(false);
+    }
+  }, [id, startingTeam, challengeQuery, refetchAll, queryClient, showError]);
 
   const finishJoinAfterTimeWindow = useCallback(() => {
     setShowTimePrompt(false);
@@ -1106,6 +1125,39 @@ export default function ChallengeDetailScreen() {
               <Text style={s.socialProofTitle}>{participantCount} {participantCount === 1 ? "warrior" : "warriors"}</Text>
               <Text style={s.socialProofSub}>{participantCount === 0 ? "Be the first to join" : `${joinedToday} joined today`}</Text>
             </View>
+
+            {(isTeamChallenge || isSharedGoal) && teamMembers.length > 0 && (
+              <TeamMemberList
+                members={teamMembers}
+                currentUserId={currentUserId}
+                runStatus={runStatus ?? "waiting"}
+              />
+            )}
+
+            {(isTeamChallenge || isSharedGoal) && runStatus === "waiting" && teamMembers.some((m) => m.user_id === currentUserId && m.role === "creator") && (
+              <TouchableOpacity
+                style={[s.ctaButton, { opacity: startingTeam ? 0.6 : 1 }]}
+                onPress={handleStartTeamChallenge}
+                disabled={startingTeam}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Start this team challenge now"
+              >
+                {startingTeam ? (
+                  <ActivityIndicator size="small" color={DS_COLORS.white} />
+                ) : (
+                  <Text style={s.ctaText}>Start Challenge</Text>
+                )}
+              </TouchableOpacity>
+            )}
+
+            {(isTeamChallenge || isSharedGoal) && runStatus === "waiting" && !teamMembers.some((m) => m.user_id === currentUserId && m.role === "creator") && (
+              <View style={{ backgroundColor: DS_COLORS.ACCENT_TINT, borderRadius: DS_RADIUS.MD, padding: 16, marginBottom: 16, alignItems: "center" }}>
+                <Text style={{ fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.challengeHeaderDark }}>
+                  Waiting for the creator to start...
+                </Text>
+              </View>
+            )}
 
             {firstIncompleteTask ? (
               <TouchableOpacity

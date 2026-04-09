@@ -26,6 +26,7 @@ import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-sy
 import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { captureError } from "@/lib/sentry";
+import { track } from "@/lib/analytics";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
@@ -165,6 +166,7 @@ export default function PostThreadScreen() {
           reactedByMe: !!result.reacted,
           respectCount: Math.max(0, result.reactionCount ?? nextC),
         }));
+        track({ name: "respect_sent", toUserId: post.userId ?? undefined });
         await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
       } catch (e) {
         captureError(e, "PostThreadRespect");

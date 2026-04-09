@@ -56,7 +56,7 @@ export const challengesJoinProcedures = {
 
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from("challenges")
-        .select("id")
+        .select("id, participation_type, team_size, run_status")
         .eq("id", input.challengeId)
         .single();
 
@@ -64,9 +64,12 @@ export const challengesJoinProcedures = {
         throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
       }
 
-      const participationType = "solo" as "solo" | "team" | "shared_goal";
-      const teamSize = 1;
-      const isTeamWaiting = false;
+      const ch = challenge as { id: string; participation_type?: string; team_size?: number; run_status?: string };
+      const participationType = (ch.participation_type ?? "solo") as "solo" | "duo" | "team" | "shared_goal";
+      const teamSize = ch.team_size ?? 1;
+      const isTeamOrShared =
+        participationType === "team" || participationType === "duo" || participationType === "shared_goal";
+      const isTeamWaiting = isTeamOrShared && ch.run_status === "waiting";
 
       if (isTeamWaiting) {
         const { data: existingMember } = await ctx.supabase
@@ -119,6 +122,29 @@ export const challengesJoinProcedures = {
         }
 
         return { joined: true, runStatus: "waiting" as const };
+      }
+
+      // For team/shared_goal challenges that are already active, insert into challenge_members and joinChallengeDirect
+      if (isTeamOrShared && !isTeamWaiting) {
+        // Already active — add as member if not already
+        const { data: existingMember } = await ctx.supabase
+          .from("challenge_members")
+          .select("id")
+          .eq("challenge_id", input.challengeId)
+          .eq("user_id", ctx.userId)
+          .maybeSingle();
+        if (!existingMember) {
+          const { error: insertErr } = await ctx.supabase.from("challenge_members").insert({
+            challenge_id: input.challengeId,
+            user_id: ctx.userId,
+            role: "member",
+            status: "active",
+          });
+          if (insertErr && (insertErr as { code?: string }).code !== "23505") {
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
+          }
+        }
+        // Fall through to joinChallengeDirect below
       }
 
       logger.debug({ challengeId: input.challengeId }, "[JOIN-BACKEND] Calling joinChallengeDirect");

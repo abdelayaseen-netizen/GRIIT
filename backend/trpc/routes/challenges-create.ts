@@ -319,9 +319,17 @@ export const challengesCreateProcedures = {
         }
       }
 
+      // Auto-start shared_goal challenges immediately (no waiting for team members)
+      if (input.participationType === "shared_goal") {
+        await ctx.supabase
+          .from("challenges")
+          .update({ run_status: "active", started_at: new Date().toISOString() })
+          .eq("id", challenge.id);
+      }
+
       if (input.tasks.length === 0) {
         const activeChallengeNoTasks =
-          challengeStatus === "published"
+          challengeStatus === "published" && !isTeamOrShared
             ? await autoJoinCreatorAfterCreate(
                 ctx.supabase,
                 ctx.userId,
@@ -393,7 +401,7 @@ export const challengesCreateProcedures = {
       }
 
       let activeChallenge: Awaited<ReturnType<typeof joinChallengeDirect>> | null = null;
-      if (challengeStatus === "published") {
+      if (challengeStatus === "published" && !isTeamOrShared) {
         activeChallenge = await autoJoinCreatorAfterCreate(
           ctx.supabase,
           ctx.userId,

@@ -6,13 +6,10 @@ import {
   Pressable,
   Animated,
   TextInput,
-  Modal,
-  TouchableOpacity,
-  Dimensions,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Camera, CircleCheck, Heart, X } from "lucide-react-native";
+import { Camera, CircleCheck, Heart } from "lucide-react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
@@ -20,8 +17,7 @@ import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
 import { Avatar } from "@/components/Avatar";
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
+import { ImageViewerModal } from "../shared/ImageViewerModal";
 
 function placeholderBg(challengeName: string): string {
   const s = challengeName.toLowerCase();
@@ -261,39 +257,11 @@ function FeedPostCardInner({
 
       <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
 
-      {proofUri ? (
-        <Modal
-          visible={lightboxVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setLightboxVisible(false)}
-          statusBarTranslucent
-        >
-          <View style={styles.lightboxOverlay}>
-            <Pressable
-              style={StyleSheet.absoluteFillObject}
-              onPress={() => setLightboxVisible(false)}
-              accessibilityRole="button"
-              accessibilityLabel="Close full image"
-            />
-            <Image
-              source={{ uri: proofUri }}
-              style={styles.lightboxImage}
-              contentFit="contain"
-              accessibilityLabel="Full size proof photo"
-            />
-            <TouchableOpacity
-              style={styles.lightboxClose}
-              onPress={() => setLightboxVisible(false)}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-            >
-              <X size={24} color={DS_COLORS.WHITE} />
-            </TouchableOpacity>
-          </View>
-        </Modal>
-      ) : null}
+      <ImageViewerModal
+        visible={lightboxVisible}
+        imageUri={proofUri ?? ""}
+        onClose={() => setLightboxVisible(false)}
+      />
     </View>
   );
 }
@@ -447,27 +415,5 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 11,
     color: DS_COLORS.FEED_META_MUTED,
-  },
-  lightboxOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.95)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  lightboxClose: {
-    position: "absolute",
-    top: 60,
-    right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: DS_COLORS.OVERLAY_WHITE_15,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
-  },
-  lightboxImage: {
-    width: SCREEN_W,
-    height: SCREEN_H * 0.8,
   },
 });

@@ -6,6 +6,12 @@ export function getTodayDateKey(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+export function getTomorrowDateKey(): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 /**
  * First calendar day (UTC) of the rolling 7-day window including today.
  * Matches secure_day RPC: date_key from (today UTC - 6 days) through today UTC.

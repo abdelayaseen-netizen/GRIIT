@@ -16,7 +16,7 @@ import { Camera } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS, GRIIT_COLORS } from "@/lib/design-system"
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
-import type { JournalCategory, ScheduleType } from "@/types";
+import type { JournalCategory } from "@/types";
 
 type WizardTaskType =
   | "journal"
@@ -454,9 +454,6 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const [journalPromptText, setJournalPromptText] = useState("");
   const [captureMoodJournal, setCaptureMoodJournal] = useState(false);
   const [locationStampPhoto, setLocationStampPhoto] = useState(false);
-  const [timeEnforcementEnabled, setTimeEnforcementEnabled] = useState(false);
-  const [anchorTime, setAnchorTime] = useState("06:00");
-  const [windowMinutes, setWindowMinutes] = useState("60");
   const [hardMode, setHardMode] = useState(false);
   const [scheduleStart, setScheduleStart] = useState("7:00 AM");
   const [scheduleEnd, setScheduleEnd] = useState("8:00 AM");
@@ -499,9 +496,6 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       setJournalPromptText("");
       setCaptureMoodJournal(false);
       setLocationStampPhoto(false);
-      setTimeEnforcementEnabled(false);
-      setAnchorTime("06:00");
-      setWindowMinutes("60");
       setHardMode(false);
       setScheduleStart("7:00 AM");
       setScheduleEnd("8:00 AM");
@@ -659,19 +653,11 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     const opts = buildOpts();
     const task = buildTask(name, kind, !!hardModeGlobal, opts);
     if (!task) return;
-    const teEnabled = kind !== "simple" && timeEnforcementEnabled;
-    const windowEnd = teEnabled ? parseInt(windowMinutes, 10) || 60 : null;
-    const anchor = anchorTime.trim() || "06:00";
     const hm = hardMode;
     const scheduleTz = hm ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined;
     onAdd({
       ...task,
       wizardType: kind,
-      timeEnforcementEnabled: teEnabled,
-      scheduleType: (teEnabled ? "DAILY" : "NONE") as ScheduleType,
-      anchorTimeLocal: teEnabled ? anchor : null,
-      windowStartOffsetMin: teEnabled ? 0 : null,
-      windowEndOffsetMin: teEnabled ? windowEnd : null,
       config: {
         hard_mode: hm,
         schedule_window_start: hm && scheduleStart.trim() ? parseTimeToHHMM(scheduleStart) : undefined,
@@ -694,9 +680,6 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     buildOpts,
     onAdd,
     onClose,
-    timeEnforcementEnabled,
-    anchorTime,
-    windowMinutes,
     hardMode,
     scheduleStart,
     scheduleEnd,
@@ -1310,52 +1293,6 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               </>
             )}
           </View>
-          {kind !== "simple" && (
-            <View style={s.timeSection}>
-              <View style={[s.toggleRow, s.timeToggleRow]}>
-                <Text style={s.toggleLabel}>Set a time window</Text>
-                <Switch
-                  value={timeEnforcementEnabled}
-                  onValueChange={setTimeEnforcementEnabled}
-                  accessibilityRole="switch"
-                  accessibilityLabel="Toggle daily time window for this task"
-                  trackColor={{ false: DS_COLORS.BORDER, true: GRIIT_COLORS.primary }}
-                />
-              </View>
-              {timeEnforcementEnabled && (
-                <View style={s.timeFields}>
-                  <Text style={s.hint}>Task must be started within this window</Text>
-                  <View style={s.timeRow}>
-                    <View style={s.timeField}>
-                      <Text style={s.sublabel}>Start time</Text>
-                      <TextInput
-                        style={s.input}
-                        value={anchorTime}
-                        onChangeText={setAnchorTime}
-                        placeholder="06:00"
-                        placeholderTextColor={DS_COLORS.TEXT_MUTED}
-                        keyboardType="numbers-and-punctuation"
-                      />
-                    </View>
-                    <View style={s.timeField}>
-                      <Text style={s.sublabel}>Window (minutes)</Text>
-                      <TextInput
-                        style={s.input}
-                        value={windowMinutes}
-                        onChangeText={setWindowMinutes}
-                        placeholder="60"
-                        placeholderTextColor={DS_COLORS.TEXT_MUTED}
-                        keyboardType="number-pad"
-                      />
-                    </View>
-                  </View>
-                  <Text style={s.hint}>
-                    e.g. 6:00 AM with 60 min window means task must start between 6:00–7:00 AM
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
         </ScrollView>
         <View style={[s.footer, { paddingBottom: insets.bottom + 12 }]}>
           <TouchableOpacity
@@ -1459,12 +1396,6 @@ const s = StyleSheet.create({
     backgroundColor: DS_COLORS.buttonDisabledBg,
   },
   ctaText: { fontSize: DS_TYPOGRAPHY.SIZE_BASE, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_ON_DARK },
-  timeSection: { marginTop: DS_SPACING.lg },
-  timeToggleRow: { marginBottom: 8 },
-  timeFields: { marginTop: 8 },
-  timeRow: { flexDirection: "row", gap: 12 },
-  timeField: { flex: 1 },
-  sublabel: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 4 },
   hint: { fontSize: 11, color: DS_COLORS.TEXT_MUTED, marginTop: 4, marginBottom: 8 },
   flex1: { flex: 1 },
   rowGap8: { flexDirection: "row", gap: 8 },
