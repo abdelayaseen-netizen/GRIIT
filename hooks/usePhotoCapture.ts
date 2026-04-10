@@ -36,7 +36,8 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
       }
     } catch (err) {
       captureError(err, "PhotoCaptureUpload");
-      onError("Upload failed. Please try again.");
+      const detail = err instanceof Error ? err.message : String(err);
+      onError(`Upload failed: ${detail.slice(0, 140)}`);
       setPhotoUri(null);
     } finally {
       setPhotoUploading(false);
@@ -44,14 +45,24 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
   }, [onError]);
 
   const handleTakePhoto = useCallback(async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      onError("Allow camera access to submit photo proof.");
-      return;
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        onError("Allow camera access to submit photo proof.");
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, base64: true });
+      if (result.canceled || !result.assets[0]) return;
+      if (!result.assets[0].base64 || result.assets[0].base64.length === 0) {
+        onError("Camera returned no image data. Try again.");
+        return;
+      }
+      await upload(result.assets[0]);
+    } catch (err) {
+      captureError(err, "PhotoCaptureTakePhoto");
+      const detail = err instanceof Error ? err.message : String(err);
+      onError(`Camera failed: ${detail.slice(0, 140)}`);
     }
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, base64: true });
-    if (result.canceled || !result.assets[0]) return;
-    await upload(result.assets[0]);
   }, [onError, upload]);
 
   const handlePickImage = useCallback(async () => {

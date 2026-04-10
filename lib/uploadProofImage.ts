@@ -13,11 +13,27 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const UPLOAD_TIMEOUT_MS = 20000;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+const B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes.buffer;
+  let clean = base64.replace(/^data:[^;]+;base64,/, "").replace(/[^A-Za-z0-9+/=]/g, "");
+  const lookup = new Uint8Array(256);
+  for (let i = 0; i < B64_CHARS.length; i++) lookup[B64_CHARS.charCodeAt(i)] = i;
+  lookup["=".charCodeAt(0)] = 64;
+  while (clean.length % 4 !== 0) clean += "=";
+  const outLen = (clean.length * 3) >> 2;
+  const bytes = new Uint8Array(outLen);
+  let p = 0;
+  for (let i = 0; i < clean.length; i += 4) {
+    const c0 = lookup[clean.charCodeAt(i)]!;
+    const c1 = lookup[clean.charCodeAt(i + 1)]!;
+    const c2 = lookup[clean.charCodeAt(i + 2)]!;
+    const c3 = lookup[clean.charCodeAt(i + 3)]!;
+    bytes[p++] = (c0 << 2) | (c1 >> 4);
+    if (c2 !== 64) bytes[p++] = ((c1 & 15) << 4) | (c2 >> 2);
+    if (c3 !== 64) bytes[p++] = ((c2 & 3) << 6) | c3;
+  }
+  return bytes.buffer.slice(0, p);
 }
 
 export type UploadProofResult = { url: string } | { error: string };
@@ -69,13 +85,15 @@ export async function uploadProofImageFromBase64(
 
     clearTimeout(timeout);
     if (error) {
-      if (error.message?.includes("timeout") || error.message?.includes("abort")) {
+      const msg = error.message ?? "";
+      if (msg.includes("timeout") || msg.includes("abort")) {
         return { error: "Upload timed out. Please try again." };
       }
-      if (error.message?.toLowerCase().includes("network")) {
+      if (msg.toLowerCase().includes("network")) {
         return { error: "Network error. Check your connection and try again." };
       }
-      return { error: error.message || "Upload failed" };
+      const statusCode = (error as { statusCode?: string | number }).statusCode;
+      return { error: statusCode ? `Storage ${statusCode}: ${msg}` : msg || "Upload failed" };
     }
 
     const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path);

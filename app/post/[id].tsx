@@ -32,6 +32,7 @@ import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { InlineError } from "@/components/InlineError";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -56,6 +57,7 @@ function PostThreadScreenInner() {
   const [draft, setDraft] = useState("");
   const [androidMenuOpen, setAndroidMenuOpen] = useState(false);
   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
+  const [deleteErr, setDeleteErr] = useState("");
   const respectLastAt = useRef<Map<string, number>>(new Map());
 
   const cachedPost = useMemo(() => {
@@ -215,6 +217,8 @@ function PostThreadScreenInner() {
         router.back();
       } catch (e) {
         captureError(e, "PostThreadDeletePost");
+        const msg = e instanceof Error ? e.message : "Couldn't delete post. Try again.";
+        setDeleteErr(msg);
       }
     },
     [queryClient, id, router]
@@ -355,6 +359,7 @@ function PostThreadScreenInner() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
+      {deleteErr ? <InlineError message={deleteErr} onDismiss={() => setDeleteErr("")} /> : null}
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}

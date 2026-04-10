@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { reportClientError } from "@/lib/client-error-reporting";
 import { logger } from "@/lib/logger";
@@ -29,13 +29,28 @@ export class ErrorBoundary extends Component<Props, State> {
 
   retry = () => this.setState({ hasError: false, error: null });
 
+  // TEMPORARY: show error details in production until Sentry is wired — revert after diagnosis
   render() {
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) return this.props.fallback;
       return (
         <View style={styles.container}>
           <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.message}>{"We've"} been notified. Try again or restart the app.</Text>
+          <Text style={styles.message}>
+            {this.state.error.message?.slice(0, 200) || "Unknown error"}
+          </Text>
+          <Text
+            style={[
+              styles.message,
+              styles.stackTrace,
+              { color: "#aaaaaa" },
+            ]}
+          >
+            {(this.state.error.stack ?? "")
+              .split("\n")
+              .slice(0, 6)
+              .join("\n")}
+          </Text>
           <TouchableOpacity style={styles.button} onPress={this.retry} activeOpacity={0.8} accessibilityLabel="Try again" accessibilityRole="button">
             <Text style={styles.buttonText}>Try again</Text>
           </TouchableOpacity>
@@ -65,6 +80,14 @@ const styles = StyleSheet.create({
     color: DS_COLORS.grayMuted,
     textAlign: "center",
     marginBottom: 24,
+  },
+  stackTrace: {
+    fontSize: 11,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    marginTop: 8,
+    marginBottom: 24,
+    textAlign: "left",
+    alignSelf: "stretch",
   },
   button: {
     backgroundColor: DS_COLORS.taskIndigo,
