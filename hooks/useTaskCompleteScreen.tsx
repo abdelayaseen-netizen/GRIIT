@@ -22,6 +22,13 @@ import ViewShot from "react-native-view-shot";
 import { styles } from "@/components/task/task-complete-styles";
 import { usePhotoCapture } from "@/hooks/usePhotoCapture";
 import { useTaskTimer } from "@/hooks/useTaskTimer";
+import {
+  startActiveTaskNotification,
+  updateActiveTaskNotification,
+  clearActiveTaskNotification,
+  type ActiveTaskTimerPayload,
+} from "@/lib/active-task-timer";
+import { ROUTES } from "@/lib/routes";
 import { useJournalInput } from "@/hooks/useJournalInput";
 import { useTaskCompleteShareCardProps } from "@/hooks/useTaskCompleteShareCardProps";
 import { TaskCompleteCelebration } from "@/components/task/TaskCompleteCelebration";
@@ -179,6 +186,47 @@ export function TaskCompleteScreenInner() {
       autoStart: showWorkoutTimer,
     });
 
+  // Lock-screen timer notification — starts when a timer task begins,
+  // updates every 30s, and clears on unmount / pause / submit.
+  // Mirrors the pattern in app/task/checkin.tsx (startSession) so timer
+  // tasks going through the unified screen get the same lock-screen widget.
+  useEffect(() => {
+    // Only timer-based tasks get the lock screen widget.
+    if (!showWorkoutTimer || requiredSeconds <= 0) {
+      return;
+    }
+    // Only run while the timer is actually running.
+    if (!isTimerRunning) {
+      return;
+    }
+    // Build payload — route deep-links back to this task via the active-challenge screen,
+    // since nothing pushes to TASK_CHECKIN/TASK_RUN anymore.
+    const notifPayload: ActiveTaskTimerPayload = {
+      taskId,
+      taskTitle: taskName,
+      timerType: "checkin",
+      startedAtMs: Date.now() - timerSeconds * 1000,
+      targetSeconds: isCountdown && requiredSeconds > 0 ? requiredSeconds : undefined,
+      route: activeChallengeId ? ROUTES.CHALLENGE_ACTIVE(activeChallengeId) : ROUTES.TABS_HOME,
+    };
+    // Kick off the initial notification immediately.
+    void startActiveTaskNotification(notifPayload);
+    // Update every 30 seconds while running. Using a local counter ref to avoid
+    // depending on timerSeconds in the effect deps (which would churn every second).
+    const intervalId = setInterval(() => {
+      const elapsed = Math.max(
+        0,
+        Math.floor((Date.now() - notifPayload.startedAtMs) / 1000)
+      );
+      void updateActiveTaskNotification(notifPayload, elapsed);
+    }, 30000);
+    return () => {
+      clearInterval(intervalId);
+      void clearActiveTaskNotification();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- timerSeconds intentionally excluded; we derive elapsed from startedAtMs instead to avoid re-subscribing every second
+  }, [showWorkoutTimer, requiredSeconds, isTimerRunning, taskId, taskName, isCountdown, activeChallengeId]);
+
   const { journalText, handleJournalChange, wordCount, journalOk } = useJournalInput({
     minWords: config.min_words ?? 0,
     onError: showError,
@@ -326,6 +374,7 @@ export function TaskCompleteScreenInner() {
       );
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void clearActiveTaskNotification();
 
       const celebTitle = isHardMode ? "Hard mode earned." : "Secured.";
       const celebPoints = isHardMode ? 8 : 5;
