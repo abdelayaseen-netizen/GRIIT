@@ -392,8 +392,22 @@ export const checkinsRouter = createTRPCRouter({
           event_type: "unlocked_achievement" as const,
           metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
         }));
-        const { error: achErr } = await ctx.supabase.from("activity_events").insert(achievementRows);
-        if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
+        const { data: existingEvents } = await ctx.supabase
+          .from("activity_events")
+          .select("metadata")
+          .eq("user_id", ctx.userId)
+          .eq("event_type", "unlocked_achievement")
+          .in("metadata->>achievement_key", newUnlockKeys);
+        const alreadyEmitted = new Set(
+          (existingEvents ?? [])
+            .map((r: { metadata: { achievement_key?: string } }) => r.metadata?.achievement_key)
+            .filter(Boolean)
+        );
+        const filteredRows = achievementRows.filter((r) => !alreadyEmitted.has(r.metadata.achievement_key));
+        if (filteredRows.length > 0) {
+          const { error: achErr } = await ctx.supabase.from("activity_events").insert(filteredRows);
+          if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
+        }
       }
       return {
         success: true,
@@ -503,8 +517,22 @@ export const checkinsRouter = createTRPCRouter({
         event_type: "unlocked_achievement" as const,
         metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
       }));
-      const { error: achErr } = await ctx.supabase.from("activity_events").insert(achievementRows);
-      if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
+      const { data: existingEvents } = await ctx.supabase
+        .from("activity_events")
+        .select("metadata")
+        .eq("user_id", ctx.userId)
+        .eq("event_type", "unlocked_achievement")
+        .in("metadata->>achievement_key", newUnlockKeys);
+      const alreadyEmitted = new Set(
+        (existingEvents ?? [])
+          .map((r: { metadata: { achievement_key?: string } }) => r.metadata?.achievement_key)
+          .filter(Boolean)
+      );
+      const filteredRows = achievementRows.filter((r) => !alreadyEmitted.has(r.metadata.achievement_key));
+      if (filteredRows.length > 0) {
+        const { error: achErr } = await ctx.supabase.from("activity_events").insert(filteredRows);
+        if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
+      }
     }
     return { success: true, newStreakCount, lastStandEarned, challengeDay: newCurrentDay };
   }),

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getYesterdayDateKey } from "./date-utils";
+
 /**
  * Daily batch job: detect users who missed yesterday, auto-use Last Stands where available,
  * and reset streaks for users with no protection.
@@ -24,10 +26,9 @@ export async function runDailyReset(supabase: SupabaseClient): Promise<{
   let streaksReset = 0;
   let lastStandsUsed = 0;
 
-  try {
-    const yesterday = new Date(Date.now() - 86400000);
-    const yesterdayKey = yesterday.toISOString().slice(0, 10);
+  const BATCH_SIZE = 100;
 
+  try {
     const { data: activeUsers, error: acErr } = await supabase
       .from("active_challenges")
       .select("user_id")
@@ -41,25 +42,58 @@ export async function runDailyReset(supabase: SupabaseClient): Promise<{
     const uniqueUserIds = [...new Set((activeUsers ?? []).map((r: { user_id: string }) => r.user_id))];
     if (uniqueUserIds.length === 0) return { processed, streaksReset, lastStandsUsed, errors };
 
-    const { data: securedRows, error: secErr } = await supabase
-      .from("day_secures")
-      .select("user_id")
-      .eq("date_key", yesterdayKey)
-      .in("user_id", uniqueUserIds);
+    const profileTimezoneMap = new Map<string, string | null>();
+    for (let i = 0; i < uniqueUserIds.length; i += BATCH_SIZE) {
+      const chunk = uniqueUserIds.slice(i, i + BATCH_SIZE);
+      const { data: profileTzRows, error: tzErr } = await supabase.from("profiles").select("user_id, timezone").in("user_id", chunk);
 
-    if (secErr) {
-      errors.push(`day_secures query: ${secErr.message}`);
-      return { processed, streaksReset, lastStandsUsed, errors };
+      if (tzErr) {
+        errors.push(`profiles timezone query: ${tzErr.message}`);
+        return { processed, streaksReset, lastStandsUsed, errors };
+      }
+      for (const r of profileTzRows ?? []) {
+        const row = r as { user_id: string; timezone: string | null };
+        profileTimezoneMap.set(row.user_id, row.timezone);
+      }
     }
 
-    const securedUserIds = new Set((securedRows ?? []).map((r: { user_id: string }) => r.user_id));
+    const userYesterdayKey = new Map<string, string>();
+    for (const uid of uniqueUserIds) {
+      const tz = profileTimezoneMap.get(uid);
+      const y = getYesterdayDateKey(tz?.trim() ? tz : null);
+      userYesterdayKey.set(uid, y);
+    }
+
+    const bucketToUserIds = new Map<string, string[]>();
+    for (const uid of uniqueUserIds) {
+      const yk = userYesterdayKey.get(uid)!;
+      const bucket = bucketToUserIds.get(yk);
+      if (bucket) bucket.push(uid);
+      else bucketToUserIds.set(yk, [uid]);
+    }
+
+    const securedUserIds = new Set<string>();
+    for (const [yesterdayKey, userIdsInBucket] of bucketToUserIds) {
+      const { data: securedRows, error: secErr } = await supabase
+        .from("day_secures")
+        .select("user_id")
+        .eq("date_key", yesterdayKey)
+        .in("user_id", userIdsInBucket);
+
+      if (secErr) {
+        errors.push(`day_secures query: ${secErr.message}`);
+        return { processed, streaksReset, lastStandsUsed, errors };
+      }
+      for (const r of securedRows ?? []) {
+        securedUserIds.add((r as { user_id: string }).user_id);
+      }
+    }
 
     const missedUserIds = uniqueUserIds.filter((uid) => !securedUserIds.has(uid));
     processed = uniqueUserIds.length;
 
     if (missedUserIds.length === 0) return { processed, streaksReset, lastStandsUsed, errors };
 
-    const BATCH_SIZE = 100;
     for (let i = 0; i < missedUserIds.length; i += BATCH_SIZE) {
       const batch = missedUserIds.slice(i, i + BATCH_SIZE);
 
@@ -132,7 +166,9 @@ export async function runDailyReset(supabase: SupabaseClient): Promise<{
         if (!streakInfo) continue;
 
         try {
-          const { error: insertErr } = await supabase.from("last_stand_uses").insert({ user_id: uid, date_key: yesterdayKey });
+          const { error: insertErr } = await supabase
+            .from("last_stand_uses")
+            .insert({ user_id: uid, date_key: userYesterdayKey.get(uid)! });
 
           if (insertErr) {
             errors.push(`last_stand insert ${uid}: ${insertErr.message}`);
