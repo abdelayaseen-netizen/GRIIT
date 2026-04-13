@@ -35,6 +35,7 @@ import {
 } from "lucide-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import { parseTimeString, scheduleTaskReminder } from "@/lib/notifications";
 import { formatTimeHHMM, getTimeWindowState } from "@/lib/time-enforcement";
 import { formatTimeRemainingHMS, isChallengeExpired } from "@/lib/challenge-timer";
@@ -704,6 +705,9 @@ export default function ChallengeDetailScreen() {
       setShowCommitmentModal(false);
       setShowJoinCelebration(true);
       await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
+      void registerPushTokenWithBackend().catch(() => {
+        /* non-fatal */
+      });
       trackEvent("challenge_joined", { challenge_id: id });
       try {
         track({ name: "challenge_joined", challenge_id: id });

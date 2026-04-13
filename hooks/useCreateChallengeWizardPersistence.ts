@@ -10,6 +10,7 @@ import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
 import { sharePlainMessage } from "@/lib/share";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { registerPushTokenWithBackend } from "@/lib/register-push-token";
 import {
   buildCreatePayload,
   validateDraftTasks,
@@ -291,6 +292,9 @@ export function useCreateChallengeWizardPersistence(a: WizardPersistenceArgs) {
         if (newId) {
           pendingNavId.current = newId;
           await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
+          void registerPushTokenWithBackend().catch(() => {
+            /* non-fatal */
+          });
           useCelebrationStore.getState().show({
             title: "Challenge created!",
             subtitle: `${title.trim()} is live.`,
