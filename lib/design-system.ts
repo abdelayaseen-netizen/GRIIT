@@ -827,6 +827,14 @@ export const DS_SHADOWS = {
     shadowRadius: 4,
     elevation: 1,
   },
+  /** Alias — small elevation (matches SUBTLE). */
+  sm: {
+    shadowColor: 'rgba(0,0,0,0.04)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
+  },
   BUTTON: {
     shadowColor: 'rgba(0,0,0,0.08)',
     shadowOffset: { width: 0, height: 2 },

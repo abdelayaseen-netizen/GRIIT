@@ -186,7 +186,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [user, fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
 
-  useNotificationScheduler({ user, stats, activeChallenge });
+  const resolvedProfile = profile || fallbackProfile;
+  const profileTimezone = (resolvedProfile as { timezone?: string | null } | null)?.timezone;
+  useNotificationScheduler({ user, stats, activeChallenge, timezone: profileTimezone });
 
   useEffect(() => {
     if (activeChallenge?.id) {
@@ -327,7 +329,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
 
-  const todayDateLocal = useMemo(() => getTodayDateKey(), []);
+  const todayDateLocal = useMemo(() => getTodayDateKey(profileTimezone), [profileTimezone]);
 
   const computeProgress = useMemo(() => {
     if (!challenge || !todayCheckins.length) {
@@ -368,7 +370,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     canSecureDay,
   });
 
-  const resolvedProfile = profile || fallbackProfile;
   const profileHasLoaded = (profileFetched && profile !== null) || profileError || !!fallbackProfile;
   const initialFetchDone = hardTimeout || ((profileHasLoaded || (profileFetched && autoCreateAttempted && !profileAutoCreating) || !!fallbackProfile) && activeChallengeLoaded);
 

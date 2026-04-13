@@ -38,6 +38,7 @@ import {
   clearActiveTaskNotification,
 } from "@/lib/active-task-timer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useActiveSessionStore } from "@/store/activeSessionStore";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
 type TimeStatus = "too_early" | "window_open" | "too_late";
@@ -52,8 +53,15 @@ interface CurrentLocation {
 export default function CheckinTaskScreen() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
-  const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();
+  const { currentChallenge, verifyTask, getTaskStateForTemplate, profile, activeChallenge } = useApp();
+  const setActiveSession = useActiveSessionStore((s) => s.setActiveSession);
+  const clearActiveSession = useActiveSessionStore((s) => s.clearActiveSession);
+  const updateTimerRunning = useActiveSessionStore((s) => s.updateTimerRunning);
+  const activeChallengeId = activeChallenge?.id ?? "";
+  const challengeName =
+    (activeChallenge?.challenges as { title?: string } | undefined)?.title ?? "Challenge";
+  const profileTz = (profile as { timezone?: string | null })?.timezone;
+  const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration(profileTz);
   const { error, showError, clearError } = useInlineError();
 
   const task = currentChallenge?.tasks.find((t: { id: string }) => t.id === taskId);
@@ -133,11 +141,16 @@ export default function CheckinTaskScreen() {
       if (locationSubscription.current) locationSubscription.current.remove();
       if (notifUpdateRef.current) clearInterval(notifUpdateRef.current);
       clearActiveTaskNotification();
+      clearActiveSession();
       clearInterval(interval);
       subscription.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- checkPermissions/updateTimeStatus would cause unnecessary re-runs if in deps
-  }, [sessionActive, showError]);
+  }, [sessionActive, showError, clearActiveSession]);
+
+  useEffect(() => {
+    updateTimerRunning(sessionActive);
+  }, [sessionActive, updateTimerRunning]);
 
   useEffect(() => {
     if (hasPermission && !sessionActive) {
@@ -303,6 +316,16 @@ export default function CheckinTaskScreen() {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
 
+    setActiveSession({
+      taskId: task?.id ?? taskId ?? "",
+      taskName: task?.title ?? "Check-in",
+      taskType: "checkin",
+      activeChallengeId,
+      challengeName,
+      startedAtMs: Date.now(),
+      targetSeconds: minSessionSeconds,
+      isTimerRunning: true,
+    });
     // Start lock screen timer notification
     const notifPayload = {
       taskId: task?.id ?? taskId ?? "",
@@ -332,6 +355,7 @@ export default function CheckinTaskScreen() {
       notifUpdateRef.current = null;
     }
     clearActiveTaskNotification();
+    clearActiveSession();
   };
 
   const handleFinish = async () => {

@@ -14,6 +14,7 @@ import {
 import { countSecuredLast7Days } from "@/lib/date-utils";
 import { deriveUserRank } from "@/lib/derive-user-rank";
 import type { StatsFromApi } from "@/types";
+import { useNotificationPrefsStore } from "@/store/notificationPrefsStore";
 
 import { styles } from "@/components/settings/settings-styles";
 
@@ -64,6 +65,11 @@ export function ReminderSection({
   handleReminderToggle,
   handleReminderTime,
 }: ReminderSectionProps) {
+  const lockScreenTimer = useNotificationPrefsStore((s) => s.lockScreenTimer);
+  const setLockScreenTimer = useNotificationPrefsStore((s) => s.setLockScreenTimer);
+  const showActiveTaskCard = useNotificationPrefsStore((s) => s.showActiveTaskCard);
+  const setShowActiveTaskCard = useNotificationPrefsStore((s) => s.setShowActiveTaskCard);
+
   return (
     <View style={styles.section}>
       <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>🔔 Notifications</Text>
@@ -120,6 +126,46 @@ export function ReminderSection({
             </View>
           </>
         )}
+        <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleTextWrap}>
+            <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Lock screen timer</Text>
+            <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>
+              Show task timer on lock screen while a task is in progress.
+            </Text>
+          </View>
+          <Switch
+            value={lockScreenTimer}
+            onValueChange={(v) => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setLockScreenTimer(v);
+            }}
+            trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+            thumbColor={lockScreenTimer ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
+            accessibilityLabel="Toggle lock screen task timer"
+            accessibilityRole="switch"
+          />
+        </View>
+        <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleTextWrap}>
+            <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Home screen card</Text>
+            <Text style={[styles.toggleSub, { color: DS_COLORS.textMuted }]}>
+              Show the in-progress task card on the Home tab.
+            </Text>
+          </View>
+          <Switch
+            value={showActiveTaskCard}
+            onValueChange={(v) => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setShowActiveTaskCard(v);
+            }}
+            trackColor={{ false: DS_COLORS.border, true: DS_COLORS.accent }}
+            thumbColor={showActiveTaskCard ? DS_COLORS.white : DS_COLORS.switchThumbInactive}
+            accessibilityLabel="Toggle in-progress task card on Home"
+            accessibilityRole="switch"
+          />
+        </View>
         <View style={[styles.cardDivider, { backgroundColor: DS_COLORS.border }]} />
         <View style={styles.toggleRow}>
           <View style={styles.toggleTextWrap}>

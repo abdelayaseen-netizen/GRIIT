@@ -29,6 +29,7 @@ import {
   type ActiveTaskTimerPayload,
 } from "@/lib/active-task-timer";
 import { ROUTES } from "@/lib/routes";
+import { useActiveSessionStore } from "@/store/activeSessionStore";
 import { useJournalInput } from "@/hooks/useJournalInput";
 import { useTaskCompleteShareCardProps } from "@/hooks/useTaskCompleteShareCardProps";
 import { TaskCompleteCelebration } from "@/components/task/TaskCompleteCelebration";
@@ -59,6 +60,9 @@ export function TaskCompleteScreenInner() {
   const queryClient = useQueryClient();
   const { activeChallenge, completeTask, challenge, stats, computeProgress, todayCheckins } = useApp();
   const showCelebration = useCelebrationStore((s) => s.show);
+  const setActiveSession = useActiveSessionStore((s) => s.setActiveSession);
+  const clearActiveSession = useActiveSessionStore((s) => s.clearActiveSession);
+  const updateTimerRunning = useActiveSessionStore((s) => s.updateTimerRunning);
   const [submitted, setSubmitted] = useState(false);
   const [shareFeedErr, setShareFeedErr] = useState("");
   const [variableReward, setVariableReward] = useState<{ label: string; color: string; bg: string } | null>(null);
@@ -186,12 +190,76 @@ export function TaskCompleteScreenInner() {
       autoStart: showWorkoutTimer,
     });
 
+  const wasTimerRunningRef = useRef(false);
+  useEffect(() => {
+    if (!taskId.trim() || !activeChallengeId.trim()) return;
+    setActiveSession({
+      taskId,
+      taskName,
+      taskType: taskTypeRaw,
+      activeChallengeId,
+      challengeName: headerChallengeName,
+      startedAtMs: Date.now(),
+      targetSeconds: requiredSeconds > 0 ? requiredSeconds : undefined,
+      isTimerRunning: false,
+    });
+    return () => {
+      clearActiveSession();
+    };
+  }, [
+    taskId,
+    activeChallengeId,
+    taskName,
+    taskTypeRaw,
+    headerChallengeName,
+    requiredSeconds,
+    setActiveSession,
+    clearActiveSession,
+  ]);
+
+  useEffect(() => {
+    if (!showWorkoutTimer || requiredSeconds <= 0) {
+      wasTimerRunningRef.current = false;
+      return;
+    }
+    if (isTimerRunning && !wasTimerRunningRef.current) {
+      wasTimerRunningRef.current = true;
+      setActiveSession({
+        taskId,
+        taskName,
+        taskType: taskTypeRaw,
+        activeChallengeId,
+        challengeName: headerChallengeName,
+        startedAtMs: Date.now() - timerSeconds * 1000,
+        targetSeconds: requiredSeconds,
+        isTimerRunning: true,
+      });
+    }
+    if (!isTimerRunning) {
+      wasTimerRunningRef.current = false;
+    }
+  }, [
+    showWorkoutTimer,
+    requiredSeconds,
+    isTimerRunning,
+    timerSeconds,
+    taskId,
+    taskName,
+    taskTypeRaw,
+    activeChallengeId,
+    headerChallengeName,
+    setActiveSession,
+  ]);
+
   // Lock-screen timer notification — starts when a timer task begins,
   // updates every 30s, and clears on unmount / pause / submit.
   // Mirrors the pattern in app/task/checkin.tsx (startSession) so timer
   // tasks going through the unified screen get the same lock-screen widget.
   useEffect(() => {
     // Only timer-based tasks get the lock screen widget.
+    if (showWorkoutTimer && requiredSeconds > 0) {
+      updateTimerRunning(isTimerRunning);
+    }
     if (!showWorkoutTimer || requiredSeconds <= 0) {
       return;
     }
@@ -225,7 +293,7 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- timerSeconds intentionally excluded; we derive elapsed from startedAtMs instead to avoid re-subscribing every second
-  }, [showWorkoutTimer, requiredSeconds, isTimerRunning, taskId, taskName, isCountdown, activeChallengeId]);
+  }, [showWorkoutTimer, requiredSeconds, isTimerRunning, taskId, taskName, isCountdown, activeChallengeId, updateTimerRunning]);
 
   const { journalText, handleJournalChange, wordCount, journalOk } = useJournalInput({
     minWords: config.min_words ?? 0,
@@ -375,6 +443,7 @@ export function TaskCompleteScreenInner() {
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void clearActiveTaskNotification();
+      clearActiveSession();
 
       const celebTitle = isHardMode ? "Hard mode earned." : "Secured.";
       const celebPoints = isHardMode ? 8 : 5;
@@ -429,6 +498,7 @@ export function TaskCompleteScreenInner() {
     workoutNotes,
     photoCaption,
     onScreenSecondsRef,
+    clearActiveSession,
   ]);
 
   const runManualComplete = useCallback(() => {

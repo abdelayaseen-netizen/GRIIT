@@ -2,7 +2,15 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/progression";
-import { getTodayDateKey, daysBetweenKeys, getWeekStartDateKey, getWeekEndDateKey } from "../../lib/date-utils";
+import {
+  getTodayDateKey,
+  getYesterdayDateKey,
+  daysBetweenKeys,
+  getWeekStartDateKey,
+  getWeekEndDateKey,
+  addCalendarDaysToDateKey,
+  getProfileTimeZoneForUser,
+} from "../../lib/date-utils";
 import type { ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { logger } from "../../lib/logger";
@@ -30,7 +38,7 @@ export const profilesStatsProcedures = {
           .maybeSingle(),
         ctx.supabase
           .from("profiles")
-          .select("streak_freeze_used_count, streak_freeze_reset_at, total_days_secured, tier, preferred_secure_time, subscription_status")
+          .select("streak_freeze_used_count, streak_freeze_reset_at, total_days_secured, tier, preferred_secure_time, subscription_status, timezone, reminder_timezone")
           .eq("user_id", ctx.userId)
           .maybeSingle(),
         ctx.supabase
@@ -69,10 +77,10 @@ export const profilesStatsProcedures = {
       const lastStandUsedDateKeys = new Set((lastStandUsesRows?.data ?? []).map((r: { date_key: string }) => r.date_key));
 
       const lastCompletedDateKey = streakData.data?.last_completed_date_key ?? null;
-      const todayKey = getTodayDateKey();
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayKey = yesterday.toISOString().slice(0, 10);
+      const tzRaw = profileRow?.data as { timezone?: string | null; reminder_timezone?: string | null } | null;
+      const tz = tzRaw?.timezone?.trim() || tzRaw?.reminder_timezone?.trim() || "UTC";
+      const todayKey = getTodayDateKey(tz);
+      const yesterdayKey = getYesterdayDateKey(tz);
 
       let effectiveMissedDays = 0;
       let missedDateKeys: string[] = [];
@@ -208,10 +216,9 @@ export const profilesStatsProcedures = {
   /** Secured date keys for discipline calendar (last 365 days). */
   getSecuredDateKeys: protectedProcedure
     .query(async ({ ctx }) => {
-      const todayKey = getTodayDateKey();
-      const start = new Date();
-      start.setDate(start.getDate() - 365);
-      const startKey = start.toISOString().split("T")[0];
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const todayKey = getTodayDateKey(tz);
+      const startKey = addCalendarDaysToDateKey(todayKey, -365);
       const { data, error } = await ctx.supabase
         .from("day_secures")
         .select("date_key")
@@ -234,8 +241,9 @@ export const profilesStatsProcedures = {
 
   getWeeklyProgress: protectedProcedure
     .query(async ({ ctx }) => {
-      const todayKey = getTodayDateKey();
-      const weekStart = getWeekStartDateKey();
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const todayKey = getTodayDateKey(tz);
+      const weekStart = getWeekStartDateKey(new Date(), tz);
       const { data: profile } = await ctx.supabase
         .from("profiles")
         .select("weekly_goal")
@@ -256,6 +264,7 @@ export const profilesStatsProcedures = {
 
   getWeeklyTrend: protectedProcedure
     .query(async ({ ctx }) => {
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
       const today = new Date();
       const result: { weekStart: string; daysSecured: number; goal: number }[] = [];
       const { data: profile } = await ctx.supabase
@@ -267,8 +276,8 @@ export const profilesStatsProcedures = {
       for (let w = 0; w < 8; w++) {
         const d = new Date(today);
         d.setUTCDate(d.getUTCDate() - w * 7);
-        const weekStart = getWeekStartDateKey(d);
-        const weekEnd = getWeekEndDateKey(d);
+        const weekStart = getWeekStartDateKey(d, tz);
+        const weekEnd = getWeekEndDateKey(d, tz);
         const { data: secures } = await ctx.supabase
           .from("day_secures")
           .select("date_key")

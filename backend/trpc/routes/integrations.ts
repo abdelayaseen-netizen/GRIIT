@@ -18,7 +18,7 @@ import {
   type StravaActivity,
 } from "../../lib/strava-service";
 import { verifyStravaTaskCompletion } from "../../lib/strava-verifier";
-import { getTodayDateKey } from "../../lib/date-utils";
+import { getTodayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 
 const PROVIDER_STRAVA = "strava";
 
@@ -178,7 +178,8 @@ export const integrationsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-      const dateKey = input.dateKey ?? getTodayDateKey();
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const dateKey = input.dateKey ?? getTodayDateKey(tz);
       const result = await verifyStravaTaskCompletion(
         ctx.supabase,
         ctx.userId,

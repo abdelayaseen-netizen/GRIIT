@@ -10,7 +10,7 @@ interface UseCelebrationReturn {
   onCelebrationComplete: () => void;
 }
 
-export function useCelebration(): UseCelebrationReturn {
+export function useCelebration(timezone?: string | null): UseCelebrationReturn {
   const [showCelebration, setShowCelebration] = useState(false);
   const currentTaskIdRef = useRef<string | null>(null);
 
@@ -20,21 +20,21 @@ export function useCelebration(): UseCelebrationReturn {
       if (!stored) return false;
       
       const shownIds: Record<string, string> = JSON.parse(stored);
-      const today = getTodayDateKey();
+      const today = getTodayDateKey(timezone);
       const key = `${taskId}_${today}`;
       
       return !!shownIds[key];
     } catch {
       return false;
     }
-  }, []);
+  }, [timezone]);
 
   const markCelebrationShown = useCallback(async (taskId: string): Promise<void> => {
     try {
       const stored = await AsyncStorage.getItem(CELEBRATION_STORAGE_KEY);
       const shownIds: Record<string, string> = stored ? JSON.parse(stored) : {};
       
-      const today = getTodayDateKey();
+      const today = getTodayDateKey(timezone);
       const key = `${taskId}_${today}`;
       shownIds[key] = new Date().toISOString();
       
@@ -51,7 +51,7 @@ export function useCelebration(): UseCelebrationReturn {
     } catch {
       // Ignore storage errors
     }
-  }, []);
+  }, [timezone]);
 
   const triggerCelebration = useCallback(async (taskId: string): Promise<void> => {
     if (currentTaskIdRef.current === taskId) return;

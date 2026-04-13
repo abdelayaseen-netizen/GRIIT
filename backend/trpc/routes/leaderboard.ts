@@ -2,7 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure, type Context } from "../create-context";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
-import { getTodayDateKey, getRollingWeekStartDateKey } from "../../lib/date-utils";
+import { getTodayDateKey, getRollingWeekStartDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { consistencyScore } from "../../lib/scoring";
@@ -43,9 +43,10 @@ export const leaderboardRouter = createTRPCRouter({
       const safeOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
       const noPagination = input?.cursor == null && input?.limit == null;
 
-      const todayKey = getTodayDateKey();
-      const weekStartKey = getRollingWeekStartDateKey();
       const userId = ctx.userId;
+      const tz = userId ? await getProfileTimeZoneForUser(ctx.supabase, userId) : "UTC";
+      const todayKey = getTodayDateKey(tz);
+      const weekStartKey = getRollingWeekStartDateKey(tz);
       const server = getSupabaseServer() ?? ctx.supabase;
       const weeklyCacheKey = `leaderboard:weekly:v1:${weekStartKey}:${todayKey}:${userId ?? "anon"}`;
       const canCacheWeekly = noPagination && safeOffset === 0;
@@ -158,8 +159,9 @@ export const leaderboardRouter = createTRPCRouter({
   getFriendsBoard: protectedProcedure.query(async ({ ctx }) => {
     const server = getSupabaseServer() ?? ctx.supabase;
     const viewerId = ctx.userId;
-    const weekStartKey = getRollingWeekStartDateKey();
-    const todayKey = getTodayDateKey();
+    const tz = await getProfileTimeZoneForUser(ctx.supabase, viewerId);
+    const weekStartKey = getRollingWeekStartDateKey(tz);
+    const todayKey = getTodayDateKey(tz);
 
     const mutual = await mutualFriendUserIds(ctx, viewerId);
     const candidateIds = [...new Set([viewerId, ...mutual])];
@@ -251,8 +253,9 @@ export const leaderboardRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const server = getSupabaseServer() ?? ctx.supabase;
       const viewerId = ctx.userId;
-      const weekStartKey = getRollingWeekStartDateKey();
-      const todayKey = getTodayDateKey();
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, viewerId);
+      const weekStartKey = getRollingWeekStartDateKey(tz);
+      const todayKey = getTodayDateKey(tz);
 
       const { data: ch, error: chErr } = await server.from("challenges").select("id, visibility, title").eq("id", input.challengeId).maybeSingle();
       if (chErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: chErr.message });

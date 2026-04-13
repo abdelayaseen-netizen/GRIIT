@@ -7,6 +7,7 @@
  */
 import * as Notifications from "expo-notifications";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
+import { useNotificationPrefsStore } from "@/store/notificationPrefsStore";
 
 const ACTIVE_TASK_NOTIF_ID = "griit-active-task-timer";
 
@@ -25,6 +26,9 @@ export interface ActiveTaskTimerPayload {
 export async function startActiveTaskNotification(
   payload: ActiveTaskTimerPayload
 ): Promise<void> {
+  if (!useNotificationPrefsStore.getState().lockScreenTimer) {
+    return;
+  }
   try {
     await Notifications.cancelScheduledNotificationAsync(ACTIVE_TASK_NOTIF_ID).catch(() => {});
     await Notifications.dismissNotificationAsync(ACTIVE_TASK_NOTIF_ID).catch(() => {});
@@ -56,6 +60,9 @@ export async function updateActiveTaskNotification(
   payload: ActiveTaskTimerPayload,
   elapsedSeconds: number
 ): Promise<void> {
+  if (!useNotificationPrefsStore.getState().lockScreenTimer) {
+    return;
+  }
   try {
     const { title, body } = buildNotifContent(payload, elapsedSeconds);
     await Notifications.scheduleNotificationAsync({

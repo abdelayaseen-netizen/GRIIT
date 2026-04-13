@@ -4,7 +4,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
-import { getTodayDateKey, getTomorrowDateKey } from "./date-utils";
+import { getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
 
 export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string; completed_at?: string | null };
 
@@ -128,9 +128,8 @@ export async function joinChallengeDirect(
       .eq("challenge_id", challengeId);
     const taskList = (tasks ?? []) as { id: string }[];
     if (taskList.length > 0) {
-      const dateKey = allWindowsExpired
-        ? getTomorrowDateKey()
-        : getTodayDateKey();
+      const tz = await getProfileTimeZoneForUser(supabase, userId);
+      const dateKey = allWindowsExpired ? getTomorrowDateKey(tz) : getTodayDateKey(tz);
       const checkIns = taskList.map((t) => ({
         user_id: userId,
         active_challenge_id: activeChallenge.id,

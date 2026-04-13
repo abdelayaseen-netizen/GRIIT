@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { requireNoError } from "../errors";
 import { STARTER_DEFINITIONS } from "../../lib/starter-seed";
-import { getTodayDateKey } from "../../lib/date-utils";
+import { getTodayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 
 const STARTER_IDS = STARTER_DEFINITIONS.map((s) => s.starter_id);
 
@@ -106,7 +106,8 @@ export const startersRouter = createTRPCRouter({
         });
       }
 
-      const dateKey = getTodayDateKey();
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const dateKey = getTodayDateKey(tz);
       const checkIns = tasks.map((t) => ({
         user_id: ctx.userId,
         active_challenge_id: activeChallenge.id,

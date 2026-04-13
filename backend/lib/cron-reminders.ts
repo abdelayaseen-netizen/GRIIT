@@ -18,6 +18,7 @@ interface ProfileRow {
   reminder_enabled: boolean | null;
   reminder_time: string | null;
   reminder_timezone: string | null;
+  timezone: string | null;
 }
 
 interface StreakRow {
@@ -32,12 +33,11 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
   errors: string[];
 }> {
   const now = new Date();
-  const todayKey = getTodayDateKey();
   const errors: string[] = [];
 
   const { data: profiles, error: profileError } = await supabase
     .from("profiles")
-    .select("user_id, expo_push_token, reminder_enabled, reminder_time, reminder_timezone")
+    .select("user_id, expo_push_token, reminder_enabled, reminder_time, reminder_timezone, timezone")
     .eq("reminder_enabled", true);
 
   if (profileError) {
@@ -55,19 +55,32 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
 
   if (withToken.length > 0) {
     const userIds = withToken.map((r) => r.user_id);
+    const userTodayKeys = new Map<string, string>();
+    for (const row of withToken) {
+      const tz =
+        (row as ProfileRow).timezone?.trim() ||
+        (row as ProfileRow).reminder_timezone?.trim() ||
+        "UTC";
+      userTodayKeys.set(row.user_id, getTodayDateKey(tz));
+    }
+    const uniqueDateKeys = [...new Set(userTodayKeys.values())];
     const [{ data: securedTodayRows }, { data: streakRows }] = await Promise.all([
-      supabase.from("day_secures").select("user_id").eq("date_key", todayKey),
+      supabase.from("day_secures").select("user_id, date_key").in("user_id", userIds).in("date_key", uniqueDateKeys),
       supabase.from("streaks").select("user_id, active_streak_count").in("user_id", userIds),
     ]);
 
-    const securedUserIds = new Set((securedTodayRows ?? []).map((r: { user_id: string }) => r.user_id));
+    const securedPairs = new Set(
+      (securedTodayRows ?? []).map((r: { user_id: string; date_key: string }) => `${r.user_id}:${r.date_key}`)
+    );
     const streakByUser = new Map<string, number>(
       (streakRows ?? []).map((r: StreakRow) => [r.user_id, Math.max(0, r.active_streak_count ?? 0)])
     );
 
     for (const row of withToken) {
-      const hasSecuredToday = securedUserIds.has(row.user_id);
-      const timezone = row.reminder_timezone?.trim() || "UTC";
+      const userToday = userTodayKeys.get(row.user_id) ?? getTodayDateKey("UTC");
+      const hasSecuredToday = securedPairs.has(`${row.user_id}:${userToday}`);
+      const timezone =
+        (row as ProfileRow).timezone?.trim() || (row as ProfileRow).reminder_timezone?.trim() || "UTC";
       const reminderTime = (row.reminder_time ?? "09:00").trim() || "09:00";
       const ctx = {
         userId: row.user_id,

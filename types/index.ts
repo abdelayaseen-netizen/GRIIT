@@ -631,6 +631,8 @@ export interface ProfileFromApi {
   profile_visibility?: string | null;
   created_at?: string | null;
   bio?: string | null;
+  /** IANA timezone for calendar date_key (matches backend). */
+  timezone?: string | null;
   /** When present, used by streak freeze UI (optional DB column). */
   streak_freezes_remaining?: number | null;
 }

@@ -26,6 +26,7 @@ const PROFILE_UPDATE_KEYS = [
   "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
   "profile_visibility", "weekly_goal",
+  "timezone",
 ] as const;
 
 type SubscriptionStatus = "free" | "premium" | "trial";
@@ -61,7 +62,7 @@ export const profilesRouter = createTRPCRouter({
           onboarding_completed: false,
         }, { onConflict: 'user_id' })
         .select(
-          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed"
+          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed, timezone"
         )
         .single();
 
@@ -186,7 +187,7 @@ export const profilesRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select(
-          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility"
+          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, timezone"
         )
         .eq("user_id", ctx.userId)
         .single();
@@ -304,6 +305,7 @@ export const profilesRouter = createTRPCRouter({
       onboarding_answers: z.record(z.string(), z.unknown()).optional(),
       profile_visibility: z.enum(["public", "friends", "private"]).optional(),
       weekly_goal: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
+      timezone: z.string().max(64).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const updatePayload: Record<string, unknown> = {};
@@ -316,7 +318,7 @@ export const profilesRouter = createTRPCRouter({
         const { data } = await ctx.supabase
           .from("profiles")
           .select(
-            "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed"
+            "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed, timezone"
           )
           .eq("user_id", ctx.userId)
           .single();
@@ -328,7 +330,7 @@ export const profilesRouter = createTRPCRouter({
         .update(updatePayload)
         .eq('user_id', ctx.userId)
         .select(
-          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed"
+          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed, timezone"
         )
         .single();
 

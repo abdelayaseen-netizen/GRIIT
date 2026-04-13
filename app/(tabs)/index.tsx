@@ -28,6 +28,7 @@ import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import type { TodayCheckinForUser, StatsFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
+import { ActiveTaskCard } from "@/components/home/ActiveTaskCard";
 import StreakHero from "@/components/home/StreakHero";
 import DailyBonus from "@/components/home/DailyBonus";
 import GoalCard from "@/components/home/GoalCard";
@@ -256,8 +257,9 @@ export default function HomeScreen() {
     const keys = [...(homeQuery.data?.securedDateKeys ?? [])].sort();
     if (keys.length === 0) return;
     const lastKey = keys[keys.length - 1]!;
-    const today = getTodayDateKey();
-    const yesterday = getYesterdayDateKey();
+    const tz = (profile as { timezone?: string | null })?.timezone;
+    const today = getTodayDateKey(tz);
+    const yesterday = getYesterdayDateKey(tz);
     const missedWindow = lastKey !== today && lastKey !== yesterday;
     if (missedWindow) {
       setShowFreezeModal(true);
@@ -503,6 +505,8 @@ export default function HomeScreen() {
         )}
 
         <DailyBonus />
+
+        <ActiveTaskCard />
 
         {homeQuery.isPending && !homeQuery.data ? (
           <View style={s.goalsSection}>

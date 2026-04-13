@@ -21,16 +21,18 @@ export interface UseNotificationSchedulerOptions {
   user: { id: string } | null;
   stats: StatsFromApi | null;
   activeChallenge: ActiveChallengeFromApi | null;
+  /** IANA timezone from profiles.timezone — aligns with server date_key. */
+  timezone?: string | null;
 }
 
 /**
  * Schedules local notifications (secure reminder, lapsed, morning, weekly, countdowns, task windows).
  * Fire-and-forget — no return value.
  */
-export function useNotificationScheduler({ user, stats, activeChallenge }: UseNotificationSchedulerOptions): void {
+export function useNotificationScheduler({ user, stats, activeChallenge, timezone }: UseNotificationSchedulerOptions): void {
   useEffect(() => {
     if (Platform.OS === "web" || !user || !stats) return;
-    const todayKey = getTodayDateKey();
+    const todayKey = getTodayDateKey(timezone);
     const lastKey = stats.lastCompletedDateKey ?? null;
     const preferred = stats.preferredSecureTime ?? "20:00";
     const lastStands = stats.lastStandsAvailable ?? 0;
@@ -80,7 +82,7 @@ export function useNotificationScheduler({ user, stats, activeChallenge }: UseNo
       const securedKeys = (await trpcQuery(TRPC.profiles.getSecuredDateKeys).catch(() => [])) as string[];
       if (cancelled) return;
 
-      const daysSecuredThisWeek = countSecuredLast7Days(Array.isArray(securedKeys) ? securedKeys : []);
+      const daysSecuredThisWeek = countSecuredLast7Days(Array.isArray(securedKeys) ? securedKeys : [], timezone);
       const basePoints = (stats.totalDaysSecured ?? 0) * 5;
 
       if (settings?.weekly_summary_enabled !== false) {
@@ -179,6 +181,7 @@ export function useNotificationScheduler({ user, stats, activeChallenge }: UseNo
     stats?.totalDaysSecured,
     stats?.activeStreak,
     stats?.tier,
+    timezone,
     activeChallenge?.id,
     activeChallenge?.challenges,
   ]);

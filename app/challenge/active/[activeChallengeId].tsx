@@ -95,6 +95,8 @@ export default function ActiveChallengeDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { profile } = useApp();
+  const profileTz = (profile as { timezone?: string | null })?.timezone;
 
   const { data: activeChallenge, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["activeChallenge", id],
@@ -118,9 +120,9 @@ export default function ActiveChallengeDetailScreen() {
   });
 
   const { data: checkins = [] } = useQuery({
-    queryKey: ["check_ins", "today", id],
+    queryKey: ["check_ins", "today", id, profileTz ?? "UTC"],
     queryFn: async () => {
-      const dateKey = getTodayDateKey();
+      const dateKey = getTodayDateKey(profileTz);
       const { data, error: err } = await supabase
         .from("check_ins")
         .select("task_id, status")

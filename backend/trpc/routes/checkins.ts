@@ -6,7 +6,12 @@ import { requireNoError } from "../errors";
 import { computeNewStreakCount } from "../../lib/streak";
 import { getTierForDays } from "../../lib/progression";
 import { shouldEarnLastStand, newAvailableAfterEarn } from "../../lib/last-stand";
-import { getTodayDateKey } from "../../lib/date-utils";
+import {
+  getTodayDateKey,
+  getYesterdayDateKey,
+  getProfileTimeZoneForUser,
+  addCalendarDaysToDateKey,
+} from "../../lib/date-utils";
 import type { StreakRow, DaySecureRow, ActiveChallengeWithTasks, PgError } from "../../types/db";
 import {
   type ChallengeTaskConfig,
@@ -58,7 +63,8 @@ export const checkinsRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-      const dateKey = getTodayDateKey();
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const dateKey = getTodayDateKey(tz);
       const { data: chRow } = await ctx.supabase.from("challenges").select("duration_type, ends_at, live_date").eq("id", challenge_id).single();
       const ch = chRow as { duration_type?: string; ends_at?: string | null; live_date?: string | null } | null;
       if (ch?.duration_type === "24h") {
@@ -303,14 +309,16 @@ export const checkinsRouter = createTRPCRouter({
 
   getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
     await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-    const dateKey = getTodayDateKey();
+    const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+    const dateKey = getTodayDateKey(tz);
     const { data, error } = await ctx.supabase.from("check_ins").select("id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).limit(100);
     requireNoError(error, "Failed to load check-ins.");
     return data ?? [];
   }),
 
   getTodayCheckinsForUser: protectedProcedure.query(async ({ ctx }) => {
-    const dateKey = getTodayDateKey();
+    const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+    const dateKey = getTodayDateKey(tz);
     const { data: acList, error: acErr } = await ctx.supabase.from("active_challenges").select("id").eq("user_id", ctx.userId).eq("status", "active").limit(50);
     requireNoError(acErr, "Failed to load active challenges.");
     const acIds = (acList ?? []).map((r: { id: string }) => r.id);
@@ -331,6 +339,7 @@ export const checkinsRouter = createTRPCRouter({
 
   secureDay: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
     const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+    const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
     const { data: chRow } = await ctx.supabase.from("challenges").select("duration_type, ends_at, live_date").eq("id", challenge_id).single();
     const ch = chRow as { duration_type?: string; ends_at?: string | null; live_date?: string | null } | null;
     if (ch?.duration_type === "24h") {
@@ -347,8 +356,8 @@ export const checkinsRouter = createTRPCRouter({
       if (challengeId) {
         const { data: chTeam } = await ctx.supabase.from("challenges").select("participation_type, run_status, duration_days").eq("id", challengeId).single();
         if ((chTeam as { participation_type?: string })?.participation_type === "team" && (chTeam as { run_status?: string })?.run_status === "active") {
-          const today = new Date().toISOString().split("T")[0];
-          const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+          const today = getTodayDateKey(tz);
+          const yesterday = getYesterdayDateKey(tz);
           await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
           await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: today });
         }
@@ -401,7 +410,7 @@ export const checkinsRouter = createTRPCRouter({
     if (msg.includes("NOT_ALL_REQUIRED")) throw new TRPCError({ code: "BAD_REQUEST", message: "Not all required tasks completed." });
     if (rpcError && code !== "42883") throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to secure day." });
 
-    const dateKey = getTodayDateKey();
+    const dateKey = getTodayDateKey(tz);
     const { data: alreadySecured } = await ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).eq("date_key", dateKey).limit(1).maybeSingle();
     const securedRow = alreadySecured as DaySecureRow | null;
     if (securedRow) {
@@ -431,9 +440,7 @@ export const checkinsRouter = createTRPCRouter({
     const { newStreakCount, longestStreak } = computeNewStreakCount(dateKey, streak as StreakRow | null);
     const streakPayload: Record<string, unknown> = { user_id: ctx.userId, active_streak_count: newStreakCount, longest_streak_count: longestStreak, last_completed_date_key: dateKey };
     const now = new Date();
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    const startKey = sevenDaysAgo.toISOString().split("T")[0];
+    const startKey = addCalendarDaysToDateKey(dateKey, -6);
     const { data: securesLast7 } = await ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).gte("date_key", startKey).lte("date_key", dateKey).limit(365);
     const securedDaysLast7 = new Set((securesLast7 ?? []).map((r: DaySecureRow) => r.date_key));
     if (dateKey) securedDaysLast7.add(dateKey);
@@ -460,7 +467,7 @@ export const checkinsRouter = createTRPCRouter({
     if (challengeId) {
       const { data: teamRow } = await ctx.supabase.from("challenges").select("participation_type, run_status").eq("id", challengeId).single();
       if ((teamRow as { participation_type?: string })?.participation_type === "team" && (teamRow as { run_status?: string })?.run_status === "active") {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+        const yesterday = getYesterdayDateKey(tz);
         await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
         await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: dateKey });
       }

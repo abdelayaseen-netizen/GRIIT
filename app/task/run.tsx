@@ -44,6 +44,7 @@ import {
   clearActiveTaskNotification,
 } from "@/lib/active-task-timer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useActiveSessionStore } from "@/store/activeSessionStore";
 
 interface GpsPoint {
   lat: number;
@@ -57,8 +58,15 @@ export default function RunTaskScreen() {
   const router = useRouter();
   const safeBack = React.useCallback(() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never)), [router]);
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { currentChallenge, verifyTask, getTaskStateForTemplate } = useApp();
-  const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration();
+  const { currentChallenge, verifyTask, getTaskStateForTemplate, profile, activeChallenge } = useApp();
+  const setActiveSession = useActiveSessionStore((s) => s.setActiveSession);
+  const clearActiveSession = useActiveSessionStore((s) => s.clearActiveSession);
+  const updateTimerRunning = useActiveSessionStore((s) => s.updateTimerRunning);
+  const activeChallengeId = activeChallenge?.id ?? "";
+  const challengeName =
+    (activeChallenge?.challenges as { title?: string } | undefined)?.title ?? "Challenge";
+  const profileTz = (profile as { timezone?: string | null })?.timezone;
+  const { showCelebration, triggerCelebration, onCelebrationComplete } = useCelebration(profileTz);
   const { error, showError, clearError } = useInlineError();
   
   const task = currentChallenge?.tasks.find((t: { id: string }) => t.id === taskId);
@@ -145,9 +153,20 @@ export default function RunTaskScreen() {
       if (locationSubscription.current) locationSubscription.current.remove();
       if (notifUpdateRef.current) clearInterval(notifUpdateRef.current);
       clearActiveTaskNotification();
+      clearActiveSession();
       subscription.remove();
     };
-  }, [runMode, timerRunning, showError, checkPermissions]);
+  }, [runMode, timerRunning, showError, checkPermissions, clearActiveSession]);
+
+  useEffect(() => {
+    if (runMode === "outdoor_gps") {
+      updateTimerRunning(isTracking);
+    } else if (runMode === "treadmill_proof" && treadmillStep === "timer") {
+      updateTimerRunning(timerRunning);
+    } else {
+      updateTimerRunning(false);
+    }
+  }, [runMode, treadmillStep, isTracking, timerRunning, updateTimerRunning]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const R = 3959;
@@ -207,6 +226,15 @@ export default function RunTaskScreen() {
         setDistanceMiles((prev) => prev + 0.01);
       }, 1000);
 
+      setActiveSession({
+        taskId: task?.id ?? "",
+        taskName: task?.title ?? "Run",
+        taskType: "run",
+        activeChallengeId,
+        challengeName,
+        startedAtMs: Date.now(),
+        isTimerRunning: true,
+      });
       // Lock screen notification — GPS run count-up
       const gpsNotifPayload = {
         taskId: task?.id ?? "",
@@ -241,6 +269,15 @@ export default function RunTaskScreen() {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
 
+    setActiveSession({
+      taskId: task?.id ?? "",
+      taskName: task?.title ?? "Run",
+      taskType: "run",
+      activeChallengeId,
+      challengeName,
+      startedAtMs: Date.now(),
+      isTimerRunning: true,
+    });
     // Lock screen notification — GPS run count-up
     const gpsNotifPayload = {
       taskId: task?.id ?? "",
@@ -306,6 +343,7 @@ export default function RunTaskScreen() {
       notifUpdateRef.current = null;
     }
     clearActiveTaskNotification();
+    clearActiveSession();
 
     if (locationSubscription.current) {
       locationSubscription.current.remove();
@@ -327,6 +365,16 @@ export default function RunTaskScreen() {
       setTimerSeconds((prev) => prev + 1);
     }, 1000);
 
+    setActiveSession({
+      taskId: task?.id ?? "",
+      taskName: task?.title ?? "Timer",
+      taskType: "run",
+      activeChallengeId,
+      challengeName,
+      startedAtMs: Date.now(),
+      targetSeconds: minTimerSeconds,
+      isTimerRunning: true,
+    });
     // Lock screen notification — treadmill countdown
     const treadmillNotifPayload = {
       taskId: task?.id ?? "",
@@ -357,6 +405,7 @@ export default function RunTaskScreen() {
       notifUpdateRef.current = null;
     }
     clearActiveTaskNotification();
+    clearActiveSession();
   };
 
   const finishTreadmillTimer = () => {

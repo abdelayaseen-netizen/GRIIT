@@ -4,7 +4,7 @@ import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create
 import { sendPushToProfile } from "../../lib/sendPush";
 import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
-import { getTodayDateKey } from "../../lib/date-utils";
+import { getTodayDateKey, getYesterdayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { logger } from "../../lib/logger";
 import { moderateContent } from "../../lib/content-moderation";
 import {
@@ -325,10 +325,9 @@ export const feedRouter = createTRPCRouter({
       eventId = ev.id;
       prevMeta = ev.metadata ?? {};
     } else {
-      const todayKey = getTodayDateKey();
-      const yesterday = new Date();
-      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-      const yesterdayKey = yesterday.toISOString().slice(0, 10);
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const todayKey = getTodayDateKey(tz);
+      const yesterdayKey = getYesterdayDateKey(tz);
 
       let taskName = "Task";
       let taskType = "manual";
