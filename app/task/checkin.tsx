@@ -268,7 +268,7 @@ export default function CheckinTaskScreen() {
     const hours = Number(timeSeg[0]) || 0;
     const minutes = Number(timeSeg[1]) || 0;
     const graceSeconds = timeWindowPolicy.allowGraceSeconds ?? 30;
-    const windowMinutes = timeWindowPolicy.startWindowMinutes ?? 10;
+    const windowMinutes = timeWindowPolicy.startWindowMinutes ?? 60;
 
     const windowStart = new Date(now);
     windowStart.setHours(hours, minutes, 0, 0);
@@ -409,7 +409,7 @@ export default function CheckinTaskScreen() {
     const timeSeg = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":");
     const hours = Number(timeSeg[0]) || 0;
     const minutes = Number(timeSeg[1]) || 0;
-    const endMinutes = minutes + (timeWindowPolicy.startWindowMinutes || 10);
+    const endMinutes = minutes + (timeWindowPolicy.startWindowMinutes || 60);
     const endHours = hours + Math.floor(endMinutes / 60);
     const endMins = endMinutes % 60;
     
