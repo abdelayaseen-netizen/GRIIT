@@ -52,40 +52,33 @@ export async function joinChallengeDirect(
   }[];
 
   const now = new Date();
+  const userTz = await getProfileTimeZoneForUser(supabase, userId);
   const timedTasks = taskWindowList.filter(
     (t) => t.hard_mode && t.time_window_end
   );
+  // Window check uses user's local time (matches checkin-complete-gates.ts).
   const allWindowsExpired =
     timedTasks.length > 0 &&
     timedTasks.every((t) => {
-      // time_window_end is "HH:MM" — compare against current UTC time
       const [hStr, mStr] = (t.time_window_end ?? "").split(":");
-      const h = parseInt(hStr ?? "0", 10);
-      const m = parseInt(mStr ?? "0", 10);
-      const windowEnd = new Date(
-        Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate(),
-          h,
-          m,
-          0
-        )
-      );
-      return now >= windowEnd;
+      const endH = parseInt(hStr ?? "0", 10);
+      const endM = parseInt(mStr ?? "0", 10);
+      const parts = new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: userTz,
+      }).formatToParts(now);
+      const curH = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+      const curM = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+      return curH * 60 + curM >= endH * 60 + endM;
     });
 
+  // If all windows expired, defer start by ~24h. Exact local-midnight
+  // alignment is not needed: date_key (which drives task scheduling)
+  // is already computed from getTomorrowDateKey(userTz) below.
   const startAt = allWindowsExpired
-    ? new Date(
-        Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate() + 1,
-          0,
-          0,
-          0
-        )
-      )
+    ? new Date(now.getTime() + 24 * 60 * 60 * 1000)
     : now;
   const endAt = new Date(startAt);
   const durationType = (challenge as { duration_type?: string }).duration_type;

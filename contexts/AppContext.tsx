@@ -11,7 +11,7 @@ import { AnalyticsBootstrap } from '@/components/AnalyticsBootstrap';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
 import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
-import { setSentryUser } from '@/lib/sentry';
+import { setSentryUser, captureError } from '@/lib/sentry';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 
 type AppContextValue = {
@@ -123,10 +123,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const premiumFromProfile = subStatus === 'premium' || subStatus === 'trial';
       setIsPremium(premiumFromProfile);
       setProfileError(false);
-      initSubscription(user.id).catch(() => {
-        // error swallowed — handle in UI
+      initSubscription(user.id).catch((err) => {
+        captureError(err, "AppContext.initSubscription");
       });
-    } catch {
+    } catch (err) {
+      captureError(err, "AppContext.fetchProfile");
       setProfileError(true);
     } finally {
       setProfileLoading(false);
@@ -139,8 +140,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
       setStats(data);
-    } catch {
-      // Stats fetch failed — non-blocking
+    } catch (err) {
+      captureError(err, "AppContext.fetchStats");
     }
   }, [user]);
 
@@ -152,7 +153,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setActiveChallengeError(false);
       setActiveChallengeLoaded(true);
       return data;
-    } catch {
+    } catch (err) {
+      captureError(err, "AppContext.fetchActiveChallenge");
       setActiveChallengeError(true);
       setActiveChallengeLoaded(true);
       return null;
@@ -163,8 +165,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const data = await trpcQuery<TodayCheckinForUser[]>(TRPC.checkins.getTodayCheckins, { activeChallengeId });
       setTodayCheckins(data || []);
-    } catch {
-      // Today checkins failed — non-blocking
+    } catch (err) {
+      captureError(err, "AppContext.fetchTodayCheckins");
     }
   }, []);
 

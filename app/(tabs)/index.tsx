@@ -69,7 +69,13 @@ function rankLadderIndex(streak: number): number {
   return 0;
 }
 
-type TaskRow = { id: string; title?: string; type?: string; required?: boolean };
+type TaskRow = {
+  id: string;
+  title?: string;
+  type?: string;
+  required?: boolean;
+  config?: { required?: boolean } & Record<string, unknown>;
+};
 type ActiveRow = {
   id: string;
   challenge_id: string;
@@ -171,7 +177,10 @@ export default function HomeScreen() {
 
     return activeList.map((ac: ActiveRow) => {
       const tasks = ac.challenges?.challenge_tasks ?? [];
-      const required = tasks.filter((t) => t.required !== false);
+      const required = tasks.filter((t) => {
+        const cfg = t.config as { required?: boolean } | undefined;
+        return (cfg?.required ?? true) === true;
+      });
       const doneSet = new Set(
         checkins
           .filter((c) => c.active_challenge_id === ac.id && c.status === "completed")
