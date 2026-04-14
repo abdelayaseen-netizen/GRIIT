@@ -336,7 +336,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return { verifiedCount: 0, totalRequired: 0, progress: 0 };
     }
 
-    const requiredTasks = (challenge.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
+    const requiredTasks =
+      (challenge.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
+        (t) => (t.config?.required ?? true) === true
+      ) || [];
     const completedCount = todayCheckins.filter((c: TodayCheckinForUser) =>
       c.status === 'completed' && requiredTasks.some((rt: { id: string }) => rt.id === c.task_id)
     ).length;

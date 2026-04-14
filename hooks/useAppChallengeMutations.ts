@@ -184,6 +184,11 @@ export function useAppChallengeMutations({
     challengeName?: string;
     totalDays?: number;
   } | undefined> => {
+    console.log("[secureDay] called", {
+      activeChallengeId: activeChallenge?.id,
+      canSecureDay,
+      todayCheckinsCount: todayCheckins.length,
+    });
     if (!activeChallenge?.id || !canSecureDay) return undefined;
     try {
       const result = (await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id })) as {
@@ -260,10 +265,11 @@ export function useAppChallengeMutations({
         }
       }
       return result;
-    } catch {
-      return undefined;
+    } catch (err) {
+      console.error("[secureDay] mutation failed", err);
+      throw err;
     }
-  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats, profile, fallbackProfile]);
+  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats, profile, fallbackProfile, todayCheckins]);
 
   return { completeTask, secureDay };
 }

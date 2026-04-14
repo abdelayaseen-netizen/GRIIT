@@ -63,7 +63,7 @@ function logStructured(payload: {
   durationMs: number;
   errorCode?: string;
 }) {
-  logger.info(payload, "trpc request");
+  logger.info(payload, `trpc ${payload.path ?? "unknown"} ${payload.errorCode ?? "ok"} ${payload.durationMs}ms`);
 }
 
 const routeLimitMiddleware = t.middleware(async (opts) => {
