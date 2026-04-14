@@ -8,7 +8,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import { logger } from "../../lib/logger";
-import { moderateContent, moderateTaskTitle } from "../../lib/content-moderation";
+import { moderateContent, moderateTaskTitle, moderateChallengeQuality } from "../../lib/content-moderation";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -217,6 +217,18 @@ export const challengesCreateProcedures = {
             }
             break;
         }
+      }
+
+      const qualityCheck = moderateChallengeQuality({
+        title: input.title,
+        description: input.description ?? null,
+        taskCount: input.tasks?.length ?? 0,
+      });
+      if (!qualityCheck.allowed) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: qualityCheck.reason ?? "Challenge does not meet quality requirements.",
+        });
       }
 
       const titleCheck = moderateContent(input.title, input.description);

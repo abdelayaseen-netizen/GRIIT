@@ -42,6 +42,7 @@ import { CompactChallengeRow } from "@/components/discover/CompactChallengeRow";
 import { PickedForYou, type PickedChallenge } from "@/components/discover/PickedForYou";
 import { prefetchChallengeById } from "@/lib/prefetch-queries";
 import { Avatar } from "@/components/Avatar";
+import { ReportChallengeModal } from "@/components/shared/ReportChallengeModal";
 
 const RECENT_SEARCHES_KEY = "griit_recent_searches";
 const BROWSE_CATEGORIES = ["Fitness", "Mind", "Discipline", "Faith", "Team"] as const;
@@ -154,6 +155,13 @@ export default function DiscoverScreen() {
 
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [reportingChallengeId, setReportingChallengeId] = useState<string | null>(null);
+  const [reportingChallengeTitle, setReportingChallengeTitle] = useState<string | undefined>(undefined);
+
+  const openReport = useCallback((id: string, title: string | undefined) => {
+    setReportingChallengeId(id);
+    setReportingChallengeTitle(title);
+  }, []);
   const [chipFilter, setChipFilter] = useState<DiscoverFilterId>("All");
   const debouncedQuery = useDebounce(searchQuery, 300);
   const filterQuery = debouncedQuery.trim() || searchQuery.trim();
@@ -335,9 +343,10 @@ export default function DiscoverScreen() {
         challenge={item}
         onPressIn={() => prefetchChallengeDetail(item.id)}
         onPress={(challengeId) => openChallenge(challengeId)}
+        onLongPress={openReport}
       />
     ),
-    [openChallenge, prefetchChallengeDetail]
+    [openChallenge, prefetchChallengeDetail, openReport]
   );
 
   const keyExtractorDiscoverRoot = useCallback((item: { key: string }) => item.key, []);
@@ -374,9 +383,10 @@ export default function DiscoverScreen() {
           void pushRecentSearch(filterQuery);
           openChallenge(c.id);
         }}
+        onLongPress={openReport}
       />
     ),
-    [pushRecentSearch, filterQuery, openChallenge]
+    [pushRecentSearch, filterQuery, openChallenge, openReport]
   );
 
   const renderSoloCompactItem = useCallback(
@@ -812,6 +822,15 @@ export default function DiscoverScreen() {
               tintColor={DS_COLORS.ACCENT}
             />
           }
+        />
+        <ReportChallengeModal
+          visible={reportingChallengeId !== null}
+          challengeId={reportingChallengeId}
+          challengeTitle={reportingChallengeTitle}
+          onClose={() => {
+            setReportingChallengeId(null);
+            setReportingChallengeTitle(undefined);
+          }}
         />
       </SafeAreaView>
     </ErrorBoundary>

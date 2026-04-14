@@ -109,6 +109,9 @@ export const TRPC = {
     recordOpen: 'referrals.recordOpen',
     markJoinedChallenge: 'referrals.markJoinedChallenge',
   },
+  reports: {
+    create: 'reports.create',
+  },
   feed: {
     list: 'feed.list',
     listMine: 'feed.listMine',

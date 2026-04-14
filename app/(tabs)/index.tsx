@@ -47,6 +47,7 @@ import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
+import { ReportChallengeModal } from "@/components/shared/ReportChallengeModal";
 import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -122,6 +123,9 @@ export default function HomeScreen() {
   const { stats, refetchAll, profile } = useApp();
   const [leaveChallengeError, setLeaveChallengeError] = React.useState<string | null>(null);
   const [leaveConfirmChallengeId, setLeaveConfirmChallengeId] = React.useState<string | null>(null);
+  const [longPressMenuChallenge, setLongPressMenuChallenge] = React.useState<{ id: string; title: string } | null>(null);
+  const [reportingChallengeId, setReportingChallengeId] = React.useState<string | null>(null);
+  const [reportingChallengeTitle, setReportingChallengeTitle] = React.useState<string | undefined>(undefined);
   const [showPointsExplainer, setShowPointsExplainer] = React.useState(false);
   const [completedExpanded, setCompletedExpanded] = React.useState(true);
   const prevCompletedCount = React.useRef(0);
@@ -384,8 +388,7 @@ export default function HomeScreen() {
           void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
         }}
         onLongPressChallenge={() => {
-          setLeaveChallengeError(null);
-          setLeaveConfirmChallengeId(group.challengeId);
+          setLongPressMenuChallenge({ id: group.challengeId, title: group.challengeName });
         }}
         isError={homeQuery.isError}
       />
@@ -708,6 +711,60 @@ export default function HomeScreen() {
           setShowFreezeModal(false);
         }}
         onLetReset={() => setShowFreezeModal(false)}
+      />
+      <Modal
+        visible={longPressMenuChallenge !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLongPressMenuChallenge(null)}
+      >
+        <View style={s.rankModalRoot}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={s.rankModalBackdrop}
+            activeOpacity={1}
+            onPress={() => setLongPressMenuChallenge(null)}
+            accessibilityLabel="Close"
+          />
+          <View style={s.rankModalSheet}>
+            <Text style={s.rankModalTitle}>{longPressMenuChallenge?.title ?? "Challenge"}</Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={s.rankRow}
+              onPress={() => {
+                const ch = longPressMenuChallenge;
+                setLongPressMenuChallenge(null);
+                if (!ch) return;
+                setReportingChallengeId(ch.id);
+                setReportingChallengeTitle(ch.title);
+              }}
+            >
+              <Text style={[s.rankRowName, { color: DS_COLORS.TEXT_PRIMARY }]}>Report this challenge</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={s.rankRow}
+              onPress={() => {
+                const ch = longPressMenuChallenge;
+                setLongPressMenuChallenge(null);
+                if (!ch) return;
+                setLeaveChallengeError(null);
+                setLeaveConfirmChallengeId(ch.id);
+              }}
+            >
+              <Text style={[s.rankRowName, { color: DS_COLORS.DISCOVER_CORAL }]}>Leave challenge</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <ReportChallengeModal
+        visible={reportingChallengeId !== null}
+        challengeId={reportingChallengeId}
+        challengeTitle={reportingChallengeTitle}
+        onClose={() => {
+          setReportingChallengeId(null);
+          setReportingChallengeTitle(undefined);
+        }}
       />
       <Modal
         visible={showRankModal}

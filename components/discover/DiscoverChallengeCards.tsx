@@ -54,10 +54,12 @@ export const DiscoverMiniChallengeCard = React.memo(function DiscoverMiniChallen
   challenge,
   onPress,
   onPressIn,
+  onLongPress,
 }: {
   challenge: MiniCardChallenge;
   onPress: (id: string) => void;
   onPressIn?: () => void;
+  onLongPress?: (id: string, title: string | undefined) => void;
 }) {
   const theme = difficultyBorder(challenge.difficulty);
   const weekMs = 7 * 24 * 60 * 60 * 1000;
@@ -68,9 +70,12 @@ export const DiscoverMiniChallengeCard = React.memo(function DiscoverMiniChallen
     <Pressable
       onPressIn={onPressIn}
       onPress={() => onPress(challenge.id)}
+      onLongPress={onLongPress ? () => onLongPress(challenge.id, challenge.title) : undefined}
+      delayLongPress={500}
       style={[s.miniRoot, { borderLeftColor: theme.border }]}
       accessibilityRole="button"
       accessibilityLabel={challenge.title ?? "Challenge"}
+      accessibilityHint={onLongPress ? "Long-press to report this challenge." : undefined}
     >
       <View style={s.miniBadgeAbs}>
         <Text style={[s.miniBadgeTxt, { color: theme.badgeText, backgroundColor: theme.badgeBg }]}>{theme.label}</Text>
@@ -107,15 +112,19 @@ export type FullCardChallenge = {
 export function DiscoverChallengeSearchRow({
   challenge,
   onPress,
+  onLongPress,
 }: {
   challenge: MiniCardChallenge & { participants_count?: number; duration_days?: number };
   onPress: () => void;
+  onLongPress?: (id: string, title: string | undefined) => void;
 }) {
   const colors = getCategoryColors(String(challenge.category ?? "discipline"));
   const Icon = String(challenge.category ?? "").toLowerCase().includes("mind") ? BookOpen : String(challenge.category ?? "").toLowerCase().includes("fitness") ? Flame : Target;
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress ? () => onLongPress(challenge.id, challenge.title) : undefined}
+      delayLongPress={500}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -125,6 +134,7 @@ export function DiscoverChallengeSearchRow({
       }}
       accessibilityRole="button"
       accessibilityLabel={challenge.title ?? "Challenge"}
+      accessibilityHint={onLongPress ? "Long-press to report this challenge." : undefined}
     >
       <View
         style={{
