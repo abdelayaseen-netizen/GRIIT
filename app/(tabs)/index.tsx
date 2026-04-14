@@ -134,7 +134,8 @@ export default function HomeScreen() {
   const homeQuery = useQuery({
     queryKey: ["home", "v2", user?.id ?? ""],
     enabled: !isGuest && !!user?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
     placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<HomeData> => {
       const settled = await Promise.allSettled([

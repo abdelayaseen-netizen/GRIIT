@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import logger from "../../lib/logger";
+import { logger } from "../../lib/logger";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
   const { count: realCount } = await supabase

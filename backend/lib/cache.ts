@@ -2,7 +2,7 @@
  * Optional Redis response cache (Upstash). No-op when env vars unset.
  */
 import { Redis } from "@upstash/redis";
-import logger from "./logger";
+import { logger } from "./logger";
 
 let redis: Redis | null | undefined;
 

@@ -31,7 +31,7 @@ export async function hydrateActivityEventsToPosts(
   ctx: Context,
   server: SupabaseClient
 ): Promise<
-  Array<{
+  {
     id: string;
     userId: string;
     username: string;
@@ -56,7 +56,7 @@ export async function hydrateActivityEventsToPosts(
     lastReactorName: string | null;
     commentCount: number;
     visibility: "public" | "friends" | "private";
-  }>
+  }[]
 > {
   if (events.length === 0) return [];
   const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((id): id is string => !!id))];

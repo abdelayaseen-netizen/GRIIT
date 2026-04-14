@@ -62,7 +62,7 @@ export function shouldSendStreakAtRiskReminder(ctx: SecureReminderContext): bool
 }
 
 /** Morning notification templates (variable reinforcement). */
-const MORNING_TEMPLATES: Array<{ title: string; body: (streak: number) => string }> = [
+const MORNING_TEMPLATES: { title: string; body: (streak: number) => string }[] = [
   { title: "Day {streak} starts now", body: (_s) => `Secure your day 💪` },
   { title: "Your {streak}-day streak is waiting", body: (_s) => `Let's go.` },
   { title: "Rise and grind", body: (s) => `Day ${s} won't secure itself.` },
@@ -71,7 +71,7 @@ const MORNING_TEMPLATES: Array<{ title: string; body: (streak: number) => string
 ];
 
 /** Evening streak-at-risk templates (loss-aversion framing). */
-const EVENING_TEMPLATES: Array<{ title: (streak: number) => string; body: (streak: number) => string }> = [
+const EVENING_TEMPLATES: { title: (streak: number) => string; body: (streak: number) => string }[] = [
   {
     title: (s) => (s > 0 ? `Your ${s}-day streak expires at midnight` : "Your day isn't secured yet"),
     body: (s) => (s > 0 ? "Still time." : "Secure your day before midnight."),
@@ -105,7 +105,7 @@ function pickEveningCopy(streak: number): { title: string; body: string } {
 }
 
 /** "Come back" notification templates for users inactive 3+ days. */
-export const COMEBACK_TEMPLATES: Array<{ title: string; body: string }> = [
+export const COMEBACK_TEMPLATES: { title: string; body: string }[] = [
   { title: "We miss you", body: "Your streak is waiting. Come back and secure today." },
   { title: "Ready when you are", body: "A few days off — no judgment. Tap to pick up where you left off." },
   { title: "Your discipline doesn't expire", body: "Come back and secure your next day." },
