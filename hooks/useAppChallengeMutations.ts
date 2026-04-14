@@ -75,7 +75,9 @@ export function useAppChallengeMutations({
       clocked_in_at?: string;
     }): Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void> => {
       const requiredTasks =
-        (challenge?.challenge_tasks as { id: string; required?: boolean }[] | undefined)?.filter((t) => t.required) || [];
+        (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
+          (t) => (t.config?.required ?? true) === true
+        ) || [];
       const completedCountBefore = todayCheckins.filter(
         (c: TodayCheckinForUser) =>
           c.status === "completed" && requiredTasks.some((rt: { id: string }) => rt.id === c.task_id)

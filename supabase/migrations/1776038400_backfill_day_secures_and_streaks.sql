@@ -102,12 +102,13 @@ rec AS (
     (r.d - interval '1 day')::date,
     r.len + 1
   FROM rec r
-  WHERE EXISTS (
-    SELECT 1
-    FROM public.day_secures ds
-    WHERE ds.user_id = r.user_id
-      AND ds.date_key = ((r.d - interval '1 day')::date)::text
-  )
+  WHERE r.len < 1000
+    AND EXISTS (
+      SELECT 1
+      FROM public.day_secures ds
+      WHERE ds.user_id = r.user_id
+        AND ds.date_key = ((r.d - interval '1 day')::date)::text
+    )
 ),
 active_by_user AS (
   SELECT user_id, MAX(len)::int AS active_streak_count
