@@ -23,13 +23,16 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.griit.challenge-tracker",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
         "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
         "NSLocationWhenInUseUsageDescription": "GRIIT uses your location to verify outdoor activities like runs and walks.",
         "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience.",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.usernotifications.time-sensitive": true
       }
     },
     "android": {
