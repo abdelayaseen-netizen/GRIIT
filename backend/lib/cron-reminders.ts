@@ -116,14 +116,16 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
   // --- Comeback pushes for inactive users (3+ days since last secure) ---
   let comebackSent = 0;
   try {
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    // Loose UTC bound: anyone whose last secure is older than 2 UTC days is a CANDIDATE.
+    // Per-user timezone check happens below.
+    const candidateBoundUTC = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: inactiveUsers, error: inactiveErr } = await supabase
       .from("streaks")
       .select("user_id, last_completed_date_key")
       .not("last_completed_date_key", "is", null)
-      .lte("last_completed_date_key", threeDaysAgo);
+      .lte("last_completed_date_key", candidateBoundUTC);
 
     if (inactiveErr) {
       errors.push(`comeback streaks query: ${inactiveErr.message}`);
@@ -139,6 +141,22 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
         if (cpErr) {
           errors.push(`comeback profiles query: ${cpErr.message}`);
         } else {
+          // Build user_id -> last_completed_date_key map for per-user TZ check
+          const lastSecureByUser = new Map<string, string>();
+          for (const r of (inactiveUsers ?? []) as { user_id: string; last_completed_date_key: string }[]) {
+            lastSecureByUser.set(r.user_id, r.last_completed_date_key);
+          }
+          // Need each user's profile timezone for accurate "3 days ago in their TZ" check
+          const candidateUserIds = (comebackProfiles ?? []).map((p: { user_id: string }) => p.user_id);
+          const { data: tzRows } = await supabase
+            .from("profiles")
+            .select("user_id, timezone")
+            .in("user_id", candidateUserIds);
+          const tzByUser = new Map<string, string>(
+            ((tzRows ?? []) as { user_id: string; timezone: string | null }[])
+              .map((r) => [r.user_id, r.timezone?.trim() || "UTC"])
+          );
+
           const eligibleUsers = (comebackProfiles ?? []).filter((p: {
             user_id: string;
             expo_push_token: string | null;
@@ -154,7 +172,16 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
                 return false;
               }
             }
-            return true;
+            // Per-user TZ check: their last secure must be >=3 days ago IN THEIR LOCAL CALENDAR
+            const userTz = tzByUser.get(p.user_id) ?? "UTC";
+            const userToday = getTodayDateKey(userTz);
+            const lastKey = lastSecureByUser.get(p.user_id);
+            if (!lastKey) return false;
+            // Calendar diff in days
+            const a = new Date(`${userToday}T00:00:00Z`).getTime();
+            const b = new Date(`${lastKey}T00:00:00Z`).getTime();
+            const dayDiff = Math.floor((a - b) / (24 * 60 * 60 * 1000));
+            return dayDiff >= 3;
           });
 
           const currentHourUTC = now.getUTCHours();

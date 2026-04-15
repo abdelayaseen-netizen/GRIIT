@@ -150,7 +150,7 @@ export async function runDailyReset(supabase: SupabaseClient): Promise<{
           .from("streaks")
           .update({
             active_streak_count: 0,
-            last_secured_date: null,
+            last_completed_date_key: null,
           })
           .in("user_id", usersToReset);
 

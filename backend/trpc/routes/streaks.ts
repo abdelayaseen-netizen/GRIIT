@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
-import { dateKeyFromDate, parseDateKey, daysBetweenKeys } from "../../lib/date-utils";
+import { daysBetweenKeys, getYesterdayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 
 const STREAK_FREEZE_PER_MONTH = 1;
 const FREEZE_ELIGIBLE_MISSED_DAYS = 1;
@@ -14,10 +14,8 @@ export const streaksRouter = createTRPCRouter({
   useFreeze: protectedProcedure
     .input(z.object({ dateKeyToFreeze: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }))
     .mutation(async ({ input, ctx }) => {
-      const todayKey = dateKeyFromDate(new Date());
-      const yesterday = new Date(parseDateKey(todayKey));
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayKey = dateKeyFromDate(yesterday);
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const yesterdayKey = getYesterdayDateKey(tz);
 
       if (input.dateKeyToFreeze !== yesterdayKey) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used for yesterday." });

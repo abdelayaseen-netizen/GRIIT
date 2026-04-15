@@ -28,6 +28,10 @@ import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
 import { trackEvent } from "@/lib/analytics";
+// Static import: ensures Notifications.setNotificationHandler at the top of
+// lib/notifications.ts runs at app boot, before any timer task can schedule a
+// lock-screen notification.
+import { requestNotificationPermissions } from "@/lib/notifications";
 import { useScreenTracker } from "@/hooks/useScreenTracker";
 
 initialiseSentry();
@@ -52,9 +56,7 @@ function PushRegistrationBootstrap() {
   useEffect(() => {
     if (Platform.OS === "web" || !user) return;
     void requestNotificationPermissionAfterFirstJoin();
-    void import("@/lib/notifications").then(({ requestNotificationPermissions }) => {
-      void requestNotificationPermissions();
-    });
+    void requestNotificationPermissions();
   }, [user]);
   return null;
 }

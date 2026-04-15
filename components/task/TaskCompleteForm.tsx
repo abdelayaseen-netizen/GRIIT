@@ -570,7 +570,13 @@ export function TaskCompleteForm(props: TaskCompleteFormProps) {
   </View>
 )}
 
-{/* Photo proof (required add-on or photo task) */}
+</View>
+
+{/* Photo proof — INTENTIONALLY OUTSIDE the dimmed wrapper above.
+    The hard-mode photo gate is satisfied by taking a photo, so the
+    Take Photo button MUST remain interactive even when hardGatesPassed
+    is false. Otherwise we deadlock the user (no way to satisfy the gate
+    that disables the very button needed to satisfy it). */}
 {needsPhotoProof && (
   <View style={styles.card}>
     <Text style={styles.sectionLabel}>{taskTypeRaw === "photo" ? "Submit proof" : "Photo proof"}</Text>
@@ -645,7 +651,6 @@ export function TaskCompleteForm(props: TaskCompleteFormProps) {
     ) : null}
   </View>
 )}
-</View>
 
 {/* Submit — hidden for pure manual/simple when ready (circle tap submits) */}
 {!(isPureManual && canSubmit) && (
@@ -667,7 +672,7 @@ export function TaskCompleteForm(props: TaskCompleteFormProps) {
       ) : (
         <Text style={styles.primaryBtnText}>
           {isHardVerificationTask && !hardGatesPassed
-            ? "Gates must pass"
+            ? (needsPhotoProof && !photoUrl ? "Take photo to continue" : "Verifying...")
             : showWorkoutTimer && requiredSeconds > 0 && !timerOk
               ? `${Math.floor(Math.max(0, requiredSeconds - timerSeconds) / 60)}:${String(Math.max(0, requiredSeconds - timerSeconds) % 60).padStart(2, "0")} remaining`
               : "Complete task"}

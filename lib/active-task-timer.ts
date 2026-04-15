@@ -42,6 +42,7 @@ export async function startActiveTaskNotification(
         body,
         sound: false,
         sticky: true,
+        interruptionLevel: "timeSensitive",
         data: {
           type: "active_task_timer",
           route: payload.route,
@@ -72,6 +73,7 @@ export async function updateActiveTaskNotification(
         body,
         sound: false,
         sticky: true,
+        interruptionLevel: "timeSensitive",
         data: {
           type: "active_task_timer",
           route: payload.route,
