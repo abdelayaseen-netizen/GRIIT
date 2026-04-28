@@ -37,6 +37,7 @@ import {
   updateActiveTaskNotification,
   clearActiveTaskNotification,
 } from "@/lib/active-task-timer";
+import { endLiveActivity } from "@/lib/live-activity";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useActiveSessionStore } from "@/store/activeSessionStore";
 
@@ -140,6 +141,7 @@ export default function CheckinTaskScreen() {
       if (timerRef.current) clearInterval(timerRef.current);
       if (locationSubscription.current) locationSubscription.current.remove();
       if (notifUpdateRef.current) clearInterval(notifUpdateRef.current);
+      endLiveActivity();
       clearActiveTaskNotification();
       clearActiveSession();
       clearInterval(interval);
@@ -354,6 +356,7 @@ export default function CheckinTaskScreen() {
       clearInterval(notifUpdateRef.current);
       notifUpdateRef.current = null;
     }
+    endLiveActivity();
     clearActiveTaskNotification();
     clearActiveSession();
   };

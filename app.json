@@ -23,13 +23,16 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.griit.challenge-tracker",
-      "buildNumber": "2",
+      "buildNumber": "3",
+      "appleTeamId": "WZT43QXHZB",
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
         "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
         "NSLocationWhenInUseUsageDescription": "GRIIT uses your location to verify outdoor activities like runs and walks.",
         "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true,
+        "NSSupportsLiveActivitiesFrequentUpdates": true
       },
       "entitlements": {
         "com.apple.developer.usernotifications.time-sensitive": true
@@ -72,7 +75,8 @@
       "expo-font",
       "expo-web-browser",
       "expo-apple-authentication",
-      "expo-localization"
+      "expo-localization",
+      "expo-live-activity"
     ],
     "experiments": {
       "typedRoutes": true,

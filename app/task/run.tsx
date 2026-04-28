@@ -43,6 +43,11 @@ import {
   updateActiveTaskNotification,
   clearActiveTaskNotification,
 } from "@/lib/active-task-timer";
+import {
+  startLiveActivity,
+  endLiveActivity,
+  type LiveActivityPayload,
+} from "@/lib/live-activity";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useActiveSessionStore } from "@/store/activeSessionStore";
 
@@ -152,6 +157,7 @@ export default function RunTaskScreen() {
       if (timerRef.current) clearInterval(timerRef.current);
       if (locationSubscription.current) locationSubscription.current.remove();
       if (notifUpdateRef.current) clearInterval(notifUpdateRef.current);
+      endLiveActivity();
       clearActiveTaskNotification();
       clearActiveSession();
       subscription.remove();
@@ -342,6 +348,7 @@ export default function RunTaskScreen() {
       clearInterval(notifUpdateRef.current);
       notifUpdateRef.current = null;
     }
+    endLiveActivity();
     clearActiveTaskNotification();
     clearActiveSession();
 
@@ -384,6 +391,11 @@ export default function RunTaskScreen() {
       targetSeconds: minTimerSeconds,
       route: `${ROUTES.TASK_RUN}?taskId=${task?.id ?? ""}`,
     };
+    const treadmillLiveActivityPayload: LiveActivityPayload = {
+      ...treadmillNotifPayload,
+      challengeName,
+    };
+    startLiveActivity(treadmillLiveActivityPayload);
     startActiveTaskNotification(treadmillNotifPayload);
     notifUpdateRef.current = setInterval(() => {
       setTimerSeconds((prev) => {
@@ -404,6 +416,7 @@ export default function RunTaskScreen() {
       clearInterval(notifUpdateRef.current);
       notifUpdateRef.current = null;
     }
+    endLiveActivity();
     clearActiveTaskNotification();
     clearActiveSession();
   };
