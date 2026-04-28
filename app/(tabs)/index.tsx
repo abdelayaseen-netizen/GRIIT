@@ -131,9 +131,22 @@ export default function HomeScreen() {
   const prevCompletedCount = React.useRef(0);
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showRankModal, setShowRankModal] = React.useState(false);
+  const [showFreezeInfoModal, setShowFreezeInfoModal] = React.useState(false);
   const scrollRef = useRef<FlatList<{ key: string }>>(null);
   const goalsSectionYRef = useRef(0);
   const feedSectionYRef = useRef(0);
+
+  const freezeStatusQuery = useQuery({
+    queryKey: ["streaks", "getFreezeStatus", user?.id ?? ""],
+    enabled: !isGuest && !!user?.id,
+    staleTime: 120_000,
+    queryFn: () =>
+      trpcQuery(TRPC.streaks.getFreezeStatus) as Promise<{
+        remaining: number;
+        limit: number;
+        isPro: boolean;
+      }>,
+  });
 
   const homeQuery = useQuery({
     queryKey: ["home", "v2", user?.id ?? ""],
@@ -261,6 +274,25 @@ export default function HomeScreen() {
   const statsAllZero = streak === 0 && points === 0 && completedChallengesCount === 0;
   const showStatDash = statsAllZero;
   const streakPillLabel = streak === 0 ? "Day 1" : String(streak);
+
+  const freezeStatus = freezeStatusQuery.data;
+  const streakFreezeLine = useMemo(() => {
+    if (!freezeStatus) return null;
+    if (freezeStatus.remaining > 0) {
+      return `🛡 ${freezeStatus.remaining} freeze${freezeStatus.remaining === 1 ? "" : "s"} this month`;
+    }
+    if (!freezeStatus.isPro) return "🛡 Pro: 4 freezes/mo";
+    return "🛡 No freezes left (resets monthly)";
+  }, [freezeStatus]);
+
+  const onStreakFreezeLinePress = useCallback(() => {
+    if (!freezeStatus) return;
+    if (freezeStatus.remaining > 0 || freezeStatus.isPro) {
+      setShowFreezeInfoModal(true);
+      return;
+    }
+    router.push(ROUTES.PAYWALL as never);
+  }, [freezeStatus, router]);
 
   const showCelebration = useCelebrationStore((s) => s.show);
 
@@ -461,7 +493,13 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <StreakHero streak={displayStreak} ringProgress={ringProgress} onStartFirstTask={scrollToGoalsSection} />
+        <StreakHero
+          streak={displayStreak}
+          ringProgress={ringProgress}
+          onStartFirstTask={scrollToGoalsSection}
+          freezeLine={streakFreezeLine}
+          onFreezeLinePress={streakFreezeLine ? onStreakFreezeLinePress : undefined}
+        />
 
         <WeekStrip
           securedDateKeys={securedKeys}
@@ -712,6 +750,36 @@ export default function HomeScreen() {
         }}
         onLetReset={() => setShowFreezeModal(false)}
       />
+      <Modal
+        visible={showFreezeInfoModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowFreezeInfoModal(false)}
+      >
+        <View style={s.rankModalRoot}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={s.rankModalBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowFreezeInfoModal(false)}
+            accessibilityLabel="Close"
+          />
+          <View style={s.rankModalSheet}>
+            <Text style={s.rankModalTitle}>Streak freezes</Text>
+            <Text style={{ fontSize: 15, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 22, marginBottom: 16 }}>
+              If you miss one day, a streak freeze can keep your streak alive. Free accounts get 1 freeze per month;
+              GRIIT Pro includes 4. Freezes reset about every 30 days.
+            </Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={s.rankRow}
+              onPress={() => setShowFreezeInfoModal(false)}
+            >
+              <Text style={[s.rankRowName, { color: DS_COLORS.ACCENT }]}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       <Modal
         visible={longPressMenuChallenge !== null}
         transparent

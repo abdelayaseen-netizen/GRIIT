@@ -116,6 +116,22 @@ export const challengesCreateProcedures = {
         require_strava: z.boolean().optional(),
         strava_min_distance_meters: z.number().optional(),
         strava_activity_type: z.string().max(50).optional(),
+        targetMode: z.enum(["fixed", "ramp"]).optional(),
+        startValue: z.number().optional(),
+        startDurationMinutes: z.number().optional(),
+        routineAnchor: z
+          .enum([
+            "wake_up",
+            "morning_coffee",
+            "after_breakfast",
+            "after_work",
+            "before_bed",
+            "after_brushing_teeth",
+            "lunch_break",
+            "custom",
+          ])
+          .optional(),
+        routineAnchorCustom: z.string().max(80).optional(),
       })).min(0).max(50),
     }).superRefine((data, ctx) => {
       if (data.participationType !== "shared_goal" && data.tasks.length < 1) {
@@ -390,6 +406,11 @@ export const challengesCreateProcedures = {
             require_strava: task.require_strava,
             strava_min_distance_meters: task.strava_min_distance_meters,
             strava_activity_type: task.strava_activity_type,
+            targetMode: task.targetMode,
+            startValue: task.startValue,
+            startDurationMinutes: task.startDurationMinutes,
+            routineAnchor: task.routineAnchor,
+            routineAnchorCustom: task.routineAnchorCustom,
           },
           challenge.id,
           i
@@ -400,7 +421,7 @@ export const challengesCreateProcedures = {
         .from("challenge_tasks")
         .insert(tasksToInsert)
         .select(
-          "id, challenge_id, title, task_type, order_index, config, created_at, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes"
+          "id, challenge_id, title, task_type, order_index, config, created_at, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom"
         );
 
       if (tasksError) {

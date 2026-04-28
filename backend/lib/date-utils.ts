@@ -15,7 +15,7 @@ export function addCalendarDaysToDateKey(dateKey: string, deltaDays: number): st
   return dt.toISOString().slice(0, 10);
 }
 
-function formatDateKeyInTimeZone(isoInstant: Date, timeZone: string): string {
+export function formatDateKeyInTimeZone(isoInstant: Date, timeZone: string): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -131,6 +131,34 @@ export function parseDateKey(key: string): Date {
  * Date keys between start (exclusive) and end (inclusive). start and end are YYYY-MM-DD.
  * Used for streak missed-days and profile getStats.
  */
+/** Start/end are YYYY-MM-DD in the same calendar; inclusive index (same day = 1). */
+export function calendarDayIndexInclusive(startDateKey: string, endDateKey: string): number {
+  const [y1, m1, d1] = startDateKey.split("-").map(Number);
+  const [y2, m2, d2] = endDateKey.split("-").map(Number);
+  if (
+    y1 === undefined ||
+    m1 === undefined ||
+    d1 === undefined ||
+    y2 === undefined ||
+    m2 === undefined ||
+    d2 === undefined
+  ) {
+    return 1;
+  }
+  const u1 = Date.UTC(y1, m1 - 1, d1);
+  const u2 = Date.UTC(y2, m2 - 1, d2);
+  return Math.floor((u2 - u1) / 86400000) + 1;
+}
+
+/** UTC date key for an ISO instant rendered in `timeZone` (same helper as streak / check-ins). */
+export function dateKeyFromIsoInTimeZone(iso: string, timeZone: string): string {
+  try {
+    return formatDateKeyInTimeZone(new Date(iso), timeZone);
+  } catch {
+    return new Date(iso).toISOString().slice(0, 10);
+  }
+}
+
 export function daysBetweenKeys(startKey: string, endKey: string): string[] {
   const out: string[] = [];
   const start = parseDateKey(startKey);

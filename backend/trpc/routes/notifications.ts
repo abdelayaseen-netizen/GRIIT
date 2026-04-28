@@ -10,6 +10,33 @@ const NOTIF_SELECT = "id, user_id, type, title, body, data, read, created_at";
 
 type NotifType = "respect" | "comment" | "follow" | "rank" | "follow_request" | "general";
 
+function anchorVerb(
+  routineAnchor: string | null,
+  routineAnchorCustom: string | null
+): string | null {
+  if (!routineAnchor) return null;
+  switch (routineAnchor) {
+    case "wake_up":
+      return "you wake up";
+    case "morning_coffee":
+      return "your morning coffee";
+    case "after_breakfast":
+      return "breakfast";
+    case "after_work":
+      return "you get home";
+    case "after_brushing_teeth":
+      return "you brush your teeth";
+    case "lunch_break":
+      return "lunch";
+    case "before_bed":
+      return "before bed";
+    case "custom":
+      return routineAnchorCustom?.trim() || null;
+    default:
+      return null;
+  }
+}
+
 function parseDataObject(raw: unknown): Record<string, unknown> {
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
     return raw as Record<string, unknown>;
@@ -221,4 +248,34 @@ export const notificationsRouter = createTRPCRouter({
       return defaults;
     }
   }),
+
+  previewTaskReminderBody: protectedProcedure
+    .input(z.object({ taskId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { data: task, error } = await ctx.supabase
+        .from("challenge_tasks")
+        .select("title, routine_anchor, routine_anchor_custom")
+        .eq("id", input.taskId)
+        .maybeSingle();
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to load task reminder copy.",
+        });
+      }
+      const row = task as {
+        title?: string | null;
+        routine_anchor?: string | null;
+        routine_anchor_custom?: string | null;
+      } | null;
+      const title = row?.title?.trim() || "task";
+      const verb = anchorVerb(
+        row?.routine_anchor ?? null,
+        row?.routine_anchor_custom ?? null
+      );
+      const body = verb
+        ? `Right after ${verb}: ${title}`
+        : `Time for your daily ${title}`;
+      return { body };
+    }),
 });

@@ -112,6 +112,8 @@ export interface TaskEditorTask {
   timeEnforcementEnabled?: boolean;
   scheduleType?: ScheduleType;
   anchorTimeLocal?: string | null;
+  routineAnchor?: "wake_up" | "morning_coffee" | "after_breakfast" | "after_work" | "before_bed" | "after_brushing_teeth" | "lunch_break" | "custom";
+  routineAnchorCustom?: string | null;
   taskDurationMinutes?: number | null;
   windowMode?: WindowMode;
   windowStartOffsetMin?: number | null;
@@ -124,6 +126,12 @@ export interface TaskEditorTask {
   requirePhotoProof?: boolean;
   /** Timer: must stay on timer screen for full duration */
   strictTimerMode?: boolean;
+  /** Target progression mode. "fixed" = same goal every day; "ramp" = interpolate from start to final. */
+  targetMode?: "fixed" | "ramp";
+  /** When targetMode === "ramp": Day-1 value (distance, glasses, pages, reps, etc.). */
+  startValue?: number;
+  /** When targetMode === "ramp": Day-1 duration (timer / run time / session minutes). */
+  startDurationMinutes?: number;
   verificationMethod?: string;
   verificationRuleJson?: {
     sport?: string;
@@ -143,6 +151,8 @@ interface Props {
   editingTask: TaskEditorTask | null;
   onSave: (task: TaskEditorTask) => void;
   onCancel: () => void;
+  /** Challenge length in days (ramp preview). */
+  durationDays?: number;
 }
 
 const JOURNAL_CATEGORIES: { id: JournalCategory; label: string }[] = [
@@ -192,6 +202,43 @@ const TASK_TYPES: {
   { id: "simple", icon: CheckCircle, label: "Simple", description: "Mark complete manually", ...TASK_TYPE_STYLES.simple },
   { id: "checkin", icon: MapPin, label: "Check-in", description: "Verify at a place", ...TASK_TYPE_STYLES.checkin },
 ];
+
+const ROUTINE_ANCHORS: {
+  id: NonNullable<TaskEditorTask["routineAnchor"]>;
+  label: string;
+}[] = [
+  { id: "wake_up", label: "🛏 When I wake up" },
+  { id: "morning_coffee", label: "☕ With morning coffee" },
+  { id: "after_breakfast", label: "🍳 After breakfast" },
+  { id: "after_work", label: "🏠 When I get home from work" },
+  { id: "after_brushing_teeth", label: "🪥 After brushing teeth" },
+  { id: "lunch_break", label: "🥗 At lunch break" },
+  { id: "before_bed", label: "🌙 Before bed" },
+  { id: "custom", label: "+ Other" },
+];
+
+function suggestedAnchorTime(
+  anchor: NonNullable<TaskEditorTask["routineAnchor"]>
+): string | null {
+  switch (anchor) {
+    case "wake_up":
+      return "07:00";
+    case "morning_coffee":
+      return "07:30";
+    case "after_breakfast":
+      return "08:30";
+    case "after_work":
+      return "18:00";
+    case "after_brushing_teeth":
+      return "22:00";
+    case "lunch_break":
+      return "12:30";
+    case "before_bed":
+      return "22:30";
+    default:
+      return null;
+  }
+}
 
 const TASK_TYPE_MAP: Record<
   TaskType,
@@ -245,7 +292,9 @@ export default function TaskEditorModal({
   const [radiusMeters, setRadiusMeters] = useState("150");
 
   const [teEnabled, setTeEnabled] = useState(false);
-  const [teAnchor, setTeAnchor] = useState("05:00");
+  const [teAnchor, setTeAnchor] = useState("");
+  const [routineAnchor, setRoutineAnchor] = useState<NonNullable<TaskEditorTask["routineAnchor"]> | null>(null);
+  const [routineAnchorCustom, setRoutineAnchorCustom] = useState("");
   const [teDuration, setTeDuration] = useState("");
   const [teWinStart, setTeWinStart] = useState("0");
   const [teWinEnd, setTeWinEnd] = useState("60");
@@ -289,7 +338,9 @@ export default function TaskEditorModal({
     setLocationName("");
     setRadiusMeters("150");
     setTeEnabled(false);
-    setTeAnchor("05:00");
+    setTeAnchor("");
+    setRoutineAnchor(null);
+    setRoutineAnchorCustom("");
     setTeDuration("");
     setTeWinStart("0");
     setTeWinEnd("60");
@@ -367,8 +418,9 @@ export default function TaskEditorModal({
       if (editingTask.timeEnforcementEnabled) {
         setTeEnabled(true);
         setTeDetailsExpanded(true);
-        if (editingTask.anchorTimeLocal)
-          setTeAnchor(editingTask.anchorTimeLocal);
+        setTeAnchor(editingTask.anchorTimeLocal ?? "");
+        setRoutineAnchor(editingTask.routineAnchor ?? null);
+        setRoutineAnchorCustom(editingTask.routineAnchorCustom ?? "");
         if (editingTask.taskDurationMinutes)
           setTeDuration(editingTask.taskDurationMinutes.toString());
         if (editingTask.windowStartOffsetMin != null)
@@ -523,8 +575,17 @@ export default function TaskEditorModal({
           timezoneMode: teTzMode,
           challengeTimezone:
             teTzMode === "CHALLENGE_TIMEZONE" ? teTz : null,
+          routineAnchor: routineAnchor ?? undefined,
+          routineAnchorCustom:
+            routineAnchor === "custom"
+              ? (routineAnchorCustom.trim() || null)
+              : null,
         }
-      : { timeEnforcementEnabled: false };
+      : {
+          timeEnforcementEnabled: false,
+          routineAnchor: undefined,
+          routineAnchorCustom: null,
+        };
 
     const verMethod: "manual" | "photo_proof" | "strava_activity" =
       verificationMethod === "strava_activity" ? "strava_activity"
@@ -642,6 +703,8 @@ export default function TaskEditorModal({
     teHardEnd,
     teTzMode,
     teTz,
+    routineAnchor,
+    routineAnchorCustom,
     minWords,
     journalType,
     journalPrompt,
@@ -1134,6 +1197,40 @@ export default function TaskEditorModal({
                   placeholder="e.g. America/New_York"
                 />
               )}
+            </View>
+
+            <View style={cfs.fieldGroup}>
+              <Text style={s.inputLabel}>When in your day?</Text>
+              <View style={s.modeRow}>
+                {ROUTINE_ANCHORS.map((opt) => (
+                  <DurationPill
+                    key={opt.id}
+                    label={opt.label}
+                    selected={routineAnchor === opt.id}
+                    onPress={() => {
+                      setRoutineAnchor(opt.id);
+                      if (opt.id !== "custom") {
+                        const sug = suggestedAnchorTime(opt.id);
+                        if (sug && !teAnchor.trim()) {
+                          setTeAnchor(sug);
+                        }
+                        setRoutineAnchorCustom("");
+                      }
+                    }}
+                  />
+                ))}
+              </View>
+              {routineAnchor === "custom" ? (
+                <TextInput
+                  style={s.offsetInput}
+                  value={routineAnchorCustom}
+                  onChangeText={setRoutineAnchorCustom}
+                  maxLength={80}
+                  multiline={false}
+                  placeholder="Describe your routine anchor"
+                  placeholderTextColor={tokenColors.textSecondaryCreate}
+                />
+              ) : null}
             </View>
           </View>
             )}

@@ -82,7 +82,7 @@ export default function CreateChallengeWizard() {
   const [taskStepError, setTaskStepError] = useState(false);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>("standard");
-  const [photoProof, setPhotoProof] = useState<PhotoProof>("off");
+  const [photoProof, setPhotoProof] = useState<PhotoProof>("optional");
   const [categories, setCategories] = useState<string[]>([]);
   const [catError, setCatError] = useState(false);
   const [teamRules, setTeamRules] = useState<TeamRules>("all");
@@ -435,6 +435,7 @@ export default function CreateChallengeWizard() {
         visible={newTaskOpen}
         onClose={() => setNewTaskOpen(false)}
         hardModeGlobal={hardModeGlobal}
+        durationDays={challengeType === "one_day" ? 1 : duration}
         onAdd={(t) => setTasks((p) => [...p, t])}
       />
 

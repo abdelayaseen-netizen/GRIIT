@@ -46,6 +46,11 @@ type TaskRowWithVerification = ChallengeTaskRowRaw & {
   min_duration_minutes?: number | null;
   anchor_time_local?: string | null;
   window_start_offset_min?: number | null;
+  target_mode?: string | null;
+  start_value?: number | string | null;
+  start_duration_minutes?: number | null;
+  routine_anchor?: string | null;
+  routine_anchor_custom?: string | null;
 };
 
 /** API shape returned to frontend (flat fields) */
@@ -135,6 +140,15 @@ export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Ch
     config: {
       ...(typeof row.config === "object" && row.config !== null ? row.config : {}),
     },
+    target_mode: r.target_mode ?? "fixed",
+    start_value: r.start_value != null ? Number(r.start_value) : null,
+    start_duration_minutes: r.start_duration_minutes ?? null,
+    routine_anchor:
+      typeof r.routine_anchor === "string" ? r.routine_anchor : null,
+    routine_anchor_custom:
+      typeof r.routine_anchor_custom === "string"
+        ? r.routine_anchor_custom
+        : null,
   };
 }
 
@@ -345,9 +359,27 @@ export function buildTaskInsertPayload(
   order_index: number;
   config: ChallengeTaskConfig;
   require_photo?: boolean;
+  target_mode: string;
+  start_value: number | null;
+  start_duration_minutes: number | null;
+  routine_anchor: string | null;
+  routine_anchor_custom: string | null;
 } {
   const task_type = toTaskType(task.type ?? "manual");
   const t = task as Record<string, unknown>;
+  const targetMode = t.targetMode === "ramp" ? "ramp" : "fixed";
+  const startVal =
+    targetMode === "ramp" && typeof t.startValue === "number" ? t.startValue : null;
+  const startDur =
+    targetMode === "ramp" && typeof t.startDurationMinutes === "number"
+      ? t.startDurationMinutes
+      : null;
+  const routineAnchor =
+    typeof t.routineAnchor === "string" ? t.routineAnchor : null;
+  const routineAnchorCustom =
+    routineAnchor === "custom" && typeof t.routineAnchorCustom === "string"
+      ? t.routineAnchorCustom
+      : null;
   const config = buildTaskConfigFromInput({
     type: task.type,
     required: task.required,
@@ -385,6 +417,11 @@ export function buildTaskInsertPayload(
     task_type,
     order_index: orderIndex,
     config,
+    target_mode: targetMode,
+    start_value: startVal,
+    start_duration_minutes: startDur,
+    routine_anchor: routineAnchor,
+    routine_anchor_custom: routineAnchorCustom,
     ...(task.photoRequired === true || task.requirePhotoProof === true ? { require_photo: true } : {}),
   };
 }

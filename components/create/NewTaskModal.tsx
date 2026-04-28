@@ -16,6 +16,7 @@ import { Camera } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS, GRIIT_COLORS } from "@/lib/design-system"
 import type { TaskEditorTask } from "@/components/TaskEditorModal";
+import { getDailyTarget } from "@/lib/task-progress";
 import type { JournalCategory } from "@/types";
 
 type WizardTaskType =
@@ -272,6 +273,11 @@ type BuildOpts = {
   heartRateThreshold: number;
   workoutType: WorkoutTypeUI;
   timedWorkout: boolean;
+  rampEnabled: boolean;
+  /** Day-1 value (glasses, pages, reps, distance, or run time minutes) */
+  rampStartValue: number | null;
+  /** Day-1 timer minutes */
+  rampStartDuration: number | null;
 };
 
 function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, opts: BuildOpts): TaskEditorTask | null {
@@ -293,17 +299,24 @@ function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, op
         captureMood: opts.captureMoodJournal,
       };
     }
-    case "timer":
+    case "timer": {
+      const end = opts.timerMins;
+      const ramp = opts.rampEnabled && opts.rampStartDuration != null && opts.rampStartDuration > 0 && opts.rampStartDuration < end;
       return {
         id: newId(),
         title,
         type: "timer",
         required: true,
-        durationMinutes: opts.timerMins,
+        durationMinutes: end,
         mustCompleteInSession: true,
         requirePhotoProof: reqPhoto(opts.requirePhotoTimer),
         strictTimerMode: opts.hardModeTimer,
+        targetMode: ramp ? "ramp" : "fixed",
+        startDurationMinutes: ramp ? opts.rampStartDuration ?? undefined : undefined,
+        targetValue: end,
+        unit: "minutes",
       };
+    }
     case "photo":
       return {
         id: newId(),
@@ -316,29 +329,47 @@ function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, op
       };
     case "run":
       if (opts.runTracking === "distance") {
+        const end = opts.runTarget;
+        const ramp =
+          opts.rampEnabled &&
+          opts.rampStartValue != null &&
+          opts.rampStartValue > 0 &&
+          opts.rampStartValue < end;
         return {
           id: newId(),
           title,
           type: "run",
           required: true,
           trackingMode: "distance",
-          targetValue: opts.runTarget,
+          targetValue: end,
           unit: opts.runUnitDist,
           requirePhotoProof: reqPhoto(opts.requirePhotoRun),
           verificationMethod: opts.gpsRun ? "gps" : undefined,
+          targetMode: ramp ? "ramp" : "fixed",
+          startValue: ramp ? opts.rampStartValue ?? undefined : undefined,
         };
       }
-      return {
-        id: newId(),
-        title,
-        type: "run",
-        required: true,
-        trackingMode: "time",
-        targetValue: opts.runTarget,
-        unit: "minutes",
-        requirePhotoProof: reqPhoto(opts.requirePhotoRun),
-        verificationMethod: opts.gpsRun ? "gps" : undefined,
-      };
+      {
+        const end = opts.runTarget;
+        const ramp =
+          opts.rampEnabled &&
+          opts.rampStartDuration != null &&
+          opts.rampStartDuration > 0 &&
+          opts.rampStartDuration < end;
+        return {
+          id: newId(),
+          title,
+          type: "run",
+          required: true,
+          trackingMode: "time",
+          targetValue: end,
+          unit: "minutes",
+          requirePhotoProof: reqPhoto(opts.requirePhotoRun),
+          verificationMethod: opts.gpsRun ? "gps" : undefined,
+          targetMode: ramp ? "ramp" : "fixed",
+          startDurationMinutes: ramp ? opts.rampStartDuration ?? undefined : undefined,
+        };
+      }
     case "simple":
       return {
         id: newId(),
@@ -357,27 +388,45 @@ function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, op
         radiusMeters: 150,
         requirePhotoProof: reqPhoto(false),
       };
-    case "water":
+    case "water": {
+      const end = opts.waterGlasses;
+      const ramp =
+        opts.rampEnabled &&
+        opts.rampStartValue != null &&
+        opts.rampStartValue > 0 &&
+        opts.rampStartValue < end;
       return {
         id: newId(),
         title,
         type: "water",
         required: true,
-        targetValue: opts.waterGlasses,
+        targetValue: end,
         unit: "glasses",
         requirePhotoProof: reqPhoto(false),
+        targetMode: ramp ? "ramp" : "fixed",
+        startValue: ramp ? opts.rampStartValue ?? undefined : undefined,
       };
-    case "reading":
+    }
+    case "reading": {
+      const end = opts.readingPages;
+      const ramp =
+        opts.rampEnabled &&
+        opts.rampStartValue != null &&
+        opts.rampStartValue > 0 &&
+        opts.rampStartValue < end;
       return {
         id: newId(),
         title,
         type: "reading",
         required: true,
-        targetValue: opts.readingPages,
+        targetValue: end,
         unit: "pages",
         requirePhotoProof: reqPhoto(false),
         durationMinutes: opts.timedReading ? opts.readingSessionMins : undefined,
+        targetMode: ramp ? "ramp" : "fixed",
+        startValue: ramp ? opts.rampStartValue ?? undefined : undefined,
       };
+    }
     case "workout":
       return {
         id: newId(),
@@ -400,16 +449,25 @@ function buildTask(name: string, t: WizardTaskType, hardPhotoGlobal: boolean, op
             ? { workout_type: opts.workoutType }
             : null,
       };
-    case "counter":
+    case "counter": {
+      const end = opts.counterTarget;
+      const ramp =
+        opts.rampEnabled &&
+        opts.rampStartValue != null &&
+        opts.rampStartValue > 0 &&
+        opts.rampStartValue < end;
       return {
         id: newId(),
         title,
         type: "counter",
         required: true,
-        targetValue: opts.counterTarget,
+        targetValue: end,
         unit: (opts.counterUnit.trim() || "reps") as TaskEditorTask["unit"],
         requirePhotoProof: reqPhoto(opts.requirePhotoCounter),
+        targetMode: ramp ? "ramp" : "fixed",
+        startValue: ramp ? opts.rampStartValue ?? undefined : undefined,
       };
+    }
     default:
       return null;
   }
@@ -420,9 +478,11 @@ type Props = {
   onClose: () => void;
   onAdd: (task: TaskEditorTask & { wizardType?: string }) => void;
   hardModeGlobal?: boolean;
+  /** Challenge length in days (for ramp preview). */
+  durationDays: number;
 };
 
-export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }: Props) {
+export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal, durationDays }: Props) {
   const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<WizardTaskType>("simple");
@@ -463,6 +523,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
   const [locationLng, setLocationLng] = useState<number | null>(null);
   const [requireCameraOnly, setRequireCameraOnly] = useState(false);
   const [requireStrava, setRequireStrava] = useState(false);
+  const [rampEnabled, setRampEnabled] = useState(false);
+  const [rampDay1, setRampDay1] = useState("1");
 
   useEffect(() => {
     if (!visible) {
@@ -505,6 +567,8 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       setLocationLng(null);
       setRequireCameraOnly(false);
       setRequireStrava(false);
+      setRampEnabled(false);
+      setRampDay1("1");
     } else {
       setHardMode(!!hardModeGlobal);
     }
@@ -527,11 +591,32 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     setCaptureMoodJournal(false);
     setLocationStampPhoto(false);
     setRequireStrava(false);
+    setRampEnabled(false);
+    setRampDay1("1");
   }, [kind]);
 
   const buildOpts = useCallback((): BuildOpts => {
     const runT =
       runTracking === "distance" ? parsePositiveFloat(runTarget, 3) : parsePositiveInt(runTarget, 30);
+    let rampStartValue: number | null = null;
+    let rampStartDuration: number | null = null;
+    if (rampEnabled) {
+      if (kind === "timer") {
+        const v = parsePositiveInt(rampDay1, 0);
+        rampStartDuration = v > 0 ? v : null;
+      } else if (kind === "run") {
+        if (runTracking === "distance") {
+          const v = parsePositiveFloat(rampDay1, 0);
+          rampStartValue = v > 0 ? v : null;
+        } else {
+          const v = parsePositiveInt(rampDay1, 0);
+          rampStartDuration = v > 0 ? v : null;
+        }
+      } else if (kind === "water" || kind === "reading" || kind === "counter") {
+        const v = parsePositiveInt(rampDay1, 0);
+        rampStartValue = v > 0 ? v : null;
+      }
+    }
     return {
       timerMins: parsePositiveInt(timerMins, 30),
       waterGlasses: parsePositiveInt(waterGlasses, 8),
@@ -560,14 +645,20 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       heartRateThreshold: parsePositiveInt(heartRateThreshold, 120),
       workoutType,
       timedWorkout,
+      rampEnabled,
+      rampStartValue,
+      rampStartDuration,
     };
   }, [
+    kind,
+    rampEnabled,
+    rampDay1,
+    runTracking,
     timerMins,
     waterGlasses,
     readingPages,
     counterTarget,
     counterUnit,
-    runTracking,
     runTarget,
     runUnitDist,
     workoutMins,
@@ -595,21 +686,62 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     if (!name.trim()) return false;
     if (hardMode && requireLocation && !locationName.trim()) return false;
     switch (kind) {
-      case "timer":
-        return parsePositiveInt(timerMins, 0) > 0;
-      case "water":
-        return parsePositiveInt(waterGlasses, 0) > 0;
-      case "reading":
-        if (parsePositiveInt(readingPages, 0) <= 0) return false;
-        if (timedReading && parsePositiveInt(readingSessionMins, 0) <= 0) return false;
+      case "timer": {
+        const end = parsePositiveInt(timerMins, 0);
+        if (end <= 0) return false;
+        if (rampEnabled) {
+          const s = parsePositiveInt(rampDay1, 0);
+          if (s <= 0 || s >= end) return false;
+        }
         return true;
-      case "counter":
-        return parsePositiveInt(counterTarget, 0) > 0;
+      }
+      case "water": {
+        const end = parsePositiveInt(waterGlasses, 0);
+        if (end <= 0) return false;
+        if (rampEnabled) {
+          const s = parsePositiveInt(rampDay1, 0);
+          if (s <= 0 || s >= end) return false;
+        }
+        return true;
+      }
+      case "reading": {
+        const end = parsePositiveInt(readingPages, 0);
+        if (end <= 0) return false;
+        if (timedReading && parsePositiveInt(readingSessionMins, 0) <= 0) return false;
+        if (rampEnabled) {
+          const s = parsePositiveInt(rampDay1, 0);
+          if (s <= 0 || s >= end) return false;
+        }
+        return true;
+      }
+      case "counter": {
+        const end = parsePositiveInt(counterTarget, 0);
+        if (end <= 0) return false;
+        if (rampEnabled) {
+          const s = parsePositiveInt(rampDay1, 0);
+          if (s <= 0 || s >= end) return false;
+        }
+        return true;
+      }
       case "run":
         if (runTracking === "distance") {
-          return parsePositiveFloat(runTarget, 0) > 0;
+          const end = parsePositiveFloat(runTarget, 0);
+          if (end <= 0) return false;
+          if (rampEnabled) {
+            const s = parsePositiveFloat(rampDay1, 0);
+            if (s <= 0 || s >= end) return false;
+          }
+          return true;
         }
-        return parsePositiveInt(runTarget, 0) > 0;
+        {
+          const end = parsePositiveInt(runTarget, 0);
+          if (end <= 0) return false;
+          if (rampEnabled) {
+            const s = parsePositiveInt(rampDay1, 0);
+            if (s <= 0 || s >= end) return false;
+          }
+          return true;
+        }
       case "workout":
         if (parsePositiveInt(workoutMins, 0) <= 0) return false;
         if (requireLocationWorkout && !locationNameWorkout.trim()) return false;
@@ -634,7 +766,123 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
     hardMode,
     requireLocation,
     locationName,
+    rampEnabled,
+    rampDay1,
+    durationDays,
   ]);
+
+  const totalRampDays = Math.max(2, Math.min(365, durationDays > 0 ? durationDays : 21));
+
+  const rampPreviewTimer = useMemo(() => {
+    if (!rampEnabled || kind !== "timer") return null;
+    const end = parsePositiveInt(timerMins, 30);
+    const start = parsePositiveInt(rampDay1, 1);
+    if (start <= 0 || start >= end) return null;
+    const base = {
+      target_mode: "ramp" as const,
+      start_value: null as number | null,
+      target_value: null as number | null,
+      start_duration_minutes: start,
+      duration_minutes: end,
+    };
+    const midDay = Math.min(7, totalRampDays);
+    const d1 = getDailyTarget(base, 1, totalRampDays, "int");
+    const dm = getDailyTarget(base, midDay, totalRampDays, "int");
+    const dlast = getDailyTarget(base, totalRampDays, totalRampDays, "int");
+    return `Day 1: ${d1.durationMinutes} min → Day ${midDay}: ${dm.durationMinutes} min → Day ${totalRampDays}: ${dlast.durationMinutes} min`;
+  }, [rampEnabled, kind, timerMins, rampDay1, totalRampDays]);
+
+  const rampPreviewWater = useMemo(() => {
+    if (!rampEnabled || kind !== "water") return null;
+    const end = parsePositiveInt(waterGlasses, 8);
+    const start = parsePositiveInt(rampDay1, 1);
+    if (start <= 0 || start >= end) return null;
+    const base = {
+      target_mode: "ramp" as const,
+      start_value: start,
+      target_value: end,
+      start_duration_minutes: null as number | null,
+      duration_minutes: null as number | null,
+    };
+    const midDay = Math.min(7, totalRampDays);
+    const d1 = getDailyTarget(base, 1, totalRampDays, "int");
+    const dm = getDailyTarget(base, midDay, totalRampDays, "int");
+    const dlast = getDailyTarget(base, totalRampDays, totalRampDays, "int");
+    return `Day 1: ${d1.targetValue} → Day ${midDay}: ${dm.targetValue} → Day ${totalRampDays}: ${dlast.targetValue}`;
+  }, [rampEnabled, kind, waterGlasses, rampDay1, totalRampDays]);
+
+  const rampPreviewReading = useMemo(() => {
+    if (!rampEnabled || kind !== "reading") return null;
+    const end = parsePositiveInt(readingPages, 10);
+    const start = parsePositiveInt(rampDay1, 1);
+    if (start <= 0 || start >= end) return null;
+    const base = {
+      target_mode: "ramp" as const,
+      start_value: start,
+      target_value: end,
+      start_duration_minutes: null as number | null,
+      duration_minutes: null as number | null,
+    };
+    const midDay = Math.min(7, totalRampDays);
+    const d1 = getDailyTarget(base, 1, totalRampDays, "int");
+    const dm = getDailyTarget(base, midDay, totalRampDays, "int");
+    const dlast = getDailyTarget(base, totalRampDays, totalRampDays, "int");
+    return `Day 1: ${d1.targetValue} pages → Day ${midDay}: ${dm.targetValue} pages → Day ${totalRampDays}: ${dlast.targetValue} pages`;
+  }, [rampEnabled, kind, readingPages, rampDay1, totalRampDays]);
+
+  const rampPreviewCounter = useMemo(() => {
+    if (!rampEnabled || kind !== "counter") return null;
+    const end = parsePositiveInt(counterTarget, 100);
+    const start = parsePositiveInt(rampDay1, 1);
+    if (start <= 0 || start >= end) return null;
+    const base = {
+      target_mode: "ramp" as const,
+      start_value: start,
+      target_value: end,
+      start_duration_minutes: null as number | null,
+      duration_minutes: null as number | null,
+    };
+    const midDay = Math.min(7, totalRampDays);
+    const d1 = getDailyTarget(base, 1, totalRampDays, "int");
+    const dm = getDailyTarget(base, midDay, totalRampDays, "int");
+    const dlast = getDailyTarget(base, totalRampDays, totalRampDays, "int");
+    return `Day 1: ${d1.targetValue} → Day ${midDay}: ${dm.targetValue} → Day ${totalRampDays}: ${dlast.targetValue}`;
+  }, [rampEnabled, kind, counterTarget, rampDay1, totalRampDays]);
+
+  const rampPreviewRun = useMemo(() => {
+    if (!rampEnabled || kind !== "run") return null;
+    const midDay = Math.min(7, totalRampDays);
+    if (runTracking === "distance") {
+      const end = parsePositiveFloat(runTarget, 3);
+      const start = parsePositiveFloat(rampDay1, 1);
+      if (start <= 0 || start >= end) return null;
+      const base = {
+        target_mode: "ramp" as const,
+        start_value: start,
+        target_value: end,
+        start_duration_minutes: null as number | null,
+        duration_minutes: null as number | null,
+      };
+      const d1 = getDailyTarget(base, 1, totalRampDays, "runDistance");
+      const dm = getDailyTarget(base, midDay, totalRampDays, "runDistance");
+      const dlast = getDailyTarget(base, totalRampDays, totalRampDays, "runDistance");
+      return `Day 1: ${d1.targetValue} ${runUnitDist} → Day ${midDay}: ${dm.targetValue} ${runUnitDist} → Day ${totalRampDays}: ${dlast.targetValue} ${runUnitDist}`;
+    }
+    const end = parsePositiveInt(runTarget, 30);
+    const start = parsePositiveInt(rampDay1, 1);
+    if (start <= 0 || start >= end) return null;
+    const base = {
+      target_mode: "ramp" as const,
+      start_value: null as number | null,
+      target_value: null as number | null,
+      start_duration_minutes: start,
+      duration_minutes: end,
+    };
+    const d1 = getDailyTarget(base, 1, totalRampDays, "int");
+    const dm = getDailyTarget(base, midDay, totalRampDays, "int");
+    const dlast = getDailyTarget(base, totalRampDays, totalRampDays, "int");
+    return `Day 1: ${d1.durationMinutes} min → Day ${midDay}: ${dm.durationMinutes} min → Day ${totalRampDays}: ${dlast.durationMinutes} min`;
+  }, [rampEnabled, kind, runTracking, runTarget, rampDay1, totalRampDays, runUnitDist]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     try {
@@ -733,7 +981,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       case "timer":
         return (
           <View style={s.configBlock}>
-            <Text style={s.label}>Duration (minutes)</Text>
+            <Text style={s.label}>
+              {rampEnabled ? `By day ${totalRampDays}, reach (minutes)` : "Duration (minutes)"}
+            </Text>
             <TextInput
               style={s.input}
               placeholder="e.g. 30"
@@ -743,6 +993,22 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setTimerMins}
               accessibilityLabel="Timer duration in minutes"
             />
+            {row("Start small, build up", rampEnabled, setRampEnabled, "Toggle start small build up ramp")}
+            {rampEnabled ? (
+              <>
+                <Text style={[s.label, s.labelSp]}>Day 1 starts at (minutes)</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="e.g. 5"
+                  placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                  keyboardType="number-pad"
+                  value={rampDay1}
+                  onChangeText={setRampDay1}
+                  accessibilityLabel="Day 1 timer minutes"
+                />
+                {rampPreviewTimer ? <Text style={s.rampCaption}>{rampPreviewTimer}</Text> : null}
+              </>
+            ) : null}
             {row("Require photo proof", requirePhotoTimer, setRequirePhotoTimer, "Toggle require photo proof for timer")}
             {row("Hard mode (stay on screen)", hardModeTimer, setHardModeTimer, "Toggle hard mode timer, stay on screen")}
           </View>
@@ -750,7 +1016,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       case "water":
         return (
           <View style={s.configBlock}>
-            <Text style={s.label}>Daily target (glasses)</Text>
+            <Text style={s.label}>
+              {rampEnabled ? `By day ${totalRampDays}, reach (glasses)` : "Daily target (glasses)"}
+            </Text>
             <TextInput
               style={s.input}
               placeholder="e.g. 8"
@@ -760,12 +1028,30 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setWaterGlasses}
               accessibilityLabel="Water target in glasses"
             />
+            {row("Start small, build up", rampEnabled, setRampEnabled, "Toggle start small build up ramp")}
+            {rampEnabled ? (
+              <>
+                <Text style={[s.label, s.labelSp]}>Day 1 starts at (glasses)</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="e.g. 4"
+                  placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                  keyboardType="number-pad"
+                  value={rampDay1}
+                  onChangeText={setRampDay1}
+                  accessibilityLabel="Day 1 water glasses"
+                />
+                {rampPreviewWater ? <Text style={s.rampCaption}>{rampPreviewWater}</Text> : null}
+              </>
+            ) : null}
           </View>
         );
       case "reading":
         return (
           <View style={s.configBlock}>
-            <Text style={s.label}>Target pages</Text>
+            <Text style={s.label}>
+              {rampEnabled ? `By day ${totalRampDays}, reach (pages)` : "Target pages"}
+            </Text>
             <TextInput
               style={s.input}
               placeholder="e.g. 10"
@@ -775,6 +1061,22 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setReadingPages}
               accessibilityLabel="Reading target pages"
             />
+            {row("Start small, build up", rampEnabled, setRampEnabled, "Toggle start small build up ramp")}
+            {rampEnabled ? (
+              <>
+                <Text style={[s.label, s.labelSp]}>Day 1 starts at (pages)</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="e.g. 2"
+                  placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                  keyboardType="number-pad"
+                  value={rampDay1}
+                  onChangeText={setRampDay1}
+                  accessibilityLabel="Day 1 reading pages"
+                />
+                {rampPreviewReading ? <Text style={s.rampCaption}>{rampPreviewReading}</Text> : null}
+              </>
+            ) : null}
             {row("Timed reading session", timedReading, setTimedReading, "Toggle timed reading session")}
             {timedReading ? (
               <>
@@ -795,7 +1097,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
       case "counter":
         return (
           <View style={s.configBlock}>
-            <Text style={s.label}>Target count</Text>
+            <Text style={s.label}>
+              {rampEnabled ? `By day ${totalRampDays}, reach` : "Target count"}
+            </Text>
             <TextInput
               style={s.input}
               placeholder="e.g. 100"
@@ -805,6 +1109,22 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
               onChangeText={setCounterTarget}
               accessibilityLabel="Target count"
             />
+            {row("Start small, build up", rampEnabled, setRampEnabled, "Toggle start small build up ramp")}
+            {rampEnabled ? (
+              <>
+                <Text style={[s.label, s.labelSp]}>Day 1 starts at</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="e.g. 10"
+                  placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                  keyboardType="number-pad"
+                  value={rampDay1}
+                  onChangeText={setRampDay1}
+                  accessibilityLabel="Day 1 count"
+                />
+                {rampPreviewCounter ? <Text style={s.rampCaption}>{rampPreviewCounter}</Text> : null}
+              </>
+            ) : null}
             <Text style={[s.label, s.labelSp]}>Unit</Text>
             <TextInput
               style={s.input}
@@ -863,7 +1183,9 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
             </View>
             {runTracking === "distance" ? (
               <>
-                <Text style={[s.label, s.labelSp]}>Target distance</Text>
+                <Text style={[s.label, s.labelSp]}>
+                  {rampEnabled ? `By day ${totalRampDays}, reach` : "Target distance"}
+                </Text>
                 <TextInput
                   style={s.input}
                   placeholder="e.g. 3"
@@ -903,10 +1225,28 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {row("Start small, build up", rampEnabled, setRampEnabled, "Toggle start small build up ramp")}
+                {rampEnabled ? (
+                  <>
+                    <Text style={[s.label, s.labelSp]}>Day 1 starts at ({runUnitDist})</Text>
+                    <TextInput
+                      style={s.input}
+                      placeholder="e.g. 1"
+                      placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                      keyboardType="decimal-pad"
+                      value={rampDay1}
+                      onChangeText={setRampDay1}
+                      accessibilityLabel="Day 1 run distance"
+                    />
+                    {rampPreviewRun ? <Text style={s.rampCaption}>{rampPreviewRun}</Text> : null}
+                  </>
+                ) : null}
               </>
             ) : (
               <>
-                <Text style={[s.label, s.labelSp]}>Duration (minutes)</Text>
+                <Text style={[s.label, s.labelSp]}>
+                  {rampEnabled ? `By day ${totalRampDays}, reach (minutes)` : "Duration (minutes)"}
+                </Text>
                 <TextInput
                   style={s.input}
                   placeholder="e.g. 30"
@@ -916,6 +1256,22 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal }
                   onChangeText={setRunTarget}
                   accessibilityLabel="Run duration in minutes"
                 />
+                {row("Start small, build up", rampEnabled, setRampEnabled, "Toggle start small build up ramp")}
+                {rampEnabled ? (
+                  <>
+                    <Text style={[s.label, s.labelSp]}>Day 1 starts at (minutes)</Text>
+                    <TextInput
+                      style={s.input}
+                      placeholder="e.g. 10"
+                      placeholderTextColor={DS_COLORS.TEXT_MUTED}
+                      keyboardType="number-pad"
+                      value={rampDay1}
+                      onChangeText={setRampDay1}
+                      accessibilityLabel="Day 1 run minutes"
+                    />
+                    {rampPreviewRun ? <Text style={s.rampCaption}>{rampPreviewRun}</Text> : null}
+                  </>
+                ) : null}
               </>
             )}
             {row("GPS tracking", gpsRun, setGpsRun, "Toggle GPS tracking for run")}
@@ -1330,6 +1686,13 @@ const s = StyleSheet.create({
   body: { padding: DS_SPACING.lg },
   label: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_SECONDARY, marginBottom: 8 },
   labelSp: { marginTop: DS_SPACING.md },
+  rampCaption: {
+    fontSize: 12,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_REGULAR,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 8,
+    lineHeight: 17,
+  },
   input: {
     backgroundColor: DS_COLORS.WHITE,
     borderWidth: 1,

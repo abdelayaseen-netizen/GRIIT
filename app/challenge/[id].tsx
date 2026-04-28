@@ -72,6 +72,7 @@ import { SkeletonChallengeDetail } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { challengeDetailStyles as s } from "@/components/challenge/challengeDetailScreenStyles";
+import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import { ChallengeHero } from "@/components/challenge/ChallengeHero";
 import { ChallengeStats } from "@/components/challenge/ChallengeStats";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
@@ -252,11 +253,43 @@ function CountdownTimer({ endsAt, theme }: { endsAt: string; theme: DifficultyTh
 
 function RequirementChips({
   task,
+  dayNumber,
+  totalDays,
 }: {
-  task: ChallengeTaskFromApi & { min_duration_minutes?: number | null; require_photo?: boolean };
+  task: ChallengeTaskFromApi & {
+    min_duration_minutes?: number | null;
+    require_photo?: boolean;
+    target_mode?: string;
+    start_value?: number | null;
+    start_duration_minutes?: number | null;
+    type?: string;
+  };
+  dayNumber?: number;
+  totalDays?: number;
 }) {
+  const raw = task as Record<string, unknown>;
+  const cfg = (typeof raw.config === "object" && raw.config !== null ? raw.config : {}) as Record<string, unknown>;
+  const daily =
+    dayNumber != null && totalDays != null && totalDays > 0
+      ? getDailyTargetForChallengeTask(
+          {
+            task_type: String((raw as { type?: string }).type ?? "manual"),
+            target_mode: (raw as { target_mode?: string }).target_mode,
+            start_value: (raw as { start_value?: number | null }).start_value ?? null,
+            start_duration_minutes: (raw as { start_duration_minutes?: number | null }).start_duration_minutes ?? null,
+            config: cfg,
+            min_duration_minutes:
+              (raw as { min_duration_minutes?: number | null }).min_duration_minutes ?? null,
+          },
+          dayNumber,
+          totalDays
+        )
+      : null;
   const reqPhoto = task.require_photo === true || task.require_photo_proof === true;
   const dur =
+    (daily?.durationMinutes != null && daily.durationMinutes > 0
+      ? daily.durationMinutes
+      : null) ??
     (typeof task.min_duration_minutes === "number" && task.min_duration_minutes > 0
       ? task.min_duration_minutes
       : null) ??
@@ -309,6 +342,8 @@ function MissionRow({
   onConnectStrava,
   onVerifyStrava,
   isPro = true,
+  dayNumber,
+  totalDays,
 }: {
   task: ChallengeTaskFromApi & { journalPrompt?: string; journalTypes?: string[]; captureMood?: boolean; captureEnergy?: boolean; captureBodyState?: boolean; wordLimitEnabled?: boolean; wordLimitWords?: number | null; timeEnforcementEnabled?: boolean; anchorTimeLocal?: string; verification_method?: string | null; require_location?: boolean; require_heart_rate?: boolean };
   theme: DifficultyTheme;
@@ -323,6 +358,8 @@ function MissionRow({
   onConnectStrava?: () => void;
   onVerifyStrava?: () => Promise<void>;
   isPro?: boolean;
+  dayNumber?: number;
+  totalDays?: number;
 }) {
   const isLockedProFeature = !isPro && (task.require_location === true || task.require_heart_rate === true);
   const IconComp = TASK_ICONS[task.type] || Target;
@@ -420,7 +457,7 @@ function MissionRow({
             {[task.verification, task.estimate].filter(Boolean).join(" \u00B7 ")}
           </Text>
         ) : null}
-        <RequirementChips task={task} />
+        <RequirementChips task={task} dayNumber={dayNumber} totalDays={totalDays} />
       </View>
       {isCompleted ? (
         <View style={s.completedBadge}>
@@ -1289,6 +1326,12 @@ export default function ChallengeDetailScreen() {
                       onStart={() => handleMissionStart(task)}
                       checkin={checkin}
                       isPro={isPro}
+                      dayNumber={isJoined ? Math.max(1, userCurrentDay) : undefined}
+                      totalDays={
+                        challenge?.duration_days != null && challenge.duration_days > 0
+                          ? challenge.duration_days
+                          : undefined
+                      }
                       verificationMethod={(task as { verification_method?: string }).verification_method}
                       stravaConnected={hasStravaTasks ? stravaConnected : null}
                       activeChallengeId={isThisActiveChallenge ? activeChallengeId : undefined}

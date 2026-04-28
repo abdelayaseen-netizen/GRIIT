@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { X, Flame, Zap, BarChart2, Users } from "lucide-react-native";
+import { X, Flame, Zap, BarChart2, Users, Shield } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system"
 import { getOfferings, purchasePackage, restorePurchases } from "@/lib/revenue-cat";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -25,6 +25,7 @@ import { ROUTES } from "@/lib/routes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const VALUE_PROPS = [
+  { icon: Shield, title: "4 streak freezes per month (free: 1)", subtitle: "Protect your streak on an off day" },
   { icon: Flame, title: "Unlimited challenges", subtitle: "Join as many as you want" },
   { icon: BarChart2, title: "Advanced analytics", subtitle: "Detailed streak and score breakdowns" },
   { icon: Users, title: "Team challenges", subtitle: "Compete with friends" },

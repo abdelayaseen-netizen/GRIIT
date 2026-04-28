@@ -7,7 +7,10 @@ import {
   getTodayDateKey,
   getYesterdayDateKey,
   getProfileTimeZoneForUser,
+  dateKeyFromIsoInTimeZone,
+  calendarDayIndexInclusive,
 } from "../../lib/date-utils";
+import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import type { PgError } from "../../types/db";
 import {
   type ChallengeTaskConfig,
@@ -37,6 +40,9 @@ type TaskRowWithVerification = ChallengeTaskRowRaw & {
   location_longitude?: number | null;
   location_radius_meters?: number | null;
   min_duration_minutes?: number | null;
+  target_mode?: string | null;
+  start_value?: number | null;
+  start_duration_minutes?: number | null;
 };
 
 export const checkinsRouter = createTRPCRouter({
@@ -61,8 +67,30 @@ export const checkinsRouter = createTRPCRouter({
       const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
       const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
       const dateKey = getTodayDateKey(tz);
-      const { data: chRow } = await ctx.supabase.from("challenges").select("duration_type, ends_at, live_date").eq("id", challenge_id).single();
-      const ch = chRow as { duration_type?: string; ends_at?: string | null; live_date?: string | null } | null;
+      const { data: acStartRow } = await ctx.supabase
+        .from("active_challenges")
+        .select("start_at")
+        .eq("id", input.activeChallengeId)
+        .single();
+      const { data: chRow } = await ctx.supabase
+        .from("challenges")
+        .select("duration_type, ends_at, live_date, duration_days")
+        .eq("id", challenge_id)
+        .single();
+      const ch = chRow as {
+        duration_type?: string;
+        ends_at?: string | null;
+        live_date?: string | null;
+        duration_days?: number | null;
+      } | null;
+      const startAt = (acStartRow as { start_at?: string } | null)?.start_at;
+      let rampDayNumber = 1;
+      const totalDur = ch?.duration_days != null && ch.duration_days > 0 ? ch.duration_days : 1;
+      if (ch?.duration_type !== "24h" && startAt) {
+        const startKey = dateKeyFromIsoInTimeZone(String(startAt), tz);
+        const idx = calendarDayIndexInclusive(startKey, dateKey);
+        rampDayNumber = Math.min(totalDur, Math.max(1, idx));
+      }
       if (ch?.duration_type === "24h") {
         const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
         if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
@@ -92,7 +120,9 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: taskRow, error: taskFetchError } = await ctx.supabase
         .from("challenge_tasks")
-        .select("id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes")
+        .select(
+          "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes"
+        )
         .eq("id", input.taskId)
         .single();
 
@@ -114,6 +144,18 @@ export const checkinsRouter = createTRPCRouter({
       const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
       const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
       const taskType = task?.task_type ?? "manual";
+      const dailyTargets = getDailyTargetForChallengeTask(
+        {
+          task_type: taskType,
+          target_mode: task.target_mode,
+          start_value: task.start_value,
+          start_duration_minutes: task.start_duration_minutes,
+          config: cfg as Record<string, unknown>,
+          min_duration_minutes: task.min_duration_minutes,
+        },
+        rampDayNumber,
+        totalDur
+      );
       const requirePhoto = task?.require_photo === true || needsProof;
       const photoUrl = (input.photo_url ?? input.proofUrl)?.trim() || null;
       if (requirePhoto && !photoUrl) throw new TRPCError({ code: "BAD_REQUEST", message: "This task requires a photo. Please take a photo to verify completion." });
@@ -134,6 +176,7 @@ export const checkinsRouter = createTRPCRouter({
 
       const timerHardMode = task?.timer_hard_mode === true || cfg.strict_timer_mode === true || cfg.timer_hard_mode === true;
       const minDurationMinutes =
+        dailyTargets.durationMinutes ??
         task?.min_duration_minutes ??
         durationMinutes ??
         (taskType === "run" && cfg.tracking_mode === "time" && typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : null);
@@ -159,6 +202,33 @@ export const checkinsRouter = createTRPCRouter({
       if ((isTimer || isRunTimed || isWorkoutTimed) && requiredMinutes > 0) {
         const completedMinutes = input.value ?? 0;
         if (completedMinutes < requiredMinutes) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${requiredMinutes} minutes. You logged ${completedMinutes}.` });
+      }
+
+      const requiredNumeric = dailyTargets.targetValue;
+      if (
+        requiredNumeric != null &&
+        requiredNumeric > 0 &&
+        input.value != null &&
+        (taskType === "water" || taskType === "counter" || taskType === "reading") &&
+        input.value < requiredNumeric
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `This task requires at least ${requiredNumeric}. You logged ${input.value}.`,
+        });
+      }
+      if (
+        taskType === "run" &&
+        cfg.tracking_mode === "distance" &&
+        requiredNumeric != null &&
+        requiredNumeric > 0 &&
+        input.value != null &&
+        input.value < requiredNumeric
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `This task requires at least ${requiredNumeric}. You logged ${input.value}.`,
+        });
       }
 
       const verificationGates: Record<string, unknown> = {};

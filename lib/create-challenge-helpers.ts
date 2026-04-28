@@ -81,6 +81,10 @@ export interface CreateTaskDraft {
   } | null;
   /** Hard Mode verification (merged into API task payload). */
   config?: TaskWizardHardConfig;
+  /** Daily target ramp (optional). */
+  targetMode?: "fixed" | "ramp";
+  startValue?: number;
+  startDurationMinutes?: number;
 }
 
 export type ParticipationTypeUI = "solo" | "duo" | "team" | "shared_goal";
@@ -136,6 +140,8 @@ export function validateDraftTasks(
     if (!task.title.trim()) {
       return { valid: false, error: "Task is missing a title" };
     }
+    const ramp = task.targetMode === "ramp";
+    const rampErr = (msg: string) => ({ valid: false as const, error: msg });
     switch (task.type) {
       case "journal":
         if (!task.journalPrompt || task.journalPrompt.trim().length < 20) {
@@ -149,15 +155,42 @@ export function validateDraftTasks(
         if (!task.durationMinutes || task.durationMinutes <= 0) {
           return { valid: false, error: `Task "${task.title}" needs duration` };
         }
+        if (ramp) {
+          const s = task.startDurationMinutes;
+          const e = task.durationMinutes;
+          if (s == null || e == null || s >= e) {
+            return rampErr(
+              `Task "${task.title}": set a Day-1 duration smaller than your final target (ramp).`
+            );
+          }
+        }
         break;
       case "run":
         if (task.trackingMode === "distance") {
           if (!task.targetValue || task.targetValue <= 0) {
             return { valid: false, error: `Task "${task.title}" needs distance` };
           }
+          if (ramp) {
+            const s = task.startValue;
+            const e = task.targetValue;
+            if (s == null || e == null || s >= e) {
+              return rampErr(
+                `Task "${task.title}": Day-1 distance must be less than your final distance (ramp).`
+              );
+            }
+          }
         } else if (task.trackingMode === "time") {
           if (!task.targetValue || task.targetValue <= 0) {
             return { valid: false, error: `Task "${task.title}" needs time duration` };
+          }
+          if (ramp) {
+            const s = task.startDurationMinutes;
+            const e = task.targetValue;
+            if (s == null || e == null || s >= e) {
+              return rampErr(
+                `Task "${task.title}": Day-1 minutes must be less than your final target (ramp).`
+              );
+            }
           }
         }
         break;
@@ -173,15 +206,42 @@ export function validateDraftTasks(
         if (!task.targetValue || task.targetValue <= 0) {
           return { valid: false, error: `Task "${task.title}" needs a target (glasses)` };
         }
+        if (ramp) {
+          const s = task.startValue;
+          const e = task.targetValue;
+          if (s == null || e == null || s >= e) {
+            return rampErr(
+              `Task "${task.title}": Day-1 glasses must be less than your final target (ramp).`
+            );
+          }
+        }
         break;
       case "reading":
         if (!task.targetValue || task.targetValue <= 0) {
           return { valid: false, error: `Task "${task.title}" needs target pages` };
         }
+        if (ramp) {
+          const s = task.startValue;
+          const e = task.targetValue;
+          if (s == null || e == null || s >= e) {
+            return rampErr(
+              `Task "${task.title}": Day-1 pages must be less than your final target (ramp).`
+            );
+          }
+        }
         break;
       case "counter":
         if (!task.targetValue || task.targetValue <= 0) {
           return { valid: false, error: `Task "${task.title}" needs a target count` };
+        }
+        if (ramp) {
+          const s = task.startValue;
+          const e = task.targetValue;
+          if (s == null || e == null || s >= e) {
+            return rampErr(
+              `Task "${task.title}": Day-1 count must be less than your final target (ramp).`
+            );
+          }
         }
         break;
     }
@@ -278,6 +338,9 @@ export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, 
       location_radius_meters: task.config?.location_radius_meters,
       require_camera_only: task.config?.require_camera_only,
       require_strava: task.config?.require_strava,
+      targetMode: task.targetMode,
+      startValue: task.startValue,
+      startDurationMinutes: task.startDurationMinutes,
     })),
   };
   if (partType === "shared_goal") {

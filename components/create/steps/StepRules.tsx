@@ -38,20 +38,20 @@ export function StepRules({
   return (
     <>
       <Text style={styles.h1}>Challenge rules</Text>
-      <Text style={styles.sub}>How strict do you want this?</Text>
+      <Text style={styles.sub}>Choose your enforcement level</Text>
       <Text style={styles.fieldLabel}>Difficulty</Text>
       <View style={styles.typeRow}>
         <TouchableOpacity
           style={[styles.ruleCard, difficultyMode === "standard" && styles.ruleCardSel]}
           onPress={() => setDifficultyMode("standard")}
           accessibilityRole="button"
-          accessibilityLabel="Standard difficulty — self-reported completion, streak freezes allowed — tap to select"
+          accessibilityLabel="Standard difficulty - self-reported completion, streak freezes allowed - tap to select"
           accessibilityState={{ selected: difficultyMode === "standard" }}
         >
           <Text style={styles.ruleTitle}>Standard</Text>
           {(
             [
-              "Self-reported completion",
+              "Self-reported or photo proof",
               "Streak freezes allowed",
               "Miss a day? Keep going",
             ] as const
@@ -80,12 +80,12 @@ export function StepRules({
           style={[styles.ruleCard, difficultyMode === "hard" && styles.ruleCardSel]}
           onPress={() => setDifficultyMode("hard")}
           accessibilityRole="button"
-          accessibilityLabel="Hard mode — photo proof required, no streak freezes, miss a day means Day 1 again — tap to select"
+          accessibilityLabel="Hard mode - camera-only photos, verification gates, Strava/HR-rule support - tap to select"
           accessibilityState={{ selected: difficultyMode === "hard" }}
         >
-          <Text style={styles.ruleTitle}>Hard mode 🔥</Text>
+          <Text style={styles.ruleTitle}>Hard mode ??</Text>
           {(
-            ["Photo proof every task", "No streak freezes", "Miss a day? Day 1 again"] as const
+            ["Camera-only photos (no roll)", "Verification gates (time, location)", "Strava/HR-rule support"] as const
           ).map((item, i) => (
             <View key={i} style={styles.rowStartGap8Mb4}>
               <Ionicons
@@ -111,12 +111,12 @@ export function StepRules({
       {difficultyMode === "hard" ? (
         <View style={styles.hardWarningBox}>
           <Text style={styles.hardWarningText}>
-            Hard mode adds verification gates (time window, location, etc.). Camera-only enforcement is per task in the task
-            editor — not forced on every task.
+            Hard mode adds verification gates (time window, location, Strava rules) on top of your photo-proof setting.
+            Each task can still be configured individually.
           </Text>
         </View>
       ) : null}
-      <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Photo proof</Text>
+      <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Photo proof on the feed</Text>
       <View style={styles.rowGapSm}>
         {(
           [
@@ -132,12 +132,15 @@ export function StepRules({
             onPress={() => {
               setPhotoProof(p.id);
             }}
-            accessibilityLabel={`Photo proof ${p.label} — ${photoProof === p.id ? "selected" : "tap to select"}`}
+            accessibilityLabel={`Photo proof ${p.label} - ${photoProof === p.id ? "selected" : "tap to select"}`}
             style={styles.flex1}
           />
         ))}
       </View>
-      <Text style={styles.caption}>Photos become shareable proof cards on your feed.</Text>
+      <Text style={styles.caption}>
+        Recommended. Public proof is the strongest accountability mechanism - research shows partner-reported progress
+        lifts goal completion from 43% to 76%.
+      </Text>
       <Text style={styles.fieldLabel}>
         Category <Text style={styles.light}>(select all that apply)</Text>
       </Text>
@@ -154,7 +157,7 @@ export function StepRules({
                   onPress={() =>
                     setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
                   }
-                  accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
+                  accessibilityLabel={`${c} category ??? ${sel ? "selected" : "tap to select"}`}
                   style={styles.flex1}
                 />
               );
@@ -171,7 +174,7 @@ export function StepRules({
                   onPress={() =>
                     setCategories((prev) => (sel ? prev.filter((x) => x !== c) : [...prev, c]))
                   }
-                  accessibilityLabel={`${c} category — ${sel ? "selected" : "tap to select"}`}
+                  accessibilityLabel={`${c} category ??? ${sel ? "selected" : "tap to select"}`}
                   style={styles.flex1}
                 />
               );
@@ -191,7 +194,7 @@ export function StepRules({
               style={[styles.typeCard, teamRules === "all" && styles.typeCardSel]}
               onPress={() => setTeamRules("all")}
               accessibilityRole="button"
-              accessibilityLabel={`Everyone does all tasks — each person completes every task — ${teamRules === "all" ? "selected" : "tap to select"}`}
+              accessibilityLabel={`Everyone does all tasks ??? each person completes every task ??? ${teamRules === "all" ? "selected" : "tap to select"}`}
               accessibilityState={{ selected: teamRules === "all" }}
             >
               <Text style={styles.typeCardTitle}>Everyone does all</Text>
@@ -201,7 +204,7 @@ export function StepRules({
               style={[styles.typeCard, teamRules === "shared" && styles.typeCardSel]}
               onPress={() => setTeamRules("shared")}
               accessibilityRole="button"
-              accessibilityLabel={`Shared progress — team splits numeric targets — ${teamRules === "shared" ? "selected" : "tap to select"}`}
+              accessibilityLabel={`Shared progress ??? team splits numeric targets ??? ${teamRules === "shared" ? "selected" : "tap to select"}`}
               accessibilityState={{ selected: teamRules === "shared" }}
             >
               <Text style={styles.typeCardTitle}>Shared progress</Text>

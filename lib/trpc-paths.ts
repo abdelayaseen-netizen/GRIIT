@@ -74,6 +74,7 @@ export const TRPC = {
     join: 'starters.join',
   },
   streaks: {
+    getFreezeStatus: 'streaks.getFreezeStatus',
     useFreeze: 'streaks.useFreeze',
   },
   leaderboard: {

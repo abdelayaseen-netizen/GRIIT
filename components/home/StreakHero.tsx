@@ -25,9 +25,18 @@ type Props = {
   streak: number;
   ringProgress: number;
   onStartFirstTask: () => void;
+  /** Proactive streak freeze line (tappable when onFreezeLinePress set). */
+  freezeLine?: string | null;
+  onFreezeLinePress?: () => void;
 };
 
-export default React.memo(function StreakHero({ streak, ringProgress, onStartFirstTask }: Props) {
+export default React.memo(function StreakHero({
+  streak,
+  ringProgress,
+  onStartFirstTask,
+  freezeLine,
+  onFreezeLinePress,
+}: Props) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 60_000);
@@ -70,6 +79,17 @@ export default React.memo(function StreakHero({ streak, ringProgress, onStartFir
         </View>
         <View style={s.info}>
           <Text style={s.dayLabel}>day streak</Text>
+          {freezeLine ? (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={onFreezeLinePress}
+              disabled={!onFreezeLinePress}
+              accessibilityRole={onFreezeLinePress ? "button" : "text"}
+              accessibilityLabel={freezeLine}
+            >
+              <Text style={s.freezeLine}>{freezeLine}</Text>
+            </TouchableOpacity>
+          ) : null}
           <Text style={s.msg}>{message}</Text>
           <Text style={s.timer}>{timerLabel}</Text>
         </View>
@@ -126,6 +146,11 @@ const s = StyleSheet.create({
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_SECONDARY,
     marginBottom: 2,
+  },
+  freezeLine: {
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginBottom: 4,
   },
   info: {
     flex: 1,
