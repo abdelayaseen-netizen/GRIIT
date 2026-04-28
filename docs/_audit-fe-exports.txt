@@ -1,0 +1,1201 @@
+### app\(tabs)\_layout.tsx
+export default function TabLayout() {
+---
+### app\(tabs)\activity.tsx
+export default function ActivityScreen() {
+---
+### app\(tabs)\create.tsx
+export default function CreateTabScreen() {
+---
+### app\(tabs)\discover.tsx
+export default function DiscoverScreen() {
+---
+### app\(tabs)\index.tsx
+export default function HomeScreen() {
+---
+### app\(tabs)\profile.tsx
+export default function ProfileScreen() {
+---
+### app\(tabs)\teams.tsx
+export default function TeamsTabScreen() {
+---
+### app\_layout.tsx
+export default Sentry.wrap(RootLayout);
+---
+### app\+not-found.tsx
+export default function NotFoundScreen() {
+---
+### app\accountability.tsx
+export default function AccountabilityScreen() {
+---
+### app\accountability\add.tsx
+export default function AddAccountabilityPartnerScreen() {
+---
+### app\api\health+api.ts
+export async function GET() {
+---
+### app\api\trpc\[trpc]+api.ts
+export async function OPTIONS() {
+export async function GET(request: Request) {
+export async function POST(request: Request) {
+---
+### app\auth\_layout.tsx
+export default function AuthLayout() {
+---
+### app\auth\forgot-password.tsx
+export default function ForgotPasswordScreen() {
+---
+### app\auth\login.tsx
+export default function LoginScreen() {
+---
+### app\auth\signup.tsx
+export default function SignupScreen() {
+---
+### app\challenge\[id].tsx
+export default function ChallengeDetailScreen() {
+---
+### app\challenge\active\[activeChallengeId].tsx
+export default function ActiveChallengeDetailScreen() {
+---
+### app\challenge\complete.tsx
+export default function ChallengeCompleteScreen() {
+---
+### app\create\_layout.tsx
+export default function CreateModalLayout() {
+---
+### app\create\index.tsx
+export default function CreateModalScreen() {
+---
+### app\create-challenge.tsx
+export default function CreateChallengeRedirect() {
+---
+### app\create-profile.tsx
+export default function CreateProfileScreen() {
+---
+### app\edit-profile.tsx
+export default function EditProfileScreen() {
+---
+### app\follow-list.tsx
+export default function FollowListScreen() {
+---
+### app\invite\[code].tsx
+export default function InviteRedirectScreen() {
+---
+### app\legal\_layout.tsx
+export default function LegalLayout() {
+---
+### app\legal\privacy-policy.tsx
+export default function PrivacyPolicyScreen() {
+---
+### app\legal\terms.tsx
+export default function TermsScreen() {
+---
+### app\onboarding\_layout.tsx
+export default function OnboardingLayout() {
+---
+### app\onboarding\index.tsx
+export default function OnboardingPage() {
+---
+### app\paywall.tsx
+export default function PaywallScreen() {
+---
+### app\post\[id].tsx
+export default function PostThreadScreen() {
+---
+### app\profile\[username].tsx
+export default function PublicProfileScreen() {
+---
+### app\settings.tsx
+export default function SettingsScreen() {
+---
+### app\task\checkin.tsx
+export default function CheckinTaskScreen() {
+---
+### app\task\checkin-styles.ts
+export const checkinStyles = StyleSheet.create({
+---
+### app\task\complete.tsx
+export type { TaskCompleteConfig } from "@/lib/task-helpers";
+export default function TaskCompleteScreen() {
+---
+### app\task\run.tsx
+export default function RunTaskScreen() {
+---
+### app\task\run-styles.ts
+export const styles = StyleSheet.create({
+---
+### components\activity\activity-styles.ts
+export const styles = StyleSheet.create({
+---
+### components\activity\LeaderboardTab.tsx
+export interface LeaderboardTabProps {
+export function LeaderboardTab({ userId, listHeader }: LeaderboardTabProps) {
+---
+### components\activity\NotificationsTab.tsx
+export interface NotificationsTabProps {
+export function NotificationsTab({ userId, listHeader }: NotificationsTabProps) {
+---
+### components\activity\types.ts
+export type LeaderScope = "global" | "friends" | "challenge";
+export type NotifRow = {
+export type BoardEntry = {
+---
+### components\AnalyticsBootstrap.tsx
+export function AnalyticsBootstrap() {
+---
+### components\AuthGateModal.tsx
+export type GateContext =
+export function AuthGateModal({ visible, onClose, context: _context }: AuthGateModalProps) {
+---
+### components\Avatar.tsx
+export function Avatar({ url, name, size, userId, bgColor, style }: Props) {
+---
+### components\Celebration.tsx
+export default function Celebration({ visible, onComplete, titleText, streakCount, pointsToNextTier, nextTierName }: CelebrationProps) {
+---
+### components\challenge\challengeDetailScreenStyles.ts
+export const challengeDetailStyles = StyleSheet.create({
+---
+### components\challenge\ChallengeHero.tsx
+export const ChallengeHero = React.memo(function ChallengeHero({
+---
+### components\challenge\challengeInfoChip.tsx
+export function InfoChip({ label, dark }: { label: string; dark?: boolean }) {
+---
+### components\challenge\ChallengeLeaderboard.tsx
+export const ChallengeLeaderboard = React.memo(function ChallengeLeaderboard({
+---
+### components\challenge\challengeSocialAvatars.tsx
+export function SocialAvatars({
+---
+### components\challenge\ChallengeStats.tsx
+export const ChallengeStats = React.memo(function ChallengeStats({ challenge }: Props) {
+---
+### components\challenge\ChallengeTodayGoals.tsx
+export const ChallengeTodayGoals = React.memo(function ChallengeTodayGoals({ children }: Props) {
+---
+### components\challenge\LogProgressModal.tsx
+export default function LogProgressModal({ visible, unit, onClose, onSubmit }: LogProgressModalProps) {
+---
+### components\challenge\SharedGoalProgress.tsx
+export interface SharedGoalLogEntry {
+export default function SharedGoalProgress({
+---
+### components\challenge\TeamMemberList.tsx
+export interface TeamMemberForList {
+export default function TeamMemberList({ members, currentUserId, runStatus }: TeamMemberListProps) {
+---
+### components\challenges\HeroFeaturedCard.tsx
+export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
+---
+### components\challenges\JoinCelebrationModal.tsx
+export type JoinCelebrationModalProps = {
+export default function JoinCelebrationModal({
+---
+### components\create\CommitModal.tsx
+export default function CommitModal({
+---
+### components\create\CreateChallengeWizard.tsx
+export default function CreateChallengeWizard() {
+---
+### components\create\DraftExitModal.tsx
+export function DraftExitModal({ visible, onClose, onSaveDraft }: DraftExitModalProps) {
+---
+### components\create\NewTaskModal.tsx
+export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal, durationDays }: Props) {
+---
+### components\create\steps\StepBasics.tsx
+export type WhoBasics = "solo" | "duo" | "squad";
+export interface StepBasicsProps {
+export function StepBasics({
+---
+### components\create\steps\StepReview.tsx
+export interface StepReviewProps {
+export function StepReview({
+---
+### components\create\steps\StepRules.tsx
+export interface StepRulesProps {
+export function StepRules({
+---
+### components\create\steps\StepTasks.tsx
+export interface StepTasksProps {
+export function StepTasks({
+---
+### components\create\wizard-shared.tsx
+export const DURATION_PRESETS = [7, 14, 21, 30, 75] as const;
+export const CATEGORY_OPTIONS = ["Fitness", "Mind", "Faith", "Discipline", "Other"] as const;
+export function DurationPill({
+export function getTaskIcon(taskType: string): string {
+export function getTaskMeta(task: TaskEditorTask & { wizardType?: string }): string {
+---
+### components\create\WizardStepFooter.tsx
+export function WizardStepFooter({
+---
+### components\create\wizard-styles.ts
+export const styles = StyleSheet.create({
+---
+### components\discover\ActivityTicker.tsx
+export type RecentCompletionItem = {
+export function ActivityTicker() {
+---
+### components\discover\CompactChallengeRow.tsx
+export interface CompactChallengeRowProps {
+export const CompactChallengeRow = React.memo(CompactChallengeRowInner);
+---
+### components\discover\DiscoverChallengeCards.tsx
+export type MiniCardChallenge = {
+export const DiscoverMiniChallengeCard = React.memo(function DiscoverMiniChallengeCard({
+export type FullCardChallenge = {
+export function DiscoverChallengeSearchRow({
+export function DiscoverFullChallengeCard({
+---
+### components\discover\FilterChips.tsx
+export type DiscoverFilterId = "All" | "Easy" | "7 days" | "Physical" | "Mental" | "Spiritual";
+export function FilterChips({ onFilterChange }: FilterChipsProps) {
+---
+### components\discover\PickedForYou.tsx
+export type PickedChallenge = {
+export function PickedForYou({ challenges }: { challenges: PickedChallenge[] }) {
+---
+### components\ErrorBoundary.tsx
+export class ErrorBoundary extends Component<Props, State> {
+---
+### components\ErrorRetry.tsx
+export function ErrorRetry({ message = "Something went wrong", onRetry }: ErrorRetryProps) {
+---
+### components\feed\FeedCardHeader.tsx
+export const FeedCardHeader = React.memo(FeedCardHeaderInner);
+---
+### components\feed\FeedEngagementRow.tsx
+export const FeedEngagementRow = React.memo(FeedEngagementRowInner);
+---
+### components\feed\FeedPostCard.tsx
+export const FeedPostCard = React.memo(FeedPostCardInner);
+---
+### components\feed\feedTypes.ts
+export type LiveFeedPost = {
+export type FeedCommentPreview = {
+---
+### components\feed\MilestonePostCard.tsx
+export const MilestonePostCard = React.memo(MilestonePostCardInner);
+---
+### components\feed\WhoRespectedSheet.tsx
+export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
+---
+### components\home\ActiveChallenges.tsx
+export interface ChallengeWithProgress {
+export default function ActiveChallenges({ challengesWithProgress: controlledList, refreshKey }: ActiveChallengesProps = {}) {
+---
+### components\home\ActiveTaskCard.tsx
+export function ActiveTaskCard() {
+---
+### components\home\ChallengeCard.tsx
+export interface TodayTaskItem {
+export default function ChallengeCard({
+---
+### components\home\DailyBonus.tsx
+export default React.memo(function DailyBonus() {
+---
+### components\home\DailyQuote.tsx
+export default React.memo(function DailyQuote() {
+---
+### components\home\DailyStatus.tsx
+export type DailyStatusState = "NOT_SECURED" | "SECURED";
+export default function DailyStatus({
+---
+### components\home\DiscoverCTA.tsx
+export default function DiscoverCTA({ onPress, variant = "home" }: Props) {
+---
+### components\home\EmptyChallengesCard.tsx
+export default function EmptyChallengesCard() {
+---
+### components\home\ExploreChallengesButton.tsx
+export default function ExploreChallengesButton() {
+---
+### components\home\GoalCard.tsx
+export default React.memo(function GoalCard({
+---
+### components\home\index.ts
+export { default as DailyStatus } from "./DailyStatus";
+export type { DailyStatusState } from "./DailyStatus";
+export { default as ExploreChallengesButton } from "./ExploreChallengesButton";
+export { default as ActiveChallenges } from "./ActiveChallenges";
+export type { ChallengeWithProgress } from "./ActiveChallenges";
+export { default as ChallengeCard } from "./ChallengeCard";
+export type { TodayTaskItem } from "./ChallengeCard";
+export { default as EmptyChallengesCard } from "./EmptyChallengesCard";
+---
+### components\home\NextUnlock.tsx
+export default React.memo(function NextUnlock({ currentStreak }: { currentStreak: number }) {
+---
+### components\home\PointsExplainer.tsx
+export default function PointsExplainer({ visible, onClose, currentPoints, currentRank }: Props) {
+---
+### components\home\StreakHero.tsx
+export default React.memo(function StreakHero({
+---
+### components\home\WeekStrip.tsx
+export default React.memo(function WeekStrip({
+---
+### components\InlineError.tsx
+export const InlineError = React.memo(InlineErrorInner);
+---
+### components\LiveFeedSection.tsx
+export default React.memo(LiveFeedSection);
+---
+### components\OfflineBanner.tsx
+export const OfflineBanner = React.memo(OfflineBannerInner);
+---
+### components\onboarding\OnboardingFlow.tsx
+export default function OnboardingFlow() {
+---
+### components\onboarding\onboarding-theme.ts
+export const ONBOARDING_COLORS = {
+export const ONBOARDING_TYPOGRAPHY = {
+export const ONBOARDING_SPACING = {
+export const GOAL_OPTIONS = [
+export const INTENSITY_OPTIONS = [
+---
+### components\onboarding\ProgressDots.tsx
+export default function ProgressDots({ total, current }: ProgressDotsProps) {
+---
+### components\onboarding\screens\AutoSuggestChallengeScreen.tsx
+export default function AutoSuggestChallengeScreen({
+---
+### components\onboarding\screens\GoalSelection.tsx
+export default function GoalSelection({ onContinue }: GoalSelectionProps) {
+---
+### components\onboarding\screens\ProfileSetup.tsx
+export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) {
+---
+### components\onboarding\screens\SignUpScreen.tsx
+export default function SignUpScreen({ onAuthSuccess }: SignUpScreenProps) {
+---
+### components\onboarding\screens\ValueSplash.tsx
+export default function ValueSplash({ onContinue }: ValueSplashProps) {
+---
+### components\PremiumBadge.tsx
+export function PremiumBadge({ size = 14, label }: PremiumBadgeProps) {
+---
+### components\profile\AchievementsSection.tsx
+export type AchievementCategory = "consistency" | "challenge" | "discipline";
+export interface AchievementItem {
+export interface AchievementsSectionProps {
+export default React.memo(function AchievementsSection({ achievements, loading }: AchievementsSectionProps) {
+---
+### components\profile\BadgeDetailModal.tsx
+export type BadgeDetailPayload = {
+export function BadgeDetailModal({ badge, onClose }: Props) {
+---
+### components\profile\CompletedChallengesSection.tsx
+export interface CompletedChallengeItem {
+export interface CompletedChallengesSectionProps {
+export default React.memo(function CompletedChallengesSection({
+---
+### components\profile\DisciplineCalendar.tsx
+export interface DisciplineCalendarProps {
+export default function DisciplineCalendar({
+---
+### components\profile\DisciplineGrowthCard.tsx
+export interface DisciplineGrowthCardProps {
+export default function DisciplineGrowthCard({
+---
+### components\profile\DisciplineScoreCard.tsx
+export interface DisciplineScoreCardProps {
+export default React.memo(function DisciplineScoreCard({
+---
+### components\profile\index.ts
+export { default as ProfileHeader } from "./ProfileHeader";
+export type { ProfileHeaderProps } from "./ProfileHeader";
+export { default as DisciplineScoreCard } from "./DisciplineScoreCard";
+export type { DisciplineScoreCardProps } from "./DisciplineScoreCard";
+export { default as TierProgressBar } from "./TierProgressBar";
+export type { TierProgressBarProps } from "./TierProgressBar";
+export { default as LifetimeStatsCard } from "./LifetimeStatsCard";
+export type { LifetimeStatsCardProps } from "./LifetimeStatsCard";
+export { default as DisciplineCalendar } from "./DisciplineCalendar";
+export type { DisciplineCalendarProps } from "./DisciplineCalendar";
+export { default as AchievementsSection } from "./AchievementsSection";
+export type { AchievementItem, AchievementCategory, AchievementsSectionProps } from "./AchievementsSection";
+export { default as CompletedChallengesSection } from "./CompletedChallengesSection";
+export type { CompletedChallengeItem, CompletedChallengesSectionProps } from "./CompletedChallengesSection";
+export { default as SocialStatsCard } from "./SocialStatsCard";
+---
+### components\profile\LifetimeStatsCard.tsx
+export interface LifetimeStatsCardProps {
+export default React.memo(function LifetimeStatsCard({
+---
+### components\profile\ProfileCompletionCard.tsx
+export interface ProfileCompletionCardProps {
+export default function ProfileCompletionCard({
+---
+### components\profile\ProfileHeader.tsx
+export interface ProfileHeaderProps {
+export default React.memo(function ProfileHeader({
+---
+### components\profile\ShareDisciplineCard.tsx
+export interface ShareDisciplineCardProps {
+export default function ShareDisciplineCard({
+---
+### components\profile\SocialStatsCard.tsx
+export interface SocialStatsCardProps {
+export default function SocialStatsCard({
+---
+### components\profile\TierProgressBar.tsx
+export interface TierProgressBarProps {
+export default function TierProgressBar({
+---
+### components\ProofShareCard.tsx
+export default function ProofShareCard({
+---
+### components\settings\AccountDangerZone.tsx
+export const CONSEQUENCES = [
+export interface AccountDangerZoneProps {
+export function AccountDangerZone({
+export function ConsequencesSection() {
+---
+### components\settings\ReminderSection.tsx
+export const REMINDER_PRESETS = [
+export interface ReminderSectionProps {
+export function ReminderSection({
+---
+### components\settings\settings-styles.ts
+export const styles = StyleSheet.create({
+---
+### components\settings\VisibilitySection.tsx
+export interface VisibilitySectionProps {
+export function VisibilitySection({
+---
+### components\share\ShareCards.tsx
+export interface BaseCardProps {
+export interface StatementCardProps extends BaseCardProps {
+export interface TransparentCardProps extends BaseCardProps {
+export interface ProofPhotoCardProps extends BaseCardProps {
+export interface DayRecapCardProps {
+export interface ChallengeCompleteCardProps {
+export interface MinimalStreakCardProps {
+export function StatementCard({
+export function TransparentCard({
+export function ProofPhotoCard({
+export function DayRecapCard({ challengeName, dayNumber, streak, rank, tasks }: DayRecapCardProps) {
+export function ChallengeCompleteCard({ challengeName, totalDays, totalTasks }: ChallengeCompleteCardProps) {
+export function MinimalStreakCard({ streak, challengeName }: MinimalStreakCardProps) {
+export const SHARE_CARD_DIMENSIONS = { width: CARD_WIDTH, height: CARD_HEIGHT };
+---
+### components\share\ShareSheetModal.tsx
+export type ShareSheetCardKey = "Statement" | "Transparent" | "Proof" | "Recap" | "Complete" | "Streak";
+export type ShareSheetModalProps = {
+export function ShareSheetModal({
+---
+### components\ShareCard.tsx
+export const SHARE_CARD_WIDTH = 400;
+export const SHARE_CARD_HEIGHT = 500;
+export type ShareCardType = "progress" | "completion" | "milestone";
+export interface ShareCardProps {
+export const ShareCard = React.memo(ShareCardInner);
+---
+### components\shared\Card.tsx
+export default function Card({ children, onPress, padded = true, accessibilityLabel, containerStyle }: Props) {
+---
+### components\shared\CelebrationOverlay.tsx
+export default function CelebrationOverlay() {
+---
+### components\shared\ConfirmDialog.tsx
+export type ConfirmDialogProps = {
+export function ConfirmDialog({
+---
+### components\shared\ErrorState.tsx
+export default function ErrorState({ message, onRetry, containerStyle }: Props) {
+---
+### components\shared\FormInput.tsx
+export default function FormInput({
+---
+### components\shared\ImageViewerModal.tsx
+export interface ImageViewerModalProps {
+export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModalProps) {
+---
+### components\shared\LoadingState.tsx
+export default function LoadingState({
+---
+### components\shared\ProofShareOverlay.tsx
+export default function ProofShareOverlay() {
+---
+### components\shared\ReportChallengeModal.tsx
+export function ReportChallengeModal({ visible, challengeId, challengeTitle, onClose }: Props) {
+---
+### components\shared\SectionHeader.tsx
+export default React.memo(SectionHeaderInner);
+---
+### components\skeletons\index.ts
+export { SkeletonBase } from "./SkeletonBase";
+export { SkeletonFeedCard } from "./SkeletonFeedCard";
+export { SkeletonChallengeCard } from "./SkeletonChallengeCard";
+export { SkeletonLeaderboardRow } from "./SkeletonLeaderboardRow";
+export { SkeletonHomeChallengeCard } from "./SkeletonHomeChallengeCard";
+export { SkeletonHeroCard } from "./SkeletonHeroCard";
+export { SkeletonChallengeDetail } from "./SkeletonChallengeDetail";
+export { SkeletonProfile } from "./SkeletonProfile";
+---
+### components\skeletons\SkeletonBase.tsx
+export const SkeletonBase = React.memo(function SkeletonBase({
+---
+### components\skeletons\SkeletonChallengeCard.tsx
+export const SkeletonChallengeCard = React.memo(function SkeletonChallengeCard() {
+---
+### components\skeletons\SkeletonChallengeDetail.tsx
+export const SkeletonChallengeDetail = React.memo(function SkeletonChallengeDetail() {
+---
+### components\skeletons\SkeletonFeedCard.tsx
+export const SkeletonFeedCard = React.memo(function SkeletonFeedCard() {
+---
+### components\skeletons\SkeletonHeroCard.tsx
+export const SkeletonHeroCard = React.memo(function SkeletonHeroCard() {
+---
+### components\skeletons\SkeletonHomeChallengeCard.tsx
+export const SkeletonHomeChallengeCard = React.memo(function SkeletonHomeChallengeCard() {
+---
+### components\skeletons\SkeletonLeaderboardRow.tsx
+export const SkeletonLeaderboardRow = React.memo(function SkeletonLeaderboardRow() {
+---
+### components\skeletons\SkeletonProfile.tsx
+export const SkeletonProfile = React.memo(function SkeletonProfile() {
+---
+### components\StreakFreezeModal.tsx
+export function StreakFreezeModal({
+---
+### components\task\RunPickerColumn.tsx
+export const RUN_PICKER_ITEM_H = 40;
+export const RUN_PICKER_PAD = 40;
+export const RUN_WHOLE_KM = Array.from({ length: 51 }, (_, i) => String(i));
+export const RUN_DEC_KM = Array.from({ length: 10 }, (_, i) => String(i));
+export const RUN_DURATION_ITEMS = Array.from({ length: 181 }, (_, i) => String(i));
+export function parseRunKmParts(s: string): { whole: number; dec: number } {
+export function RunPickerColumn({
+---
+### components\task\TaskCompleteCelebration.tsx
+export interface TaskCompleteCelebrationProps extends ShareCardPropsBundle {
+export function TaskCompleteCelebration({
+---
+### components\task\TaskCompleteForm.tsx
+export interface TaskCompleteFormProps {
+export function TaskCompleteForm(props: TaskCompleteFormProps) {
+---
+### components\task\task-complete-styles.ts
+export const styles = StyleSheet.create({
+export const celebStyles = StyleSheet.create({
+---
+### components\task\VerificationGates.tsx
+export type GateStatusKind = "locked" | "checking" | "passed" | "failed" | "pending";
+export interface GateStatus {
+export function VerificationGates({ config, photoSatisfied = false, onGatesResolved, onTimeWindowFailed }: Props) {
+---
+### components\TaskEditorModal.tsx
+export interface TaskEditorTask {
+export default function TaskEditorModal({
+---
+### components\TimeWindowPrompt.tsx
+export function TimeWindowPrompt({ visible, tasks, onSave, onSkip }: TimeWindowPromptProps) {
+---
+### components\ui\Card.tsx
+export default React.memo(Card);
+---
+### components\ui\CategoryTag.tsx
+export const CategoryTag = React.memo(CategoryTagInner);
+---
+### components\ui\ChallengeCard24h.tsx
+export const ChallengeCard24h = React.memo(ChallengeCard24hInner);
+---
+### components\ui\ChallengeCardFeatured.tsx
+export const ChallengeCardFeatured = React.memo(ChallengeCardFeaturedInner);
+---
+### components\ui\ChallengeRowCard.tsx
+export const ChallengeRowCard = React.memo(ChallengeRowCardInner);
+---
+### components\ui\Chip.tsx
+export function Chip({
+---
+### components\ui\CreateFlowCheckbox.tsx
+export function CreateFlowCheckbox({ checked, onPress, label, accessibilityLabel: a11yLabel }: Props) {
+---
+### components\ui\CreateFlowHeader.tsx
+export function CreateFlowHeader(p: {
+---
+### components\ui\CreateFlowInput.tsx
+export function CreateFlowInput({ value, onChangeText, placeholder, label, multiline, accessibilityLabel }: P) {
+---
+### components\ui\DurationPill.tsx
+export const DurationPill = React.memo(DurationPillInner);
+---
+### components\ui\EmptyState.tsx
+export interface EmptyStateProps {
+export const EmptyState = React.memo(EmptyStateInner);
+---
+### components\ui\EnforcementBlock.tsx
+export function EnforcementBlock({ title = "Time enforcement", children }: Props) {
+---
+### components\ui\GRIITWordmark.tsx
+export function GRIITWordmark({
+---
+### components\ui\index.ts
+export { Screen } from "./Screen";
+export { PrimaryButton } from "./PrimaryButton";
+export { Input } from "./Input";
+export { Chip } from "./Chip";
+export { SearchBar } from "./SearchBar";
+export { SectionHeader } from "./SectionHeader";
+export { EmptyState } from "./EmptyState";
+export { ChallengeCard24h } from "./ChallengeCard24h";
+export { ChallengeCardFeatured } from "./ChallengeCardFeatured";
+export { ChallengeRowCard } from "./ChallengeRowCard";
+export { DurationPill } from "./DurationPill";
+export { CategoryTag } from "./CategoryTag";
+export { TaskTypeCard } from "./TaskTypeCard";
+export { CreateFlowHeader } from "./CreateFlowHeader";
+export { CreateFlowInput } from "./CreateFlowInput";
+---
+### components\ui\InitialCircle.tsx
+export function InitialCircle({ username, size = 44 }: { username: string; size?: number }) {
+---
+### components\ui\Input.tsx
+export const Input = React.memo(InputInner);
+---
+### components\ui\PrimaryButton.tsx
+export const PrimaryButton = React.memo(PrimaryButtonInner);
+---
+### components\ui\Screen.tsx
+export function Screen(props: ScreenProps) {
+---
+### components\ui\SearchBar.tsx
+export function SearchBar(props: {
+---
+### components\ui\SectionHeader.tsx
+export const SectionHeader = React.memo(SectionHeaderInner);
+---
+### components\ui\TaskTypeCard.tsx
+export const TaskTypeCard = React.memo(TaskTypeCardInner);
+---
+### contexts\ApiContext.tsx
+export type ApiStatus = 'checking' | 'ready' | 'down';
+export type DbStatus = 'unchecked' | 'ok' | 'missing_tables' | 'error';
+export interface ApiDiagnostics {
+export function useApi() {
+export function ApiProvider({ children }: { children: ReactNode }) {
+---
+### contexts\AppContext.tsx
+export function useApp() {
+export function AppProvider({ children }: { children: ReactNode }) {
+---
+### contexts\AuthContext.tsx
+export function useAuth() {
+export function AuthProvider({ children }: { children: ReactNode }) {
+---
+### contexts\AuthGateContext.tsx
+export function useAuthGate() {
+export function useIsGuest(): boolean {
+export function AuthGateProvider({ children }: { children: ReactNode }) {
+---
+### contexts\ThemeContext.tsx
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function useTheme(): ThemeContextValue {
+---
+### hooks\useAppChallengeMutations.ts
+export function useAppChallengeMutations({
+---
+### hooks\useCelebration.ts
+export function useCelebration(timezone?: string | null): UseCelebrationReturn {
+---
+### hooks\useCreateChallengeWizardPersistence.ts
+export const CREATE_CHALLENGE_DRAFT_KEY = "griit_challenge_draft";
+export function useCreateChallengeWizardPersistence(a: WizardPersistenceArgs) {
+---
+### hooks\useDebounce.ts
+export function useDebounce<T>(value: T, delay: number): T {
+---
+### hooks\useInlineError.ts
+export function useInlineError() {
+---
+### hooks\useJournalInput.ts
+export function useJournalInput({ minWords, onError }: UseJournalInputOptions): UseJournalInputReturn {
+---
+### hooks\useJournalSubmit.ts
+export type JournalSubmitParams = {
+export async function submitJournalEntry(params: JournalSubmitParams): Promise<void> {
+---
+### hooks\useNetworkStatus.ts
+export function useNetworkStatus(): boolean {
+---
+### hooks\useNotificationScheduler.ts
+export interface UseNotificationSchedulerOptions {
+export function useNotificationScheduler({ user, stats, activeChallenge, timezone }: UseNotificationSchedulerOptions): void {
+---
+### hooks\usePhotoCapture.ts
+export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureOptions): UsePhotoCaptureReturn {
+---
+### hooks\useProStatus.ts
+export function useProStatus() {
+---
+### hooks\useScreenTracker.ts
+export function useScreenTracker() {
+---
+### hooks\useTaskCompleteScreen.tsx
+export function TaskCompleteScreenInner() {
+---
+### hooks\useTaskCompleteShareCardProps.ts
+export interface UseTaskCompleteShareCardPropsInput {
+export function useTaskCompleteShareCardProps({
+---
+### hooks\useTaskTimer.ts
+export function useTaskTimer({ requiredSeconds, isCountdown, isHardMode, autoStart }: UseTaskTimerOptions): UseTaskTimerReturn {
+---
+### lib\active-task-timer.ts
+export type ActiveTaskTimerType = "checkin" | "run_gps" | "run_treadmill";
+export interface ActiveTaskTimerPayload {
+export async function startActiveTaskNotification(
+export async function updateActiveTaskNotification(
+export async function clearActiveTaskNotification(): Promise<void> {
+---
+### lib\analytics.ts
+export function identify(userId: string, props?: UserProperties) {
+export function reset() {
+export const resetAnalytics = reset;
+export function trackEvent(event: string, properties?: FunnelProps): void {
+export function track(event: AnalyticsEvent) {
+---
+### lib\api.test.ts
+(no export line match)
+---
+### lib\api.ts
+export function getApiBaseUrl(): string {
+export function getTrpcUrl(): string {
+export async function fetchWithTimeout(
+export async function fetchWithRetry(
+export interface HealthCheckResult {
+export async function checkHealth(): Promise<HealthCheckResult> {
+export function formatError(error: unknown): string {
+export async function checkDbTables(): Promise<DbSanityResult> {
+export function formatTRPCError(error: unknown): {
+---
+### lib\auth-expiry.ts
+export type SessionExpiredListener = () => void;
+export function onSessionExpired(listener: SessionExpiredListener): () => void {
+export function notifySessionExpired(): void {
+---
+### lib\auth-helpers.ts
+export function mapAuthError(error: { message: string }): string {
+---
+### lib\avatar.ts
+export const AVATAR_COLORS = [
+export function getAvatarColor(userId: string): { bg: string; letter: string } {
+export type PickAvatarOutcome =
+export async function pickAndUploadAvatar(userId: string): Promise<PickAvatarOutcome> {
+---
+### lib\badge-descriptions.ts
+export const BADGE_DESCRIPTIONS: Record<string, string> = {
+export function getBadgeDescription(id: string): string {
+---
+### lib\build-task-config-param.ts
+export function buildTaskConfigParam(task: Record<string, unknown> | undefined | null): string {
+---
+### lib\challenge-packs.ts
+export type PackTaskPhoto = "none" | "optional" | "required";
+export type PackTaskDef = {
+export type ChallengePackDef = {
+export function tasksFromPack(pack: ChallengePackDef): Record<string, unknown>[] {
+export const CHALLENGE_PACKS: ChallengePackDef[] = [
+---
+### lib\challenge-timer.ts
+export function getChallengeTimeRemaining(endsAt: string): {
+export function formatTimeRemaining(endsAt: string): string {
+export function formatTimeRemainingHMS(endsAt: string): string {
+export function isChallengeExpired(endsAt: string | null | undefined): boolean {
+---
+### lib\client-error-reporting.ts
+export function reportClientError(error: Error, componentStack?: string | null): void {
+---
+### lib\config.ts
+export { DEEP_LINK_BASE_URL };
+export const APP_STORE_URLS = {
+---
+### lib\constants\storage-keys.ts
+export const STORAGE_KEYS = {
+export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
+---
+### lib\create-challenge-helpers.ts
+export interface TaskWizardHardConfig {
+export interface CreateTaskDraft {
+export type ParticipationTypeUI = "solo" | "duo" | "team" | "shared_goal";
+export type DeadlineTypeUI = "none" | "soft" | "hard";
+export interface CreateChallengeDraft {
+export function getDurationFromDraft(
+export function validateDraftTasks(
+export function buildCreatePayload(draft: CreateChallengeDraft): Record<string, unknown> {
+export function canProceedStep1(
+---
+### lib\create-selection.ts
+export const CREATE_SELECTION = {
+---
+### lib\date-utils.ts
+export function getTodayDateKey(timezone?: string | null): string {
+export function getYesterdayDateKey(timezone?: string | null): string {
+export function countSecuredLast7Days(securedDateKeys: string[], timezone?: string | null): number {
+export function formatShortDate(date: Date | string): string {
+export function formatMonthShort(date: Date | string): string {
+---
+### lib\deep-links.ts
+export function challengeDeepLink(challengeId: string, refUserId?: string | null): string {
+export function inviteDeepLink(inviteCode: string, refUserId?: string | null): string {
+export function profileDeepLink(username: string): string {
+export function getRefFromUrl(url: string): string | null {
+---
+### lib\derive-user-rank.ts
+export function deriveUserRank(stats: StatsFromApi | null | undefined): string {
+---
+### lib\design-system.ts
+export const DS_COLORS = {
+export const GRIIT_COLORS = {
+export const DS_TYPOGRAPHY = {
+export const DS_SPACING = {
+export const DS_RADIUS = {
+export const DS_SHADOWS = {
+export const DS_MEASURES = {
+export const DS_BORDERS = {
+export const CHALLENGE_CATEGORY_COLORS = {
+export const DEFAULT_CATEGORY_COLOR = CHALLENGE_CATEGORY_COLORS.discipline;
+export function getCategoryColors(category: string) {
+export type DSColors = typeof DS_COLORS;
+export type DSTypography = typeof DS_TYPOGRAPHY;
+export type DSSpacing = typeof DS_SPACING;
+export type DSRadius = typeof DS_RADIUS;
+---
+### lib\estimate-daily-time.ts
+export type EstimateTaskInput = {
+export function estimateDailyMinutes(tasks: EstimateTaskInput[]): number {
+export function formatEstimatedDailyLabel(mins: number): string {
+---
+### lib\feature-flags.ts
+export const FLAGS = {
+export const FREE_LIMITS = {
+export const PREMIUM_FEATURES = {
+---
+### lib\formatTime.ts
+export function formatSecondsToMMSS(totalSeconds: number): string {
+---
+### lib\formatTimeAgo.test.ts
+(no export line match)
+---
+### lib\formatTimeAgo.ts
+export function formatTimeAgo(dateString: string): { text: string; isDayOrMore: boolean } {
+export function formatTimeAgoCompact(dateString: string): string {
+---
+### lib\geo.ts
+export function haversineDistance(
+---
+### lib\live-activity.ts
+export type LiveActivityTimerType = "checkin" | "run_gps" | "run_treadmill";
+export interface LiveActivityPayload {
+export function startLiveActivity(payload: LiveActivityPayload): void {
+export function updateLiveActivity(payload: LiveActivityPayload): void {
+export function endLiveActivity(): void {
+export function hasActiveLiveActivity(): boolean {
+---
+### lib\logger.ts
+export const logger = {
+---
+### lib\mutations.ts
+export function useLeaveChallenge() {
+---
+### lib\notification-copy.ts
+export type NotifCategory =
+export type NotifVars = {
+export const TASK_PREP_LEAD_MINUTES: Record<string, number> = {
+export const TASK_PREP_COPY: Record<string, { title: string; body: string }[]> = {
+export function pickTaskPrepTemplate(
+export function normalizeTaskTypeForPrep(raw: string | undefined): string {
+export function pickTemplate(
+export default TEMPLATES;
+---
+### lib\notifications.ts
+export const SOCIAL_TRIGGER_ID = "social-trigger";
+export const ENABLE_TWO_HOURS_LEFT = true;
+export function formatTimeForNotification(hour: number, minute: number): string {
+export async function cancelSecureReminders(): Promise<void> {
+export async function scheduleNextSecureReminder(
+export async function setupNotificationChannel(): Promise<void> {
+export async function requestNotificationPermissions(): Promise<boolean> {
+export async function scheduleLapsedUserReminders(params: {
+export async function cancelLapsedUserReminders(): Promise<void> {
+export async function scheduleMilestoneApproachingIfNeeded(streakCount: number): Promise<void> {
+export async function scheduleMorningMotivation(params: {
+export async function cancelMorningMotivation(): Promise<void> {
+export async function scheduleTaskWindowAlerts(
+export async function scheduleWeeklySummary(params: {
+export async function cancelWeeklySummary(): Promise<void> {
+---
+### lib\onboarding-pending.ts
+export type OnboardingAnswers = {
+export async function getPendingChallengeId(): Promise<string | null> {
+export async function setPendingChallengeId(challengeId: string | null): Promise<void> {
+export async function getOnboardingAnswers(): Promise<OnboardingAnswers | null> {
+export async function setOnboardingAnswers(answers: OnboardingAnswers | null): Promise<void> {
+export async function clearOnboardingPending(): Promise<void> {
+export async function clearOnboardingAnswers(): Promise<void> {
+---
+### lib\posthog.ts
+export function getPostHog(): PostHog | null {
+export function isPostHogEnabled(): boolean {
+export function resetPostHog(): void {
+---
+### lib\prefetch-queries.ts
+export function prefetchChallengeById(queryClient: QueryClient, id: string) {
+export function prefetchActiveChallengeById(queryClient: QueryClient, activeChallengeId: string) {
+---
+### lib\premium.ts
+export function setSubscriptionState(
+export function isPremium(): boolean {
+export function canJoinChallenge(currentActiveCount: number): { allowed: boolean; limit: number } {
+---
+### lib\profile-badges.tsx
+export type BadgeLucideProps = { size?: number; color?: string; strokeWidth?: number };
+export const BADGE_ICONS: Record<string, ComponentType<BadgeLucideProps>> = {
+export function badgeAccentFor(color: string): { bg: string; stroke: string } {
+---
+### lib\profile-display.ts
+export function isAutoGeneratedUsername(u: string | null | undefined): boolean {
+export function profilePrimaryName(
+export function profileHandleAt(p: { username?: string | null }): string | null {
+---
+### lib\query-client.ts
+export const queryClient = new QueryClient({
+---
+### lib\quotes.ts
+export const GRIIT_QUOTES = [
+export const DISCIPLINE_QUOTES = GRIIT_QUOTES.map((q) => q.text);
+export type QuoteWithAuthor = { text: string; author: string };
+export function getDailyQuoteObject(): QuoteWithAuthor {
+export function getRandomQuote(): QuoteWithAuthor {
+export function getDailyQuote(): string {
+---
+### lib\register-push-token.ts
+export async function registerPushTokenWithBackend(): Promise<boolean> {
+export async function requestNotificationPermissionAfterFirstJoin(): Promise<void> {
+---
+### lib\revenue-cat.ts
+export {
+export const isExpoGo = Constants.appOwnership === "expo";
+export async function checkEntitlement(_entitlementId?: string): Promise<boolean> {
+---
+### lib\review-prompt.ts
+export type ReviewTrigger = "day_secured" | "challenge_completed" | "milestone";
+export async function maybePromptForReview(
+export function shouldPromptOnMilestone(
+---
+### lib\routes.ts
+export const ROUTES = {
+export const SEGMENTS = {
+---
+### lib\sanitize.ts
+export function stripHtml(input: string): string {
+export const MAX_LENGTHS = {
+export function sanitizeText(
+export function sanitizeChallengeTitle(input: string): string {
+export function sanitizeChallengeDescription(input: string): string {
+export function sanitizeUsername(input: string): string {
+export function sanitizeBio(input: string): string {
+export function sanitizeDisplayName(input: string): string {
+---
+### lib\scoring.ts
+export function consistencyScore(weeklySecuredDays: number, currentStreak: number): number {
+---
+### lib\sentry.ts
+export function initialiseSentry(): void {
+export const initSentry = initialiseSentry;
+export function setSentryUser(userId: string, email?: string): void {
+export function clearSentryUser(): void {
+export function captureError(error: unknown, context?: string | Record<string, unknown>): void {
+export function captureMessage(message: string, level: Sentry.SeverityLevel = "info"): void {
+export { Sentry };
+---
+### lib\share.ts
+export async function shareInvite(message?: string, title?: string): Promise<void> {
+export async function sharePlainMessage(message: string, title?: string): Promise<void> {
+export async function shareChallenge(
+export async function inviteToChallenge(
+export async function shareProfile(
+export async function shareDaySecured(data: {
+export async function shareMilestone(data: {
+export async function shareProgressImage(imageUri: string, message: string): Promise<void> {
+export async function shareToInstagramStory(imageUri: string): Promise<void> {
+export async function shareChallengeComplete(data: {
+export async function shareApp(): Promise<void> {
+---
+### lib\signout-cleanup.ts
+export async function runClientSignOutCleanup(): Promise<void> {
+---
+### lib\subscription.ts
+export type CustomerInfo = {
+export type PurchasesPackage = {
+export type PurchasesOffering = {
+export async function initializeRevenueCat(userId: string): Promise<void> {
+export async function syncSubscriptionToSupabase(userId: string, customerInfo: CustomerInfo | null): Promise<void> {
+export async function checkPremiumStatus(): Promise<boolean> {
+export async function getOfferings(): Promise<PurchasesOffering | null> {
+export async function purchasePackage(
+export async function restorePurchases(): Promise<{
+export async function getCustomerInfo(): Promise<CustomerInfo | null> {
+export const SUBSCRIPTION_PRODUCT_IDS = {
+export type SubscriptionStatus = "free" | "premium" | "trial";
+export function addSubscriptionChangeListener(cb: SubscriptionChangeCallback): () => void {
+export async function initSubscription(userId: string): Promise<void> {
+export function clearSubscription(): void {
+---
+### lib\supabase.ts
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+---
+### lib\task-hard-verification.ts
+export interface TaskHardVerificationConfig {
+---
+### lib\task-helpers.ts
+export const JOURNAL_PROMPTS = [
+export function getDailyPrompt(taskId: string, journalPrompt?: string): string {
+export type TaskCompleteConfig = {
+export function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {
+export function firstString(v: string | string[] | undefined): string {
+export function inferRunOrWorkout(taskType: string, taskName: string): "run" | "workout" {
+export const WORKOUT_KINDS = ["Gym", "HIIT", "Yoga", "Calisthenics", "Other"] as const;
+export function goBackOrHome(router: RouterLike) {
+export function formatCheckinTime(iso: string): string {
+---
+### lib\task-progress.ts
+export type DailyTargetTaskInput = {
+export function getDailyTarget(
+export function getEndTargetsForTaskType(
+export function getDailyTargetForChallengeTask(
+---
+### lib\theme\colors.ts
+export const colors = {
+export type Colors = typeof colors;
+---
+### lib\theme\createFlowStyles.ts
+export const createFlowStyles = StyleSheet.create({
+---
+### lib\theme\index.ts
+export { colors } from "./colors";
+export { typography } from "./typography";
+export { spacing } from "./spacing";
+export { radius } from "./radius";
+export { shadows } from "./shadows";
+export { borders, iconSizes, measures } from "./tokens";
+export { sharedStyles } from "./shared-styles";
+---
+### lib\theme\radius.ts
+export const radius = {
+export type Radius = typeof radius;
+---
+### lib\theme\shadows.ts
+export const shadows = {
+export type Shadows = typeof shadows;
+---
+### lib\theme\shared-styles.ts
+export const sharedStyles = StyleSheet.create({
+---
+### lib\theme\spacing.ts
+export const spacing = {
+export type Spacing = typeof spacing;
+---
+### lib\theme\tokens.ts
+export const colors = {
+export const typography = {
+export const spacing = {
+export const radius = {
+export const shadows = {
+export const borders = {
+export const iconSizes = {
+export const measures = {
+export type Colors = typeof colors;
+export type Typography = typeof typography;
+export type Spacing = typeof spacing;
+export type Radius = typeof radius;
+export type Shadows = typeof shadows;
+export type IconSizes = typeof iconSizes;
+---
+### lib\theme\typography.ts
+export const typography = {
+export type Typography = typeof typography;
+---
+### lib\theme-palettes.ts
+export type ThemeColors = {
+export const LIGHT_THEME: ThemeColors = {
+export const DARK_THEME: ThemeColors = {
+---
+### lib\time-enforcement.test.ts
+(no export line match)
+---
+### lib\time-enforcement.ts
+export interface TimeWindow {
+export type TimeWindowStatus = "before" | "active" | "missed";
+export interface TimeWindowState {
+export function formatTimeHHMM(time: string): string {
+export function computeTimeWindow(
+export function getTimeWindowState(
+export function computeWindowSummary(
+export function validateTimeEnforcement(config: Partial<TimeEnforcementConfig>): {
+---
+### lib\trpc.ts
+export async function trpcQuery<T = unknown>(
+export async function trpcMutate<T = unknown>(
+---
+### lib\trpc-errors.test.ts
+(no export line match)
+---
+### lib\trpc-errors.ts
+export const TRPC_ERROR_CODE = {
+export type TrpcErrorCode = (typeof TRPC_ERROR_CODE)[keyof typeof TRPC_ERROR_CODE];
+export const TRPC_ERROR_TITLES: Record<TrpcErrorCode, string> = {
+export const TRPC_ERROR_USER_MESSAGE: Partial<Record<TrpcErrorCode, string>> = {
+---
+### lib\trpc-paths.ts
+export const TRPC = {
+---
+### lib\uploadAvatar.ts
+export type UploadAvatarResult = { url: string } | { error: string };
+export async function uploadAvatarFromUri(
+---
+### lib\uploadProofImage.ts
+export type UploadProofResult = { url: string } | { error: string };
+export async function uploadProofImageFromBase64(
+export async function uploadProofImageFromUri(uri: string): Promise<UploadProofResult> {
+---
+### lib\utils.ts
+export function getAvatarColor(username: string): string {
+export function getFeedAvatarBgFromUserId(userId: string): string {
+export function getDisplayInitials(displayName: string): string {
+---
+### lib\utils\relativeTime.ts
+export function relativeTime(dateStr: string): string {
+---
+### types\index.ts
+export type TaskType = "run" | "journal" | "timer" | "photo" | "checklist" | "custom" | "checkin";
+export interface ChallengeTaskFromApi {
+export type JournalCategory = "self_reflection" | "emotions" | "mental_clarity" | "physical_state" | "gratitude" | "wins_losses" | "discipline_check" | "free_write";
+export type MoodLevel = "very_bad" | "bad" | "neutral" | "good" | "very_good";
+export type BodyState = "fresh" | "ok" | "sore" | "exhausted";
+export type WordLimitMode = "PRESET" | "CUSTOM";
+export type ScheduleType = "NONE" | "DAILY" | "CUSTOM_DATES";
+export type WindowMode = "NONE" | "WINDOW" | "HARD_DEADLINE";
+export type TimezoneMode = "USER_LOCAL" | "CHALLENGE_TIMEZONE";
+export interface TimeEnforcementConfig {
+export interface JournalConfig {
+export interface JournalEntry {
+export type ChallengeType = "standard" | "one_day" | "solo" | "team" | "both";
+export type GoalMode = "individual" | "shared";
+export type TeamStatus = "active" | "completed" | "abandoned";
+---
+### types\netinfo.d.ts
+export default NetInfo;
+---
+### types\react-native-purchases.d.ts
+export interface CustomerInfo {
+export interface PurchasesPackage {
+export const LOG_LEVEL: { VERBOSE: number; DEBUG: number; INFO: number; WARN: number; ERROR: number };
+export default Purchases;
+---
