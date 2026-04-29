@@ -682,6 +682,8 @@ export default function HomeScreen() {
       renderCompletedGoalGroup,
       keyExtractorIncompleteGroup,
       keyExtractorCompletedGroup,
+      onStreakFreezeLinePress,
+      streakFreezeLine,
     ]
   );
 

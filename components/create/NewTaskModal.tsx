@@ -768,7 +768,6 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal, 
     locationName,
     rampEnabled,
     rampDay1,
-    durationDays,
   ]);
 
   const totalRampDays = Math.max(2, Math.min(365, durationDays > 0 ? durationDays : 21));
