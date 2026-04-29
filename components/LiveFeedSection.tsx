@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  FlatList,
   Share,
   Animated,
   ActionSheetIOS,
@@ -12,6 +11,7 @@ import {
   Modal,
   TouchableOpacity,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -440,8 +440,9 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
           </Pressable>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={finalFeed}
+          estimatedItemSize={380}
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
           renderItem={renderItem}
@@ -451,10 +452,6 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
           ListFooterComponent={
             <DiscoverCTA variant="feed" onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
           }
-          removeClippedSubviews={false}
-          initialNumToRender={5}
-          maxToRenderPerBatch={8}
-          windowSize={5}
           showsVerticalScrollIndicator={false}
         />
       )}
