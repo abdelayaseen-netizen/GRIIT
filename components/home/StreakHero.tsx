@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { getIdentityLine, getIdentityTier } from "@/constants/identity-copy";
+import { track } from "@/lib/analytics";
 
 const RING_SIZE = 64;
 const R = 28;
@@ -38,6 +40,7 @@ export default React.memo(function StreakHero({
   onFreezeLinePress,
 }: Props) {
   const [tick, setTick] = useState(0);
+  const lastTrackedIdentityKey = useRef<string | null>(null);
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 60_000);
     return () => clearInterval(id);
@@ -51,6 +54,19 @@ export default React.memo(function StreakHero({
     if (streak >= 2 && streak <= 6) return "Complete today's goals. Day 7 unlocks Builder rank.";
     return `${streak}-day streak. Keep the chain alive.`;
   }, [streak]);
+  const identityLine = useMemo(() => getIdentityLine(streak), [streak]);
+  const identityTier = useMemo(() => getIdentityTier(streak), [streak]);
+
+  useEffect(() => {
+    const eventKey = `${streak}:${identityTier}`;
+    if (lastTrackedIdentityKey.current === eventKey) return;
+    lastTrackedIdentityKey.current = eventKey;
+    track({
+      name: "identity_line_shown",
+      streak_count: streak,
+      tier: identityTier,
+    });
+  }, [streak, identityTier]);
 
   const dashOffset = C * (1 - Math.min(1, Math.max(0, ringProgress)));
 
@@ -92,6 +108,9 @@ export default React.memo(function StreakHero({
           ) : null}
           <Text style={s.msg}>{message}</Text>
           <Text style={s.timer}>{timerLabel}</Text>
+          <Text style={s.identityLine} accessibilityLabel={identityLine}>
+            {identityLine}
+          </Text>
         </View>
       </View>
       <TouchableOpacity
@@ -163,6 +182,11 @@ const s = StyleSheet.create({
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.DISCOVER_CORAL,
+  },
+  identityLine: {
+    marginTop: 6,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_SECONDARY,
   },
   cta: {
     marginTop: DS_SPACING.sm,

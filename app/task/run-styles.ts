@@ -501,6 +501,28 @@ export const styles = StyleSheet.create({
   verifyButtonTextDisabled: {
     color: DS_COLORS.textMuted,
   },
+  minimumDayWrap: {
+    marginTop: 12,
+    alignItems: "center",
+    gap: 8,
+  },
+  minimumDayHint: {
+    fontSize: 12,
+    color: DS_COLORS.textSecondary,
+  },
+  minimumDayButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: DS_RADIUS.MD,
+    borderWidth: 1,
+    borderColor: DS_COLORS.border,
+    backgroundColor: DS_COLORS.surface,
+  },
+  minimumDayButtonText: {
+    fontSize: 13,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.textPrimary,
+  },
   verifiedContainer: {
     flex: 1,
     alignItems: "center",

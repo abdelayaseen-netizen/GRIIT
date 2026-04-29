@@ -35,6 +35,7 @@ import { useJournalInput } from "@/hooks/useJournalInput";
 import { useTaskCompleteShareCardProps } from "@/hooks/useTaskCompleteShareCardProps";
 import { TaskCompleteCelebration } from "@/components/task/TaskCompleteCelebration";
 import { TaskCompleteForm } from "@/components/task/TaskCompleteForm";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import {
   firstString,
   parseConfig,
@@ -86,6 +87,7 @@ export function TaskCompleteScreenInner() {
   const [heartRateManual, setHeartRateManual] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [minimumConfirmVisible, setMinimumConfirmVisible] = useState(false);
   const [paramsReady, setParamsReady] = useState(false);
   const manualScale = useRef(new Animated.Value(1)).current;
   const runDistanceKm = useRef("0.0");
@@ -125,6 +127,9 @@ export function TaskCompleteScreenInner() {
   }, []);
 
   const isHardVerificationTask = config.hard_mode === true;
+  const isChallengeHardMode =
+    ((challenge as { is_hard_mode?: boolean } | null)?.is_hard_mode ?? false) ||
+    ((activeChallenge as { challenges?: { is_hard_mode?: boolean } } | null)?.challenges?.is_hard_mode ?? false);
   const hardVerificationConfig = useMemo((): TaskHardVerificationConfig => {
     return {
       hard_mode: config.hard_mode,
@@ -392,8 +397,12 @@ export function TaskCompleteScreenInner() {
     workoutOk,
   ]);
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
     if (!activeChallengeId || !taskId || !canSubmit) return;
+    if (taskMode === "minimum" && isChallengeHardMode) {
+      showError("Hard mode challenges require full completion.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       let noteTextOut: string | undefined;
@@ -434,6 +443,7 @@ export function TaskCompleteScreenInner() {
         location_longitude: gatesLocation?.lng ?? userLocation?.lng,
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
         clocked_in_at: isHardVerificationTask ? (clockedInAtRef.current ?? new Date().toISOString()) : undefined,
+        task_mode: taskMode,
       });
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
       setCompletionIdForShare(
@@ -446,8 +456,8 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      const celebTitle = isHardMode ? "Hard mode earned." : "Secured.";
-      const celebPoints = isHardMode ? 8 : 5;
+      const celebTitle = taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
+      const celebPoints = taskMode === "minimum" ? 0 : isHardMode ? 8 : 5;
       showCelebration({
         title: celebTitle,
         subtitle: `+${celebPoints} points`,
@@ -500,6 +510,7 @@ export function TaskCompleteScreenInner() {
     photoCaption,
     onScreenSecondsRef,
     clearActiveSession,
+    isChallengeHardMode,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -515,6 +526,11 @@ export function TaskCompleteScreenInner() {
       manualSubmitScheduled.current = false;
     }, 300);
   }, [handleSubmit, isSubmitting, manualScale]);
+
+  const handleMinimumDayConfirm = useCallback(() => {
+    setMinimumConfirmVisible(false);
+    void handleSubmit("minimum");
+  }, [handleSubmit]);
 
   const challengeIdForFeed =
     (activeChallenge as { challenge_id?: string } | null)?.challenge_id ??
@@ -652,6 +668,9 @@ export function TaskCompleteScreenInner() {
         photoCaption={photoCaption}
         setPhotoCaption={setPhotoCaption}
         handleSubmit={handleSubmit}
+        onRequestMinimumDay={() => setMinimumConfirmVisible(true)}
+        disableMinimumDay={isChallengeHardMode || isSubmitting}
+        minimumDayBlockedReason={isChallengeHardMode ? "Hard mode challenges require full completion." : undefined}
         heartRateData={heartRateData}
         setHeartRateData={setHeartRateData}
         heartRateManual={heartRateManual}
@@ -739,6 +758,7 @@ export function TaskCompleteScreenInner() {
       distance,
       radius,
       handleCheckLocation,
+      isChallengeHardMode,
     ]
   );
 
@@ -823,6 +843,14 @@ export function TaskCompleteScreenInner() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         renderItem={renderTaskCompleteFormItem}
+      />
+      <ConfirmDialog
+        visible={minimumConfirmVisible}
+        title="Mark minimum day?"
+        message="Can't do the full task today? This keeps your streak alive, but does not grant full-task rewards."
+        confirmLabel="Mark minimum day"
+        onCancel={() => setMinimumConfirmVisible(false)}
+        onConfirm={handleMinimumDayConfirm}
       />
     </SafeAreaView>
   );

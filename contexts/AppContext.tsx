@@ -39,6 +39,7 @@ type AppContextValue = {
     location_longitude?: number;
     timer_seconds_on_screen?: number;
     clocked_in_at?: string;
+    task_mode?: "full" | "minimum";
   }) => Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void>;
   secureDay: () => Promise<{
     newStreakCount: number;

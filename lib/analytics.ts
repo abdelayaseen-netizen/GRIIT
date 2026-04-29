@@ -2,8 +2,18 @@
  * Analytics events for activation and retention. Forwarded to PostHog when configured.
  */
 import { getPostHog, resetPostHog } from "./posthog";
+import type { IdentityTier } from "@/constants/identity-copy";
 
 export type PaywallVariant = "control" | "social_proof";
+export type ReminderType =
+  | "daily_streak"
+  | "streak_at_risk"
+  | "lapsed_3d"
+  | "lapsed_7d"
+  | "partner_completed"
+  | "milestone_celebration"
+  | "first_day_check"
+  | "comeback";
 
 type AnalyticsEvent =
   | { name: "app_opened"; streak_count?: number; isPremium?: boolean; days_since_signup?: number }
@@ -48,7 +58,9 @@ type AnalyticsEvent =
   | { name: "feed_posted"; challenge_id?: string; has_photo?: boolean }
   | { name: "discover_challenge_tapped"; challenge_id?: string }
   | { name: "share_completed"; content_type?: string }
-  | { name: "notification_opened"; notification_type?: string }
+  | { name: "notification_opened"; reminder_type: ReminderType; time_to_open_ms: number }
+  | { name: "notification_scheduled"; reminder_type: ReminderType; scheduled_for: string }
+  | { name: "notification_sent"; reminder_type: ReminderType }
   | { name: "nudge_sent"; toUserId?: string }
   | { name: "respect_sent"; toUserId?: string }
   | { name: "streak_lost" }
@@ -90,6 +102,8 @@ type AnalyticsEvent =
   | { name: "user_returned_after_lapse"; lapse_days: number; days_since_signup?: number }
   | { name: "cold_start"; cold_start_ms: number }
   | { name: "cold_start_bucket"; bucket: "fast" | "ok" | "slow" | "very_slow"; cold_start_ms: number }
+  | { name: "identity_line_shown"; streak_count: number; tier: IdentityTier }
+  | { name: "minimum_day_completed"; challenge_id?: string; streak_count?: number; day_number?: number }
   | { name: "review_prompted"; total_days_secured: number; trigger: string };
 
 type UserProperties = {
@@ -277,4 +291,30 @@ export function trackColdStart(props: { cold_start_ms: number }): void {
     coldStartMs < 1500 ? "fast" : coldStartMs < 2500 ? "ok" : coldStartMs <= 4000 ? "slow" : "very_slow";
   track({ name: "cold_start", cold_start_ms: coldStartMs });
   track({ name: "cold_start_bucket", bucket, cold_start_ms: coldStartMs });
+}
+
+export function trackNotificationScheduled(props: {
+  reminder_type: ReminderType;
+  scheduled_for: string;
+}): void {
+  track({
+    name: "notification_scheduled",
+    reminder_type: props.reminder_type,
+    scheduled_for: props.scheduled_for,
+  });
+}
+
+export function trackNotificationSent(props: { reminder_type: ReminderType }): void {
+  track({ name: "notification_sent", reminder_type: props.reminder_type });
+}
+
+export function trackNotificationOpened(props: {
+  reminder_type: ReminderType;
+  time_to_open_ms: number;
+}): void {
+  track({
+    name: "notification_opened",
+    reminder_type: props.reminder_type,
+    time_to_open_ms: Math.max(0, Math.round(props.time_to_open_ms)),
+  });
 }

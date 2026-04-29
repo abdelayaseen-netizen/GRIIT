@@ -93,7 +93,7 @@ app.get("/api/cron/send-reminders", async (c) => {
     const { getSupabaseAdmin, hasSupabaseAdmin } = await import("./lib/supabase-admin");
     const supabase = hasSupabaseAdmin() ? getSupabaseAdmin() : (await import("./lib/supabase")).supabase;
     const result = await runReminderCron(supabase);
-    return c.json({ ok: true, ...result });
+    return c.json({ ok: true, reminder_type_taxonomy: "enabled", ...result });
   } catch (err) {
     const { logger } = await import("./lib/logger");
     logger.error({ err }, "[cron] send-reminders error");

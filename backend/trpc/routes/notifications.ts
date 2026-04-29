@@ -76,6 +76,8 @@ function mapDbRow(r: DbNotifRow) {
         : null;
   const actorAvatarUrl =
     typeof dataObj["actor_avatar_url"] === "string" ? dataObj["actor_avatar_url"] : null;
+  const reminder_type =
+    typeof dataObj["reminder_type"] === "string" ? dataObj["reminder_type"] : null;
 
   const allowed = new Set(["respect", "comment", "follow", "rank", "follow_request"]);
   const typeStr = String(r.type ?? "general");
@@ -92,6 +94,7 @@ function mapDbRow(r: DbNotifRow) {
     actorUsername,
     actorDisplayName,
     actorAvatarUrl,
+    reminder_type,
     metadata: dataObj,
   };
 }

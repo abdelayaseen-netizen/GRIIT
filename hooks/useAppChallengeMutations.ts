@@ -83,6 +83,7 @@ export function useAppChallengeMutations({
       location_longitude?: number;
       timer_seconds_on_screen?: number;
       clocked_in_at?: string;
+      task_mode?: "full" | "minimum";
     }): Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
@@ -110,6 +111,7 @@ export function useAppChallengeMutations({
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
           const challengeIdForRetention = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
+          const activeStreak = (stats as StatsFromApi | null)?.activeStreak;
           const daysSinceSignup = calculateDaysSinceSignup(profile ?? fallbackProfile);
           if (currentDay >= 7 && challengeIdForRetention) {
             try {
@@ -132,6 +134,19 @@ export function useAppChallengeMutations({
           if (currentDay === 3 && challengeIdForRetention) {
             try {
               trackEvent("day_3_retained", { challenge_id: challengeIdForRetention });
+            } catch {
+              /* non-fatal */
+            }
+          }
+          const isMinimumDay = params.task_mode === "minimum";
+          if (isMinimumDay) {
+            try {
+              track({
+                name: "minimum_day_completed",
+                challenge_id: challengeIdForRetention,
+                streak_count: activeStreak,
+                day_number: currentDay,
+              });
             } catch {
               /* non-fatal */
             }

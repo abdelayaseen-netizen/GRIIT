@@ -5,6 +5,7 @@
  */
 
 import { sendPushToUser } from "./push-reminder-expo";
+import { getStreakAtRiskCopy } from "../../constants/identity-copy";
 
 export interface SecureReminderContext {
   userId: string;
@@ -137,8 +138,16 @@ export async function sendSecureReminder(
     type === "morning"
       ? pickMorningCopy(streak)
       : pickEveningCopy(streak);
+  const reminderType = type === "morning" ? "daily_streak" : "streak_at_risk";
+  const finalCopy =
+    type === "streak_at_risk"
+      ? getStreakAtRiskCopy(streak)
+      : copy;
 
-  await sendPushToUser(token, copy.title, copy.body);
+  await sendPushToUser(token, finalCopy.title, finalCopy.body, {
+    reminder_type: reminderType,
+    sent_at_ms: Date.now(),
+  });
 }
 
 /**
@@ -155,5 +164,8 @@ export async function sendComebackPush(pushToken: string): Promise<void> {
   const template = COMEBACK_TEMPLATES[i] ?? COMEBACK_TEMPLATES[0];
   if (!template) return;
 
-  await sendPushToUser(token, template.title, template.body);
+  await sendPushToUser(token, template.title, template.body, {
+    reminder_type: "comeback",
+    sent_at_ms: Date.now(),
+  });
 }

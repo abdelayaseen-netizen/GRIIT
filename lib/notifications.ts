@@ -25,6 +25,7 @@ import * as Device from "expo-device";
 import Constants from "expo-constants";
 import { captureError } from "@/lib/sentry";
 import { DS_COLORS } from "@/lib/design-system";
+import { getStreakAtRiskCopy } from "@/constants/identity-copy";
 import {
   pickTemplate,
   type NotifVars,
@@ -32,6 +33,7 @@ import {
   pickTaskPrepTemplate,
   normalizeTaskTypeForPrep,
 } from "@/lib/notification-copy";
+import { trackNotificationScheduled, type ReminderType } from "@/lib/analytics";
 
 // Foreground: banner/alert + sound (also set in registerForPushNotificationsAsync)
 Notifications.setNotificationHandler({
@@ -58,6 +60,17 @@ const STREAK_CELEBRATION_ID = "streak-celebration";
 /** Reserved for friend-activity / server-triggered social pushes. */
 export const SOCIAL_TRIGGER_ID = "social-trigger";
 const CHALLENGE_COUNTDOWN_PREFIX = "challenge-countdown-";
+
+function scheduleWithReminderType(content: Notifications.NotificationContentInput, reminderType: ReminderType) {
+  return {
+    ...content,
+    data: {
+      ...((content.data as Record<string, unknown> | undefined) ?? {}),
+      reminder_type: reminderType,
+      sent_at_ms: Date.now(),
+    },
+  };
+}
 
 /** Default 8pm */
 const DEFAULT_PREFERRED_TIME = "20:00";
@@ -123,16 +136,17 @@ export async function scheduleNextSecureReminder(
     await Notifications.cancelScheduledNotificationAsync(SECURE_REMINDER_ID);
     await Notifications.scheduleNotificationAsync({
       identifier: SECURE_REMINDER_ID,
-      content: {
+      content: scheduleWithReminderType({
         title,
         body,
         sound: true,
-      },
+      }, "daily_streak"),
       trigger: {
         type: "date",
         date: triggerDate,
       } as Notifications.NotificationTriggerInput,
     });
+    trackNotificationScheduled({ reminder_type: "daily_streak", scheduled_for: triggerDate.toISOString() });
 
     if (ENABLE_TWO_HOURS_LEFT) {
       const twoHoursLeft = new Date(triggerDate);
@@ -145,16 +159,17 @@ export async function scheduleNextSecureReminder(
             : "Only 2 hours left to secure today. Don't break your streak!";
         await Notifications.scheduleNotificationAsync({
           identifier: TWO_HOURS_LEFT_ID,
-          content: {
+          content: scheduleWithReminderType({
             title: "2 hours left",
             body: twoHoursBody,
             sound: true,
-          },
+          }, "streak_at_risk"),
           trigger: {
             type: "date",
             date: twoHoursLeft,
           } as Notifications.NotificationTriggerInput,
         });
+        trackNotificationScheduled({ reminder_type: "streak_at_risk", scheduled_for: twoHoursLeft.toISOString() });
       }
     }
     if (!afterDate) {
@@ -163,26 +178,22 @@ export async function scheduleNextSecureReminder(
       streakAtRisk.setHours(23, 15, 0, 0);
       if (streakAtRisk.getTime() > now.getTime()) {
         await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
-        const riskKey = streakAtRisk.toISOString().slice(0, 10);
-        const { title: riskTitle, body: riskBodyBase } = pickTemplate(
-          "streak_at_risk",
-          { streak: streakCount ?? 0 },
-          riskKey
-        );
+        const riskCopy = getStreakAtRiskCopy(streakCount ?? 0);
         const lsText =
           lastStandsRemaining !== undefined && lastStandsRemaining >= 0
             ? ` You have ${lastStandsRemaining} Last Stand(s) remaining.`
             : "";
-        const riskBody = `${riskBodyBase}${lsText}`;
+        const riskBody = `${riskCopy.body}${lsText}`;
         await Notifications.scheduleNotificationAsync({
           identifier: STREAK_AT_RISK_ID,
-          content: {
-            title: riskTitle,
+          content: scheduleWithReminderType({
+            title: riskCopy.title,
             body: riskBody,
             sound: true,
-          },
+          }, "streak_at_risk"),
           trigger: { type: "date", date: streakAtRisk } as Notifications.NotificationTriggerInput,
         });
+        trackNotificationScheduled({ reminder_type: "streak_at_risk", scheduled_for: streakAtRisk.toISOString() });
       }
     }
   } catch {
@@ -240,13 +251,14 @@ export async function scheduleLapsedUserReminders(params: {
     const d3 = pickTemplate("lapsed", { challenge: challengeName ?? "" }, day3.toISOString().slice(0, 10));
     await Notifications.scheduleNotificationAsync({
       identifier: LAPSED_IDS[0],
-      content: {
+      content: scheduleWithReminderType({
         title: d3.title,
         body: d3.body,
         sound: true,
-      },
+      }, "lapsed_3d"),
       trigger: { type: "date", date: day3 } as Notifications.NotificationTriggerInput,
     });
+    trackNotificationScheduled({ reminder_type: "lapsed_3d", scheduled_for: day3.toISOString() });
     track({ name: "lapsed_notification_scheduled", day: 3 });
 
     await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[1]);
@@ -257,26 +269,28 @@ export async function scheduleLapsedUserReminders(params: {
     );
     await Notifications.scheduleNotificationAsync({
       identifier: LAPSED_IDS[1],
-      content: {
+      content: scheduleWithReminderType({
         title: d7.title,
         body: d7.body,
         sound: true,
-      },
+      }, "lapsed_7d"),
       trigger: { type: "date", date: day7 } as Notifications.NotificationTriggerInput,
     });
+    trackNotificationScheduled({ reminder_type: "lapsed_7d", scheduled_for: day7.toISOString() });
     track({ name: "lapsed_notification_scheduled", day: 7 });
 
     await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[2]);
     const d14 = pickTemplate("lapsed", { challenge: challengeName ?? "" }, day14.toISOString().slice(0, 10));
     await Notifications.scheduleNotificationAsync({
       identifier: LAPSED_IDS[2],
-      content: {
+      content: scheduleWithReminderType({
         title: d14.title,
         body: d14.body,
         sound: true,
-      },
+      }, "comeback"),
       trigger: { type: "date", date: day14 } as Notifications.NotificationTriggerInput,
     });
+    trackNotificationScheduled({ reminder_type: "comeback", scheduled_for: day14.toISOString() });
     track({ name: "lapsed_notification_scheduled", day: 14 });
   } catch {
     // ignore
@@ -311,13 +325,14 @@ export async function scheduleMilestoneApproachingIfNeeded(streakCount: number):
     const in12h = new Date(Date.now() + 12 * 60 * 60 * 1000);
     await Notifications.scheduleNotificationAsync({
       identifier: MILESTONE_APPROACHING_ID,
-      content: {
+      content: scheduleWithReminderType({
         title: "One more day!",
         body: `Tomorrow is Day ${nextDay}! Complete your tasks to hit this milestone.`,
         sound: true,
-      },
+      }, "milestone_celebration"),
       trigger: { type: "date", date: in12h } as Notifications.NotificationTriggerInput,
     });
+    trackNotificationScheduled({ reminder_type: "milestone_celebration", scheduled_for: in12h.toISOString() });
     const { track } = await import("@/lib/analytics");
     track({ name: "milestone_approaching_notification_scheduled", milestone_day: nextDay });
   } catch {
@@ -640,18 +655,20 @@ export async function scheduleTaskReminder(params: {
 
     await Notifications.scheduleNotificationAsync({
       identifier,
-      content: {
+      content: scheduleWithReminderType({
         title: `Time for ${taskName}`,
         body: `${challengeName} · Don't break your streak`,
         sound: true,
         data: { type: "task_reminder", identifier },
-      },
+      }, "daily_streak"),
       trigger: {
         type: SchedulableTriggerInputTypes.DAILY,
         hour,
         minute,
       },
     });
+    const nextDaily = nextOccurrence(new Date(), hour, minute);
+    trackNotificationScheduled({ reminder_type: "daily_streak", scheduled_for: nextDaily.toISOString() });
   } catch (error) {
     captureError(error, "scheduleTaskReminder");
   }
@@ -669,7 +686,7 @@ export async function scheduleStreakReminder(streakCount: number): Promise<void>
 
     await Notifications.scheduleNotificationAsync({
       identifier: STREAK_REMINDER_10PM_ID,
-      content: {
+      content: scheduleWithReminderType({
         title:
           streakCount > 0
             ? `Your ${streakCount}-day streak ends at midnight`
@@ -677,7 +694,7 @@ export async function scheduleStreakReminder(streakCount: number): Promise<void>
         body: "Complete your tasks to keep the streak alive",
         sound: true,
         data: { type: "streak_reminder" },
-      },
+      }, "daily_streak"),
       trigger: {
         type: SchedulableTriggerInputTypes.DAILY,
         hour: 22,

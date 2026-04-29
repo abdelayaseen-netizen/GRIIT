@@ -63,7 +63,7 @@ export default function RunTaskScreen() {
   const router = useRouter();
   const safeBack = React.useCallback(() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never)), [router]);
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { currentChallenge, verifyTask, getTaskStateForTemplate, profile, activeChallenge } = useApp();
+  const { currentChallenge, verifyTask, getTaskStateForTemplate, profile, activeChallenge, completeTask } = useApp();
   const setActiveSession = useActiveSessionStore((s) => s.setActiveSession);
   const clearActiveSession = useActiveSessionStore((s) => s.clearActiveSession);
   const updateTimerRunning = useActiveSessionStore((s) => s.updateTimerRunning);
@@ -83,6 +83,7 @@ export default function RunTaskScreen() {
   
   const [runMode, setRunMode] = useState<RunMode>("outdoor_gps");
   const [pendingRunMode, setPendingRunMode] = useState<RunMode | null>(null);
+  const [minimumConfirmVisible, setMinimumConfirmVisible] = useState(false);
   const [isTracking, setIsTracking] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [distanceMiles, setDistanceMiles] = useState<number>(0);
@@ -539,6 +540,22 @@ export default function RunTaskScreen() {
     }
   };
 
+  const handleMinimumDay = async () => {
+    const minimumTaskId = task?.id ?? taskId;
+    if (!minimumTaskId || !activeChallengeId) return;
+    try {
+      await completeTask({
+        activeChallengeId,
+        taskId: minimumTaskId,
+        task_mode: "minimum",
+      });
+      setMinimumConfirmVisible(false);
+      safeBack();
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not mark minimum day.");
+    }
+  };
+
   const formatPace = () => {
     if (distanceMiles === 0 || elapsedSeconds === 0) return "--:--";
     const paceSeconds = elapsedSeconds / distanceMiles;
@@ -964,6 +981,17 @@ export default function RunTaskScreen() {
               VERIFY RUN
             </Text>
           </TouchableOpacity>
+          <View style={styles.minimumDayWrap}>
+            <Text style={styles.minimumDayHint}>Can't do the full thing today?</Text>
+            <TouchableOpacity
+              style={styles.minimumDayButton}
+              onPress={() => setMinimumConfirmVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Mark minimum day"
+            >
+              <Text style={styles.minimumDayButtonText}>Mark Minimum</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
 
@@ -974,6 +1002,16 @@ export default function RunTaskScreen() {
         confirmLabel="Switch"
         onCancel={() => setPendingRunMode(null)}
         onConfirm={confirmModeSwitch}
+      />
+      <ConfirmDialog
+        visible={minimumConfirmVisible}
+        title="Mark minimum day?"
+        message="This keeps your streak alive with a minimum day check-in."
+        confirmLabel="Mark minimum day"
+        onCancel={() => setMinimumConfirmVisible(false)}
+        onConfirm={() => {
+          void handleMinimumDay();
+        }}
       />
     </SafeAreaView>
     </ErrorBoundary>

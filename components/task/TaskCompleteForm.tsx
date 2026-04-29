@@ -92,6 +92,9 @@ export interface TaskCompleteFormProps {
   photoCaption: string;
   setPhotoCaption: (s: string) => void;
   handleSubmit: () => void | Promise<void>;
+  onRequestMinimumDay: () => void;
+  disableMinimumDay: boolean;
+  minimumDayBlockedReason?: string;
   heartRateData: { avg: number; peak: number } | null;
   setHeartRateData: (v: { avg: number; peak: number } | null) => void;
   heartRateManual: string;
@@ -171,6 +174,9 @@ export function TaskCompleteForm(props: TaskCompleteFormProps) {
     photoCaption,
     setPhotoCaption,
     handleSubmit,
+    onRequestMinimumDay,
+    disableMinimumDay,
+    minimumDayBlockedReason,
     heartRateData,
     setHeartRateData,
     heartRateManual,
@@ -679,6 +685,25 @@ export function TaskCompleteForm(props: TaskCompleteFormProps) {
         </Text>
       )}
     </TouchableOpacity>
+    <View style={styles.minimumDividerWrap}>
+      <View style={styles.minimumDivider} />
+      <Text style={styles.minimumDividerText}>or</Text>
+      <View style={styles.minimumDivider} />
+    </View>
+    <Text style={styles.minimumCopy}>
+      Can't do the full thing today? Mark a minimum day to keep your streak.
+    </Text>
+    <TouchableOpacity
+      style={[styles.secondaryBtn, disableMinimumDay && styles.primaryBtnDisabled]}
+      onPress={onRequestMinimumDay}
+      disabled={disableMinimumDay}
+      accessibilityRole="button"
+      accessibilityLabel="Mark minimum day"
+      accessibilityState={{ disabled: disableMinimumDay }}
+    >
+      <Text style={styles.secondaryBtnText}>Mark minimum day</Text>
+    </TouchableOpacity>
+    {minimumDayBlockedReason ? <Text style={styles.warnSmall}>{minimumDayBlockedReason}</Text> : null}
   </View>
 )}
   </>

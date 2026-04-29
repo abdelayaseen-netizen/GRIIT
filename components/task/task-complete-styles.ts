@@ -259,6 +259,27 @@ export const styles = StyleSheet.create({
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   submitSection: { marginTop: DS_SPACING.xxl, paddingBottom: DS_SPACING.xxl },
+  minimumDividerWrap: {
+    marginTop: DS_SPACING.lg,
+    marginBottom: DS_SPACING.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.sm,
+  },
+  minimumDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: DS_COLORS.BORDER,
+  },
+  minimumDividerText: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_MUTED,
+  },
+  minimumCopy: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginBottom: DS_SPACING.sm,
+  },
   offscreenCapture: {
     position: "absolute",
     left: -9999,

@@ -61,6 +61,7 @@ export const checkinsRouter = createTRPCRouter({
         location_longitude: z.number().optional(),
         timer_seconds_on_screen: z.number().int().min(0).optional(),
         clocked_in_at: z.string().datetime().optional(),
+        task_mode: z.enum(["full", "minimum"]).default("full"),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -74,7 +75,7 @@ export const checkinsRouter = createTRPCRouter({
         .single();
       const { data: chRow } = await ctx.supabase
         .from("challenges")
-        .select("duration_type, ends_at, live_date, duration_days")
+        .select("duration_type, ends_at, live_date, duration_days, is_hard_mode")
         .eq("id", challenge_id)
         .single();
       const ch = chRow as {
@@ -94,6 +95,14 @@ export const checkinsRouter = createTRPCRouter({
       if (ch?.duration_type === "24h") {
         const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
         if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
+      }
+      const isMinimumDay = input.task_mode === "minimum";
+      const isChallengeHardMode = (ch as { is_hard_mode?: boolean } | null)?.is_hard_mode === true;
+      if (isMinimumDay && isChallengeHardMode) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Hard mode challenges require full completion.",
+        });
       }
 
       // --- Anti-cheat: prevent rapid-fire completions ---
@@ -139,7 +148,9 @@ export const checkinsRouter = createTRPCRouter({
       const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
       const config = cfg as TaskConfig;
 
-      assertHardModeScheduleWindow(config);
+      if (!isMinimumDay) {
+        assertHardModeScheduleWindow(config);
+      }
 
       const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
       const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
@@ -156,13 +167,16 @@ export const checkinsRouter = createTRPCRouter({
         rampDayNumber,
         totalDur
       );
-      const requirePhoto = task?.require_photo === true || needsProof;
+      const requirePhoto = !isMinimumDay && (task?.require_photo === true || needsProof);
       const photoUrl = (input.photo_url ?? input.proofUrl)?.trim() || null;
       if (requirePhoto && !photoUrl) throw new TRPCError({ code: "BAD_REQUEST", message: "This task requires a photo. Please take a photo to verify completion." });
 
-      assertHardModeCameraOnly(cfg, photoUrl, input.proofUrl);
+      if (!isMinimumDay) {
+        assertHardModeCameraOnly(cfg, photoUrl, input.proofUrl);
+      }
 
-      const requireHeartRate = task?.require_heart_rate === true || cfg.verification_method === "heart_rate";
+      const requireHeartRate =
+        !isMinimumDay && (task?.require_heart_rate === true || cfg.verification_method === "heart_rate");
       if (requireHeartRate) {
         const threshold = (typeof task?.heart_rate_threshold === "number" ? task.heart_rate_threshold : null) ?? (typeof ruleFromCfg?.min_avg_bpm === "number" ? ruleFromCfg.min_avg_bpm : 100);
         const avg = input.heart_rate_avg ?? 0;
@@ -172,7 +186,7 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const { locationDistanceM, hardModeLocationGate } = evaluateTaskLocation(task, cfg, input);
-      const requireLocation = task?.require_location === true || cfg.require_location === true;
+      const requireLocation = !isMinimumDay && (task?.require_location === true || cfg.require_location === true);
 
       const timerHardMode = task?.timer_hard_mode === true || cfg.strict_timer_mode === true || cfg.timer_hard_mode === true;
       const minDurationMinutes =
@@ -180,17 +194,23 @@ export const checkinsRouter = createTRPCRouter({
         task?.min_duration_minutes ??
         durationMinutes ??
         (taskType === "run" && cfg.tracking_mode === "time" && typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : null);
-      if (timerHardMode && minDurationMinutes != null && minDurationMinutes > 0) {
+      if (!isMinimumDay && timerHardMode && minDurationMinutes != null && minDurationMinutes > 0) {
         const requiredSeconds = minDurationMinutes * 60;
         const onScreen = input.timer_seconds_on_screen ?? 0;
         if (onScreen < requiredSeconds) throw new TRPCError({ code: "BAD_REQUEST", message: `Hard mode: you must stay on the timer screen for the full ${minDurationMinutes} minutes. You were on screen for ${Math.floor(onScreen / 60)} minutes.` });
       }
 
-      if (minDurationMinutes != null && minDurationMinutes > 0 && input.value != null && input.value < minDurationMinutes) {
+      if (
+        !isMinimumDay &&
+        minDurationMinutes != null &&
+        minDurationMinutes > 0 &&
+        input.value != null &&
+        input.value < minDurationMinutes
+      ) {
         throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minDurationMinutes} minutes. You completed ${input.value} minutes.` });
       }
       const isJournal = taskType === "journal" || taskType === "manual";
-      if (isJournal && minWords > 0) {
+      if (!isMinimumDay && isJournal && minWords > 0) {
         const text = (input.noteText ?? "").trim();
         const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
         if (wordCount < minWords) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minWords} words. You wrote ${wordCount}.` });
@@ -199,13 +219,14 @@ export const checkinsRouter = createTRPCRouter({
       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const isWorkoutTimed = taskType === "workout" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const requiredMinutes = minDurationMinutes ?? durationMinutes;
-      if ((isTimer || isRunTimed || isWorkoutTimed) && requiredMinutes > 0) {
+      if (!isMinimumDay && (isTimer || isRunTimed || isWorkoutTimed) && requiredMinutes > 0) {
         const completedMinutes = input.value ?? 0;
         if (completedMinutes < requiredMinutes) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${requiredMinutes} minutes. You logged ${completedMinutes}.` });
       }
 
       const requiredNumeric = dailyTargets.targetValue;
       if (
+        !isMinimumDay &&
         requiredNumeric != null &&
         requiredNumeric > 0 &&
         input.value != null &&
@@ -218,6 +239,7 @@ export const checkinsRouter = createTRPCRouter({
         });
       }
       if (
+        !isMinimumDay &&
         taskType === "run" &&
         cfg.tracking_mode === "distance" &&
         requiredNumeric != null &&
@@ -232,35 +254,36 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const verificationGates: Record<string, unknown> = {};
-      if (config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
+      if (!isMinimumDay && config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
         verificationGates.time_gate = {
           status: "passed",
           clocked_in_at: input.clocked_in_at ?? new Date().toISOString(),
           window: `${config.schedule_window_start}-${config.schedule_window_end}`,
         };
       }
-      if (hardModeLocationGate && locationDistanceM != null) {
+      if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
         verificationGates.location_gate = {
           status: "passed",
           distance_meters: Math.round(locationDistanceM),
           location_name: cfg.location_name ?? "the required location",
         };
-      } else if (requireLocation && locationDistanceM != null) {
+      } else if (!isMinimumDay && requireLocation && locationDistanceM != null) {
         verificationGates.location_gate = {
           status: "passed",
           distance_meters: Math.round(locationDistanceM),
           location_name: task?.location_name ?? cfg.location_name ?? "the required location",
         };
       }
-      if (cfg.hard_mode && cfg.require_camera_only && photoUrl) {
+      if (!isMinimumDay && cfg.hard_mode && cfg.require_camera_only && photoUrl) {
         verificationGates.photo_gate = { status: "passed", camera_only: true };
       }
-      if (cfg.hard_mode && cfg.require_strava) {
+      if (!isMinimumDay && cfg.hard_mode && cfg.require_strava) {
         verificationGates.strava_gate = { status: "pending" };
       }
 
       const proofUrl = photoUrl || input.proofUrl?.trim() || null;
       const payload: Record<string, unknown> = { user_id: ctx.userId, active_challenge_id: input.activeChallengeId, task_id: input.taskId, date_key: dateKey, status: "completed" };
+      payload.task_mode = input.task_mode;
       if (input.value != null) payload.value = input.value;
       if (input.noteText != null) payload.note_text = input.noteText;
       if (proofUrl != null) payload.proof_url = proofUrl;
@@ -327,6 +350,7 @@ export const checkinsRouter = createTRPCRouter({
           photo_url: proofUrl ?? null,
           verification_method: verificationMethod,
           is_hard_mode: timerHardMode,
+          task_mode: input.task_mode,
           heart_rate_verified: requireHeartRate ? heartRateVerified : false,
           location_verified: !!(input.location_latitude != null && input.location_longitude != null && requireLocation),
         },
@@ -370,7 +394,7 @@ export const checkinsRouter = createTRPCRouter({
       const completedRequired = completedCheckins?.filter((c) => requiredTasks.some((rt) => rt.id === c.task_id)) || [];
       const progress = requiredTasks.length > 0 ? (completedRequired.length / requiredTasks.length) * 100 : 0;
       await ctx.supabase.from("active_challenges").update({ progress_percent: progress }).eq("id", input.activeChallengeId);
-      return data;
+      return { ...(data ?? {}), isMinimumDay };
     }),
 
   getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {

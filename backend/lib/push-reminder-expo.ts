@@ -14,7 +14,8 @@ const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 export async function sendPushToUser(
   pushToken: string | null | undefined,
   title: string,
-  body: string
+  body: string,
+  data?: Record<string, unknown>
 ): Promise<void> {
   const token = typeof pushToken === "string" ? pushToken.trim() : "";
   if (!token || !isValidExpoToken(token)) return;
@@ -28,6 +29,7 @@ export async function sendPushToUser(
         title,
         body,
         sound: "default",
+        data,
       }),
     });
     if (!res.ok) {

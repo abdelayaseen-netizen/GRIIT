@@ -27,7 +27,13 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
-import { trackAppOpened, trackColdStart, trackEvent, trackUserReturnedAfterLapse } from "@/lib/analytics";
+import {
+  trackAppOpened,
+  trackColdStart,
+  trackNotificationOpened,
+  trackUserReturnedAfterLapse,
+  type ReminderType,
+} from "@/lib/analytics";
 // Static import: ensures Notifications.setNotificationHandler at the top of
 // lib/notifications.ts runs at app boot, before any timer task can schedule a
 // lock-screen notification.
@@ -446,9 +452,22 @@ function RootLayout() {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       try {
         const data = response.notification.request.content.data as Record<string, unknown> | undefined;
-        const rawType = data?.type;
-        trackEvent("notification_opened", {
-          notification_type: typeof rawType === "string" ? rawType : "unknown",
+        const rawReminderType = data?.reminder_type;
+        const openedAt = Date.now();
+        const sentAtRaw = data?.sent_at_ms;
+        const sentAtMs =
+          typeof sentAtRaw === "number"
+            ? sentAtRaw
+            : typeof sentAtRaw === "string"
+              ? Number(sentAtRaw)
+              : openedAt;
+        const reminderType: ReminderType =
+          typeof rawReminderType === "string"
+            ? (rawReminderType as ReminderType)
+            : "daily_streak";
+        trackNotificationOpened({
+          reminder_type: reminderType,
+          time_to_open_ms: Math.max(0, openedAt - (Number.isFinite(sentAtMs) ? sentAtMs : openedAt)),
         });
         if (data?.type === "active_task_timer" && typeof data.route === "string") {
           const r = data.route;

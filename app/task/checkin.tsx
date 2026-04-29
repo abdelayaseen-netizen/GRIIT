@@ -40,6 +40,7 @@ import {
 import { endLiveActivity } from "@/lib/live-activity";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useActiveSessionStore } from "@/store/activeSessionStore";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 type LocationStatus = "checking" | "inside" | "outside" | "error" | "no_permission";
 type TimeStatus = "too_early" | "window_open" | "too_late";
@@ -54,7 +55,7 @@ interface CurrentLocation {
 export default function CheckinTaskScreen() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { currentChallenge, verifyTask, getTaskStateForTemplate, profile, activeChallenge } = useApp();
+  const { currentChallenge, verifyTask, getTaskStateForTemplate, profile, activeChallenge, completeTask } = useApp();
   const setActiveSession = useActiveSessionStore((s) => s.setActiveSession);
   const clearActiveSession = useActiveSessionStore((s) => s.clearActiveSession);
   const updateTimerRunning = useActiveSessionStore((s) => s.updateTimerRunning);
@@ -93,6 +94,7 @@ export default function CheckinTaskScreen() {
   const [backgroundSeconds, setBackgroundSeconds] = useState(0);
   const [backgroundViolation, setBackgroundViolation] = useState(false);
   const [outsideRadiusSeconds, setOutsideRadiusSeconds] = useState(0);
+  const [minimumConfirmVisible, setMinimumConfirmVisible] = useState(false);
 
   const [startLocation, setStartLocation] = useState<CurrentLocation | null>(null);
 
@@ -431,6 +433,26 @@ export default function CheckinTaskScreen() {
     }
   };
 
+  const handleMinimumDay = async () => {
+    const minimumTaskId = task?.id ?? taskId;
+    if (!minimumTaskId || !activeChallengeId) return;
+    try {
+      await completeTask({
+        activeChallengeId,
+        taskId: minimumTaskId,
+        task_mode: "minimum",
+      });
+      setMinimumConfirmVisible(false);
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace(ROUTES.TABS_HOME as never);
+      }
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not mark minimum day.");
+    }
+  };
+
   const getTimeWindowDisplay = () => {
     if (!timeWindowPolicy?.enabled) return "Anytime";
     const timeSeg = (timeWindowPolicy.startTimeLocal ?? "00:00").split(":");
@@ -646,7 +668,28 @@ export default function CheckinTaskScreen() {
             {sessionActive ? "FINISH CHECK-IN" : "START SESSION FIRST"}
           </Text>
         </TouchableOpacity>
+        <View style={styles.minimumDayWrap}>
+          <Text style={styles.minimumDayHint}>Can't do the full thing today?</Text>
+          <TouchableOpacity
+            style={styles.minimumDayButton}
+            onPress={() => setMinimumConfirmVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Mark minimum day"
+          >
+            <Text style={styles.minimumDayButtonText}>Mark Minimum</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+      <ConfirmDialog
+        visible={minimumConfirmVisible}
+        title="Mark minimum day?"
+        message="This keeps your streak alive with a minimum day check-in."
+        confirmLabel="Mark minimum day"
+        onCancel={() => setMinimumConfirmVisible(false)}
+        onConfirm={() => {
+          void handleMinimumDay();
+        }}
+      />
     </SafeAreaView>
     </ErrorBoundary>
   );
