@@ -27,3 +27,12 @@
 - RevenueCat 2026 State of Subscription Apps: hard paywall 5x conversion, 17-32d trial +70%, 80% trials start day 0, 55% of 3-day trial cancellations on day 0
 - Cialdini Influence: social proof one of six core persuasion levers; testimonials with specifics outperform generic
 - Health & Fitness benchmark: 68% annual plan adoption
+
+## Performance Targets (research-anchored)
+- Cold start P50: <2000ms (industry: <2s = top quartile)
+- Cold start P95: <4000ms
+- API P50: <300ms
+- API P95: <1000ms
+- Crash-free sessions: >99.5%
+- Measurement source: PostHog (cold_start), Sentry Performance (API)
+- Action threshold: any P50 > target → file as performance bug, fix before next paid acquisition push

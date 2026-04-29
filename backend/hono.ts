@@ -1,6 +1,7 @@
 import { trpcServer } from "@hono/trpc-server";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
+import * as Sentry from "@sentry/node";
 
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
@@ -20,6 +21,30 @@ app.use(
     allowHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
   })
 );
+
+app.use("*", async (c, next) => {
+  const startedAt = Date.now();
+  await next();
+  const duration_ms = Date.now() - startedAt;
+  c.res.headers.set("x-response-time", `${duration_ms}ms`);
+  if (Sentry.isEnabled()) {
+    (Sentry as unknown as {
+      metrics?: {
+        distribution?: (
+          name: string,
+          value: number,
+          options?: { tags?: Record<string, string> }
+        ) => void;
+      };
+    }).metrics?.distribution?.("http.request.duration", duration_ms, {
+      tags: {
+        route: c.req.path,
+        method: c.req.method,
+        status: String(c.res.status),
+      },
+    });
+  }
+});
 
 app.get("/", (c) => c.json({ status: "ok", message: "GRIIT API is running" }));
 

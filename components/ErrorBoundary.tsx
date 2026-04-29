@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
             style={[
               styles.message,
               styles.stackTrace,
-              { color: "#aaaaaa" },
+              { color: DS_COLORS.TEXT_TERTIARY },
             ]}
           >
             {(this.state.error.stack ?? "")

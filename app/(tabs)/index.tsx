@@ -2,7 +2,6 @@ import React, { useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import {
   UIManager,
   Modal,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { InlineError } from "@/components/InlineError";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -132,7 +132,7 @@ export default function HomeScreen() {
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showRankModal, setShowRankModal] = React.useState(false);
   const [showFreezeInfoModal, setShowFreezeInfoModal] = React.useState(false);
-  const scrollRef = useRef<FlatList<{ key: string }>>(null);
+  const scrollRef = useRef<FlashList<{ key: string }> | null>(null);
   const goalsSectionYRef = useRef(0);
   const feedSectionYRef = useRef(0);
 
@@ -594,16 +594,13 @@ export default function HomeScreen() {
               actionLabel={`${incompleteChallenges.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining`}
               onPressAction={() => {}}
             />
-            <FlatList
+            <FlashList
               data={incompleteChallenges}
               keyExtractor={keyExtractorIncompleteGroup}
               scrollEnabled={false}
               nestedScrollEnabled
               renderItem={renderIncompleteGoalGroup}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              initialNumToRender={8}
-              removeClippedSubviews={Platform.OS === "android"}
+              estimatedItemSize={320}
             />
             {completedTodayChallenges.length > 0 ? (
               <>
@@ -619,16 +616,13 @@ export default function HomeScreen() {
                   </Text>
                 </TouchableOpacity>
                 {completedExpanded ? (
-                  <FlatList
+                  <FlashList
                     data={completedTodayChallenges}
                     keyExtractor={keyExtractorCompletedGroup}
                     scrollEnabled={false}
                     nestedScrollEnabled
                     renderItem={renderCompletedGoalGroup}
-                    maxToRenderPerBatch={10}
-                    windowSize={5}
-                    initialNumToRender={8}
-                    removeClippedSubviews={Platform.OS === "android"}
+                    estimatedItemSize={320}
                   />
                 ) : null}
               </>
@@ -692,15 +686,13 @@ export default function HomeScreen() {
   if (isGuest) {
     return (
       <SafeAreaView style={s.container}>
-        <FlatList
+        <FlashList
           data={[{ key: "guest-home" }]}
           keyExtractor={keyExtractorHomeKey}
           renderItem={renderGuestHomeItem}
+          estimatedItemSize={700}
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={1}
-          maxToRenderPerBatch={1}
-          windowSize={2}
         />
       </SafeAreaView>
     );
@@ -709,11 +701,12 @@ export default function HomeScreen() {
   return (
     <ErrorBoundary>
     <SafeAreaView style={s.container}>
-      <FlatList
+      <FlashList
         ref={scrollRef}
         data={[{ key: "home-root" }]}
         keyExtractor={keyExtractorHomeKey}
         renderItem={renderHomeRootItem}
+        estimatedItemSize={2200} // TODO(perf): tune with sampled item heights from production sessions
         refreshControl={
           <RefreshControl
             refreshing={homeQuery.isRefetching}
@@ -724,9 +717,6 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
       />
       <PointsExplainer
         visible={showPointsExplainer}

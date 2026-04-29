@@ -1,7 +1,7 @@
 import { Stack, useRouter, useSegments, Redirect, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
-import React, { useEffect, useState, useCallback, createContext, useContext } from "react";
+import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
@@ -27,7 +27,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
-import { trackAppOpened, trackEvent, trackUserReturnedAfterLapse } from "@/lib/analytics";
+import { trackAppOpened, trackColdStart, trackEvent, trackUserReturnedAfterLapse } from "@/lib/analytics";
 // Static import: ensures Notifications.setNotificationHandler at the top of
 // lib/notifications.ts runs at app boot, before any timer task can schedule a
 // lock-screen notification.
@@ -35,6 +35,8 @@ import { requestNotificationPermissions } from "@/lib/notifications";
 import { useScreenTracker } from "@/hooks/useScreenTracker";
 import { PostHogProvider } from "posthog-react-native";
 import { posthog } from "@/lib/posthog";
+
+const COLD_START_AT = Date.now();
 
 initialiseSentry();
 
@@ -84,6 +86,7 @@ function AuthRedirector() {
   const [hasProfile, setHasProfile] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
+  const coldStartTrackedRef = useRef(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEYS.HAS_LAUNCHED).then((v) => setHasLaunched(v === "true"));
@@ -170,6 +173,11 @@ function AuthRedirector() {
 
     const recordOpen = async () => {
       try {
+        if (!coldStartTrackedRef.current) {
+          coldStartTrackedRef.current = true;
+          const coldStartMs = Date.now() - COLD_START_AT;
+          trackColdStart({ cold_start_ms: coldStartMs });
+        }
         const nowMs = Date.now();
         const nowIso = new Date(nowMs).toISOString();
         const lastOpenRaw = await AsyncStorage.getItem("griit:last_app_open_at");

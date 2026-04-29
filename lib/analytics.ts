@@ -88,6 +88,8 @@ type AnalyticsEvent =
   | { name: "lapsed_notification_scheduled"; day: number }
   | { name: "milestone_approaching_notification_scheduled"; milestone_day: number }
   | { name: "user_returned_after_lapse"; lapse_days: number; days_since_signup?: number }
+  | { name: "cold_start"; cold_start_ms: number }
+  | { name: "cold_start_bucket"; bucket: "fast" | "ok" | "slow" | "very_slow"; cold_start_ms: number }
   | { name: "review_prompted"; total_days_secured: number; trigger: string };
 
 type UserProperties = {
@@ -267,4 +269,12 @@ export function trackPaywallRestoreTapped(props: { variant: PaywallVariant }): v
 
 export function trackPaywallRestoreFailed(props: { variant: PaywallVariant; error_code?: string }): void {
   track({ name: "paywall_restore_failed", variant: props.variant, error_code: props.error_code });
+}
+
+export function trackColdStart(props: { cold_start_ms: number }): void {
+  const coldStartMs = Math.max(0, Math.round(props.cold_start_ms));
+  const bucket: "fast" | "ok" | "slow" | "very_slow" =
+    coldStartMs < 1500 ? "fast" : coldStartMs < 2500 ? "ok" : coldStartMs <= 4000 ? "slow" : "very_slow";
+  track({ name: "cold_start", cold_start_ms: coldStartMs });
+  track({ name: "cold_start_bucket", bucket, cold_start_ms: coldStartMs });
 }
