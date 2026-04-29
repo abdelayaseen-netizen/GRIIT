@@ -1,7 +1,7 @@
 import React from "react";
+import { Image } from "expo-image";
 import {
   Modal,
-  Image,
   View,
   StyleSheet,
   Dimensions,
@@ -104,7 +104,9 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
               <Image
                 source={{ uri: imageUri }}
                 style={{ width: VIEWPORT_W, height: VIEWPORT_H }}
-                resizeMode="contain"
+                contentFit="contain"
+                cachePolicy="memory-disk"
+                transition={150}
                 accessibilityLabel="Full size proof photo"
                 accessibilityRole="image"
               />
