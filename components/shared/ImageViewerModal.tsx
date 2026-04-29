@@ -19,6 +19,7 @@ import Animated, {
 import { X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_COLORS } from "@/lib/design-system";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
 
 const { width: VIEWPORT_W, height: VIEWPORT_H } = Dimensions.get("window");
 
@@ -30,6 +31,7 @@ export interface ImageViewerModalProps {
 
 export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModalProps) {
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReduceMotion();
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -65,9 +67,15 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
     })
     .onEnd(() => {
       if (scale.value < 1.2) {
-        scale.value = withSpring(1);
-        translateX.value = withSpring(0);
-        translateY.value = withSpring(0);
+        if (reduceMotion) {
+          scale.value = 1;
+          translateX.value = 0;
+          translateY.value = 0;
+        } else {
+          scale.value = withSpring(1);
+          translateX.value = withSpring(0);
+          translateY.value = withSpring(0);
+        }
       }
     });
 
@@ -93,7 +101,13 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
   const topPad = Platform.OS === "android" ? (StatusBar.currentHeight ?? 0) + 8 : insets.top + 8;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={reduceMotion ? "none" : "fade"}
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
       {visible ? <StatusBar hidden /> : null}
       <GestureHandlerRootView style={styles.backdrop}>
         <View style={styles.backdropInner}>

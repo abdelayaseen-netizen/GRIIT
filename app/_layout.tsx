@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform } from "react-native";
+import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -469,6 +470,9 @@ function RootLayout() {
           reminder_type: reminderType,
           time_to_open_ms: Math.max(0, openedAt - (Number.isFinite(sentAtMs) ? sentAtMs : openedAt)),
         });
+        if (Platform.OS !== "web" && reminderType === "streak_at_risk") {
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        }
         if (data?.type === "active_task_timer" && typeof data.route === "string") {
           const r = data.route;
           router.push((r.startsWith(ROUTES.TASK_RUN) || r.startsWith(ROUTES.TASK_CHECKIN) ? r : ROUTES.TASK_RUN) as never);

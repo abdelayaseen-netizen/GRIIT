@@ -25,6 +25,8 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import FormInput from "@/components/shared/FormInput";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import * as Haptics from "expo-haptics";
+import { validateDisplayName, validateEmail, validatePassword } from "@/lib/validation";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
@@ -38,11 +40,6 @@ function getPasswordStrength(password: string): "weak" | "medium" | "strong" {
   if (types >= 3) return "strong";
   if (types >= 2) return "medium";
   return "weak";
-}
-
-function isValidEmail(s: string): boolean {
-  const t = s.trim();
-  return t.includes("@") && t.includes(".") && t.length > 5;
 }
 
 function SignupScreenInner() {
@@ -75,9 +72,12 @@ function SignupScreenInner() {
   const normalizedUsername = username.replace(/^@+/, "").trim().toLowerCase();
   const usernameValid =
     normalizedUsername.length >= 3 && /^[a-z0-9_.]+$/.test(normalizedUsername);
-  const displayNameValid = displayName.trim().length >= 2;
-  const emailValid = isValidEmail(email);
-  const passwordValid = password.length >= 8;
+  const displayNameError = touched.displayName ? validateDisplayName(displayName) : null;
+  const emailError = touched.email ? validateEmail(email) : null;
+  const passwordError = touched.password ? validatePassword(password) : null;
+  const displayNameValid = validateDisplayName(displayName) === null;
+  const emailValid = validateEmail(email) === null;
+  const passwordValid = validatePassword(password) === null;
   const canSubmit =
     displayNameValid &&
     usernameValid &&
@@ -199,6 +199,9 @@ function SignupScreenInner() {
       } catch {
         /* non-fatal */
       }
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       router.replace(ROUTES.TABS as never);
     } catch (err: unknown) {
       captureError(err, { flow: "signup" });
@@ -210,12 +213,9 @@ function SignupScreenInner() {
   };
 
   const strength = getPasswordStrength(password);
-  const displayNameInvalid = displayName.trim().length > 0 && displayName.trim().length < 2;
   const usernameInvalidLength = normalizedUsername.length > 0 && normalizedUsername.length < 3;
   const usernameInvalidChars = normalizedUsername.length >= 3 && !/^[a-z0-9_.]+$/.test(normalizedUsername);
   const usernameInvalid = usernameInvalidLength || usernameInvalidChars;
-  const emailInvalid = email.trim().length > 0 && !/^\S+@\S+\.\S+$/.test(email.trim());
-  const passwordInvalid = password.length > 0 && password.length < 8;
 
   const getInputBorderColor = (field: keyof typeof touched, isValid: boolean) => {
     if (touched[field] && !isValid) return DS_COLORS.danger;
@@ -257,14 +257,15 @@ function SignupScreenInner() {
                 setFocusedField(null);
                 setTouched((p) => ({ ...p, displayName: true }));
               }}
-              error={touched.displayName && displayNameInvalid ? "Name must be at least 2 characters" : undefined}
+              error={displayNameError ?? undefined}
               inputStyle={{
-                borderColor: getInputBorderColor("displayName", !displayNameInvalid),
+                borderColor: getInputBorderColor("displayName", !displayNameError),
                 backgroundColor: DS_COLORS.surface,
                 color: DS_COLORS.textPrimary,
               }}
               accessibilityLabel="Display name — what we call you"
             />
+            <InlineError message={displayNameError} />
 
             <FormInput
               label="Username"
@@ -324,17 +325,19 @@ function SignupScreenInner() {
                 setFocusedField(null);
                 setTouched((p) => ({ ...p, email: true }));
               }}
-              error={touched.email && emailInvalid ? "Enter a valid email address" : undefined}
+              error={emailError ?? undefined}
               inputStyle={{
-                borderColor: getInputBorderColor("email", !emailInvalid),
+                borderColor: getInputBorderColor("email", !emailError),
                 backgroundColor: DS_COLORS.surface,
                 color: DS_COLORS.textPrimary,
               }}
               accessibilityLabel="Email address"
             />
+            <InlineError message={emailError} />
+            {touched.email && !emailError ? <InlineError message="Email looks valid." variant="success" /> : null}
 
             <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Password</Text>
-            <View style={[styles.passwordRow, { borderColor: getInputBorderColor("password", !passwordInvalid), backgroundColor: DS_COLORS.surface }]}>
+            <View style={[styles.passwordRow, { borderColor: getInputBorderColor("password", !passwordError), backgroundColor: DS_COLORS.surface }]}>
               <TextInput
                 ref={passwordRef}
                 style={[styles.passwordInput, { color: DS_COLORS.textPrimary }]}
@@ -395,9 +398,10 @@ function SignupScreenInner() {
                 </Text>
               </View>
             )}
-            {touched.password && passwordInvalid && (
-              <Text style={styles.inlineError}>Password must be at least 8 characters</Text>
-            )}
+            {password.length > 0 && touched.password && validatePassword(password) === null ? (
+              <Text style={styles.availableText}>✓ Password looks strong enough</Text>
+            ) : null}
+            <InlineError message={passwordError} />
 
             <TouchableOpacity
               style={[styles.button, !canSubmit && styles.buttonDisabled]}

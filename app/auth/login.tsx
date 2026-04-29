@@ -21,6 +21,7 @@ import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 import FormInput from "@/components/shared/FormInput";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import * as Haptics from "expo-haptics";
 
 const PADDING_H = 20;
 
@@ -96,6 +97,9 @@ function LoginScreenInner() {
           /* non-fatal */
         }
         router.replace(ROUTES.TABS as never);
+      }
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (e) {
       captureError(e, { flow: "login_email" });

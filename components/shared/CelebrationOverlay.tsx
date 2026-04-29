@@ -16,6 +16,7 @@ import { useCelebrationStore, type CelebrationType } from "@/store/celebrationSt
 import { captureError } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
 import { sharePlainMessage } from "@/lib/share";
+import { useReduceMotion } from "@/hooks/useReduceMotion";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const PARTICLE_COUNT = 36;
@@ -60,6 +61,7 @@ export default function CelebrationOverlay() {
   const type = useCelebrationStore((s) => s.type);
   const shareMessage = useCelebrationStore((s) => s.shareMessage);
   const dismiss = useCelebrationStore((s) => s.dismiss);
+  const reduceMotion = useReduceMotion();
 
   const handleShareChallenge = async () => {
     const msg = shareMessage?.trim();
@@ -101,6 +103,17 @@ export default function CelebrationOverlay() {
     cardTranslate.setValue(50);
     cardSpring.setValue(0);
     iconScale.setValue(0);
+    if (reduceMotion) {
+      backdropOp.setValue(1);
+      cardTranslate.setValue(0);
+      cardSpring.setValue(1);
+      iconScale.setValue(1);
+      particles.forEach((p) => {
+        p.opacity.setValue(0);
+        p.translateY.setValue(SCREEN_H * 0.85);
+      });
+      return;
+    }
 
     Animated.timing(backdropOp, {
       toValue: 1,
@@ -167,7 +180,7 @@ export default function CelebrationOverlay() {
     return () => {
       anims.forEach((a) => a.stop?.());
     };
-  }, [visible, backdropOp, cardTranslate, cardSpring, iconScale, particles]);
+  }, [visible, backdropOp, cardTranslate, cardSpring, iconScale, particles, reduceMotion]);
 
   const cardAnimatedStyle = {
     opacity: cardSpring,

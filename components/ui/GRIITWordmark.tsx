@@ -33,6 +33,7 @@ export function GRIITWordmark({
             lineHeight: DS_TYPOGRAPHY.SIZE_2XL * DS_TYPOGRAPHY.LINE_TIGHT,
           },
         ]}
+        // Intentional: brand logo lockup should stay fixed and not reflow.
         allowFontScaling={false}
       >
         GRIIT
@@ -48,6 +49,7 @@ export function GRIITWordmark({
               marginTop: compact ? DS_SPACING.XS : DS_SPACING.SM,
             },
           ]}
+          // Intentional: tagline is part of the fixed brand lockup.
           allowFontScaling={false}
         >
           {subtitle}

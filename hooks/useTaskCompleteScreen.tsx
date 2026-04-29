@@ -398,7 +398,12 @@ export function TaskCompleteScreenInner() {
   ]);
 
   const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
-    if (!activeChallengeId || !taskId || !canSubmit) return;
+    if (!activeChallengeId || !taskId || !canSubmit) {
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      }
+      return;
+    }
     if (taskMode === "minimum" && isChallengeHardMode) {
       showError("Hard mode challenges require full completion.");
       return;

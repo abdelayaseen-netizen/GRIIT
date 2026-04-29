@@ -2,7 +2,8 @@
  * Premium Paywall Screen — GRIIT Pro subscription with RevenueCat offerings.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type { PurchasesPackage } from "react-native-purchases";
 import { DS_COLORS, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
@@ -102,6 +103,9 @@ export default function PaywallScreen() {
       setPurchasing(false);
       if (result.success) {
         trackPaywallPurchaseCompleted({ package_id: pkg.identifier, variant });
+        if (Platform.OS !== "web") {
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
         await refetchPro();
         router.replace(ROUTES.TABS as never);
       } else if (result.cancelled) {
