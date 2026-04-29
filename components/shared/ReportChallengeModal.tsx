@@ -75,7 +75,9 @@ export function ReportChallengeModal({ visible, challengeId, challengeTitle, onC
           ) : (
             <>
               <Text style={s.title}>Report this challenge</Text>
-              {challengeTitle ? <Text style={s.subtitle}>"{challengeTitle}"</Text> : null}
+              {challengeTitle ? (
+                <Text style={s.subtitle}>{`"${challengeTitle}"`}</Text>
+              ) : null}
               <Text style={s.label}>Why are you reporting it?</Text>
               {REPORT_REASONS.map((r) => (
                 <TouchableOpacity
