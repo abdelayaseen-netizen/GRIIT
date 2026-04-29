@@ -3,6 +3,8 @@
  */
 import { getPostHog, resetPostHog } from "./posthog";
 
+export type PaywallVariant = "control" | "social_proof";
+
 type AnalyticsEvent =
   | { name: "app_opened"; streak_count?: number; isPremium?: boolean; days_since_signup?: number }
   | { name: "guest_view_screen"; screen: string }
@@ -28,7 +30,15 @@ type AnalyticsEvent =
   | { name: "day_7_retained"; challenge_id?: string; day_number?: number }
   | { name: "day_30_task_completed"; challenge_id?: string; day_number?: number; days_since_signup?: number }
   | { name: "screen_viewed"; screen_name?: string; screen_pattern?: string }
-  | { name: "paywall_viewed"; source?: string }
+  | { name: "paywall_viewed"; source?: string; variant?: PaywallVariant }
+  | { name: "paywall_variant_assigned"; variant: PaywallVariant }
+  | { name: "paywall_offering_selected"; package_id: string; variant: PaywallVariant }
+  | { name: "paywall_purchase_started"; package_id: string; variant: PaywallVariant }
+  | { name: "paywall_purchase_completed"; package_id: string; variant: PaywallVariant }
+  | { name: "paywall_purchase_failed"; package_id?: string; variant: PaywallVariant; error_code?: string }
+  | { name: "paywall_purchase_cancelled"; package_id?: string; variant: PaywallVariant }
+  | { name: "paywall_restore_tapped"; variant: PaywallVariant }
+  | { name: "paywall_restore_failed"; variant: PaywallVariant; error_code?: string }
   | { name: "trial_started"; product_id?: string }
   | { name: "subscription_started"; product_id?: string }
   | { name: "subscription_cancelled" }
@@ -198,4 +208,63 @@ export function trackUserReturnedAfterLapse(props: {
     lapse_days: props.lapse_days,
     days_since_signup: props.days_since_signup,
   });
+}
+
+export function getPaywallVariant(): PaywallVariant {
+  try {
+    const ph = getPostHog() as { getFeatureFlag?: (flag: string) => unknown } | null;
+    const flag = ph?.getFeatureFlag?.("paywall_variant");
+    if (flag === "social_proof") return "social_proof";
+    return "control";
+  } catch {
+    return "control";
+  }
+}
+
+export function trackPaywallVariantAssigned(props: { variant: PaywallVariant }): void {
+  track({ name: "paywall_variant_assigned", variant: props.variant });
+}
+
+export function trackPaywallOfferingSelected(props: { package_id: string; variant: PaywallVariant }): void {
+  track({ name: "paywall_offering_selected", package_id: props.package_id, variant: props.variant });
+}
+
+export function trackPaywallPurchaseStarted(props: { package_id: string; variant: PaywallVariant }): void {
+  track({ name: "paywall_purchase_started", package_id: props.package_id, variant: props.variant });
+}
+
+export function trackPaywallPurchaseCompleted(props: { package_id: string; variant: PaywallVariant }): void {
+  track({ name: "paywall_purchase_completed", package_id: props.package_id, variant: props.variant });
+}
+
+export function trackPaywallPurchaseFailed(props: {
+  package_id?: string;
+  variant: PaywallVariant;
+  error_code?: string;
+}): void {
+  track({
+    name: "paywall_purchase_failed",
+    package_id: props.package_id,
+    variant: props.variant,
+    error_code: props.error_code,
+  });
+}
+
+export function trackPaywallPurchaseCancelled(props: {
+  package_id?: string;
+  variant: PaywallVariant;
+}): void {
+  track({
+    name: "paywall_purchase_cancelled",
+    package_id: props.package_id,
+    variant: props.variant,
+  });
+}
+
+export function trackPaywallRestoreTapped(props: { variant: PaywallVariant }): void {
+  track({ name: "paywall_restore_tapped", variant: props.variant });
+}
+
+export function trackPaywallRestoreFailed(props: { variant: PaywallVariant; error_code?: string }): void {
+  track({ name: "paywall_restore_failed", variant: props.variant, error_code: props.error_code });
 }
