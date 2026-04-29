@@ -33,6 +33,8 @@ import { trackEvent } from "@/lib/analytics";
 // lock-screen notification.
 import { requestNotificationPermissions } from "@/lib/notifications";
 import { useScreenTracker } from "@/hooks/useScreenTracker";
+import { PostHogProvider } from "posthog-react-native";
+import { posthog } from "@/lib/posthog";
 
 initialiseSentry();
 
@@ -414,27 +416,33 @@ function RootLayout() {
     return null;
   }
 
+  const appTree = (
+    <GestureHandlerRootView style={layoutStyles.flex1}>
+      <ThemeProvider>
+        <AuthProvider>
+          <PushRegistrationBootstrap />
+          <SessionExpiredContext.Provider
+            value={{ message: sessionExpiredMessage, setMessage: setSessionExpiredMessage }}
+          >
+            <AuthGateProvider>
+              <ApiProvider>
+                <AppProvider>
+                  <ThemeAwareStatusBar />
+                  <RootLayoutNav />
+                  <AuthRedirector />
+                </AppProvider>
+              </ApiProvider>
+            </AuthGateProvider>
+          </SessionExpiredContext.Provider>
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
+  );
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={layoutStyles.flex1}>
-          <ThemeProvider>
-            <AuthProvider>
-              <PushRegistrationBootstrap />
-              <SessionExpiredContext.Provider value={{ message: sessionExpiredMessage, setMessage: setSessionExpiredMessage }}>
-                <AuthGateProvider>
-                  <ApiProvider>
-                    <AppProvider>
-                      <ThemeAwareStatusBar />
-                      <RootLayoutNav />
-                      <AuthRedirector />
-                    </AppProvider>
-                  </ApiProvider>
-                </AuthGateProvider>
-              </SessionExpiredContext.Provider>
-            </AuthProvider>
-          </ThemeProvider>
-        </GestureHandlerRootView>
+        {posthog ? <PostHogProvider client={posthog}>{appTree}</PostHogProvider> : appTree}
       </QueryClientProvider>
     </ErrorBoundary>
   );

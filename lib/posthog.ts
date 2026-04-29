@@ -9,29 +9,38 @@ import PostHog from "posthog-react-native";
 const API_KEY = (process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "").trim();
 const HOST = "https://us.i.posthog.com";
 
-let client: PostHog | null = null;
+/** Single client instance; null when no API key (use with PostHogProvider when non-null). */
+export const posthog: PostHog | null = API_KEY
+  ? (() => {
+      try {
+        const client = new PostHog(API_KEY, { host: HOST });
+        if (__DEV__) {
+          console.log(
+            "[PostHog] Initialized with key:",
+            API_KEY.slice(0, 8) + "...",
+            "host:",
+            HOST
+          );
+        }
+        return client;
+      } catch {
+        return null;
+      }
+    })()
+  : null;
 
 export function getPostHog(): PostHog | null {
-  if (!API_KEY) return null;
-  if (!client) {
-    try {
-      client = new PostHog(API_KEY, { host: HOST });
-      if (__DEV__) console.log("[PostHog] Initialized with key:", API_KEY?.slice(0, 8) + "...", "host:", HOST);
-    } catch {
-      return null;
-    }
-  }
-  return client;
+  return posthog;
 }
 
 export function isPostHogEnabled(): boolean {
-  return !!API_KEY && client !== null;
+  return posthog !== null;
 }
 
 export function resetPostHog(): void {
-  if (client) {
+  if (posthog) {
     try {
-      client.reset();
+      posthog.reset();
     } catch {
       // ignore
     }
