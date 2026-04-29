@@ -27,7 +27,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
-import { trackEvent } from "@/lib/analytics";
+import { trackAppOpened, trackEvent, trackUserReturnedAfterLapse } from "@/lib/analytics";
 // Static import: ensures Notifications.setNotificationHandler at the top of
 // lib/notifications.ts runs at app boot, before any timer task can schedule a
 // lock-screen notification.
@@ -38,9 +38,7 @@ import { posthog } from "@/lib/posthog";
 
 initialiseSentry();
 
-// MIGRATION NEEDED — run in Supabase SQL editor if not present:
-// ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS push_token TEXT;
-// (expo_push_token is already used by the backend; registerToken updates both push_tokens table and profiles.expo_push_token.)
+// push_token migration: see supabase/migrations/20260429083000_add_push_token_to_profiles.sql
 
 SplashScreen.preventAutoHideAsync();
 
@@ -85,6 +83,7 @@ function AuthRedirector() {
   const [profileChecked, setProfileChecked] = useState<boolean>(false);
   const [hasProfile, setHasProfile] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEYS.HAS_LAUNCHED).then((v) => setHasLaunched(v === "true"));
@@ -100,17 +99,23 @@ function AuthRedirector() {
 
       const profilePromise = supabase
         .from("profiles")
-        .select("user_id, username, onboarding_completed")
+        .select("user_id, username, onboarding_completed, created_at")
         .eq("user_id", userId)
         .single()
-        .then(({ data }: { data: { user_id?: string; username?: string | null; onboarding_completed?: boolean } | null }) => data);
+        .then(
+          ({
+            data,
+          }: {
+            data: { user_id?: string; username?: string | null; onboarding_completed?: boolean; created_at?: string | null } | null;
+          }) => data
+        );
 
       let result = await Promise.race([profilePromise, timeoutPromise]);
 
       if (result === null && retry < maxRetries) {
         const { data } = await supabase
           .from("profiles")
-          .select("user_id, username, onboarding_completed")
+          .select("user_id, username, onboarding_completed, created_at")
           .eq("user_id", userId)
           .single();
         result = data;
@@ -119,10 +124,12 @@ function AuthRedirector() {
       if (result === null) {
         setHasProfile(false);
         setOnboardingCompleted(false);
+        setProfileCreatedAt(null);
       } else {
         const hasValidProfile = !!result && typeof result.username === "string" && result.username.trim().length > 0;
         setHasProfile(hasValidProfile);
         setOnboardingCompleted(hasValidProfile && result?.onboarding_completed === true);
+        setProfileCreatedAt(result?.created_at ?? null);
       }
       done();
     } catch (err) {
@@ -134,6 +141,7 @@ function AuthRedirector() {
       }
       setHasProfile(false);
       setOnboardingCompleted(false);
+      setProfileCreatedAt(null);
       done();
     }
   }, []);
@@ -146,8 +154,43 @@ function AuthRedirector() {
       setProfileChecked(true);
       setHasProfile(false);
       setOnboardingCompleted(null);
+      setProfileCreatedAt(null);
     }
   }, [user, loading, checkProfile]);
+
+  useEffect(() => {
+    if (loading || !user || !profileChecked) return;
+
+    const daysSinceSignup = (() => {
+      if (!profileCreatedAt) return undefined;
+      const createdAtMs = Date.parse(profileCreatedAt);
+      if (Number.isNaN(createdAtMs)) return undefined;
+      return Math.max(0, Math.floor((Date.now() - createdAtMs) / (1000 * 60 * 60 * 24)));
+    })();
+
+    const recordOpen = async () => {
+      try {
+        const nowMs = Date.now();
+        const nowIso = new Date(nowMs).toISOString();
+        const lastOpenRaw = await AsyncStorage.getItem("griit:last_app_open_at");
+        if (lastOpenRaw) {
+          const lastOpenMs = Date.parse(lastOpenRaw);
+          if (!Number.isNaN(lastOpenMs)) {
+            const lapseDays = Math.floor((nowMs - lastOpenMs) / (1000 * 60 * 60 * 24));
+            if (lapseDays >= 3) {
+              trackUserReturnedAfterLapse({ lapse_days: lapseDays, days_since_signup: daysSinceSignup });
+            }
+          }
+        }
+        trackAppOpened({ days_since_signup: daysSinceSignup });
+        await AsyncStorage.setItem("griit:last_app_open_at", nowIso);
+      } catch {
+        // non-fatal
+      }
+    };
+
+    void recordOpen();
+  }, [loading, user, profileChecked, profileCreatedAt]);
 
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {

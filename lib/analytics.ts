@@ -4,7 +4,7 @@
 import { getPostHog, resetPostHog } from "./posthog";
 
 type AnalyticsEvent =
-  | { name: "app_opened"; streak_count?: number; isPremium?: boolean }
+  | { name: "app_opened"; streak_count?: number; isPremium?: boolean; days_since_signup?: number }
   | { name: "guest_view_screen"; screen: string }
   | { name: "gate_modal_shown"; context: "join" | "secure" | "respect" | "nudge" | "create" | "team" | "other" }
   | { name: "signup_started" }
@@ -26,6 +26,7 @@ type AnalyticsEvent =
   | { name: "day_secured"; streak_count?: number; challenge_id?: string; day_number?: number }
   | { name: "day_3_retained"; challenge_id?: string }
   | { name: "day_7_retained"; challenge_id?: string; day_number?: number }
+  | { name: "day_30_task_completed"; challenge_id?: string; day_number?: number; days_since_signup?: number }
   | { name: "screen_viewed"; screen_name?: string; screen_pattern?: string }
   | { name: "paywall_viewed"; source?: string }
   | { name: "trial_started"; product_id?: string }
@@ -76,6 +77,7 @@ type AnalyticsEvent =
   | { name: "weekly_summary_shown"; goal: number; completed: number; met_goal: boolean }
   | { name: "lapsed_notification_scheduled"; day: number }
   | { name: "milestone_approaching_notification_scheduled"; milestone_day: number }
+  | { name: "user_returned_after_lapse"; lapse_days: number; days_since_signup?: number }
   | { name: "review_prompted"; total_days_secured: number; trigger: string };
 
 type UserProperties = {
@@ -159,4 +161,41 @@ export function track(event: AnalyticsEvent) {
       // ignore
     }
   }
+}
+
+export function trackDay30Completed(props: {
+  challenge_id?: string;
+  day_number?: number;
+  days_since_signup?: number;
+}): void {
+  track({
+    name: "day_30_task_completed",
+    challenge_id: props.challenge_id,
+    day_number: props.day_number,
+    days_since_signup: props.days_since_signup,
+  });
+}
+
+export function trackAppOpened(props?: {
+  streak_count?: number;
+  isPremium?: boolean;
+  days_since_signup?: number;
+}): void {
+  track({
+    name: "app_opened",
+    streak_count: props?.streak_count,
+    isPremium: props?.isPremium,
+    days_since_signup: props?.days_since_signup,
+  });
+}
+
+export function trackUserReturnedAfterLapse(props: {
+  lapse_days: number;
+  days_since_signup?: number;
+}): void {
+  track({
+    name: "user_returned_after_lapse",
+    lapse_days: props.lapse_days,
+    days_since_signup: props.days_since_signup,
+  });
 }

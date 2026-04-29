@@ -13,7 +13,7 @@ import {
   fireStreakCelebration,
   isStreakCelebrationMilestone,
 } from "@/lib/notifications";
-import { track, trackEvent } from "@/lib/analytics";
+import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { showGoalCelebration } from "@/store/celebrationStore";
 import { useProofSharePromptStore } from "@/store/proofSharePromptStore";
@@ -43,6 +43,16 @@ type UseAppChallengeMutationsArgs = {
   fallbackProfile: unknown;
   canSecureDay: boolean;
 };
+
+function calculateDaysSinceSignup(profileLike: unknown): number | null {
+  const createdAt = (profileLike as { created_at?: string | null } | null)?.created_at;
+  if (!createdAt) return null;
+  const createdAtMs = Date.parse(createdAt);
+  if (Number.isNaN(createdAtMs)) return null;
+  const diffMs = Date.now() - createdAtMs;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, days);
+}
 
 export function useAppChallengeMutations({
   user,
@@ -100,9 +110,21 @@ export function useAppChallengeMutations({
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
           const challengeIdForRetention = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
+          const daysSinceSignup = calculateDaysSinceSignup(profile ?? fallbackProfile);
           if (currentDay >= 7 && challengeIdForRetention) {
             try {
               trackEvent("day_7_retained", { challenge_id: challengeIdForRetention, day_number: currentDay });
+            } catch {
+              /* non-fatal */
+            }
+          }
+          if (daysSinceSignup === 30 && challengeIdForRetention) {
+            try {
+              trackDay30Completed({
+                challenge_id: challengeIdForRetention,
+                day_number: currentDay,
+                days_since_signup: daysSinceSignup,
+              });
             } catch {
               /* non-fatal */
             }
