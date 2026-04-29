@@ -47,3 +47,10 @@ node_modules
 .expo
 bun.lock
 bun.lockb
+
+coverage/
+*.tar.gz
+*.zip
+.vscode/
+.idea/
+*.log
