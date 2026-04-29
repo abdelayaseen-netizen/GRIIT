@@ -3,5 +3,16 @@ module.exports = function (api) {
   return {
     presets: [["babel-preset-expo", { unstable_transformImportMeta: true }]],
     plugins: ["react-native-reanimated/plugin"],
+    env: {
+      production: {
+        plugins: [
+          [
+            "transform-remove-console",
+            { exclude: ["error", "warn"] },
+          ],
+          "react-native-reanimated/plugin",
+        ],
+      },
+    },
   };
 };
