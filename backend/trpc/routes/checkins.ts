@@ -10,7 +10,7 @@ import {
   dateKeyFromIsoInTimeZone,
   calendarDayIndexInclusive,
 } from "../../lib/date-utils";
-import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
+import { getDailyTargetForChallengeTask } from "../../../lib/task-progress";
 import type { PgError } from "../../types/db";
 import {
   type ChallengeTaskConfig,
