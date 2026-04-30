@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/node";
 
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
+import { getSupabaseConfigStatus } from "./lib/supabase";
 import { checkRateLimit, getClientIp } from "./lib/rate-limit";
 
 const REQUEST_BODY_MAX_BYTES = Number(process.env.REQUEST_BODY_MAX_BYTES) || 1_000_000; // 1MB
@@ -48,11 +49,34 @@ app.use("*", async (c, next) => {
 
 app.get("/", (c) => c.json({ status: "ok", message: "GRIIT API is running" }));
 
-async function healthJson(c: Context) {
+/** Liveness: no external I/O. Use for Railway / load balancer probes. */
+function livenessJson(c: Context) {
+  const supa = getSupabaseConfigStatus();
+  const sha =
+    process.env.RAILWAY_GIT_COMMIT_SHA ??
+    process.env.VERCEL_GIT_COMMIT_SHA ??
+    process.env.GIT_COMMIT_SHA;
+  return c.json({
+    ok: true,
+    status: "ok",
+    uptime_ms: Math.round(process.uptime() * 1000),
+    commit: sha ? sha.slice(0, 7) : "dev",
+    deps: {
+      supabase_configured: supa.ok,
+      supabase_missing: supa.missing,
+    },
+  });
+}
+
+app.get("/api/health", livenessJson);
+app.get("/health", livenessJson);
+
+/** Deep health: live Supabase query. For monitoring, not for Railway liveness. */
+async function healthDeepJson(c: Context) {
   const checks: Record<string, "ok" | "error"> = {};
   try {
-    const { supabase } = await import("./lib/supabase");
-    const { error } = await supabase.from("challenges").select("id").limit(1);
+    const { getSupabase } = await import("./lib/supabase");
+    const { error } = await getSupabase().from("challenges").select("id").limit(1);
     checks.supabase = error ? "error" : "ok";
   } catch {
     checks.supabase = "error";
@@ -65,6 +89,7 @@ async function healthJson(c: Context) {
     "unknown";
   return c.json(
     {
+      ok: allOk,
       status: allOk ? "ok" : "degraded",
       version: "1.0.0",
       timestamp: new Date().toISOString(),
@@ -78,8 +103,7 @@ async function healthJson(c: Context) {
   );
 }
 
-app.get("/api/health", healthJson);
-app.get("/health", healthJson);
+app.get("/api/health/deep", healthDeepJson);
 
 /** Cron: send daily morning and streak-at-risk push reminders. Call every hour with CRON_SECRET. */
 app.get("/api/cron/send-reminders", async (c) => {

@@ -41,17 +41,20 @@ cd ..
 **Wait for the deploy to finish.** Railway shows "Deploy succeeded" when ready. Then verify:
 
 ```powershell
-# Health check
+# Liveness (Railway healthcheck path — no external calls)
 Invoke-WebRequest -Uri https://grit-backend-production.up.railway.app/api/health -Method GET
+
+# Full dependency check (Supabase query — use for monitoring, not as the load balancer probe)
+Invoke-WebRequest -Uri https://grit-backend-production.up.railway.app/api/health/deep -Method GET
 ```
 
-Expected: `200 OK` with a JSON response.
+Expected: `200 OK` on `/api/health` whenever the Node process is up (body includes `deps.supabase_configured` — if `false`, fix env vars). `/api/health/deep` returns `200` or `503` depending on whether Supabase is reachable.
 
 ### Backend environment variables (Railway dashboard -> Variables)
 
 Required:
-- `EXPO_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `EXPO_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon key
+- **`EXPO_PUBLIC_SUPABASE_URL`** — **REQUIRED** — Supabase project URL. Without it (and the anon key), the API cannot use the shared Supabase client; liveness still returns `200` with `supabase_configured: false` in the JSON body.
+- **`EXPO_PUBLIC_SUPABASE_ANON_KEY`** — **REQUIRED** — Supabase anon key (same as above).
 - `SUPABASE_SERVICE_ROLE_KEY` - for backend-only operations
 - `NODE_ENV` - `production`
 - `CORS_ORIGIN` - app's origin (set to `*` only for dev)
@@ -212,3 +215,15 @@ This is currently a single-developer project. In the event of incapacity:
 - PostHog: dashboard URL (fill in)
 - Sentry: dashboard URL (fill in)
 - RevenueCat: https://app.revenuecat.com
+
+### Troubleshooting: Healthcheck fails after deploy
+
+If Railway healthcheck reports "service unavailable" after a deploy:
+
+1. Check `railway logs --service grit-backend` for the actual error.
+2. The most common cause is missing env vars — check the Variables tab for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+3. Hit `/api/health` (liveness — should return `200` if Node is up):
+   - If `200` with `deps.supabase_configured: false` → env vars are missing or empty; fix in Railway Variables.
+   - If there is no response at all → the process did not bind (check logs for a stack trace on older builds; with lazy Supabase init, the process should still bind so this is rarer).
+4. Hit `/api/health/deep` for a full dependency check (Supabase reachable, etc.). Expect `200` or `503` if the database check fails.
+5. After fixing env vars, click **Redeploy** in the Railway dashboard on the latest deployment — no new commit is required.
