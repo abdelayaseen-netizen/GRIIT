@@ -41,6 +41,8 @@ export function getSupabaseConfigStatus(): { ok: boolean; missing: string[] } {
 /**
  * Backwards-compatible lazy client: import sites stay the same; first property access
  * initializes (or throws with a clear error if env is missing).
+ * Traps `get` / `has` / `ownKeys` / `getOwnPropertyDescriptor` so `in`, spread, and
+ * reflection paths delegate consistently to the real client.
  */
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop, receiver) {
@@ -50,5 +52,14 @@ export const supabase = new Proxy({} as SupabaseClient, {
       return (value as (...args: unknown[]) => unknown).bind(client);
     }
     return value;
+  },
+  has(_target, prop) {
+    return Reflect.has(getSupabase() as object, prop);
+  },
+  ownKeys(_target) {
+    return Reflect.ownKeys(getSupabase() as object);
+  },
+  getOwnPropertyDescriptor(_target, prop) {
+    return Reflect.getOwnPropertyDescriptor(getSupabase() as object, prop);
   },
 });
