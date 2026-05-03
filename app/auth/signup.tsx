@@ -18,6 +18,7 @@ import { supabase } from "@/lib/supabase";
 import { track, trackEvent } from "@/lib/analytics";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system"
 import { GRIITWordmark } from "@/components/ui";
 import { InlineError } from "@/components/InlineError";
@@ -99,7 +100,7 @@ function SignupScreenInner() {
     setUsernameStatus("checking");
     try {
       const result = await trpcQuery<{ user_id: string } | null>(
-        "profiles.getPublicByUsername",
+        TRPC.profiles.getPublicByUsername,
         { username: norm }
       );
       setUsernameStatus(result ? "taken" : "available");
