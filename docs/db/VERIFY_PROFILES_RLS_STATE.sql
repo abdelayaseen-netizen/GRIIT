@@ -46,14 +46,17 @@
 --   - If RLS is ON, the policy table tells us exactly what migrations to write.
 
 -- Step 1 — is RLS enabled on public.profiles?
+-- (Uses pg_class because pg_tables.forcerowsecurity is not exposed on all
+-- Supabase Postgres versions and produces "column does not exist" errors.)
 SELECT
-  schemaname,
-  tablename,
-  rowsecurity AS rls_enabled,
-  forcerowsecurity AS rls_forced
-FROM pg_tables
-WHERE schemaname = 'public'
-  AND tablename = 'profiles';
+  n.nspname AS schemaname,
+  c.relname AS tablename,
+  c.relrowsecurity      AS rls_enabled,
+  c.relforcerowsecurity AS rls_forced
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public'
+  AND c.relname = 'profiles';
 
 -- Step 2 — every policy on public.profiles
 SELECT
