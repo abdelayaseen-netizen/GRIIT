@@ -11,6 +11,7 @@ import { supabase } from "./supabase";
 import { trpcMutate } from "./trpc";
 import { TRPC } from "./trpc-paths";
 import { trackEvent } from "./analytics";
+import { captureError } from "./sentry";
 
 const ENTITLEMENT_ID = "GRIIT Pro";
 
@@ -56,9 +57,10 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
         (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY ?? "").trim();
 
   if (!apiKey) {
-    if (__DEV__) {
-      // error swallowed — handle in UI
-    }
+    captureError(
+      new Error("RevenueCat API key not configured for current platform"),
+      "initializeRevenueCatMissingKey"
+    );
     return;
   }
 
@@ -94,10 +96,8 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
         // Best-effort — DB already has client-side values from syncSubscriptionToSupabase
       });
     });
-  } catch {
-    if (__DEV__) {
-      // error swallowed — handle in UI
-    }
+  } catch (error) {
+    captureError(error, "initializeRevenueCat");
   }
 }
 
@@ -116,10 +116,8 @@ export async function syncSubscriptionToSupabase(userId: string, customerInfo: C
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", userId);
-  } catch {
-    if (__DEV__) {
-      // error swallowed — handle in UI
-    }
+  } catch (error) {
+    captureError(error, "syncSubscriptionToSupabase");
   }
 }
 
