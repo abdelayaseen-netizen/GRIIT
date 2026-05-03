@@ -93,7 +93,9 @@ export function startLiveActivity(payload: LiveActivityPayload): void {
     if (currentActivityId && lastState) {
       try {
         LiveActivity.stopActivity(currentActivityId, lastState);
-      } catch {}
+      } catch (error) {
+        captureError(error, "startLiveActivityStopPrior");
+      }
       currentActivityId = undefined;
       lastState = undefined;
     }
