@@ -982,7 +982,7 @@ export default function RunTaskScreen() {
             </Text>
           </TouchableOpacity>
           <View style={styles.minimumDayWrap}>
-            <Text style={styles.minimumDayHint}>Can't do the full thing today?</Text>
+            <Text style={styles.minimumDayHint}>Can&apos;t do the full thing today?</Text>
             <TouchableOpacity
               style={styles.minimumDayButton}
               onPress={() => setMinimumConfirmVisible(true)}

@@ -691,7 +691,7 @@ export function TaskCompleteForm(props: TaskCompleteFormProps) {
       <View style={styles.minimumDivider} />
     </View>
     <Text style={styles.minimumCopy}>
-      Can't do the full thing today? Mark a minimum day to keep your streak.
+      Can&apos;t do the full thing today? Mark a minimum day to keep your streak.
     </Text>
     <TouchableOpacity
       style={[styles.secondaryBtn, disableMinimumDay && styles.primaryBtnDisabled]}
