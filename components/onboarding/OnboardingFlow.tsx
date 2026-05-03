@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -8,6 +8,7 @@ import { ONBOARDING_COLORS as C , GOAL_OPTIONS } from "@/components/onboarding/o
 import { GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { captureError } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
@@ -22,8 +23,9 @@ import AutoSuggestChallengeScreen from "./screens/AutoSuggestChallengeScreen";
 import ProgressDots from "./ProgressDots";
 
 export default function OnboardingFlow() {
-  const { currentStep, nextStep, prevStep, completeOnboarding, setProfileSetupHints } = useOnboardingStore();
-  const [authUserId, setAuthUserId] = useState<string>("");
+  const { currentStep, nextStep, prevStep, completeOnboarding, setProfileSetupHints, setStep } = useOnboardingStore();
+  const { user, loading: authLoading } = useAuth();
+  const authUserId = user?.id ?? "";
   const router = useRouter();
 
   useEffect(() => {
@@ -33,6 +35,16 @@ export default function OnboardingFlow() {
       selectedGoals: s.selectedGoals.filter((g) => validGoalIds.has(g)),
     }));
   }, []);
+
+  // If a persisted onboarding session lands at a step that requires auth but
+  // the live Supabase session is gone, walk back to signup so the user has a
+  // recoverable path. Avoids the silent-stuck state on ProfileSetup with empty userId.
+  useEffect(() => {
+    if (authLoading) return;
+    if (currentStep >= 3 && !user) {
+      setStep(2);
+    }
+  }, [authLoading, currentStep, user, setStep]);
 
   const showTopBar = currentStep >= 1 && currentStep <= 4;
 
@@ -46,8 +58,7 @@ export default function OnboardingFlow() {
   }, [currentStep, nextStep]);
 
   const handleSignUpComplete = useCallback(
-    (userId: string) => {
-      setAuthUserId(userId);
+    (_userId: string) => {
       advanceStep();
     },
     [advanceStep]
