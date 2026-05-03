@@ -591,4 +591,4 @@ Weights (revenue-priority): Monetization 0.15; Retention 0.12; Onboarding 0.10; 
 - **Phases completed:** 10 / 10 (Phase 0 through Phase 9, inclusive of scorecard JSON).  
 - **Findings (approximate aggregate):** P0 = **1**, P1 = **5**, P2 = **12**, P3 = **2** (see JSON).  
 - **Audit doc path:** `docs/audits/GRIIT_FULL_AUDIT_20260502.md`  
-- **Final commit SHA:** After the last `git commit` that contains this file, read `git rev-parse HEAD` (this document is the sole change in that commit).  
+- **Final commit SHA:** `1e802e4` (full `1e802e42a48168dfb3fa87bf8a058e9f979921cf`)  
