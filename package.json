@@ -89,6 +89,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@expo/ngrok": "^4.1.0",
+    "@sentry/node": "^10.50.0",
     "@types/react": "~19.1.10",
     "@vitest/coverage-v8": "^2.1.9",
     "babel-plugin-transform-remove-console": "^6.9.4",
