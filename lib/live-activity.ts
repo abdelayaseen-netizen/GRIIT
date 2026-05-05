@@ -71,11 +71,11 @@ function buildState(payload: LiveActivityPayload): LiveActivity.LiveActivityStat
 
 function buildConfig(payload: LiveActivityPayload): LiveActivity.LiveActivityConfig {
   return {
-    backgroundColor: "#1A1A1A",
-    titleColor: "#FFFFFF",
-    subtitleColor: "#B0B0B0",
+    backgroundColor: DS_COLORS.LIVE_ACTIVITY_BG,
+    titleColor: DS_COLORS.LIVE_ACTIVITY_TITLE,
+    subtitleColor: DS_COLORS.LIVE_ACTIVITY_SUBTITLE,
     progressViewTint: DS_COLORS.DISCOVER_CORAL,
-    progressViewLabelColor: "#FFFFFF",
+    progressViewLabelColor: DS_COLORS.LIVE_ACTIVITY_LABEL,
     deepLinkUrl: payload.route,
     timerType: "digital",
     padding: { horizontal: 16, top: 12, bottom: 12 },

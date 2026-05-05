@@ -393,6 +393,15 @@ export const DS_COLORS = {
   ONBOARDING_COMMITMENT_BTN: '#2D2D2D',
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // LIVE ACTIVITY (iOS lock screen + Dynamic Island — lib/live-activity.ts)
+  // Always dark surface (Apple HIG); tokens here are render-on-dark only.
+  // ═══════════════════════════════════════════════════════════════════════════
+  LIVE_ACTIVITY_BG: '#1A1A1A',
+  LIVE_ACTIVITY_TITLE: '#FFFFFF',
+  LIVE_ACTIVITY_SUBTITLE: '#B0B0B0',
+  LIVE_ACTIVITY_LABEL: '#FFFFFF',
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // DARK THEME FOUNDATION (lib/theme-palettes DARK_THEME — reserved; app is light-first)
   // ═══════════════════════════════════════════════════════════════════════════
   DARK_BG_PAGE: '#1A1A1A',
