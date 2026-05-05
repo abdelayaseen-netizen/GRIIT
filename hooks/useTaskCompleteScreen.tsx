@@ -28,7 +28,7 @@ import {
   clearActiveTaskNotification,
   type ActiveTaskTimerPayload,
 } from "@/lib/active-task-timer";
-import { endLiveActivity } from "@/lib/live-activity";
+import { startLiveActivity, type LiveActivityPayload, endLiveActivity } from "@/lib/live-activity";
 import { ROUTES } from "@/lib/routes";
 import { useActiveSessionStore } from "@/store/activeSessionStore";
 import { useJournalInput } from "@/hooks/useJournalInput";
@@ -283,6 +283,11 @@ export function TaskCompleteScreenInner() {
       targetSeconds: isCountdown && requiredSeconds > 0 ? requiredSeconds : undefined,
       route: activeChallengeId ? ROUTES.CHALLENGE_ACTIVE(activeChallengeId) : ROUTES.TABS_HOME,
     };
+    const liveActivityPayload: LiveActivityPayload = {
+      ...notifPayload,
+      challengeName: headerChallengeName,
+    };
+    startLiveActivity(liveActivityPayload);
     void startActiveTaskNotification(notifPayload);
     // Update every 30 seconds while running. Using a local counter ref to avoid
     // depending on timerSeconds in the effect deps (which would churn every second).

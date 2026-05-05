@@ -87,10 +87,10 @@ function buildConfig(payload: LiveActivityPayload): LiveActivity.LiveActivityCon
 }
 
 /**
- * Start a Live Activity. iOS only. No-op on Android, if disabled in prefs,
- * or if the payload is count-up (no targetSeconds) — count-up is not yet
- * supported in expo-live-activity@0.4.2 and falls back to the sticky
- * notification path.
+ * Start a Live Activity. iOS only. No-op on Android or if disabled in prefs.
+ * Both countdown (targetSeconds set) and count-up (no targetSeconds) tasks
+ * render natively via expo-live-activity 0.5.0-alpha1+; count-up uses
+ * progressBar.elapsedTimer.startDate to tick up every second on its own.
  */
 export function startLiveActivity(payload: LiveActivityPayload): void {
   if (!isIOSAndEnabled()) return;

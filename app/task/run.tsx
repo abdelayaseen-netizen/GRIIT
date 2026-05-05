@@ -250,6 +250,11 @@ export default function RunTaskScreen() {
         startedAtMs: Date.now(),
         route: `${ROUTES.TASK_RUN}?taskId=${task?.id ?? ""}`,
       };
+      const gpsLiveActivityPayload: LiveActivityPayload = {
+        ...gpsNotifPayload,
+        challengeName,
+      };
+      startLiveActivity(gpsLiveActivityPayload);
       startActiveTaskNotification(gpsNotifPayload);
       notifUpdateRef.current = setInterval(() => {
         setElapsedSeconds((prev) => {
@@ -293,6 +298,11 @@ export default function RunTaskScreen() {
       startedAtMs: Date.now(),
       route: `${ROUTES.TASK_RUN}?taskId=${task?.id ?? ""}`,
     };
+    const gpsLiveActivityPayload: LiveActivityPayload = {
+      ...gpsNotifPayload,
+      challengeName,
+    };
+    startLiveActivity(gpsLiveActivityPayload);
     startActiveTaskNotification(gpsNotifPayload);
     notifUpdateRef.current = setInterval(() => {
       setElapsedSeconds((prev) => {
