@@ -223,11 +223,13 @@ export function useAppChallengeMutations({
     challengeName?: string;
     totalDays?: number;
   } | undefined> => {
-    console.log("[secureDay] called", {
-      activeChallengeId: activeChallenge?.id,
-      canSecureDay,
-      todayCheckinsCount: todayCheckins.length,
-    });
+    if (__DEV__) {
+      console.log("[secureDay] called", {
+        activeChallengeId: activeChallenge?.id,
+        canSecureDay,
+        todayCheckinsCount: todayCheckins.length,
+      });
+    }
     if (!activeChallenge?.id || !canSecureDay) return undefined;
     try {
       const result = (await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id })) as {
@@ -290,14 +292,14 @@ export function useAppChallengeMutations({
         const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
         const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
         const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch(() => {
-          // error swallowed — handle in UI
+        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch((err: unknown) => {
+          captureError(err, "scheduleNextSecureReminder");
         });
         await cancelLapsedUserReminders();
         const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
         await scheduleLapsedUserReminders({ streakCount: newStreakCount, challengeName });
-        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch(() => {
-          // error swallowed — handle in UI
+        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch((err: unknown) => {
+          captureError(err, "scheduleMilestoneApproachingIfNeeded");
         });
         if (isStreakCelebrationMilestone(newStreakCount)) {
           fireStreakCelebration(newStreakCount).catch(() => {});
@@ -305,7 +307,7 @@ export function useAppChallengeMutations({
       }
       return result;
     } catch (err) {
-      console.error("[secureDay] mutation failed", err);
+      captureError(err, "secureDay");
       throw err;
     }
   }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats, profile, fallbackProfile, todayCheckins]);
