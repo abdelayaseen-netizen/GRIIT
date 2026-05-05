@@ -1,4 +1,4 @@
-# GRIT Design System (Rork-Aligned)
+# GRIIT Design System (Rork-Aligned)
 
 Single source of truth for look and feel. Screens must use tokens and UI components—no hardcoded colors or font sizes.
 

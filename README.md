@@ -23,7 +23,7 @@ No Rork or other third‑party app platform required. Run and build everything y
 1. **Clone and install**
    ```bash
    git clone <your-repo-url>
-   cd GRIT-1
+   cd GRIIT
    npm install
    ```
 

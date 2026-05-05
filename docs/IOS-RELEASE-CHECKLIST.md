@@ -1,6 +1,6 @@
 # iOS app release checklist
 
-Steps to ship GRIT as an iOS app (TestFlight and/or App Store). Order matters where noted.
+Steps to ship GRIIT as an iOS app (TestFlight and/or App Store). Order matters where noted.
 
 ---
 
@@ -48,7 +48,7 @@ Steps to ship GRIT as an iOS app (TestFlight and/or App Store). Order matters wh
 
 | # | Step | Notes |
 |---|------|--------|
-| 13 | **App Store Connect app** | In [App Store Connect](https://appstoreconnect.apple.com), create an app (e.g. name “GRIT”, bundle ID `app.grit.challenge-tracker` to match `app.json`). |
+| 13 | **App Store Connect app** | In [App Store Connect](https://appstoreconnect.apple.com), create an app (e.g. name “GRIIT”, bundle ID `app.grit.challenge-tracker` to match `app.json`). |
 | 14 | **Submit build** | `eas submit --platform ios --latest` (or specify build ID). Or in EAS dashboard, open the build and use “Submit to App Store”. |
 | 15 | **TestFlight** | Once processed, the build appears in TestFlight for internal/external testers. |
 | 16 | **App Store release** | In App Store Connect, complete product page, pricing, and submit for review when ready. |
