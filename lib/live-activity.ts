@@ -1,13 +1,15 @@
 /**
  * Live Activity wrapper — iOS lock screen + Dynamic Island.
- * Uses expo-live-activity (Software Mansion) v0.4.2.
+ * Uses expo-live-activity (Software Mansion) v0.5.0-alpha1+.
  *
  * On Android, every export is a no-op. Android continues to use the
  * sticky notification in lib/active-task-timer.ts.
  *
- * Behaviour (expo-live-activity@0.4.2):
- *   - Count-up tasks: no Live Activity; sticky notification only (iOS + Android)
- *   - Countdown tasks (targetSeconds): lock screen / Dynamic Island countdown
+ * Behaviour:
+ *   - Countdown tasks (targetSeconds set): progressBar.date drives a countdown
+ *     timer in the Live Activity card and Dynamic Island.
+ *   - Count-up tasks (no targetSeconds): progressBar.elapsedTimer.startDate
+ *     drives a tick-up timer in the Live Activity card and Dynamic Island.
  *
  * The native timer updates every second on its own — we do NOT need
  * a JS interval. We only call updateLiveActivity() if title/subtitle changes.
@@ -39,24 +41,29 @@ function isIOSAndEnabled(): boolean {
   return true;
 }
 
-function buildState(payload: LiveActivityPayload): LiveActivity.LiveActivityState | null {
-  // expo-live-activity v0.4.2 only supports countdown (`date`) and discrete
-  // progress (`progress` 0..1). Native count-up timer is unreleased on main.
-  // We therefore only render Live Activities for countdown tasks (treadmill
-  // and any check-in with a targetSeconds). Count-up tasks fall through to
-  // the existing sticky notification on iOS just like on Android.
-  if (!payload.targetSeconds || payload.targetSeconds <= 0) {
-    return null;
-  }
-
+function buildState(payload: LiveActivityPayload): LiveActivity.LiveActivityState {
   const title = payload.challengeName?.trim() || "GRIIT";
   const subtitle = payload.taskTitle;
-  const endMs = payload.startedAtMs + payload.targetSeconds * 1000;
 
+  // Countdown mode (treadmill, cold shower, time-gated check-ins): native
+  // ActivityKit ticks toward `date` every second, with no JS work required.
+  if (payload.targetSeconds && payload.targetSeconds > 0) {
+    const endMs = payload.startedAtMs + payload.targetSeconds * 1000;
+    return {
+      title,
+      subtitle,
+      progressBar: { date: endMs },
+      imageName: "griit-mark",
+      dynamicIslandImageName: "griit-mark",
+    };
+  }
+
+  // Count-up mode (prayer, GPS run, journal, anything without a target):
+  // native ActivityKit ticks elapsed seconds from startDate every second.
   return {
     title,
     subtitle,
-    progressBar: { date: endMs },
+    progressBar: { elapsedTimer: { startDate: payload.startedAtMs } },
     imageName: "griit-mark",
     dynamicIslandImageName: "griit-mark",
   };
@@ -88,7 +95,6 @@ function buildConfig(payload: LiveActivityPayload): LiveActivity.LiveActivityCon
 export function startLiveActivity(payload: LiveActivityPayload): void {
   if (!isIOSAndEnabled()) return;
   const state = buildState(payload);
-  if (!state) return; // count-up tasks: fall through to notification path
   try {
     if (currentActivityId && lastState) {
       try {
@@ -119,7 +125,6 @@ export function updateLiveActivity(payload: LiveActivityPayload): void {
   if (!isIOSAndEnabled()) return;
   if (!currentActivityId) return;
   const state = buildState(payload);
-  if (!state) return;
   try {
     LiveActivity.updateActivity(currentActivityId, state);
     lastState = state;
