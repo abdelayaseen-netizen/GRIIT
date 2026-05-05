@@ -1,0 +1,94 @@
+lib/active-task-timer.ts-53-    });
+lib/active-task-timer.ts-54-  } catch {
+lib/active-task-timer.ts:55:    // notifications may not be permitted — fail silently
+lib/active-task-timer.ts-56-  }
+lib/active-task-timer.ts-57-}
+lib/active-task-timer.ts-58-
+lib/active-task-timer.ts-59-/** Call every 30 seconds from the task screen's interval to update elapsed time. */
+--
+lib/active-task-timer.ts-84-    });
+lib/active-task-timer.ts-85-  } catch {
+lib/active-task-timer.ts:86:    // fail silently
+lib/active-task-timer.ts-87-  }
+lib/active-task-timer.ts-88-}
+lib/active-task-timer.ts-89-
+lib/active-task-timer.ts-90-/** Call when task completes, is abandoned, or screen unmounts. */
+--
+lib/active-task-timer.ts-94-    await Notifications.dismissNotificationAsync(ACTIVE_TASK_NOTIF_ID).catch(() => {});
+lib/active-task-timer.ts-95-  } catch {
+lib/active-task-timer.ts:96:    // fail silently
+lib/active-task-timer.ts-97-  }
+lib/active-task-timer.ts-98-}
+lib/active-task-timer.ts-99-
+lib/active-task-timer.ts-100-function buildNotifContent(
+--
+hooks/useNotificationScheduler.ts-42-      tomorrow.setDate(tomorrow.getDate() + 1);
+hooks/useNotificationScheduler.ts-43-      scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount).catch(() => {
+hooks/useNotificationScheduler.ts:44:        // error swallowed — handle in UI
+hooks/useNotificationScheduler.ts-45-      });
+hooks/useNotificationScheduler.ts-46-    } else {
+hooks/useNotificationScheduler.ts-47-      scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount).catch(() => {
+hooks/useNotificationScheduler.ts:48:        // error swallowed — handle in UI
+hooks/useNotificationScheduler.ts-49-      });
+hooks/useNotificationScheduler.ts-50-    }
+hooks/useNotificationScheduler.ts-51-    const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
+hooks/useNotificationScheduler.ts-52-    scheduleLapsedUserReminders({ streakCount, challengeName }).catch(() => {
+hooks/useNotificationScheduler.ts:53:      // error swallowed — handle in UI
+hooks/useNotificationScheduler.ts-54-    });
+hooks/useNotificationScheduler.ts-55-
+hooks/useNotificationScheduler.ts-56-    let cancelled = false;
+hooks/useNotificationScheduler.ts-57-    const runExtended = async () => {
+--
+lib/trpc.ts-110-    if (errorData) err.data = errorData;
+lib/trpc.ts-111-    else if (errorCode) err.data = { code: errorCode };
+lib/trpc.ts:112:    // error swallowed — handle in UI
+lib/trpc.ts-113-    throw err;
+lib/trpc.ts-114-  }
+lib/trpc.ts-115-
+lib/trpc.ts-116-  const result = json?.result?.data;
+--
+lib/review-prompt.ts-46-    await AsyncStorage.setItem(REVIEW_PROMPT_KEY, Date.now().toString());
+lib/review-prompt.ts-47-  } catch {
+lib/review-prompt.ts:48:    // error swallowed — handle in UI
+lib/review-prompt.ts-49-  }
+lib/review-prompt.ts-50-}
+lib/review-prompt.ts-51-
+lib/review-prompt.ts-52-/**
+--
+hooks/useAppChallengeMutations.ts-292-        const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
+hooks/useAppChallengeMutations.ts-293-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch(() => {
+hooks/useAppChallengeMutations.ts:294:          // error swallowed — handle in UI
+hooks/useAppChallengeMutations.ts-295-        });
+hooks/useAppChallengeMutations.ts-296-        await cancelLapsedUserReminders();
+hooks/useAppChallengeMutations.ts-297-        const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
+hooks/useAppChallengeMutations.ts-298-        await scheduleLapsedUserReminders({ streakCount: newStreakCount, challengeName });
+hooks/useAppChallengeMutations.ts-299-        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch(() => {
+hooks/useAppChallengeMutations.ts:300:          // error swallowed — handle in UI
+hooks/useAppChallengeMutations.ts-301-        });
+hooks/useAppChallengeMutations.ts-302-        if (isStreakCelebrationMilestone(newStreakCount)) {
+hooks/useAppChallengeMutations.ts-303-          fireStreakCelebration(newStreakCount).catch(() => {});
+hooks/useAppChallengeMutations.ts-304-        }
+--
+components/ErrorBoundary.tsx-7-function logError(error: Error, componentStack: string | null | undefined) {
+components/ErrorBoundary.tsx-8-  if (__DEV__) {
+components/ErrorBoundary.tsx:9:    // error swallowed — handle in UI
+components/ErrorBoundary.tsx-10-  } else {
+components/ErrorBoundary.tsx-11-    reportClientError(error, componentStack ?? undefined);
+components/ErrorBoundary.tsx-12-  }
+components/ErrorBoundary.tsx-13-}
+--
+app/_layout.tsx-145-    } catch (err) {
+app/_layout.tsx-146-      captureError(err, "AuthRedirectorCheckProfile");
+app/_layout.tsx:147:      // error swallowed — handle in UI
+app/_layout.tsx-148-      if (retry < maxRetries) {
+app/_layout.tsx-149-        await checkProfile(userId, retry + 1);
+app/_layout.tsx-150-        return;
+app/_layout.tsx-151-      }
+--
+contexts/AuthContext.tsx-40-        clearTimeout(timeout);
+contexts/AuthContext.tsx-41-        setLoading(false);
+contexts/AuthContext.tsx:42:        // error swallowed — handle in UI
+contexts/AuthContext.tsx-43-      });
+contexts/AuthContext.tsx-44-
+contexts/AuthContext.tsx-45-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+contexts/AuthContext.tsx-46-      setSession(session);

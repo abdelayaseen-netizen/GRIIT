@@ -1,0 +1,248 @@
+
+app/(tabs)/discover.tsx:52:    visibility?: string;
+app/(tabs)/discover.tsx:89:  return String(c.visibility ?? "public").toLowerCase() === "public";
+app/challenge/[id].tsx:626:        visibility: (d.visibility as string) ?? "public",
+app/challenge/[id].tsx:1094:  const challengeVisibility = (challenge.visibility || "public") as string;
+app/challenge/[id].tsx:1095:  const visibilityLabel = challengeVisibility === "friends" ? "Friends" : challengeVisibility === "private" ? "Only me" : null;
+app/challenge/[id].tsx:1096:  const visibilityIcon = challengeVisibility === "friends"
+app/challenge/[id].tsx:1098:    : challengeVisibility === "private"
+app/challenge/[id].tsx:1152:            visibilityLabel={visibilityLabel}
+app/challenge/[id].tsx:1153:            visibilityIcon={visibilityIcon}
+app/profile/[username].tsx:54:  profile_visibility: string;
+app/profile/[username].tsx:141:  const vis = String(profile?.profile_visibility ?? "public").toLowerCase();
+app/settings.tsx:22:import { VisibilitySection } from "@/components/settings/VisibilitySection";
+app/settings.tsx:41:  const [profileVisibility, setProfileVisibility] = useState<"public" | "friends" | "private">("public");
+app/settings.tsx:42:  const [challengeVisibility, setChallengeVisibility] = useState<"public" | "friends" | "private">("public");
+app/settings.tsx:43:  const [activityVisibility, setActivityVisibility] = useState<"public" | "friends" | "private">("public");
+app/settings.tsx:90:  const loadProfileVisibility = useCallback(async () => {
+app/settings.tsx:93:      const data = await trpcQuery(TRPC.profiles.get) as { profile_visibility?: string | null };
+app/settings.tsx:94:      const v = data?.profile_visibility;
+app/settings.tsx:95:      if (v === "public" || v === "friends" || v === "private") setProfileVisibility(v);
+app/settings.tsx:97:      captureError(e, "SettingsLoadProfileVisibility");
+app/settings.tsx:111:    loadProfileVisibility();
+app/settings.tsx:112:  }, [loadProfileVisibility]);
+app/settings.tsx:173:        <VisibilitySection
+app/settings.tsx:174:          profileVisibility={profileVisibility}
+app/settings.tsx:175:          challengeVisibility={challengeVisibility}
+app/settings.tsx:176:          activityVisibility={activityVisibility}
+app/settings.tsx:177:          onProfileVisibilityChange={async (v) => {
+app/settings.tsx:178:            setProfileVisibility(v);
+app/settings.tsx:181:              await trpcMutate(TRPC.profiles.update, { profile_visibility: v });
+app/settings.tsx:183:              captureError(e, "SettingsProfileVisibilityUpdate");
+app/settings.tsx:184:              loadProfileVisibility();
+app/settings.tsx:187:          onChallengeVisibilityChange={setChallengeVisibility}
+app/settings.tsx:188:          onActivityVisibilityChange={setActivityVisibility}
+backend/lib/daily-challenge-generator.ts:4: * Creates a challenge with creator_id null, visibility PUBLIC, status published.
+backend/lib/daily-challenge-generator.ts:39:    .eq("visibility", "PUBLIC")
+backend/lib/daily-challenge-generator.ts:58:    visibility: "PUBLIC",
+backend/lib/feed-activity-hydrate.ts:6:export function normalizeChallengeVisibility(raw: string | null | undefined): "public" | "friends" | "private" {
+backend/lib/feed-activity-hydrate.ts:58:    visibility: "public" | "friends" | "private";
+backend/lib/feed-activity-hydrate.ts:66:      ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds)
+backend/lib/feed-activity-hydrate.ts:67:      : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
+backend/lib/feed-activity-hydrate.ts:75:  const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
+backend/lib/feed-activity-hydrate.ts:82:  const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean => {
+backend/lib/feed-activity-hydrate.ts:91:    const vis = normalizeChallengeVisibility(ch?.visibility);
+backend/lib/feed-activity-hydrate.ts:92:    if (!passesVisibility(ev, vis)) continue;
+backend/lib/feed-activity-hydrate.ts:155:    const visibility = normalizeChallengeVisibility(ch?.visibility);
+backend/lib/feed-activity-hydrate.ts:182:      visibility,
+backend/trpc/routes/challenges-create.ts:51:      visibility: z.enum(['PUBLIC', 'FRIENDS', 'PRIVATE']).optional().default('FRIENDS'),
+backend/trpc/routes/challenges-create.ts:288:        visibility: (input.visibility || "FRIENDS").toUpperCase(),
+backend/trpc/routes/challenges-create.ts:313:          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status"
+backend/trpc/routes/challenges-discover.ts:31:        "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config)",
+backend/trpc/routes/challenges-discover.ts:40:      q = q.or(`visibility.eq.PUBLIC,creator_id.eq.${safeUserId}`);
+backend/trpc/routes/challenges-discover.ts:42:      q = q.eq("visibility", "PUBLIC");
+backend/trpc/routes/challenges-discover.ts:153:      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status")
+backend/trpc/routes/challenges-discover.ts:155:      .eq("visibility", "PUBLIC")
+backend/trpc/routes/challenges-discover.ts:235:      .eq("visibility", "PUBLIC")
+backend/trpc/routes/challenges-discover.ts:285:          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, source_starter_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config)",
+backend/trpc/routes/challenges-discover.ts:294:        query = query.or(`visibility.eq.PUBLIC,creator_id.eq.${safeUserId}`);
+backend/trpc/routes/challenges-discover.ts:296:        query = query.eq("visibility", "PUBLIC");
+backend/trpc/routes/challenges-discover.ts:352:          visibility,
+backend/trpc/routes/challenges-discover.ts:358:        .eq('visibility', 'PUBLIC')
+backend/trpc/routes/challenges.ts:75:          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom)",
+backend/trpc/routes/challenges.ts:78:        .eq("visibility", "PUBLIC")
+backend/trpc/routes/challenges.ts:115:          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, challenge_tasks (id, title, task_type, order_index, config, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom)"
+backend/trpc/routes/challenges.ts:338:          .select("profile_visibility")
+backend/trpc/routes/challenges.ts:341:        const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+backend/trpc/routes/feed.ts:13:  normalizeChallengeVisibility,
+backend/trpc/routes/feed.ts:31:    // Load profile visibility for feed filtering
+backend/trpc/routes/feed.ts:35:    // Parallelize visibility + challenge lookups
+backend/trpc/routes/feed.ts:38:        ? server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds).limit(200)
+backend/trpc/routes/feed.ts:41:        ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
+backend/trpc/routes/feed.ts:46:    for (const r of ((visResult.data ?? []) as { user_id: string; profile_visibility?: string | null }[])) {
+backend/trpc/routes/feed.ts:47:      const v = String(r.profile_visibility ?? "public").toLowerCase();
+backend/trpc/routes/feed.ts:50:    const challengeMap = new Map<string, { id: string; title?: string; visibility?: string; duration_days?: number }>();
+backend/trpc/routes/feed.ts:51:    for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
+backend/trpc/routes/feed.ts:54:    const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean => {
+backend/trpc/routes/feed.ts:66:      const vis = normalizeChallengeVisibility(ch?.visibility);
+backend/trpc/routes/feed.ts:67:      if (!passesVisibility(ev, vis)) continue;
+backend/trpc/routes/feed.ts:77:    const { data: targetRow, error: pErr } = await server.from("profiles").select("user_id, profile_visibility").eq("user_id", input.userId).maybeSingle();
+backend/trpc/routes/feed.ts:80:    const profileVis = String((targetRow as { profile_visibility?: string }).profile_visibility ?? "public").toLowerCase();
+backend/trpc/routes/feed.ts:110:      challengeIds.length ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200) : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
+backend/trpc/routes/feed.ts:114:    const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
+backend/trpc/routes/feed.ts:123:    const vis = normalizeChallengeVisibility(ch?.visibility);
+backend/trpc/routes/feed.ts:177:      visibility: vis,
+backend/trpc/routes/feed.ts:767:    const { data: chRows } = await server.from("challenges").select("id, title, visibility").in("id", challengeIds).limit(200);
+backend/trpc/routes/feed.ts:770:        .filter((c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() === "PUBLIC")
+backend/trpc/routes/leaderboard.ts:260:      const { data: ch, error: chErr } = await server.from("challenges").select("id, visibility, title").eq("id", input.challengeId).maybeSingle();
+backend/trpc/routes/leaderboard.ts:264:      const vis = String((ch as { visibility?: string }).visibility ?? "public").toLowerCase();
+backend/trpc/routes/leaderboard.ts:286:        return { leaderPoints: 1, challengeTitle: (ch as { title?: string }).title ?? "Challenge", visibility: vis, entries: [] };
+backend/trpc/routes/leaderboard.ts:336:        visibility: vis,
+backend/trpc/routes/notifications.ts:11:type NotifType = "respect" | "comment" | "follow" | "rank" | "follow_request" | "general";
+backend/trpc/routes/notifications.ts:82:  const allowed = new Set(["respect", "comment", "follow", "rank", "follow_request"]);
+backend/trpc/routes/profiles-social.ts:18:        .select("profile_visibility")
+backend/trpc/routes/profiles-social.ts:24:      const vis = String((target as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+backend/trpc/routes/profiles-social.ts:99:        .select("profile_visibility, username")
+backend/trpc/routes/profiles-social.ts:105:      const vis = String((target as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+backend/trpc/routes/profiles-social.ts:139:        type: "follow_request",
+backend/trpc/routes/profiles-social.ts:158:          data: { type: "follow_request", actorId: ctx.userId },
+backend/trpc/routes/profiles-stats.ts:322:          .select("profile_visibility")
+backend/trpc/routes/profiles-stats.ts:325:        const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
+backend/trpc/routes/profiles.ts:28:  "profile_visibility", "weekly_goal",
+backend/trpc/routes/profiles.ts:65:          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed, timezone"
+backend/trpc/routes/profiles.ts:91:            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
+backend/trpc/routes/profiles.ts:96:            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
+backend/trpc/routes/profiles.ts:119:        profile_visibility?: string | null;
+backend/trpc/routes/profiles.ts:163:        profile_visibility: String(p.profile_visibility ?? "public").toLowerCase(),
+backend/trpc/routes/profiles.ts:190:          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, timezone"
+backend/trpc/routes/profiles.ts:306:      profile_visibility: z.enum(["public", "friends", "private"]).optional(),
+backend/trpc/routes/profiles.ts:321:            "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed, timezone"
+backend/trpc/routes/profiles.ts:333:          "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed, timezone"
+backend/types/db.ts:41:  visibility?: string | null;
+backend/seed.sql:50:  visibility TEXT CHECK (visibility IN ('public', 'private', 'friends')) DEFAULT 'public',
+backend/seed.sql:156:CREATE INDEX IF NOT EXISTS idx_challenges_featured ON challenges(is_featured, visibility, status);
+backend/seed.sql:204:INSERT INTO challenges (id, title, description, short_hook, theme_color, rules_text, duration_type, duration_days, difficulty, category, visibility, status, is_featured, created_by, participants_count) VALUES
+components/activity/LeaderboardTab.tsx:67:    typeof useQuery<{ leaderPoints: number; challengeTitle: string; visibility: string; entries: BoardEntry[] }>
+components/activity/LeaderboardTab.tsx:357:                    (challengeBoard.data?.visibility ?? "public").toLowerCase() === "friends"
+components/activity/LeaderboardTab.tsx:359:                      : (challengeBoard.data?.visibility ?? "public").toLowerCase() === "private"
+components/activity/LeaderboardTab.tsx:370:                      (challengeBoard.data?.visibility ?? "public").toLowerCase() === "friends"
+components/activity/LeaderboardTab.tsx:372:                        : (challengeBoard.data?.visibility ?? "public").toLowerCase() === "private"
+components/activity/LeaderboardTab.tsx:378:                {(challengeBoard.data?.visibility ?? "public").toLowerCase() === "friends"
+components/activity/LeaderboardTab.tsx:380:                  : (challengeBoard.data?.visibility ?? "public").toLowerCase() === "private"
+components/activity/LeaderboardTab.tsx:711:        visibility: string;
+components/activity/NotificationsTab.tsx:46:    case "follow_request":
+components/activity/NotificationsTab.tsx:111:            : item.type === "follow" || item.type === "follow_request"
+components/activity/NotificationsTab.tsx:194:    if (n.type === "follow" || n.type === "follow_request") {
+components/activity/NotificationsTab.tsx:223:  if (n.type === "follow_request" && frDone === "declined") {
+components/activity/NotificationsTab.tsx:248:                    : n.type === "follow" || n.type === "follow_request"
+components/activity/NotificationsTab.tsx:257:            {n.type === "respect" ? "🔥" : n.type === "comment" ? "💬" : n.type === "follow" || n.type === "follow_request" ? "+" : n.type === "rank" ? "★" : "•"}
+components/activity/NotificationsTab.tsx:268:      {n.type === "follow_request" && n.actorId ? (
+components/activity/types.ts:5:  type: "respect" | "comment" | "follow" | "follow_request" | "rank" | "general";
+components/challenge/challengeDetailScreenStyles.ts:213:  visibilityChip: {
+components/challenge/ChallengeHero.tsx:24:  visibilityLabel: string | null;
+components/challenge/ChallengeHero.tsx:25:  visibilityIcon: React.ReactNode;
+components/challenge/ChallengeHero.tsx:45:  visibilityLabel,
+components/challenge/ChallengeHero.tsx:46:  visibilityIcon,
+components/challenge/ChallengeHero.tsx:126:            {visibilityLabel && (
+components/challenge/ChallengeHero.tsx:130:                  s.visibilityChip,
+components/challenge/ChallengeHero.tsx:134:                {visibilityIcon}
+components/challenge/ChallengeHero.tsx:135:                <Text style={s.infoChipText}>{visibilityLabel}</Text>
+components/create/steps/StepReview.tsx:4:import type { ChallengeVisibility } from "@/types";
+components/create/steps/StepReview.tsx:21:  visibility: ChallengeVisibility;
+components/create/steps/StepReview.tsx:22:  setVisibility: (v: ChallengeVisibility) => void;
+components/create/steps/StepReview.tsx:36:  visibility,
+components/create/steps/StepReview.tsx:37:  setVisibility,
+components/create/steps/StepReview.tsx:188:            onPress={() => setVisibility(v.key)}
+components/create/steps/StepReview.tsx:189:            accessibilityLabel={`Visibility ${v.label}`}
+components/create/steps/StepReview.tsx:191:            accessibilityState={{ selected: visibility === v.key }}
+components/create/steps/StepReview.tsx:199:              backgroundColor: visibility === v.key ? DS_COLORS.ACCENT_TINT : DS_COLORS.TRANSPARENT,
+components/create/steps/StepReview.tsx:208:                fontWeight: visibility === v.key ? DS_TYPOGRAPHY.WEIGHT_SEMIBOLD : "400",
+components/create/steps/StepReview.tsx:209:                color: visibility === v.key ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
+components/create/steps/StepReview.tsx:218:        {visibility === "PUBLIC" && "Visible on Discover. Anyone can find and join."}
+components/create/steps/StepReview.tsx:219:        {visibility === "FRIENDS" && "Only your friends can see and join."}
+components/create/steps/StepReview.tsx:220:        {visibility === "PRIVATE" && "Private. No one else sees it."}
+components/create/CreateChallengeWizard.tsx:26:import type { ChallengeType, ChallengeVisibility } from "@/types";
+components/create/CreateChallengeWizard.tsx:89:  const [visibility, setVisibility] = useState<ChallengeVisibility>("FRIENDS");
+components/create/CreateChallengeWizard.tsx:244:    visibility,
+components/create/CreateChallengeWizard.tsx:245:    setVisibility,
+components/create/CreateChallengeWizard.tsx:410:              visibility={visibility}
+components/create/CreateChallengeWizard.tsx:411:              setVisibility={setVisibility}
+components/feed/feedTypes.ts:27:  visibility: "public" | "friends" | "private";
+components/settings/VisibilitySection.tsx:6:type VisibilityValue = "public" | "friends" | "private";
+components/settings/VisibilitySection.tsx:8:function VisibilitySubsection({
+components/settings/VisibilitySection.tsx:14:  value: VisibilityValue;
+components/settings/VisibilitySection.tsx:15:  onChange: (v: VisibilityValue) => void;
+components/settings/VisibilitySection.tsx:17:  const options: { key: VisibilityValue; label: string }[] = [
+components/settings/VisibilitySection.tsx:23:    <View style={visibilityStyles.wrap}>
+components/settings/VisibilitySection.tsx:24:      <Text style={[visibilityStyles.label, { color: DS_COLORS.textPrimary }]}>{label}</Text>
+components/settings/VisibilitySection.tsx:25:      <View style={visibilityStyles.pillRow}>
+components/settings/VisibilitySection.tsx:30:              visibilityStyles.pill,
+components/settings/VisibilitySection.tsx:36:            accessibilityLabel={`Set ${label} visibility to ${opt.label}`}
+components/settings/VisibilitySection.tsx:40:            <Text style={[visibilityStyles.pillText, { color: value === opt.key ? DS_COLORS.white : DS_COLORS.textPrimary }]}>{opt.label}</Text>
+components/settings/VisibilitySection.tsx:44:      <Text style={[visibilityStyles.hint, { color: DS_COLORS.textMuted }]}>
+components/settings/VisibilitySection.tsx:51:const visibilityStyles = StyleSheet.create({
+components/settings/VisibilitySection.tsx:71:export interface VisibilitySectionProps {
+components/settings/VisibilitySection.tsx:72:  profileVisibility: VisibilityValue;
+components/settings/VisibilitySection.tsx:73:  challengeVisibility: VisibilityValue;
+components/settings/VisibilitySection.tsx:74:  activityVisibility: VisibilityValue;
+components/settings/VisibilitySection.tsx:75:  onProfileVisibilityChange: (v: VisibilityValue) => void | Promise<void>;
+components/settings/VisibilitySection.tsx:76:  onChallengeVisibilityChange: (v: VisibilityValue) => void;
+components/settings/VisibilitySection.tsx:77:  onActivityVisibilityChange: (v: VisibilityValue) => void;
+components/settings/VisibilitySection.tsx:80:export function VisibilitySection({
+components/settings/VisibilitySection.tsx:81:  profileVisibility,
+components/settings/VisibilitySection.tsx:82:  challengeVisibility,
+components/settings/VisibilitySection.tsx:83:  activityVisibility,
+components/settings/VisibilitySection.tsx:84:  onProfileVisibilityChange,
+components/settings/VisibilitySection.tsx:85:  onChallengeVisibilityChange,
+components/settings/VisibilitySection.tsx:86:  onActivityVisibilityChange,
+components/settings/VisibilitySection.tsx:87:}: VisibilitySectionProps) {
+components/settings/VisibilitySection.tsx:91:        <Text style={[styles.sectionTitleLarge, { color: DS_COLORS.textPrimary }]}>👁 Privacy & Visibility</Text>
+components/settings/VisibilitySection.tsx:97:        <VisibilitySubsection label="Profile Visibility" value={profileVisibility} onChange={onProfileVisibilityChange} />
+components/settings/VisibilitySection.tsx:99:        <VisibilitySubsection label="Challenge Visibility" value={challengeVisibility} onChange={onChallengeVisibilityChange} />
+components/settings/VisibilitySection.tsx:101:        <VisibilitySubsection label="Activity Visibility" value={activityVisibility} onChange={onActivityVisibilityChange} />
+components/LiveFeedSection.tsx:79:    if (post.visibility === "private" && post.userId !== user?.id) return false;
+hooks/useCreateChallengeWizardPersistence.ts:21:import type { ChallengeType, ChallengeVisibility, ReplayPolicy } from "@/types";
+hooks/useCreateChallengeWizardPersistence.ts:65:  visibility: ChallengeVisibility;
+hooks/useCreateChallengeWizardPersistence.ts:66:  setVisibility: (v: ChallengeVisibility) => void;
+hooks/useCreateChallengeWizardPersistence.ts:111:    visibility,
+hooks/useCreateChallengeWizardPersistence.ts:112:    setVisibility,
+hooks/useCreateChallengeWizardPersistence.ts:137:      visibility,
+hooks/useCreateChallengeWizardPersistence.ts:153:      visibility,
+hooks/useCreateChallengeWizardPersistence.ts:197:      if (d.visibility === "PUBLIC" || d.visibility === "FRIENDS" || d.visibility === "PRIVATE") setVisibility(d.visibility);
+hooks/useCreateChallengeWizardPersistence.ts:216:    setVisibility,
+hooks/useCreateChallengeWizardPersistence.ts:255:        visibility,
+hooks/useCreateChallengeWizardPersistence.ts:334:      visibility,
+lib/create-challenge-helpers.ts:11:  ChallengeVisibility,
+lib/create-challenge-helpers.ts:105:  visibility: ChallengeVisibility;
+lib/create-challenge-helpers.ts:265:  const visibility = (draft.visibility && String(draft.visibility).toUpperCase()) || "FRIENDS";
+lib/create-challenge-helpers.ts:278:    visibility: visibility === "PUBLIC" || visibility === "PRIVATE" ? visibility : "FRIENDS",
+scripts/seed-challenges.sql:3:-- Ensures: getFeatured returns rows (visibility=PUBLIC, status=published), getStarterPack returns rows (source_starter_id set).
+scripts/seed-challenges.sql:20:  visibility,
+scripts/seed-challenges.sql:71:  visibility,
+supabase/migrations/20250308000000_discover_challenges_seed.sql:3:-- Schema: public.challenges (id, created_at, creator_id, title, description, duration_days, visibility, difficulty, metadata, category, status, is_featured, participants_count)
+supabase/migrations/20250308000000_discover_challenges_seed.sql:11:  visibility,
+supabase/migrations/20250316000000_starter_challenges_seed.sql:3:-- Visibility "everyone" = public. These show on Discover when status = published and visibility = public.
+supabase/migrations/20250316000000_starter_challenges_seed.sql:15:  visibility,
+supabase/migrations/20250317000000_visibility_uppercase.sql:1:-- Normalize challenges.visibility to uppercase (PUBLIC, FRIENDS, PRIVATE).
+supabase/migrations/20250317000000_visibility_uppercase.sql:6:SET visibility = UPPER(visibility)
+supabase/migrations/20250317000000_visibility_uppercase.sql:7:WHERE visibility IN ('public', 'private', 'friends');
+supabase/migrations/20250317000000_visibility_uppercase.sql:12:  ALTER TABLE public.challenges DROP CONSTRAINT IF EXISTS challenges_visibility_check;
+supabase/migrations/20250317000000_visibility_uppercase.sql:14:  RAISE NOTICE 'Drop visibility constraint: %', SQLERRM;
+supabase/migrations/20250317000000_visibility_uppercase.sql:19:  ADD CONSTRAINT challenges_visibility_check
+supabase/migrations/20250317000000_visibility_uppercase.sql:20:  CHECK (visibility IN ('PUBLIC', 'FRIENDS', 'PRIVATE'));
+supabase/migrations/20250325000000_challenges_discover_index.sql:1:-- Index for Discover query: visibility, status, is_featured DESC, participants_count DESC
+supabase/migrations/20250325000000_challenges_discover_index.sql:4:  ON challenges (visibility, status, is_featured DESC, participants_count DESC);
+supabase/migrations/20250326000000_challenges_rls_tighten_select.sql:2:-- Keeps getFeatured and getById safe; other visibility/status not exposed.
+supabase/migrations/20250326000000_challenges_rls_tighten_select.sql:7:    visibility = 'PUBLIC' AND status = 'published'
+supabase/migrations/20250328000000_profiles_profile_visibility.sql:1:-- Add profile_visibility to profiles for Settings > Privacy (who can see profile).
+supabase/migrations/20250328000000_profiles_profile_visibility.sql:3:ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_visibility TEXT DEFAULT 'public';
+supabase/migrations/20250328000000_profiles_profile_visibility.sql:8:    SELECT 1 FROM pg_constraint WHERE conname = 'profiles_profile_visibility_check' AND conrelid = 'profiles'::regclass
+supabase/migrations/20250328000000_profiles_profile_visibility.sql:10:    ALTER TABLE profiles ADD CONSTRAINT profiles_profile_visibility_check
+supabase/migrations/20250328000000_profiles_profile_visibility.sql:11:      CHECK (profile_visibility IS NULL OR profile_visibility IN ('public', 'friends', 'private'));
+supabase/migrations/20250328000000_profiles_profile_visibility.sql:14:  RAISE NOTICE 'profiles_profile_visibility_check: %', SQLERRM;
+supabase/migrations/20250620100000_rls_challenges_via_active_participation.sql:2:-- visibility/status would block the generic "PUBLIC + published" policy (20250326000000).
+supabase/migrations/20250620110000_seed_24h_and_team_challenges.sql:7:  visibility, difficulty, category, status, is_featured, participants_count,
+supabase/migrations/20250620110000_seed_24h_and_team_challenges.sql:23:  visibility, difficulty, category, status, is_featured, participants_count,
+supabase/migrations/20260320060000_restore_public_challenge_read_policies.sql:2:-- Keep active-participation policies for private/joined visibility.
+supabase/migrations/20260320060000_restore_public_challenge_read_policies.sql:11:    lower(coalesce(visibility, 'public')) = 'public'
+supabase/migrations/20260320060000_restore_public_challenge_read_policies.sql:22:        AND lower(coalesce(c.visibility, 'public')) = 'public'
+supabase/migrations/20260328140000_user_follows_status_notifications_v2.sql:24:  CHECK (type IN ('respect', 'comment', 'follow', 'rank', 'follow_request', 'general'));
+supabase/migrations/20260407000002_unpublish_inappropriate_challenges.sql:4:SET status = 'rejected', visibility = 'PRIVATE'
+supabase/migrations/20260503000000_profiles_delete_policy_and_update_hardening.sql:21:--     profile_visibility='private' and leaks columns like expo_push_token,
+supabase/supabase-migrations-all.sql:24:SET status = 'rejected', visibility = 'PRIVATE'
+tests/flows/edge-cases.test.ts:99:        visibility: "FRIENDS",
+types/index.ts:105:export type ChallengeVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
+types/index.ts:228:  visibility: ChallengeVisibility;
+types/index.ts:518:  visibility?: string;
+types/index.ts:631:  profile_visibility?: string | null;
+

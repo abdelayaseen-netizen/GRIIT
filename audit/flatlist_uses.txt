@@ -1,0 +1,365 @@
+
+> app/(tabs)/discover.tsx:561:                  <FlatList
+  app/(tabs)/discover.tsx:562:                    data={peopleSearch.data}
+  app/(tabs)/discover.tsx:563:                    keyExtractor={keyExtractorPeople}
+  app/(tabs)/discover.tsx:564:                    scrollEnabled={false}
+  app/(tabs)/discover.tsx:565:                    nestedScrollEnabled
+  app/(tabs)/discover.tsx:566:                    renderItem={renderPeopleSearchItem}
+  app/(tabs)/discover.tsx:567:                    maxToRenderPerBatch={10}
+  app/(tabs)/discover.tsx:568:                    windowSize={5}
+  app/(tabs)/discover.tsx:569:                    initialNumToRender={8}
+  app/(tabs)/discover.tsx:570:                    removeClippedSubviews={Platform.OS === "android"}
+  app/(tabs)/discover.tsx:571:                  />
+> app/(tabs)/discover.tsx:583:                <FlatList
+  app/(tabs)/discover.tsx:584:                  data={filteredChallengesForSearch}
+  app/(tabs)/discover.tsx:585:                  keyExtractor={keyExtractorChallengeId}
+  app/(tabs)/discover.tsx:586:                  scrollEnabled={false}
+  app/(tabs)/discover.tsx:587:                  nestedScrollEnabled
+  app/(tabs)/discover.tsx:588:                  renderItem={renderSearchChallengeRow}
+  app/(tabs)/discover.tsx:589:                  maxToRenderPerBatch={10}
+  app/(tabs)/discover.tsx:590:                  windowSize={5}
+  app/(tabs)/discover.tsx:591:                  initialNumToRender={8}
+  app/(tabs)/discover.tsx:592:                  removeClippedSubviews={Platform.OS === "android"}
+  app/(tabs)/discover.tsx:593:                />
+> app/(tabs)/discover.tsx:655:                  <FlatList
+  app/(tabs)/discover.tsx:656:                    horizontal
+  app/(tabs)/discover.tsx:657:                    data={twentyFourHour}
+  app/(tabs)/discover.tsx:658:                    keyExtractor={keyExtractorChallengeId}
+  app/(tabs)/discover.tsx:659:                    showsHorizontalScrollIndicator={false}
+  app/(tabs)/discover.tsx:660:                    contentContainerStyle={discoverStyles.horizontalListContent}
+  app/(tabs)/discover.tsx:661:                    renderItem={renderTwentyFourHourItem}
+  app/(tabs)/discover.tsx:662:                    initialNumToRender={10}
+  app/(tabs)/discover.tsx:663:                    maxToRenderPerBatch={10}
+  app/(tabs)/discover.tsx:664:                    windowSize={5}
+  app/(tabs)/discover.tsx:665:                    removeClippedSubviews={Platform.OS === "android"}
+> app/(tabs)/discover.tsx:682:                    <FlatList
+  app/(tabs)/discover.tsx:683:                      data={soloChallenges}
+  app/(tabs)/discover.tsx:684:                      keyExtractor={keyExtractorChallengeId}
+  app/(tabs)/discover.tsx:685:                      scrollEnabled={false}
+  app/(tabs)/discover.tsx:686:                      nestedScrollEnabled
+  app/(tabs)/discover.tsx:687:                      ItemSeparatorComponent={discoverRowSeparator}
+  app/(tabs)/discover.tsx:688:                      renderItem={renderSoloCompactItem}
+  app/(tabs)/discover.tsx:689:                      maxToRenderPerBatch={10}
+  app/(tabs)/discover.tsx:690:                      windowSize={5}
+  app/(tabs)/discover.tsx:691:                      initialNumToRender={8}
+  app/(tabs)/discover.tsx:692:                      removeClippedSubviews={Platform.OS === "android"}
+> app/(tabs)/discover.tsx:710:                    <FlatList
+  app/(tabs)/discover.tsx:711:                      data={teamChallenges}
+  app/(tabs)/discover.tsx:712:                      keyExtractor={keyExtractorChallengeId}
+  app/(tabs)/discover.tsx:713:                      scrollEnabled={false}
+  app/(tabs)/discover.tsx:714:                      nestedScrollEnabled
+  app/(tabs)/discover.tsx:715:                      ItemSeparatorComponent={discoverRowSeparator}
+  app/(tabs)/discover.tsx:716:                      renderItem={renderTeamCompactItem}
+  app/(tabs)/discover.tsx:717:                      maxToRenderPerBatch={10}
+  app/(tabs)/discover.tsx:718:                      windowSize={5}
+  app/(tabs)/discover.tsx:719:                      initialNumToRender={8}
+  app/(tabs)/discover.tsx:720:                      removeClippedSubviews={Platform.OS === "android"}
+> app/(tabs)/discover.tsx:730:                    <FlatList
+  app/(tabs)/discover.tsx:731:                      data={newThisWeek}
+  app/(tabs)/discover.tsx:732:                      keyExtractor={keyExtractorChallengeId}
+  app/(tabs)/discover.tsx:733:                      scrollEnabled={false}
+  app/(tabs)/discover.tsx:734:                      nestedScrollEnabled
+  app/(tabs)/discover.tsx:735:                      ItemSeparatorComponent={discoverRowSeparator}
+  app/(tabs)/discover.tsx:736:                      renderItem={renderNewWeekCompactItem}
+  app/(tabs)/discover.tsx:737:                      maxToRenderPerBatch={10}
+  app/(tabs)/discover.tsx:738:                      windowSize={5}
+  app/(tabs)/discover.tsx:739:                      initialNumToRender={8}
+  app/(tabs)/discover.tsx:740:                      removeClippedSubviews={Platform.OS === "android"}
+> app/(tabs)/discover.tsx:812:        <FlatList
+  app/(tabs)/discover.tsx:813:          data={[{ key: "discover-root" }]}
+  app/(tabs)/discover.tsx:814:          keyExtractor={keyExtractorDiscoverRoot}
+  app/(tabs)/discover.tsx:815:          renderItem={renderDiscoverRootItem}
+  app/(tabs)/discover.tsx:816:          showsVerticalScrollIndicator={false}
+  app/(tabs)/discover.tsx:817:          keyboardShouldPersistTaps="handled"
+  app/(tabs)/discover.tsx:818:          refreshControl={
+  app/(tabs)/discover.tsx:819:            <RefreshControl
+  app/(tabs)/discover.tsx:820:              refreshing={discoverFeed.isRefetching}
+  app/(tabs)/discover.tsx:821:              onRefresh={() => void discoverFeed.refetch()}
+  app/(tabs)/discover.tsx:822:              tintColor={DS_COLORS.ACCENT}
+> app/(tabs)/profile.tsx:607:              <FlatList
+  app/(tabs)/profile.tsx:608:                data={activeItems}
+  app/(tabs)/profile.tsx:609:                keyExtractor={keyExtractorActiveChallenge}
+  app/(tabs)/profile.tsx:610:                scrollEnabled={false}
+  app/(tabs)/profile.tsx:611:                nestedScrollEnabled
+  app/(tabs)/profile.tsx:612:                contentContainerStyle={styles.chListContent}
+  app/(tabs)/profile.tsx:613:                renderItem={renderActiveChallengeItem}
+  app/(tabs)/profile.tsx:614:                maxToRenderPerBatch={10}
+  app/(tabs)/profile.tsx:615:                windowSize={5}
+  app/(tabs)/profile.tsx:616:                initialNumToRender={8}
+  app/(tabs)/profile.tsx:617:                removeClippedSubviews={Platform.OS === "android"}
+> app/(tabs)/profile.tsx:639:              <FlatList
+  app/(tabs)/profile.tsx:640:                data={postsQuery.data?.posts ?? []}
+  app/(tabs)/profile.tsx:641:                keyExtractor={keyExtractorPost}
+  app/(tabs)/profile.tsx:642:                scrollEnabled={false}
+  app/(tabs)/profile.tsx:643:                nestedScrollEnabled
+  app/(tabs)/profile.tsx:644:                renderItem={renderProfilePostRow}
+  app/(tabs)/profile.tsx:645:                maxToRenderPerBatch={10}
+  app/(tabs)/profile.tsx:646:                windowSize={5}
+  app/(tabs)/profile.tsx:647:                initialNumToRender={8}
+  app/(tabs)/profile.tsx:648:                removeClippedSubviews={Platform.OS === "android"}
+  app/(tabs)/profile.tsx:649:              />
+> app/(tabs)/profile.tsx:661:                <FlatList
+  app/(tabs)/profile.tsx:662:                  data={badgesQuery.data?.earned ?? []}
+  app/(tabs)/profile.tsx:663:                  keyExtractor={keyExtractorBadge}
+  app/(tabs)/profile.tsx:664:                  numColumns={3}
+  app/(tabs)/profile.tsx:665:                  scrollEnabled={false}
+  app/(tabs)/profile.tsx:666:                  nestedScrollEnabled
+  app/(tabs)/profile.tsx:667:                  columnWrapperStyle={styles.badgeGridRow}
+  app/(tabs)/profile.tsx:668:                  renderItem={renderEarnedBadgeItem}
+  app/(tabs)/profile.tsx:669:                  maxToRenderPerBatch={12}
+  app/(tabs)/profile.tsx:670:                  windowSize={5}
+  app/(tabs)/profile.tsx:671:                  initialNumToRender={12}
+> app/(tabs)/profile.tsx:675:                <FlatList
+  app/(tabs)/profile.tsx:676:                  data={badgesQuery.data?.next ?? []}
+  app/(tabs)/profile.tsx:677:                  keyExtractor={keyExtractorBadge}
+  app/(tabs)/profile.tsx:678:                  numColumns={3}
+  app/(tabs)/profile.tsx:679:                  scrollEnabled={false}
+  app/(tabs)/profile.tsx:680:                  nestedScrollEnabled
+  app/(tabs)/profile.tsx:681:                  columnWrapperStyle={styles.badgeGridRow}
+  app/(tabs)/profile.tsx:682:                  renderItem={renderNextBadgeItem}
+  app/(tabs)/profile.tsx:683:                  maxToRenderPerBatch={12}
+  app/(tabs)/profile.tsx:684:                  windowSize={5}
+  app/(tabs)/profile.tsx:685:                  initialNumToRender={12}
+> app/(tabs)/profile.tsx:779:      <FlatList
+  app/(tabs)/profile.tsx:780:        data={[{ key: "profile-root" }]}
+  app/(tabs)/profile.tsx:781:        keyExtractor={keyExtractorProfileRoot}
+  app/(tabs)/profile.tsx:782:        renderItem={renderProfileRootItem}
+  app/(tabs)/profile.tsx:783:        showsVerticalScrollIndicator={false}
+  app/(tabs)/profile.tsx:784:        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.PRIMARY} />}
+  app/(tabs)/profile.tsx:785:        contentContainerStyle={styles.scroll}
+  app/(tabs)/profile.tsx:786:      />
+  app/(tabs)/profile.tsx:787:      <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+  app/(tabs)/profile.tsx:788:    </SafeAreaView>
+  app/(tabs)/profile.tsx:789:    </ErrorBoundary>
+> app/accountability/add.tsx:182:        <FlatList
+  app/accountability/add.tsx:183:          data={hits}
+  app/accountability/add.tsx:184:          keyExtractor={(item) => item.user_id}
+  app/accountability/add.tsx:185:          renderItem={renderItem}
+  app/accountability/add.tsx:186:          initialNumToRender={8}
+  app/accountability/add.tsx:187:          maxToRenderPerBatch={10}
+  app/accountability/add.tsx:188:          windowSize={5}
+  app/accountability/add.tsx:189:          removeClippedSubviews={Platform.OS === "android"}
+  app/accountability/add.tsx:190:          showsVerticalScrollIndicator={false}
+  app/accountability/add.tsx:191:          contentContainerStyle={styles.listContent}
+  app/accountability/add.tsx:192:          keyboardShouldPersistTaps="handled"
+> app/challenge/complete.tsx:196:      <FlatList
+  app/challenge/complete.tsx:197:        style={styles.scroll}
+  app/challenge/complete.tsx:198:        data={[{ key: "complete-body" }]}
+  app/challenge/complete.tsx:199:        keyExtractor={(item) => item.key}
+  app/challenge/complete.tsx:200:        contentContainerStyle={styles.content}
+  app/challenge/complete.tsx:201:        showsVerticalScrollIndicator={false}
+  app/challenge/complete.tsx:202:        initialNumToRender={1}
+  app/challenge/complete.tsx:203:        maxToRenderPerBatch={1}
+  app/challenge/complete.tsx:204:        windowSize={2}
+  app/challenge/complete.tsx:205:        renderItem={renderCompleteBody}
+  app/challenge/complete.tsx:206:      />
+> app/post/[id].tsx:381:          <FlatList
+  app/post/[id].tsx:382:            data={commentsQuery.data ?? []}
+  app/post/[id].tsx:383:            keyExtractor={(c) => c.id}
+  app/post/[id].tsx:384:            contentContainerStyle={styles.list}
+  app/post/[id].tsx:385:            ListHeaderComponent={listHeader}
+  app/post/[id].tsx:386:            refreshControl={
+  app/post/[id].tsx:387:              <RefreshControl
+  app/post/[id].tsx:388:                refreshing={
+  app/post/[id].tsx:389:                  (commentsQuery.isRefetching && !commentsQuery.isPending) ||
+  app/post/[id].tsx:390:                  (postQuery.isRefetching && !postQuery.isPending)
+  app/post/[id].tsx:391:                }
+> app/accountability.tsx:257:              <FlatList
+  app/accountability.tsx:258:                data={list.accepted}
+  app/accountability.tsx:259:                keyExtractor={keyExtractorAccepted}
+  app/accountability.tsx:260:                scrollEnabled={false}
+  app/accountability.tsx:261:                nestedScrollEnabled
+  app/accountability.tsx:262:                renderItem={renderAcceptedPartner}
+  app/accountability.tsx:263:                maxToRenderPerBatch={10}
+  app/accountability.tsx:264:                windowSize={5}
+  app/accountability.tsx:265:                initialNumToRender={8}
+  app/accountability.tsx:266:                removeClippedSubviews={Platform.OS === "android"}
+  app/accountability.tsx:267:              />
+> app/accountability.tsx:276:              <FlatList
+  app/accountability.tsx:277:                data={list.incomingPending}
+  app/accountability.tsx:278:                keyExtractor={keyExtractorIncoming}
+  app/accountability.tsx:279:                scrollEnabled={false}
+  app/accountability.tsx:280:                nestedScrollEnabled
+  app/accountability.tsx:281:                renderItem={renderIncomingInvite}
+  app/accountability.tsx:282:                maxToRenderPerBatch={10}
+  app/accountability.tsx:283:                windowSize={5}
+  app/accountability.tsx:284:                initialNumToRender={8}
+  app/accountability.tsx:285:                removeClippedSubviews={Platform.OS === "android"}
+  app/accountability.tsx:286:              />
+> app/accountability.tsx:295:              <FlatList
+  app/accountability.tsx:296:                data={list.outgoingPending}
+  app/accountability.tsx:297:                keyExtractor={keyExtractorOutgoing}
+  app/accountability.tsx:298:                scrollEnabled={false}
+  app/accountability.tsx:299:                nestedScrollEnabled
+  app/accountability.tsx:300:                renderItem={renderOutgoingInvite}
+  app/accountability.tsx:301:                maxToRenderPerBatch={10}
+  app/accountability.tsx:302:                windowSize={5}
+  app/accountability.tsx:303:                initialNumToRender={8}
+  app/accountability.tsx:304:                removeClippedSubviews={Platform.OS === "android"}
+  app/accountability.tsx:305:              />
+> app/accountability.tsx:372:      <FlatList
+  app/accountability.tsx:373:        data={[{ key: "accountability-root" }]}
+  app/accountability.tsx:374:        keyExtractor={keyExtractorAccountabilityRoot}
+  app/accountability.tsx:375:        style={styles.scroll}
+  app/accountability.tsx:376:        contentContainerStyle={styles.scrollContent}
+  app/accountability.tsx:377:        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+  app/accountability.tsx:378:        renderItem={renderAccountabilityRootItem}
+  app/accountability.tsx:379:        showsVerticalScrollIndicator={false}
+  app/accountability.tsx:380:        keyboardShouldPersistTaps="handled"
+  app/accountability.tsx:381:      />
+  app/accountability.tsx:382:
+> app/follow-list.tsx:231:          <FlatList
+  app/follow-list.tsx:232:            data={users}
+  app/follow-list.tsx:233:            keyExtractor={(item) => item.user_id}
+  app/follow-list.tsx:234:            renderItem={renderItem}
+  app/follow-list.tsx:235:            ListEmptyComponent={listEmpty}
+  app/follow-list.tsx:236:            contentContainerStyle={styles.listContent}
+  app/follow-list.tsx:237:            initialNumToRender={10}
+  app/follow-list.tsx:238:            maxToRenderPerBatch={10}
+  app/follow-list.tsx:239:            windowSize={5}
+  app/follow-list.tsx:240:            removeClippedSubviews={Platform.OS === "android"}
+  app/follow-list.tsx:241:            showsVerticalScrollIndicator={false}
+> components/activity/LeaderboardTab.tsx:298:            <FlatList
+  components/activity/LeaderboardTab.tsx:299:              horizontal
+  components/activity/LeaderboardTab.tsx:300:              data={activeList}
+  components/activity/LeaderboardTab.tsx:301:              keyExtractor={(item, i) => item.challenge_id ?? item.challenges?.id ?? `ch-${i}`}
+  components/activity/LeaderboardTab.tsx:302:              showsHorizontalScrollIndicator={false}
+  components/activity/LeaderboardTab.tsx:303:              contentContainerStyle={styles.challengePillsRow}
+  components/activity/LeaderboardTab.tsx:304:              renderItem={renderChallengePill}
+  components/activity/LeaderboardTab.tsx:305:            />
+  components/activity/LeaderboardTab.tsx:306:          )}
+  components/activity/LeaderboardTab.tsx:307:          {activeList.length > 0 && selectedChallengeId ? (
+  components/activity/LeaderboardTab.tsx:308:            <View style={styles.challengeScopeToggle}>
+> components/activity/LeaderboardTab.tsx:422:    <FlatList
+  components/activity/LeaderboardTab.tsx:423:      data={[]}
+  components/activity/LeaderboardTab.tsx:424:      keyExtractor={(_, i) => `lb-pad-${i}`}
+  components/activity/LeaderboardTab.tsx:425:      renderItem={renderLeaderboardPaddingNull}
+  components/activity/LeaderboardTab.tsx:426:      ListHeaderComponent={
+  components/activity/LeaderboardTab.tsx:427:        <>
+  components/activity/LeaderboardTab.tsx:428:          {listHeader}
+  components/activity/LeaderboardTab.tsx:429:          {leaderboardInner}
+  components/activity/LeaderboardTab.tsx:430:        </>
+  components/activity/LeaderboardTab.tsx:431:      }
+  components/activity/LeaderboardTab.tsx:432:      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
+> components/activity/LeaderboardTab.tsx:495:      <FlatList
+  components/activity/LeaderboardTab.tsx:496:        data={rest}
+  components/activity/LeaderboardTab.tsx:497:        keyExtractor={(e) => e.userId}
+  components/activity/LeaderboardTab.tsx:498:        renderItem={renderRegularRow}
+  components/activity/LeaderboardTab.tsx:499:        scrollEnabled={false}
+  components/activity/LeaderboardTab.tsx:500:        nestedScrollEnabled
+  components/activity/LeaderboardTab.tsx:501:        maxToRenderPerBatch={10}
+  components/activity/LeaderboardTab.tsx:502:        windowSize={5}
+  components/activity/LeaderboardTab.tsx:503:        initialNumToRender={8}
+  components/activity/LeaderboardTab.tsx:504:        ListFooterComponent={footer}
+  components/activity/LeaderboardTab.tsx:505:        removeClippedSubviews={Platform.OS === "android"}
+> components/challenge/SharedGoalProgress.tsx:175:          <FlatList
+  components/challenge/SharedGoalProgress.tsx:176:            data={recentLogs}
+  components/challenge/SharedGoalProgress.tsx:177:            keyExtractor={(item) => item.id}
+  components/challenge/SharedGoalProgress.tsx:178:            initialNumToRender={8}
+  components/challenge/SharedGoalProgress.tsx:179:            maxToRenderPerBatch={10}
+  components/challenge/SharedGoalProgress.tsx:180:            windowSize={5}
+  components/challenge/SharedGoalProgress.tsx:181:            removeClippedSubviews={Platform.OS === "android"}
+  components/challenge/SharedGoalProgress.tsx:182:            scrollEnabled={false}
+  components/challenge/SharedGoalProgress.tsx:183:            showsVerticalScrollIndicator={false}
+  components/challenge/SharedGoalProgress.tsx:184:            renderItem={renderLogItem}
+  components/challenge/SharedGoalProgress.tsx:185:          />
+> components/discover/ActivityTicker.tsx:106:      <FlatList
+  components/discover/ActivityTicker.tsx:107:        horizontal
+  components/discover/ActivityTicker.tsx:108:        data={completions.slice(0, 10)}
+  components/discover/ActivityTicker.tsx:109:        keyExtractor={(item) => item.id}
+  components/discover/ActivityTicker.tsx:110:        showsHorizontalScrollIndicator={false}
+  components/discover/ActivityTicker.tsx:111:        contentContainerStyle={styles.scroll}
+  components/discover/ActivityTicker.tsx:112:        renderItem={renderTickerItem}
+  components/discover/ActivityTicker.tsx:113:        maxToRenderPerBatch={10}
+  components/discover/ActivityTicker.tsx:114:        windowSize={5}
+  components/discover/ActivityTicker.tsx:115:        initialNumToRender={8}
+  components/discover/ActivityTicker.tsx:116:      />
+> components/discover/FilterChips.tsx:40:    <FlatList
+  components/discover/FilterChips.tsx:41:      horizontal
+  components/discover/FilterChips.tsx:42:      data={FILTERS}
+  components/discover/FilterChips.tsx:43:      keyExtractor={(item) => item}
+  components/discover/FilterChips.tsx:44:      showsHorizontalScrollIndicator={false}
+  components/discover/FilterChips.tsx:45:      contentContainerStyle={styles.container}
+  components/discover/FilterChips.tsx:46:      renderItem={renderFilterChip}
+  components/discover/FilterChips.tsx:47:      maxToRenderPerBatch={10}
+  components/discover/FilterChips.tsx:48:      windowSize={5}
+  components/discover/FilterChips.tsx:49:      initialNumToRender={6}
+  components/discover/FilterChips.tsx:50:    />
+> components/discover/PickedForYou.tsx:108:      <FlatList
+  components/discover/PickedForYou.tsx:109:        horizontal
+  components/discover/PickedForYou.tsx:110:        data={challenges}
+  components/discover/PickedForYou.tsx:111:        keyExtractor={(item) => item.id}
+  components/discover/PickedForYou.tsx:112:        showsHorizontalScrollIndicator={false}
+  components/discover/PickedForYou.tsx:113:        contentContainerStyle={styles.scroll}
+  components/discover/PickedForYou.tsx:114:        renderItem={renderPickedCard}
+  components/discover/PickedForYou.tsx:115:        maxToRenderPerBatch={10}
+  components/discover/PickedForYou.tsx:116:        windowSize={5}
+  components/discover/PickedForYou.tsx:117:        initialNumToRender={5}
+  components/discover/PickedForYou.tsx:118:      />
+> components/feed/WhoRespectedSheet.tsx:121:            <FlatList
+  components/feed/WhoRespectedSheet.tsx:122:              style={styles.list}
+  components/feed/WhoRespectedSheet.tsx:123:              data={query.data}
+  components/feed/WhoRespectedSheet.tsx:124:              keyExtractor={(item) => item.userId}
+  components/feed/WhoRespectedSheet.tsx:125:              initialNumToRender={10}
+  components/feed/WhoRespectedSheet.tsx:126:              maxToRenderPerBatch={10}
+  components/feed/WhoRespectedSheet.tsx:127:              windowSize={5}
+  components/feed/WhoRespectedSheet.tsx:128:              renderItem={renderRespectedRow}
+  components/feed/WhoRespectedSheet.tsx:129:              contentContainerStyle={styles.listContent}
+  components/feed/WhoRespectedSheet.tsx:130:            />
+  components/feed/WhoRespectedSheet.tsx:131:          )}
+> components/home/PointsExplainer.tsx:64:        <FlatList
+  components/home/PointsExplainer.tsx:65:          data={POINT_RULES}
+  components/home/PointsExplainer.tsx:66:          keyExtractor={(r) => r.action}
+  components/home/PointsExplainer.tsx:67:          contentContainerStyle={s.scroll}
+  components/home/PointsExplainer.tsx:68:          initialNumToRender={8}
+  components/home/PointsExplainer.tsx:69:          maxToRenderPerBatch={8}
+  components/home/PointsExplainer.tsx:70:          windowSize={5}
+  components/home/PointsExplainer.tsx:71:          ListHeaderComponent={
+  components/home/PointsExplainer.tsx:72:            <>
+  components/home/PointsExplainer.tsx:73:              <View style={s.statusCard}>
+  components/home/PointsExplainer.tsx:74:                <Text style={s.statusPoints}>{currentPoints}</Text>
+> components/paywall/PaywallControl.tsx:46:      <FlatList
+  components/paywall/PaywallControl.tsx:47:        data={loading ? [] : packages}
+  components/paywall/PaywallControl.tsx:48:        keyExtractor={(pkg) => pkg.identifier}
+  components/paywall/PaywallControl.tsx:49:        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+  components/paywall/PaywallControl.tsx:50:        renderItem={renderPlanItem}
+  components/paywall/PaywallControl.tsx:51:        ListHeaderComponent={
+  components/paywall/PaywallControl.tsx:52:          <>
+  components/paywall/PaywallControl.tsx:53:            <View style={styles.heroSection}>
+  components/paywall/PaywallControl.tsx:54:              <View style={styles.iconBadge}>
+  components/paywall/PaywallControl.tsx:55:                <Flame size={36} color={DS_COLORS.WHITE} />
+  components/paywall/PaywallControl.tsx:56:              </View>
+> components/paywall/PaywallSocialProof.tsx:56:      <FlatList
+  components/paywall/PaywallSocialProof.tsx:57:        data={loading ? [] : packages}
+  components/paywall/PaywallSocialProof.tsx:58:        keyExtractor={(pkg) => pkg.identifier}
+  components/paywall/PaywallSocialProof.tsx:59:        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+  components/paywall/PaywallSocialProof.tsx:60:        renderItem={renderPlanItem}
+  components/paywall/PaywallSocialProof.tsx:61:        ListHeaderComponent={
+  components/paywall/PaywallSocialProof.tsx:62:          <>
+  components/paywall/PaywallSocialProof.tsx:63:            <View style={styles.heroSection}>
+  components/paywall/PaywallSocialProof.tsx:64:              <View style={styles.iconBadge}>
+  components/paywall/PaywallSocialProof.tsx:65:                <Flame size={36} color={DS_COLORS.WHITE} />
+  components/paywall/PaywallSocialProof.tsx:66:              </View>
+> components/profile/AchievementsSection.tsx:87:      <FlatList
+  components/profile/AchievementsSection.tsx:88:        horizontal
+  components/profile/AchievementsSection.tsx:89:        data={flatBadges}
+  components/profile/AchievementsSection.tsx:90:        keyExtractor={(a) => a.id}
+  components/profile/AchievementsSection.tsx:91:        showsHorizontalScrollIndicator={false}
+  components/profile/AchievementsSection.tsx:92:        contentContainerStyle={styles.scrollContent}
+  components/profile/AchievementsSection.tsx:93:        renderItem={renderBadgeItem}
+  components/profile/AchievementsSection.tsx:94:        maxToRenderPerBatch={10}
+  components/profile/AchievementsSection.tsx:95:        windowSize={5}
+  components/profile/AchievementsSection.tsx:96:        initialNumToRender={8}
+  components/profile/AchievementsSection.tsx:97:        removeClippedSubviews={Platform.OS === "android"}
+> hooks/useTaskCompleteScreen.tsx:849:      <FlatList
+  hooks/useTaskCompleteScreen.tsx:850:        data={[{ key: "task-complete-root" }]}
+  hooks/useTaskCompleteScreen.tsx:851:        keyExtractor={(item) => item.key}
+  hooks/useTaskCompleteScreen.tsx:852:        style={styles.scroll}
+  hooks/useTaskCompleteScreen.tsx:853:        contentContainerStyle={styles.scrollContent}
+  hooks/useTaskCompleteScreen.tsx:854:        keyboardShouldPersistTaps="handled"
+  hooks/useTaskCompleteScreen.tsx:855:        renderItem={renderTaskCompleteFormItem}
+  hooks/useTaskCompleteScreen.tsx:856:      />
+  hooks/useTaskCompleteScreen.tsx:857:      <ConfirmDialog
+  hooks/useTaskCompleteScreen.tsx:858:        visible={minimumConfirmVisible}
+  hooks/useTaskCompleteScreen.tsx:859:        title="Mark minimum day?"
+

@@ -1,0 +1,37 @@
+
+hooks/useAppChallengeMutations.ts:226:    console.log("[secureDay] called", {
+lib/analytics.ts:172:    if (__DEV__) console.log("[PostHog] Capturing event:", event, properties);
+lib/posthog.ts:18:          console.log(
+backend/trpc/app-router.ts:11:console.log("[app-router] loading sub-routers");
+backend/trpc/app-router.ts:13:console.log("[app-router] importing auth");
+backend/trpc/app-router.ts:15:console.log("[app-router] importing user");
+backend/trpc/app-router.ts:17:console.log("[app-router] importing profiles");
+backend/trpc/app-router.ts:19:console.log("[app-router] importing challenges");
+backend/trpc/app-router.ts:21:console.log("[app-router] importing checkins");
+backend/trpc/app-router.ts:23:console.log("[app-router] importing starters");
+backend/trpc/app-router.ts:25:console.log("[app-router] importing streaks");
+backend/trpc/app-router.ts:27:console.log("[app-router] importing leaderboard");
+backend/trpc/app-router.ts:29:console.log("[app-router] importing respects");
+backend/trpc/app-router.ts:31:console.log("[app-router] importing nudges");
+backend/trpc/app-router.ts:33:console.log("[app-router] importing notifications");
+backend/trpc/app-router.ts:35:console.log("[app-router] importing accountability");
+backend/trpc/app-router.ts:37:console.log("[app-router] importing feed");
+backend/trpc/app-router.ts:39:console.log("[app-router] importing achievements");
+backend/trpc/app-router.ts:41:console.log("[app-router] importing integrations");
+backend/trpc/app-router.ts:43:console.log("[app-router] importing sharedGoal");
+backend/trpc/app-router.ts:45:console.log("[app-router] importing referrals");
+backend/trpc/app-router.ts:47:console.log("[app-router] importing reports");
+backend/trpc/app-router.ts:50:console.log("[app-router] all sub-routers loaded, building appRouter");
+backend/server.ts:12:console.log("[boot] step 1: dotenv + sentry init complete");
+backend/server.ts:13:console.log("[boot] step 1: NODE_ENV =", process.env.NODE_ENV);
+backend/server.ts:14:console.log("[boot] step 1: PORT =", process.env.PORT);
+backend/server.ts:15:console.log("[boot] step 1: SUPABASE_URL set =", !!process.env.EXPO_PUBLIC_SUPABASE_URL);
+backend/server.ts:16:console.log("[boot] step 1: SUPABASE_ANON set =", !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+backend/server.ts:17:console.log("[boot] step 1: SENTRY_DSN_BACKEND set =", !!process.env.SENTRY_DSN_BACKEND);
+backend/server.ts:43:  console.log("[boot] step 2: starting hono import");
+backend/server.ts:48:    console.log("[boot] step 3: hono imported successfully");
+backend/server.ts:55:  console.log("[boot] step 4: importing serve");
+backend/server.ts:57:  console.log("[boot] step 5: serve imported");
+backend/server.ts:60:  console.log("[boot] step 6: binding port", port);
+backend/server.ts:68:  console.log(`[boot] step 7: server listening on 0.0.0.0:${port}`);
+

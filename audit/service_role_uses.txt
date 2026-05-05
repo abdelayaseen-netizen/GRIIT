@@ -1,0 +1,7 @@
+
+backend/lib/strava-callback.ts:59:    log("Strava callback: no Supabase server client (missing SUPABASE_SERVICE_ROLE_KEY?)");
+backend/lib/supabase-admin.ts:9:const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+backend/lib/supabase-admin.ts:13:  if (!serviceRoleKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for cron");
+backend/lib/supabase-server.ts:10:const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+backend/trpc/routes/profiles-stats.ts:403:  /** Delete account: clears profile data; when SUPABASE_SERVICE_ROLE_KEY is set, also deletes auth user. Client must sign out after. */
+

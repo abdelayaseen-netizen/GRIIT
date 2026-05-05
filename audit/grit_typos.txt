@@ -1,0 +1,44 @@
+
+docs/audits/AUDIT_00_RUBRIC_WAVE1_WAVE2_2026-04-27.md:4:**Repository root:** `C:\Users\abdel\OneDrive\Desktop\GRIT-1`  
+docs/audits/AUDIT_00_RUBRIC_WAVE1_WAVE2_2026-04-27.md:47:Set-Location "c:\Users\abdel\OneDrive\Desktop\GRIT-1"
+docs/audits/SCORECARD-FINAL-AUDIT.md:32: RUN  v2.1.9 C:/Users/.../GRIT-1
+docs/audits/SCORECARD-FULL-STACK.md:6:Verification: PowerShell 5.1 on Windows, repo root `GRIT-1`. Commands run as specified in the audit prompt unless noted (e.g. `Get-Content -Raw` unavailable — substituted `[System.IO.File]::ReadAllText` for expo-image scan).
+docs/audits/SCORECARD-TESTFLIGHT.md:65:4. `Select-String` on `lib/config.ts` for `grit-backend-production|API_BASE_URL|EXPO_PUBLIC_API` returned no lines; API URL is driven by `EXPO_PUBLIC_API_URL` / `EXPO_PUBLIC_API_BASE_URL` in `lib/api.ts`—confirm production values are set in EAS env, not only in docs.
+docs/audits/SCORECARD-TESTFLIGHT.md:80:PS> Set-Location c:\Users\abdel\OneDrive\Desktop\GRIT-1; npx tsc --noEmit 2>&1 | Select-Object -Last 8; Write-Output "EXIT:$LASTEXITCODE"
+docs/audits/SCORECARD-TESTFLIGHT.md:84:PS> Set-Location c:\Users\abdel\OneDrive\Desktop\GRIT-1\backend; npx tsc --noEmit 2>&1 | Select-Object -Last 8; Write-Output "EXIT:$LASTEXITCODE"
+docs/audits/SCORECARD-TESTFLIGHT.md:92:PS> Select-String -Path "lib/config.ts" -Pattern "grit-backend-production|API_BASE_URL|EXPO_PUBLIC_API"
+docs/audits/SCORECARD-TESTFLIGHT.md:95:PS> Select-String -Path "lib/api.ts" -Pattern "grit-backend-production|API_BASE_URL|EXPO_PUBLIC_API" | Select-Object -First 15
+docs/audits/SCORECARD-TESTFLIGHT.md:448:C:\Users\abdel\OneDrive\Desktop\GRIT-1\backend\lib\progression.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:449:C:\Users\abdel\OneDrive\Desktop\GRIT-1\backend\lib\streak.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:450:C:\Users\abdel\OneDrive\Desktop\GRIT-1\backend\trpc\routes\accountability.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:451:C:\Users\abdel\OneDrive\Desktop\GRIT-1\backend\trpc\routes\challenges-create.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:452:C:\Users\abdel\OneDrive\Desktop\GRIT-1\backend\trpc\routes\last-stand.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:453:C:\Users\abdel\OneDrive\Desktop\GRIT-1\backend\trpc\routes\nudges.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:454:C:\Users\abdel\OneDrive\Desktop\GRIT-1\lib\api.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:455:C:\Users\abdel\OneDrive\Desktop\GRIT-1\lib\formatTimeAgo.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:456:C:\Users\abdel\OneDrive\Desktop\GRIT-1\lib\time-enforcement.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:457:C:\Users\abdel\OneDrive\Desktop\GRIT-1\lib\trpc-errors.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:458:C:\Users\abdel\OneDrive\Desktop\GRIT-1\tests\flows\critical-paths.test.ts
+docs/audits/SCORECARD-TESTFLIGHT.md:459:C:\Users\abdel\OneDrive\Desktop\GRIT-1\tests\flows\edge-cases.test.ts
+docs/ASO.md:29:- habit,tracker,75hard,morning,routine,journal,checkin,grit,build,strong,mental,toughness
+docs/DEPLOYMENT.md:7:- **Backend URL (production):** https://grit-backend-production.up.railway.app
+docs/DEPLOYMENT.md:9:- **Railway service:** grit-backend
+docs/DEPLOYMENT.md:30:railway up --service grit-backend
+docs/DEPLOYMENT.md:37:railway up --service grit-backend
+docs/DEPLOYMENT.md:45:Invoke-WebRequest -Uri https://grit-backend-production.up.railway.app/api/health -Method GET
+docs/DEPLOYMENT.md:48:Invoke-WebRequest -Uri https://grit-backend-production.up.railway.app/api/health/deep -Method GET
+docs/DEPLOYMENT.md:73:railway logs --service grit-backend
+docs/DEPLOYMENT.md:79:railway logs --service grit-backend --follow
+docs/DEPLOYMENT.md:152:railway deployments --service grit-backend
+docs/DEPLOYMENT.md:177:- `POST https://grit-backend-production.up.railway.app/internal/daily-reset` - daily, runs streak rollover
+docs/DEPLOYMENT.md:178:- `GET https://grit-backend-production.up.railway.app/api/cron/send-reminders` - periodic, sends scheduled push notifications
+docs/DEPLOYMENT.md:223:1. Check `railway logs --service grit-backend` for the actual error.
+docs/DESIGN-SYSTEM.md:1:# GRIT Design System (Rork-Aligned)
+docs/EAS-LAUNCH-CHECKLIST.md:35:railway up --service grit-backend
+docs/EAS-LAUNCH-CHECKLIST.md:38:curl https://grit-backend-production.up.railway.app/health
+docs/GRIIT_MASTER_SCORECARD_V2.md:4:**Repository:** `GRIT-1`  
+docs/GRIIT_MASTER_SCORECARD.md:14:PowerShell and tooling were run at repo root (`GRIT-1`).
+docs/IOS-RELEASE-CHECKLIST.md:3:Steps to ship GRIT as an iOS app (TestFlight and/or App Store). Order matters where noted.
+docs/IOS-RELEASE-CHECKLIST.md:51:| 13 | **App Store Connect app** | In [App Store Connect](https://appstoreconnect.apple.com), create an app (e.g. name “GRIT”, bundle ID `app.grit.challenge-tracker` to match `app.json`). |
+README.md:26:   cd GRIT-1
+

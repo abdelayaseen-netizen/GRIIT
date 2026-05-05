@@ -1,0 +1,5 @@
+
+components/home/ActiveChallenges.tsx:31:  return tasks.filter((t) => t.required !== false);
+hooks/useTaskCompleteShareCardProps.ts:75:    const required = ch?.challenge_tasks?.filter((t) => t.required) ?? [];
+hooks/useTaskCompleteShareCardProps.ts:97:    const n = ch?.challenge_tasks?.filter((t) => t.required).length;
+
