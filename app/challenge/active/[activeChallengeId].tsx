@@ -20,6 +20,7 @@ import {
   Timer,
   FileText,
   CheckCircle,
+  Lock,
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
@@ -39,6 +40,67 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackEvent } from "@/lib/analytics";
+
+type TileWindowStatus = "before" | "open" | "closed" | "none";
+
+interface TileWindowState {
+  status: TileWindowStatus;
+  /** "Opens at 7:00 AM" / "Window closed at 8:00 AM" / undefined when status === "open" or "none" */
+  label?: string;
+}
+
+function formatHHMM12(hr: number, mn: number): string {
+  const period = hr >= 12 ? "PM" : "AM";
+  const dh = hr % 12 || 12;
+  return `${dh}:${String(mn).padStart(2, "0")} ${period}`;
+}
+
+function getTileWindowState(
+  cfg: Record<string, unknown> | null | undefined,
+  now: Date = new Date()
+): TileWindowState {
+  if (!cfg || cfg.hard_mode !== true) return { status: "none" };
+  const start = typeof cfg.schedule_window_start === "string" ? cfg.schedule_window_start : "";
+  const end = typeof cfg.schedule_window_end === "string" ? cfg.schedule_window_end : "";
+  if (!start || !end) return { status: "none" };
+
+  const tz =
+    (typeof cfg.schedule_timezone === "string" && cfg.schedule_timezone.trim()) ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: tz,
+  }).formatToParts(now);
+  const h = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+  const m = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+  const current = h * 60 + m;
+
+  const sParts = start.split(":").map(Number);
+  const eParts = end.split(":").map(Number);
+  const sH = sParts[0] ?? 0;
+  const sM = sParts[1] ?? 0;
+  const eH = eParts[0] ?? 0;
+  const eM = eParts[1] ?? 0;
+  const startMin = sH * 60 + sM;
+  const endMin = eH * 60 + eM;
+
+  let isOpen: boolean;
+  if (startMin <= endMin) {
+    isOpen = current >= startMin && current <= endMin;
+  } else {
+    // Wraparound (rare — e.g. 22:00 to 02:00)
+    isOpen = current >= startMin || current <= endMin;
+  }
+
+  if (isOpen) return { status: "open" };
+  if (current < startMin) {
+    return { status: "before", label: `Opens at ${formatHHMM12(sH, sM)}` };
+  }
+  return { status: "closed", label: `Window closed at ${formatHHMM12(eH, eM)}` };
+}
 
 type TaskRow = {
   id: string;
@@ -196,6 +258,17 @@ export default function ActiveChallengeDetailScreen() {
   const { stats } = useApp();
   const { user } = useAuth();
   const streakCount = (stats as { activeStreak?: number })?.activeStreak ?? 0;
+
+  // Re-render every 30s so time-windowed task tiles unlock/lock automatically
+  // without forcing the user to pull-to-refresh.
+  const [windowTick, setWindowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setWindowTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  // windowTick is read inside the task tile render to keep TS/eslint happy
+  void windowTick;
+
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } = useInlineError();
 
@@ -401,32 +474,64 @@ export default function ActiveChallengeDetailScreen() {
               const IconComp = getTaskIcon(task);
               const estMin = task.estimated_minutes ?? (task as { duration_minutes?: number }).duration_minutes;
               const verificationType = (task.verification_type ?? task.task_type ?? "Check").toString();
+              const windowState = getTileWindowState(task.config);
+              const isLockedByWindow = !isCompleted && (windowState.status === "before" || windowState.status === "closed");
+              const subText = isLockedByWindow && windowState.label
+                ? windowState.label
+                : `${verificationType} · ~${estMin ?? "?"} min`;
+
+              const handlePress = () => {
+                if (isLockedByWindow) {
+                  // Soft haptic + no nav. The label already explains why.
+                  if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                  return;
+                }
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push({
+                  pathname: ROUTES.TASK_COMPLETE,
+                  params: {
+                    taskId: task.id,
+                    activeChallengeId: id,
+                    taskType: task.task_type ?? "manual",
+                    taskName: task.title ?? "",
+                    taskDescription: "",
+                    taskConfig: buildTaskConfigParam(task as Record<string, unknown>),
+                  },
+                } as never);
+              };
+
               return (
                 <TouchableOpacity
                   key={task.id}
-                  style={s.missionRow}
-                  onPress={() => {
-                    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    router.push({ pathname: ROUTES.TASK_COMPLETE, params: { taskId: task.id, activeChallengeId: id, taskType: task.task_type ?? "manual", taskName: task.title ?? "", taskDescription: "", taskConfig: buildTaskConfigParam(task as Record<string, unknown>) } } as never);
-                  }}
-                  activeOpacity={0.7}
+                  style={[s.missionRow, isLockedByWindow && s.missionRowLocked]}
+                  onPress={handlePress}
+                  activeOpacity={isLockedByWindow ? 1 : 0.7}
                   accessibilityRole="button"
+                  accessibilityState={{ disabled: isLockedByWindow }}
                   accessibilityLabel={
                     isCompleted
                       ? `Open completed task ${task.title ?? "Task"}`
-                      : `Start task ${task.title ?? "Task"}`
+                      : isLockedByWindow
+                        ? `${task.title ?? "Task"} — ${windowState.label ?? "locked"}`
+                        : `Start task ${task.title ?? "Task"}`
                   }
                 >
-                  <View style={[s.missionIconWrap, isCompleted && s.missionIconWrapDone]}>
-                    <IconComp size={20} color={isCompleted ? DS_COLORS.ACCENT_GREEN : DS_COLORS.ACCENT_PRIMARY} />
+                  <View style={[s.missionIconWrap, isCompleted && s.missionIconWrapDone, isLockedByWindow && s.missionIconWrapLocked]}>
+                    {isLockedByWindow ? (
+                      <Lock size={18} color={DS_COLORS.TEXT_MUTED} />
+                    ) : (
+                      <IconComp size={20} color={isCompleted ? DS_COLORS.ACCENT_GREEN : DS_COLORS.ACCENT_PRIMARY} />
+                    )}
                   </View>
                   <View style={s.missionContent}>
-                    <Text style={[s.missionTaskTitle, isCompleted && s.missionTaskTitleDone]}>{task.title ?? "Task"}</Text>
-                    <Text style={s.missionTaskSub}>{verificationType} · ~{estMin ?? "?"} min</Text>
+                    <Text style={[s.missionTaskTitle, isCompleted && s.missionTaskTitleDone, isLockedByWindow && s.missionTaskTitleLocked]}>
+                      {task.title ?? "Task"}
+                    </Text>
+                    <Text style={[s.missionTaskSub, isLockedByWindow && s.missionTaskSubLocked]}>{subText}</Text>
                   </View>
                   {isCompleted ? (
                     <Check size={20} color={DS_COLORS.ACCENT_GREEN} />
-                  ) : (
+                  ) : isLockedByWindow ? null : (
                     <Text style={s.startLink}>Start ›</Text>
                   )}
                 </TouchableOpacity>
@@ -609,6 +714,10 @@ const s = StyleSheet.create({
   missionTaskTitle: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
   missionTaskTitleDone: { textDecorationLine: "line-through", color: DS_COLORS.TEXT_MUTED },
   missionTaskSub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, marginTop: 2 },
+  missionRowLocked: { opacity: 0.65 },
+  missionIconWrapLocked: { backgroundColor: DS_COLORS.DISABLED_BG },
+  missionTaskTitleLocked: { color: DS_COLORS.TEXT_MUTED },
+  missionTaskSubLocked: { color: DS_COLORS.TEXT_MUTED },
   startLink: { fontSize: 14, fontWeight: "500", color: DS_COLORS.DISCOVER_CORAL },
   sectionTitleRules: { fontSize: 20, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginTop: 16, marginBottom: 12 },
   rulesCard: { overflow: "hidden" },
