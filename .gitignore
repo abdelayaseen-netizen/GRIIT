@@ -56,3 +56,7 @@ coverage/
 *.log
 ios/
 android/
+
+# local audit script (developer-only, not part of project)
+run_audit.sh
+audit/
