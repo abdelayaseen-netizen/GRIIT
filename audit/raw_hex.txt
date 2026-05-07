@@ -1,6 +1,0 @@
-
-lib/live-activity.ts:74:    backgroundColor: "#1A1A1A",
-lib/live-activity.ts:75:    titleColor: "#FFFFFF",
-lib/live-activity.ts:76:    subtitleColor: "#B0B0B0",
-lib/live-activity.ts:78:    progressViewLabelColor: "#FFFFFF",
-
