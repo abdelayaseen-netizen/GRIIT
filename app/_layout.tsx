@@ -475,7 +475,16 @@ function RootLayout() {
         }
         if (data?.type === "active_task_timer" && typeof data.route === "string") {
           const r = data.route;
-          router.push((r.startsWith(ROUTES.TASK_RUN) || r.startsWith(ROUTES.TASK_CHECKIN) ? r : ROUTES.TASK_RUN) as never);
+          // Allow any in-app task or challenge surface through. The legacy
+          // /task/run and /task/checkin screens are kept for back-compat,
+          // but unified timer tasks (prayer, etc.) route to
+          // /challenge/active/{id} — which the previous guard rejected,
+          // dumping users into the orphaned legacy run screen.
+          const isAllowed =
+            r.startsWith("/task/") ||
+            r.startsWith("/challenge/") ||
+            r.startsWith(ROUTES.TABS_HOME);
+          router.push((isAllowed ? r : ROUTES.TABS_HOME) as never);
           return;
         }
         router.push(ROUTES.ACTIVITY as never);
