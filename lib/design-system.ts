@@ -1045,6 +1045,16 @@ export const DS_COLORS_V2 = {
     warningSoft: '#FAEEDA',
     danger: '#A32D2D',
     dangerSoft: '#FCEBEB',
+
+    // At-risk state on dark hero surface — 1.5px border color.
+    // Distinct from `danger` (#A32D2D), which is meant for light surfaces.
+    // c-red 400 (next stop up the red ramp from danger = c-red 600).
+    dangerOnDark: '#E24B4A',
+
+    // At-risk state subtitle text on dark hero surface.
+    // Lighter than `dangerOnDark` for legibility against near-black background.
+    // c-red 200.
+    dangerOnDarkText: '#F09595',
   },
 
   // Difficulty (GRIIT-specific)
