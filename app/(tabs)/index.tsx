@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { Flame, Zap, Target } from "lucide-react-native";
+import { Target } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +30,7 @@ import type { TodayCheckinForUser, StatsFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
 import { ActiveTaskCard } from "@/components/home/ActiveTaskCard";
 import StreakHeroV2 from "@/components/home/StreakHeroV2";
-import DailyBonus from "@/components/home/DailyBonus";
+import DailyBonus from "@/components/home/DailyBonusV2";
 import GoalCard from "@/components/home/GoalCard";
 import PointsExplainer from "@/components/home/PointsExplainer";
 import WeekStrip from "@/components/home/WeekStrip";
@@ -38,11 +38,10 @@ import NextUnlock from "@/components/home/NextUnlock";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { EmptyState } from "@/components/ui/EmptyState";
-import Card from "@/components/shared/Card";
 import { SkeletonHomeChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_SPACING_V2, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -484,21 +483,6 @@ export default function HomeScreen() {
             <Text style={s.greeting}>{getGreeting()}</Text>
             <Text style={s.word}>GRIIT</Text>
           </View>
-          <View style={s.pills}>
-            <View style={[s.pill, streak > 0 && s.pillWarm]}>
-              <Flame size={13} color={DS_COLORS.DISCOVER_CORAL} />
-              <Text style={s.pillText}>{showStatDash ? "—" : streakPillLabel}</Text>
-            </View>
-            <TouchableOpacity accessibilityRole="button"
-              style={[s.pill, points > 0 && s.pillPurple]}
-              onPress={() => setShowPointsExplainer(true)}
-              activeOpacity={0.7}
-              accessibilityLabel={`${points} discipline points. Tap to learn more.`}
-            >
-              <Zap size={13} color={DS_COLORS.DISCOVER_BLUE} />
-              <Text style={s.pillText}>{showStatDash ? "—" : String(points)}</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {(() => {
@@ -523,30 +507,32 @@ export default function HomeScreen() {
             (midnight.getTime() - now.getTime()) / 60000,
           );
           return (
-            <StreakHeroV2
-              streak={streak}
-              // TODO: wire lastStreak from store when previous-streak field
-              // lands. Without this, the lost / comeback state never triggers
-              // for users whose streak just broke.
-              lastStreak={0}
-              minutesRemaining={minutesRemaining}
-              tasksRemaining={tasksRemaining}
-              totalTasksToday={totalTasksToday}
-              freezesAvailable={freezesAvailable}
-              // TODO: wire freezeUsedToday from store when the
-              // freeze-applied-today flag lands (profiles.last_freeze_used_at
-              // exists in DB per lib/notifications.ts:13 — needs surfacing).
-              // The `&& !hasAcknowledgedFreezeUsed` clause already exists so
-              // dismissal works the moment the real flag arrives; until then
-              // it's a no-op AND with `false`.
-              freezeUsedToday={false && !hasAcknowledgedFreezeUsed}
-              onStartFirstTask={scrollToGoalsSection}
-              onSaveStreak={scrollToGoalsSection}
-              onUseFreeze={() => setShowFreezeModal(true)}
-              onAcknowledgeFreezeUsed={() => setHasAcknowledgedFreezeUsed(true)}
-              onSkip={() => {}}
-              onStartComeback={scrollToGoalsSection}
-            />
+            <View style={s.heroWrap}>
+              <StreakHeroV2
+                streak={streak}
+                // TODO: wire lastStreak from store when previous-streak field
+                // lands. Without this, the lost / comeback state never triggers
+                // for users whose streak just broke.
+                lastStreak={0}
+                minutesRemaining={minutesRemaining}
+                tasksRemaining={tasksRemaining}
+                totalTasksToday={totalTasksToday}
+                freezesAvailable={freezesAvailable}
+                // TODO: wire freezeUsedToday from store when the
+                // freeze-applied-today flag lands (profiles.last_freeze_used_at
+                // exists in DB per lib/notifications.ts:13 — needs surfacing).
+                // The `&& !hasAcknowledgedFreezeUsed` clause already exists so
+                // dismissal works the moment the real flag arrives; until then
+                // it's a no-op AND with `false`.
+                freezeUsedToday={false && !hasAcknowledgedFreezeUsed}
+                onStartFirstTask={scrollToGoalsSection}
+                onSaveStreak={scrollToGoalsSection}
+                onUseFreeze={() => setShowFreezeModal(true)}
+                onAcknowledgeFreezeUsed={() => setHasAcknowledgedFreezeUsed(true)}
+                onSkip={() => {}}
+                onStartComeback={scrollToGoalsSection}
+              />
+            </View>
           );
         })()}
 
@@ -554,7 +540,6 @@ export default function HomeScreen() {
           securedDateKeys={securedKeys}
           currentStreak={streak}
           freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0}
-          hasEverSecured={hasEverSecured}
         />
 
         {statsAllZero ? (
@@ -569,40 +554,7 @@ export default function HomeScreen() {
               <Text style={s.welcomeCtaText}>Start your first challenge</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <View style={s.statsRow}>
-            <Card padded={false} containerStyle={s.stat}>
-              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.ACCENT_TINT }]}>
-                <Flame size={16} color={DS_COLORS.DISCOVER_CORAL} />
-              </View>
-              <Text style={s.statValueNum}>{displayStreak}</Text>
-              <Text style={s.statLabelLower}>streak</Text>
-            </Card>
-            <Card padded={false} containerStyle={s.stat}>
-              <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.purpleTintWarm }]}>
-                <Zap size={16} color={DS_COLORS.CATEGORY_MIND} />
-              </View>
-              <Text style={s.statValueNum}>{points}</Text>
-              <Text style={s.statLabelLower}>points</Text>
-            </Card>
-            <TouchableOpacity accessibilityRole="button"
-              style={s.statTouchable}
-              activeOpacity={0.85}
-              onPress={() => setShowRankModal(true)}
-              accessibilityLabel="View rank ladder"
-            >
-              <Card padded={false} containerStyle={s.stat}>
-                <View style={[s.statIconWrap, { backgroundColor: DS_COLORS.GREEN_BG }]}>
-                  <Target size={16} color={DS_COLORS.GREEN} />
-                </View>
-                <Text style={s.statValueNum} numberOfLines={1}>
-                  {rank}
-                </Text>
-                <Text style={s.statLabelLower}>rank</Text>
-              </Card>
-            </TouchableOpacity>
-          </View>
-        )}
+        ) : null}
 
         <DailyBonus />
 
@@ -910,6 +862,7 @@ export default function HomeScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  heroWrap: { paddingHorizontal: DS_SPACING_V2.md },
   headerRow: {
     paddingHorizontal: DS_SPACING.xl,
     paddingTop: DS_SPACING.md,
