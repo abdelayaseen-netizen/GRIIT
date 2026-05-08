@@ -254,7 +254,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   miniRoot: {
-    width: 160,
+    flex: 1,
     backgroundColor: DS_COLORS.WHITE,
     borderRadius: DS_RADIUS.LG,
     padding: 16,

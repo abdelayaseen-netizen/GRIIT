@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_COLORS_V2, DS_TYPE, DS_RADIUS_V2 } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
 
 export type RecentCompletionItem = {
@@ -101,7 +102,7 @@ export function ActivityTicker() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.liveDot} />
-        <Text style={styles.headerText}>Happening now</Text>
+        <Text style={styles.headerText}>Recent activity</Text>
       </View>
       <FlatList
         horizontal
@@ -137,9 +138,9 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.DISCOVER_GREEN,
   },
   headerText: {
-    fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
+    ...DS_TYPE.label,
+    color: DS_COLORS_V2.text.secondary,
+    textTransform: "uppercase",
   },
   scroll: {
     gap: 8,
@@ -151,14 +152,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: DS_COLORS.SURFACE,
-    borderRadius: DS_RADIUS.MD,
+    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: DS_RADIUS_V2.md,
     padding: 8,
     paddingRight: 12,
     minWidth: 220,
     maxWidth: 280,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS.BORDER,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
   avatar: {
     width: 24,
