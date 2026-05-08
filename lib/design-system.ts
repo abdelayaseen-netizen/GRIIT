@@ -1081,7 +1081,7 @@ export const DS_TYPE = {
   display: {
     fontSize: 64,
     fontWeight: '500' as const,
-    lineHeight: 0.95,
+    lineHeight: 61, // was 0.95 (CSS multiplier; RN expects absolute pixels)
     letterSpacing: -2.56, // -0.04em at 64pt
     // STREAK HERO NUMBER ONLY. Never anywhere else.
   },
