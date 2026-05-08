@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { DS_COLORS, getCategoryColors, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS, DS_COLORS_V2, DS_RADIUS_V2 } from "@/lib/design-system"
 import { Avatar } from "@/components/Avatar";
 
 const HERO_COPY: Record<string, string> = {
@@ -49,12 +49,9 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
   const showWeekCount = weekJoins >= 5;
   const socialLine = showWeekCount ? `${weekJoins} joined this week` : "Trending now";
   const previews = (challenge.joinPreview ?? []).slice(0, 3);
-  const categoryColors = getCategoryColors(challenge.category ?? "discipline");
   const copy = HERO_COPY[challenge.title] ?? challenge.description ?? "Lock in. Show up daily. Build unbreakable discipline.";
   return (
-    <View style={[s.card, { backgroundColor: categoryColors.header }]}>
-      <View style={s.glowBottom} />
-      <View style={s.glowTop} />
+    <View style={s.card}>
       <View style={s.content}>
         <View style={s.row1}>
           <View style={s.trendingWrap}>
@@ -62,11 +59,11 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
             <Text style={s.trendingText}>TRENDING NOW</Text>
           </View>
           <View style={s.durationPill}>
-            <Text style={s.durationText}>{duration} days</Text>
+            <Text style={s.durationText}>{duration} {duration === 1 ? "day" : "days"}</Text>
           </View>
         </View>
         <Text style={s.title}>{challenge.title}</Text>
-        <Text style={[s.desc, { color: categoryColors.subtitleText }]}>{copy}</Text>
+        <Text style={s.desc}>{copy}</Text>
         <View style={s.socialBar} accessibilityRole="none" accessibilityLabel={socialLine}>
           {previews.length > 0 ? (
             <View style={s.avatarCluster}>
@@ -100,9 +97,7 @@ export const HeroFeaturedCard = React.memo(function HeroFeaturedCard({
 });
 
 const s = StyleSheet.create({
-  card: { borderRadius: DS_RADIUS.XL, backgroundColor: DS_COLORS.DISCOVER_HERO_DARK_BG, overflow: "hidden", marginTop: 24 },
-  glowBottom: { position: "absolute", bottom: -20, right: -20, width: 160, height: 160, borderRadius: DS_RADIUS.PILL, backgroundColor: DS_COLORS.HERO_CARD_PRIMARY_GLOW_25 },
-  glowTop: { position: "absolute", top: -10, left: -10, width: 100, height: 100, borderRadius: DS_RADIUS.PILL, backgroundColor: DS_COLORS.HERO_CARD_AMBER_GLOW_10 },
+  card: { borderRadius: DS_RADIUS_V2.xl, backgroundColor: DS_COLORS_V2.surface.heroDark, overflow: "hidden", marginTop: 24 },
   content: { paddingHorizontal: 22, paddingVertical: 22 },
   row1: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   trendingWrap: { flexDirection: "row", alignItems: "center", gap: 7 },
@@ -111,7 +106,7 @@ const s = StyleSheet.create({
   durationPill: { borderRadius: DS_RADIUS.MD, paddingVertical: 4, paddingHorizontal: 10, backgroundColor: DS_COLORS.OVERLAY_WHITE_8 },
   durationText: { fontSize: 10, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_ON_DARK_40 },
   title: { fontSize: 21, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, color: DS_COLORS.WHITE, lineHeight: 24, letterSpacing: -0.4 },
-  desc: { marginTop: 8, fontSize: 12, lineHeight: 17, color: DS_COLORS.TEXT_ON_DARK_45 },
+  desc: { marginTop: 8, fontSize: 12, lineHeight: 17, color: DS_COLORS_V2.text.onDarkSecondary },
   socialBar: {
     marginTop: 14,
     borderRadius: DS_RADIUS.MD,

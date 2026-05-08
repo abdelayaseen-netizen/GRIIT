@@ -21,7 +21,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_COLORS, DS_RADIUS, DS_COLORS_V2, DS_TYPE, DS_SPACING_V2 } from "@/lib/design-system"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkeletonHeroCard, SkeletonChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
@@ -462,16 +462,8 @@ export default function DiscoverScreen() {
             <View>
           <View style={discoverStyles.headerPad}>
             <Text style={discoverStyles.title}>Discover</Text>
-            <Text style={discoverStyles.subtitle}>What are you willing to commit to?</Text>
             {!isPremium ? (
-              <Text
-                style={[
-                  discoverStyles.activeLimitText,
-                  { color: activeCount >= 3 ? DS_COLORS.DISCOVER_CORAL : DS_COLORS.TEXT_MUTED },
-                ]}
-              >
-                {activeCount}/3 challenges active
-              </Text>
+              <Text style={discoverStyles.subtitle}>{activeCount}/3 challenges active</Text>
             ) : null}
           </View>
 
@@ -653,12 +645,14 @@ export default function DiscoverScreen() {
                     style={discoverStyles.sectionHeaderMargin}
                   />
                   <FlatList
-                    horizontal
                     data={twentyFourHour}
                     keyExtractor={keyExtractorChallengeId}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={discoverStyles.horizontalListContent}
+                    numColumns={2}
+                    columnWrapperStyle={discoverStyles.gridRow}
+                    contentContainerStyle={discoverStyles.gridContent}
                     renderItem={renderTwentyFourHourItem}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
                     initialNumToRender={10}
                     maxToRenderPerBatch={10}
                     windowSize={5}
@@ -840,9 +834,17 @@ export default function DiscoverScreen() {
 const discoverStyles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
   headerPad: { paddingHorizontal: 20, paddingTop: 8 },
-  title: { fontSize: 26, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, letterSpacing: -0.5 },
-  subtitle: { fontSize: 12, fontWeight: "500", color: DS_COLORS.TEXT_MUTED, marginTop: 4 },
+  title: { ...DS_TYPE.title.lg, color: DS_COLORS_V2.text.primary },
+  subtitle: { ...DS_TYPE.caption, color: DS_COLORS_V2.text.secondary, marginTop: 4 },
   activeLimitText: { fontSize: 12, fontWeight: "500", marginTop: 4 },
+  gridRow: {
+    gap: DS_SPACING_V2.xs,
+    marginBottom: DS_SPACING_V2.xs,
+    paddingHorizontal: DS_SPACING_V2.md,
+  },
+  gridContent: {
+    paddingBottom: DS_SPACING_V2.xs,
+  },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
