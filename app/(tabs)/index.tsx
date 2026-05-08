@@ -29,7 +29,7 @@ import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import type { TodayCheckinForUser, StatsFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
 import { ActiveTaskCard } from "@/components/home/ActiveTaskCard";
-import StreakHero from "@/components/home/StreakHero";
+import StreakHeroV2 from "@/components/home/StreakHeroV2";
 import DailyBonus from "@/components/home/DailyBonus";
 import GoalCard from "@/components/home/GoalCard";
 import PointsExplainer from "@/components/home/PointsExplainer";
@@ -132,6 +132,14 @@ export default function HomeScreen() {
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showRankModal, setShowRankModal] = React.useState(false);
   const [showFreezeInfoModal, setShowFreezeInfoModal] = React.useState(false);
+  // StreakHeroV2 freeze-used acknowledgement (PR#2 of design system v2 migration).
+  // FIXME: persist to AsyncStorage with today's date as key once the
+  // freeze-used real flag (profiles.last_freeze_used_at) is surfaced to the
+  // client. Today this only matters within a single session — when the user
+  // backgrounds and returns, they'd see the freeze-used card again, which is
+  // fine for now since freezeUsedToday is hardcoded false anyway.
+  const [hasAcknowledgedFreezeUsed, setHasAcknowledgedFreezeUsed] =
+    React.useState(false);
   const scrollRef = useRef<FlashList<{ key: string }> | null>(null);
   const goalsSectionYRef = useRef(0);
   const feedSectionYRef = useRef(0);
@@ -493,13 +501,54 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <StreakHero
-          streak={displayStreak}
-          ringProgress={ringProgress}
-          onStartFirstTask={scrollToGoalsSection}
-          freezeLine={streakFreezeLine}
-          onFreezeLinePress={streakFreezeLine ? onStreakFreezeLinePress : undefined}
-        />
+        {(() => {
+          // StreakHeroV2 wiring (PR#2 of design system v2 migration).
+          // Inline computations rather than helpers per migration plan;
+          // we'll factor these out in a follow-up PR if multiple screens
+          // need them.
+          const totalTasksToday = challengeGroups.reduce(
+            (sum, g) => sum + g.goals.length,
+            0,
+          );
+          const tasksDoneToday = challengeGroups.reduce(
+            (sum, g) => sum + g.goals.filter((gl) => gl.completed).length,
+            0,
+          );
+          const tasksRemaining = Math.max(0, totalTasksToday - tasksDoneToday);
+          const freezesAvailable = freezeStatus?.remaining ?? 0;
+          const now = new Date();
+          const midnight = new Date(now);
+          midnight.setHours(24, 0, 0, 0);
+          const minutesRemaining = Math.floor(
+            (midnight.getTime() - now.getTime()) / 60000,
+          );
+          return (
+            <StreakHeroV2
+              streak={streak}
+              // TODO: wire lastStreak from store when previous-streak field
+              // lands. Without this, the lost / comeback state never triggers
+              // for users whose streak just broke.
+              lastStreak={0}
+              minutesRemaining={minutesRemaining}
+              tasksRemaining={tasksRemaining}
+              totalTasksToday={totalTasksToday}
+              freezesAvailable={freezesAvailable}
+              // TODO: wire freezeUsedToday from store when the
+              // freeze-applied-today flag lands (profiles.last_freeze_used_at
+              // exists in DB per lib/notifications.ts:13 — needs surfacing).
+              // The `&& !hasAcknowledgedFreezeUsed` clause already exists so
+              // dismissal works the moment the real flag arrives; until then
+              // it's a no-op AND with `false`.
+              freezeUsedToday={false && !hasAcknowledgedFreezeUsed}
+              onStartFirstTask={scrollToGoalsSection}
+              onSaveStreak={scrollToGoalsSection}
+              onUseFreeze={() => setShowFreezeModal(true)}
+              onAcknowledgeFreezeUsed={() => setHasAcknowledgedFreezeUsed(true)}
+              onSkip={() => {}}
+              onStartComeback={scrollToGoalsSection}
+            />
+          );
+        })()}
 
         <WeekStrip
           securedDateKeys={securedKeys}
