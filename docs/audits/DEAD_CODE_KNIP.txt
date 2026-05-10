@@ -1,0 +1,252 @@
+Unused files (24)
+components/home/ActiveChallenges.tsx             
+components/home/ChallengeCard.tsx                
+components/home/DailyBonus.tsx                   
+components/home/DailyStatus.tsx                  
+components/home/EmptyChallengesCard.tsx          
+components/home/ExploreChallengesButton.tsx      
+components/home/index.ts                         
+components/home/StreakHero.tsx                   
+components/profile/AchievementsSection.tsx       
+components/profile/CompletedChallengesSection.tsx
+components/profile/DisciplineCalendar.tsx        
+components/profile/DisciplineGrowthCard.tsx      
+components/profile/DisciplineScoreCard.tsx       
+components/profile/index.ts                      
+components/profile/LifetimeStatsCard.tsx         
+components/profile/ProfileCompletionCard.tsx     
+components/profile/ProfileHeader.tsx             
+components/profile/ShareDisciplineCard.tsx       
+components/profile/SocialStatsCard.tsx           
+components/profile/TierProgressBar.tsx           
+components/ui/Card.tsx                           
+hooks/useDebounce.ts                             
+hooks/useJournalSubmit.ts                        
+styles/discover-styles.ts                        
+Unused dependencies (5)
+@trpc/client               package.json:37:6
+expo-blur                  package.json:45:6
+expo-camera                package.json:46:6
+expo-symbols               package.json:69:6
+react-native-purchases-ui  package.json:81:6
+Unused devDependencies (2)
+depcheck  package.json:101:6
+ts-prune  package.json:105:6
+Unlisted dependencies (1)
+docx  scripts/audit/build_scorecard.mjs:28:8
+Unresolved imports (1)
+babel-preset-expo  babel.config.js
+Unused exports (125)
+getDescriptionForKey             function  backend/lib/achievements.ts:155:17              
+invalidateCache                  function  backend/lib/cache.ts:43:23                      
+mapTaskRowToApi                  function  backend/lib/challenge-tasks.ts:88:17            
+getTaskType                      function  backend/lib/challenge-tasks.ts:170:17           
+toTaskType                       function  backend/lib/challenge-tasks.ts:197:17           
+buildTaskConfigFromInput         function  backend/lib/challenge-tasks.ts:204:17           
+pickTemplateForDate              function  backend/lib/daily-challenge-generator.ts:12:17  
+formatDateKeyInTimeZone          function  backend/lib/date-utils.ts:18:17                 
+dateKeyFromDate                  function  backend/lib/date-utils.ts:114:17                
+parseDateKey                     function  backend/lib/date-utils.ts:119:17                
+default                          variable  backend/lib/logger.ts:16:16                     
+COMEBACK_TEMPLATES                         backend/lib/push-reminder.ts:109:14             
+escapePostgrestFilter            function  backend/lib/sanitize-search.ts:25:17            
+refreshAccessToken               function  backend/lib/strava-service.ts:92:23             
+getActivityById                  function  backend/lib/strava-service.ts:178:23            
+INTENSITY_OPTIONS                          components/onboarding/onboarding-theme.ts:119:14
+CONSEQUENCES                               components/settings/AccountDangerZone.tsx:17:14 
+REMINDER_PRESETS                           components/settings/ReminderSection.tsx:21:14   
+SHARE_CARD_WIDTH                           components/ShareCard.tsx:6:14                   
+SHARE_CARD_HEIGHT                          components/ShareCard.tsx:7:14                   
+RUN_PICKER_ITEM_H                          components/task/RunPickerColumn.tsx:5:14        
+RUN_PICKER_PAD                             components/task/RunPickerColumn.tsx:6:14        
+default                          function  components/TaskEditorModal.tsx:259:25           
+Title                                      components/typography/index.ts:2:21             
+default                          function  components/typography/Title.tsx:27:25           
+CategoryTag                                components/ui/CategoryTag.tsx:28:14             
+ChallengeCard24h                           components/ui/ChallengeCard24h.tsx:115:14       
+ChallengeCardFeatured                      components/ui/ChallengeCardFeatured.tsx:127:14  
+ChallengeRowCard                           components/ui/ChallengeRowCard.tsx:94:14        
+Chip                             function  components/ui/Chip.tsx:26:17                    
+Screen                                     components/ui/index.ts:1:10                     
+PrimaryButton                              components/ui/index.ts:2:10                     
+Input                                      components/ui/index.ts:3:10                     
+Chip                                       components/ui/index.ts:4:10                     
+SearchBar                                  components/ui/index.ts:5:10                     
+SectionHeader                              components/ui/index.ts:6:10                     
+EmptyState                                 components/ui/index.ts:7:10                     
+ChallengeCard24h                           components/ui/index.ts:8:10                     
+ChallengeCardFeatured                      components/ui/index.ts:9:10                     
+ChallengeRowCard                           components/ui/index.ts:10:10                    
+CategoryTag                                components/ui/index.ts:12:10                    
+Input                                      components/ui/Input.tsx:28:14                   
+Screen                           function  components/ui/Screen.tsx:15:17                  
+SearchBar                        function  components/ui/SearchBar.tsx:6:17                
+SectionHeader                              components/ui/SectionHeader.tsx:22:14           
+getIdentityTier                  function  constants/identity-copy.ts:10:17                
+getIdentityLine                  function  constants/identity-copy.ts:21:17                
+useApi                           function  contexts/ApiContext.tsx:43:17                   
+reset                            function  lib/analytics.ts:143:17                         
+trackNotificationSent            function  lib/analytics.ts:307:17                         
+fetchWithTimeout                 function  lib/api.ts:70:23                                
+AVATAR_COLORS                              lib/avatar.ts:9:14                              
+BADGE_DESCRIPTIONS                         lib/badge-descriptions.ts:2:14                  
+getChallengeTimeRemaining        function  lib/challenge-timer.ts:6:17                     
+formatTimeRemaining              function  lib/challenge-timer.ts:25:17                    
+formatMonthShort                 function  lib/date-utils.ts:68:17                         
+getRefFromUrl                    function  lib/deep-links.ts:25:17                         
+CHALLENGE_CATEGORY_COLORS                  lib/design-system.ts:926:14                     
+DEFAULT_CATEGORY_COLOR                     lib/design-system.ts:959:14                     
+DS_SHADOW                                  lib/design-system.ts:1212:14                    
+DS_MOTION                                  lib/design-system.ts:1221:14                    
+DS_ICON                                    lib/design-system.ts:1234:14                    
+DS_AVATAR                                  lib/design-system.ts:1246:14                    
+DS_PHOTO                                   lib/design-system.ts:1261:14                    
+DS_BREAKPOINT                              lib/design-system.ts:1271:14                    
+DS_CARD                                    lib/design-system.ts:1285:14                    
+PREMIUM_FEATURES                           lib/feature-flags.ts:37:14                      
+updateLiveActivity               function  lib/live-activity.ts:124:17                     
+hasActiveLiveActivity            function  lib/live-activity.ts:155:17                     
+TASK_PREP_COPY                             lib/notification-copy.ts:110:14                 
+default                          variable  lib/notification-copy.ts:230:16                 
+SOCIAL_TRIGGER_ID                          lib/notifications.ts:61:14                      
+ENABLE_TWO_HOURS_LEFT                      lib/notifications.ts:79:14                      
+formatTimeForNotification        function  lib/notifications.ts:89:17                      
+setupNotificationChannel         function  lib/notifications.ts:207:23                     
+registerForPushNotifications               lib/notifications.ts:639:14                     
+cancelChallengeReminders         function  lib/notifications.ts:712:23                     
+getPendingChallengeId            function  lib/onboarding-pending.ts:17:23                 
+getOnboardingAnswers             function  lib/onboarding-pending.ts:26:23                 
+setOnboardingAnswers             function  lib/onboarding-pending.ts:36:23                 
+clearOnboardingPending           function  lib/onboarding-pending.ts:42:23                 
+clearOnboardingAnswers           function  lib/onboarding-pending.ts:47:23                 
+isPostHogEnabled                 function  lib/posthog.ts:36:17                            
+prefetchChallengeById            function  lib/prefetch-queries.ts:10:17                   
+isPremium                        function  lib/premium.ts:24:17                            
+isAutoGeneratedUsername          function  lib/profile-display.ts:3:17                     
+GRIIT_QUOTES                               lib/quotes.ts:2:14                              
+DISCIPLINE_QUOTES                          lib/quotes.ts:36:14                             
+getDailyQuoteObject              function  lib/quotes.ts:44:17                             
+getDailyQuote                    function  lib/quotes.ts:59:17                             
+initializePurchases                        lib/revenue-cat.ts:8:27                         
+configureRevenueCat                        lib/revenue-cat.ts:9:27                         
+getCustomerInfo                            lib/revenue-cat.ts:14:3                         
+isExpoGo                                   lib/revenue-cat.ts:17:14                        
+checkEntitlement                 function  lib/revenue-cat.ts:20:23                        
+shouldPromptOnMilestone          function  lib/review-prompt.ts:55:17                      
+stripHtml                        function  lib/sanitize.ts:10:17                           
+MAX_LENGTHS                                lib/sanitize.ts:16:14                           
+sanitizeText                     function  lib/sanitize.ts:27:17                           
+sanitizeUsername                 function  lib/sanitize.ts:44:17                           
+sanitizeBio                      function  lib/sanitize.ts:48:17                           
+sanitizeDisplayName              function  lib/sanitize.ts:52:17                           
+initSentry                                 lib/sentry.ts:24:14                             
+Sentry                                     lib/sentry.ts:68:10                             
+shareDaySecured                  function  lib/share.ts:94:23                              
+shareMilestone                   function  lib/share.ts:113:23                             
+shareApp                         function  lib/share.ts:192:23                             
+initializeRevenueCat             function  lib/subscription.ts:51:23                       
+syncSubscriptionToSupabase       function  lib/subscription.ts:105:23                      
+SUBSCRIPTION_PRODUCT_IDS                   lib/subscription.ts:222:14                      
+JOURNAL_PROMPTS                            lib/task-helpers.ts:4:14                        
+getEndTargetsForTaskType         function  lib/task-progress.ts:65:17                      
+DARK_THEME                                 lib/theme-palettes.ts:77:14                     
+colors                                     lib/theme/index.ts:1:10                         
+typography                                 lib/theme/index.ts:2:10                         
+spacing                                    lib/theme/index.ts:3:10                         
+radius                                     lib/theme/index.ts:4:10                         
+shadows                                    lib/theme/index.ts:5:10                         
+borders                                    lib/theme/index.ts:6:10                         
+iconSizes                                  lib/theme/index.ts:6:19                         
+measures                                   lib/theme/index.ts:6:30                         
+shadows                       t            lib/theme/tokens.ts:134:14                      
+borders                       t            lib/theme/tokens.ts:159:14                      
+computeTimeWindow                function  lib/time-enforcement.ts:36:17                   
+getAvatarColor                   function  lib/utils.ts:14:17                              
+Unused exported types (103)
+AchievementKey                     type       backend/lib/achievement-definitions.ts:54:13    
+TaskConfig                         type       backend/lib/challenge-tasks.ts:8:15             
+DailyChallengeTaskTemplate         interface  backend/lib/daily-challenge-templates.ts:6:18   
+ActiveChallengeRow                 type       backend/trpc/guards.ts:4:13                     
+DaySecureRow                       interface  backend/types/db.ts:13:18                       
+ChallengeTaskRow                   interface  backend/types/db.ts:19:18                       
+ActiveChallengeWithTasks           interface  backend/types/db.ts:25:18                       
+ParticipationType                  type       backend/types/db.ts:32:13                       
+RunStatus                          type       backend/types/db.ts:35:13                       
+ChallengeMemberRow                 interface  backend/types/db.ts:60:18                       
+ChallengeTeamMemberWithStatus      interface  backend/types/db.ts:70:18                       
+SharedGoalLogRow                   interface  backend/types/db.ts:79:18                       
+HeroFeaturedCategory               type       components/challenges/HeroFeaturedCard.tsx:17:13
+WhoBasics                          type       components/create/steps/StepBasics.tsx:10:13    
+PaywallVariant                     type       components/paywall/types.ts:4:13                
+BaseCardProps                      interface  components/share/ShareCards.tsx:9:18            
+ShareCardType                      type       components/ShareCard.tsx:9:13                   
+ActiveTaskTimerType                type       lib/active-task-timer.ts:14:13                  
+PackTaskPhoto                      type       lib/challenge-packs.ts:8:13                     
+PackTaskDef                        type       lib/challenge-packs.ts:10:13                    
+StorageKey                         type       lib/constants/storage-keys.ts:22:13             
+DSColors                           type       lib/design-system.ts:967:13                     
+DSTypography                       type       lib/design-system.ts:968:13                     
+DSSpacing                          type       lib/design-system.ts:969:13                     
+DSRadius                           type       lib/design-system.ts:970:13                     
+DSShadows                          type       lib/design-system.ts:971:13                     
+DSMeasures                         type       lib/design-system.ts:972:13                     
+LiveActivityTimerType              type       lib/live-activity.ts:23:13                      
+OnboardingAnswers                  type       lib/onboarding-pending.ts:10:13                 
+RetentionConfig                    type       lib/retention-config.ts:25:13                   
+SubscriptionStatus                 type       lib/subscription.ts:227:13                      
+Colors                             type       lib/theme/colors.ts:34:13                       
+Radius                             type       lib/theme/radius.ts:12:13                       
+Shadows                            type       lib/theme/shadows.ts:23:13                      
+Spacing                            type       lib/theme/spacing.ts:13:13                      
+Colors                          t  type       lib/theme/tokens.ts:199:13                      
+Typography                      t  type       lib/theme/tokens.ts:200:13                      
+Spacing                         t  type       lib/theme/tokens.ts:201:13                      
+Radius                          t  type       lib/theme/tokens.ts:202:13                      
+Shadows                         t  type       lib/theme/tokens.ts:203:13                      
+IconSizes                       t  type       lib/theme/tokens.ts:204:13                      
+Typography                         type       lib/theme/typography.ts:19:13                   
+TimeWindow                         interface  lib/time-enforcement.ts:3:18                    
+TimeWindowStatus                   type       lib/time-enforcement.ts:8:13                    
+ActiveSession                      type       store/activeSessionStore.ts:3:13                
+NotificationPrefs                  type       store/notificationPrefsStore.ts:5:13            
+ProofSharePayload                  type       store/proofSharePromptStore.ts:3:13             
+TaskType                           type       types/index.ts:1:13                             
+MoodLevel                          type       types/index.ts:21:13                            
+BodyState                          type       types/index.ts:23:13                            
+JournalConfig                      interface  types/index.ts:47:18                            
+JournalEntry                       interface  types/index.ts:59:18                            
+GoalMode                           type       types/index.ts:68:13                            
+TeamStatus                         type       types/index.ts:69:13                            
+TeamMemberRole                     type       types/index.ts:70:13                            
+InviteType                         type       types/index.ts:71:13                            
+InviteStatus                       type       types/index.ts:72:13                            
+CompletionType                     type       types/index.ts:76:13                            
+VerificationType                   type       types/index.ts:78:13                            
+ChallengeCategory                  type       types/index.ts:80:13                            
+ChallengeDifficulty                type       types/index.ts:82:13                            
+ChallengeMode                      type       types/index.ts:84:13                            
+TaskStatus                         type       types/index.ts:86:13                            
+ChallengeStatus                    type       types/index.ts:107:13                           
+CommunityEventType                 type       types/index.ts:109:13                           
+User                               interface  types/index.ts:111:18                           
+ChallengePolicy                    interface  types/index.ts:122:18                           
+LocationPolicy                     interface  types/index.ts:140:18                           
+TimeWindowPolicy                   interface  types/index.ts:149:18                           
+SessionPolicy                      interface  types/index.ts:160:18                           
+TaskRules                          interface  types/index.ts:167:18                           
+TaskTemplate                       interface  types/index.ts:185:18                           
+ReplayRules                        interface  types/index.ts:198:18                           
+DailyChallengeConfig               interface  types/index.ts:206:18                           
+Challenge                          interface  types/index.ts:214:18                           
+UserChallenge                      interface  types/index.ts:242:18                           
+ReplayInstance                     interface  types/index.ts:256:18                           
+DailyRun                           interface  types/index.ts:266:18                           
+GeoTimeCheckinVerificationData     interface  types/index.ts:278:18                           
+VerificationData                   interface  types/index.ts:312:18                           
+TaskState                          interface  types/index.ts:341:18                           
+CommunityEvent                     interface  types/index.ts:352:18                           
+Medal                              interface  types/index.ts:367:18                           
+ActivityItem                       interface  types/index.ts:375:18                           
+SuggestedUser                      interface  types/index.ts:391:18                           
+ProofSummary                       interface  types/index.ts:402:18                           
+HomeFeedItem          

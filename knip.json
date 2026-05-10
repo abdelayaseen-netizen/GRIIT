@@ -1,0 +1,40 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "app/**/*.{ts,tsx}",
+    "backend/server.ts",
+    "backend/trpc/app-router.ts",
+    "scripts/**/*.{js,ts,mjs}",
+    "metro.config.js",
+    "babel.config.js",
+    "eslint.config.js",
+    "vitest.config.ts",
+    "expo-env.d.ts"
+  ],
+  "project": [
+    "**/*.{ts,tsx,js,mjs}!"
+  ],
+  "ignore": [
+    ".expo/**",
+    "dist/**",
+    "ios/**",
+    "android/**",
+    "docs/**",
+    "node_modules/**",
+    "griit_brand/**",
+    "tests/**"
+  ],
+  "ignoreDependencies": [
+    "expo-router",
+    "expo-updates",
+    "expo-status-bar",
+    "babel-plugin-transform-remove-console",
+    "@babel/core",
+    "@expo/ngrok",
+    "concurrently"
+  ],
+  "ignoreBinaries": [
+    "tsx",
+    "expo"
+  ]
+}

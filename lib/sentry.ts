@@ -20,9 +20,6 @@ export function initialiseSentry(): void {
   });
 }
 
-/** @deprecated Use `initialiseSentry` — kept for existing imports. */
-export const initSentry = initialiseSentry;
-
 export function setSentryUser(userId: string, email?: string): void {
   if (!SENTRY_DSN) return;
   Sentry.setUser({ id: userId, email });
@@ -64,5 +61,3 @@ export function captureMessage(message: string, level: Sentry.SeverityLevel = "i
     Sentry.captureMessage(message, level);
   }
 }
-
-export { Sentry };

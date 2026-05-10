@@ -248,7 +248,7 @@ export default function StreakHeroV2(props: Props) {
           color="secondary"
           style={{ marginTop: DS_SPACING_V2.xs }}
         >
-          Your streak is safe. You'll need a real task tomorrow.
+          Your streak is safe. You&apos;ll need a real task tomorrow.
         </Caption>
         <View style={buttonRow()}>
           <HeroButton

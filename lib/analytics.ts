@@ -139,12 +139,9 @@ export function identify(userId: string, props?: UserProperties) {
   }
 }
 
-/** @deprecated Prefer `resetAnalytics` (Sprint 4 naming). */
-export function reset() {
+export function resetAnalytics() {
   resetPostHog();
 }
-
-export const resetAnalytics = reset;
 
 type FunnelProps = Record<string, string | number | boolean | undefined>;
 
