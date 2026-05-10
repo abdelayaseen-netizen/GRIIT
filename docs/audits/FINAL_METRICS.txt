@@ -1,0 +1,49 @@
+=== FINAL METRICS ===
+
+TS errors:
+0
+
+Lint summary (last line):
+✖ 1 problem (0 errors, 1 warning)
+
+Total .ts/.tsx files:
+     364
+
+Production LOC (app components lib hooks store contexts backend):
+   63049 total
+
+Deps / devDeps:
+deps: 60 devDeps: 13
+
+Repo size (du -sh):
+1.7G	.
+  (note: includes node_modules; macOS du has no --exclude)
+
+Raw hex in .tsx (outside design-system):
+       2
+
+Alert.alert:
+       0
+
+console.* unguarded in production (excluding __DEV__-guarded lines):
+       3
+
+Empty catches:
+       0
+
+any in production:
+       0
+
+Files >500 LOC (production scope):
+      27
+
+Files >300 LOC (production scope):
+      63
+
+FlatList audit:
+  total FlatLists:
+      22
+  with initialNumToRender:
+      14
+  with windowSize:
+      14

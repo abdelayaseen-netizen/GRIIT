@@ -15,10 +15,11 @@ import {
  * decide what to render; this component decides how the surface looks.
  *
  * Surface variants:
- * - 'heroDark' (default, #0F0F0F) — streak hero, trophies, primary CTAs.
- *   Used for the streak (Duolingo +60% retention lever per spec Part 1).
- * - 'heroDarkWarm' (#262321) — secondary effort surface, used for the
- *   Day 0 / streak-lost comeback state and active task in-flight rows.
+ * - 'heroDark' (default, DS_COLORS_V2.surface.heroDark) — streak hero,
+ *   trophies, primary CTAs (Duolingo +60% retention lever per spec Part 1).
+ * - 'heroDarkWarm' (DS_COLORS_V2.surface.heroDarkWarm) — secondary effort
+ *   surface, used for the Day 0 / streak-lost comeback state and active
+ *   task in-flight rows.
  *
  * Border defaults to none; render the at-risk red border by passing
  * borderWidth={1.5} and borderColor={DS_COLORS_V2.semantic.dangerOnDark}.

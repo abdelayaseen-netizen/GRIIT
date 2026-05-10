@@ -302,6 +302,10 @@ function LeaderboardBody({
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.challengePillsRow}
               renderItem={renderChallengePill}
+              initialNumToRender={6}
+              maxToRenderPerBatch={6}
+              windowSize={3}
+              removeClippedSubviews
             />
           )}
           {activeList.length > 0 && selectedChallengeId ? (
@@ -431,6 +435,10 @@ function LeaderboardBody({
       }
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
       showsVerticalScrollIndicator={false}
+      initialNumToRender={1}
+      maxToRenderPerBatch={1}
+      windowSize={1}
+      removeClippedSubviews={false}
       contentContainerStyle={styles.scrollContent}
       style={styles.leaderboardFlatFlex}
       keyboardShouldPersistTaps="handled"
