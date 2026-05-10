@@ -378,11 +378,13 @@ function PublicProfileScreenInner() {
 
   const primaryLine = profilePrimaryName(profile, null);
   const handleAt = profileHandleAt(profile);
-  const showHandleRow =
-    Boolean(handleAt) &&
-    Boolean(profile.display_name?.trim()) &&
-    Boolean(profile.username?.trim()) &&
-    profile.display_name!.trim() !== profile.username!.trim();
+  const showHandleRow = (() => {
+    if (!handleAt) return false;
+    const dn = profile.display_name?.trim();
+    const un = profile.username?.trim();
+    if (!dn || !un) return false;
+    return dn !== un;
+  })();
   const tierColors = tierPillStyle(profile.tier ?? "Starter");
   const fc = followCountsQuery.data;
   const showPrivateGate = needsRequest && !isFollowing && !isPending;

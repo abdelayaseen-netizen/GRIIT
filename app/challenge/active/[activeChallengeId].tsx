@@ -541,21 +541,24 @@ export default function ActiveChallengeDetailScreen() {
           )}
 
           {/* Rules */}
-          {challenge?.rules && Array.isArray(challenge.rules) && challenge.rules.length > 0 && (
-            <>
-              <Text style={s.sectionTitleRules}>Rules</Text>
-              <View style={[s.card, s.rulesCard]}>
-                {(challenge.rules as string[]).map((rule: string, i: number) => (
-                  <View key={i} style={[s.ruleRow, i < challenge.rules!.length - 1 && s.ruleRowBorder]}>
-                    <View style={s.ruleCheck}>
-                      <Check size={14} color={DS_COLORS.ACCENT_GREEN} />
+          {challenge?.rules && Array.isArray(challenge.rules) && challenge.rules.length > 0 && (() => {
+            const rules = challenge.rules as string[];
+            return (
+              <>
+                <Text style={s.sectionTitleRules}>Rules</Text>
+                <View style={[s.card, s.rulesCard]}>
+                  {rules.map((rule, i) => (
+                    <View key={i} style={[s.ruleRow, i < rules.length - 1 && s.ruleRowBorder]}>
+                      <View style={s.ruleCheck}>
+                        <Check size={14} color={DS_COLORS.ACCENT_GREEN} />
+                      </View>
+                      <Text style={s.ruleText}>{rule}</Text>
                     </View>
-                    <Text style={s.ruleText}>{rule}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
+                  ))}
+                </View>
+              </>
+            );
+          })()}
 
           {/* About */}
           <Text style={s.sectionTitleAbout}>About</Text>

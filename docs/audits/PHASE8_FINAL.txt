@@ -1,0 +1,30 @@
+=== any in production ===
+count:        0
+(first 20)
+
+=== Empty catches ===
+count:        0
+
+=== Alert.alert ===
+count:        0
+
+=== console.log/warn/error in production ===
+count:        5
+./hooks/useAppChallengeMutations.ts:227:      console.log("[secureDay] called", {
+./lib/sentry.ts:37:    console.error(`[${label}]`, error);
+./lib/analytics.ts:169:    if (__DEV__) console.log("[PostHog] Capturing event:", event, properties);
+./lib/posthog.ts:18:          console.log(
+./lib/logger.ts:14:  if (__DEV__) (level === "error" ? console.error : level === "warn" ? console.warn : console.log)(`[${tag}] ${message}`, error ?? "");
+
+=== @ts-ignore / @ts-expect-error ===
+count:        1
+./backend/lib/strava-callback.ts:80:  // @ts-expect-error - table type not in generated types
+
+=== Non-null assertions (X!.Y) ===
+count:        5
+
+=== useMutation totals ===
+  useMutation calls:
+       3
+  with onError nearby (8-line window):
+0

@@ -9,12 +9,18 @@ Sentry.init({
   tracesSampleRate: 0.1,
 });
 
-console.log("[boot] step 1: dotenv + sentry init complete");
-console.log("[boot] step 1: NODE_ENV =", process.env.NODE_ENV);
-console.log("[boot] step 1: PORT =", process.env.PORT);
-console.log("[boot] step 1: SUPABASE_URL set =", !!process.env.EXPO_PUBLIC_SUPABASE_URL);
-console.log("[boot] step 1: SUPABASE_ANON set =", !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
-console.log("[boot] step 1: SENTRY_DSN_BACKEND set =", !!process.env.SENTRY_DSN_BACKEND);
+import { logger } from "./lib/logger";
+
+logger.info(
+  {
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT,
+    supabaseUrlSet: !!process.env.EXPO_PUBLIC_SUPABASE_URL,
+    supabaseAnonSet: !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    sentryDsnSet: !!process.env.SENTRY_DSN_BACKEND,
+  },
+  "[boot] step 1: dotenv + sentry init complete",
+);
 
 function toError(reason: unknown): Error {
   if (reason instanceof Error) return reason;
@@ -27,37 +33,36 @@ function toError(reason: unknown): Error {
 }
 
 process.on("uncaughtException", (err) => {
-  console.error("[boot] FATAL uncaughtException:", err);
+  logger.error({ err }, "[boot] FATAL uncaughtException");
   Sentry.captureException(err);
-  // Give Sentry 2s to flush, then exit
   setTimeout(() => process.exit(1), 2000);
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error("[boot] FATAL unhandledRejection:", reason);
+  logger.error({ err: reason }, "[boot] FATAL unhandledRejection");
   Sentry.captureException(toError(reason));
   setTimeout(() => process.exit(1), 2000);
 });
 
 async function main() {
-  console.log("[boot] step 2: starting hono import");
+  logger.info("[boot] step 2: starting hono import");
   let app: import("hono").Hono;
   try {
     const honoModule = await import("./hono");
     app = honoModule.default;
-    console.log("[boot] step 3: hono imported successfully");
+    logger.info("[boot] step 3: hono imported successfully");
   } catch (err) {
-    console.error("[boot] FATAL hono import failed:", err);
+    logger.error({ err }, "[boot] FATAL hono import failed");
     Sentry.captureException(toError(err));
     throw err;
   }
 
-  console.log("[boot] step 4: importing serve");
+  logger.info("[boot] step 4: importing serve");
   const { serve } = await import("@hono/node-server");
-  console.log("[boot] step 5: serve imported");
+  logger.info("[boot] step 5: serve imported");
 
   const port = Number(process.env.PORT ?? 8080);
-  console.log("[boot] step 6: binding port", port);
+  logger.info({ port }, "[boot] step 6: binding port");
 
   serve({
     fetch: app.fetch,
@@ -65,11 +70,11 @@ async function main() {
     hostname: "0.0.0.0",
   });
 
-  console.log(`[boot] step 7: server listening on 0.0.0.0:${port}`);
+  logger.info({ port }, "[boot] step 7: server listening on 0.0.0.0");
 }
 
 main().catch((err) => {
-  console.error("[boot] FATAL main() rejected:", err);
+  logger.error({ err }, "[boot] FATAL main() rejected");
   Sentry.captureException(toError(err));
   setTimeout(() => process.exit(1), 2000);
 });
