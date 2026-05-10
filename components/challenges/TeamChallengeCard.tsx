@@ -1,20 +1,19 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  Dumbbell,
-  Brain,
-  BookHeart,
-  Target,
-  Plus,
-  type LucideIcon,
-} from "lucide-react-native";
+import { Plus } from "lucide-react-native";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { Avatar } from "@/components/Avatar";
+import {
+  getCategoryStyle,
+  difficultyDescriptive,
+  dayUnit,
+  type ChallengeCategory as TeamChallengeCategory,
+  type ChallengeDifficulty as TeamChallengeDifficulty,
+} from "./_card-helpers";
 
-export type TeamChallengeDifficulty = "EASY" | "MED" | "HARD";
-export type TeamChallengeCategory = "body" | "mind" | "faith" | "focus";
+export type { TeamChallengeCategory, TeamChallengeDifficulty };
 
 export interface TeamChallengeCardData {
   id: string;
@@ -34,52 +33,6 @@ export interface TeamChallengeCardData {
 export interface TeamChallengeCardProps {
   data: TeamChallengeCardData;
   onJoin?: (id: string) => void;
-}
-
-interface CategoryStyle {
-  Icon: LucideIcon;
-  tint: string;
-  iconColor: string;
-}
-
-function getCategoryStyle(category: TeamChallengeCategory): CategoryStyle {
-  switch (category) {
-    case "body":
-      return {
-        Icon: Dumbbell,
-        tint: DS_COLORS.CATEGORY_BODY_TINT,
-        iconColor: DS_COLORS.CATEGORY_BODY_ICON,
-      };
-    case "mind":
-      return {
-        Icon: Brain,
-        tint: DS_COLORS.CATEGORY_MIND_TINT,
-        iconColor: DS_COLORS.CATEGORY_MIND_ICON,
-      };
-    case "faith":
-      return {
-        Icon: BookHeart,
-        tint: DS_COLORS.CATEGORY_FAITH_TINT,
-        iconColor: DS_COLORS.CATEGORY_FAITH_ICON,
-      };
-    case "focus":
-    default:
-      return {
-        Icon: Target,
-        tint: DS_COLORS.CATEGORY_FOCUS_TINT,
-        iconColor: DS_COLORS.CATEGORY_FOCUS_ICON,
-      };
-  }
-}
-
-function difficultyDescriptive(d: TeamChallengeDifficulty): string {
-  if (d === "EASY") return "Easy";
-  if (d === "HARD") return "Hard";
-  return "Medium";
-}
-
-function dayUnit(days: number): string {
-  return days === 1 ? "day" : "days";
 }
 
 const PREVIEW_AVATAR_SIZE = 24;

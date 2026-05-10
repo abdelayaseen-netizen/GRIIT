@@ -11,6 +11,7 @@ import {
 } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { Avatar } from "@/components/Avatar";
+import { dayUnit } from "./_card-helpers";
 
 export type HeroFeaturedDifficulty = "EASY" | "MED" | "HARD";
 export type HeroFeaturedProofType = "photo" | "text" | "location";
@@ -62,10 +63,6 @@ function proofTypeLabel(p: HeroFeaturedProofType): string {
   if (p === "photo") return "Photo proof";
   if (p === "location") return "Location proof";
   return "Text proof";
-}
-
-function dayUnit(days: number): string {
-  return days === 1 ? "day" : "days";
 }
 
 function buildSocialProof(friendNames: string[], othersCount: number): string | null {
