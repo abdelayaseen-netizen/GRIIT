@@ -125,6 +125,7 @@ export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
               initialNumToRender={10}
               maxToRenderPerBatch={10}
               windowSize={5}
+              removeClippedSubviews
               renderItem={renderRespectedRow}
               contentContainerStyle={styles.listContent}
             />
