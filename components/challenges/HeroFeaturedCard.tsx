@@ -5,6 +5,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   DS_COLORS,
+  DS_COLORS_V2,
   DS_RADIUS,
   DS_SPACING,
   DS_TYPOGRAPHY,
@@ -42,14 +43,10 @@ export interface HeroFeaturedCardProps {
   onJoin?: (id: string) => void;
 }
 
-// Visual identity gradient — three deep warm stops; explicitly allowed by spec
-// (these are not theme tokens, they are the brand fallback when no proof photo
-// is available).
-const FALLBACK_GRADIENT_STOPS: [string, string, string] = [
-  "#2a2520",
-  "#4a3a30",
-  "#6b4a30",
-];
+// Visual identity gradient — sourced from DS_COLORS_V2.surface.heroDarkWarmGradient.
+// Used as the brand fallback when no proof photo is available.
+const FALLBACK_GRADIENT_STOPS: readonly [string, string, string] =
+  DS_COLORS_V2.surface.heroDarkWarmGradient;
 
 const HEADER_HEIGHT = 140;
 
