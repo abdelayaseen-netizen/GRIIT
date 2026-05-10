@@ -1,0 +1,160 @@
+import React from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
+import {
+  ChevronRight,
+  Dumbbell,
+  Brain,
+  BookHeart,
+  Target,
+  type LucideIcon,
+} from "lucide-react-native";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { ROUTES } from "@/lib/routes";
+
+export type CompactChallengeDifficulty = "EASY" | "MED" | "HARD";
+export type CompactChallengeCategory = "body" | "mind" | "faith" | "focus";
+export type CompactChallengeProofType = "photo" | "text" | "location";
+
+export interface CompactChallengeRowData {
+  id: string;
+  slug: string | null;
+  name: string;
+  duration_days: number;
+  difficulty: CompactChallengeDifficulty;
+  proof_type: CompactChallengeProofType;
+  category: CompactChallengeCategory;
+}
+
+export interface CompactChallengeRowProps {
+  data: CompactChallengeRowData;
+}
+
+interface CategoryStyle {
+  Icon: LucideIcon;
+  tint: string;
+  iconColor: string;
+}
+
+function getCategoryStyle(category: CompactChallengeCategory): CategoryStyle {
+  switch (category) {
+    case "body":
+      return {
+        Icon: Dumbbell,
+        tint: DS_COLORS.CATEGORY_BODY_TINT,
+        iconColor: DS_COLORS.CATEGORY_BODY_ICON,
+      };
+    case "mind":
+      return {
+        Icon: Brain,
+        tint: DS_COLORS.CATEGORY_MIND_TINT,
+        iconColor: DS_COLORS.CATEGORY_MIND_ICON,
+      };
+    case "faith":
+      return {
+        Icon: BookHeart,
+        tint: DS_COLORS.CATEGORY_FAITH_TINT,
+        iconColor: DS_COLORS.CATEGORY_FAITH_ICON,
+      };
+    case "focus":
+    default:
+      return {
+        Icon: Target,
+        tint: DS_COLORS.CATEGORY_FOCUS_TINT,
+        iconColor: DS_COLORS.CATEGORY_FOCUS_ICON,
+      };
+  }
+}
+
+function difficultyDescriptive(d: CompactChallengeDifficulty): string {
+  if (d === "EASY") return "Easy";
+  if (d === "HARD") return "Hard";
+  return "Medium";
+}
+
+function proofTypeLabel(p: CompactChallengeProofType): string {
+  if (p === "photo") return "Photo proof";
+  if (p === "location") return "Location proof";
+  return "Text proof";
+}
+
+function dayUnit(days: number): string {
+  return days === 1 ? "day" : "days";
+}
+
+export const CompactChallengeRow = React.memo(function CompactChallengeRow({
+  data,
+}: CompactChallengeRowProps) {
+  const router = useRouter();
+  const cat = getCategoryStyle(data.category);
+  const CatIcon = cat.Icon;
+  const metaLine = `${data.duration_days} ${dayUnit(data.duration_days)} · ${difficultyDescriptive(
+    data.difficulty
+  )} · ${proofTypeLabel(data.proof_type)}`;
+  const a11y = `${data.name}, ${data.duration_days} ${dayUnit(
+    data.duration_days
+  )}, ${difficultyDescriptive(data.difficulty)}, ${proofTypeLabel(data.proof_type).toLowerCase()}, tap to view`;
+
+  const target = (data.slug ?? data.id).trim() || data.id;
+  const handlePress = () => {
+    if (!target) return;
+    router.push(ROUTES.CHALLENGE_ID(target) as never);
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={a11y}
+      style={styles.row}
+    >
+      <View style={[styles.iconTile, { backgroundColor: cat.tint }]}>
+        <CatIcon size={18} color={cat.iconColor} strokeWidth={2} />
+      </View>
+      <View style={styles.body}>
+        <Text style={styles.title} numberOfLines={1}>
+          {data.name}
+        </Text>
+        <Text style={styles.meta} numberOfLines={1}>
+          {metaLine}
+        </Text>
+      </View>
+      <ChevronRight size={18} color={DS_COLORS.TEXT_MUTED} strokeWidth={2} />
+    </Pressable>
+  );
+});
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.md,
+    paddingHorizontal: DS_SPACING.md,
+    paddingVertical: DS_SPACING.md,
+    backgroundColor: DS_COLORS.WHITE,
+    borderRadius: DS_RADIUS.LG,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+  },
+  iconTile: {
+    width: 38,
+    height: 38,
+    borderRadius: DS_RADIUS.MD,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  body: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  meta: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 2,
+  },
+});

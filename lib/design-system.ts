@@ -380,6 +380,36 @@ export const DS_COLORS = {
   DISCOVER_V3_ROW_HARD_BORDER: '#C62828',
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // DISCOVER V3 — Streak risk banner (loss-aversion red tint)
+  // ═══════════════════════════════════════════════════════════════════════════
+  DANGER_BG_SUBTLE: '#FCEBEB',
+  DANGER_BORDER_SUBTLE: 'rgba(163,45,45,0.15)',
+  DANGER_TEXT_PRIMARY: '#501313',
+  DANGER_TEXT_SECONDARY: '#791F1F',
+  DANGER_ACCENT: '#A32D2D',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DISCOVER V3 — Featured card dark surface + photo overlays
+  // ═══════════════════════════════════════════════════════════════════════════
+  FEATURED_DARK_BG: '#1a1a1a',
+  FEATURED_OVERLAY_BADGE: 'rgba(255,255,255,0.15)',
+  FEATURED_OVERLAY_ATTRIBUTION: 'rgba(0,0,0,0.45)',
+  FEATURED_TEXT_PRIMARY: '#ffffff',
+  FEATURED_TEXT_SECONDARY: 'rgba(255,255,255,0.65)',
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DISCOVER V3 — Category icon tile palette (Body / Mind / Faith / Focus)
+  // ═══════════════════════════════════════════════════════════════════════════
+  CATEGORY_BODY_TINT: '#FAECE7',
+  CATEGORY_MIND_TINT: '#EAF3DE',
+  CATEGORY_FAITH_TINT: '#E1F5EE',
+  CATEGORY_FOCUS_TINT: '#FBEAF0',
+  CATEGORY_BODY_ICON: '#993C1D',
+  CATEGORY_MIND_ICON: '#3B6D11',
+  CATEGORY_FAITH_ICON: '#0F6E56',
+  CATEGORY_FOCUS_ICON: '#993556',
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // ONBOARDING (migrated from constants/onboarding-theme.ts)
   // ═══════════════════════════════════════════════════════════════════════════
   ONBOARDING_BG_PAGE: '#F5F1EB',

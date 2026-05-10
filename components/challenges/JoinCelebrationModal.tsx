@@ -115,7 +115,7 @@ export default function JoinCelebrationModal({
             <View style={styles.inner} accessibilityRole="summary">
               <ShieldCheck size={64} color={DS_COLORS.accent} strokeWidth={2} />
               <Text style={styles.headline}>You&apos;re in!</Text>
-              <Text style={styles.subline}>Day 1 of {name} starts now.</Text>
+              <Text style={styles.subline}>{name} starts now — day 1.</Text>
               <TouchableOpacity
                 style={styles.cta}
                 onPress={handleLetsGo}

@@ -41,6 +41,9 @@ export const TRPC = {
     list: 'challenges.list',
     getFeatured: 'challenges.getFeatured',
     getDiscoverFeed: 'challenges.getDiscoverFeed',
+    getDiscoverFeatured: 'challenges.getDiscoverFeatured',
+    getDiscoverGrid: 'challenges.getDiscoverGrid',
+    getDiscoverHabits: 'challenges.getDiscoverHabits',
     getRecommended: 'challenges.getRecommended',
     getCategoryCounts: 'challenges.getCategoryCounts',
     getStarterPack: 'challenges.getStarterPack',
@@ -128,6 +131,7 @@ export const TRPC = {
     getPost: 'feed.getPost',
     getUserPosts: 'feed.getUserPosts',
     getRecentCompletions: 'feed.getRecentCompletions',
+    getStreakAtRisk: 'feed.getStreakAtRisk',
   },
   achievements: {
     getForUser: 'achievements.getForUser',

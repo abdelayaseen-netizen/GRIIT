@@ -7,6 +7,47 @@ import { getSupabaseServer } from "../../lib/supabase-server";
 import { getTodayDateKey, getYesterdayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { logger } from "../../lib/logger";
 import { moderateContent } from "../../lib/content-moderation";
+import { RETENTION_CONFIG } from "../../../lib/retention-config";
+
+type ProofType = "photo" | "text" | "location";
+
+function deriveProofTypeFromTasks(
+  tasks: { task_type?: string | null; config?: Record<string, unknown> | null }[] | null | undefined
+): ProofType {
+  const list = tasks ?? [];
+  for (const t of list) {
+    const tt = String(t.task_type ?? "").toLowerCase();
+    const cfg = (t.config ?? {}) as Record<string, unknown>;
+    if (tt === "location" || cfg.require_location === true) return "location";
+    if (tt === "photo" || cfg.require_photo_proof === true || cfg.photo_required === true) {
+      return "photo";
+    }
+  }
+  return "text";
+}
+
+/**
+ * Compute hours remaining until midnight in the user's local IANA timezone.
+ * Used by streak-at-risk to know how much of the day is left to secure.
+ */
+function hoursUntilLocalMidnight(timezone: string): number {
+  try {
+    const now = new Date();
+    const fmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const parts = fmt.formatToParts(now);
+    const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+    const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+    const totalMinutesUntilMidnight = 24 * 60 - (hour * 60 + minute);
+    return Math.max(0, totalMinutesUntilMidnight / 60);
+  } catch {
+    return 24;
+  }
+}
 import {
   LIVE_FEED_TYPES,
   followRowAccepted,
@@ -828,5 +869,88 @@ export const feedRouter = createTRPCRouter({
         currentDay: day,
       };
     });
+  }),
+
+  /**
+   * Discover v3 — most-at-risk active streak for the current user, or null.
+   *
+   * Returns non-null only when ALL conditions hold:
+   *   - The user has an active streak (`streaks.active_streak_count > 0`).
+   *   - The user has not yet secured today (no `day_secures` row for today's
+   *     date key in their local timezone).
+   *   - The number of hours remaining until midnight in the user's local
+   *     timezone is at or below `RETENTION_CONFIG.STREAK_AT_RISK_HOURS`.
+   *
+   * The streak is attributed to the user's currently-active challenge with the
+   * highest `current_day` (proxy for the longest in-progress run).
+   */
+  getStreakAtRisk: protectedProcedure.query(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+    const today = getTodayDateKey(tz);
+
+    const [streakResult, securedTodayResult, activeRunsResult] = await Promise.all([
+      ctx.supabase
+        .from("streaks")
+        .select("active_streak_count, last_completed_date_key")
+        .eq("user_id", ctx.userId)
+        .maybeSingle(),
+      ctx.supabase
+        .from("day_secures")
+        .select("date_key")
+        .eq("user_id", ctx.userId)
+        .eq("date_key", today)
+        .limit(1),
+      ctx.supabase
+        .from("active_challenges")
+        .select("challenge_id, current_day")
+        .eq("user_id", ctx.userId)
+        .eq("status", "active")
+        .order("current_day", { ascending: false })
+        .limit(5),
+    ]);
+
+    const streakRow = (streakResult.data ?? null) as
+      | { active_streak_count?: number | null; last_completed_date_key?: string | null }
+      | null;
+    const streakLength = Math.max(0, streakRow?.active_streak_count ?? 0);
+    if (streakLength <= 0) return null;
+
+    const hasSecuredToday = (securedTodayResult.data ?? []).length > 0;
+    if (hasSecuredToday) return null;
+
+    const hoursRemaining = hoursUntilLocalMidnight(tz);
+    if (hoursRemaining > RETENTION_CONFIG.STREAK_AT_RISK_HOURS) return null;
+
+    const runs = (activeRunsResult.data ?? []) as {
+      challenge_id: string;
+      current_day?: number | null;
+    }[];
+    if (runs.length === 0 || !runs[0]?.challenge_id) return null;
+    const top = runs[0];
+    const challengeId = top.challenge_id;
+
+    const { data: chRow } = await server
+      .from("challenges")
+      .select(
+        "id, title, challenge_tasks (id, task_type, order_index, config)"
+      )
+      .eq("id", challengeId)
+      .maybeSingle();
+    const challenge = chRow as {
+      id: string;
+      title?: string | null;
+      challenge_tasks?: { task_type?: string | null; config?: Record<string, unknown> | null }[] | null;
+    } | null;
+    if (!challenge) return null;
+
+    return {
+      challenge_id: challenge.id,
+      challenge_slug: null as string | null,
+      challenge_name: (challenge.title ?? "Challenge").trim() || "Challenge",
+      streak_length: streakLength,
+      hours_remaining: Math.max(0, Math.round(hoursRemaining * 10) / 10),
+      proof_type: deriveProofTypeFromTasks(challenge.challenge_tasks ?? null),
+    };
   }),
 });
