@@ -849,6 +849,10 @@ export function TaskCompleteScreenInner() {
       <FlatList
         data={[{ key: "task-complete-root" }]}
         keyExtractor={(item) => item.key}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={1}
+        removeClippedSubviews={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"

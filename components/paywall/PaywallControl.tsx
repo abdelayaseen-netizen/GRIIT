@@ -46,6 +46,10 @@ export default function PaywallControl({
       <FlatList
         data={loading ? [] : packages}
         keyExtractor={(pkg) => pkg.identifier}
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={3}
+        removeClippedSubviews
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         renderItem={renderPlanItem}
         ListHeaderComponent={

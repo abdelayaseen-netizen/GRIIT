@@ -1,0 +1,12 @@
+./app/post/[id].tsx                                               init=1 window=1 clipped=1 batch=1
+./app/follow-list.tsx                                             init=1 window=1 clipped=1 batch=1
+./app/(tabs)/profile.tsx                                          init=4 window=4 clipped=4 batch=4
+./app/accountability/add.tsx                                      init=1 window=1 clipped=1 batch=1
+./app/accountability.tsx                                          init=3 window=3 clipped=3 batch=3
+app/challenge/complete.tsx                                        init=1 window=1 clipped=0 batch=1
+./app/post/[id].tsx init=1 clipped=1
+./app/follow-list.tsx init=1 clipped=1
+./app/(tabs)/profile.tsx init=4 clipped=4
+./app/accountability/add.tsx init=1 clipped=1
+./app/accountability.tsx init=3 clipped=3
+./app/challenge/complete.tsx init=1 clipped=1
