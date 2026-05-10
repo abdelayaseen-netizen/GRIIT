@@ -24,7 +24,6 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.griit.challenge-tracker",
-      "buildNumber": "4",
       "appleTeamId": "WZT43QXHZB",
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
