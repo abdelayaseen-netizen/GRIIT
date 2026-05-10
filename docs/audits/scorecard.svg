@@ -27,11 +27,11 @@
   <rect width="1100" height="720" class="bg"/>
   <rect x="32" y="32" width="1036" height="656" rx="8" class="card"/>
 
-  <text x="56" y="74" class="title">GRIIT Deep Clean Scorecard  2026-05-10</text>
-  <text x="56" y="96" class="subtitle">Branch cleanup/2026-05-deep-clean · commit c7939df · 8 phases · grep-evidenced</text>
+  <text x="56" y="74" class="title">GRIIT Deep Clean Scorecard - 2026-05-10</text>
+  <text x="56" y="96" class="subtitle">Branch cleanup/2026-05-deep-clean . commit c79b4d3 . 9 phases . grep-evidenced . Gate C cleared</text>
 
   <text x="850" y="78" class="overall" text-anchor="end">OVERALL</text>
-  <text x="1040" y="92" class="overallVal" text-anchor="end">88.6 / 100</text>
+  <text x="1040" y="92" class="overallVal" text-anchor="end">90.5 / 100</text>
 
   <!-- Legend -->
   <g transform="translate(56,116)">
@@ -39,11 +39,10 @@
     <text x="26" y="12" class="legendText">Final score (this sprint)</text>
     <rect x="200" y="0" width="18" height="14" class="barPrior"/>
     <text x="226" y="12" class="legendText">Prior pass (n/a where new)</text>
-    <text x="420" y="12" class="legendText">” reflects this sprint's contribution.</text>
+    <text x="420" y="12" class="legendText">Delta reflects this sprint's contribution.</text>
   </g>
 
   <!-- Chart area: y=160..640, x=240..1040 -->
-  <!-- Grid lines at 0, 25, 50, 75, 100 -->
   <g class="grid">
     <line x1="240" y1="160" x2="240" y2="640"/>
     <line x1="240" y1="640" x2="1040" y2="640"/>
@@ -60,8 +59,7 @@
     <text x="1040" y="660" class="axisText" text-anchor="middle">100</text>
   </g>
 
-  <!-- 10 rows. Row height 44, top of first row at y=170. Bar height 16 (final) above 12 (prior). -->
-  <!-- Each row: <prior bar> behind <final bar>. Width = score * 8 (since 100 * 8 = 800px chart width). -->
+  <!-- 10 rows. Width = score * 8 (since 100 * 8 = 800px chart width). -->
 
   <!-- 1. Repo consolidation: 92 (no prior) -->
   <text x="232" y="186" class="axisText" text-anchor="end">1. Repo consolidation</text>
@@ -102,14 +100,14 @@
   <text x="946" y="357" class="scoreLabel" text-anchor="end">89</text>
   <text x="958" y="357" class="delta deltaPos">+15</text>
 
-  <!-- 7. Backend hardening: 78 from 83  -->
+  <!-- 7. Backend hardening: 92 from 83 (Gate C applied 2026-05-10) -->
   <text x="232" y="390" class="axisText" text-anchor="end">7. Backend hardening</text>
   <rect x="240" y="380" width="664" height="14" class="barPrior"/>
-  <rect x="240" y="376" width="624" height="20" class="barFinal"/>
-  <text x="858" y="391" class="scoreLabel" text-anchor="end">78</text>
-  <text x="870" y="391" class="delta deltaNeg">-5*</text>
+  <rect x="240" y="376" width="736" height="20" class="barFinal"/>
+  <text x="970" y="391" class="scoreLabel" text-anchor="end">92</text>
+  <text x="982" y="391" class="delta deltaPos">+9</text>
 
-  <!-- 8. Auth & security: 91 from 79 -->
+  <!-- 8. Auth &amp; security: 91 from 79 -->
   <text x="232" y="424" class="axisText" text-anchor="end">8. Auth &amp; security</text>
   <rect x="240" y="414" width="632" height="14" class="barPrior"/>
   <rect x="240" y="410" width="728" height="20" class="barFinal"/>
@@ -131,14 +129,14 @@
   <text x="966" y="493" class="delta deltaPos">+10</text>
 
   <!-- Footnote -->
-  <text x="56" y="554" class="subtitle">* Backend hardening dipped because the RLS migration is staged but UNAPPLIED (Gate C  Yaseen runs SQL manually).</text>
-  <text x="56" y="572" class="subtitle">  The migration file lives at supabase/migrations/20260510000000_profiles_rls_hardening.sql. Score will rise to 92+ once applied.</text>
+  <text x="56" y="554" class="subtitle">Gate C cleared 2026-05-10 - RLS migration 20260510000000_profiles_rls_hardening.sql applied to Supabase production.</text>
+  <text x="56" y="572" class="subtitle">Verified: anon SELECT policy removed, profiles_select_authenticated enforced. Smoke test 5/5 (email + Apple, leaderboard, proof post, signed-out open).</text>
 
   <!-- Bottom strip: top metrics that anchor the scores -->
   <g transform="translate(56,604)">
     <rect x="0" y="0" width="988" height="62" rx="6" fill="#FFFFFF" stroke="#E5E5E5"/>
-    <text x="14" y="20" class="axisText" font-weight="700">Hard-rule metrics (baseline ’ final)</text>
-    <text x="14" y="40" class="axisText">Raw hex outside DS: 6 ’ 0   ·   console.* unguarded: 41 ’ 0   ·   any in production: 0 ’ 0   ·   Empty catches: 0 ’ 0   ·   Alert.alert: 0 ’ 0</text>
-    <text x="14" y="56" class="axisText">FlatList full perf props: 13/22 ’ 22/22 (100%)   ·   A11y labeled: ~95% ’ 343/343 (100%)   ·   WCAG AA pairs: 6/9 ’ 9/9</text>
+    <text x="14" y="20" class="axisText" font-weight="700">Hard-rule metrics (baseline -&gt; final)</text>
+    <text x="14" y="40" class="axisText">Raw hex outside DS: 6 -&gt; 0   .   console.* unguarded: 41 -&gt; 0   .   any in production: 0 -&gt; 0   .   Empty catches: 0 -&gt; 0   .   Alert.alert: 0 -&gt; 0</text>
+    <text x="14" y="56" class="axisText">FlatList full perf props: 13/22 -&gt; 22/22 (100%)   .   A11y labeled: ~95% -&gt; 343/343 (100%)   .   WCAG AA pairs: 6/9 -&gt; 9/9</text>
   </g>
 </svg>
