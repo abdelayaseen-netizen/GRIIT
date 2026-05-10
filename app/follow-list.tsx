@@ -147,7 +147,7 @@ export default function FollowListScreen() {
             accessibilityRole="button"
           >
             {item.avatar_url?.trim() ? (
-              <Image source={{ uri: item.avatar_url.trim() }} style={styles.avatarImg} contentFit="cover" />
+              <Image source={{ uri: item.avatar_url.trim() }} style={styles.avatarImg} contentFit="cover" accessible={false} />
             ) : (
               <View style={[styles.avatarFallback, { backgroundColor: getFeedAvatarBgFromUserId(item.user_id) }]}>
                 <Text style={styles.avatarLetter}>{getDisplayInitials(primary)}</Text>

@@ -130,10 +130,12 @@ function HeroButton({
     variant === 'primary'
       ? DS_COLORS_V2.brand.primaryOnDark
       : DS_BUTTON.ghostOnDark.backgroundColor;
+  const a11yLabel = typeof children === 'string' ? children : undefined;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
       style={({ pressed }) => [
         {
           backgroundColor,

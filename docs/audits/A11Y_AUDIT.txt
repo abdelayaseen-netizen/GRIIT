@@ -1,0 +1,9 @@
+Total interactive: 343
+With accessibilityLabel or accessible={false}: 343 (100.0%)
+  - explicit accessible={false} (intentional): 3
+  - with label: 340
+Without label: 0
+
+By file (top 25):
+
+Violations:

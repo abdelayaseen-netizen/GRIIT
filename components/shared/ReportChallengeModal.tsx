@@ -105,7 +105,7 @@ export function ReportChallengeModal({ visible, challengeId, challengeTitle, onC
               />
               {error ? <Text style={s.error}>{error}</Text> : null}
               <View style={s.buttons}>
-                <TouchableOpacity style={s.cancelBtn} onPress={handleClose} disabled={submitting} accessibilityRole="button">
+                <TouchableOpacity style={s.cancelBtn} onPress={handleClose} disabled={submitting} accessibilityRole="button" accessibilityLabel="Cancel report">
                   <Text style={s.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity

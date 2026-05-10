@@ -765,6 +765,7 @@ export default function HomeScreen() {
             </Text>
             <TouchableOpacity
               accessibilityRole="button"
+              accessibilityLabel="Dismiss streak freeze info"
               style={s.rankRow}
               onPress={() => setShowFreezeInfoModal(false)}
             >
@@ -791,6 +792,7 @@ export default function HomeScreen() {
             <Text style={s.rankModalTitle}>{longPressMenuChallenge?.title ?? "Challenge"}</Text>
             <TouchableOpacity
               accessibilityRole="button"
+              accessibilityLabel="Report this challenge"
               style={s.rankRow}
               onPress={() => {
                 const ch = longPressMenuChallenge;
@@ -804,6 +806,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               accessibilityRole="button"
+              accessibilityLabel="Leave challenge"
               style={s.rankRow}
               onPress={() => {
                 const ch = longPressMenuChallenge;
