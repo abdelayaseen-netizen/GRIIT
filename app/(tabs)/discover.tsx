@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     marginTop: DS_SPACING.xl,
   },
   sectionHeader: {
-    paddingHorizontal: 0,
+    paddingHorizontal: DS_SPACING.lg,
   },
   sectionSub: {
     fontSize: 12,
