@@ -130,10 +130,12 @@ function HeroButton({
     variant === 'primary'
       ? DS_COLORS_V2.brand.primaryOnDark
       : DS_BUTTON.ghostOnDark.backgroundColor;
+  const a11yLabel = typeof children === 'string' ? children : undefined;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
       style={({ pressed }) => [
         {
           backgroundColor,
@@ -248,7 +250,7 @@ export default function StreakHeroV2(props: Props) {
           color="secondary"
           style={{ marginTop: DS_SPACING_V2.xs }}
         >
-          Your streak is safe. You'll need a real task tomorrow.
+          Your streak is safe. You&apos;ll need a real task tomorrow.
         </Caption>
         <View style={buttonRow()}>
           <HeroButton

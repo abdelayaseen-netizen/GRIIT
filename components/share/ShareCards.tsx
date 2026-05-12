@@ -352,7 +352,7 @@ export function ProofPhotoCard({
   isVerified,
 }: ProofPhotoCardProps) {
   return (
-    <ImageBackground source={{ uri: proofPhotoUri }} style={proofStyles.container} resizeMode="cover">
+    <ImageBackground source={{ uri: proofPhotoUri }} style={proofStyles.container} resizeMode="cover" accessible={false}>
       <Text style={proofStyles.watermark}>GRIIT</Text>
 
       {isVerified ? (

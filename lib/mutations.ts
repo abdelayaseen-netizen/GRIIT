@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { captureError } from "@/lib/sentry";
 
 /**
  * Leave challenge. On success invalidates challenge detail, home, profile, discover.
+ * Callers can read `mutation.isError` / `mutation.error` to render inline state.
  */
 export function useLeaveChallenge() {
   const queryClient = useQueryClient();
@@ -16,6 +18,9 @@ export function useLeaveChallenge() {
       queryClient.invalidateQueries({ queryKey: ["home"] });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["discover"] });
+    },
+    onError: (err) => {
+      captureError(err, "useLeaveChallenge");
     },
   });
 }

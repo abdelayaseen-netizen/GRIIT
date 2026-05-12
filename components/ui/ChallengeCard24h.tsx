@@ -2,15 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Clock } from "lucide-react-native";
 import { DS_COLORS, DS_SPACING, DS_SHADOWS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
-
-function getStripeColorByCategory(category?: string): string {
-  const cat = (category ?? "").toUpperCase();
-  if (cat === "FITNESS") return DS_COLORS.ACCENT_PRIMARY;
-  if (cat === "MIND") return DS_COLORS.CATEGORY_MIND_STRIPE;
-  if (cat === "DISCIPLINE") return DS_COLORS.ACCENT_GREEN;
-  if (cat === "FAITH") return DS_COLORS.CATEGORY_FAITH_STRIPE;
-  return DS_COLORS.ACCENT_PRIMARY;
-}
+import { getStripeColorByCategory } from "./_challenge-card-helpers";
 
 const DIFF_STYLES_DEFAULT = { bg: DS_COLORS.DIFFICULTY_MEDIUM_BG, text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT };
 const DIFF_STYLES: Record<string, { bg: string; text: string }> = {

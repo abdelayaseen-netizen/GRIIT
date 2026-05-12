@@ -1,0 +1,11 @@
+Total <FlatList> opens: 22
+  with initialNumToRender: 18 (82%)
+  with windowSize:         18 (82%)
+  with removeClippedSubviews: 18 (82%)
+  with all three:          18 (82%)
+
+Missing one or more:
+  app/(tabs)/profile.tsx:782  init=0 window=0 clipped=0
+  app/accountability.tsx:372  init=0 window=0 clipped=0
+  components/activity/LeaderboardTab.tsx:298  init=0 window=0 clipped=0
+  components/activity/LeaderboardTab.tsx:422  init=0 window=0 clipped=0

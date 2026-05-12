@@ -3,12 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Clock } from "lucide-react-native";
 import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 
-// Gray-50 (c-gray ramp). Used for the icon container and progress-bar
-// track. No v2 token exists for this shade yet — the closest is
-// surface.divider (#E8E4DC), which is too dark for a "tinted neutral
-// inside a white card" use case. Tokenize as DS_COLORS_V2.gray[50] in
-// a follow-up PR when the gray ramp lands.
-const GRAY_50 = "#F1EFE8";
+const GRAY_50 = DS_COLORS_V2.surface.cardChipNeutral;
 
 function noonProgressAndLabel(now: Date): {
   pct: number;

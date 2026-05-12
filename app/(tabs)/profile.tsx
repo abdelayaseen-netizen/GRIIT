@@ -119,6 +119,8 @@ export default function ProfileScreen() {
     placeholderData: (previousData) => previousData,
   });
 
+  // user!.id below: queries are gated by `enabled: !!user?.id`, so queryFn
+  // only runs when user.id is defined. The non-null assertion is a TS hint.
   const followCountsQuery = useQuery({
     queryKey: ["profile", user?.id, "followCounts"],
     queryFn: () => trpcQuery(TRPC.profiles.getFollowCounts, { userId: user!.id }) as Promise<{ followers: number; following: number }>,
@@ -270,12 +272,13 @@ export default function ProfileScreen() {
   const emailLocal = user?.email?.includes("@") ? user.email.split("@")[0] : undefined;
   const primaryLine = profile ? profilePrimaryName(profile, emailLocal) : "";
   const handleAt = profile ? profileHandleAt(profile) : null;
-  const showHandleRow =
-    Boolean(profile) &&
-    Boolean(handleAt) &&
-    Boolean(profile!.display_name?.trim()) &&
-    Boolean(profile!.username?.trim()) &&
-    profile!.display_name!.trim() !== profile!.username!.trim();
+  const showHandleRow = (() => {
+    if (!profile || !handleAt) return false;
+    const dn = profile.display_name?.trim();
+    const un = profile.username?.trim();
+    if (!dn || !un) return false;
+    return dn !== un;
+  })();
   const listUsername = profile ? profile.username?.trim() || primaryLine : "";
   const tier = stats?.tier ?? "Starter";
   const tierColors = tierPillStyle(tier);
@@ -783,6 +786,10 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.PRIMARY} />}
         contentContainerStyle={styles.scroll}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={1}
+        removeClippedSubviews={false}
       />
       <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </SafeAreaView>

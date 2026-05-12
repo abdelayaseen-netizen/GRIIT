@@ -5,12 +5,14 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   DS_COLORS,
+  DS_COLORS_V2,
   DS_RADIUS,
   DS_SPACING,
   DS_TYPOGRAPHY,
 } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { Avatar } from "@/components/Avatar";
+import { dayUnit } from "./_card-helpers";
 
 export type HeroFeaturedDifficulty = "EASY" | "MED" | "HARD";
 export type HeroFeaturedProofType = "photo" | "text" | "location";
@@ -41,14 +43,10 @@ export interface HeroFeaturedCardProps {
   onJoin?: (id: string) => void;
 }
 
-// Visual identity gradient — three deep warm stops; explicitly allowed by spec
-// (these are not theme tokens, they are the brand fallback when no proof photo
-// is available).
-const FALLBACK_GRADIENT_STOPS: [string, string, string] = [
-  "#2a2520",
-  "#4a3a30",
-  "#6b4a30",
-];
+// Visual identity gradient — sourced from DS_COLORS_V2.surface.heroDarkWarmGradient.
+// Used as the brand fallback when no proof photo is available.
+const FALLBACK_GRADIENT_STOPS: readonly [string, string, string] =
+  DS_COLORS_V2.surface.heroDarkWarmGradient;
 
 const HEADER_HEIGHT = 140;
 
@@ -62,10 +60,6 @@ function proofTypeLabel(p: HeroFeaturedProofType): string {
   if (p === "photo") return "Photo proof";
   if (p === "location") return "Location proof";
   return "Text proof";
-}
-
-function dayUnit(days: number): string {
-  return days === 1 ? "day" : "days";
 }
 
 function buildSocialProof(friendNames: string[], othersCount: number): string | null {

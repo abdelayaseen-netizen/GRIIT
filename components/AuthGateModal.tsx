@@ -49,6 +49,8 @@ export function AuthGateModal({ visible, onClose, context: _context }: AuthGateM
   return (
     <Modal visible={visible} transparent animationType="fade">
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Close"
         style={styles.backdrop}
         activeOpacity={1}
         onPress={onClose}

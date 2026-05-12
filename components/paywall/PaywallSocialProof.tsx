@@ -49,13 +49,17 @@ export default function PaywallSocialProof({
 }: PaywallBodyProps) {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7} accessibilityRole="button">
+      <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Close paywall">
         <X size={18} color={DS_COLORS.TEXT_SECONDARY} />
       </TouchableOpacity>
 
       <FlatList
         data={loading ? [] : packages}
         keyExtractor={(pkg) => pkg.identifier}
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={3}
+        removeClippedSubviews
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         renderItem={renderPlanItem}
         ListHeaderComponent={
@@ -97,7 +101,7 @@ export default function PaywallSocialProof({
 
       <View style={[styles.stickyBar, { paddingBottom: insetsBottom + 12 }]}>
         {errorMessage ? (
-          <TouchableOpacity style={styles.errorPill} onPress={onClearError} activeOpacity={0.85} accessibilityRole="button">
+          <TouchableOpacity style={styles.errorPill} onPress={onClearError} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel="Dismiss error">
             <Text style={styles.errorText} accessibilityRole="alert">
               {errorMessage}
             </Text>

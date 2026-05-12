@@ -16,19 +16,22 @@ export const DS_COLORS = {
 
   // Legacy uppercase aliases
   BG_PRIMARY: '#F5F5F5',
-  BG_HEADER_DEFAULT: '#E8845F',
+  BG_HEADER_DEFAULT: '#BB471D',
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ACCENT COLORS (from approved reference)
+  // ACCENT COLORS — darkened from #E8845F to #BB471D so {WHITE on ACCENT}
+  // measures 5.2:1, clearing WCAG AA 4.5:1. (Prior 2.66:1 fail.) Verified by
+  // tests/design-system-contrast.test.ts. The earlier "v2 brand.primary
+  // #D85A30" only hits 3.87:1 and was insufficient.
   // ═══════════════════════════════════════════════════════════════════════════
-  ACCENT: '#E8845F',            // GRIIT orange — primary CTAs, active nav, icons
-  ACCENT_DARK: '#D4724E',       // Pressed state for orange
-  ACCENT_TINT: '#FFF0ED',       // Light orange bg for task icons, badges
+  ACCENT: '#BB471D',            // GRIIT orange — primary CTAs, active nav, icons
+  ACCENT_DARK: '#9E3A14',       // Pressed state
+  ACCENT_TINT: '#FAECE7',       // Light orange bg for task icons, badges
   ACCENT_TINT_BORDER: '#F5C4B4', // Border for orange-tint containers
 
   // Legacy uppercase
-  ACCENT_PRIMARY: '#E8845F',
-  ACCENT_SECONDARY: '#D4724E',
+  ACCENT_PRIMARY: '#BB471D',
+  ACCENT_SECONDARY: '#9E3A14',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // GREEN / SUCCESS COLORS (from approved reference)
@@ -44,16 +47,17 @@ export const DS_COLORS = {
   SUCCESS_LIGHT: '#EBF5EE',
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEXT COLORS (from approved reference)
+  // TEXT COLORS — TERTIARY/MUTED darkened from #8A8A8A to #8A8A8A so the pair
+  // {TEXT_TERTIARY, BG_PAGE} clears WCAG large-text minimum 3.0:1 (was 2.61).
   // ═══════════════════════════════════════════════════════════════════════════
   TEXT_PRIMARY: '#111111',      // Headings and body
   TEXT_SECONDARY: '#666666',    // Subtext, labels, metadata
-  TEXT_MUTED: '#999999',        // Placeholders, disabled
+  TEXT_MUTED: '#8A8A8A',        // Placeholders, disabled — V2 text.tertiary
   TEXT_ON_DARK: '#FFFFFF',      // Text on dark/colored backgrounds
 
   // Legacy
-  TEXT_TERTIARY: '#999999',
-  TEXT_ORANGE: '#E8845F',
+  TEXT_TERTIARY: '#8A8A8A',
+  TEXT_ORANGE: '#BB471D',
   TEXT_ON_ACCENT: '#FFFFFF',
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -70,15 +74,15 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   // TAB BAR (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
-  TAB_ACTIVE: '#E8845F',
+  TAB_ACTIVE: '#BB471D',
   TAB_INACTIVE: '#AAAAAA',
   TAB_BG: '#FFFFFF',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // LIVE / STREAK (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
-  LIVE_DOT: '#E8845F',
-  STREAK_ICON: '#E8845F',
+  LIVE_DOT: '#BB471D',
+  STREAK_ICON: '#BB471D',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // BASIC COLORS (from approved reference)
@@ -105,7 +109,7 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   // CATEGORY COLORS (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
-  CATEGORY_FITNESS: '#E8845F',
+  CATEGORY_FITNESS: '#BB471D',
   CATEGORY_MIND: '#7C6BC4',
   CATEGORY_MIND_STRIPE: '#4A5568',
   CATEGORY_DISCIPLINE: '#111111',
@@ -120,7 +124,7 @@ export const DS_COLORS = {
   DIFFICULTY_MEDIUM_BG: '#FFF8E8',
   DIFFICULTY_MEDIUM_TEXT: '#C17D00',
   DIFFICULTY_HARD_BG: '#FFF0ED',
-  DIFFICULTY_HARD_TEXT: '#E8845F',
+  DIFFICULTY_HARD_TEXT: '#BB471D',
   DIFFICULTY_EXTREME_BG: '#FFE5E5',
   DIFFICULTY_EXTREME_TEXT: '#DC2626',
   DIFFICULTY_MEDIUM: '#F5A623',
@@ -148,15 +152,15 @@ export const DS_COLORS = {
   // FEATURED / TIMER (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
   FEATURED_BG: '#FFF0ED',
-  FEATURED_TEXT: '#E8845F',
+  FEATURED_TEXT: '#BB471D',
   TIMER_BG: '#FFF0ED',
-  TIMER_TEXT: '#E8845F',
+  TIMER_TEXT: '#BB471D',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TASK ICONS (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
   TASK_ICON_BG: '#FFF0ED',
-  TASK_ICON_COLOR: '#E8845F',
+  TASK_ICON_COLOR: '#BB471D',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // EXPLORE BUTTON (from approved reference)
@@ -171,8 +175,8 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   INPUT_BG: '#FFFFFF',
   INPUT_BORDER: '#E8E5DF',
-  INPUT_BORDER_FOCUS: '#E8845F',
-  INPUT_PLACEHOLDER: '#999999',
+  INPUT_BORDER_FOCUS: '#BB471D',
+  INPUT_PLACEHOLDER: '#8A8A8A',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SKELETON / MODAL (from approved reference)
@@ -192,13 +196,13 @@ export const DS_COLORS = {
   // AVATAR (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
   AVATAR_BORDER: '#FFFFFF',
-  AVATAR_1: '#E8845F',
+  AVATAR_1: '#BB471D',
   AVATAR_2: '#2D8A4E',
   AVATAR_3: '#7B61FF',
   AVATAR_4: '#00897B',
   AVATAR_5: '#C4960C',
   AVATAR_6: '#D94040',
-  AVATAR_COLOR_1: '#E8845F',
+  AVATAR_COLOR_1: '#BB471D',
   AVATAR_COLOR_2: '#2D8A4E',
   AVATAR_COLOR_3: '#7B61FF',
   AVATAR_COLOR_4: '#00897B',
@@ -236,7 +240,7 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   // SWITCH/TOGGLE
   // ═══════════════════════════════════════════════════════════════════════════
-  SWITCH_TRACK_ON: '#E8845F',
+  SWITCH_TRACK_ON: '#BB471D',
   SWITCH_TRACK_OFF: '#E8E5DF',
   SWITCH_THUMB: '#FFFFFF',
 
@@ -268,7 +272,7 @@ export const DS_COLORS = {
   PRESSED_ORANGE: '#D2734A',
   GRAY_CARD_BG: '#F3F4F6',
   SCORE_ARROW: '#666666',
-  PAYWALL_BULLET: '#E8845F',
+  PAYWALL_BULLET: '#BB471D',
   SHARE_CARD_BG: '#000000',
   PROFILE_HEADER_BG: '#F5F3F0',
   SCORE_ICON: '#666666',
@@ -318,7 +322,7 @@ export const DS_COLORS = {
   linkBlue: '#2563EB',
   checkinBlue: '#2563EB',
   acceptGreen: '#10B981',
-  centerButtonBg: '#E8845F',
+  centerButtonBg: '#BB471D',
   DISCOVER_CORAL: '#E8593C',
   DISCOVER_BLUE: '#5B7FD4',
   DISCOVER_GREEN: '#4CAF50',
@@ -455,7 +459,7 @@ export const DS_COLORS = {
   CREATE_HARD_WARNING_BORDER: '#FFE082',
   CREATE_HARD_WARNING_TEXT: '#7A5C00',
   /** Aliases for create redesign (map to existing surfaces) */
-  TEXT_HINT: '#999999',
+  TEXT_HINT: '#8A8A8A',
   BORDER_LIGHT: '#EEEBE5',
   CARD_BG: '#FFFFFF',
   WARM_CREAM: '#F2F1EC',
@@ -501,8 +505,8 @@ export const DS_COLORS = {
   buttonDisabledBg: '#C4C0B8',
   buttonDisabledText: '#888888',
   rankGoldBg: '#FEF3C7',
-  activityOrange: '#E8845F',
-  borderFocus: '#E8845F',
+  activityOrange: '#BB471D',
+  borderFocus: '#BB471D',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // BACKWARD COMPATIBILITY ALIASES (lowercase — for gradual migration)
@@ -513,13 +517,13 @@ export const DS_COLORS = {
   card: '#FFFFFF',
   textPrimary: '#111111',
   textSecondary: '#666666',
-  textMuted: '#999999',
-  accent: '#E8845F',
-  accentDark: '#D4724E',
+  textMuted: '#8A8A8A',
+  accent: '#BB471D',
+  accentDark: '#9E3A14',
   border: '#E8E5DF',
   success: '#3D7A5A',
   tabInactive: '#AAAAAA',
-  tabActive: '#E8845F',
+  tabActive: '#BB471D',
   white: '#FFFFFF',
   black: '#111111',
   navyDark: '#111111',
@@ -551,14 +555,14 @@ export const DS_COLORS = {
   purpleTintWarm: '#EDE8FF',
   journalPurple: '#7C6BC4',
   journalStartBlue: '#2563EB',
-  runOrange: '#E8845F',
+  runOrange: '#BB471D',
   borderAlt: '#EFEFEF',
   challenge24hHeaderBg: '#2D6A4F',
   avatarPurple: '#7C6BC4',
   emeraldDark: '#065F46',
   challengeHeaderDark: '#2D3A2E',
   alertRedBorder: '#FECACA',
-  inputPlaceholder: '#999999',
+  inputPlaceholder: '#8A8A8A',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // camelCase / legacy aliases (TypeScript cleanup — match references across app)
@@ -586,7 +590,7 @@ export const DS_COLORS = {
   chipGrayBg: '#F3F4F6',
   checkinBlueBg: '#EEF0F8',
   surfaceAlt: '#F5F3F0',
-  avatarColor1: '#E8845F',
+  avatarColor1: '#BB471D',
   avatarColor2: '#2D8A4E',
   avatarColor3: '#7B61FF',
   avatarColor4: '#00897B',
@@ -1035,6 +1039,14 @@ export const DS_COLORS_V2 = {
     heroDark: '#0F0F0F',        // The signature dark surface — streak hero, trophies, etc.
     heroDarkWarm: '#262321',    // Secondary effort surface — active task, in-task screens
 
+    // Warm gradient ramp — used by HeroFeaturedCard. Three stops top->bottom.
+    heroDarkWarmGradient: ['#2a2520', '#4a3a30', '#6b4a30'] as const,
+
+    // Tinted neutral chip background. Sits on white cards where `surface.divider`
+    // (#E8E4DC) is too dark and `surface.cardSubtle` (#FAF7F2) is too light.
+    // Used by DailyBonusV2 progress-bar track and timer icon container.
+    cardChipNeutral: '#F1EFE8',
+
     // Dividers
     divider: '#E8E4DC',
     dividerDark: '#2A2A2A',
@@ -1042,14 +1054,15 @@ export const DS_COLORS_V2 = {
 
   // Brand
   brand: {
-    primary: '#D85A30',         // The GRIIT orange
-    primaryHover: '#C04A23',    // Pressed/hover state
+    primary: '#BB471D',         // The GRIIT orange — 5.2:1 contrast with white
+    primaryHover: '#9E3A14',    // Pressed/hover state
     primarySoft: '#FAECE7',     // Subtle tint backgrounds (light mode only)
     primaryOnDark: '#E8693E',   // Slightly brighter for OLED compensation
     primaryText: '#FFFFFF',     // Text on brand.primary — always white
                                 // NEVER use primarySoft text on primary background.
                                 // That's the v1 contrast bug (2.66:1).
-                                // White on primary = 5.4:1 ✓
+                                // White on #BB471D = 5.2:1 (verified by
+                                // tests/design-system-contrast.test.ts)
   },
 
   // Text

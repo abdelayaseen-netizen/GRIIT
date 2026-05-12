@@ -1,20 +1,17 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  Trophy,
-  Users2,
-  Dumbbell,
-  Brain,
-  BookHeart,
-  Target,
-  type LucideIcon,
-} from "lucide-react-native";
+import { Trophy, Users2 } from "lucide-react-native";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
+import {
+  getCategoryStyle,
+  difficultyDescriptive,
+  type ChallengeCategory as DailyCardCategory,
+  type ChallengeDifficulty as DailyCardDifficulty,
+} from "./_card-helpers";
 
-export type DailyCardDifficulty = "EASY" | "MED" | "HARD";
-export type DailyCardCategory = "body" | "mind" | "faith" | "focus";
+export type { DailyCardCategory, DailyCardDifficulty };
 
 export interface DailyCardData {
   id: string;
@@ -28,42 +25,6 @@ export interface DailyCardData {
    * SOCIAL_PROOF_MIN_THRESHOLD are returned as 0 by the backend so the
    * "Be first today" empty state can render. */
   joinedTodayCount: number;
-}
-
-interface CategoryStyle {
-  Icon: LucideIcon;
-  tint: string;
-  iconColor: string;
-}
-
-function getCategoryStyle(category: DailyCardCategory): CategoryStyle {
-  switch (category) {
-    case "body":
-      return {
-        Icon: Dumbbell,
-        tint: DS_COLORS.CATEGORY_BODY_TINT,
-        iconColor: DS_COLORS.CATEGORY_BODY_ICON,
-      };
-    case "mind":
-      return {
-        Icon: Brain,
-        tint: DS_COLORS.CATEGORY_MIND_TINT,
-        iconColor: DS_COLORS.CATEGORY_MIND_ICON,
-      };
-    case "faith":
-      return {
-        Icon: BookHeart,
-        tint: DS_COLORS.CATEGORY_FAITH_TINT,
-        iconColor: DS_COLORS.CATEGORY_FAITH_ICON,
-      };
-    case "focus":
-    default:
-      return {
-        Icon: Target,
-        tint: DS_COLORS.CATEGORY_FOCUS_TINT,
-        iconColor: DS_COLORS.CATEGORY_FOCUS_ICON,
-      };
-  }
 }
 
 interface DifficultyStyle {
@@ -96,12 +57,6 @@ function getDifficultyStyle(d: DailyCardDifficulty): DifficultyStyle {
     text: DS_COLORS.DIFFICULTY_MEDIUM_TEXT,
     border: DS_COLORS.DIFFICULTY_MEDIUM_TEXT,
   };
-}
-
-function difficultyDescriptive(d: DailyCardDifficulty): string {
-  if (d === "EASY") return "Easy";
-  if (d === "HARD") return "Hard";
-  return "Medium";
 }
 
 export interface DailyCardProps {

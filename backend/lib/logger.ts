@@ -12,5 +12,3 @@ export const logger = pino({
     level: (label: string) => ({ level: label }),
   },
 });
-
-export default logger;

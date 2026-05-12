@@ -1,0 +1,134 @@
+backend/trpc/create-context.ts:115:export const publicProcedure = withLogging;
+backend/trpc/create-context.ts:116:export const protectedProcedure = withLogging.use(({ ctx, next }) => {
+backend/trpc/routes/checkins.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/checkins.ts:49:  complete: protectedProcedure
+backend/trpc/routes/checkins.ts:400:  getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
+backend/trpc/routes/checkins.ts:409:  getTodayCheckinsForUser: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/checkins.ts:430:  secureDay: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+backend/trpc/routes/checkins.ts:539:  markAsShared: protectedProcedure.input(z.object({ completionId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+backend/trpc/routes/checkins.ts:548:  getShareStats: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/checkins.ts:556:  getMilestoneShared: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
+backend/trpc/routes/checkins.ts:563:  setMilestoneShared: protectedProcedure
+backend/trpc/routes/profiles.ts:11:import { createTRPCRouter, protectedProcedure, publicProcedure } from "../create-context";
+backend/trpc/routes/profiles.ts:44:  create: protectedProcedure
+backend/trpc/routes/profiles.ts:80:  getPublicByUsername: publicProcedure
+backend/trpc/routes/profiles.ts:171:  updatePushToken: protectedProcedure
+backend/trpc/routes/profiles.ts:184:  get: protectedProcedure
+backend/trpc/routes/profiles.ts:202:  validateSubscription: protectedProcedure
+backend/trpc/routes/profiles.ts:292:  update: protectedProcedure
+backend/trpc/routes/profiles.ts:347:  search: protectedProcedure
+backend/trpc/routes/profiles.ts:377:  getFollowers: publicProcedure
+backend/trpc/routes/profiles.ts:427:  getFollowing: publicProcedure
+backend/trpc/routes/profiles.ts:478:  isFollowing: protectedProcedure
+backend/trpc/routes/profiles.ts:494:  deleteAccount: protectedProcedure
+backend/trpc/routes/respects.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/respects.ts:12:  give: protectedProcedure
+backend/trpc/routes/respects.ts:73:  getForUser: protectedProcedure
+backend/trpc/routes/respects.ts:112:  getCountForUser: protectedProcedure
+backend/trpc/routes/challenges.ts:4:import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+backend/trpc/routes/challenges.ts:60:  list: publicProcedure
+backend/trpc/routes/challenges.ts:107:  getById: publicProcedure
+backend/trpc/routes/challenges.ts:265:  getActive: protectedProcedure
+backend/trpc/routes/challenges.ts:293:  listMyActive: protectedProcedure
+backend/trpc/routes/challenges.ts:330:  getPublicChallenges: protectedProcedure
+backend/trpc/routes/challenges.ts:380:  startTeamChallenge: protectedProcedure
+backend/trpc/routes/challenges.ts:397:  getTeamMembers: protectedProcedure
+backend/trpc/routes/integrations.ts:8:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/integrations.ts:27:  getStravaAuthUrl: protectedProcedure.query(({ ctx }) => {
+backend/trpc/routes/integrations.ts:41:  isStravaEnabled: protectedProcedure.query(() => {
+backend/trpc/routes/integrations.ts:46:  getStravaConnection: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/integrations.ts:72:  getStravaActivities: protectedProcedure
+backend/trpc/routes/integrations.ts:122:  getStravaAthlete: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/integrations.ts:155:  disconnectStrava: protectedProcedure
+backend/trpc/routes/integrations.ts:171:  verifyStravaTask: protectedProcedure
+backend/trpc/routes/sharedGoal.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/sharedGoal.ts:6:  logProgress: protectedProcedure
+backend/trpc/routes/sharedGoal.ts:88:  getRecentLogs: protectedProcedure
+backend/trpc/routes/sharedGoal.ts:126:  getContributions: protectedProcedure
+backend/trpc/routes/achievements.ts:1:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/achievements.ts:4:  getForUser: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/profiles-social.ts:3:import { protectedProcedure } from "../create-context";
+backend/trpc/routes/profiles-social.ts:10:  followUser: protectedProcedure
+backend/trpc/routes/profiles-social.ts:77:  unfollowUser: protectedProcedure
+backend/trpc/routes/profiles-social.ts:91:  sendFollowRequest: protectedProcedure
+backend/trpc/routes/profiles-social.ts:167:  acceptFollowRequest: protectedProcedure
+backend/trpc/routes/profiles-social.ts:213:  declineFollowRequest: protectedProcedure
+backend/trpc/routes/profiles-social.ts:228:  getFollowStatus: protectedProcedure
+backend/trpc/routes/profiles-social.ts:249:  getFollowCounts: protectedProcedure
+backend/trpc/routes/profiles-social.ts:273:  getPendingFollowRequests: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/notifications.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/notifications.ts:103:  getAll: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/notifications.ts:135:  markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
+backend/trpc/routes/notifications.ts:147:  registerToken: protectedProcedure
+backend/trpc/routes/notifications.ts:181:  updateReminderSettings: protectedProcedure
+backend/trpc/routes/notifications.ts:210:  getReminderSettings: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/notifications.ts:255:  previewTaskReminderBody: protectedProcedure
+backend/trpc/routes/reports.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/reports.ts:21:  create: protectedProcedure
+backend/trpc/routes/profiles-stats.ts:3:import { protectedProcedure } from "../create-context";
+backend/trpc/routes/profiles-stats.ts:19:  getStats: protectedProcedure
+backend/trpc/routes/profiles-stats.ts:186:  getCompletedChallenges: protectedProcedure
+backend/trpc/routes/profiles-stats.ts:217:  getSecuredDateKeys: protectedProcedure
+backend/trpc/routes/profiles-stats.ts:242:  getWeeklyProgress: protectedProcedure
+backend/trpc/routes/profiles-stats.ts:265:  getWeeklyTrend: protectedProcedure
+backend/trpc/routes/profiles-stats.ts:297:  setWeeklyGoal: protectedProcedure
+backend/trpc/routes/profiles-stats.ts:312:  getBadges: protectedProcedure
+backend/trpc/routes/accountability.ts:4:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/accountability.ts:37:  invite: protectedProcedure
+backend/trpc/routes/accountability.ts:162:  listMine: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/accountability.ts:228:  respond: protectedProcedure
+backend/trpc/routes/accountability.ts:313:  remove: protectedProcedure
+backend/trpc/routes/feed.ts:3:import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+backend/trpc/routes/feed.ts:60:  getLiveFeed: protectedProcedure.input(z.object({ scope: z.enum(["following", "everyone"]), limit: z.number().min(1).max(30).default(20) })).query(async ({ ctx, input }) => {
+backend/trpc/routes/feed.ts:115:  getUserPosts: protectedProcedure.input(z.object({ userId: z.string().uuid(), limit: z.number().min(1).max(50).default(20) })).query(async ({ ctx, input }) => {
+backend/trpc/routes/feed.ts:138:  getPost: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).query(async ({ ctx, input }) => {
+backend/trpc/routes/feed.ts:222:  list: protectedProcedure.input(z.object({ limit: z.number().min(1).max(50).default(20), cursor: z.string().optional() })).query(async ({ ctx, input }) => {
+backend/trpc/routes/feed.ts:292:  listMine: protectedProcedure.input(z.object({ limit: z.number().min(1).max(50).default(20), cursor: z.string().optional() })).query(async ({ ctx, input }) => {
+backend/trpc/routes/feed.ts:325:  getMySummary: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/feed.ts:338:  shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(500).optional(), proofPhotoUrl: z.string().url().optional() })).mutation(async ({ input, ctx }) => {
+backend/trpc/routes/feed.ts:421:  react: protectedProcedure
+backend/trpc/routes/feed.ts:553:  getComments: protectedProcedure
+backend/trpc/routes/feed.ts:596:  comment: protectedProcedure
+backend/trpc/routes/feed.ts:698:  deleteComment: protectedProcedure
+backend/trpc/routes/feed.ts:734:  deletePost: protectedProcedure
+backend/trpc/routes/feed.ts:756:  getReactions: protectedProcedure
+backend/trpc/routes/feed.ts:792:  getRecentCompletions: publicProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/feed.ts:887:  getStreakAtRisk: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/challenges-discover.ts:2:import { publicProcedure } from "../create-context";
+backend/trpc/routes/challenges-discover.ts:90:  getDiscoverFeed: publicProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/challenges-discover.ts:224:  getDiscoverFeatured: publicProcedure
+backend/trpc/routes/challenges-discover.ts:403:  getDiscoverGrid: publicProcedure
+backend/trpc/routes/challenges-discover.ts:478:  getDiscoverHabits: publicProcedure
+backend/trpc/routes/challenges-discover.ts:601:  getRecommended: publicProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/challenges-discover.ts:682:  getCategoryCounts: publicProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/challenges-discover.ts:712:  getFeatured: publicProcedure
+backend/trpc/routes/challenges-discover.ts:787:  getStarterPack: publicProcedure
+backend/trpc/routes/nudges.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/nudges.ts:20:  send: protectedProcedure
+backend/trpc/routes/nudges.ts:87:  getForUser: protectedProcedure
+backend/trpc/routes/starters.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/starters.ts:23:  getChallengeIdByStarterId: protectedProcedure
+backend/trpc/routes/starters.ts:40:  join: protectedProcedure
+backend/trpc/routes/challenges-create.ts:3:import { protectedProcedure } from "../create-context";
+backend/trpc/routes/challenges-create.ts:45:  create: protectedProcedure
+backend/trpc/routes/challenges-join.ts:3:import { protectedProcedure } from "../create-context";
+backend/trpc/routes/challenges-join.ts:18:  join: protectedProcedure
+backend/trpc/routes/challenges-join.ts:175:  leave: protectedProcedure
+backend/trpc/routes/leaderboard.ts:3:import { createTRPCRouter, publicProcedure, protectedProcedure, type Context } from "../create-context";
+backend/trpc/routes/leaderboard.ts:31:  getWeekly: publicProcedure
+backend/trpc/routes/leaderboard.ts:159:  getFriendsBoard: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/leaderboard.ts:246:  getChallengeBoard: protectedProcedure
+backend/trpc/routes/referrals.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/referrals.ts:7:  recordOpen: protectedProcedure
+backend/trpc/routes/referrals.ts:34:  markJoinedChallenge: protectedProcedure
+backend/trpc/routes/user.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/user.ts:28:  completeOnboarding: protectedProcedure
+backend/trpc/routes/auth.ts:3:import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+backend/trpc/routes/auth.ts:9:  signUp: publicProcedure
+backend/trpc/routes/auth.ts:28:  signIn: publicProcedure
+backend/trpc/routes/auth.ts:45:  signOut: protectedProcedure
+backend/trpc/routes/auth.ts:55:  getSession: publicProcedure
+backend/trpc/routes/auth.ts:62:  getEmailForUsername: publicProcedure
+backend/trpc/routes/streaks.ts:3:import { createTRPCRouter, protectedProcedure } from "../create-context";
+backend/trpc/routes/streaks.ts:15:  getFreezeStatus: protectedProcedure.query(async ({ ctx }) => {
+backend/trpc/routes/streaks.ts:37:  useFreeze: protectedProcedure

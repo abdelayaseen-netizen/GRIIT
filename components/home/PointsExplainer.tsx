@@ -68,6 +68,7 @@ export default function PointsExplainer({ visible, onClose, currentPoints, curre
           initialNumToRender={8}
           maxToRenderPerBatch={8}
           windowSize={5}
+          removeClippedSubviews
           ListHeaderComponent={
             <>
               <View style={s.statusCard}>

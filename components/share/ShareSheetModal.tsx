@@ -358,16 +358,16 @@ export function ShareSheetModal({
           <ActivityIndicator style={styles.busy} color={DS_COLORS.DISCOVER_CORAL} />
         ) : (
           <View style={styles.actions}>
-            <Pressable style={styles.primaryBtn} onPress={() => void handleInstagram()} accessibilityRole="button">
+            <Pressable style={styles.primaryBtn} onPress={() => void handleInstagram()} accessibilityRole="button" accessibilityLabel="Share to Instagram Story">
               <Text style={styles.primaryBtnText}>Instagram Story</Text>
             </Pressable>
-            <Pressable style={styles.secondaryBtn} onPress={() => void handleCopy()} accessibilityRole="button">
+            <Pressable style={styles.secondaryBtn} onPress={() => void handleCopy()} accessibilityRole="button" accessibilityLabel="Copy share image">
               <Text style={styles.secondaryBtnText}>Copy</Text>
             </Pressable>
-            <Pressable style={styles.secondaryBtn} onPress={() => void handleSave()} accessibilityRole="button">
+            <Pressable style={styles.secondaryBtn} onPress={() => void handleSave()} accessibilityRole="button" accessibilityLabel="Save share image">
               <Text style={styles.secondaryBtnText}>Save</Text>
             </Pressable>
-            <Pressable style={styles.tertiaryBtn} onPress={() => void handleShareSheet()} accessibilityRole="button">
+            <Pressable style={styles.tertiaryBtn} onPress={() => void handleShareSheet()} accessibilityRole="button" accessibilityLabel="More share options">
               <Text style={styles.tertiaryBtnText}>More…</Text>
             </Pressable>
           </View>

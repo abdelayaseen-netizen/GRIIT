@@ -1,0 +1,29 @@
+GRIIT Design System — WCAG Contrast Report
+============================================
+Date: 2026-05-10
+Branch: cleanup/2026-05-deep-clean
+
+All pairs in tests/design-system-contrast.test.ts now pass:
+
+| Pair                                  | FG       | BG       | Ratio  | Min  | Result |
+|---------------------------------------|----------|----------|-------:|-----:|--------|
+| TEXT_PRIMARY on BG_PAGE               | #111111  | #F5F5F5  | 18.65  | 4.5  | PASS   |
+| TEXT_SECONDARY on BG_PAGE             | #666666  | #F5F5F5  |  5.51  | 4.5  | PASS   |
+| TEXT_TERTIARY on BG_PAGE              | #8A8A8A  | #F5F5F5  |  3.19  | 3.0  | PASS   |
+| TEXT_ON_ACCENT on ACCENT              | #FFFFFF  | #BB471D  |  5.21  | 4.5  | PASS   |
+| TEXT_PRIMARY on BG_CARD               | #111111  | #FFFFFF  | 19.55  | 4.5  | PASS   |
+| TEXT_SECONDARY on BG_CARD             | #666666  | #FFFFFF  |  5.74  | 4.5  | PASS   |
+| TEXT_TERTIARY on BG_CARD              | #8A8A8A  | #FFFFFF  |  3.49  | 3.0  | PASS   |
+| textPrimary on surface                | #111111  | #FFFFFF  | 19.55  | 4.5  | PASS   |
+| textSecondary on surface              | #666666  | #FFFFFF  |  5.74  | 4.5  | PASS   |
+
+Token swaps:
+- ACCENT             #E8845F -> #BB471D  (5.21:1 vs 2.66:1, +96%)
+- ACCENT_DARK        #D4724E -> #9E3A14
+- TEXT_TERTIARY      #999999 -> #8A8A8A  (3.19:1 vs 2.61:1)
+- TEXT_MUTED         #999999 -> #8A8A8A
+- DS_COLORS_V2.brand.primary already targeted at the new value.
+
+Note: Yaseen's task description suggested #DC5401 ("~4.7:1, passes AA").
+Empirical measurement: white on #DC5401 = 3.95:1, FAILS AA. Picked #BB471D
+(5.21:1) instead. See scripts/check-contrast.mjs for the probe used.

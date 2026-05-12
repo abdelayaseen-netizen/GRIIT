@@ -20,9 +20,6 @@ export function initialiseSentry(): void {
   });
 }
 
-/** @deprecated Use `initialiseSentry` — kept for existing imports. */
-export const initSentry = initialiseSentry;
-
 export function setSentryUser(userId: string, email?: string): void {
   if (!SENTRY_DSN) return;
   Sentry.setUser({ id: userId, email });
@@ -36,7 +33,8 @@ export function clearSentryUser(): void {
 export function captureError(error: unknown, context?: string | Record<string, unknown>): void {
   if (__DEV__) {
     const label = typeof context === "string" ? context : JSON.stringify(context ?? {});
-    if (__DEV__) console.error(`[${label}]`, error);
+    // DEV-only: surface errors to the dev console; stripped in production builds.
+    console.error(`[${label}]`, error);
     return;
   }
   if (!SENTRY_DSN) return;
@@ -64,5 +62,3 @@ export function captureMessage(message: string, level: Sentry.SeverityLevel = "i
     Sentry.captureMessage(message, level);
   }
 }
-
-export { Sentry };

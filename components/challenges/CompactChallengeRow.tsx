@@ -1,19 +1,18 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  ChevronRight,
-  Dumbbell,
-  Brain,
-  BookHeart,
-  Target,
-  type LucideIcon,
-} from "lucide-react-native";
+import { ChevronRight } from "lucide-react-native";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
+import {
+  getCategoryStyle,
+  difficultyDescriptive,
+  dayUnit,
+  type ChallengeCategory as CompactChallengeCategory,
+  type ChallengeDifficulty as CompactChallengeDifficulty,
+} from "./_card-helpers";
 
-export type CompactChallengeDifficulty = "EASY" | "MED" | "HARD";
-export type CompactChallengeCategory = "body" | "mind" | "faith" | "focus";
+export type { CompactChallengeCategory, CompactChallengeDifficulty };
 export type CompactChallengeProofType = "photo" | "text" | "location";
 
 export interface CompactChallengeRowData {
@@ -30,56 +29,10 @@ export interface CompactChallengeRowProps {
   data: CompactChallengeRowData;
 }
 
-interface CategoryStyle {
-  Icon: LucideIcon;
-  tint: string;
-  iconColor: string;
-}
-
-function getCategoryStyle(category: CompactChallengeCategory): CategoryStyle {
-  switch (category) {
-    case "body":
-      return {
-        Icon: Dumbbell,
-        tint: DS_COLORS.CATEGORY_BODY_TINT,
-        iconColor: DS_COLORS.CATEGORY_BODY_ICON,
-      };
-    case "mind":
-      return {
-        Icon: Brain,
-        tint: DS_COLORS.CATEGORY_MIND_TINT,
-        iconColor: DS_COLORS.CATEGORY_MIND_ICON,
-      };
-    case "faith":
-      return {
-        Icon: BookHeart,
-        tint: DS_COLORS.CATEGORY_FAITH_TINT,
-        iconColor: DS_COLORS.CATEGORY_FAITH_ICON,
-      };
-    case "focus":
-    default:
-      return {
-        Icon: Target,
-        tint: DS_COLORS.CATEGORY_FOCUS_TINT,
-        iconColor: DS_COLORS.CATEGORY_FOCUS_ICON,
-      };
-  }
-}
-
-function difficultyDescriptive(d: CompactChallengeDifficulty): string {
-  if (d === "EASY") return "Easy";
-  if (d === "HARD") return "Hard";
-  return "Medium";
-}
-
 function proofTypeLabel(p: CompactChallengeProofType): string {
   if (p === "photo") return "Photo proof";
   if (p === "location") return "Location proof";
   return "Text proof";
-}
-
-function dayUnit(days: number): string {
-  return days === 1 ? "day" : "days";
 }
 
 export const CompactChallengeRow = React.memo(function CompactChallengeRow({

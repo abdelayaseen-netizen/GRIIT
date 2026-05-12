@@ -202,6 +202,7 @@ function ChallengeCompleteScreenInner() {
         initialNumToRender={1}
         maxToRenderPerBatch={1}
         windowSize={2}
+        removeClippedSubviews={false}
         renderItem={renderCompleteBody}
       />
     </SafeAreaView>

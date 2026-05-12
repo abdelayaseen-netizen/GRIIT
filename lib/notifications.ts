@@ -635,9 +635,6 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 }
 
-/** @deprecated Use registerForPushNotificationsAsync */
-export const registerForPushNotifications = registerForPushNotificationsAsync;
-
 /**
  * Schedule a local notification at a specific time every day.
  */

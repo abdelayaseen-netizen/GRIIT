@@ -378,6 +378,10 @@ function AccountabilityScreenInner() {
         renderItem={renderAccountabilityRootItem}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={1}
+        removeClippedSubviews={false}
       />
 
       <ConfirmDialog
