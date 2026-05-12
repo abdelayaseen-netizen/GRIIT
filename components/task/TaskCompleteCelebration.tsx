@@ -198,9 +198,21 @@ export function TaskCompleteCelebration({
             placeholderTextColor={DS_COLORS.DISCOVER_HERO_AVATAR_RING}
             value={postCaption}
             onChangeText={setPostCaption}
-            maxLength={500}
+            maxLength={120}
             editable={!postedInline}
           />
+          <Text
+            style={{
+              alignSelf: "stretch",
+              textAlign: "right",
+              fontSize: 12,
+              marginTop: 6,
+              color: postCaption.length === 120 ? DS_COLORS.ACCENT : DS_COLORS.TEXT_SECONDARY,
+            }}
+            accessibilityLiveRegion="polite"
+          >
+            {postCaption.length} / 120
+          </Text>
 
           {postedInline ? <Text style={celebStyles.postedOk}>Posted!</Text> : null}
           {shareFeedErr ? <Text style={celebStyles.postedErr}>{shareFeedErr}</Text> : null}
