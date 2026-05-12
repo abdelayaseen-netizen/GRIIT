@@ -335,7 +335,7 @@ export const feedRouter = createTRPCRouter({
     };
   }),
 
-  shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(500).optional(), proofPhotoUrl: z.string().url().optional() })).mutation(async ({ input, ctx }) => {
+  shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(120).optional(), proofPhotoUrl: z.string().url().optional() })).mutation(async ({ input, ctx }) => {
     const server = getSupabaseServer();
     if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     if (input.caption?.trim()) {
