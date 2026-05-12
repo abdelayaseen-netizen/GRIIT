@@ -403,7 +403,7 @@ export function TaskCompleteScreenInner() {
   ]);
 
   const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
-    if (!activeChallengeId || !taskId || !canSubmit) {
+    if (!activeChallengeId || !taskId) {
       if (Platform.OS !== "web") {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
@@ -411,6 +411,12 @@ export function TaskCompleteScreenInner() {
     }
     if (taskMode === "minimum" && isChallengeHardMode) {
       showError("Hard mode challenges require full completion.");
+      return;
+    }
+    if (taskMode === "full" && !canSubmit) {
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      }
       return;
     }
     setIsSubmitting(true);
