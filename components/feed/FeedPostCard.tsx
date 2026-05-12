@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Camera, CircleCheck, Heart } from "lucide-react-native";
+import { Camera, Heart } from "lucide-react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
@@ -17,7 +17,6 @@ import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
 import { Avatar } from "@/components/Avatar";
-import { ImageViewerModal } from "../shared/ImageViewerModal";
 
 function placeholderBg(challengeName: string): string {
   const s = challengeName.toLowerCase();
@@ -55,7 +54,15 @@ function FeedPostCardInner({
   const [showQuickComment, setShowQuickComment] = React.useState(false);
   const [quickDraft, setQuickDraft] = React.useState("");
   const [sending, setSending] = React.useState(false);
-  const [lightboxVisible, setLightboxVisible] = React.useState(false);
+  const [captionExpanded, setCaptionExpanded] = React.useState(false);
+
+  const taskOrDayTag = post.taskName?.trim()
+    ? post.taskName.trim()
+    : `Day ${post.currentDay} of ${post.totalDays}`;
+
+  React.useEffect(() => {
+    setCaptionExpanded(false);
+  }, [post.id]);
 
   const lastTapRef = React.useRef<number>(0);
   const tapTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,13 +111,11 @@ function FeedPostCardInner({
     } else {
       lastTapRef.current = now;
       tapTimeoutRef.current = setTimeout(() => {
-        if (proofUri) {
-          setLightboxVisible(true);
-        }
+        setCaptionExpanded((prev) => !prev);
         tapTimeoutRef.current = null;
       }, DOUBLE_TAP_DELAY);
     }
-  }, [post.reactedByMe, onRespect, heartScale, heartOpacity, proofUri]);
+  }, [post.reactedByMe, onRespect, heartScale, heartOpacity]);
 
   const handleQuickSend = React.useCallback(async () => {
     const text = quickDraft.trim();
@@ -131,52 +136,69 @@ function FeedPostCardInner({
     <View style={styles.card}>
       <FeedCardHeader post={post} onProfilePress={onProfilePress} onMenuPress={onMenuPress} />
 
-      {post.caption ? (
-        <Text style={styles.captionBody} accessibilityRole="text">
-          {post.caption}
-        </Text>
-      ) : null}
-
       {showProof ? (
         <View style={styles.proofWrap}>
-          <Pressable
-            onPress={handleImagePress}
-            accessibilityRole="button"
-            accessibilityLabel="Tap to view full image, double tap to respect"
-          >
-            {proofUri ? (
-              <Image
-                source={{ uri: proofUri }}
-                style={styles.proofImage}
-                contentFit="cover"
-                accessibilityRole="image"
-              />
-            ) : (
-              <View style={[styles.placeholder, { backgroundColor: placeholderBg(post.challengeName) }]}>
-                <Camera size={40} color={DS_COLORS.TEXT_PRIMARY} style={{ opacity: 0.35 }} />
-              </View>
-            )}
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                styles.heartOverlay,
-                {
-                  opacity: heartOpacity,
-                  transform: [{ scale: heartScale }],
-                },
-              ]}
+          <View style={styles.proofMedia}>
+            <Pressable
+              style={styles.heroPressable}
+              onPress={handleImagePress}
+              accessibilityRole="button"
+              accessibilityLabel="Tap to expand caption, double tap to respect"
             >
-              <Heart size={80} color={DS_COLORS.FEED_RESPECT_ICON_FILL} fill={DS_COLORS.FEED_RESPECT_ICON_FILL} />
-            </Animated.View>
-          </Pressable>
-          <View style={styles.proofMeta}>
-            <CircleCheck size={12} color={DS_COLORS.ACCENT} />
-            <Text style={styles.taskTag}>
-              {post.challengeName}
-              {post.taskName ? ` · ${post.taskName}` : ` · Task ${post.currentDay} of ${post.totalDays}`}
-            </Text>
+              <View style={styles.proofImageArea}>
+                {proofUri ? (
+                  <Image
+                    source={{ uri: proofUri }}
+                    style={styles.proofImage}
+                    contentFit="cover"
+                    accessibilityRole="image"
+                  />
+                ) : (
+                  <View style={[styles.placeholder, { backgroundColor: placeholderBg(post.challengeName) }]}>
+                    <Camera size={40} color={DS_COLORS.TEXT_PRIMARY} style={{ opacity: 0.35 }} />
+                  </View>
+                )}
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.heartOverlay,
+                    {
+                      opacity: heartOpacity,
+                      transform: [{ scale: heartScale }],
+                    },
+                  ]}
+                >
+                  <Heart size={80} color={DS_COLORS.FEED_RESPECT_ICON_FILL} fill={DS_COLORS.FEED_RESPECT_ICON_FILL} />
+                </Animated.View>
+              </View>
+
+              <View style={styles.overlayAnchored}>
+                <View style={styles.overlayBackdrop}>
+                  <Text style={styles.overlayChallenge} numberOfLines={2}>
+                    {post.challengeName}
+                  </Text>
+                  <Text style={styles.overlayTag} numberOfLines={2}>
+                    {taskOrDayTag}
+                  </Text>
+                  {post.caption?.trim() ? (
+                    <Text
+                      style={styles.overlayCaption}
+                      numberOfLines={captionExpanded ? undefined : 2}
+                      ellipsizeMode="tail"
+                      accessibilityRole="text"
+                    >
+                      {post.caption}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            </Pressable>
           </View>
         </View>
+      ) : post.caption?.trim() ? (
+        <Text style={styles.captionFallback} accessibilityRole="text">
+          {post.caption}
+        </Text>
       ) : null}
 
       <View style={styles.progressBlock}>
@@ -256,12 +278,6 @@ function FeedPostCardInner({
       ) : null}
 
       <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
-
-      <ImageViewerModal
-        visible={lightboxVisible}
-        imageUri={proofUri ?? ""}
-        onClose={() => setLightboxVisible(false)}
-      />
     </View>
   );
 }
@@ -274,7 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.XL,
     overflow: "hidden",
   },
-  captionBody: {
+  captionFallback: {
     fontSize: 12,
     color: DS_COLORS.TEXT_PRIMARY,
     lineHeight: 20,
@@ -288,13 +304,33 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
   },
+  proofMedia: {
+    position: "relative",
+    width: "100%",
+  },
+  heroPressable: {
+    width: "100%",
+    position: "relative",
+  },
+  proofImageArea: {
+    width: "100%",
+    aspectRatio: 4 / 5,
+    position: "relative",
+    overflow: "hidden",
+  },
   proofImage: {
     width: "100%",
-    aspectRatio: 4 / 3,
+    height: "100%",
+    position: "absolute",
+    left: 0,
+    top: 0,
   },
   placeholder: {
     width: "100%",
-    aspectRatio: 4 / 3,
+    height: "100%",
+    position: "absolute",
+    left: 0,
+    top: 0,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -307,18 +343,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  proofMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+  overlayAnchored: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  taskTag: {
-    fontSize: 11,
-    color: DS_COLORS.TEXT_SECONDARY,
-    flex: 1,
+  overlayBackdrop: {
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    paddingHorizontal: 12,
+    paddingTop: 14,
+    paddingBottom: 12,
+    gap: 4,
+  },
+  overlayChallenge: {
+    fontSize: 13,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.WHITE,
+    opacity: 0.7,
+  },
+  overlayTag: {
+    fontSize: 12,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.WHITE,
+    opacity: 0.92,
+  },
+  overlayCaption: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "400",
+    color: DS_COLORS.WHITE,
+    opacity: 1,
+    marginTop: 2,
   },
   progressBlock: {
     paddingTop: 8,
