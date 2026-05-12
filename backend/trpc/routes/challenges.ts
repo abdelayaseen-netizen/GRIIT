@@ -117,6 +117,16 @@ export const challengesRouter = createTRPCRouter({
         .eq("id", input.id)
         .single();
 
+      logger.info(
+        {
+          challengeId: input.id,
+          authed: !!ctx.userId,
+          found: !!data,
+          error: (error as { code?: string } | null)?.code ?? null,
+        },
+        "[challenges.getById] attempt"
+      );
+
       if (error) {
         const pgCode = (error as { code?: string }).code;
         if (pgCode === "PGRST116") {
