@@ -32,7 +32,12 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
+import { FLAGS } from "@/lib/feature-flags";
+import { ProfileHero } from "@/components/profile/ProfileHero";
+import { TrophyRail } from "@/components/profile/TrophyRail";
+import { EmptyPostsZone } from "@/components/profile/EmptyPostsZone";
+import { computeProfileState } from "@/lib/profile-state";
 import { shareProfile } from "@/lib/share";
 import { pickAndUploadAvatar } from "@/lib/avatar";
 import { captureError } from "@/lib/sentry";
@@ -131,14 +136,14 @@ export default function ProfileScreen() {
   const postsQuery = useQuery({
     queryKey: ["profile", user?.id, "userPosts"],
     queryFn: () => trpcQuery(TRPC.feed.getUserPosts, { userId: user!.id, limit: 30 }) as Promise<{ posts: LiveFeedPost[] }>,
-    enabled: !isGuest && !!user?.id && tab === "posts",
+    enabled: !isGuest && !!user?.id,
     staleTime: 60 * 1000,
   });
 
   const badgesQuery = useQuery({
     queryKey: ["profile", user?.id, "badges"],
     queryFn: () => trpcQuery(TRPC.profiles.getBadges, { userId: user!.id }) as Promise<{ earned: BadgeDef[]; next: BadgeDef[] }>,
-    enabled: !isGuest && !!user?.id && tab === "badges",
+    enabled: !isGuest && !!user?.id,
     staleTime: 60 * 1000,
   });
 
@@ -283,6 +288,24 @@ export default function ProfileScreen() {
   const tier = stats?.tier ?? "Starter";
   const tierColors = tierPillStyle(tier);
   const fc = followCountsQuery.data;
+  const postCount = postsQuery.data?.posts?.length ?? 0;
+  const badgeCount = badgesQuery.data?.earned?.length ?? 0;
+  const profileState = useMemo(() => computeProfileState({ streak, postCount }), [streak, postCount]);
+
+  const lastProfileStateFiredRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!FLAGS.PR5_PROFILE_STATE_ANALYTICS) return;
+    if (lastProfileStateFiredRef.current === profileState) return;
+    lastProfileStateFiredRef.current = profileState;
+    track({
+      name: "profile_state_viewed",
+      state: profileState,
+      view: "self",
+      streak,
+      post_count: postCount,
+      badge_count: badgeCount,
+    });
+  }, [profileState, streak, postCount, badgeCount]);
   const avatarUri = profile ? (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "" : "";
 
   type ProfileActiveChallengeRow = {
@@ -353,7 +376,9 @@ export default function ProfileScreen() {
         onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
         onRespect={() => void onPostRespect(post)}
         onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
-        onShare={() => {}}
+        onShare={() => {
+          track({ name: "profile_post_thumbnail_tapped", post_id: post.id });
+        }}
       />
     ),
     [router, onPostRespect]
@@ -464,6 +489,43 @@ export default function ProfileScreen() {
             ) : null}
           </TouchableOpacity>
         ) : null}
+
+
+        {FLAGS.PR5_PROFILE_HERO && FLAGS.PR5_STREAK_HERO_CARD ? (
+          <ProfileHero
+            state={profileState}
+            view="self"
+            displayName={primaryLine}
+            username={profile.username?.trim() || listUsername}
+            avatarUrl={avatarUri.trim() ? avatarUri : null}
+            bio={profile.bio ?? null}
+            tier={tier}
+            tierBg={tierColors.bg}
+            tierFg={tierColors.fg}
+            streak={streak}
+            followerCount={fc?.followers ?? 0}
+            followingCount={fc?.following ?? 0}
+            onBioCta={() => {
+              track({ name: "profile_bio_cta_tapped", from_state: "new_user" });
+              router.push(ROUTES.EDIT_PROFILE as never);
+            }}
+            onEditProfile={() => router.push(ROUTES.EDIT_PROFILE as never)}
+            onShare={() => {
+              track({ name: "profile_share_tapped", from_state: profileState });
+              void handleShare();
+            }}
+            onLightFirstFlame={() => router.push(ROUTES.TABS_HOME as never)}
+            onAvatarPress={() => void handleAvatarPress()}
+            uploadingAvatar={uploading}
+            onFollowersPress={() =>
+              router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)
+            }
+            onFollowingPress={() =>
+              router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)
+            }
+          />
+        ) : (
+          <>
 
         <View style={styles.profileRow}>
           <View style={styles.avatarCol}>
@@ -586,6 +648,40 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+          </>
+        )}
+
+        {FLAGS.PR5_TROPHY_RAIL &&
+          (badgesQuery.data?.earned?.length ?? 0) + (badgesQuery.data?.next?.length ?? 0) > 0 ? (
+          <TrophyRail
+            earned={badgesQuery.data?.earned ?? []}
+            next={badgesQuery.data?.next ?? []}
+            onSeeAllPress={() => setTab("badges")}
+            onPressBadge={(b, lit) => {
+              track({
+                name: "profile_trophy_tapped",
+                badge_slug: b.slug,
+                lit,
+              });
+              setSelectedBadge({
+                id: b.id,
+                name: b.name,
+                icon: b.icon,
+                color: b.color,
+                progress: b.progress ?? 0,
+                total: b.total ?? 1,
+              });
+            }}
+          />
+        ) : null}
+
+
+
+
+        {FLAGS.PR5_EMPTY_ZONE && profileState === "new_user" && badgeCount === 0 ? (
+          <EmptyPostsZone view="self" onPostFirstProof={() => router.push(ROUTES.TABS_CREATE as never)} />
+        ) : (
+          <>
         <View style={styles.tabsBar}>
           {(["challenges", "posts", "badges"] as const).map((t) => (
             <Pressable accessibilityRole="tab"
@@ -693,6 +789,9 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
+          </>
+        )}
+
         <View style={{ height: 32 }} />
       </View>
       );
@@ -732,6 +831,8 @@ export default function ProfileScreen() {
       keyExtractorBadge,
       renderEarnedBadgeItem,
       renderNextBadgeItem,
+      profileState,
+      badgeCount,
     ]
   );
 

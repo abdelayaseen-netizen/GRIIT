@@ -15,7 +15,9 @@ export function EmptyPostsZone(props: EmptyPostsZoneProps) {
       <View style={styles.container}>
         <Camera size={28} color={DS_COLORS.TEXT_MUTED} strokeWidth={1.5} />
         <Text style={styles.title}>No proof posts yet</Text>
-        <Text style={styles.subtitle}>{props.displayName ?? "They"} hasn't posted anything yet.</Text>
+        <Text style={styles.subtitle}>
+          {(props.displayName ?? "They") + " hasn\u2019t posted anything yet."}
+        </Text>
       </View>
     );
   }
