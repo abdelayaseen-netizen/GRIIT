@@ -18,6 +18,14 @@ export const FLAGS = {
   PREMIUM_ANALYTICS: true,
   PREMIUM_PROFILE_FEATURES: true,
   PREMIUM_INTEGRATIONS: false,
+  /** PR#3: tap a proof photo in feed/profile → opens ImageViewerModal fullscreen. */
+  PR3_IMAGE_VIEWER: true,
+  /** PR#3: dedupe FeedCardHeader (drop taskName) and remove "Day X of Y" label. */
+  PR3_FEED_DEDUPE: true,
+  /** PR#3: hide WeekStrip and DailyBonus when streak === 0. */
+  PR3_ZERO_STATE_GATES: true,
+  /** PR#3: instrument home_state_viewed analytics event. */
+  PR3_HOME_STATE_ANALYTICS: true,
 } as const;
 
 // ============================================
