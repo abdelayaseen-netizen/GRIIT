@@ -51,6 +51,8 @@ import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
+import { FLAGS } from "@/lib/feature-flags";
+import { computeHomeState } from "@/lib/home-state";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -267,6 +269,34 @@ export default function HomeScreen() {
   }, [completedTodayChallenges.length]);
 
   const streak = stats?.activeStreak ?? 0;
+
+  const homeState = useMemo(() => {
+    const totalTasksToday = challengeGroups.reduce(
+      (sum, g) => sum + g.goals.length,
+      0,
+    );
+    const tasksDoneToday = challengeGroups.reduce(
+      (sum, g) => sum + g.goals.filter((gl) => gl.completed).length,
+      0,
+    );
+    const tasksRemaining = Math.max(0, totalTasksToday - tasksDoneToday);
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const minutesToMidnight = Math.floor(
+      (midnight.getTime() - now.getTime()) / 60000,
+    );
+    return computeHomeState({ streak, tasksRemaining, minutesToMidnight });
+  }, [streak, challengeGroups]);
+
+  const lastHomeStateFiredRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!FLAGS.PR3_HOME_STATE_ANALYTICS) return;
+    if (lastHomeStateFiredRef.current === homeState) return;
+    lastHomeStateFiredRef.current = homeState;
+    track({ name: "home_state_viewed", state: homeState, streak });
+  }, [homeState, streak]);
+
   const displayStreak = Math.max(1, streak);
   const basePoints = (stats?.totalDaysSecured ?? 0) * 5;
   const activeCount = homeQuery.data?.activeList.length ?? 0;
@@ -536,11 +566,13 @@ export default function HomeScreen() {
           );
         })()}
 
-        <WeekStrip
-          securedDateKeys={securedKeys}
-          currentStreak={streak}
-          freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0}
-        />
+        {!FLAGS.PR3_ZERO_STATE_GATES || streak >= 1 ? (
+          <WeekStrip
+            securedDateKeys={securedKeys}
+            currentStreak={streak}
+            freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0}
+          />
+        ) : null}
 
         {statsAllZero ? (
           <View style={s.welcomeCard}>
@@ -556,7 +588,7 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        <DailyBonus />
+        {!FLAGS.PR3_ZERO_STATE_GATES || streak >= 1 ? <DailyBonus /> : null}
 
         <ActiveTaskCard />
 
