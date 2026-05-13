@@ -376,9 +376,7 @@ export default function ProfileScreen() {
         onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
         onRespect={() => void onPostRespect(post)}
         onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
-        onShare={() => {
-          track({ name: "profile_post_thumbnail_tapped", post_id: post.id });
-        }}
+        onShare={() => {}}
       />
     ),
     [router, onPostRespect]
