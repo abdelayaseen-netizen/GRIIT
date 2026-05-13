@@ -17,6 +17,9 @@ import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
 import { Avatar } from "@/components/Avatar";
+import { ImageViewerModal } from "@/components/shared/ImageViewerModal";
+import { track } from "@/lib/analytics";
+import { FLAGS } from "@/lib/feature-flags";
 
 function placeholderBg(challengeName: string): string {
   const s = challengeName.toLowerCase();
@@ -54,15 +57,12 @@ function FeedPostCardInner({
   const [showQuickComment, setShowQuickComment] = React.useState(false);
   const [quickDraft, setQuickDraft] = React.useState("");
   const [sending, setSending] = React.useState(false);
-  const [captionExpanded, setCaptionExpanded] = React.useState(false);
+  const [viewerOpen, setViewerOpen] = React.useState(false);
+  const viewerOpenedAtRef = React.useRef<number>(0);
 
   const taskOrDayTag = post.taskName?.trim()
     ? post.taskName.trim()
     : `Day ${post.currentDay} of ${post.totalDays}`;
-
-  React.useEffect(() => {
-    setCaptionExpanded(false);
-  }, [post.id]);
 
   const lastTapRef = React.useRef<number>(0);
   const tapTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -111,11 +111,15 @@ function FeedPostCardInner({
     } else {
       lastTapRef.current = now;
       tapTimeoutRef.current = setTimeout(() => {
-        setCaptionExpanded((prev) => !prev);
+        if (FLAGS.PR3_IMAGE_VIEWER && proofUri) {
+          setViewerOpen(true);
+          viewerOpenedAtRef.current = Date.now();
+          track({ name: "image_viewer_opened", source: "feed", post_id: post.id });
+        }
         tapTimeoutRef.current = null;
       }, DOUBLE_TAP_DELAY);
     }
-  }, [post.reactedByMe, onRespect, heartScale, heartOpacity]);
+  }, [post.reactedByMe, post.id, onRespect, heartScale, heartOpacity, proofUri]);
 
   const handleQuickSend = React.useCallback(async () => {
     const text = quickDraft.trim();
@@ -143,7 +147,7 @@ function FeedPostCardInner({
               style={styles.heroPressable}
               onPress={handleImagePress}
               accessibilityRole="button"
-              accessibilityLabel="Tap to expand caption, double tap to respect"
+              accessibilityLabel="Tap photo to view full screen, double tap to respect"
             >
               <View style={styles.proofImageArea}>
                 {proofUri ? (
@@ -183,7 +187,7 @@ function FeedPostCardInner({
                   {post.caption?.trim() ? (
                     <Text
                       style={styles.overlayCaption}
-                      numberOfLines={captionExpanded ? undefined : 2}
+                      numberOfLines={2}
                       ellipsizeMode="tail"
                       accessibilityRole="text"
                     >
@@ -278,6 +282,25 @@ function FeedPostCardInner({
       ) : null}
 
       <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
+
+      {FLAGS.PR3_IMAGE_VIEWER && proofUri ? (
+        <ImageViewerModal
+          visible={viewerOpen}
+          imageUri={proofUri}
+          onClose={() => {
+            const duration = viewerOpenedAtRef.current
+              ? Date.now() - viewerOpenedAtRef.current
+              : undefined;
+            track({
+              name: "image_viewer_closed",
+              source: "feed",
+              post_id: post.id,
+              duration_ms: duration,
+            });
+            setViewerOpen(false);
+          }}
+        />
+      ) : null}
     </View>
   );
 }
