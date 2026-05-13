@@ -5,6 +5,7 @@ import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import type { LiveFeedPost } from "./feedTypes";
+import { FLAGS } from "@/lib/feature-flags";
 
 function isSameDay(iso: string): boolean {
   const d = new Date(iso);
@@ -20,9 +21,15 @@ type Props = {
 
 function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
   const displayUser = post.displayName || post.username || "Member";
-  const challengeTask = post.taskName
-    ? `${post.challengeName} · ${post.taskName}`
-    : post.challengeName;
+  const dayLabelPrefix =
+    FLAGS.PR3_FEED_DEDUPE && post.currentDay > 0
+      ? `${post.currentDay} day${post.currentDay === 1 ? "" : "s"} · `
+      : "";
+  const challengeTask = FLAGS.PR3_FEED_DEDUPE
+    ? `${dayLabelPrefix}${post.challengeName}`
+    : post.taskName
+      ? `${post.challengeName} · ${post.taskName}`
+      : post.challengeName;
   const timeAgo = relativeTime(post.createdAt);
 
   const completedToday =

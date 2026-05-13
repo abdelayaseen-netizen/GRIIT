@@ -206,11 +206,13 @@ function FeedPostCardInner({
       ) : null}
 
       <View style={styles.progressBlock}>
-        <View style={styles.progressTop}>
-          <Text style={styles.progressLabel}>
-            Day {post.currentDay} of {post.totalDays}
-          </Text>
-        </View>
+        {!FLAGS.PR3_FEED_DEDUPE ? (
+          <View style={styles.progressTop}>
+            <Text style={styles.progressLabel}>
+              Day {post.currentDay} of {post.totalDays}
+            </Text>
+          </View>
+        ) : null}
         <View style={styles.track}>
           <View style={[styles.fill, { width: `${pct}%` }]} />
         </View>
