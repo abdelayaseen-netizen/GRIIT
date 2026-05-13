@@ -87,6 +87,15 @@ type AnalyticsEvent =
   | { name: "invite_shared"; challengeId?: string; source: "challenge_detail" | "milestone_modal" }
   | { name: "follow_suggested_click"; username?: string }
   | { name: "share_tapped"; share_type: "challenge" | "progress" | "invite" | "profile" }
+  | { name: "image_viewer_opened"; source: "feed" | "profile_posts"; post_id?: string }
+  | { name: "image_viewer_closed"; source: "feed" | "profile_posts"; duration_ms?: number; post_id?: string }
+  | {
+      name: "home_state_viewed";
+      state: "new_user" | "day_in_progress" | "streak_at_risk" | "streak_healthy";
+      streak: number;
+      tasks_remaining?: number;
+      minutes_to_midnight?: number;
+    }
   | { name: "paywall_shown"; source: string }
   | { name: "paywall_dismissed"; source: string }
   | { name: "purchase_started"; package_type: "monthly" | "annual" }
