@@ -18,6 +18,24 @@ export const FLAGS = {
   PREMIUM_ANALYTICS: true,
   PREMIUM_PROFILE_FEATURES: true,
   PREMIUM_INTEGRATIONS: false,
+  /** PR#3: tap a proof photo in feed/profile → opens ImageViewerModal fullscreen. */
+  PR3_IMAGE_VIEWER: true,
+  /** PR#3: dedupe FeedCardHeader (drop taskName) and remove "Day X of Y" label. */
+  PR3_FEED_DEDUPE: true,
+  /** PR#3: hide WeekStrip and DailyBonus when streak === 0. */
+  PR3_ZERO_STATE_GATES: true,
+  /** PR#3: instrument home_state_viewed analytics event. */
+  PR3_HOME_STATE_ANALYTICS: true,
+  /** PR#5: profile screen redesign — avatar ring + identity meta + tier pill, replaces stats grid header. */
+  PR5_PROFILE_HERO: true,
+  /** PR#5: replace 4-tile stats grid with counts row + streak hero card. */
+  PR5_STREAK_HERO_CARD: true,
+  /** PR#5: trophy rail (earned + next-locked badges) above tab strip. */
+  PR5_TROPHY_RAIL: true,
+  /** PR#5: empty-zone replaces 3-tab strip when user has 0 posts and 0 badges. */
+  PR5_EMPTY_ZONE: true,
+  /** PR#5: instrument profile_state_viewed analytics event. */
+  PR5_PROFILE_STATE_ANALYTICS: true,
 } as const;
 
 // ============================================
