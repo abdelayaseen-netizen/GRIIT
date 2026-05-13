@@ -96,6 +96,21 @@ type AnalyticsEvent =
       tasks_remaining?: number;
       minutes_to_midnight?: number;
     }
+  | {
+      name: "profile_state_viewed";
+      state: "new_user" | "growing" | "established";
+      view: "self" | "visitor";
+      streak: number;
+      post_count: number;
+      badge_count: number;
+    }
+  | { name: "profile_bio_cta_tapped"; from_state: "new_user" }
+  | {
+      name: "profile_share_tapped";
+      from_state: "new_user" | "growing" | "established";
+    }
+  | { name: "profile_trophy_tapped"; badge_slug?: string; lit: boolean }
+  | { name: "profile_post_thumbnail_tapped"; post_id?: string; days_ago?: number }
   | { name: "paywall_shown"; source: string }
   | { name: "paywall_dismissed"; source: string }
   | { name: "purchase_started"; package_type: "monthly" | "annual" }
