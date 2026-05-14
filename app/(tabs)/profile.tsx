@@ -1,5 +1,5 @@
 // NOTE(post-launch): Add "Drafts" section — filter challenges where status === 'draft' && creator_id === user.id
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -17,32 +17,33 @@ import {
   Settings,
   Camera,
   Share2,
-  Zap,
   CheckCircle,
   ChevronRight,
   Pencil,
+  Target,
+  LayoutGrid,
+  Award,
 } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { trackEvent } from "@/lib/analytics";
 import { shareProfile } from "@/lib/share";
 import { pickAndUploadAvatar } from "@/lib/avatar";
 import { captureError } from "@/lib/sentry";
-import { Avatar } from "@/components/Avatar";
-import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { SkeletonProfile } from "@/components/skeletons";
+import { Avatar } from "@/components/Avatar";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
 import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
-import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
+import { PostsGrid } from "@/components/profile/PostsGrid";
+import { BadgesGrid, type BadgeGridRow } from "@/components/profile/BadgesGrid";
 import { StreakHero } from "@/components/profile/StreakHero";
 import { TodayTaskStrip } from "@/components/profile/TodayTaskStrip";
 import { MiniStats } from "@/components/profile/MiniStats";
@@ -57,23 +58,13 @@ type ProfileTab = "challenges" | "posts" | "badges";
 
 type ProfileV2Mode = "self" | "public" | "friends-allowed" | "friends-blocked" | "private";
 
-const RESPECT_DEBOUNCE_MS = 300;
+
 
 type ActiveRow = {
   id: string;
   current_day?: number;
   progress_percent?: number;
   challenges?: { id?: string; title?: string; duration_days?: number };
-};
-
-type BadgeDef = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  progress: number;
-  total: number;
-  type?: string;
 };
 
 export default function ProfileScreen() {
@@ -89,7 +80,6 @@ export default function ProfileScreen() {
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
   const [miniActiveSheetOpen, setMiniActiveSheetOpen] = useState(false);
   const [miniCompletedSheetOpen, setMiniCompletedSheetOpen] = useState(false);
-  const respectLastAtProfile = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     if (!avatarInlineError) return;
@@ -123,31 +113,11 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
-  const postsQuery = useQuery({
-    queryKey: ["profile", user?.id, "userPosts"],
-    queryFn: () => trpcQuery(TRPC.feed.getUserPosts, { userId: user!.id, limit: 30 }) as Promise<{ posts: LiveFeedPost[] }>,
-    enabled: !isGuest && !!user?.id && tab === "posts",
-    staleTime: 60 * 1000,
-  });
-
-  const badgesQuery = useQuery({
-    queryKey: ["profile", user?.id, "badges"],
-    queryFn: () => trpcQuery(TRPC.profiles.getBadges, { userId: user!.id }) as Promise<{ earned: BadgeDef[]; next: BadgeDef[] }>,
-    enabled: !isGuest && !!user?.id && tab === "badges",
-    staleTime: 60 * 1000,
-  });
-
-  const refreshing =
-    activeListQuery.isRefetching || followCountsQuery.isRefetching || postsQuery.isRefetching || badgesQuery.isRefetching;
+  const refreshing = activeListQuery.isRefetching || followCountsQuery.isRefetching;
   const onRefresh = useCallback(async () => {
     await refetchAll();
-    await Promise.all([
-      activeListQuery.refetch(),
-      followCountsQuery.refetch(),
-      postsQuery.refetch(),
-      badgesQuery.refetch(),
-    ]);
-  }, [refetchAll, activeListQuery, followCountsQuery, postsQuery, badgesQuery]);
+    await Promise.all([activeListQuery.refetch(), followCountsQuery.refetch()]);
+  }, [refetchAll, activeListQuery, followCountsQuery]);
 
   const streak = stats?.activeStreak ?? 0;
   const best = stats?.longestStreak ?? 0;
@@ -299,54 +269,32 @@ export default function ProfileScreen() {
     }));
   }, []);
 
-  const onPostRespect = useCallback(
-    async (post: LiveFeedPost) => {
-      if (!user?.id) return;
-      const now = Date.now();
-      const last = respectLastAtProfile.current.get(post.id) ?? 0;
-      if (now - last < RESPECT_DEBOUNCE_MS) return;
-      respectLastAtProfile.current.set(post.id, now);
-
-      const prevR = post.reactedByMe;
-      const prevC = post.respectCount;
-      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
-      qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
-        if (!old) return old;
-        return {
-          ...old,
-          posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: !prevR, respectCount: nextC } : p)),
-        };
-      });
-      try {
-        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
-          reacted?: boolean;
-          reactionCount?: number;
-        };
-        qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            posts: old.posts.map((p) =>
-              p.id === post.id
-                ? { ...p, reactedByMe: !!result.reacted, respectCount: Math.max(0, result.reactionCount ?? nextC) }
-                : p
-            ),
-          };
-        });
-        await qc.invalidateQueries({ queryKey: ["liveFeed"] });
-      } catch (e) {
-        captureError(e, "ProfileTabRespect");
-        qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: prevR, respectCount: prevC } : p)),
-          };
-        });
-      }
-    },
-    [user?.id, qc]
+  // TODO(profile-v2): replace with postsQuery.data (new endpoint)
+  const profileV2PostsStub = useMemo(
+    () =>
+      Array.from({ length: 9 }, (_, i) => ({
+        id: `profile-v2-post-${i + 1}`,
+        imageUrl: `https://picsum.photos/seed/grit-${i + 101}/320/400`,
+        challengeTitle: ["Morning Lift", "Run Club", "Prayer Pace", "Journal Jam", "Cold Plunge", "Hydration", "Macros", "Steps", "Read"][i] ?? `Challenge ${i + 1}`,
+        dayOfTotal:
+          ["Day 1 of 21", "Day 7 of 30", "Day 3 of 30", "Day 12 of 14", "Day 20 of 30", "Day 4 of 10", "Day 15 of 60", "Day 9 of 21", "Day 11 of 40"][i] ??
+          `Day ${i + 2} of 21`,
+      })),
+    []
   );
+
+  // TODO(profile-v2): replace with badgesQuery.data via API
+  const profileV2BadgesStub = useMemo((): BadgeGridRow[] => {
+    const rows: BadgeGridRow[] = [
+      { id: "badge-ignite", name: "Ignition", iconName: "flame", unlocked: true },
+      { id: "badge-sprint10", name: "Sprint Ten", iconName: "star", unlocked: true },
+      { id: "badge-focus", name: "Focus Forge", iconName: "target", unlocked: false },
+      { id: "badge-sunrise", name: "Sunrise", iconName: "sun", unlocked: false },
+      { id: "badge-marathon", name: "Road Ready", iconName: "trophy", unlocked: false },
+      { id: "badge-voltage", name: "Voltage", iconName: "zap", unlocked: false },
+    ];
+    return rows;
+  }, []);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -417,8 +365,6 @@ export default function ProfileScreen() {
 
   const keyExtractorProfileRoot = useCallback((item: { key: string }) => item.key, []);
   const keyExtractorActiveChallenge = useCallback((item: ProfileActiveChallengeRow) => item.id, []);
-  const keyExtractorPost = useCallback((post: LiveFeedPost) => post.id, []);
-  const keyExtractorBadge = useCallback((b: BadgeDef) => b.id, []);
 
   const renderActiveChallengeItem = useCallback(
     ({ item }: { item: ProfileActiveChallengeRow }) => {
@@ -433,7 +379,7 @@ export default function ProfileScreen() {
       return (
         <TouchableOpacity accessibilityRole="button"
           style={styles.chCard}
-          onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
+          onPress={() => router.push(ROUTES.CHALLENGE_ACTIVE(item.id) as never)}
           accessibilityLabel={a11yLabel}
         >
           <View style={styles.chTop}>
@@ -465,85 +411,6 @@ export default function ProfileScreen() {
       );
     },
     [router]
-  );
-
-  const renderProfilePostRow = useCallback(
-    ({ item: post }: { item: LiveFeedPost }) => (
-      <FeedPostCard
-        post={post}
-        onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
-        onRespect={() => void onPostRespect(post)}
-        onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
-        onShare={() => {}}
-      />
-    ),
-    [router, onPostRespect]
-  );
-
-  const renderEarnedBadgeItem = useCallback(
-    ({ item: b }: { item: BadgeDef }) => {
-      const IconComp = BADGE_ICONS[b.icon] ?? Zap;
-      const accent = badgeAccentFor(b.color);
-      return (
-        <Pressable accessibilityRole="button"
-          style={styles.badgeCard}
-          onPress={() =>
-            setSelectedBadge({
-              id: b.id,
-              name: b.name,
-              icon: b.icon,
-              color: b.color,
-              progress: b.progress,
-              total: b.total,
-            })
-          }
-          accessibilityLabel={`${b.name} badge details`}
-        >
-          <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
-            <IconComp size={22} color={accent.stroke} strokeWidth={2} />
-          </View>
-          <Text style={styles.badgeName}>{b.name}</Text>
-          <Text style={styles.badgeProg}>
-            {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
-          </Text>
-        </Pressable>
-      );
-    },
-    [setSelectedBadge]
-  );
-
-  const renderNextBadgeItem = useCallback(
-    ({ item: b }: { item: BadgeDef }) => {
-      const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
-      return (
-        <Pressable accessibilityRole="button"
-          style={[styles.badgeCard, styles.badgeCardDim]}
-          onPress={() =>
-            setSelectedBadge({
-              id: b.id,
-              name: b.name,
-              icon: b.icon,
-              color: b.color,
-              progress: b.progress,
-              total: b.total,
-            })
-          }
-          accessibilityLabel={`${b.name} badge details`}
-        >
-          <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
-            <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
-          </View>
-          <Text style={styles.badgeName}>{b.name}</Text>
-          <Text style={styles.badgeProg}>
-            {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
-          </Text>
-          <View style={styles.nextBarTrack}>
-            <View style={[styles.nextBarFill, { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` }]} />
-          </View>
-        </Pressable>
-      );
-    },
-    [setSelectedBadge]
   );
 
   const profileRootContent = useMemo(
@@ -693,19 +560,56 @@ export default function ProfileScreen() {
         <StreakHeatmap days={streakHeatmapStubDays} />
 
         <View style={styles.tabsBar}>
-          {(["challenges", "posts", "badges"] as const).map((t) => (
-            <Pressable accessibilityRole="tab"
-              key={t}
-              style={[styles.tabBtn, tab === t && styles.tabBtnOn]}
-              onPress={() => setTab(t)}
-              accessibilityState={{ selected: tab === t }}
-              accessibilityLabel={t === "challenges" ? "Challenges tab" : t === "posts" ? "Posts tab" : "Badges tab"}
-            >
-              <Text style={[styles.tabTxt, tab === t ? styles.tabTxtOn : styles.tabTxtOff]}>
-                {t === "challenges" ? "Challenges" : t === "posts" ? "Posts" : "Badges"}
-              </Text>
-            </Pressable>
-          ))}
+          <Pressable
+            accessibilityRole="tab"
+            style={[styles.tabBtn, tab === "challenges" && styles.tabBtnOn]}
+            onPress={() => setTab("challenges")}
+            accessibilityState={{ selected: tab === "challenges" }}
+            accessibilityLabel="Challenges tab"
+          >
+            <View style={styles.tabInner}>
+              <Target
+                size={18}
+                color={tab === "challenges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                strokeWidth={2}
+              />
+              <Text style={[styles.tabTxt, tab === "challenges" ? styles.tabTxtOn : styles.tabTxtOff]}>Challenges</Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="tab"
+            style={[styles.tabBtn, tab === "posts" && styles.tabBtnOn]}
+            onPress={() => setTab("posts")}
+            accessibilityState={{ selected: tab === "posts" }}
+            accessibilityLabel="Posts tab"
+          >
+            <View style={styles.tabInner}>
+              <LayoutGrid
+                size={18}
+                color={tab === "posts" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                strokeWidth={2}
+              />
+              <Text style={[styles.tabTxt, tab === "posts" ? styles.tabTxtOn : styles.tabTxtOff]}>Posts</Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="tab"
+            style={[styles.tabBtn, tab === "badges" && styles.tabBtnOn]}
+            onPress={() => setTab("badges")}
+            accessibilityState={{ selected: tab === "badges" }}
+            accessibilityLabel="Badges tab"
+          >
+            <View style={styles.tabInner}>
+              <Award
+                size={18}
+                color={tab === "badges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                strokeWidth={2}
+              />
+              <Text style={[styles.tabTxt, tab === "badges" ? styles.tabTxtOn : styles.tabTxtOff]}>Badges</Text>
+            </View>
+          </Pressable>
         </View>
 
         {tab === "challenges" ? (
@@ -730,73 +634,17 @@ export default function ProfileScreen() {
         ) : null}
 
         {tab === "posts" ? (
-          <View style={styles.tabPad}>
-            {postsQuery.isPending ? (
-              <Text style={styles.emptyHint}>Loading posts…</Text>
-            ) : (postsQuery.data?.posts ?? []).length === 0 ? (
-              <View style={styles.postsEmpty}>
-                <Text style={styles.postsEmptyTitle}>No posts yet</Text>
-                <Text style={styles.postsEmptySub}>Complete a task to share your first post.</Text>
-                <TouchableOpacity accessibilityRole="button"
-                  onPress={() => router.push(ROUTES.TABS_HOME as never)}
-                  accessibilityLabel="Go to my challenges"
-                >
-                  <Text style={styles.postsEmptyCta}>Go to my challenges →</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <FlatList
-                data={postsQuery.data?.posts ?? []}
-                keyExtractor={keyExtractorPost}
-                scrollEnabled={false}
-                nestedScrollEnabled
-                renderItem={renderProfilePostRow}
-                maxToRenderPerBatch={10}
-                windowSize={5}
-                initialNumToRender={8}
-                removeClippedSubviews={Platform.OS === "android"}
-              />
-            )}
-          </View>
+          <PostsGrid
+            posts={profileV2PostsStub}
+            onSelect={(postId) => {
+              void postId;
+              // TODO(profile-v2): open v4 post card navigation
+            }}
+          />
         ) : null}
 
         {tab === "badges" ? (
-          <View style={styles.tabPad}>
-            {badgesQuery.isPending ? (
-              <Text style={styles.emptyHint}>Loading badges…</Text>
-            ) : (
-              <>
-                <Text style={styles.secHead}>EARNED ({badgesQuery.data?.earned.length ?? 0})</Text>
-                <FlatList
-                  data={badgesQuery.data?.earned ?? []}
-                  keyExtractor={keyExtractorBadge}
-                  numColumns={3}
-                  scrollEnabled={false}
-                  nestedScrollEnabled
-                  columnWrapperStyle={styles.badgeGridRow}
-                  renderItem={renderEarnedBadgeItem}
-                  maxToRenderPerBatch={12}
-                  windowSize={5}
-                  initialNumToRender={12}
-                  removeClippedSubviews={Platform.OS === "android"}
-                />
-                <Text style={[styles.secHead, { marginTop: 20 }]}>NEXT UP ({badgesQuery.data?.next.length ?? 0})</Text>
-                <FlatList
-                  data={badgesQuery.data?.next ?? []}
-                  keyExtractor={keyExtractorBadge}
-                  numColumns={3}
-                  scrollEnabled={false}
-                  nestedScrollEnabled
-                  columnWrapperStyle={styles.badgeGridRow}
-                  renderItem={renderNextBadgeItem}
-                  maxToRenderPerBatch={12}
-                  windowSize={5}
-                  initialNumToRender={12}
-                  removeClippedSubviews={Platform.OS === "android"}
-                />
-              </>
-            )}
-          </View>
+          <BadgesGrid badges={profileV2BadgesStub} onBadgePress={(payload) => setSelectedBadge(payload)} />
         ) : null}
 
         <View style={{ height: 32 }} />
@@ -829,18 +677,10 @@ export default function ProfileScreen() {
       tab,
       setTab,
       activeItems,
-      postsQuery.isPending,
-      postsQuery.data?.posts,
-      badgesQuery.isPending,
-      badgesQuery.data?.earned,
-      badgesQuery.data?.next,
+      profileV2PostsStub,
+      profileV2BadgesStub,
       keyExtractorActiveChallenge,
       renderActiveChallengeItem,
-      keyExtractorPost,
-      renderProfilePostRow,
-      keyExtractorBadge,
-      renderEarnedBadgeItem,
-      renderNextBadgeItem,
     ]
   );
 
@@ -1040,9 +880,10 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.PROFILE_BORDER_ALT,
   },
   tabBtn: { flex: 1, alignItems: "center", paddingVertical: 12 },
-  tabBtnOn: { borderBottomWidth: 2, borderBottomColor: DS_COLORS.PRIMARY, marginBottom: -1.5 },
+  tabInner: { alignItems: "center", gap: 6 },
+  tabBtnOn: { borderBottomWidth: 2, borderBottomColor: DS_COLORS.ACCENT, marginBottom: -1.5 },
   tabTxt: { fontSize: 13 },
-  tabTxtOn: { fontWeight: "500", color: DS_COLORS.PRIMARY },
+  tabTxtOn: { fontWeight: "500", color: DS_COLORS.ACCENT },
   tabTxtOff: { fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
   tabPad: { paddingHorizontal: 20, paddingTop: 14, gap: 12 },
   chListContent: { gap: 12 },
@@ -1071,41 +912,4 @@ const styles = StyleSheet.create({
   chTrack: { height: 4, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 12, overflow: "hidden" },
   chFill: { height: 4, borderRadius: DS_RADIUS.SM },
   chPctBadge: { fontSize: 13, fontWeight: "500", flexShrink: 0 },
-  postsEmpty: { alignItems: "center", paddingVertical: 32 },
-  postsEmptyTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
-  postsEmptySub: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, marginTop: 6, textAlign: "center", maxWidth: 280 },
-  postsEmptyCta: { marginTop: 16, fontSize: 13, fontWeight: "500", color: DS_COLORS.PRIMARY },
-  secHead: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS.PROFILE_TEXT_SECONDARY,
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
-    marginBottom: 10,
-  },
-  badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  badgeGridRow: { gap: 10, marginBottom: 10 },
-  badgeCard: {
-    width: "31%",
-    minWidth: 100,
-    flexGrow: 1,
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: DS_RADIUS.LG,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    alignItems: "center",
-  },
-  badgeCardDim: { opacity: 0.85 },
-  badgeIconOuter: {
-    width: 44,
-    height: 44,
-    borderRadius: DS_RADIUS.iconButton,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  badgeName: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, textAlign: "center" },
-  badgeProg: { fontSize: 11, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED, marginTop: 4 },
-  nextBarTrack: { width: "100%", height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 8, overflow: "hidden" },
-  nextBarFill: { height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PRIMARY },
 });
