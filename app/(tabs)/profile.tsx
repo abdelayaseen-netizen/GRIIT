@@ -18,9 +18,6 @@ import {
   Camera,
   Share2,
   Zap,
-  Star,
-  Clock,
-  Check,
   CheckCircle,
   ChevronRight,
   Pencil,
@@ -48,6 +45,11 @@ import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
 import { StreakHero } from "@/components/profile/StreakHero";
 import { TodayTaskStrip } from "@/components/profile/TodayTaskStrip";
+import { MiniStats } from "@/components/profile/MiniStats";
+import {
+  ChallengeListSheet,
+  type ChallengeListSheetIconName,
+} from "@/components/profile/ChallengeListSheet";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
@@ -84,6 +86,8 @@ export default function ProfileScreen() {
   const [avatarInlineError, setAvatarInlineError] = useState<string | null>(null);
   const [avatarDisplayOverride, setAvatarDisplayOverride] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
+  const [miniActiveSheetOpen, setMiniActiveSheetOpen] = useState(false);
+  const [miniCompletedSheetOpen, setMiniCompletedSheetOpen] = useState(false);
   const respectLastAtProfile = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -169,6 +173,122 @@ export default function ProfileScreen() {
       };
     });
   }, [activeListQuery.data]);
+
+  const navigateMiniActiveChallenge = useCallback(
+    (id: string) => {
+      setMiniActiveSheetOpen(false);
+      router.push(ROUTES.CHALLENGE_ACTIVE(id) as never);
+    },
+    [router]
+  );
+
+  const navigateMiniCompletedChallenge = useCallback(
+    (id: string) => {
+      setMiniCompletedSheetOpen(false);
+      router.push(ROUTES.CHALLENGE_ACTIVE(id) as never);
+    },
+    [router]
+  );
+
+  // TODO(profile-v2): replace with profileQuery.data.activeChallenges
+  const stubActiveChallengeRows = useMemo(
+    (): Array<{
+      id: string;
+      title: string;
+      subtitle: string;
+      joinedCount: number;
+      finishedCount?: number;
+      iconBg: string;
+      iconColor: string;
+      iconName: ChallengeListSheetIconName;
+    }> => [
+      {
+        id: "morning-workout",
+        title: "Morning workout",
+        subtitle: "Day 1 of 21",
+        joinedCount: 1284,
+        iconBg: DS_COLORS.ACCENT_TINT,
+        iconColor: DS_COLORS.ACCENT,
+        iconName: "target",
+      },
+      {
+        id: "morning-prayer",
+        title: "5-Minute Morning Prayer",
+        subtitle: "Day 3 of 30",
+        joinedCount: 3041,
+        iconBg: DS_COLORS.ACCENT_GREEN_BG,
+        iconColor: DS_COLORS.GREEN,
+        iconName: "sun",
+      },
+    ],
+    []
+  );
+
+  // TODO(profile-v2): replace with profileQuery.data.completedChallenges
+  const stubCompletedChallengeRows = useMemo(
+    (): Array<{
+      id: string;
+      title: string;
+      subtitle: string;
+      joinedCount: number;
+      finishedCount?: number;
+      iconBg: string;
+      iconColor: string;
+      iconName: ChallengeListSheetIconName;
+    }> => [
+      {
+        id: "hydration-push",
+        title: "Hydration streak",
+        subtitle: "Finished May 1, 2026",
+        joinedCount: 812,
+        finishedCount: 540,
+        iconBg: DS_COLORS.CATEGORY_PEACH,
+        iconColor: DS_COLORS.DISCOVER_CORAL,
+        iconName: "droplet",
+      },
+      {
+        id: "sleep-reset",
+        title: "Sleep reset challenge",
+        subtitle: "Finished Apr 26, 2026",
+        joinedCount: 1902,
+        finishedCount: 1201,
+        iconBg: DS_COLORS.ONBOARDING_ACCENT_LIGHT,
+        iconColor: DS_COLORS.TEXT_PRIMARY,
+        iconName: "bed",
+      },
+      {
+        id: "daily-read",
+        title: "12 pages daily",
+        subtitle: "Finished Apr 12, 2026",
+        joinedCount: 4033,
+        finishedCount: 2200,
+        iconBg: DS_COLORS.WARNING_BG,
+        iconColor: DS_COLORS.WARNING,
+        iconName: "book",
+      },
+      {
+        id: "green-walk",
+        title: "10k steps green week",
+        subtitle: "Finished Mar 29, 2026",
+        joinedCount: 5120,
+        finishedCount: 3300,
+        iconName: "leaf",
+        iconBg: DS_COLORS.ACCENT_GREEN_BG,
+        iconColor: DS_COLORS.ACCENT_GREEN,
+      },
+      {
+        id: "trail-sprint",
+        title: "Weekend warrior",
+        subtitle: "Finished Feb 13, 2026",
+        joinedCount: 2877,
+        finishedCount: 1900,
+        iconBg: DS_COLORS.SUGGESTED_CARD_ACCENT_LIFESTYLE,
+        iconColor: DS_COLORS.CATEGORY_DISCIPLINE,
+        iconName: "walk",
+      },
+    ],
+    []
+  );
 
   const onPostRespect = useCallback(
     async (post: LiveFeedPost) => {
@@ -553,44 +673,13 @@ export default function ProfileScreen() {
           />
         ) : null}
 
-        <View style={styles.statsGrid}>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_CORAL_BG }]}>
-              <Zap size={14} color={DS_COLORS.PROFILE_STAT_CORAL_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{streak}</Text>
-              <Text style={styles.statGridLbl}>day streak</Text>
-            </View>
-          </View>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_AMBER_BG }]}>
-              <Star size={14} color={DS_COLORS.PROFILE_STAT_AMBER_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{best}</Text>
-              <Text style={styles.statGridLbl}>best streak</Text>
-            </View>
-          </View>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_TEAL_BG }]}>
-              <Clock size={14} color={DS_COLORS.PROFILE_STAT_TEAL_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{active}</Text>
-              <Text style={styles.statGridLbl}>active</Text>
-            </View>
-          </View>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_BLUE_BG }]}>
-              <Check size={14} color={DS_COLORS.PROFILE_STAT_BLUE_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{done}</Text>
-              <Text style={styles.statGridLbl}>completed</Text>
-            </View>
-          </View>
-        </View>
+        <MiniStats
+          bestStreak={best}
+          activeCount={active}
+          completedCount={done}
+          onTapActive={() => setMiniActiveSheetOpen(true)}
+          onTapCompleted={() => setMiniCompletedSheetOpen(true)}
+        />
 
         <View style={styles.tabsBar}>
           {(["challenges", "posts", "badges"] as const).map((t) => (
@@ -713,6 +802,8 @@ export default function ProfileScreen() {
       handleAt,
       fc,
       listUsername,
+      isOwnProfile,
+      profileV2ModeStub,
       router,
       handleAvatarPress,
       uploading,
@@ -796,6 +887,20 @@ export default function ProfileScreen() {
         removeClippedSubviews={false}
       />
       <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+      <ChallengeListSheet
+        visible={miniActiveSheetOpen}
+        title="Active challenges"
+        items={stubActiveChallengeRows}
+        onClose={() => setMiniActiveSheetOpen(false)}
+        onSelect={navigateMiniActiveChallenge}
+      />
+      <ChallengeListSheet
+        visible={miniCompletedSheetOpen}
+        title="Completed challenges"
+        items={stubCompletedChallengeRows}
+        onClose={() => setMiniCompletedSheetOpen(false)}
+        onSelect={navigateMiniCompletedChallenge}
+      />
     </SafeAreaView>
     </ErrorBoundary>
   );

@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
@@ -501,24 +502,26 @@ function RootLayout() {
 
   const appTree = (
     <GestureHandlerRootView style={layoutStyles.flex1}>
-      <ThemeProvider>
-        <AuthProvider>
-          <PushRegistrationBootstrap />
-          <SessionExpiredContext.Provider
-            value={{ message: sessionExpiredMessage, setMessage: setSessionExpiredMessage }}
-          >
-            <AuthGateProvider>
-              <ApiProvider>
-                <AppProvider>
-                  <ThemeAwareStatusBar />
-                  <RootLayoutNav />
-                  <AuthRedirector />
-                </AppProvider>
-              </ApiProvider>
-            </AuthGateProvider>
-          </SessionExpiredContext.Provider>
-        </AuthProvider>
-      </ThemeProvider>
+      <BottomSheetModalProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <PushRegistrationBootstrap />
+            <SessionExpiredContext.Provider
+              value={{ message: sessionExpiredMessage, setMessage: setSessionExpiredMessage }}
+            >
+              <AuthGateProvider>
+                <ApiProvider>
+                  <AppProvider>
+                    <ThemeAwareStatusBar />
+                    <RootLayoutNav />
+                    <AuthRedirector />
+                  </AppProvider>
+                </ApiProvider>
+              </AuthGateProvider>
+            </SessionExpiredContext.Provider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 
