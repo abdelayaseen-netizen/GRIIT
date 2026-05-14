@@ -23,6 +23,7 @@ import {
   Check,
   CheckCircle,
   ChevronRight,
+  Pencil,
 } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
@@ -46,9 +47,12 @@ import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
 import { StreakHero } from "@/components/profile/StreakHero";
+import { TodayTaskStrip } from "@/components/profile/TodayTaskStrip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
+
+type ProfileV2Mode = "self" | "public" | "friends-allowed" | "friends-blocked" | "private";
 
 const RESPECT_DEBOUNCE_MS = 300;
 
@@ -68,20 +72,6 @@ type BadgeDef = {
   total: number;
   type?: string;
 };
-
-function formatJoinDate(value?: string | null): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("en-US", { month: "short", year: "numeric" });
-}
-
-function tierPillStyle(tier: string): { bg: string; fg: string } {
-  const t = tier.toLowerCase();
-  if (t.includes("build")) return { bg: DS_COLORS.PROFILE_TIER_BUILDER_BG, fg: DS_COLORS.PROFILE_TIER_BUILDER_TEXT };
-  if (t.includes("start")) return { bg: DS_COLORS.PROFILE_TIER_STARTER_BG, fg: DS_COLORS.PROFILE_TIER_STARTER_TEXT };
-  return { bg: DS_COLORS.PROFILE_TIER_WARRIOR_BG, fg: DS_COLORS.PROFILE_TIER_WARRIOR_TEXT };
-}
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -279,11 +269,13 @@ export default function ProfileScreen() {
     if (!dn || !un) return false;
     return dn !== un;
   })();
-  const listUsername = profile ? profile.username?.trim() || primaryLine : "";
-  const tier = stats?.tier ?? "Starter";
-  const tierColors = tierPillStyle(tier);
-  const fc = followCountsQuery.data;
   const avatarUri = profile ? (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "" : "";
+  const listUsername = profile ? profile.username?.trim() || primaryLine : "";
+  const fc = followCountsQuery.data;
+  // TODO(profile-v2): derive from auth context + route param
+  const isOwnProfile = true;
+  // TODO(profile-v2): derive from route param + profile_visibility + mutual follow checks
+  const profileV2ModeStub: ProfileV2Mode = "self";
 
   type ProfileActiveChallengeRow = {
     id: string;
@@ -430,6 +422,8 @@ export default function ProfileScreen() {
       if (!profile || !user?.id) {
         return <View />;
       }
+      // TODO(profile-v2): wire tier from profile.tier once tier system ships
+      const profileV2TierStub = "Builder";
       return (
       <View>
         <View style={styles.topBar}>
@@ -484,59 +478,56 @@ export default function ProfileScreen() {
                 {uploading ? (
                   <Text style={styles.cameraBadgeText}>…</Text>
                 ) : (
-                  <Camera size={13} color={DS_COLORS.WHITE} strokeWidth={2} />
+                  <Camera size={12} color={DS_COLORS.WHITE} strokeWidth={2} />
                 )}
               </View>
             </Pressable>
           </View>
           <View style={styles.textCol}>
             <Text style={styles.username}>{primaryLine}</Text>
-            {showHandleRow ? <Text style={styles.handleAt}>{handleAt}</Text> : null}
-            <View style={styles.tierRow}>
-              <View style={[styles.tierPill, { backgroundColor: tierColors.bg }]}>
-                <Text style={[styles.tierPillText, { color: tierColors.fg }]}>{tier}</Text>
+            <View style={styles.handleTierRow}>
+              {showHandleRow && handleAt ? <Text style={styles.handleCompact}>{handleAt}</Text> : null}
+              <View style={styles.v2TierChip}>
+                <Text style={styles.v2TierChipText}>{profileV2TierStub}</Text>
               </View>
-              {profile.created_at ? <Text style={styles.joined}>Joined {formatJoinDate(profile.created_at)}</Text> : null}
             </View>
-            <Text style={[styles.bio, !profile.bio?.trim() && styles.bioPlaceholder]}>
-              {profile.bio?.trim() ? profile.bio : "Add a bio…"}
-            </Text>
-            <View style={styles.followInline}>
+            <View style={styles.followRowCompact}>
               <TouchableOpacity accessibilityRole="button"
                 style={styles.followInlineBtn}
                 onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
                 accessibilityLabel="View followers"
               >
-                <Text style={styles.followInlineNum}>{fc?.followers ?? 0}</Text>
-                <Text style={styles.followInlineLbl}> followers</Text>
+                <Text style={styles.followCompactNum}>{fc?.followers ?? 0}</Text>
+                <Text style={styles.followCompactLbl}> followers</Text>
               </TouchableOpacity>
               <TouchableOpacity accessibilityRole="button"
                 style={styles.followInlineBtn}
                 onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
                 accessibilityLabel="View following"
               >
-                <Text style={styles.followInlineNum}>{fc?.following ?? 0}</Text>
-                <Text style={styles.followInlineLbl}> following</Text>
+                <Text style={styles.followCompactNum}>{fc?.following ?? 0}</Text>
+                <Text style={styles.followCompactLbl}> following</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
-
-        <View style={styles.actionRow}>
-          <TouchableOpacity accessibilityRole="button"
-            style={styles.btnOutline}
-            onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
-            accessibilityLabel="Edit profile"
-          >
-            <Text style={styles.btnOutlineText}>Edit profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity accessibilityRole="button"
-            style={styles.btnShareCompact}
-            onPress={() => void handleShare()}
-            accessibilityLabel="Share profile"
-          >
-            <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_SECONDARY} strokeWidth={2} />
-          </TouchableOpacity>
+          <View style={styles.identityIconStack}>
+            <TouchableOpacity accessibilityRole="button"
+              style={styles.identityIconSq}
+              onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
+              accessibilityLabel="Edit profile"
+              hitSlop={6}
+            >
+              <Pencil size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
+            </TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button"
+              style={styles.identityIconSq}
+              onPress={() => void handleShare()}
+              accessibilityLabel="Share profile"
+              hitSlop={6}
+            >
+              <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* TODO(profile-v2): replace stubbed streak values with profileQuery.data */}
@@ -548,6 +539,19 @@ export default function ProfileScreen() {
             /* TODO(profile-v2): wire share */
           }}
         />
+
+        {isOwnProfile && profileV2ModeStub === "self" ? (
+          <TodayTaskStrip
+            taskName="5-Minute Morning Prayer"
+            dayOfTotal="Day 3 of 30"
+            onClear={() => {
+              /* TODO(profile-v2): wire to checkin mutation */
+            }}
+            onTap={() => {
+              /* TODO(profile-v2): navigate to task flow */
+            }}
+          />
+        ) : null}
 
         <View style={styles.statsGrid}>
           <View style={styles.statGridCard}>
@@ -707,8 +711,6 @@ export default function ProfileScreen() {
       primaryLine,
       showHandleRow,
       handleAt,
-      tierColors,
-      tier,
       fc,
       listUsername,
       router,
@@ -849,35 +851,39 @@ const styles = StyleSheet.create({
   cameraBadgeText: { color: DS_COLORS.WHITE, fontSize: 12 },
   textCol: { flex: 1, minWidth: 0 },
   username: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, letterSpacing: -0.3 },
-  handleAt: { marginTop: 2, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
-  tierRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 6 },
-  tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: DS_RADIUS.MD },
-  tierPillText: { fontSize: 11, fontWeight: "500" },
-  joined: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
-  bio: { marginTop: 8, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, lineHeight: 18 },
-  bioPlaceholder: { fontStyle: "italic" },
-  followInline: { flexDirection: "row", gap: 14, marginTop: 8 },
-  followInlineBtn: { flexDirection: "row", alignItems: "baseline" },
-  followInlineNum: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
-  followInlineLbl: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
-  actionRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginTop: 14, marginBottom: 14 },
-  btnOutline: {
-    flex: 1,
-    borderRadius: DS_RADIUS.joinCta,
-    borderWidth: 1.5,
-    borderColor: DS_COLORS.PRIMARY,
-    paddingVertical: 11,
+  handleTierRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: DS_COLORS.BG_CARD,
+    gap: 8,
+    marginTop: 4,
   },
-  btnOutlineText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PRIMARY },
-  btnShareCompact: {
-    width: 44,
-    borderRadius: DS_RADIUS.joinCta,
-    borderWidth: 1.5,
+  handleCompact: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+  v2TierChip: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: DS_RADIUS.SM,
+    backgroundColor: DS_COLORS.ACCENT,
+    alignSelf: "flex-start",
+  },
+  v2TierChipText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_ON_ACCENT,
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+  },
+  followRowCompact: { flexDirection: "row", gap: 12, marginTop: 6 },
+  followInlineBtn: { flexDirection: "row", alignItems: "baseline" },
+  followCompactNum: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
+  followCompactLbl: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+  identityIconStack: { gap: 8, marginTop: 2 },
+  identityIconSq: {
+    width: 32,
+    height: 32,
+    borderRadius: DS_RADIUS.SM,
+    borderWidth: 1,
     borderColor: DS_COLORS.PROFILE_BORDER_ALT,
-    paddingVertical: 11,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: DS_COLORS.BG_CARD,
