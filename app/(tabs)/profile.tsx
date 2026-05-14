@@ -33,7 +33,7 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { trackEvent } from "@/lib/analytics";
-import { shareProfile } from "@/lib/share";
+import { shareProfile, sharePlainMessage } from "@/lib/share";
 import { pickAndUploadAvatar } from "@/lib/avatar";
 import { captureError } from "@/lib/sentry";
 import { Avatar } from "@/components/Avatar";
@@ -46,6 +46,7 @@ import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
+import { StreakHero } from "@/components/profile/StreakHero";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
@@ -154,8 +155,15 @@ export default function ProfileScreen() {
     ]);
   }, [refetchAll, activeListQuery, followCountsQuery, postsQuery, badgesQuery]);
 
+  // Loading: empty hero rather than placeholder shimmer until getStats settles (stats may briefly be null).
   const streak = stats?.activeStreak ?? 0;
   const best = stats?.longestStreak ?? 0;
+
+  // Days to the next streak milestone. Locked thresholds; full milestone system is a future ticket.
+  const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 365] as const;
+  const nextStreakMilestone = STREAK_MILESTONES.find((m) => m > streak) ?? null;
+  const nextBadgeIn = nextStreakMilestone === null ? null : nextStreakMilestone - streak;
+
   const active = stats?.activeChallenges ?? 0;
   const done = stats?.completedChallenges ?? 0;
 
@@ -239,6 +247,16 @@ export default function ProfileScreen() {
       tier: stats?.tier ?? "Starter",
     });
   }, [profile?.username, streak, stats?.totalDaysSecured, stats?.tier]);
+
+  const handleShareStreak = useCallback(async () => {
+    const days = stats?.activeStreak ?? 0;
+    if (days <= 0) return;
+    try {
+      await sharePlainMessage(`${days} day streak on GRIIT 🔥`);
+    } catch {
+      /* user cancelled share sheet — ignore */
+    }
+  }, [stats?.activeStreak]);
 
   /** Picker + FormData upload (`lib/uploadAvatar`) + `profiles.update` + context refetch. */
   const handleAvatarPress = useCallback(async () => {
@@ -547,6 +565,15 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={{ paddingHorizontal: 20 }}>
+          <StreakHero
+            streakDays={streak}
+            bestStreak={best}
+            nextBadgeIn={nextBadgeIn}
+            onShare={() => void handleShareStreak()}
+          />
+        </View>
+
         <View style={styles.statsGrid}>
           <View style={styles.statGridCard}>
             <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_CORAL_BG }]}>
@@ -713,6 +740,8 @@ export default function ProfileScreen() {
       handleAvatarPress,
       uploading,
       handleShare,
+      handleShareStreak,
+      nextBadgeIn,
       streak,
       best,
       active,
