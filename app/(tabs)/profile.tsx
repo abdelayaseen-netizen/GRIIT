@@ -32,7 +32,7 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { trackEvent } from "@/lib/analytics";
-import { shareProfile } from "@/lib/share";
+import { sharePlainMessage, shareProfile } from "@/lib/share";
 import { pickAndUploadAvatar } from "@/lib/avatar";
 import { captureError } from "@/lib/sentry";
 import { SkeletonProfile } from "@/components/skeletons";
@@ -66,6 +66,8 @@ type ActiveRow = {
   progress_percent?: number;
   challenges?: { id?: string; title?: string; duration_days?: number };
 };
+
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 365] as const;
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -126,6 +128,18 @@ export default function ProfileScreen() {
   const best = stats?.longestStreak ?? 0;
   const active = stats?.activeChallenges ?? 0;
   const done = stats?.completedChallenges ?? 0;
+
+  const nextMilestone = STREAK_MILESTONES.find((m) => m > streak) ?? null;
+  const nextBadgeIn = nextMilestone === null ? null : nextMilestone - streak;
+
+  const handleShareStreak = useCallback(async () => {
+    if (streak <= 0) return;
+    try {
+      await sharePlainMessage(`${streak} day streak on GRIIT 🔥`);
+    } catch {
+      // Swallow: user cancellation is not an error path.
+    }
+  }, [streak]);
 
   const activeItems = useMemo(() => {
     const rows = (activeListQuery.data ?? []) as ActiveRow[];
@@ -617,14 +631,11 @@ export default function ProfileScreen() {
 
         {profileContentUnlocked ? (
           <>
-            {/* TODO(profile-v2): replace stubbed streak values with profileQuery.data */}
             <StreakHero
-              streakDays={7}
-              bestStreak={23}
-              nextBadgeIn={1}
-              onShare={() => {
-                /* TODO(profile-v2): wire share */
-              }}
+              streakDays={streak}
+              bestStreak={best}
+              nextBadgeIn={nextBadgeIn}
+              onShare={() => void handleShareStreak()}
             />
 
             {mode === 'self' ? (
@@ -798,7 +809,10 @@ export default function ProfileScreen() {
       handleAvatarPress,
       uploading,
       handleShare,
+      streak,
       best,
+      nextBadgeIn,
+      handleShareStreak,
       active,
       done,
       streakHeatmapStubDays,
