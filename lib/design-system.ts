@@ -29,6 +29,14 @@ export const DS_COLORS = {
   ACCENT_TINT: '#FAECE7',       // Light orange bg for task icons, badges
   ACCENT_TINT_BORDER: '#F5C4B4', // Border for orange-tint containers
 
+  // Profile v2 — 30-day streak heatmap ramp (hue-locked to ACCENT)
+  HEATMAP_L0: '#EEE9E0',
+  HEATMAP_L1: '#F2D4C0',
+  HEATMAP_L2: '#E0A282',
+  HEATMAP_L3: '#BB471D',
+  HEATMAP_L4: '#9E3A14',
+  HEATMAP_TODAY_RING: '#1A1A1A',
+
   // Legacy uppercase
   ACCENT_PRIMARY: '#BB471D',
   ACCENT_SECONDARY: '#9E3A14',

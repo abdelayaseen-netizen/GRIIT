@@ -1,5 +1,5 @@
 // NOTE(post-launch): Add "Drafts" section — filter challenges where status === 'draft' && creator_id === user.id
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -11,46 +11,54 @@ import {
   Platform,
   Linking,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   Settings,
   Camera,
   Share2,
-  Zap,
-  Star,
-  Clock,
-  Check,
   CheckCircle,
   ChevronRight,
+  Pencil,
+  Target,
+  LayoutGrid,
+  Award,
 } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { trpcQuery, trpcMutate } from "@/lib/trpc";
+import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { trackEvent } from "@/lib/analytics";
 import { shareProfile } from "@/lib/share";
 import { pickAndUploadAvatar } from "@/lib/avatar";
 import { captureError } from "@/lib/sentry";
-import { Avatar } from "@/components/Avatar";
-import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { SkeletonProfile } from "@/components/skeletons";
+import { Avatar } from "@/components/Avatar";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
-import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
+import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system"
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
-import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
+import { PostsGrid } from "@/components/profile/PostsGrid";
+import { BadgesGrid, type BadgeGridRow } from "@/components/profile/BadgesGrid";
+import { StreakHero } from "@/components/profile/StreakHero";
+import { TodayTaskStrip } from "@/components/profile/TodayTaskStrip";
+import { MiniStats } from "@/components/profile/MiniStats";
+import {
+  ChallengeListSheet,
+  type ChallengeListSheetIconName,
+} from "@/components/profile/ChallengeListSheet";
+import { StreakHeatmap } from "@/components/profile/StreakHeatmap";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
 
-const RESPECT_DEBOUNCE_MS = 300;
+type ProfileV2Mode = "self" | "public" | "friends-allowed" | "friends-blocked" | "private";
+
+
 
 type ActiveRow = {
   id: string;
@@ -58,30 +66,6 @@ type ActiveRow = {
   progress_percent?: number;
   challenges?: { id?: string; title?: string; duration_days?: number };
 };
-
-type BadgeDef = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  progress: number;
-  total: number;
-  type?: string;
-};
-
-function formatJoinDate(value?: string | null): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("en-US", { month: "short", year: "numeric" });
-}
-
-function tierPillStyle(tier: string): { bg: string; fg: string } {
-  const t = tier.toLowerCase();
-  if (t.includes("build")) return { bg: DS_COLORS.PROFILE_TIER_BUILDER_BG, fg: DS_COLORS.PROFILE_TIER_BUILDER_TEXT };
-  if (t.includes("start")) return { bg: DS_COLORS.PROFILE_TIER_STARTER_BG, fg: DS_COLORS.PROFILE_TIER_STARTER_TEXT };
-  return { bg: DS_COLORS.PROFILE_TIER_WARRIOR_BG, fg: DS_COLORS.PROFILE_TIER_WARRIOR_TEXT };
-}
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -94,7 +78,11 @@ export default function ProfileScreen() {
   const [avatarInlineError, setAvatarInlineError] = useState<string | null>(null);
   const [avatarDisplayOverride, setAvatarDisplayOverride] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
-  const respectLastAtProfile = useRef<Map<string, number>>(new Map());
+  const [miniActiveSheetOpen, setMiniActiveSheetOpen] = useState(false);
+  const [miniCompletedSheetOpen, setMiniCompletedSheetOpen] = useState(false);
+  const [profileV2PreviewMode, setProfileV2PreviewMode] = useState<ProfileV2Mode>('self');
+  /** Dev preview alias; use this name so visibility checks (`mode === '…'`) are grep-friendly for PR verification. */
+  const mode = profileV2PreviewMode;
 
   useEffect(() => {
     if (!avatarInlineError) return;
@@ -128,31 +116,11 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
-  const postsQuery = useQuery({
-    queryKey: ["profile", user?.id, "userPosts"],
-    queryFn: () => trpcQuery(TRPC.feed.getUserPosts, { userId: user!.id, limit: 30 }) as Promise<{ posts: LiveFeedPost[] }>,
-    enabled: !isGuest && !!user?.id && tab === "posts",
-    staleTime: 60 * 1000,
-  });
-
-  const badgesQuery = useQuery({
-    queryKey: ["profile", user?.id, "badges"],
-    queryFn: () => trpcQuery(TRPC.profiles.getBadges, { userId: user!.id }) as Promise<{ earned: BadgeDef[]; next: BadgeDef[] }>,
-    enabled: !isGuest && !!user?.id && tab === "badges",
-    staleTime: 60 * 1000,
-  });
-
-  const refreshing =
-    activeListQuery.isRefetching || followCountsQuery.isRefetching || postsQuery.isRefetching || badgesQuery.isRefetching;
+  const refreshing = activeListQuery.isRefetching || followCountsQuery.isRefetching;
   const onRefresh = useCallback(async () => {
     await refetchAll();
-    await Promise.all([
-      activeListQuery.refetch(),
-      followCountsQuery.refetch(),
-      postsQuery.refetch(),
-      badgesQuery.refetch(),
-    ]);
-  }, [refetchAll, activeListQuery, followCountsQuery, postsQuery, badgesQuery]);
+    await Promise.all([activeListQuery.refetch(), followCountsQuery.refetch()]);
+  }, [refetchAll, activeListQuery, followCountsQuery]);
 
   const streak = stats?.activeStreak ?? 0;
   const best = stats?.longestStreak ?? 0;
@@ -180,54 +148,158 @@ export default function ProfileScreen() {
     });
   }, [activeListQuery.data]);
 
-  const onPostRespect = useCallback(
-    async (post: LiveFeedPost) => {
-      if (!user?.id) return;
-      const now = Date.now();
-      const last = respectLastAtProfile.current.get(post.id) ?? 0;
-      if (now - last < RESPECT_DEBOUNCE_MS) return;
-      respectLastAtProfile.current.set(post.id, now);
-
-      const prevR = post.reactedByMe;
-      const prevC = post.respectCount;
-      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
-      qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
-        if (!old) return old;
-        return {
-          ...old,
-          posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: !prevR, respectCount: nextC } : p)),
-        };
-      });
-      try {
-        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
-          reacted?: boolean;
-          reactionCount?: number;
-        };
-        qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            posts: old.posts.map((p) =>
-              p.id === post.id
-                ? { ...p, reactedByMe: !!result.reacted, respectCount: Math.max(0, result.reactionCount ?? nextC) }
-                : p
-            ),
-          };
-        });
-        await qc.invalidateQueries({ queryKey: ["liveFeed"] });
-      } catch (e) {
-        captureError(e, "ProfileTabRespect");
-        qc.setQueryData(["profile", user.id, "userPosts"], (old: { posts: LiveFeedPost[] } | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            posts: old.posts.map((p) => (p.id === post.id ? { ...p, reactedByMe: prevR, respectCount: prevC } : p)),
-          };
-        });
-      }
+  const navigateMiniActiveChallenge = useCallback(
+    (id: string) => {
+      setMiniActiveSheetOpen(false);
+      router.push(ROUTES.CHALLENGE_ACTIVE(id) as never);
     },
-    [user?.id, qc]
+    [router]
   );
+
+  const navigateMiniCompletedChallenge = useCallback(
+    (id: string) => {
+      setMiniCompletedSheetOpen(false);
+      router.push(ROUTES.CHALLENGE_ACTIVE(id) as never);
+    },
+    [router]
+  );
+
+  const noopMiniStatsNavigate = useCallback(() => {}, []);
+
+  // TODO(profile-v2): replace with profileQuery.data.activeChallenges
+  const stubActiveChallengeRows = useMemo(
+    (): {
+      id: string;
+      title: string;
+      subtitle: string;
+      joinedCount: number;
+      finishedCount?: number;
+      iconBg: string;
+      iconColor: string;
+      iconName: ChallengeListSheetIconName;
+    }[] => [
+      {
+        id: "morning-workout",
+        title: "Morning workout",
+        subtitle: "Day 1 of 21",
+        joinedCount: 1284,
+        iconBg: DS_COLORS.ACCENT_TINT,
+        iconColor: DS_COLORS.ACCENT,
+        iconName: "target",
+      },
+      {
+        id: "morning-prayer",
+        title: "5-Minute Morning Prayer",
+        subtitle: "Day 3 of 30",
+        joinedCount: 3041,
+        iconBg: DS_COLORS.ACCENT_GREEN_BG,
+        iconColor: DS_COLORS.GREEN,
+        iconName: "sun",
+      },
+    ],
+    []
+  );
+
+  // TODO(profile-v2): replace with profileQuery.data.completedChallenges
+  const stubCompletedChallengeRows = useMemo(
+    (): {
+      id: string;
+      title: string;
+      subtitle: string;
+      joinedCount: number;
+      finishedCount?: number;
+      iconBg: string;
+      iconColor: string;
+      iconName: ChallengeListSheetIconName;
+    }[] => [
+      {
+        id: "hydration-push",
+        title: "Hydration streak",
+        subtitle: "Finished May 1, 2026",
+        joinedCount: 812,
+        finishedCount: 540,
+        iconBg: DS_COLORS.CATEGORY_PEACH,
+        iconColor: DS_COLORS.DISCOVER_CORAL,
+        iconName: "droplet",
+      },
+      {
+        id: "sleep-reset",
+        title: "Sleep reset challenge",
+        subtitle: "Finished Apr 26, 2026",
+        joinedCount: 1902,
+        finishedCount: 1201,
+        iconBg: DS_COLORS.ONBOARDING_ACCENT_LIGHT,
+        iconColor: DS_COLORS.TEXT_PRIMARY,
+        iconName: "bed",
+      },
+      {
+        id: "daily-read",
+        title: "12 pages daily",
+        subtitle: "Finished Apr 12, 2026",
+        joinedCount: 4033,
+        finishedCount: 2200,
+        iconBg: DS_COLORS.WARNING_BG,
+        iconColor: DS_COLORS.WARNING,
+        iconName: "book",
+      },
+      {
+        id: "green-walk",
+        title: "10k steps green week",
+        subtitle: "Finished Mar 29, 2026",
+        joinedCount: 5120,
+        finishedCount: 3300,
+        iconName: "leaf",
+        iconBg: DS_COLORS.ACCENT_GREEN_BG,
+        iconColor: DS_COLORS.ACCENT_GREEN,
+      },
+      {
+        id: "trail-sprint",
+        title: "Weekend warrior",
+        subtitle: "Finished Feb 13, 2026",
+        joinedCount: 2877,
+        finishedCount: 1900,
+        iconBg: DS_COLORS.SUGGESTED_CARD_ACCENT_LIFESTYLE,
+        iconColor: DS_COLORS.CATEGORY_DISCIPLINE,
+        iconName: "walk",
+      },
+    ],
+    []
+  );
+
+  // TODO(profile-v2): replace with checkinsQuery.data
+  const streakHeatmapStubDays = useMemo(() => {
+    return Array.from({ length: 30 }, (_, i) => ({
+      date: new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10),
+      level: (((i + 11) * 29) % 5) as 0 | 1 | 2 | 3 | 4,
+    }));
+  }, []);
+
+  // TODO(profile-v2): replace with postsQuery.data (new endpoint)
+  const profileV2PostsStub = useMemo(
+    () =>
+      Array.from({ length: 9 }, (_, i) => ({
+        id: `profile-v2-post-${i + 1}`,
+        imageUrl: `https://picsum.photos/seed/grit-${i + 101}/320/400`,
+        challengeTitle: ["Morning Lift", "Run Club", "Prayer Pace", "Journal Jam", "Cold Plunge", "Hydration", "Macros", "Steps", "Read"][i] ?? `Challenge ${i + 1}`,
+        dayOfTotal:
+          ["Day 1 of 21", "Day 7 of 30", "Day 3 of 30", "Day 12 of 14", "Day 20 of 30", "Day 4 of 10", "Day 15 of 60", "Day 9 of 21", "Day 11 of 40"][i] ??
+          `Day ${i + 2} of 21`,
+      })),
+    []
+  );
+
+  // TODO(profile-v2): replace with badgesQuery.data via API
+  const profileV2BadgesStub = useMemo((): BadgeGridRow[] => {
+    const rows: BadgeGridRow[] = [
+      { id: "badge-ignite", name: "Ignition", iconName: "flame", unlocked: true },
+      { id: "badge-sprint10", name: "Sprint Ten", iconName: "star", unlocked: true },
+      { id: "badge-focus", name: "Focus Forge", iconName: "target", unlocked: false },
+      { id: "badge-sunrise", name: "Sunrise", iconName: "sun", unlocked: false },
+      { id: "badge-marathon", name: "Road Ready", iconName: "trophy", unlocked: false },
+      { id: "badge-voltage", name: "Voltage", iconName: "zap", unlocked: false },
+    ];
+    return rows;
+  }, []);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -279,11 +351,9 @@ export default function ProfileScreen() {
     if (!dn || !un) return false;
     return dn !== un;
   })();
-  const listUsername = profile ? profile.username?.trim() || primaryLine : "";
-  const tier = stats?.tier ?? "Starter";
-  const tierColors = tierPillStyle(tier);
-  const fc = followCountsQuery.data;
   const avatarUri = profile ? (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "" : "";
+  const listUsername = profile ? profile.username?.trim() || primaryLine : "";
+  const fc = followCountsQuery.data;
 
   type ProfileActiveChallengeRow = {
     id: string;
@@ -296,8 +366,6 @@ export default function ProfileScreen() {
 
   const keyExtractorProfileRoot = useCallback((item: { key: string }) => item.key, []);
   const keyExtractorActiveChallenge = useCallback((item: ProfileActiveChallengeRow) => item.id, []);
-  const keyExtractorPost = useCallback((post: LiveFeedPost) => post.id, []);
-  const keyExtractorBadge = useCallback((b: BadgeDef) => b.id, []);
 
   const renderActiveChallengeItem = useCallback(
     ({ item }: { item: ProfileActiveChallengeRow }) => {
@@ -312,7 +380,7 @@ export default function ProfileScreen() {
       return (
         <TouchableOpacity accessibilityRole="button"
           style={styles.chCard}
-          onPress={() => item.challengeId && router.push(ROUTES.CHALLENGE_ID(item.challengeId) as never)}
+          onPress={() => router.push(ROUTES.CHALLENGE_ACTIVE(item.id) as never)}
           accessibilityLabel={a11yLabel}
         >
           <View style={styles.chTop}>
@@ -346,102 +414,65 @@ export default function ProfileScreen() {
     [router]
   );
 
-  const renderProfilePostRow = useCallback(
-    ({ item: post }: { item: LiveFeedPost }) => (
-      <FeedPostCard
-        post={post}
-        onProfilePress={() => router.push(ROUTES.TABS_PROFILE as never)}
-        onRespect={() => void onPostRespect(post)}
-        onComment={() => router.push(ROUTES.POST_ID(post.id) as never)}
-        onShare={() => {}}
-      />
-    ),
-    [router, onPostRespect]
-  );
-
-  const renderEarnedBadgeItem = useCallback(
-    ({ item: b }: { item: BadgeDef }) => {
-      const IconComp = BADGE_ICONS[b.icon] ?? Zap;
-      const accent = badgeAccentFor(b.color);
-      return (
-        <Pressable accessibilityRole="button"
-          style={styles.badgeCard}
-          onPress={() =>
-            setSelectedBadge({
-              id: b.id,
-              name: b.name,
-              icon: b.icon,
-              color: b.color,
-              progress: b.progress,
-              total: b.total,
-            })
-          }
-          accessibilityLabel={`${b.name} badge details`}
-        >
-          <View style={[styles.badgeIconOuter, { backgroundColor: accent.bg }]}>
-            <IconComp size={22} color={accent.stroke} strokeWidth={2} />
-          </View>
-          <Text style={styles.badgeName}>{b.name}</Text>
-          <Text style={styles.badgeProg}>
-            {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
-          </Text>
-        </Pressable>
-      );
-    },
-    [setSelectedBadge]
-  );
-
-  const renderNextBadgeItem = useCallback(
-    ({ item: b }: { item: BadgeDef }) => {
-      const NextIcon = BADGE_ICONS[b.icon] ?? Zap;
-      return (
-        <Pressable accessibilityRole="button"
-          style={[styles.badgeCard, styles.badgeCardDim]}
-          onPress={() =>
-            setSelectedBadge({
-              id: b.id,
-              name: b.name,
-              icon: b.icon,
-              color: b.color,
-              progress: b.progress,
-              total: b.total,
-            })
-          }
-          accessibilityLabel={`${b.name} badge details`}
-        >
-          <View style={[styles.badgeIconOuter, { backgroundColor: DS_COLORS.PROFILE_NEXT_BADGE_BG }]}>
-            <NextIcon size={22} color={DS_COLORS.PROFILE_TEXT_MUTED} strokeWidth={2} />
-          </View>
-          <Text style={styles.badgeName}>{b.name}</Text>
-          <Text style={styles.badgeProg}>
-            {b.progress}/{b.total} {b.total === 1 ? "day" : "days"}
-          </Text>
-          <View style={styles.nextBarTrack}>
-            <View style={[styles.nextBarFill, { width: `${Math.min(100, (b.progress / Math.max(1, b.total)) * 100)}%` }]} />
-          </View>
-        </Pressable>
-      );
-    },
-    [setSelectedBadge]
-  );
-
   const profileRootContent = useMemo(
     () => {
       if (!profile || !user?.id) {
         return <View />;
       }
+
+      const profileContentUnlocked =
+        mode === 'self' || mode === 'public' || mode === 'friends-allowed';
+
+      // TODO(profile-v2): wire tier from profile.tier once tier system ships (varies by viewer visibility)
+      const profileV2TierStub =
+        mode === 'self' ? "Builder" : mode === 'friends-allowed' ? "Ally" : mode === 'public' ? "Explorer" : "";
+
       return (
       <View>
-        <View style={styles.topBar}>
-          <View style={{ width: 22 }} />
-          <TouchableOpacity accessibilityRole="button"
-            onPress={() => router.push(ROUTES.SETTINGS as never)}
-            accessibilityLabel="Open settings"
-            hitSlop={10}
-          >
-            <Settings size={22} color={DS_COLORS.PROFILE_TEXT_SECONDARY} />
-          </TouchableOpacity>
-        </View>
+        {mode === 'self' ? (
+          <View style={styles.topBar}>
+            <View style={{ width: 22 }} />
+            <TouchableOpacity accessibilityRole="button"
+              onPress={() => router.push(ROUTES.SETTINGS as never)}
+              accessibilityLabel="Open settings"
+              hitSlop={10}
+            >
+              <Settings size={22} color={DS_COLORS.PROFILE_TEXT_SECONDARY} />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.topBarPreview}>
+            <View style={{ width: 54 }} accessibilityElementsHidden />
+            <Text style={styles.topBarPreviewTitle} accessibilityRole="header" numberOfLines={1}>
+              {primaryLine.trim() || listUsername}
+            </Text>
+            <View style={styles.topBarPreviewTrail}>
+              {mode === 'public' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Follow profile preview stub"
+                  onPress={() => {
+                    /* TODO(profile-v2): wire follow mutation */
+                  }}
+                  style={styles.previewTrailBtn}
+                >
+                  <Text style={styles.previewTrailBtnTxt}>Follow</Text>
+                </Pressable>
+              ) : null}
+              {mode === 'friends-allowed' ? (
+                <Text accessibilityRole="text" accessibilityLabel="Following preview stub" style={styles.previewFollowingTxt}>
+                  Following
+                </Text>
+              ) : null}
+              {mode === 'friends-blocked' ? (
+                <View style={{ width: 54 }} accessibilityElementsHidden />
+              ) : null}
+              {mode === 'private' ? (
+                <View style={{ width: 54 }} accessibilityElementsHidden />
+              ) : null}
+            </View>
+          </View>
+        )}
 
         {avatarInlineError ? (
           <TouchableOpacity
@@ -465,233 +496,287 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         ) : null}
 
+        {__DEV__ ? (
+          <View
+            style={styles.devProfilePreviewBar}
+            accessibilityLabel="Developer profile preview mode switcher"
+          >
+            {([
+              ["self", "Self"],
+              ["public", "Pub"],
+              ["friends-allowed", "Fri ✓"],
+              ["friends-blocked", "Blocked"],
+              ["private", "Pvt"],
+            ] as readonly [ProfileV2Mode, string][]).map(([value, lbl]) => (
+              <Pressable
+                key={value}
+                accessibilityRole="button"
+                accessibilityState={{ selected: mode === value }}
+                accessibilityLabel={`Preview as ${value}`}
+                hitSlop={6}
+                onPress={() => setProfileV2PreviewMode(value)}
+                style={[styles.devProfilePreviewChip, mode === value && styles.devProfilePreviewChipOn]}
+              >
+                <Text style={[styles.devProfilePreviewChipTxt, mode === value && styles.devProfilePreviewChipTxtOn]}>
+                  {lbl}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+
         <View style={styles.profileRow}>
           <View style={styles.avatarCol}>
-            <Pressable accessibilityRole="button"
-              onPress={() => void handleAvatarPress()}
-              disabled={uploading}
-              accessibilityLabel="Change profile photo"
-            >
-              {avatarUri ? (
+            {mode === 'self' ? (
+              <Pressable accessibilityRole="button"
+                onPress={() => void handleAvatarPress()}
+                disabled={uploading}
+                accessibilityLabel="Change profile photo"
+              >
                 <View pointerEvents="none">
-                  <Image
-                    source={{ uri: avatarUri }}
-                    style={styles.avatarImage}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                    transition={200}
-                    accessibilityIgnoresInvertColors
+                  <Avatar
+                    url={avatarUri.trim() ? avatarUri : null}
+                    name={primaryLine}
+                    userId={user.id}
+                    size={64}
                   />
                 </View>
-              ) : (
-                <View pointerEvents="none">
-                  <Avatar url={null} name={primaryLine} userId={user.id} size={80} />
+                <View style={styles.cameraBadge}>
+                  {uploading ? (
+                    <Text style={styles.cameraBadgeText}>…</Text>
+                  ) : (
+                    <Camera size={12} color={DS_COLORS.WHITE} strokeWidth={2} />
+                  )}
                 </View>
-              )}
-              <View style={styles.cameraBadge}>
-                {uploading ? (
-                  <Text style={styles.cameraBadgeText}>…</Text>
-                ) : (
-                  <Camera size={13} color={DS_COLORS.WHITE} strokeWidth={2} />
-                )}
+              </Pressable>
+            ) : (
+              <View accessibilityRole="image" accessibilityLabel={`Profile photo for ${primaryLine.trim()}`}>
+                <Avatar
+                  url={avatarUri.trim() ? avatarUri : null}
+                  name={primaryLine}
+                  userId={user.id}
+                  size={64}
+                />
               </View>
-            </Pressable>
+            )}
           </View>
           <View style={styles.textCol}>
             <Text style={styles.username}>{primaryLine}</Text>
-            {showHandleRow ? <Text style={styles.handleAt}>{handleAt}</Text> : null}
-            <View style={styles.tierRow}>
-              <View style={[styles.tierPill, { backgroundColor: tierColors.bg }]}>
-                <Text style={[styles.tierPillText, { color: tierColors.fg }]}>{tier}</Text>
-              </View>
-              {profile.created_at ? <Text style={styles.joined}>Joined {formatJoinDate(profile.created_at)}</Text> : null}
+            <View style={styles.handleTierRow}>
+              {showHandleRow && handleAt ? <Text style={styles.handleCompact}>{handleAt}</Text> : null}
+              {profileContentUnlocked && profileV2TierStub ? (
+                <View style={styles.v2TierChip}>
+                  <Text style={styles.v2TierChipText}>{profileV2TierStub}</Text>
+                </View>
+              ) : null}
             </View>
-            <Text style={[styles.bio, !profile.bio?.trim() && styles.bioPlaceholder]}>
-              {profile.bio?.trim() ? profile.bio : "Add a bio…"}
-            </Text>
-            <View style={styles.followInline}>
-              <TouchableOpacity accessibilityRole="button"
-                style={styles.followInlineBtn}
-                onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
-                accessibilityLabel="View followers"
-              >
-                <Text style={styles.followInlineNum}>{fc?.followers ?? 0}</Text>
-                <Text style={styles.followInlineLbl}> followers</Text>
-              </TouchableOpacity>
-              <TouchableOpacity accessibilityRole="button"
-                style={styles.followInlineBtn}
-                onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
-                accessibilityLabel="View following"
-              >
-                <Text style={styles.followInlineNum}>{fc?.following ?? 0}</Text>
-                <Text style={styles.followInlineLbl}> following</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.actionRow}>
-          <TouchableOpacity accessibilityRole="button"
-            style={styles.btnOutline}
-            onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
-            accessibilityLabel="Edit profile"
-          >
-            <Text style={styles.btnOutlineText}>Edit profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity accessibilityRole="button"
-            style={styles.btnShareCompact}
-            onPress={() => void handleShare()}
-            accessibilityLabel="Share profile"
-          >
-            <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_SECONDARY} strokeWidth={2} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.statsGrid}>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_CORAL_BG }]}>
-              <Zap size={14} color={DS_COLORS.PROFILE_STAT_CORAL_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{streak}</Text>
-              <Text style={styles.statGridLbl}>day streak</Text>
-            </View>
-          </View>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_AMBER_BG }]}>
-              <Star size={14} color={DS_COLORS.PROFILE_STAT_AMBER_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{best}</Text>
-              <Text style={styles.statGridLbl}>best streak</Text>
-            </View>
-          </View>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_TEAL_BG }]}>
-              <Clock size={14} color={DS_COLORS.PROFILE_STAT_TEAL_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{active}</Text>
-              <Text style={styles.statGridLbl}>active</Text>
-            </View>
-          </View>
-          <View style={styles.statGridCard}>
-            <View style={[styles.statGridIconWrap, { backgroundColor: DS_COLORS.PROFILE_STAT_BLUE_BG }]}>
-              <Check size={14} color={DS_COLORS.PROFILE_STAT_BLUE_ICON} strokeWidth={2} />
-            </View>
-            <View>
-              <Text style={styles.statGridNum}>{done}</Text>
-              <Text style={styles.statGridLbl}>completed</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.tabsBar}>
-          {(["challenges", "posts", "badges"] as const).map((t) => (
-            <Pressable accessibilityRole="tab"
-              key={t}
-              style={[styles.tabBtn, tab === t && styles.tabBtnOn]}
-              onPress={() => setTab(t)}
-              accessibilityState={{ selected: tab === t }}
-              accessibilityLabel={t === "challenges" ? "Challenges tab" : t === "posts" ? "Posts tab" : "Badges tab"}
-            >
-              <Text style={[styles.tabTxt, tab === t ? styles.tabTxtOn : styles.tabTxtOff]}>
-                {t === "challenges" ? "Challenges" : t === "posts" ? "Posts" : "Badges"}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {tab === "challenges" ? (
-          <View style={styles.tabPad}>
-            {activeItems.length === 0 ? (
-              <Text style={styles.emptyHint}>No active challenges. Discover one to get started.</Text>
-            ) : (
-              <FlatList
-                data={activeItems}
-                keyExtractor={keyExtractorActiveChallenge}
-                scrollEnabled={false}
-                nestedScrollEnabled
-                contentContainerStyle={styles.chListContent}
-                renderItem={renderActiveChallengeItem}
-                maxToRenderPerBatch={10}
-                windowSize={5}
-                initialNumToRender={8}
-                removeClippedSubviews={Platform.OS === "android"}
-              />
-            )}
-          </View>
-        ) : null}
-
-        {tab === "posts" ? (
-          <View style={styles.tabPad}>
-            {postsQuery.isPending ? (
-              <Text style={styles.emptyHint}>Loading posts…</Text>
-            ) : (postsQuery.data?.posts ?? []).length === 0 ? (
-              <View style={styles.postsEmpty}>
-                <Text style={styles.postsEmptyTitle}>No posts yet</Text>
-                <Text style={styles.postsEmptySub}>Complete a task to share your first post.</Text>
+            {profileContentUnlocked ? (
+              <View style={styles.followRowCompact}>
                 <TouchableOpacity accessibilityRole="button"
-                  onPress={() => router.push(ROUTES.TABS_HOME as never)}
-                  accessibilityLabel="Go to my challenges"
+                  style={styles.followInlineBtn}
+                  onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
+                  accessibilityLabel="View followers"
                 >
-                  <Text style={styles.postsEmptyCta}>Go to my challenges →</Text>
+                  <Text style={styles.followCompactNum}>{fc?.followers ?? 0}</Text>
+                  <Text style={styles.followCompactLbl}> followers</Text>
+                </TouchableOpacity>
+                <TouchableOpacity accessibilityRole="button"
+                  style={styles.followInlineBtn}
+                  onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
+                  accessibilityLabel="View following"
+                >
+                  <Text style={styles.followCompactNum}>{fc?.following ?? 0}</Text>
+                  <Text style={styles.followCompactLbl}> following</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
-              <FlatList
-                data={postsQuery.data?.posts ?? []}
-                keyExtractor={keyExtractorPost}
-                scrollEnabled={false}
-                nestedScrollEnabled
-                renderItem={renderProfilePostRow}
-                maxToRenderPerBatch={10}
-                windowSize={5}
-                initialNumToRender={8}
-                removeClippedSubviews={Platform.OS === "android"}
-              />
-            )}
+            ) : null}
           </View>
-        ) : null}
+          <View style={styles.identityIconStack}>
+            {mode === 'self' ? (
+              <TouchableOpacity accessibilityRole="button"
+                style={styles.identityIconSq}
+                onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
+                accessibilityLabel="Edit profile"
+                hitSlop={6}
+              >
+                <Pencil size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
+              </TouchableOpacity>
+            ) : null}
+            {profileContentUnlocked ? (
+              <TouchableOpacity accessibilityRole="button"
+                style={styles.identityIconSq}
+                onPress={() => void handleShare()}
+                accessibilityLabel="Share profile"
+                hitSlop={6}
+              >
+                <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
 
-        {tab === "badges" ? (
-          <View style={styles.tabPad}>
-            {badgesQuery.isPending ? (
-              <Text style={styles.emptyHint}>Loading badges…</Text>
-            ) : (
+        {profileContentUnlocked ? (
+          <>
+            {/* TODO(profile-v2): replace stubbed streak values with profileQuery.data */}
+            <StreakHero
+              streakDays={7}
+              bestStreak={23}
+              nextBadgeIn={1}
+              onShare={() => {
+                /* TODO(profile-v2): wire share */
+              }}
+            />
+
+            {mode === 'self' ? (
+              <TodayTaskStrip
+                taskName="5-Minute Morning Prayer"
+                dayOfTotal="Day 3 of 30"
+                onClear={() => {
+                  /* TODO(profile-v2): wire to checkin mutation */
+                }}
+                onTap={() => {
+                  /* TODO(profile-v2): navigate to task flow */
+                }}
+              />
+            ) : null}
+
+            <MiniStats
+              bestStreak={best}
+              activeCount={active}
+              completedCount={done}
+              onTapActive={
+                mode === 'self'
+                  ? () => setMiniActiveSheetOpen(true)
+                  : noopMiniStatsNavigate
+              }
+              onTapCompleted={
+                mode === 'self'
+                  ? () => setMiniCompletedSheetOpen(true)
+                  : noopMiniStatsNavigate
+              }
+            />
+
+            <StreakHeatmap days={streakHeatmapStubDays} />
+
+            <View style={styles.tabsBar}>
+              <Pressable
+                accessibilityRole="tab"
+                style={[styles.tabBtn, tab === "challenges" && styles.tabBtnOn]}
+                onPress={() => setTab("challenges")}
+                accessibilityState={{ selected: tab === "challenges" }}
+                accessibilityLabel="Challenges tab"
+              >
+                <View style={styles.tabInner}>
+                  <Target
+                    size={18}
+                    color={tab === "challenges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                    strokeWidth={2}
+                  />
+                  <Text style={[styles.tabTxt, tab === "challenges" ? styles.tabTxtOn : styles.tabTxtOff]}>Challenges</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="tab"
+                style={[styles.tabBtn, tab === "posts" && styles.tabBtnOn]}
+                onPress={() => setTab("posts")}
+                accessibilityState={{ selected: tab === "posts" }}
+                accessibilityLabel="Posts tab"
+              >
+                <View style={styles.tabInner}>
+                  <LayoutGrid
+                    size={18}
+                    color={tab === "posts" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                    strokeWidth={2}
+                  />
+                  <Text style={[styles.tabTxt, tab === "posts" ? styles.tabTxtOn : styles.tabTxtOff]}>Posts</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="tab"
+                style={[styles.tabBtn, tab === "badges" && styles.tabBtnOn]}
+                onPress={() => setTab("badges")}
+                accessibilityState={{ selected: tab === "badges" }}
+                accessibilityLabel="Badges tab"
+              >
+                <View style={styles.tabInner}>
+                  <Award
+                    size={18}
+                    color={tab === "badges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                    strokeWidth={2}
+                  />
+                  <Text style={[styles.tabTxt, tab === "badges" ? styles.tabTxtOn : styles.tabTxtOff]}>Badges</Text>
+                </View>
+              </Pressable>
+            </View>
+
+            {tab === "challenges" ? (
+              <View style={styles.tabPad}>
+                {activeItems.length === 0 ? (
+                  <Text style={styles.emptyHint}>No active challenges. Discover one to get started.</Text>
+                ) : (
+                  <FlatList
+                    data={activeItems}
+                    keyExtractor={keyExtractorActiveChallenge}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
+                    contentContainerStyle={styles.chListContent}
+                    renderItem={renderActiveChallengeItem}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={8}
+                    removeClippedSubviews={Platform.OS === "android"}
+                  />
+                )}
+              </View>
+            ) : null}
+
+            {tab === "posts" ? (
+              <PostsGrid
+                posts={profileV2PostsStub}
+                onSelect={(postId) => {
+                  void postId;
+                  // TODO(profile-v2): open v4 post card navigation
+                }}
+              />
+            ) : null}
+
+            {tab === "badges" ? (
+              <BadgesGrid badges={profileV2BadgesStub} onBadgePress={(payload) => setSelectedBadge(payload)} />
+            ) : null}
+          </>
+        ) : (
+          <View style={styles.restrictedProfileCard}>
+            {mode === 'private' ? (
               <>
-                <Text style={styles.secHead}>EARNED ({badgesQuery.data?.earned.length ?? 0})</Text>
-                <FlatList
-                  data={badgesQuery.data?.earned ?? []}
-                  keyExtractor={keyExtractorBadge}
-                  numColumns={3}
-                  scrollEnabled={false}
-                  nestedScrollEnabled
-                  columnWrapperStyle={styles.badgeGridRow}
-                  renderItem={renderEarnedBadgeItem}
-                  maxToRenderPerBatch={12}
-                  windowSize={5}
-                  initialNumToRender={12}
-                  removeClippedSubviews={Platform.OS === "android"}
-                />
-                <Text style={[styles.secHead, { marginTop: 20 }]}>NEXT UP ({badgesQuery.data?.next.length ?? 0})</Text>
-                <FlatList
-                  data={badgesQuery.data?.next ?? []}
-                  keyExtractor={keyExtractorBadge}
-                  numColumns={3}
-                  scrollEnabled={false}
-                  nestedScrollEnabled
-                  columnWrapperStyle={styles.badgeGridRow}
-                  renderItem={renderNextBadgeItem}
-                  maxToRenderPerBatch={12}
-                  windowSize={5}
-                  initialNumToRender={12}
-                  removeClippedSubviews={Platform.OS === "android"}
-                />
+                <Text style={styles.restrictedProfileTitle}>This account is private</Text>
+                {/* TODO(profile-v2): derive copy from follower / request API */}
+                <Text style={styles.restrictedProfileBody}>
+                  Requests and approvals ship with the follower flow.
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Request to follow preview stub"
+                  style={styles.restrictedPrimaryBtn}
+                  onPress={() => {
+                    /* TODO(profile-v2): request follow mutation */
+                  }}
+                >
+                  <Text style={styles.restrictedPrimaryBtnTxt}>Request to follow</Text>
+                </Pressable>
               </>
-            )}
+            ) : null}
+            {mode === 'friends-blocked' ? (
+              <>
+                <Text style={styles.restrictedProfileTitle}>Profile unavailable</Text>
+                <Text style={styles.restrictedProfileBody}>
+                  You cannot view posts and activity for this profile.
+                </Text>
+              </>
+            ) : null}
           </View>
-        ) : null}
+        )}
 
         <View style={{ height: 32 }} />
       </View>
@@ -705,33 +790,28 @@ export default function ProfileScreen() {
       primaryLine,
       showHandleRow,
       handleAt,
-      tierColors,
-      tier,
       fc,
       listUsername,
+      mode,
       router,
+      noopMiniStatsNavigate,
       handleAvatarPress,
       uploading,
       handleShare,
-      streak,
       best,
       active,
       done,
+      streakHeatmapStubDays,
       tab,
       setTab,
+      setMiniActiveSheetOpen,
+      setMiniCompletedSheetOpen,
+      setProfileV2PreviewMode,
       activeItems,
-      postsQuery.isPending,
-      postsQuery.data?.posts,
-      badgesQuery.isPending,
-      badgesQuery.data?.earned,
-      badgesQuery.data?.next,
+      profileV2PostsStub,
+      profileV2BadgesStub,
       keyExtractorActiveChallenge,
       renderActiveChallengeItem,
-      keyExtractorPost,
-      renderProfilePostRow,
-      keyExtractorBadge,
-      renderEarnedBadgeItem,
-      renderNextBadgeItem,
     ]
   );
 
@@ -792,6 +872,20 @@ export default function ProfileScreen() {
         removeClippedSubviews={false}
       />
       <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+      <ChallengeListSheet
+        visible={miniActiveSheetOpen}
+        title="Active challenges"
+        items={stubActiveChallengeRows}
+        onClose={() => setMiniActiveSheetOpen(false)}
+        onSelect={navigateMiniActiveChallenge}
+      />
+      <ChallengeListSheet
+        visible={miniCompletedSheetOpen}
+        title="Completed challenges"
+        items={stubCompletedChallengeRows}
+        onClose={() => setMiniCompletedSheetOpen(false)}
+        onSelect={navigateMiniCompletedChallenge}
+      />
     </SafeAreaView>
     </ErrorBoundary>
   );
@@ -811,6 +905,93 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
+  topBarPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 6,
+    gap: 6,
+  },
+  topBarPreviewTitle: {
+    flex: 1,
+    flexShrink: 1,
+    textAlign: "center",
+    fontSize: 15,
+    fontWeight: "600",
+    color: DS_COLORS.PROFILE_TEXT_PRIMARY,
+  },
+  topBarPreviewTrail: {
+    minWidth: 58,
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  previewTrailBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderRadius: DS_RADIUS.SM,
+  },
+  previewTrailBtnTxt: { fontSize: 13, fontWeight: "700", color: DS_COLORS.ACCENT },
+  previewFollowingTxt: { fontSize: 12, fontWeight: "600", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+
+  devProfilePreviewBar: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginHorizontal: DS_SPACING.screenHorizontal,
+    marginBottom: DS_SPACING.sm,
+  },
+  devProfilePreviewChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: DS_RADIUS.MD,
+    borderWidth: 1,
+    borderColor: DS_COLORS.PROFILE_BORDER_ALT,
+    backgroundColor: DS_COLORS.BG_CARD,
+  },
+  devProfilePreviewChipOn: {
+    borderColor: DS_COLORS.ACCENT,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+  },
+  devProfilePreviewChipTxt: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: DS_COLORS.PROFILE_TEXT_SECONDARY,
+  },
+  devProfilePreviewChipTxtOn: { color: DS_COLORS.ACCENT },
+
+  restrictedProfileCard: {
+    marginHorizontal: DS_SPACING.screenHorizontal,
+    marginTop: DS_SPACING.md,
+    padding: DS_SPACING.md,
+    borderRadius: DS_RADIUS.LG,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    backgroundColor: DS_COLORS.BG_CARD,
+    gap: 10,
+    alignItems: "center",
+  },
+  restrictedProfileTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: DS_COLORS.PROFILE_TEXT_PRIMARY,
+    textAlign: "center",
+  },
+  restrictedProfileBody: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: DS_COLORS.PROFILE_TEXT_SECONDARY,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  restrictedPrimaryBtn: {
+    marginTop: 4,
+    paddingVertical: 12,
+    paddingHorizontal: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.MD,
+    backgroundColor: DS_COLORS.ACCENT,
+  },
+  restrictedPrimaryBtnTxt: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_ON_ACCENT },
   avatarErrorBanner: {
     marginHorizontal: 20,
     marginBottom: 10,
@@ -831,19 +1012,13 @@ const styles = StyleSheet.create({
   },
   profileRow: { flexDirection: "row", paddingHorizontal: 20, gap: 14, alignItems: "flex-start" },
   avatarCol: { position: "relative" },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.photoThumbBg,
-  },
   cameraBadge: {
     position: "absolute",
     right: -2,
     bottom: -2,
-    width: 28,
-    height: 28,
-    borderRadius: DS_RADIUS.button,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: DS_COLORS.PRIMARY,
     borderWidth: 3,
     borderColor: DS_COLORS.BG_PAGE,
@@ -853,35 +1028,39 @@ const styles = StyleSheet.create({
   cameraBadgeText: { color: DS_COLORS.WHITE, fontSize: 12 },
   textCol: { flex: 1, minWidth: 0 },
   username: { fontSize: 18, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, letterSpacing: -0.3 },
-  handleAt: { marginTop: 2, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
-  tierRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 6 },
-  tierPill: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: DS_RADIUS.MD },
-  tierPillText: { fontSize: 11, fontWeight: "500" },
-  joined: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
-  bio: { marginTop: 8, fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, lineHeight: 18 },
-  bioPlaceholder: { fontStyle: "italic" },
-  followInline: { flexDirection: "row", gap: 14, marginTop: 8 },
-  followInlineBtn: { flexDirection: "row", alignItems: "baseline" },
-  followInlineNum: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
-  followInlineLbl: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
-  actionRow: { flexDirection: "row", gap: 10, paddingHorizontal: 20, marginTop: 14, marginBottom: 14 },
-  btnOutline: {
-    flex: 1,
-    borderRadius: DS_RADIUS.joinCta,
-    borderWidth: 1.5,
-    borderColor: DS_COLORS.PRIMARY,
-    paddingVertical: 11,
+  handleTierRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: DS_COLORS.BG_CARD,
+    gap: 8,
+    marginTop: 4,
   },
-  btnOutlineText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.PRIMARY },
-  btnShareCompact: {
-    width: 44,
-    borderRadius: DS_RADIUS.joinCta,
-    borderWidth: 1.5,
+  handleCompact: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+  v2TierChip: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: DS_RADIUS.SM,
+    backgroundColor: DS_COLORS.ACCENT,
+    alignSelf: "flex-start",
+  },
+  v2TierChipText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: DS_COLORS.TEXT_ON_ACCENT,
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+  },
+  followRowCompact: { flexDirection: "row", gap: 12, marginTop: 6 },
+  followInlineBtn: { flexDirection: "row", alignItems: "baseline" },
+  followCompactNum: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
+  followCompactLbl: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+  identityIconStack: { gap: 8, marginTop: 2 },
+  identityIconSq: {
+    width: 32,
+    height: 32,
+    borderRadius: DS_RADIUS.SM,
+    borderWidth: 1,
     borderColor: DS_COLORS.PROFILE_BORDER_ALT,
-    paddingVertical: 11,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: DS_COLORS.BG_CARD,
@@ -919,9 +1098,10 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.PROFILE_BORDER_ALT,
   },
   tabBtn: { flex: 1, alignItems: "center", paddingVertical: 12 },
-  tabBtnOn: { borderBottomWidth: 2, borderBottomColor: DS_COLORS.PRIMARY, marginBottom: -1.5 },
+  tabInner: { alignItems: "center", gap: 6 },
+  tabBtnOn: { borderBottomWidth: 2, borderBottomColor: DS_COLORS.ACCENT, marginBottom: -1.5 },
   tabTxt: { fontSize: 13 },
-  tabTxtOn: { fontWeight: "500", color: DS_COLORS.PRIMARY },
+  tabTxtOn: { fontWeight: "500", color: DS_COLORS.ACCENT },
   tabTxtOff: { fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED },
   tabPad: { paddingHorizontal: 20, paddingTop: 14, gap: 12 },
   chListContent: { gap: 12 },
@@ -950,41 +1130,4 @@ const styles = StyleSheet.create({
   chTrack: { height: 4, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 12, overflow: "hidden" },
   chFill: { height: 4, borderRadius: DS_RADIUS.SM },
   chPctBadge: { fontSize: 13, fontWeight: "500", flexShrink: 0 },
-  postsEmpty: { alignItems: "center", paddingVertical: 32 },
-  postsEmptyTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
-  postsEmptySub: { fontSize: 13, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY, marginTop: 6, textAlign: "center", maxWidth: 280 },
-  postsEmptyCta: { marginTop: 16, fontSize: 13, fontWeight: "500", color: DS_COLORS.PRIMARY },
-  secHead: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS.PROFILE_TEXT_SECONDARY,
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
-    marginBottom: 10,
-  },
-  badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  badgeGridRow: { gap: 10, marginBottom: 10 },
-  badgeCard: {
-    width: "31%",
-    minWidth: 100,
-    flexGrow: 1,
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: DS_RADIUS.LG,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    alignItems: "center",
-  },
-  badgeCardDim: { opacity: 0.85 },
-  badgeIconOuter: {
-    width: 44,
-    height: 44,
-    borderRadius: DS_RADIUS.iconButton,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  badgeName: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY, textAlign: "center" },
-  badgeProg: { fontSize: 11, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_MUTED, marginTop: 4 },
-  nextBarTrack: { width: "100%", height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PROFILE_BORDER_ALT, marginTop: 8, overflow: "hidden" },
-  nextBarFill: { height: 3, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.PRIMARY },
 });
