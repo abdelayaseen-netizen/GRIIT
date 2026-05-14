@@ -50,6 +50,7 @@ import {
   ChallengeListSheet,
   type ChallengeListSheetIconName,
 } from "@/components/profile/ChallengeListSheet";
+import { StreakHeatmap } from "@/components/profile/StreakHeatmap";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
@@ -289,6 +290,14 @@ export default function ProfileScreen() {
     ],
     []
   );
+
+  // TODO(profile-v2): replace with checkinsQuery.data
+  const streakHeatmapStubDays = useMemo(() => {
+    return Array.from({ length: 30 }, (_, i) => ({
+      date: new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10),
+      level: (((i + 11) * 29) % 5) as 0 | 1 | 2 | 3 | 4,
+    }));
+  }, []);
 
   const onPostRespect = useCallback(
     async (post: LiveFeedPost) => {
@@ -681,6 +690,8 @@ export default function ProfileScreen() {
           onTapCompleted={() => setMiniCompletedSheetOpen(true)}
         />
 
+        <StreakHeatmap days={streakHeatmapStubDays} />
+
         <View style={styles.tabsBar}>
           {(["challenges", "posts", "badges"] as const).map((t) => (
             <Pressable accessibilityRole="tab"
@@ -812,6 +823,9 @@ export default function ProfileScreen() {
       best,
       active,
       done,
+      streakHeatmapStubDays,
+      stubActiveChallengeRows,
+      stubCompletedChallengeRows,
       tab,
       setTab,
       activeItems,
