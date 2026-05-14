@@ -46,6 +46,7 @@ import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
+import { StreakHero } from "@/components/profile/StreakHero";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
@@ -546,6 +547,16 @@ export default function ProfileScreen() {
             <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_SECONDARY} strokeWidth={2} />
           </TouchableOpacity>
         </View>
+
+        {/* TODO(profile-v2): replace stubbed streak values with profileQuery.data */}
+        <StreakHero
+          streakDays={7}
+          bestStreak={23}
+          nextBadgeIn={1}
+          onShare={() => {
+            /* TODO(profile-v2): wire share */
+          }}
+        />
 
         <View style={styles.statsGrid}>
           <View style={styles.statGridCard}>
