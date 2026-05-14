@@ -11,7 +11,6 @@ import {
   Platform,
   Linking,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
@@ -473,22 +472,14 @@ export default function ProfileScreen() {
               disabled={uploading}
               accessibilityLabel="Change profile photo"
             >
-              {avatarUri ? (
-                <View pointerEvents="none">
-                  <Image
-                    source={{ uri: avatarUri }}
-                    style={styles.avatarImage}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                    transition={200}
-                    accessibilityIgnoresInvertColors
-                  />
-                </View>
-              ) : (
-                <View pointerEvents="none">
-                  <Avatar url={null} name={primaryLine} userId={user.id} size={80} />
-                </View>
-              )}
+              <View pointerEvents="none">
+                <Avatar
+                  url={avatarUri.trim() ? avatarUri : null}
+                  name={primaryLine}
+                  userId={user.id}
+                  size={64}
+                />
+              </View>
               <View style={styles.cameraBadge}>
                 {uploading ? (
                   <Text style={styles.cameraBadgeText}>…</Text>
@@ -842,19 +833,13 @@ const styles = StyleSheet.create({
   },
   profileRow: { flexDirection: "row", paddingHorizontal: 20, gap: 14, alignItems: "flex-start" },
   avatarCol: { position: "relative" },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.photoThumbBg,
-  },
   cameraBadge: {
     position: "absolute",
     right: -2,
     bottom: -2,
-    width: 28,
-    height: 28,
-    borderRadius: DS_RADIUS.button,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: DS_COLORS.PRIMARY,
     borderWidth: 3,
     borderColor: DS_COLORS.BG_PAGE,

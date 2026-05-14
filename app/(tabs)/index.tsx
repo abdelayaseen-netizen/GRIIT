@@ -9,6 +9,7 @@ import {
   Platform,
   UIManager,
   Modal,
+  Pressable,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { InlineError } from "@/components/InlineError";
@@ -27,6 +28,7 @@ import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import type { TodayCheckinForUser, StatsFromApi } from "@/types";
+import { Avatar } from "@/components/Avatar";
 import DailyQuote from "@/components/home/DailyQuote";
 import { ActiveTaskCard } from "@/components/home/ActiveTaskCard";
 import StreakHeroV2 from "@/components/home/StreakHeroV2";
@@ -42,6 +44,7 @@ import { SkeletonHomeChallengeCard } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_SPACING_V2, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { profilePrimaryName } from "@/lib/profile-display";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -509,10 +512,25 @@ export default function HomeScreen() {
           <InlineError message={leaveChallengeError} onDismiss={() => setLeaveChallengeError(null)} />
         ) : null}
         <View style={s.headerRow}>
-          <View>
+          <View style={s.headerTextCol}>
             <Text style={s.greeting}>{getGreeting()}</Text>
             <Text style={s.word}>GRIIT</Text>
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open profile tab"
+            onPress={() => router.push(ROUTES.TABS_PROFILE as never)}
+          >
+            <Avatar
+              url={profile?.avatar_url?.trim() ? profile.avatar_url.trim() : null}
+              name={profilePrimaryName(
+                profile ?? {},
+                user?.email?.includes("@") ? user.email.split("@")[0] : undefined,
+              )}
+              userId={user?.id ?? undefined}
+              size={40}
+            />
+          </Pressable>
         </View>
 
         {(() => {
@@ -688,6 +706,9 @@ export default function HomeScreen() {
     [
       leaveChallengeError,
       streak,
+      profile,
+      user?.id,
+      user?.email,
       showStatDash,
       streakPillLabel,
       points,
@@ -904,6 +925,11 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  headerTextCol: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: DS_SPACING.md,
   },
   header: { paddingHorizontal: DS_SPACING.xl, paddingTop: DS_SPACING.md },
   greeting: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED },
