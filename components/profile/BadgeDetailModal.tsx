@@ -30,7 +30,12 @@ export function BadgeDetailModal({ badge, onClose }: Props) {
     <Modal visible={badge != null} transparent animationType="fade" onRequestClose={onClose}>
       {badge ? (
         <View style={styles.wrap}>
-          <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Dismiss badge detail" />
+          <Pressable
+            style={styles.backdrop}
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss badge detail"
+          />
           <View style={styles.sheet} accessibilityViewIsModal>
             <View style={[styles.iconCircle, { backgroundColor: accent.bg }]}>
               <IconComp size={32} color={accent.stroke} strokeWidth={2} />
@@ -43,7 +48,12 @@ export function BadgeDetailModal({ badge, onClose }: Props) {
             <View style={styles.barTrack}>
               <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: complete ? DS_COLORS.ACCENT : DS_COLORS.PRIMARY }]} />
             </View>
-            <TouchableOpacity onPress={onClose} accessibilityLabel="Close badge detail" accessibilityRole="button" style={styles.gotItWrap}>
+            <TouchableOpacity
+              onPress={onClose}
+              accessibilityLabel="Close badge detail"
+              accessibilityRole="button"
+              style={styles.gotItWrap}
+            >
               <Text style={styles.gotIt}>Got it</Text>
             </TouchableOpacity>
           </View>

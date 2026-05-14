@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
 import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
 
 export type StreakHeatmapProps = {
-  days: Array<{ date: string; level: 0 | 1 | 2 | 3 | 4 }>;
+  days: { date: string; level: 0 | 1 | 2 | 3 | 4 }[];
 };
 
 const COLS = 5;

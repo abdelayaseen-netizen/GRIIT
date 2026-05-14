@@ -10,12 +10,12 @@ const OVERLAY_BOTTOM = ["rgba(0,0,0,0)", "rgba(0,0,0,0.55)"] as const;
 const PILL_BG = "rgba(0,0,0,0.4)";
 
 export type PostsGridProps = {
-  posts: Array<{
+  posts: {
     id: string;
     imageUrl: string;
     challengeTitle: string;
     dayOfTotal: string;
-  }>;
+  }[];
   onSelect: (id: string) => void;
 };
 

@@ -55,7 +55,11 @@ export function StreakHero({ streakDays, bestStreak, nextBadgeIn, onShare }: Str
           )}
         </View>
 
-        <View style={styles.flameSquare} accessible={false}>
+        <View
+          style={styles.flameSquare}
+          accessibilityRole="image"
+          accessibilityLabel="Streak flame illustration"
+        >
           {streakDays === 0 ? (
             <Flame size={34} color={DS_COLORS.WHITE} fill="transparent" strokeWidth={2} />
           ) : (

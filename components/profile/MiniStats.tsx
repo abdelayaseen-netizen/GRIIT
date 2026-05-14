@@ -20,7 +20,12 @@ export function MiniStats({
 }: MiniStatsProps) {
   return (
     <View style={styles.row}>
-      <View style={[styles.card, styles.cardStatic]} accessible accessibilityLabel={`Best streak, ${bestStreak} ${bestStreak === 1 ? "day" : "days"}`}>
+      <View
+        style={[styles.card, styles.cardStatic]}
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={`Best streak, ${bestStreak} ${bestStreak === 1 ? "day" : "days"}`}
+      >
         <Text style={styles.num}>{bestStreak}</Text>
         <Text style={styles.lbl}>Best streak</Text>
       </View>

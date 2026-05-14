@@ -30,7 +30,7 @@ export type ChallengeListSheetIconName =
 export type ChallengeListSheetProps = {
   visible: boolean;
   title: "Active challenges" | "Completed challenges";
-  items: Array<{
+  items: {
     id: string;
     title: string;
     subtitle: string;
@@ -39,7 +39,7 @@ export type ChallengeListSheetProps = {
     iconBg: string;
     iconColor: string;
     iconName: ChallengeListSheetIconName;
-  }>;
+  }[];
   onClose: () => void;
   onSelect: (id: string) => void;
 };

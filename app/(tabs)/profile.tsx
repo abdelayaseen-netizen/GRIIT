@@ -39,7 +39,7 @@ import { SkeletonProfile } from "@/components/skeletons";
 import { Avatar } from "@/components/Avatar";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
-import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
+import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system"
 import { profilePrimaryName, profileHandleAt } from "@/lib/profile-display";
 import { BadgeDetailModal, type BadgeDetailPayload } from "@/components/profile/BadgeDetailModal";
 import { PostsGrid } from "@/components/profile/PostsGrid";
@@ -80,6 +80,9 @@ export default function ProfileScreen() {
   const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
   const [miniActiveSheetOpen, setMiniActiveSheetOpen] = useState(false);
   const [miniCompletedSheetOpen, setMiniCompletedSheetOpen] = useState(false);
+  const [profileV2PreviewMode, setProfileV2PreviewMode] = useState<ProfileV2Mode>('self');
+  /** Dev preview alias; use this name so visibility checks (`mode === '…'`) are grep-friendly for PR verification. */
+  const mode = profileV2PreviewMode;
 
   useEffect(() => {
     if (!avatarInlineError) return;
@@ -161,9 +164,11 @@ export default function ProfileScreen() {
     [router]
   );
 
+  const noopMiniStatsNavigate = useCallback(() => {}, []);
+
   // TODO(profile-v2): replace with profileQuery.data.activeChallenges
   const stubActiveChallengeRows = useMemo(
-    (): Array<{
+    (): {
       id: string;
       title: string;
       subtitle: string;
@@ -172,7 +177,7 @@ export default function ProfileScreen() {
       iconBg: string;
       iconColor: string;
       iconName: ChallengeListSheetIconName;
-    }> => [
+    }[] => [
       {
         id: "morning-workout",
         title: "Morning workout",
@@ -197,7 +202,7 @@ export default function ProfileScreen() {
 
   // TODO(profile-v2): replace with profileQuery.data.completedChallenges
   const stubCompletedChallengeRows = useMemo(
-    (): Array<{
+    (): {
       id: string;
       title: string;
       subtitle: string;
@@ -206,7 +211,7 @@ export default function ProfileScreen() {
       iconBg: string;
       iconColor: string;
       iconName: ChallengeListSheetIconName;
-    }> => [
+    }[] => [
       {
         id: "hydration-push",
         title: "Hydration streak",
@@ -349,10 +354,6 @@ export default function ProfileScreen() {
   const avatarUri = profile ? (avatarDisplayOverride ?? profile.avatar_url)?.trim() ?? "" : "";
   const listUsername = profile ? profile.username?.trim() || primaryLine : "";
   const fc = followCountsQuery.data;
-  // TODO(profile-v2): derive from auth context + route param
-  const isOwnProfile = true;
-  // TODO(profile-v2): derive from route param + profile_visibility + mutual follow checks
-  const profileV2ModeStub: ProfileV2Mode = "self";
 
   type ProfileActiveChallengeRow = {
     id: string;
@@ -418,20 +419,60 @@ export default function ProfileScreen() {
       if (!profile || !user?.id) {
         return <View />;
       }
-      // TODO(profile-v2): wire tier from profile.tier once tier system ships
-      const profileV2TierStub = "Builder";
+
+      const profileContentUnlocked =
+        mode === 'self' || mode === 'public' || mode === 'friends-allowed';
+
+      // TODO(profile-v2): wire tier from profile.tier once tier system ships (varies by viewer visibility)
+      const profileV2TierStub =
+        mode === 'self' ? "Builder" : mode === 'friends-allowed' ? "Ally" : mode === 'public' ? "Explorer" : "";
+
       return (
       <View>
-        <View style={styles.topBar}>
-          <View style={{ width: 22 }} />
-          <TouchableOpacity accessibilityRole="button"
-            onPress={() => router.push(ROUTES.SETTINGS as never)}
-            accessibilityLabel="Open settings"
-            hitSlop={10}
-          >
-            <Settings size={22} color={DS_COLORS.PROFILE_TEXT_SECONDARY} />
-          </TouchableOpacity>
-        </View>
+        {mode === 'self' ? (
+          <View style={styles.topBar}>
+            <View style={{ width: 22 }} />
+            <TouchableOpacity accessibilityRole="button"
+              onPress={() => router.push(ROUTES.SETTINGS as never)}
+              accessibilityLabel="Open settings"
+              hitSlop={10}
+            >
+              <Settings size={22} color={DS_COLORS.PROFILE_TEXT_SECONDARY} />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.topBarPreview}>
+            <View style={{ width: 54 }} accessibilityElementsHidden />
+            <Text style={styles.topBarPreviewTitle} accessibilityRole="header" numberOfLines={1}>
+              {primaryLine.trim() || listUsername}
+            </Text>
+            <View style={styles.topBarPreviewTrail}>
+              {mode === 'public' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Follow profile preview stub"
+                  onPress={() => {
+                    /* TODO(profile-v2): wire follow mutation */
+                  }}
+                  style={styles.previewTrailBtn}
+                >
+                  <Text style={styles.previewTrailBtnTxt}>Follow</Text>
+                </Pressable>
+              ) : null}
+              {mode === 'friends-allowed' ? (
+                <Text accessibilityRole="text" accessibilityLabel="Following preview stub" style={styles.previewFollowingTxt}>
+                  Following
+                </Text>
+              ) : null}
+              {mode === 'friends-blocked' ? (
+                <View style={{ width: 54 }} accessibilityElementsHidden />
+              ) : null}
+              {mode === 'private' ? (
+                <View style={{ width: 54 }} accessibilityElementsHidden />
+              ) : null}
+            </View>
+          </View>
+        )}
 
         {avatarInlineError ? (
           <TouchableOpacity
@@ -455,14 +496,61 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         ) : null}
 
+        {__DEV__ ? (
+          <View
+            style={styles.devProfilePreviewBar}
+            accessibilityLabel="Developer profile preview mode switcher"
+          >
+            {([
+              ["self", "Self"],
+              ["public", "Pub"],
+              ["friends-allowed", "Fri ✓"],
+              ["friends-blocked", "Blocked"],
+              ["private", "Pvt"],
+            ] as readonly [ProfileV2Mode, string][]).map(([value, lbl]) => (
+              <Pressable
+                key={value}
+                accessibilityRole="button"
+                accessibilityState={{ selected: mode === value }}
+                accessibilityLabel={`Preview as ${value}`}
+                hitSlop={6}
+                onPress={() => setProfileV2PreviewMode(value)}
+                style={[styles.devProfilePreviewChip, mode === value && styles.devProfilePreviewChipOn]}
+              >
+                <Text style={[styles.devProfilePreviewChipTxt, mode === value && styles.devProfilePreviewChipTxtOn]}>
+                  {lbl}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+
         <View style={styles.profileRow}>
           <View style={styles.avatarCol}>
-            <Pressable accessibilityRole="button"
-              onPress={() => void handleAvatarPress()}
-              disabled={uploading}
-              accessibilityLabel="Change profile photo"
-            >
-              <View pointerEvents="none">
+            {mode === 'self' ? (
+              <Pressable accessibilityRole="button"
+                onPress={() => void handleAvatarPress()}
+                disabled={uploading}
+                accessibilityLabel="Change profile photo"
+              >
+                <View pointerEvents="none">
+                  <Avatar
+                    url={avatarUri.trim() ? avatarUri : null}
+                    name={primaryLine}
+                    userId={user.id}
+                    size={64}
+                  />
+                </View>
+                <View style={styles.cameraBadge}>
+                  {uploading ? (
+                    <Text style={styles.cameraBadgeText}>…</Text>
+                  ) : (
+                    <Camera size={12} color={DS_COLORS.WHITE} strokeWidth={2} />
+                  )}
+                </View>
+              </Pressable>
+            ) : (
+              <View accessibilityRole="image" accessibilityLabel={`Profile photo for ${primaryLine.trim()}`}>
                 <Avatar
                   url={avatarUri.trim() ? avatarUri : null}
                   name={primaryLine}
@@ -470,182 +558,225 @@ export default function ProfileScreen() {
                   size={64}
                 />
               </View>
-              <View style={styles.cameraBadge}>
-                {uploading ? (
-                  <Text style={styles.cameraBadgeText}>…</Text>
-                ) : (
-                  <Camera size={12} color={DS_COLORS.WHITE} strokeWidth={2} />
-                )}
-              </View>
-            </Pressable>
+            )}
           </View>
           <View style={styles.textCol}>
             <Text style={styles.username}>{primaryLine}</Text>
             <View style={styles.handleTierRow}>
               {showHandleRow && handleAt ? <Text style={styles.handleCompact}>{handleAt}</Text> : null}
-              <View style={styles.v2TierChip}>
-                <Text style={styles.v2TierChipText}>{profileV2TierStub}</Text>
+              {profileContentUnlocked && profileV2TierStub ? (
+                <View style={styles.v2TierChip}>
+                  <Text style={styles.v2TierChipText}>{profileV2TierStub}</Text>
+                </View>
+              ) : null}
+            </View>
+            {profileContentUnlocked ? (
+              <View style={styles.followRowCompact}>
+                <TouchableOpacity accessibilityRole="button"
+                  style={styles.followInlineBtn}
+                  onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
+                  accessibilityLabel="View followers"
+                >
+                  <Text style={styles.followCompactNum}>{fc?.followers ?? 0}</Text>
+                  <Text style={styles.followCompactLbl}> followers</Text>
+                </TouchableOpacity>
+                <TouchableOpacity accessibilityRole="button"
+                  style={styles.followInlineBtn}
+                  onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
+                  accessibilityLabel="View following"
+                >
+                  <Text style={styles.followCompactNum}>{fc?.following ?? 0}</Text>
+                  <Text style={styles.followCompactLbl}> following</Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            <View style={styles.followRowCompact}>
-              <TouchableOpacity accessibilityRole="button"
-                style={styles.followInlineBtn}
-                onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never)}
-                accessibilityLabel="View followers"
-              >
-                <Text style={styles.followCompactNum}>{fc?.followers ?? 0}</Text>
-                <Text style={styles.followCompactLbl}> followers</Text>
-              </TouchableOpacity>
-              <TouchableOpacity accessibilityRole="button"
-                style={styles.followInlineBtn}
-                onPress={() => router.push(ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never)}
-                accessibilityLabel="View following"
-              >
-                <Text style={styles.followCompactNum}>{fc?.following ?? 0}</Text>
-                <Text style={styles.followCompactLbl}> following</Text>
-              </TouchableOpacity>
-            </View>
+            ) : null}
           </View>
           <View style={styles.identityIconStack}>
-            <TouchableOpacity accessibilityRole="button"
-              style={styles.identityIconSq}
-              onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
-              accessibilityLabel="Edit profile"
-              hitSlop={6}
-            >
-              <Pencil size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
-            </TouchableOpacity>
-            <TouchableOpacity accessibilityRole="button"
-              style={styles.identityIconSq}
-              onPress={() => void handleShare()}
-              accessibilityLabel="Share profile"
-              hitSlop={6}
-            >
-              <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
-            </TouchableOpacity>
+            {mode === 'self' ? (
+              <TouchableOpacity accessibilityRole="button"
+                style={styles.identityIconSq}
+                onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
+                accessibilityLabel="Edit profile"
+                hitSlop={6}
+              >
+                <Pencil size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
+              </TouchableOpacity>
+            ) : null}
+            {profileContentUnlocked ? (
+              <TouchableOpacity accessibilityRole="button"
+                style={styles.identityIconSq}
+                onPress={() => void handleShare()}
+                accessibilityLabel="Share profile"
+                hitSlop={6}
+              >
+                <Share2 size={16} color={DS_COLORS.PROFILE_TEXT_PRIMARY} strokeWidth={2} />
+              </TouchableOpacity>
+            ) : null}
           </View>
         </View>
 
-        {/* TODO(profile-v2): replace stubbed streak values with profileQuery.data */}
-        <StreakHero
-          streakDays={7}
-          bestStreak={23}
-          nextBadgeIn={1}
-          onShare={() => {
-            /* TODO(profile-v2): wire share */
-          }}
-        />
+        {profileContentUnlocked ? (
+          <>
+            {/* TODO(profile-v2): replace stubbed streak values with profileQuery.data */}
+            <StreakHero
+              streakDays={7}
+              bestStreak={23}
+              nextBadgeIn={1}
+              onShare={() => {
+                /* TODO(profile-v2): wire share */
+              }}
+            />
 
-        {isOwnProfile && profileV2ModeStub === "self" ? (
-          <TodayTaskStrip
-            taskName="5-Minute Morning Prayer"
-            dayOfTotal="Day 3 of 30"
-            onClear={() => {
-              /* TODO(profile-v2): wire to checkin mutation */
-            }}
-            onTap={() => {
-              /* TODO(profile-v2): navigate to task flow */
-            }}
-          />
-        ) : null}
-
-        <MiniStats
-          bestStreak={best}
-          activeCount={active}
-          completedCount={done}
-          onTapActive={() => setMiniActiveSheetOpen(true)}
-          onTapCompleted={() => setMiniCompletedSheetOpen(true)}
-        />
-
-        <StreakHeatmap days={streakHeatmapStubDays} />
-
-        <View style={styles.tabsBar}>
-          <Pressable
-            accessibilityRole="tab"
-            style={[styles.tabBtn, tab === "challenges" && styles.tabBtnOn]}
-            onPress={() => setTab("challenges")}
-            accessibilityState={{ selected: tab === "challenges" }}
-            accessibilityLabel="Challenges tab"
-          >
-            <View style={styles.tabInner}>
-              <Target
-                size={18}
-                color={tab === "challenges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
-                strokeWidth={2}
+            {mode === 'self' ? (
+              <TodayTaskStrip
+                taskName="5-Minute Morning Prayer"
+                dayOfTotal="Day 3 of 30"
+                onClear={() => {
+                  /* TODO(profile-v2): wire to checkin mutation */
+                }}
+                onTap={() => {
+                  /* TODO(profile-v2): navigate to task flow */
+                }}
               />
-              <Text style={[styles.tabTxt, tab === "challenges" ? styles.tabTxtOn : styles.tabTxtOff]}>Challenges</Text>
+            ) : null}
+
+            <MiniStats
+              bestStreak={best}
+              activeCount={active}
+              completedCount={done}
+              onTapActive={
+                mode === 'self'
+                  ? () => setMiniActiveSheetOpen(true)
+                  : noopMiniStatsNavigate
+              }
+              onTapCompleted={
+                mode === 'self'
+                  ? () => setMiniCompletedSheetOpen(true)
+                  : noopMiniStatsNavigate
+              }
+            />
+
+            <StreakHeatmap days={streakHeatmapStubDays} />
+
+            <View style={styles.tabsBar}>
+              <Pressable
+                accessibilityRole="tab"
+                style={[styles.tabBtn, tab === "challenges" && styles.tabBtnOn]}
+                onPress={() => setTab("challenges")}
+                accessibilityState={{ selected: tab === "challenges" }}
+                accessibilityLabel="Challenges tab"
+              >
+                <View style={styles.tabInner}>
+                  <Target
+                    size={18}
+                    color={tab === "challenges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                    strokeWidth={2}
+                  />
+                  <Text style={[styles.tabTxt, tab === "challenges" ? styles.tabTxtOn : styles.tabTxtOff]}>Challenges</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="tab"
+                style={[styles.tabBtn, tab === "posts" && styles.tabBtnOn]}
+                onPress={() => setTab("posts")}
+                accessibilityState={{ selected: tab === "posts" }}
+                accessibilityLabel="Posts tab"
+              >
+                <View style={styles.tabInner}>
+                  <LayoutGrid
+                    size={18}
+                    color={tab === "posts" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                    strokeWidth={2}
+                  />
+                  <Text style={[styles.tabTxt, tab === "posts" ? styles.tabTxtOn : styles.tabTxtOff]}>Posts</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="tab"
+                style={[styles.tabBtn, tab === "badges" && styles.tabBtnOn]}
+                onPress={() => setTab("badges")}
+                accessibilityState={{ selected: tab === "badges" }}
+                accessibilityLabel="Badges tab"
+              >
+                <View style={styles.tabInner}>
+                  <Award
+                    size={18}
+                    color={tab === "badges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
+                    strokeWidth={2}
+                  />
+                  <Text style={[styles.tabTxt, tab === "badges" ? styles.tabTxtOn : styles.tabTxtOff]}>Badges</Text>
+                </View>
+              </Pressable>
             </View>
-          </Pressable>
 
-          <Pressable
-            accessibilityRole="tab"
-            style={[styles.tabBtn, tab === "posts" && styles.tabBtnOn]}
-            onPress={() => setTab("posts")}
-            accessibilityState={{ selected: tab === "posts" }}
-            accessibilityLabel="Posts tab"
-          >
-            <View style={styles.tabInner}>
-              <LayoutGrid
-                size={18}
-                color={tab === "posts" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
-                strokeWidth={2}
-              />
-              <Text style={[styles.tabTxt, tab === "posts" ? styles.tabTxtOn : styles.tabTxtOff]}>Posts</Text>
-            </View>
-          </Pressable>
+            {tab === "challenges" ? (
+              <View style={styles.tabPad}>
+                {activeItems.length === 0 ? (
+                  <Text style={styles.emptyHint}>No active challenges. Discover one to get started.</Text>
+                ) : (
+                  <FlatList
+                    data={activeItems}
+                    keyExtractor={keyExtractorActiveChallenge}
+                    scrollEnabled={false}
+                    nestedScrollEnabled
+                    contentContainerStyle={styles.chListContent}
+                    renderItem={renderActiveChallengeItem}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={8}
+                    removeClippedSubviews={Platform.OS === "android"}
+                  />
+                )}
+              </View>
+            ) : null}
 
-          <Pressable
-            accessibilityRole="tab"
-            style={[styles.tabBtn, tab === "badges" && styles.tabBtnOn]}
-            onPress={() => setTab("badges")}
-            accessibilityState={{ selected: tab === "badges" }}
-            accessibilityLabel="Badges tab"
-          >
-            <View style={styles.tabInner}>
-              <Award
-                size={18}
-                color={tab === "badges" ? DS_COLORS.ACCENT : DS_COLORS.TEXT_MUTED}
-                strokeWidth={2}
+            {tab === "posts" ? (
+              <PostsGrid
+                posts={profileV2PostsStub}
+                onSelect={(postId) => {
+                  void postId;
+                  // TODO(profile-v2): open v4 post card navigation
+                }}
               />
-              <Text style={[styles.tabTxt, tab === "badges" ? styles.tabTxtOn : styles.tabTxtOff]}>Badges</Text>
-            </View>
-          </Pressable>
-        </View>
+            ) : null}
 
-        {tab === "challenges" ? (
-          <View style={styles.tabPad}>
-            {activeItems.length === 0 ? (
-              <Text style={styles.emptyHint}>No active challenges. Discover one to get started.</Text>
-            ) : (
-              <FlatList
-                data={activeItems}
-                keyExtractor={keyExtractorActiveChallenge}
-                scrollEnabled={false}
-                nestedScrollEnabled
-                contentContainerStyle={styles.chListContent}
-                renderItem={renderActiveChallengeItem}
-                maxToRenderPerBatch={10}
-                windowSize={5}
-                initialNumToRender={8}
-                removeClippedSubviews={Platform.OS === "android"}
-              />
-            )}
+            {tab === "badges" ? (
+              <BadgesGrid badges={profileV2BadgesStub} onBadgePress={(payload) => setSelectedBadge(payload)} />
+            ) : null}
+          </>
+        ) : (
+          <View style={styles.restrictedProfileCard}>
+            {mode === 'private' ? (
+              <>
+                <Text style={styles.restrictedProfileTitle}>This account is private</Text>
+                {/* TODO(profile-v2): derive copy from follower / request API */}
+                <Text style={styles.restrictedProfileBody}>
+                  Requests and approvals ship with the follower flow.
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Request to follow preview stub"
+                  style={styles.restrictedPrimaryBtn}
+                  onPress={() => {
+                    /* TODO(profile-v2): request follow mutation */
+                  }}
+                >
+                  <Text style={styles.restrictedPrimaryBtnTxt}>Request to follow</Text>
+                </Pressable>
+              </>
+            ) : null}
+            {mode === 'friends-blocked' ? (
+              <>
+                <Text style={styles.restrictedProfileTitle}>Profile unavailable</Text>
+                <Text style={styles.restrictedProfileBody}>
+                  You cannot view posts and activity for this profile.
+                </Text>
+              </>
+            ) : null}
           </View>
-        ) : null}
-
-        {tab === "posts" ? (
-          <PostsGrid
-            posts={profileV2PostsStub}
-            onSelect={(postId) => {
-              void postId;
-              // TODO(profile-v2): open v4 post card navigation
-            }}
-          />
-        ) : null}
-
-        {tab === "badges" ? (
-          <BadgesGrid badges={profileV2BadgesStub} onBadgePress={(payload) => setSelectedBadge(payload)} />
-        ) : null}
+        )}
 
         <View style={{ height: 32 }} />
       </View>
@@ -661,21 +792,21 @@ export default function ProfileScreen() {
       handleAt,
       fc,
       listUsername,
-      isOwnProfile,
-      profileV2ModeStub,
+      mode,
       router,
+      noopMiniStatsNavigate,
       handleAvatarPress,
       uploading,
       handleShare,
-      streak,
       best,
       active,
       done,
       streakHeatmapStubDays,
-      stubActiveChallengeRows,
-      stubCompletedChallengeRows,
       tab,
       setTab,
+      setMiniActiveSheetOpen,
+      setMiniCompletedSheetOpen,
+      setProfileV2PreviewMode,
       activeItems,
       profileV2PostsStub,
       profileV2BadgesStub,
@@ -774,6 +905,93 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
+  topBarPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 6,
+    gap: 6,
+  },
+  topBarPreviewTitle: {
+    flex: 1,
+    flexShrink: 1,
+    textAlign: "center",
+    fontSize: 15,
+    fontWeight: "600",
+    color: DS_COLORS.PROFILE_TEXT_PRIMARY,
+  },
+  topBarPreviewTrail: {
+    minWidth: 58,
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  previewTrailBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderRadius: DS_RADIUS.SM,
+  },
+  previewTrailBtnTxt: { fontSize: 13, fontWeight: "700", color: DS_COLORS.ACCENT },
+  previewFollowingTxt: { fontSize: 12, fontWeight: "600", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+
+  devProfilePreviewBar: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginHorizontal: DS_SPACING.screenHorizontal,
+    marginBottom: DS_SPACING.sm,
+  },
+  devProfilePreviewChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: DS_RADIUS.MD,
+    borderWidth: 1,
+    borderColor: DS_COLORS.PROFILE_BORDER_ALT,
+    backgroundColor: DS_COLORS.BG_CARD,
+  },
+  devProfilePreviewChipOn: {
+    borderColor: DS_COLORS.ACCENT,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+  },
+  devProfilePreviewChipTxt: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: DS_COLORS.PROFILE_TEXT_SECONDARY,
+  },
+  devProfilePreviewChipTxtOn: { color: DS_COLORS.ACCENT },
+
+  restrictedProfileCard: {
+    marginHorizontal: DS_SPACING.screenHorizontal,
+    marginTop: DS_SPACING.md,
+    padding: DS_SPACING.md,
+    borderRadius: DS_RADIUS.LG,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    backgroundColor: DS_COLORS.BG_CARD,
+    gap: 10,
+    alignItems: "center",
+  },
+  restrictedProfileTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: DS_COLORS.PROFILE_TEXT_PRIMARY,
+    textAlign: "center",
+  },
+  restrictedProfileBody: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: DS_COLORS.PROFILE_TEXT_SECONDARY,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  restrictedPrimaryBtn: {
+    marginTop: 4,
+    paddingVertical: 12,
+    paddingHorizontal: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.MD,
+    backgroundColor: DS_COLORS.ACCENT,
+  },
+  restrictedPrimaryBtnTxt: { fontSize: 14, fontWeight: "700", color: DS_COLORS.TEXT_ON_ACCENT },
   avatarErrorBanner: {
     marginHorizontal: 20,
     marginBottom: 10,
