@@ -21,5 +21,3 @@ export const RETENTION_CONFIG = {
    */
   SOCIAL_PROOF_MIN_THRESHOLD: 5,
 } as const;
-
-export type RetentionConfig = typeof RETENTION_CONFIG;

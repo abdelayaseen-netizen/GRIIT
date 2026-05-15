@@ -45,16 +45,6 @@ export interface ChallengeWithTasksRow {
   [key: string]: unknown;
 }
 
-/** challenge_members: who is in a challenge (run). */
-export interface ChallengeMemberRow {
-  id: string;
-  challenge_id: string;
-  user_id: string;
-  role: "creator" | "member";
-  status: "active" | "quit" | "failed";
-  joined_at: string;
-}
-
 export interface ProfileRow {
   user_id: string;
   username?: string | null;

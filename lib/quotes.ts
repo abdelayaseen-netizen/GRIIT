@@ -35,17 +35,6 @@ export const GRIIT_QUOTES = [
 export type QuoteWithAuthor = { text: string; author: string };
 
 /**
- * Returns a different quote each day, deterministically.
- * Same quote all day — changes at midnight.
- */
-export function getDailyQuoteObject(): QuoteWithAuthor {
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
-  );
-  return GRIIT_QUOTES[dayOfYear % GRIIT_QUOTES.length] ?? GRIIT_QUOTES[0]!;
-}
-
-/**
  * Returns a random quote — different every time called.
  */
 export function getRandomQuote(): QuoteWithAuthor {

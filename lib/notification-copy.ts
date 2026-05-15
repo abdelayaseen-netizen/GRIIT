@@ -226,5 +226,3 @@ export function pickTemplate(
 
   return { title: title.trim(), body: body.trim() };
 }
-
-export default TEMPLATES;

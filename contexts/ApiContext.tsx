@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createContext, ReactNode, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { checkHealth, getApiBaseUrl, getTrpcUrl, formatError, checkDbTables } from '@/lib/api';
 import type { HealthCheckResult } from '@/lib/api';
@@ -39,14 +39,6 @@ type ApiContextValue = {
 };
 
 const ApiContext = createContext<ApiContextValue | undefined>(undefined);
-
-export function useApi() {
-  const context = useContext(ApiContext);
-  if (context === undefined) {
-    throw new Error('useApi must be used within ApiProvider');
-  }
-  return context;
-}
 
 export function ApiProvider({ children }: { children: ReactNode }) {
   const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');

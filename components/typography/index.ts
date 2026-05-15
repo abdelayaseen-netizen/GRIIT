@@ -1,5 +1,4 @@
 export { default as Display } from './Display';
-export { default as Title } from './Title';
 export { default as Headline } from './Headline';
 export { default as Body } from './Body';
 export { default as Caption } from './Caption';

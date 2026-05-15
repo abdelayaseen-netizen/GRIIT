@@ -219,13 +219,6 @@ export async function getCustomerInfo(): Promise<CustomerInfo | null> {
   }
 }
 
-export const SUBSCRIPTION_PRODUCT_IDS = {
-  monthly: "griit_pro_monthly",
-  annual: "griit_premium_annual",
-} as const;
-
-export type SubscriptionStatus = "free" | "premium" | "trial";
-
 type SubscriptionChangeCallback = (isPremium: boolean) => void;
 const subscriptionChangeCallbacks = new Set<SubscriptionChangeCallback>();
 

@@ -115,27 +115,3 @@ export const GOAL_OPTIONS = [
     subtitle: "Embrace the discomfort",
   },
 ] as const;
-
-export const INTENSITY_OPTIONS = [
-  {
-    id: "beginner" as const,
-    title: "Building up",
-    subtitle: "I'm starting my discipline journey",
-    emoji: "🌱",
-    description: "2-3 tasks per day, forgiving streak rules",
-  },
-  {
-    id: "intermediate" as const,
-    title: "I push myself",
-    subtitle: "I already have some discipline",
-    emoji: "⚡",
-    description: "4-5 tasks per day, standard challenges",
-  },
-  {
-    id: "extreme" as const,
-    title: "No mercy",
-    subtitle: "I want the hardest challenges",
-    emoji: "🔥",
-    description: "75 Hard, extreme protocols, zero rest days",
-  },
-] as const;

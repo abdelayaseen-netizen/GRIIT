@@ -18,5 +18,3 @@ export const STORAGE_KEYS = {
   /** Set after first successful challenge join — gates push permission timing. */
   HAS_JOINED_CHALLENGE: 'griit_has_joined_challenge',
 } as const;
-
-export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];

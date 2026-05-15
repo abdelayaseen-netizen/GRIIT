@@ -1,22 +1,10 @@
-export type IdentityTier =
-  | "day_zero"
+export type IdentityTier =  | "day_zero"
   | "starting"
   | "becoming"
   | "establishing"
   | "identity"
   | "consolidated"
   | "core";
-
-export function getIdentityTier(streakCount: number): IdentityTier {
-  const streak = Math.max(0, Math.floor(streakCount));
-  if (streak === 0) return "day_zero";
-  if (streak <= 2) return "starting";
-  if (streak <= 6) return "becoming";
-  if (streak <= 13) return "establishing";
-  if (streak <= 29) return "identity";
-  if (streak <= 59) return "consolidated";
-  return "core";
-}
 
 export type StreakRiskCopy = { title: string; body: string };
 

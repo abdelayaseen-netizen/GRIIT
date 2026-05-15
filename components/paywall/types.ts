@@ -1,8 +1,6 @@
 import type { ListRenderItem } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
-export type PaywallVariant = "control" | "social_proof";
-
 export type PaywallBodyProps = {
   loading: boolean;
   packages: PurchasesPackage[];
