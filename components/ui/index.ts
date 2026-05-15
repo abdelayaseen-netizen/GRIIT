@@ -1,15 +1,9 @@
 export { Screen } from "./Screen";
 export { PrimaryButton } from "./PrimaryButton";
 export { Input } from "./Input";
-export { Chip } from "./Chip";
-export { SearchBar } from "./SearchBar";
 export { SectionHeader } from "./SectionHeader";
 export { EmptyState } from "./EmptyState";
-export { ChallengeCard24h } from "./ChallengeCard24h";
-export { ChallengeCardFeatured } from "./ChallengeCardFeatured";
-export { ChallengeRowCard } from "./ChallengeRowCard";
 export { DurationPill } from "./DurationPill";
-export { CategoryTag } from "./CategoryTag";
 export { TaskTypeCard } from "./TaskTypeCard";
 export { CreateFlowHeader } from "./CreateFlowHeader";
 export { CreateFlowInput } from "./CreateFlowInput";
