@@ -1,7 +1,11 @@
 /**
  * Rate limiting: Upstash Redis when UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN set;
  * otherwise in-memory (single-instance). Supports global and per-route limits.
+ *
+ * Redis path uses @upstash/redis only (fixed 60s window via INCR + EXPIRE), no @upstash/ratelimit.
  */
+
+import { Redis } from "@upstash/redis";
 
 const WINDOW_MS = 60_000;
 const DEFAULT_MAX_PER_WINDOW = 100;
@@ -56,32 +60,41 @@ let redisLimiters: {
   write: { limit: (key: string) => Promise<{ success: boolean; reset: number }> };
 } | null = null;
 
+async function redisFixedWindowLimit(
+  redis: Redis,
+  key: string,
+  max: number,
+  prefix: string
+): Promise<{ success: boolean; reset: number }> {
+  const now = Date.now();
+  const bucket = Math.floor(now / WINDOW_MS);
+  const redisKey = `${prefix}:w${bucket}:${key}`;
+  const count = await redis.incr(redisKey);
+  if (count === 1) {
+    await redis.expire(redisKey, Math.ceil(WINDOW_MS / 1000) + 2);
+  }
+  const reset = (bucket + 1) * WINDOW_MS;
+  return { success: count <= max, reset };
+}
+
 async function getRedisLimiters() {
   if (redisLimiters) return redisLimiters;
   const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (!url || !token) return null;
   try {
-    const { Ratelimit } = await import("@upstash/ratelimit");
-    const { Redis } = await import("@upstash/redis");
     const redis = new Redis({ url, token });
     const globalMax = getMax();
     redisLimiters = {
-      global: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(globalMax, "1 m"),
-        prefix: "rl:global",
-      }),
-      auth: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(AUTH_MAX_PER_MIN, "1 m"),
-        prefix: "rl:auth",
-      }),
-      write: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(WRITE_MAX_PER_MIN, "1 m"),
-        prefix: "rl:write",
-      }),
+      global: {
+        limit: (key: string) => redisFixedWindowLimit(redis, key, globalMax, "rl:global"),
+      },
+      auth: {
+        limit: (key: string) => redisFixedWindowLimit(redis, key, AUTH_MAX_PER_MIN, "rl:auth"),
+      },
+      write: {
+        limit: (key: string) => redisFixedWindowLimit(redis, key, WRITE_MAX_PER_MIN, "rl:write"),
+      },
     };
     return redisLimiters;
   } catch {
