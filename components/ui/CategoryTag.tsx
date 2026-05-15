@@ -1,6 +1,6 @@
+import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import * as t from "@/lib/theme/tokens";
 
 function CategoryTagInner({
   label,
@@ -29,21 +29,21 @@ export const CategoryTag = React.memo(CategoryTagInner);
 
 const s = StyleSheet.create({
   tag: {
-    paddingVertical: t.spacing.gridXS,
+    paddingVertical: DS_SPACING.sm,
     paddingHorizontal: 14,
-    borderRadius: t.radius.tagCreate,
-    backgroundColor: t.colors.cardBg,
+    borderRadius: DS_RADIUS.SM,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
-    borderColor: t.colors.borderLight,
+    borderColor: DS_COLORS.border,
   },
   tagSelected: {
-    backgroundColor: t.colors.accentOrangeSoft,
-    borderColor: t.colors.accentOrangeCreate,
+    backgroundColor: DS_COLORS.accentSoft,
+    borderColor: DS_COLORS.accent,
   },
   text: {
-    fontSize: t.typography.primaryBody.fontSize,
+    fontSize: 16,
     fontWeight: "500",
-    color: t.colors.textPrimary,
+    color: DS_COLORS.textPrimary,
   },
-  textSelected: { color: t.colors.accentOrangeCreate },
+  textSelected: { color: DS_COLORS.accent },
 });

@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { colors } from "@/lib/theme/tokens";
-import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 interface SectionHeaderProps {
   title: string;
@@ -41,7 +40,7 @@ const styles = StyleSheet.create({
   caption: {
     fontSize: 12,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     marginLeft: "auto",
   },
 });

@@ -1,12 +1,6 @@
-import { DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import {
-  colors,
-  radius,
-  measures,
-  typography,
-} from "@/lib/theme/tokens";
 
 function TaskTypeCardInner(p: {
   label: string;
@@ -63,31 +57,31 @@ export const TaskTypeCard = React.memo(TaskTypeCardInner);
 
 const styles = StyleSheet.create({
   card: {
-    height: measures.taskTypeCardHeight,
-    backgroundColor: colors.cardBg,
-    borderRadius: radius.taskTypeCard,
+    height: 120,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.card,
     borderWidth: 2,
-    borderColor: colors.borderLight,
+    borderColor: DS_COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     padding: 12,
   },
   iconCircle: {
-    width: measures.taskTypeIconCircle,
-    height: measures.taskTypeIconCircle,
-    borderRadius: measures.taskTypeIconCircle / 2,
+    width: DS_MEASURES.AVATAR_MD,
+    height: DS_MEASURES.AVATAR_MD,
+    borderRadius: DS_MEASURES.AVATAR_MD / 2,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
   },
   label: {
-    fontSize: typography.primaryBody.fontSize,
+    fontSize: 16,
     fontWeight: "500",
-    color: colors.textPrimary,
+    color: DS_COLORS.textPrimary,
   },
   description: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginTop: 4,
     lineHeight: 14,

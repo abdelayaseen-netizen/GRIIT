@@ -30,7 +30,7 @@ import {
   Image as ImageIcon,
   X,
 } from "lucide-react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system";
 import {
   CreateFlowHeader,
   CreateFlowInput,
@@ -39,8 +39,7 @@ import {
   DurationPill,
   CreateFlowCheckbox,
 } from "@/components/ui";
-import { colors as tokenColors } from "@/lib/theme/tokens";
-import { createFlowStyles as cfs } from "@/lib/theme/createFlowStyles";
+import { createFlowStyles as cfs } from "./TaskEditorModal.styles";
 import {
   JournalCategory,
   WordLimitMode,
@@ -819,7 +818,7 @@ export default function TaskEditorModal({
         accessibilityState={{ expanded: open }}
       >
         <Text style={s.collapsibleTitle}>{title}</Text>
-        {open ? <ChevronUp size={18} color={tokenColors.textSecondaryCreate} /> : <ChevronDown size={18} color={tokenColors.textSecondaryCreate} />}
+        {open ? <ChevronUp size={18} color={DS_COLORS.textSecondary} /> : <ChevronDown size={18} color={DS_COLORS.textSecondary} />}
       </TouchableOpacity>
       {open ? <View style={s.collapsibleBody}>{children}</View> : null}
     </View>
@@ -842,7 +841,7 @@ export default function TaskEditorModal({
             <Text style={s.errorText}>Min 20 characters</Text>
           )}
           <View style={s.flexSpacer} />
-          <Text style={[s.hintText, journalPrompt.length > 220 && { color: tokenColors.accentRed }]}>
+          <Text style={[s.hintText, journalPrompt.length > 220 && { color: DS_COLORS.danger }]}>
             {journalPrompt.length}/240
           </Text>
         </View>
@@ -958,7 +957,7 @@ export default function TaskEditorModal({
     <View style={cfs.settingsCard}>
       <Text style={s.sectionLabel}>PHOTO SETTINGS</Text>
       <View style={s.lockedRow}>
-        <Camera size={18} color={tokenColors.textSecondaryCreate} />
+        <Camera size={18} color={DS_COLORS.textSecondary} />
         <Text style={s.lockedText}>User uploads 1 photo</Text>
       </View>
     </View>
@@ -999,7 +998,7 @@ export default function TaskEditorModal({
   const renderSimpleSettings = () => (
     <View style={cfs.settingsCard}>
       <View style={s.lockedRow}>
-        <CheckCircle size={18} color={tokenColors.textSecondaryCreate} />
+        <CheckCircle size={18} color={DS_COLORS.textSecondary} />
         <Text style={s.lockedText}>User taps complete (confirm modal shown)</Text>
       </View>
     </View>
@@ -1063,7 +1062,7 @@ export default function TaskEditorModal({
               accessibilityState={{ expanded: teDetailsExpanded }}
             >
               <Text style={s.collapsibleTitle}>Time details</Text>
-              {teDetailsExpanded ? <ChevronUp size={18} color={tokenColors.textSecondaryCreate} /> : <ChevronDown size={18} color={tokenColors.textSecondaryCreate} />}
+              {teDetailsExpanded ? <ChevronUp size={18} color={DS_COLORS.textSecondary} /> : <ChevronDown size={18} color={DS_COLORS.textSecondary} />}
             </TouchableOpacity>
             {teDetailsExpanded && (
               <View style={[s.teBody, s.collapsibleBody]}>
@@ -1098,7 +1097,7 @@ export default function TaskEditorModal({
                     onChangeText={setTeWinStart}
                     keyboardType="number-pad"
                     placeholder="0"
-                    placeholderTextColor={tokenColors.textSecondaryCreate}
+                    placeholderTextColor={DS_COLORS.textSecondary}
                   />
                 </View>
                 <View style={s.offsetField}>
@@ -1109,7 +1108,7 @@ export default function TaskEditorModal({
                     onChangeText={setTeWinEnd}
                     keyboardType="number-pad"
                     placeholder="60"
-                    placeholderTextColor={tokenColors.textSecondaryCreate}
+                    placeholderTextColor={DS_COLORS.textSecondary}
                   />
                 </View>
               </View>
@@ -1145,7 +1144,7 @@ export default function TaskEditorModal({
                         onChangeText={setTeHardStart}
                         keyboardType="number-pad"
                         placeholder="0"
-                        placeholderTextColor={tokenColors.textSecondaryCreate}
+                        placeholderTextColor={DS_COLORS.textSecondary}
                       />
                     </View>
                     <View style={s.offsetField}>
@@ -1156,7 +1155,7 @@ export default function TaskEditorModal({
                         onChangeText={setTeHardEnd}
                         keyboardType="number-pad"
                         placeholder="30"
-                        placeholderTextColor={tokenColors.textSecondaryCreate}
+                        placeholderTextColor={DS_COLORS.textSecondary}
                       />
                     </View>
                   </View>
@@ -1228,7 +1227,7 @@ export default function TaskEditorModal({
                   maxLength={80}
                   multiline={false}
                   placeholder="Describe your routine anchor"
-                  placeholderTextColor={tokenColors.textSecondaryCreate}
+                  placeholderTextColor={DS_COLORS.textSecondary}
                 />
               ) : null}
             </View>
@@ -1271,8 +1270,8 @@ export default function TaskEditorModal({
             )}
             {teEnabled && teAnchor && (
               <View style={s.previewBadge}>
-                <Clock size={12} color={tokenColors.accentBlue} />
-                <Text style={[s.previewBadgeText, { color: tokenColors.accentBlue }]}>
+                <Clock size={12} color={DS_COLORS.checkinBlue} />
+                <Text style={[s.previewBadgeText, { color: DS_COLORS.checkinBlue }]}>
                   {formatTimeHHMM(teAnchor)}
                 </Text>
               </View>
@@ -1290,7 +1289,7 @@ export default function TaskEditorModal({
       onRequestClose={onCancel}
       testID="task-editor-modal"
     >
-      <SafeAreaView style={[cfs.screenContainer, { backgroundColor: tokenColors.bgMain }]} edges={["top", "bottom"]}>
+      <SafeAreaView style={[cfs.screenContainer, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
         <CreateFlowHeader
           title={editingTask ? "Edit Task" : "New Task"}
           onCancel={onCancel}
@@ -1524,21 +1523,21 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: DS_RADIUS.MD,
-    backgroundColor: tokenColors.cardBg,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
-    borderColor: tokenColors.borderLight,
+    borderColor: DS_COLORS.border,
   },
   verificationPillActive: {
-    borderColor: tokenColors.accentGreen,
-    backgroundColor: tokenColors.accentGreen + "18",
+    borderColor: DS_COLORS.success,
+    backgroundColor: DS_COLORS.success + "18",
   },
   verificationPillText: {
     fontSize: 14,
     fontWeight: "500",
-    color: tokenColors.textSecondaryCreate,
+    color: DS_COLORS.textSecondary,
   },
   verificationPillTextActive: {
-    color: tokenColors.accentGreen,
+    color: DS_COLORS.success,
   },
   typeGridItem: {
     width: "48%",
@@ -1557,7 +1556,7 @@ const s = StyleSheet.create({
   collapsibleTitle: {
     fontSize: 13,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: tokenColors.textSecondaryCreate,
+    color: DS_COLORS.textSecondary,
   },
   collapsibleBody: {
     marginTop: 4,
@@ -1570,18 +1569,18 @@ const s = StyleSheet.create({
   offsetLabel: {
     fontSize: 11,
     fontWeight: "500",
-    color: tokenColors.textSecondaryCreate,
+    color: DS_COLORS.textSecondary,
     marginBottom: 4,
   },
   offsetInput: {
     height: 48,
-    backgroundColor: tokenColors.cardBg,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: DS_RADIUS.XL,
     borderWidth: 1.5,
-    borderColor: tokenColors.borderLight,
+    borderColor: DS_COLORS.border,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: tokenColors.textPrimary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
   },
   sectionLabel: {
@@ -1602,7 +1601,7 @@ const s = StyleSheet.create({
   },
   inputHint: {
     fontSize: 12,
-    color: tokenColors.textSecondaryCreate,
+    color: DS_COLORS.textSecondary,
     marginTop: 4,
   },
   modeRow: { flexDirection: "row", gap: 8 },
@@ -1616,18 +1615,18 @@ const s = StyleSheet.create({
     borderColor: "transparent",
   },
   chipSelected: {
-    backgroundColor: `${tokenColors.accentPurple}18`,
-    borderColor: tokenColors.accentPurple,
+    backgroundColor: `${DS_COLORS.taskIndigo}18`,
+    borderColor: DS_COLORS.taskIndigo,
   },
   chipText: {
     fontSize: 14,
     fontWeight: "500",
-    color: tokenColors.textSecondaryCreate,
+    color: DS_COLORS.textSecondary,
   },
-  chipTextSelected: { color: tokenColors.accentPurple },
+  chipTextSelected: { color: DS_COLORS.taskIndigo },
   charRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  hintText: { fontSize: 11, color: tokenColors.textSecondaryCreate },
-  errorText: { fontSize: 11, color: tokenColors.accentRed },
+  hintText: { fontSize: 11, color: DS_COLORS.textSecondary },
+  errorText: { fontSize: 11, color: DS_COLORS.danger },
   wordLimitBody: { marginTop: 8 },
   presetRow: { flexDirection: "row", gap: 8, marginTop: 8 },
   presetCard: {
@@ -1636,32 +1635,32 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 4,
     borderRadius: DS_RADIUS.LG,
-    backgroundColor: tokenColors.cardBg,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
-    borderColor: tokenColors.borderLight,
+    borderColor: DS_COLORS.border,
   },
   presetCardActive: {
-    borderColor: tokenColors.accentPurple,
-    backgroundColor: `${tokenColors.accentPurple}12`,
+    borderColor: DS_COLORS.taskIndigo,
+    backgroundColor: `${DS_COLORS.taskIndigo}12`,
   },
   presetNum: {
     fontSize: 18,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: tokenColors.textSecondaryCreate,
+    color: DS_COLORS.textSecondary,
     marginBottom: 2,
   },
-  presetNumActive: { color: tokenColors.accentPurple },
-  presetLabel: { fontSize: 11, fontWeight: "500", color: tokenColors.textSecondaryCreate },
-  presetLabelActive: { color: tokenColors.accentPurple },
-  accentHint: { fontSize: 12, color: tokenColors.accentPurple, fontWeight: "500", marginTop: 4 },
+  presetNumActive: { color: DS_COLORS.taskIndigo },
+  presetLabel: { fontSize: 11, fontWeight: "500", color: DS_COLORS.textSecondary },
+  presetLabelActive: { color: DS_COLORS.taskIndigo },
+  accentHint: { fontSize: 12, color: DS_COLORS.taskIndigo, fontWeight: "500", marginTop: 4 },
   lockedRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 },
-  lockedText: { fontSize: 14, color: tokenColors.textSecondaryCreate },
+  lockedText: { fontSize: 14, color: DS_COLORS.textSecondary },
   previewCard: {
-    backgroundColor: tokenColors.cardBg,
+    backgroundColor: DS_COLORS.surface,
     borderRadius: DS_RADIUS.XL,
     padding: 20,
     borderWidth: 1,
-    borderColor: tokenColors.borderLight,
+    borderColor: DS_COLORS.border,
     flexDirection: "row",
     gap: 14,
   },
@@ -1676,16 +1675,16 @@ const s = StyleSheet.create({
   previewTitle: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: tokenColors.textPrimary,
+    color: DS_COLORS.textPrimary,
   },
   previewMeta: {
     fontSize: 14,
-    color: tokenColors.textSecondaryCreate,
+    color: DS_COLORS.textSecondary,
     lineHeight: 18,
   },
   previewPromptText: {
     fontSize: 12,
-    color: tokenColors.accentPurple,
+    color: DS_COLORS.taskIndigo,
     fontStyle: "normal",
   },
   previewBadge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },

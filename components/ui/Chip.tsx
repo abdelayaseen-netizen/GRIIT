@@ -1,16 +1,19 @@
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system";
+import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, StyleProp } from "react-native";
-import { colors } from "@/lib/theme/colors";
-import { radius } from "@/lib/theme/radius";
-import { spacing } from "@/lib/theme/spacing";
-import { typography } from "@/lib/theme/typography";
+
+/** Inlined from lib/theme/typography.ts `typography.body2` — value-preserving migration (Phase 2). */
+const THEME_TYPO_BODY2 = {
+  fontSize: 14,
+  fontWeight: "500" as const,
+  lineHeight: 20,
+};
 
 type ChipVariant = "accentSoft" | "muted" | "filter";
 
 const variantStyles: Record<Exclude<ChipVariant, "filter">, { bg: string; text: string }> = {
-  accentSoft: { bg: colors.accentSoft, text: colors.text },
-  muted: { bg: colors.surfaceMuted, text: colors.textMuted },
+  accentSoft: { bg: DS_COLORS.accentSoft, text: DS_COLORS.textPrimary },
+  muted: { bg: DS_COLORS.surfaceMuted, text: DS_COLORS.textMuted },
 };
 
 type ChipProps = {
@@ -82,17 +85,17 @@ export function Chip({
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm - 2,
-    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: DS_SPACING.sm,
+    borderRadius: 999,
   },
   text: {
-    ...typography.body2,
+    ...THEME_TYPO_BODY2,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   selected: {
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: DS_COLORS.textPrimary,
   },
 });
 

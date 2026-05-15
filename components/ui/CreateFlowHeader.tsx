@@ -1,7 +1,6 @@
-import { DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { colors, measures } from "@/lib/theme/tokens";
 
 export function CreateFlowHeader(p: {
   title: string;
@@ -54,25 +53,25 @@ export function CreateFlowHeader(p: {
 
 const styles = StyleSheet.create({
   header: {
-    height: measures.headerHeight,
+    height: DS_MEASURES.HEADER_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    backgroundColor: colors.cardBg,
+    backgroundColor: DS_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: DS_COLORS.border,
   },
   left: { minWidth: 64 },
   cancelText: {
     fontSize: 16,
     fontWeight: "500",
-    color: colors.accentOrangeCreate,
+    color: DS_COLORS.accent,
   },
   title: {
     fontSize: 20,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: colors.textPrimary,
+    color: DS_COLORS.textPrimary,
     flex: 1,
     textAlign: "center",
   },
@@ -81,7 +80,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: DS_RADIUS.LG,
-    backgroundColor: colors.accentOrangeCreate,
+    backgroundColor: DS_COLORS.accent,
     minWidth: 60,
     height: 38,
     alignItems: "center",
@@ -93,15 +92,15 @@ const styles = StyleSheet.create({
     height: 40,
   },
   rightBtnSoft: {
-    backgroundColor: colors.accentOrangeSoft,
+    backgroundColor: DS_COLORS.accentSoft,
   },
   rightBtnDisabled: { opacity: 0.5 },
   rightText: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: colors.white,
+    color: DS_COLORS.white,
   },
   rightTextSoft: {
-    color: colors.accentOrangeCreate,
+    color: DS_COLORS.accent,
   },
 });

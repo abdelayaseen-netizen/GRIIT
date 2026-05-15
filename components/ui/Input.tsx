@@ -1,8 +1,13 @@
 import React from "react";
 import { TextInput, View, StyleSheet, TextInputProps, ViewStyle } from "react-native";
-import { colors } from "@/lib/theme/colors";
-import { radius } from "@/lib/theme/radius";
-import { typography } from "@/lib/theme/typography";
+import { DS_COLORS, DS_RADIUS } from "@/lib/design-system";
+
+/** Inlined from lib/theme/typography.ts `typography.body` — value-preserving migration (Phase 2). */
+const THEME_TYPO_BODY = {
+  fontSize: 16,
+  fontWeight: "500" as const,
+  lineHeight: 22,
+};
 
 const HEIGHT = 54;
 
@@ -11,7 +16,7 @@ type InputProps = TextInputProps & { containerStyle?: ViewStyle };
 function InputInner({
   containerStyle,
   style,
-  placeholderTextColor = colors.textSubtle,
+  placeholderTextColor = DS_COLORS.textMuted,
   ...rest
 }: InputProps) {
   return (
@@ -31,12 +36,12 @@ const styles = StyleSheet.create({
   wrap: { minHeight: HEIGHT },
   input: {
     height: HEIGHT,
-    borderRadius: radius.md,
+    borderRadius: DS_RADIUS.LG,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: DS_COLORS.border,
+    backgroundColor: DS_COLORS.surface,
     paddingHorizontal: 16,
-    ...typography.body,
-    color: colors.text,
+    ...THEME_TYPO_BODY,
+    color: DS_COLORS.textPrimary,
   },
 });

@@ -1,15 +1,22 @@
-import { DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Compass, RefreshCw, ChevronRight } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
-import {
-  colors,
-  radius,
-  spacing,
-  typography,
-  iconSizes,
-} from "@/lib/theme/tokens";
+
+/** Inlined from lib/theme/tokens.ts `typography.emptyTitle` — value-preserving migration (Phase 2). */
+const THEME_TYPO_EMPTY_TITLE = {
+  fontSize: 17,
+  fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
+  lineHeight: 24,
+};
+
+/** Inlined from lib/theme/tokens.ts `typography.emptySub` — value-preserving migration (Phase 2). */
+const THEME_TYPO_EMPTY_SUB = {
+  fontSize: 14,
+  fontWeight: "400" as const,
+  lineHeight: 20,
+};
 
 export interface EmptyStateProps {
   /** Custom icon; defaults to Compass when omitted. */
@@ -44,7 +51,7 @@ function EmptyStateInner({
   return (
     <View style={styles.container}>
       <View style={styles.iconWrap}>
-        <Icon size={iconSizes.emptyIcon} color={colors.textSecondary} />
+        <Icon size={32} color={DS_COLORS.textSecondary} />
       </View>
       <Text style={styles.title}>{title}</Text>
       {displaySubtitle ? <Text style={styles.subtitle}>{displaySubtitle}</Text> : null}
@@ -57,7 +64,7 @@ function EmptyStateInner({
           accessibilityLabel={primaryLabel}
         >
           <Text style={styles.primaryCtaText}>{primaryLabel}</Text>
-          <ChevronRight size={18} color={colors.white} />
+          <ChevronRight size={18} color={DS_COLORS.white} />
         </TouchableOpacity>
       ) : null}
       {onSecondaryCta ? (
@@ -68,7 +75,7 @@ function EmptyStateInner({
           accessibilityRole="button"
           accessibilityLabel={secondaryCtaLabel}
         >
-          <RefreshCw size={16} color={colors.accentOrange} />
+          <RefreshCw size={16} color={DS_COLORS.accent} />
           <Text style={styles.secondaryCtaText}>{secondaryCtaLabel}</Text>
         </TouchableOpacity>
       ) : null}
@@ -88,24 +95,25 @@ const styles = StyleSheet.create({
   iconWrap: {
     width: 64,
     height: 64,
-    borderRadius: radius.emptyIcon,
-    backgroundColor: colors.chipFill,
+    borderRadius: 32,
+    backgroundColor: DS_COLORS.chipFill,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.lg,
+    marginBottom: DS_SPACING.lg,
   },
   title: {
-    fontSize: typography.emptyTitle.fontSize,
-    fontWeight: typography.emptyTitle.fontWeight,
-    color: colors.textPrimary,
+    fontSize: THEME_TYPO_EMPTY_TITLE.fontSize,
+    fontWeight: THEME_TYPO_EMPTY_TITLE.fontWeight,
+    lineHeight: THEME_TYPO_EMPTY_TITLE.lineHeight,
+    color: DS_COLORS.textPrimary,
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: typography.emptySub.fontSize,
-    color: colors.textSecondary,
+    fontSize: THEME_TYPO_EMPTY_SUB.fontSize,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
-    marginBottom: spacing.xl,
+    marginBottom: DS_SPACING.xl,
   },
   primaryCta: {
     flexDirection: "row",
@@ -114,14 +122,14 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 54,
     paddingHorizontal: 24,
-    backgroundColor: colors.accentOrange,
-    borderRadius: radius.primaryButton,
-    marginBottom: spacing.md,
+    backgroundColor: DS_COLORS.accent,
+    borderRadius: DS_RADIUS.card,
+    marginBottom: DS_SPACING.md,
   },
   primaryCtaText: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: colors.white,
+    color: DS_COLORS.white,
   },
   secondaryCta: {
     flexDirection: "row",
@@ -133,6 +141,6 @@ const styles = StyleSheet.create({
   secondaryCtaText: {
     fontSize: 14,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: colors.accentOrange,
+    color: DS_COLORS.accent,
   },
 });

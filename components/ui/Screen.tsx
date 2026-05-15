@@ -1,8 +1,7 @@
 import React from "react";
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "@/lib/theme/colors";
-import { spacing } from "@/lib/theme/spacing";
+import { DS_COLORS } from "@/lib/design-system";
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -54,9 +53,9 @@ export function Screen(props: ScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: DS_COLORS.background },
   keyboard: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: spacing.xl },
+  content: { flex: 1, paddingHorizontal: 24 },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: spacing.xxl },
+  scrollContent: { paddingBottom: 32 },
 });

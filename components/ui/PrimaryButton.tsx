@@ -1,4 +1,4 @@
-import { DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import {
   TouchableOpacity,
@@ -8,22 +8,33 @@ import {
   ViewStyle,
   StyleProp,
 } from "react-native";
-import { colors } from "@/lib/theme/colors";
-import { radius } from "@/lib/theme/radius";
-import { shadows } from "@/lib/theme/shadows";
-import { typography } from "@/lib/theme/typography";
-import * as t from "@/lib/theme/tokens";
+
+/** Inlined from lib/theme/shadows.ts `shadows.button` — value-preserving migration (Phase 2). */
+const PRIMARY_BUTTON_SHADOW_BUTTON = {
+  shadowColor: DS_COLORS.shadowBlack,
+  shadowOffset: { width: 0, height: 6 } as const,
+  shadowOpacity: 0.1,
+  shadowRadius: 12,
+  elevation: 5,
+} as const;
+
+/** Inlined from lib/theme/typography.ts `typography.body` — value-preserving migration (Phase 2). */
+const THEME_TYPO_BODY = {
+  fontSize: 16,
+  fontWeight: "500" as const,
+  lineHeight: 22,
+};
 
 type Variant = "black" | "accent" | "success" | "ghost" | "outline" | "create" | "createGreen";
 
 const HEIGHT = 56;
 
 const variantStyles: Record<Exclude<Variant, "create" | "createGreen">, { bg: string; text: string; border?: string }> = {
-  black: { bg: colors.blackBtn, text: colors.white },
-  accent: { bg: colors.accent, text: colors.white },
-  success: { bg: colors.success, text: colors.white },
-  ghost: { bg: "transparent", text: colors.text },
-  outline: { bg: "transparent", text: colors.text, border: colors.border },
+  black: { bg: DS_COLORS.black, text: DS_COLORS.white },
+  accent: { bg: DS_COLORS.accent, text: DS_COLORS.white },
+  success: { bg: DS_COLORS.success, text: DS_COLORS.white },
+  ghost: { bg: "transparent", text: DS_COLORS.textPrimary },
+  outline: { bg: "transparent", text: DS_COLORS.textPrimary, border: DS_COLORS.border },
 };
 
 type PrimaryButtonProps = {
@@ -74,7 +85,7 @@ function PrimaryButtonInner({
         testID={testID}
       >
         {loading ? (
-          <ActivityIndicator size="small" color={t.colors.white} />
+          <ActivityIndicator size="small" color={DS_COLORS.white} />
         ) : (
           <Text style={createStyles.text}>{title}</Text>
         )}
@@ -92,7 +103,7 @@ function PrimaryButtonInner({
         { backgroundColor: v.bg },
         v.border && { borderWidth: 2, borderColor: v.border },
         isDisabled && styles.disabled,
-        !isDisabled && variant !== "ghost" && variant !== "outline" && shadows.button,
+        !isDisabled && variant !== "ghost" && variant !== "outline" && PRIMARY_BUTTON_SHADOW_BUTTON,
         style,
       ]}
       onPress={onPress}
@@ -119,13 +130,13 @@ export const PrimaryButton = React.memo(PrimaryButtonInner);
 const styles = StyleSheet.create({
   btn: {
     height: HEIGHT,
-    borderRadius: radius.lg,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
   },
   text: {
-    ...typography.body,
+    ...THEME_TYPO_BODY,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   disabled: {
@@ -137,15 +148,15 @@ const styles = StyleSheet.create({
 
 const createStyles = StyleSheet.create({
   button: {
-    height: t.measures.primaryButtonHeight,
-    borderRadius: t.radius.cardCreate,
-    backgroundColor: t.colors.accentOrangeCreate,
+    height: DS_MEASURES.CTA_HEIGHT,
+    borderRadius: DS_RADIUS.card,
+    backgroundColor: DS_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: t.spacing.gridL,
+    paddingHorizontal: DS_SPACING.xxl,
   },
   buttonGreen: {
-    backgroundColor: t.colors.accentGreenCreate,
+    backgroundColor: DS_COLORS.createChallengeGreen,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -156,6 +167,6 @@ const createStyles = StyleSheet.create({
   text: {
     fontSize: 17,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: t.colors.white,
+    color: DS_COLORS.white,
   },
 });

@@ -8,8 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
-import { colors, spacing, radius } from "@/lib/theme/tokens";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export type GateContext =
@@ -109,28 +108,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: DS_SPACING.xl,
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.cardLarge,
-    padding: spacing.xxl,
+    backgroundColor: DS_COLORS.surface,
+    borderRadius: DS_RADIUS.card,
+    padding: DS_SPACING.xxl,
     width: "100%",
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    borderColor: DS_COLORS.border,
   },
   title: {
     fontSize: 24,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: colors.textPrimary,
+    color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     fontWeight: "500",
-    color: colors.textSecondary,
+    color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 22,
@@ -145,13 +144,13 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 16,
-    color: colors.accentOrange,
+    color: DS_COLORS.accent,
     marginRight: 8,
   },
   bulletText: {
     fontSize: 15,
     fontWeight: "500",
-    color: colors.textPrimary,
+    color: DS_COLORS.textPrimary,
   },
   primaryBtn: {
     marginBottom: 12,
@@ -160,14 +159,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radius.primaryButton,
+    borderColor: DS_COLORS.border,
+    borderRadius: DS_RADIUS.card,
     marginBottom: 8,
   },
   secondaryBtnText: {
     fontSize: 15,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: colors.textPrimary,
+    color: DS_COLORS.textPrimary,
   },
   tertiaryBtn: {
     paddingVertical: 12,
@@ -176,6 +175,6 @@ const styles = StyleSheet.create({
   tertiaryBtnText: {
     fontSize: 15,
     fontWeight: "500",
-    color: colors.textSecondary,
+    color: DS_COLORS.textSecondary,
   },
 });

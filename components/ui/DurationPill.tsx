@@ -1,7 +1,6 @@
-import { DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import * as t from "@/lib/theme/tokens";
 
 function DurationPillInner({
   label,
@@ -31,21 +30,21 @@ export const DurationPill = React.memo(DurationPillInner);
 const s = StyleSheet.create({
   pill: {
     paddingVertical: 10,
-    paddingHorizontal: t.spacing.gridM,
-    borderRadius: t.radius.pillCreate,
-    backgroundColor: t.colors.cardBg,
+    paddingHorizontal: DS_SPACING.lg,
+    borderRadius: DS_RADIUS.input,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 1.5,
-    borderColor: t.colors.borderLight,
+    borderColor: DS_COLORS.border,
   },
   pillSelected: {
-    backgroundColor: t.colors.cardBg,
+    backgroundColor: DS_COLORS.surface,
     borderWidth: 2,
-    borderColor: t.colors.accentOrangeCreate,
+    borderColor: DS_COLORS.accent,
   },
   text: {
-    fontSize: t.typography.primaryBody.fontSize,
+    fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: t.colors.textPrimary,
+    color: DS_COLORS.textPrimary,
   },
-  textSelected: { color: t.colors.accentOrangeCreate },
+  textSelected: { color: DS_COLORS.accent },
 });
