@@ -48,17 +48,3 @@ export async function maybePromptForReview(
     // error swallowed — handle in UI
   }
 }
-
-/**
- * Check if we should prompt on specific positive moments.
- */
-export function shouldPromptOnMilestone(
-  totalDaysSecured: number,
-  milestoneDays: number
-): boolean {
-  const promptMilestones = [7, 30, 100];
-  return (
-    promptMilestones.includes(milestoneDays) &&
-    totalDaysSecured >= MIN_DAYS_SECURED_BEFORE_PROMPT
-  );
-}

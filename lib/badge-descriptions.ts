@@ -1,5 +1,5 @@
 /** Long-form copy for badge detail modal (by badge id from API). */
-export const BADGE_DESCRIPTIONS: Record<string, string> = {
+const BADGE_DESCRIPTIONS: Record<string, string> = {
   // Discipline
   "3day":
     "Complete a 3-day streak on any challenge. Every streak starts with showing up three days in a row.",

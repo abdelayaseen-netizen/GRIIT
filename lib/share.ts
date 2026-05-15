@@ -6,10 +6,8 @@ import {
   inviteDeepLink,
   profileDeepLink,
 } from "@/lib/deep-links";
-import { DEEP_LINK_BASE_URL, APP_STORE_URLS } from "@/lib/config";
+import { DEEP_LINK_BASE_URL } from "@/lib/config";
 import { trackEvent } from "@/lib/analytics";
-
-const APP_STORE_URL = Platform.select(APP_STORE_URLS);
 
 async function shareOrCopy(message: string, title?: string): Promise<void> {
   if (Platform.OS === "web") {
@@ -91,37 +89,6 @@ export async function shareProfile(
   await shareOrCopy(message, "My discipline stats");
 }
 
-export async function shareDaySecured(data: {
-  streak: number;
-  challengeName?: string;
-  dayNumber?: number;
-}): Promise<void> {
-  const url = DEEP_LINK_BASE_URL;
-  let message = "Day secured. ";
-  if (data.challengeName && data.dayNumber) {
-    message += `Day ${data.dayNumber} of "${data.challengeName}" complete. `;
-  }
-  if (data.streak > 1) {
-    message += `${data.streak}-day streak and counting. 🔥`;
-  } else {
-    message += "Day 1 starts now. 🔥";
-  }
-  message += `\n\n${url}`;
-  await shareOrCopy(message, "Day secured");
-}
-
-export async function shareMilestone(data: {
-  streak: number;
-  milestoneMessage?: string;
-  name?: string;
-  days?: number;
-}): Promise<void> {
-  const url = DEEP_LINK_BASE_URL;
-  const msg = data.milestoneMessage ?? (data.name ? `${data.days ?? data.streak} days — ${data.name}` : `${data.streak}-day streak`);
-  const message = `${data.streak}-day streak on GRIIT. ${msg}\n\nNo shortcuts. No excuses.\n\n${url}`;
-  await shareOrCopy(message, "My streak on GRIIT");
-}
-
 /**
  * Share an image (e.g. captured ShareCard) via system share sheet.
  * Falls back to sharing message only if image share fails.
@@ -187,9 +154,4 @@ export async function shareChallengeComplete(data: {
   const hardLine = data.isHardMode ? " Hard Mode." : "";
   const message = `I completed "${data.name}" on GRIIT. ${data.daysCompleted} of ${data.duration} days secured.${hardLine}\n\n${url}`;
   await shareOrCopy(message, "Challenge Complete");
-}
-
-export async function shareApp(): Promise<void> {
-  const message = `GRIIT — discipline challenges that actually hold you accountable. Join me.\n\n${APP_STORE_URL}`;
-  await shareOrCopy(message, "GRIIT");
 }

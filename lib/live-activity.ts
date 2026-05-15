@@ -11,8 +11,8 @@
  *   - Count-up tasks (no targetSeconds): progressBar.elapsedTimer.startDate
  *     drives a tick-up timer in the Live Activity card and Dynamic Island.
  *
- * The native timer updates every second on its own — we do NOT need
- * a JS interval. We only call updateLiveActivity() if title/subtitle changes.
+ * The native timer updates every second on its own — no JS interval needed
+ * for countdown or count-up modes.
  */
 import { Platform } from "react-native";
 import * as LiveActivity from "expo-live-activity";
@@ -116,23 +116,6 @@ export function startLiveActivity(payload: LiveActivityPayload): void {
   }
 }
 
-/**
- * Update an existing Live Activity. iOS only. No-op otherwise.
- * Most callers do NOT need this — the native timer ticks on its own.
- * Use only when title/subtitle changes (e.g. lap completed).
- */
-export function updateLiveActivity(payload: LiveActivityPayload): void {
-  if (!isIOSAndEnabled()) return;
-  if (!currentActivityId) return;
-  const state = buildState(payload);
-  try {
-    LiveActivity.updateActivity(currentActivityId, state);
-    lastState = state;
-  } catch (error) {
-    captureError(error, "updateLiveActivity");
-  }
-}
-
 /** Stop the Live Activity. iOS only. No-op otherwise. Safe to call multiple times. */
 export function endLiveActivity(): void {
   if (Platform.OS !== "ios") return;
@@ -149,9 +132,4 @@ export function endLiveActivity(): void {
     currentActivityId = undefined;
     lastState = undefined;
   }
-}
-
-/** True if a Live Activity is currently displayed (iOS only). */
-export function hasActiveLiveActivity(): boolean {
-  return Platform.OS === "ios" && !!currentActivityId;
 }

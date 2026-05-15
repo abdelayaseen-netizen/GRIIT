@@ -64,8 +64,3 @@ export function formatShortDate(date: Date | string): string {
   return d.toLocaleDateString(undefined, { month: "numeric", day: "numeric", year: "numeric" });
 }
 
-/** Short month name e.g. "Jan" for calendar labels. */
-export function formatMonthShort(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("en-US", { month: "short" });
-}

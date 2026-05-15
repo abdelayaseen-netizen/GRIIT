@@ -10,22 +10,11 @@ export interface StreakRow {
   last_stands_used_total?: number | null;
 }
 
-export interface DaySecureRow {
-  date_key: string;
-  user_id?: string;
-}
-
 /** Minimal task row; API responses use mapped shape from backend/lib/challenge-tasks (ChallengeTaskApiShape). */
 export interface ChallengeTaskRow {
   id: string;
   /** Present on legacy rows; `required` may live in config JSONB only. */
   required?: boolean;
-}
-
-export interface ActiveChallengeWithTasks {
-  id: string;
-  current_day: number | null;
-  challenges?: { challenge_tasks?: ChallengeTaskRow[] } | null;
 }
 
 /** Participation type: solo (default), duo, team daily discipline, or shared goal. */
@@ -64,26 +53,6 @@ export interface ChallengeMemberRow {
   role: "creator" | "member";
   status: "active" | "quit" | "failed";
   joined_at: string;
-}
-
-/** Team member as returned by getById (with profiles and optional daily status). */
-export interface ChallengeTeamMemberWithStatus extends ChallengeMemberRow {
-  profiles?: { user_id?: string; username?: string | null; display_name?: string | null; avatar_url?: string | null };
-  /** True if member secured today; only for participation_type === 'team'. Null for shared_goal. */
-  secured_today?: boolean | null;
-  tasks_completed?: number;
-  tasks_total?: number;
-}
-
-/** shared_goal_logs: one contribution toward shared goal. Total = SUM(amount). */
-export interface SharedGoalLogRow {
-  id: string;
-  challenge_id: string;
-  user_id: string;
-  amount: number;
-  unit: string;
-  logged_at: string;
-  note?: string | null;
 }
 
 export interface ProfileRow {

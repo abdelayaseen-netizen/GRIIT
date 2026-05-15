@@ -21,13 +21,3 @@ export function profileDeepLink(username: string): string {
   return `${DEEP_LINK_BASE_URL}/profile/${encodeURIComponent(username)}`;
 }
 
-/** Parse ref (referrer user id) from URL search params. */
-export function getRefFromUrl(url: string): string | null {
-  try {
-    const u = new URL(url.startsWith("http") ? url : `${DEEP_LINK_BASE_URL}${url.startsWith("/") ? url : `/${url}`}`);
-    const ref = u.searchParams.get("ref");
-    return ref ? ref.trim() : null;
-  } catch {
-    return null;
-  }
-}

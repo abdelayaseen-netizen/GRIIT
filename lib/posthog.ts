@@ -33,10 +33,6 @@ export function getPostHog(): PostHog | null {
   return posthog;
 }
 
-export function isPostHogEnabled(): boolean {
-  return posthog !== null;
-}
-
 export function resetPostHog(): void {
   if (posthog) {
     try {

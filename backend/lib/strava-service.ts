@@ -174,9 +174,3 @@ export async function getAthleteActivities(
   if (!res.ok) throw new Error(`Strava getActivities failed: ${res.status}`);
   return (await res.json()) as StravaActivity[];
 }
-
-export async function getActivityById(accessToken: string, activityId: number): Promise<StravaActivity> {
-  const res = await stravaFetch(accessToken, `/activities/${activityId}`);
-  if (!res.ok) throw new Error(`Strava getActivity failed: ${res.status}`);
-  return (await res.json()) as StravaActivity;
-}

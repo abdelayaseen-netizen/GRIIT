@@ -444,7 +444,7 @@ export const DS_COLORS = {
   LIVE_ACTIVITY_LABEL: '#FFFFFF',
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // DARK THEME FOUNDATION (lib/theme-palettes DARK_THEME — reserved; app is light-first)
+  // DARK THEME FOUNDATION (dark palette tokens in DS_COLORS — app is light-first)
   // ═══════════════════════════════════════════════════════════════════════════
   DARK_BG_PAGE: '#1A1A1A',
   DARK_BG_CARD: '#2D2D2D',
@@ -975,15 +975,6 @@ export function getCategoryColors(category: string) {
   return CHALLENGE_CATEGORY_COLORS[key as keyof typeof CHALLENGE_CATEGORY_COLORS] ?? DEFAULT_CATEGORY_COLOR;
 }
 
-// Type exports
-export type DSColors = typeof DS_COLORS;
-export type DSTypography = typeof DS_TYPOGRAPHY;
-export type DSSpacing = typeof DS_SPACING;
-export type DSRadius = typeof DS_RADIUS;
-export type DSShadows = typeof DS_SHADOWS;
-export type DSMeasures = typeof DS_MEASURES;
-
-// ============================================================================
 // ============================================================================
 //
 //  V2 TOKENS — additive install (PR#1 of design system v2 migration)
@@ -1220,112 +1211,6 @@ export const DS_RADIUS_V2 = {
 
 export const DS_TOUCH = {
   minSize: 44, // Apple HIG minimum touch target
-} as const;
-
-// ============================================================================
-// SHADOWS (mostly none — surface contrast does the work)
-// ============================================================================
-
-/**
- * GRIIT v2 uses surface contrast, not shadows, to define depth.
- * The only allowed shadow is the focus ring on inputs.
- */
-export const DS_SHADOW = {
-  none: 'none',
-  focusRing: '0 0 0 3px rgba(216, 90, 48, 0.2)', // brand.primary at 20% opacity
-} as const;
-
-// ============================================================================
-// MOTION (placeholder — full spec coming in v2.1)
-// ============================================================================
-
-export const DS_MOTION = {
-  // Streak counter increment
-  streakIncrement: { duration: 600, easing: 'ease-out' },
-  // Default page transitions
-  pageTransition: { duration: 250, easing: 'ease-in-out' },
-  // Pressable button press
-  buttonPress: { duration: 100, easing: 'ease-out' },
-} as const;
-
-// ============================================================================
-// ICON SIZES
-// ============================================================================
-
-export const DS_ICON = {
-  xs: 14,    // Inline metadata icons
-  sm: 18,    // Search, settings inline
-  md: 22,    // Action row icons (respect, comment, share)
-  lg: 24,    // Tab bar icons
-  xl: 32,    // Photo proof camera, large emphasis icons
-} as const;
-
-// ============================================================================
-// AVATARS
-// ============================================================================
-
-export const DS_AVATAR = {
-  sm: 32,   // Notifications, comments
-  md: 40,   // Post cards, list rows (general)
-  lg: 50,   // Profile screen header
-} as const;
-
-// ============================================================================
-// PHOTO RATIOS (proof submission — locked)
-// ============================================================================
-
-/**
- * Proof photos lock to 4:5 (Instagram standard).
- * Camera-only enforcement (no gallery uploads) is a separate guard in the
- * camera component — this constant is for layout / preview frames.
- */
-export const DS_PHOTO = {
-  proofAspectRatio: 4 / 5, // width / height — Instagram 1080×1350
-  proofMaxWidth: 1080,
-  proofMaxHeight: 1350,
-} as const;
-
-// ============================================================================
-// BREAKPOINTS (mobile primary, but having these prevents future bugs)
-// ============================================================================
-
-export const DS_BREAKPOINT = {
-  phone: 0,
-  phoneLg: 414,
-  tablet: 768,
-} as const;
-
-// ============================================================================
-// COMPOSITE TOKENS (pre-baked combinations for common cases)
-// ============================================================================
-
-/**
- * Pre-baked card configurations. Use these in components rather than
- * composing from primitives every time.
- */
-export const DS_CARD = {
-  default: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
-  },
-  subtle: {
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
-  },
-  heroDark: {
-    backgroundColor: DS_COLORS_V2.surface.heroDark,
-    borderRadius: DS_RADIUS_V2.xl,
-    padding: DS_SPACING_V2.lg,
-  },
-  activeTask: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
-    borderWidth: 1.5,
-    borderColor: DS_COLORS_V2.surface.heroDarkWarm,
-  },
 } as const;
 
 /**

@@ -32,9 +32,6 @@ export const GRIIT_QUOTES = [
   { text: "One more rep. One more day.", author: "Unknown" },
 ] as const;
 
-/** Legacy one-line list (kept for any code still expecting plain strings). */
-export const DISCIPLINE_QUOTES = GRIIT_QUOTES.map((q) => q.text);
-
 export type QuoteWithAuthor = { text: string; author: string };
 
 /**
@@ -53,9 +50,4 @@ export function getDailyQuoteObject(): QuoteWithAuthor {
  */
 export function getRandomQuote(): QuoteWithAuthor {
   return GRIIT_QUOTES[Math.floor(Math.random() * GRIIT_QUOTES.length)] ?? GRIIT_QUOTES[0]!;
-}
-
-/** @deprecated Prefer getDailyQuoteObject / getRandomQuote for author attribution */
-export function getDailyQuote(): string {
-  return getDailyQuoteObject().text;
 }

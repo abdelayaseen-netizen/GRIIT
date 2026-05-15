@@ -40,15 +40,3 @@ export function sanitizeChallengeTitle(input: string): string {
 export function sanitizeChallengeDescription(input: string): string {
   return sanitizeText(input, MAX_LENGTHS.CHALLENGE_DESCRIPTION);
 }
-
-export function sanitizeUsername(input: string): string {
-  return sanitizeText(input, MAX_LENGTHS.USERNAME);
-}
-
-export function sanitizeBio(input: string): string {
-  return sanitizeText(input, MAX_LENGTHS.BIO);
-}
-
-export function sanitizeDisplayName(input: string): string {
-  return sanitizeText(input, MAX_LENGTHS.DISPLAY_NAME);
-}

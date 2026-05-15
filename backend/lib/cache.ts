@@ -39,13 +39,3 @@ export async function setCached<T>(key: string, value: T, ttlSeconds: number): P
     logger.error({ err: e }, "Cache set failed");
   }
 }
-
-export async function invalidateCache(key: string): Promise<void> {
-  const r = getRedisClient();
-  if (!r) return;
-  try {
-    await r.del(key);
-  } catch (e) {
-    logger.error({ err: e }, "Cache invalidate failed");
-  }
-}

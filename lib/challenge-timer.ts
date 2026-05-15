@@ -1,6 +1,6 @@
 /**
  * 24-hour challenge countdown and expiry helpers.
- * Use for display (formatTimeRemaining, formatTimeRemainingHMS) and guards (isChallengeExpired).
+ * Use for display (formatTimeRemainingHMS) and guards (isChallengeExpired).
  */
 
 export function getChallengeTimeRemaining(endsAt: string): {
@@ -19,13 +19,6 @@ export function getChallengeTimeRemaining(endsAt: string): {
   const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
   const seconds = Math.floor((diff % (60 * 1000)) / 1000);
   return { hours, minutes, seconds, isExpired: false };
-}
-
-/** "23h 45m" or "Ended" for countdown display. Updates every 60s is enough; use with interval or on render. */
-export function formatTimeRemaining(endsAt: string): string {
-  const { hours, minutes, isExpired } = getChallengeTimeRemaining(endsAt);
-  if (isExpired) return "Ended";
-  return `${hours}h ${minutes}m`;
 }
 
 /** "HH:MM:SS" or "Expired" for timer display. Update every 1s for live countdown. */

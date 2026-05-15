@@ -18,27 +18,6 @@ export function getIdentityTier(streakCount: number): IdentityTier {
   return "core";
 }
 
-export function getIdentityLine(streakCount: number): string {
-  const tier = getIdentityTier(streakCount);
-  switch (tier) {
-    case "day_zero":
-      return "Day one. Discipline starts here.";
-    case "starting":
-      return "You showed up today. That's how it begins.";
-    case "becoming":
-      return "You're becoming someone who shows up.";
-    case "establishing":
-      return "You're becoming the kind of person who keeps promises.";
-    case "identity":
-      return "You ARE someone who keeps promises.";
-    case "consolidated":
-      return "Discipline isn't your goal anymore - it's your default.";
-    case "core":
-    default:
-      return "This is who you are now.";
-  }
-}
-
 export type StreakRiskCopy = { title: string; body: string };
 
 export function getStreakAtRiskCopy(streakCount: number): StreakRiskCopy {

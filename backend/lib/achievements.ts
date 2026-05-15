@@ -151,8 +151,3 @@ export function getLabelForKey(key: string): string {
   const entry = Object.values(ACHIEVEMENTS).find((a) => a.key === key);
   return entry?.label ?? key;
 }
-
-export function getDescriptionForKey(key: string): string {
-  const entry = Object.values(ACHIEVEMENTS).find((a) => a.key === key);
-  return entry?.description ?? "Keep grinding to unlock this badge.";
-}

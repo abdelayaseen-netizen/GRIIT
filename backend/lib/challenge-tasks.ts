@@ -166,12 +166,6 @@ export function isTaskRequired(row: ChallengeTaskRowRaw | null | undefined): boo
   return typeof row.config === "object" && row.config !== null ? cfg.required !== false : true;
 }
 
-/** Get task type for verification (timer, journal, etc.). */
-export function getTaskType(row: ChallengeTaskRowRaw | null | undefined): string {
-  if (!row) return "manual";
-  return row.task_type ?? "manual";
-}
-
 /** Get verification settings from a raw task row. */
 export function getTaskVerification(row: ChallengeTaskRowRaw | null | undefined): {
   needsProof: boolean;

@@ -37,19 +37,3 @@ export const FREE_LIMITS = {
   MAX_DAILY_RESPECTS: 5,
   MAX_DAILY_NUDGES: 3,
 } as const;
-
-// ============================================
-// PREMIUM FEATURE FLAGS
-// When premium is enabled, flip individual features here.
-// ============================================
-export const PREMIUM_FEATURES = {
-  UNLIMITED_CHALLENGES: true,
-  UNLIMITED_CREATION: true,
-  ADVANCED_ANALYTICS: true,
-  PREMIUM_PACKS: true,
-  CUSTOM_THEMES: true,
-  LEADERBOARD_PRIORITY: true,
-  UNLIMITED_SOCIAL: true,
-  PREMIUM_BADGE: true,
-  INTEGRATIONS: false,
-} as const;
