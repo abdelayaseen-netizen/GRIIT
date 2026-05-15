@@ -13,7 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { ChevronLeft, UserPlus, UserMinus, Check, X, Users } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { sharedStyles } from "@/lib/theme/shared-styles";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -344,7 +343,7 @@ function AccountabilityScreenInner() {
 
   if (loading && !data) {
     return (
-      <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
+      <SafeAreaView style={styles.screenContainer} edges={["top"]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
             <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
@@ -360,7 +359,7 @@ function AccountabilityScreenInner() {
   }
 
   return (
-    <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
+    <SafeAreaView style={styles.screenContainer} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
           <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
@@ -406,6 +405,7 @@ export default function AccountabilityScreen() {
 }
 
 const styles = StyleSheet.create({
+  screenContainer: { flex: 1, backgroundColor: DS_COLORS.background },
   header: {
     flexDirection: "row",
     alignItems: "center",

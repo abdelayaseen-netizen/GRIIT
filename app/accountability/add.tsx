@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { sharedStyles } from "@/lib/theme/shared-styles";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -139,7 +138,7 @@ function AddAccountabilityPartnerScreenInner() {
   );
 
   return (
-    <SafeAreaView style={sharedStyles.screenContainer} edges={["top"]}>
+    <SafeAreaView style={styles.screenContainer} edges={["top"]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -205,6 +204,7 @@ export default function AddAccountabilityPartnerScreen() {
 }
 
 const styles = StyleSheet.create({
+  screenContainer: { flex: 1, backgroundColor: DS_COLORS.background },
   flex: { flex: 1 },
   header: {
     flexDirection: "row",
