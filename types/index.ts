@@ -56,14 +56,6 @@ export interface JournalConfig {
   wordLimitWords: number | null;
 }
 
-export interface JournalEntry {
-  entryText: string;
-  mood?: MoodLevel;
-  energy?: number;
-  bodyState?: BodyState;
-  createdAt: string;
-}
-
 export type ChallengeType = "standard" | "one_day" | "solo" | "team" | "both";
 export type GoalMode = "individual" | "shared";
 export type TeamStatus = "active" | "completed" | "abandoned";
@@ -105,8 +97,6 @@ export interface TodayCheckinForUser {
 export type ChallengeVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
 
 export type ChallengeStatus = "active" | "failed" | "completed";
-
-export type CommunityEventType = "joined_challenge" | "secured_day" | "milestone" | "streak" | "challenge_joined";
 
 export interface User {
   id: string;
@@ -239,40 +229,6 @@ export interface Challenge {
   creatorReputation?: number;
 }
 
-export interface UserChallenge {
-  id: string;
-  userId: string;
-  challengeId: string;
-  startDate: string;
-  status: ChallengeStatus;
-  currentDayIndex: number;
-  streakCount: number;
-  lastSecuredDate: string | null;
-  createdAt: string;
-  completionType?: CompletionType;
-  isReplayAttempt?: boolean;
-}
-
-export interface ReplayInstance {
-  id: string;
-  originalChallengeId: string;
-  userId: string;
-  attemptDate: string;
-  verificationRulesSnapshot: TaskRules;
-  status: "in_progress" | "completed" | "failed";
-  completedAt?: string;
-}
-
-export interface DailyRun {
-  id: string;
-  userChallengeId: string;
-  dateLocal: string;
-  isDaySecured: boolean;
-  securedAt: string | null;
-  todayStartedAt: string | null;
-  createdAt: string;
-}
-
 export type RunMode = "outdoor_gps" | "treadmill_proof";
 
 export interface GeoTimeCheckinVerificationData {
@@ -336,175 +292,6 @@ export interface VerificationData {
   distanceMilesShown?: number;
   durationShown?: string;
   geoTimeCheckin?: GeoTimeCheckinVerificationData;
-}
-
-export interface TaskState {
-  id: string;
-  dailyRunId: string;
-  taskTemplateId: string;
-  status: TaskStatus;
-  verificationData: VerificationData | null;
-  submittedAt: string | null;
-  verifiedAt: string | null;
-  failureReason: string | null;
-}
-
-export interface CommunityEvent {
-  id: string;
-  userId: string;
-  username: string;
-  avatarUrl: string;
-  type: CommunityEventType;
-  metadata: {
-    challengeId?: string;
-    challengeName?: string;
-    day?: number;
-    streak?: number;
-  };
-  createdAt: string;
-}
-
-export interface Medal {
-  id: string;
-  title: string;
-  description: string;
-  earnedAt: string;
-  icon: string;
-}
-
-export interface ActivityItem {
-  id: string;
-  type: "respect" | "follow" | "streak_milestone" | "day_secured" | "challenge_joined" | "encourage";
-  actorId: string;
-  actorUsername: string;
-  actorAvatar: string;
-  targetId?: string;
-  metadata?: {
-    challengeName?: string;
-    day?: number;
-    streak?: number;
-  };
-  createdAt: string;
-  read: boolean;
-}
-
-export interface SuggestedUser {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  contextLine: string;
-  streak?: number;
-  isFollowing: boolean;
-  dayNumber?: number;
-  riskLevel?: "safe" | "warning" | "danger";
-}
-
-export interface ProofSummary {
-  runMiles?: number;
-  journalWords?: number;
-  journalMinutes?: number;
-  gpsVerified?: boolean;
-  typingVerified?: boolean;
-  photoVerified?: boolean;
-  timerMinutes?: number;
-}
-
-export interface HomeFeedItem {
-  id: string;
-  type: "day_secured" | "streak_milestone" | "challenge_joined" | "encouragement_insert";
-  userId?: string;
-  username?: string;
-  avatarUrl?: string;
-  challengeName?: string;
-  day?: number;
-  dayNumber?: number;
-  streak?: number;
-  message?: string;
-  createdAt: string;
-  respected?: boolean;
-  respectCount?: number;
-  proofSummary?: ProofSummary;
-  lockedIn?: boolean;
-  withYou?: boolean;
-}
-
-export interface Highlight {
-  id: string;
-  message: string;
-  type: "respect" | "streak" | "milestone" | "followers";
-}
-
-export interface Post {
-  id: string;
-  userId: string;
-  challengeId: string;
-  dayNumber: number;
-  text: string;
-  createdAt: string;
-  respectCount: number;
-  discussCount: number;
-  respectedBy: string[];
-  user?: User;
-  challenge?: Challenge;
-}
-
-export interface Notification {
-  id: string;
-  userId: string;
-  type: "respect" | "follow" | "completion" | "encourage";
-  fromUserId: string;
-  postId?: string;
-  text: string;
-  createdAt: string;
-  read: boolean;
-  fromUser?: User;
-}
-
-export type ChatMessageType = "text" | "proof" | "checkin" | "system";
-
-export interface ChallengeRoom {
-  challengeId: string;
-  roomId: string;
-  name: string;
-  createdAt: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  roomId: string;
-  challengeId: string;
-  senderId: string;
-  senderName: string;
-  senderAvatarUrl: string;
-  type: ChatMessageType;
-  text?: string;
-  mediaUrl?: string;
-  taskId?: string;
-  dayIndex?: number;
-  createdAt: string;
-  reactions: Record<string, number>;
-  replyToMessageId?: string;
-  isDeleted: boolean;
-}
-
-export interface MemberPresence {
-  userId: string;
-  roomId: string;
-  lastSeenAt: string;
-  isTyping: boolean;
-}
-
-export interface ChatRoomSettings {
-  muteRoom: boolean;
-  mentionsOnly: boolean;
-}
-
-/** Placeholder for backend: when subscription is integrated, profile can include these. */
-export type PremiumStatus = "free" | "premium" | "trial";
-export interface ProfilePremiumFields {
-  premiumStatus?: PremiumStatus;
-  premiumExpiresAt?: string | null; // ISO date
-  premiumPlatform?: "ios" | "android" | "web" | null; // where they subscribed
 }
 
 /** Challenge detail as returned by challenges.getById (with optional team/shared goal fields). */
@@ -588,6 +375,7 @@ export interface TeamMember {
   avatar_url?: string;
 }
 
+// keep: planned for Q4 2026 team challenges
 export interface TeamInvite {
   id: string;
   team_id: string;
@@ -599,6 +387,7 @@ export interface TeamInvite {
   expires_at: string;
 }
 
+// keep: planned for Q4 2026 team challenges
 export interface TeamWithMembers extends Team {
   members: TeamMember[];
   member_count: number;
@@ -646,18 +435,4 @@ export interface CheckinFromApi {
   note_text?: string | null;
   proof_url?: string | null;
   proof_source?: string | null;
-}
-
-/** Leaderboard/activity entry from API for mapping. */
-export interface LeaderboardEntryFromApi {
-  userId?: string;
-  username?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  rank?: number;
-  value?: number;
-  unit?: string;
-  currentStreak?: number;
-  securedDaysThisWeek?: number;
-  respectCount?: number;
 }
