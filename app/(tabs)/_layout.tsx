@@ -73,7 +73,7 @@ export default function TabLayout() {
         options={{
           title: "Activity",
           tabBarIcon: ({ color, size }) => <Flame color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Activity — notifications and leaderboard",
+          tabBarAccessibilityLabel: "Activity — feed, notifications, and leaderboard",
         }}
       />
       <Tabs.Screen
