@@ -703,6 +703,7 @@ export default function HomeScreen() {
         <DailyQuote />
       </View>
     ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- homeRootContent: add freeze/challengeGroups deps; stale entries trimmed in PR #19
     [
       leaveChallengeError,
       streak,
@@ -720,7 +721,7 @@ export default function HomeScreen() {
       router,
       stats,
       homeQuery,
-      challengeGroups.length,
+      challengeGroups,
       incompleteChallenges,
       completedTodayChallenges,
       completedExpanded,
@@ -732,6 +733,8 @@ export default function HomeScreen() {
       keyExtractorCompletedGroup,
       onStreakFreezeLinePress,
       streakFreezeLine,
+      freezeStatus?.remaining,
+      hasAcknowledgedFreezeUsed,
     ]
   );
 
