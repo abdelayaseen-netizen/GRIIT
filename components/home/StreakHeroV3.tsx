@@ -78,6 +78,7 @@ function deriveState(p: Props): StreakState {
   if (p.freezeUsedToday) return 'frozen';
   if (p.streak >= 1 && p.minutesRemaining < 60 && p.tasksRemaining > 0)
     return 'atRisk';
+  if (p.streak === 0 && p.tasksRemaining > 0) return 'day1';
   if (p.streak === 1 && p.tasksRemaining > 0) return 'day1';
   return 'healthy';
 }
@@ -85,7 +86,7 @@ function deriveState(p: Props): StreakState {
 function getMetaLine(state: StreakState, p: Props): string {
   if (p.streak === 0 && p.tasksRemaining > 0) {
     if (p.minutesRemaining < 60) {
-      return `${p.minutesRemaining}m to start day 1`;
+      return `${p.minutesRemaining}m left to start day 1`;
     }
     return `${formatDuration(p.minutesRemaining)} to start day 1`;
   }
