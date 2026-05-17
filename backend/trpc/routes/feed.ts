@@ -8,6 +8,13 @@ import { getTodayDateKey, getYesterdayDateKey, getProfileTimeZoneForUser } from 
 import { logger } from "../../lib/logger";
 import { moderateContent } from "../../lib/content-moderation";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
+import {
+  LIVE_FEED_TYPES,
+  followRowAccepted,
+  normalizeChallengeVisibility,
+  hydrateActivityEventsToPosts,
+  type EvRow,
+} from "../../lib/feed-activity-hydrate";
 
 type ProofType = "photo" | "text" | "location";
 
@@ -48,13 +55,6 @@ function hoursUntilLocalMidnight(timezone: string): number {
     return 24;
   }
 }
-import {
-  LIVE_FEED_TYPES,
-  followRowAccepted,
-  normalizeChallengeVisibility,
-  hydrateActivityEventsToPosts,
-  type EvRow,
-} from "../../lib/feed-activity-hydrate";
 
 export const feedRouter = createTRPCRouter({
   getLiveFeed: protectedProcedure.input(z.object({ scope: z.enum(["following", "everyone"]), limit: z.number().min(1).max(30).default(20) })).query(async ({ ctx, input }) => {

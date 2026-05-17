@@ -9,6 +9,9 @@ Sentry.init({
   tracesSampleRate: 0.1,
 });
 
+// Sentry.init must execute before any module that allocates resources we want to monitor,
+// so the logger import is intentionally placed after the init block above.
+// eslint-disable-next-line import/first
 import { logger } from "./lib/logger";
 
 logger.info(

@@ -98,8 +98,6 @@ const fileData = files.map((p) => {
   return { p, r, txt, loc, imports: imports(txt), exports: exportsList(txt), composite, dims, flags: {hasAny,hasTsIgnore,hasCatch,hasSentry,hasPosthog,hasFrom,hasOr,hasNav,hasHex,isUi}};
 });
 
-const byName = new Map(fileData.map((f) => [f.r, f]));
-
 function reverseDeps(target) {
   const base = path.basename(target).replace(/\.(ts|tsx)$/,"");
   const out = [];
