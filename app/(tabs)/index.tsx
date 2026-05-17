@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { Target } from "lucide-react-native";
+import { Bell, ChevronRight, Target } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,16 +28,14 @@ import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import type { TodayCheckinForUser, StatsFromApi } from "@/types";
-import { Avatar } from "@/components/Avatar";
 import DailyQuote from "@/components/home/DailyQuote";
 import { ActiveTaskCard } from "@/components/home/ActiveTaskCard";
-import StreakHeroV2 from "@/components/home/StreakHeroV2";
+import StreakHeroV3 from "@/components/home/StreakHeroV3";
 import DailyBonus from "@/components/home/DailyBonusV2";
 import GoalCard from "@/components/home/GoalCard";
 import PointsExplainer from "@/components/home/PointsExplainer";
 import WeekStrip from "@/components/home/WeekStrip";
 import NextUnlock from "@/components/home/NextUnlock";
-import LiveFeedSection from "@/components/LiveFeedSection";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonHomeChallengeCard } from "@/components/skeletons";
@@ -136,7 +134,7 @@ export default function HomeScreen() {
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showRankModal, setShowRankModal] = React.useState(false);
   const [showFreezeInfoModal, setShowFreezeInfoModal] = React.useState(false);
-  // StreakHeroV2 freeze-used acknowledgement (PR#2 of design system v2 migration).
+  // StreakHeroV3 freeze-used acknowledgement (PR#2 of design system v2 migration).
   // FIXME: persist to AsyncStorage with today's date as key once the
   // freeze-used real flag (profiles.last_freeze_used_at) is surfaced to the
   // client. Today this only matters within a single session — when the user
@@ -146,7 +144,6 @@ export default function HomeScreen() {
     React.useState(false);
   const scrollRef = useRef<FlashList<{ key: string }> | null>(null);
   const goalsSectionYRef = useRef(0);
-  const feedSectionYRef = useRef(0);
 
   const freezeStatusQuery = useQuery({
     queryKey: ["streaks", "getFreezeStatus", user?.id ?? ""],
@@ -233,15 +230,6 @@ export default function HomeScreen() {
     });
   }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
 
-  const ringProgress = useMemo(() => {
-    const total = challengeGroups.reduce((sum, g) => sum + g.goals.length, 0);
-    const done = challengeGroups.reduce(
-      (sum, g) => sum + g.goals.filter((gl) => gl.completed).length,
-      0
-    );
-    return total > 0 ? done / total : 0;
-  }, [challengeGroups]);
-
   const scrollToGoalsSection = useCallback(() => {
     scrollRef.current?.scrollToOffset({
       offset: Math.max(0, goalsSectionYRef.current - 12),
@@ -300,7 +288,6 @@ export default function HomeScreen() {
     track({ name: "home_state_viewed", state: homeState, streak });
   }, [homeState, streak]);
 
-  const displayStreak = Math.max(1, streak);
   const basePoints = (stats?.totalDaysSecured ?? 0) * 5;
   const activeCount = homeQuery.data?.activeList.length ?? 0;
   const points = activeCount > 0 ? Math.max(7, basePoints) : basePoints;
@@ -309,30 +296,10 @@ export default function HomeScreen() {
     () => homeQuery.data?.securedDateKeys ?? [],
     [homeQuery.data?.securedDateKeys]
   );
-  const hasEverSecured = securedKeys.length > 0 || (stats?.totalDaysSecured ?? 0) > 0;
   const completedChallengesCount = stats?.completedChallenges ?? 0;
   const statsAllZero = streak === 0 && points === 0 && completedChallengesCount === 0;
-  const showStatDash = statsAllZero;
-  const streakPillLabel = streak === 0 ? "Day 1" : String(streak);
 
   const freezeStatus = freezeStatusQuery.data;
-  const streakFreezeLine = useMemo(() => {
-    if (!freezeStatus) return null;
-    if (freezeStatus.remaining > 0) {
-      return `🛡 ${freezeStatus.remaining} freeze${freezeStatus.remaining === 1 ? "" : "s"} this month`;
-    }
-    if (!freezeStatus.isPro) return "🛡 Pro: 4 freezes/mo";
-    return "🛡 No freezes left (resets monthly)";
-  }, [freezeStatus]);
-
-  const onStreakFreezeLinePress = useCallback(() => {
-    if (!freezeStatus) return;
-    if (freezeStatus.remaining > 0 || freezeStatus.isPro) {
-      setShowFreezeInfoModal(true);
-      return;
-    }
-    router.push(ROUTES.PAYWALL as never);
-  }, [freezeStatus, router]);
 
   const showCelebration = useCelebrationStore((s) => s.show);
 
@@ -433,39 +400,106 @@ export default function HomeScreen() {
   );
 
   const renderIncompleteGoalGroup = useCallback(
-    ({ item: group, index }: { item: ChallengeGoalGroup; index: number }) => (
-      <GoalCard
-        defaultExpanded={index === 0}
-        challengeName={group.challengeName}
-        goals={group.goals}
-        currentDay={group.currentDay}
-        durationDays={group.durationDays}
-        onPressChallengeName={() => router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)}
-        onPressGoal={(goalId: string) => {
-          const goal = group.goals.find((gl) => gl.id === goalId);
-          if (!goal) return;
-          onPressGoal(
-            goalId,
-            group.activeChallengeId,
-            goal.taskType,
-            goal.title,
-            goal.taskConfig,
-            group.challengeName,
-            group.currentDay,
-            group.durationDays
-          );
-        }}
-        onPressFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
-        onPressInActiveChallenge={() => {
-          void prefetchActiveChallengeById(queryClient, group.activeChallengeId);
-        }}
-        onLongPressChallenge={() => {
-          setLongPressMenuChallenge({ id: group.challengeId, title: group.challengeName });
-        }}
-        isError={homeQuery.isError}
-      />
-    ),
-    [router, onPressGoal, queryClient, homeQuery.isError]
+    ({ item: group, index }: { item: ChallengeGoalGroup; index: number }) => {
+      if (index > 0) {
+        return (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${group.challengeName}, day ${group.currentDay}`}
+            style={s.compressedRow}
+            onPress={() =>
+              router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)
+            }
+            onLongPress={() =>
+              setLongPressMenuChallenge({
+                id: group.challengeId,
+                title: group.challengeName,
+              })
+            }
+          >
+            <View style={s.compressedIcon}>
+              <Target size={16} color={DS_COLORS.ACCENT} strokeWidth={1.75} />
+            </View>
+            <View style={s.compressedTitleCol}>
+              <Text style={s.compressedTitle} numberOfLines={1}>
+                {group.challengeName}
+              </Text>
+            </View>
+            <View style={s.compressedDayPill}>
+              <Text style={s.compressedDayPillText}>{`Day ${group.currentDay}`}</Text>
+            </View>
+            <ChevronRight size={16} color={DS_COLORS.TEXT_MUTED} />
+          </TouchableOpacity>
+        );
+      }
+
+      const firstIncompleteGoal = group.goals.find((gl) => !gl.completed);
+      const taskCount = group.goals.length;
+      const taskWord = taskCount === 1 ? "task" : "tasks";
+      const estimatedMinutes = Math.max(15, taskCount * 10);
+      const subtitle = `${group.durationDays}-day challenge · ${taskCount} ${taskWord} · ~${estimatedMinutes} min`;
+
+      return (
+        <View style={s.primaryGoalCard}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${group.challengeName}`}
+            style={s.primaryGoalHeader}
+            onPress={() =>
+              router.push(ROUTES.CHALLENGE_ID(group.challengeId) as never)
+            }
+            onLongPress={() =>
+              setLongPressMenuChallenge({
+                id: group.challengeId,
+                title: group.challengeName,
+              })
+            }
+          >
+            <View style={s.primaryGoalIcon}>
+              <Target size={20} color={DS_COLORS.ACCENT} strokeWidth={1.75} />
+            </View>
+            <View style={s.primaryGoalText}>
+              <Text style={s.primaryGoalTitle} numberOfLines={1}>
+                {group.challengeName}
+              </Text>
+              <Text style={s.primaryGoalSubtitle} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Start now: ${firstIncompleteGoal?.title ?? group.challengeName}`}
+            style={s.primaryGoalCta}
+            onPress={() => {
+              if (!firstIncompleteGoal) {
+                void prefetchActiveChallengeById(
+                  queryClient,
+                  group.activeChallengeId,
+                );
+                router.push(
+                  ROUTES.CHALLENGE_ID(group.challengeId) as never,
+                );
+                return;
+              }
+              onPressGoal(
+                firstIncompleteGoal.id,
+                group.activeChallengeId,
+                firstIncompleteGoal.taskType,
+                firstIncompleteGoal.title,
+                firstIncompleteGoal.taskConfig,
+                group.challengeName,
+                group.currentDay,
+                group.durationDays,
+              );
+            }}
+          >
+            <Text style={s.primaryGoalCtaText}>Start now</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    },
+    [router, onPressGoal, queryClient]
   );
 
   const renderCompletedGoalGroup = useCallback(
@@ -513,31 +547,29 @@ export default function HomeScreen() {
         ) : null}
         <View style={s.headerRow}>
           <View style={s.headerTextCol}>
-            <Text style={s.greeting}>{getGreeting()}</Text>
-            <Text style={s.word}>GRIIT</Text>
+            <Text style={s.greeting}>
+              {`${getGreeting()}, ${profilePrimaryName(
+                profile ?? {},
+                user?.email?.includes("@") ? user.email.split("@")[0] : undefined,
+              ).split(" ")[0]}`}
+            </Text>
+            <Text style={s.todayTitle}>Today</Text>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open profile tab"
-            onPress={() => router.push(ROUTES.TABS_PROFILE as never)}
+            accessibilityLabel="Open notifications"
+            onPress={() => router.navigate("/(tabs)/activity" as never)}
+            style={s.bellButton}
           >
-            <Avatar
-              url={profile?.avatar_url?.trim() ? profile.avatar_url.trim() : null}
-              name={profilePrimaryName(
-                profile ?? {},
-                user?.email?.includes("@") ? user.email.split("@")[0] : undefined,
-              )}
-              userId={user?.id ?? undefined}
-              size={40}
-            />
+            <Bell size={16} color={DS_COLORS.TEXT_PRIMARY} strokeWidth={1.75} />
+            <View style={s.bellDot} />
           </Pressable>
         </View>
 
         {(() => {
-          // StreakHeroV2 wiring (PR#2 of design system v2 migration).
-          // Inline computations rather than helpers per migration plan;
-          // we'll factor these out in a follow-up PR if multiple screens
-          // need them.
+          // StreakHeroV3 wiring (PR #19 bold home — light flame-inline variant).
+          // Inline computations rather than helpers per migration plan; if
+          // multiple screens need them, factor out in a follow-up.
           const totalTasksToday = challengeGroups.reduce(
             (sum, g) => sum + g.goals.length,
             0,
@@ -556,7 +588,7 @@ export default function HomeScreen() {
           );
           return (
             <View style={s.heroWrap}>
-              <StreakHeroV2
+              <StreakHeroV3
                 streak={streak}
                 // TODO: wire lastStreak from store when previous-streak field
                 // lands. Without this, the lost / comeback state never triggers
@@ -685,38 +717,15 @@ export default function HomeScreen() {
 
         <View style={s.sectionDivider} />
 
-        <View
-          onLayout={(e) => {
-            feedSectionYRef.current = e.nativeEvent.layout.y;
-          }}
-        >
-          <LiveFeedSection
-            onScrollToFeed={() => {
-              scrollRef.current?.scrollToOffset({
-                offset: Math.max(0, feedSectionYRef.current - 8),
-                animated: true,
-              });
-            }}
-          />
-        </View>
-
         <DailyQuote />
       </View>
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- homeRootContent: add freeze/challengeGroups deps; stale entries trimmed in PR #19
     [
       leaveChallengeError,
       streak,
       profile,
-      user?.id,
       user?.email,
-      showStatDash,
-      streakPillLabel,
-      points,
-      ringProgress,
-      displayStreak,
       securedKeys,
-      hasEverSecured,
       statsAllZero,
       router,
       stats,
@@ -725,14 +734,11 @@ export default function HomeScreen() {
       incompleteChallenges,
       completedTodayChallenges,
       completedExpanded,
-      rank,
       scrollToGoalsSection,
       renderIncompleteGoalGroup,
       renderCompletedGoalGroup,
       keyExtractorIncompleteGroup,
       keyExtractorCompletedGroup,
-      onStreakFreezeLinePress,
-      streakFreezeLine,
       freezeStatus?.remaining,
       hasAcknowledgedFreezeUsed,
     ]
@@ -936,12 +942,128 @@ const s = StyleSheet.create({
   },
   header: { paddingHorizontal: DS_SPACING.xl, paddingTop: DS_SPACING.md },
   greeting: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED },
+  todayTitle: {
+    marginTop: 2,
+    fontSize: 18,
+    fontWeight: "500",
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
   word: {
     marginTop: 2,
     fontSize: DS_TYPOGRAPHY.SIZE_LG,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     letterSpacing: -0.3,
+  },
+  bellButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+    backgroundColor: DS_COLORS.BG_CARD,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  bellDot: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: DS_COLORS.ACCENT,
+  },
+  primaryGoalCard: {
+    marginHorizontal: DS_SPACING.xl,
+    marginVertical: DS_SPACING.sm,
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: DS_RADIUS.LG,
+    borderWidth: 1.5,
+    borderColor: DS_COLORS.ACCENT,
+    padding: DS_SPACING.lg,
+  },
+  primaryGoalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.md,
+    marginBottom: DS_SPACING.md,
+  },
+  primaryGoalIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryGoalText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  primaryGoalTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  primaryGoalSubtitle: {
+    marginTop: 2,
+    fontSize: DS_TYPOGRAPHY.SIZE_XS,
+    color: DS_COLORS.TEXT_SECONDARY,
+  },
+  primaryGoalCta: {
+    backgroundColor: DS_COLORS.ACCENT,
+    borderRadius: DS_RADIUS.MD,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryGoalCtaText: {
+    color: DS_COLORS.TEXT_ON_ACCENT,
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
+  },
+  compressedRow: {
+    marginHorizontal: DS_SPACING.xl,
+    marginVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: DS_RADIUS.MD,
+    borderWidth: 0.5,
+    borderColor: DS_COLORS.BORDER,
+    paddingVertical: DS_SPACING.md,
+    paddingHorizontal: DS_SPACING.md,
+    gap: DS_SPACING.sm,
+  },
+  compressedIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  compressedTitleCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  compressedTitle: {
+    fontSize: DS_TYPOGRAPHY.SIZE_SM,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  compressedDayPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+  },
+  compressedDayPillText: {
+    fontSize: 11,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.TEXT_SECONDARY,
   },
   pills: { flexDirection: "row", gap: 6 },
   pill: {
