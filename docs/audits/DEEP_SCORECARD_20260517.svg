@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 595 842" font-family="Inter, system-ui, -apple-system, Helvetica, Arial, sans-serif">
+  <rect width="595" height="842" fill="#FFFFFF"/>
+
+  <!-- ====================== HEADER ====================== -->
+  <text x="32" y="48" font-size="22" font-weight="700" fill="#111111">GRIIT Deep Scorecard</text>
+  <text x="32" y="66" font-size="11" fill="#6B6B6B">Evidence-based audit · 2026-05-17 · Build 19 · main @ 88bf695</text>
+
+  <!-- divider -->
+  <line x1="32" y1="80" x2="563" y2="80" stroke="#E5E5E5" stroke-width="1"/>
+
+  <!-- ====================== SCORE BOX ====================== -->
+  <rect x="32" y="96" width="220" height="130" rx="8" fill="#FAFAFA" stroke="#E5E5E5"/>
+  <text x="44" y="118" font-size="10" font-weight="600" fill="#6B6B6B" letter-spacing="1">PRE-CAP SCORE</text>
+  <text x="44" y="172" font-size="56" font-weight="700" fill="#111111">84</text>
+  <text x="130" y="172" font-size="14" fill="#6B6B6B">/ 100</text>
+  <text x="44" y="195" font-size="11" fill="#111111">Public launch ready</text>
+  <text x="44" y="212" font-size="10" fill="#6B6B6B">capped at 60 until 2 blockers ship</text>
+
+  <!-- Stage pipeline -->
+  <text x="268" y="118" font-size="10" font-weight="600" fill="#6B6B6B" letter-spacing="1">STAGE</text>
+
+  <!-- pipeline track -->
+  <line x1="280" y1="148" x2="555" y2="148" stroke="#E5E5E5" stroke-width="4" stroke-linecap="round"/>
+  <!-- pipeline marker positions -->
+  <circle cx="290" cy="148" r="5" fill="#E5E5E5"/>
+  <text x="290" y="172" font-size="9" fill="#6B6B6B" text-anchor="middle">Alpha</text>
+  <text x="290" y="184" font-size="8" fill="#9B9B9B" text-anchor="middle">0-40</text>
+
+  <circle cx="370" cy="148" r="5" fill="#E5E5E5"/>
+  <text x="370" y="172" font-size="9" fill="#6B6B6B" text-anchor="middle">Closed beta</text>
+  <text x="370" y="184" font-size="8" fill="#9B9B9B" text-anchor="middle">41-65</text>
+
+  <!-- ACTIVE: launch ready -->
+  <circle cx="470" cy="148" r="9" fill="#DC5401"/>
+  <text x="470" y="172" font-size="9" font-weight="700" fill="#DC5401" text-anchor="middle">Launch ready</text>
+  <text x="470" y="184" font-size="8" fill="#6B6B6B" text-anchor="middle">66-84</text>
+
+  <circle cx="545" cy="148" r="5" fill="#E5E5E5"/>
+  <text x="545" y="172" font-size="9" fill="#6B6B6B" text-anchor="middle">Growth</text>
+  <text x="545" y="184" font-size="8" fill="#9B9B9B" text-anchor="middle">85+</text>
+
+  <!-- score breakdown summary -->
+  <text x="268" y="208" font-size="10" fill="#6B6B6B">Tests 85/85 · 0 TS errors · 0 lint · 336 files / 62k LoC</text>
+
+  <!-- ====================== PHASE BAR CHART ====================== -->
+  <text x="32" y="256" font-size="11" font-weight="600" fill="#6B6B6B" letter-spacing="1">PHASE SCORES (% OF MAX)</text>
+
+  <!-- baseline -->
+  <line x1="100" y1="406" x2="555" y2="406" stroke="#E5E5E5" stroke-width="1"/>
+
+  <!-- bars: 11 phases, ~40 px per slot. Heights derived from (score/max)*120 max-height. -->
+  <!-- Phase 1 23/25 = 92% -> 110px -->
+  <rect x="105" y="296" width="32" height="110" fill="#DC5401"/>
+  <text x="121" y="290" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">92%</text>
+  <text x="121" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">1 Code</text>
+
+  <!-- Phase 2 6/10 = 60% -> 72px -->
+  <rect x="143" y="334" width="32" height="72" fill="#DC5401" opacity="0.7"/>
+  <text x="159" y="328" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">60%</text>
+  <text x="159" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">2 Arch</text>
+
+  <!-- Phase 3 6/10 = 60% -->
+  <rect x="181" y="334" width="32" height="72" fill="#DC5401" opacity="0.7"/>
+  <text x="197" y="328" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">60%</text>
+  <text x="197" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">3 DS</text>
+
+  <!-- Phase 4 6.26/10 = ~63% -->
+  <rect x="219" y="331" width="32" height="75" fill="#DC5401" opacity="0.7"/>
+  <text x="235" y="325" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">63%</text>
+  <text x="235" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">4 UX</text>
+
+  <!-- Phase 5 3/5 = 60% -->
+  <rect x="257" y="334" width="32" height="72" fill="#DC5401" opacity="0.7"/>
+  <text x="273" y="328" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">60%</text>
+  <text x="273" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">5 Btns</text>
+
+  <!-- Phase 6 12/15 = 80% -->
+  <rect x="295" y="310" width="32" height="96" fill="#DC5401"/>
+  <text x="311" y="304" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">80%</text>
+  <text x="311" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">6 BE</text>
+
+  <!-- Phase 7 6/10 = 60% -->
+  <rect x="333" y="334" width="32" height="72" fill="#DC5401" opacity="0.7"/>
+  <text x="349" y="328" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">60%</text>
+  <text x="349" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">7 State</text>
+
+  <!-- Phase 8 7/10 = 70% -->
+  <rect x="371" y="322" width="32" height="84" fill="#DC5401"/>
+  <text x="387" y="316" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">70%</text>
+  <text x="387" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">8 Perf</text>
+
+  <!-- Phase 9 6/10 = 60% with red marker for P0 -->
+  <rect x="409" y="334" width="32" height="72" fill="#DC5401" opacity="0.7"/>
+  <text x="425" y="328" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">60%</text>
+  <text x="425" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">9 Sec</text>
+  <circle cx="438" cy="298" r="4" fill="#B00020"/>
+
+  <!-- Phase 10 4/5 = 80% -->
+  <rect x="447" y="310" width="32" height="96" fill="#DC5401"/>
+  <text x="463" y="304" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">80%</text>
+  <text x="463" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">10 Obs</text>
+
+  <!-- Phase 11 5/10 = 50% with red marker for P1 -->
+  <rect x="485" y="346" width="32" height="60" fill="#DC5401" opacity="0.55"/>
+  <text x="501" y="340" font-size="9" font-weight="700" fill="#111111" text-anchor="middle">50%</text>
+  <text x="501" y="420" font-size="9" fill="#6B6B6B" text-anchor="middle">11 $$</text>
+  <circle cx="514" cy="310" r="4" fill="#B00020"/>
+
+  <!-- legend -->
+  <circle cx="105" cy="442" r="4" fill="#B00020"/>
+  <text x="115" y="446" font-size="9" fill="#6B6B6B">launch blocker on this surface</text>
+
+  <!-- ====================== TOP BLOCKERS / TOP WINS ====================== -->
+  <text x="32" y="478" font-size="11" font-weight="600" fill="#6B6B6B" letter-spacing="1">TOP 3 BLOCKERS</text>
+
+  <circle cx="40" cy="498" r="5" fill="#B00020"/>
+  <text x="54" y="502" font-size="10" fill="#111111" font-weight="600">D46 (P0) NSPhotoLibraryAddUsageDescription missing</text>
+  <text x="54" y="514" font-size="9" fill="#6B6B6B">App crashes on Save Photo in share sheet. One-line fix in app.json.</text>
+
+  <circle cx="40" cy="534" r="5" fill="#B00020"/>
+  <text x="54" y="538" font-size="10" fill="#111111" font-weight="600">D52 (P1) Entitlement key mismatch ('premium' vs 'GRIIT Pro')</text>
+  <text x="54" y="550" font-size="9" fill="#6B6B6B">AppContext.tsx:408  paying users flicker free after Restore Purchases.</text>
+
+  <circle cx="40" cy="570" r="5" fill="#B00020"/>
+  <text x="54" y="574" font-size="10" fill="#111111" font-weight="600">D18 (P2) Settings uses ChevronLeft as right-disclosure</text>
+  <text x="54" y="586" font-size="9" fill="#6B6B6B">Visible to every user who opens Settings. Visual bug, signals rushed.</text>
+
+  <text x="32" y="614" font-size="11" font-weight="600" fill="#6B6B6B" letter-spacing="1">TOP 3 WINS</text>
+
+  <circle cx="40" cy="634" r="5" fill="#DC5401"/>
+  <text x="54" y="638" font-size="10" fill="#111111" font-weight="600">Layered backend rate limiting + 25 RLS-protected tables</text>
+  <text x="54" y="650" font-size="9" fill="#6B6B6B">Auth 5/min · write 30/min/user · checkins 10/min · Upstash Redis · profiles_select_authenticated live.</text>
+
+  <circle cx="40" cy="670" r="5" fill="#DC5401"/>
+  <text x="54" y="674" font-size="10" fill="#111111" font-weight="600">~80-event PostHog taxonomy with TTFV measured to the second</text>
+  <text x="54" y="686" font-size="9" fill="#6B6B6B">Activation, retention milestones (day_3 / day_7 / day_30), full paywall funnel, streak mechanics.</text>
+
+  <circle cx="40" cy="706" r="5" fill="#DC5401"/>
+  <text x="54" y="710" font-size="10" fill="#111111" font-weight="600">100% color-token discipline, 0 raw hex outside design-system.ts</text>
+  <text x="54" y="722" font-size="9" fill="#6B6B6B">2,389 DS_COLORS references; 9/9 WCAG AA contrast pairs pass.</text>
+
+  <!-- ====================== 14-DAY PLAN STRIP ====================== -->
+  <text x="32" y="754" font-size="11" font-weight="600" fill="#6B6B6B" letter-spacing="1">14-DAY PLAN</text>
+
+  <!-- 14 day cells, 36px wide each, gap 1px -->
+  <!-- Week 1 (orange) ship clean, Week 2 (gray-orange) launch surface, Day 14 (filled accent) launch -->
+  <g font-size="8" fill="#6B6B6B" text-anchor="middle">
+    <rect x="32"  y="766" width="36" height="50" rx="3" fill="#FFF3E8" stroke="#DC5401"/>
+    <text x="50"  y="780" font-weight="700" fill="#111111">D1</text>
+    <text x="50"  y="794">Fix</text>
+    <text x="50"  y="804">D46+D52</text>
+
+    <rect x="69"  y="766" width="36" height="50" rx="3" fill="#FFF3E8" stroke="#DC5401"/>
+    <text x="87"  y="780" font-weight="700" fill="#111111">D2</text>
+    <text x="87"  y="794">F1 QA</text>
+    <text x="87"  y="804">B + C</text>
+
+    <rect x="106" y="766" width="36" height="50" rx="3" fill="#FFF3E8" stroke="#DC5401"/>
+    <text x="124" y="780" font-weight="700" fill="#111111">D3</text>
+    <text x="124" y="794">Persister</text>
+    <text x="124" y="804">+optimistic</text>
+
+    <rect x="143" y="766" width="36" height="50" rx="3" fill="#FFF3E8" stroke="#DC5401"/>
+    <text x="161" y="780" font-weight="700" fill="#111111">D4</text>
+    <text x="161" y="794">Premium</text>
+    <text x="161" y="804">gates</text>
+
+    <rect x="180" y="766" width="36" height="50" rx="3" fill="#FFF3E8" stroke="#DC5401"/>
+    <text x="198" y="780" font-weight="700" fill="#111111">D5</text>
+    <text x="198" y="794">Universal</text>
+    <text x="198" y="804">links</text>
+
+    <rect x="217" y="766" width="36" height="50" rx="3" fill="#FFF3E8" stroke="#DC5401"/>
+    <text x="235" y="780" font-weight="700" fill="#111111">D6</text>
+    <text x="235" y="794">Regression</text>
+    <text x="235" y="804">QA</text>
+
+    <rect x="254" y="766" width="36" height="50" rx="3" fill="#DC5401"/>
+    <text x="272" y="780" font-weight="700" fill="#FFFFFF">D7</text>
+    <text x="272" y="794" fill="#FFFFFF">Submit</text>
+    <text x="272" y="804" fill="#FFFFFF">to review</text>
+
+    <rect x="291" y="766" width="36" height="50" rx="3" fill="#FAFAFA" stroke="#9B9B9B"/>
+    <text x="309" y="780" font-weight="700" fill="#111111">D8</text>
+    <text x="309" y="794">Public</text>
+    <text x="309" y="804">web pages</text>
+
+    <rect x="328" y="766" width="36" height="50" rx="3" fill="#FAFAFA" stroke="#9B9B9B"/>
+    <text x="346" y="780" font-weight="700" fill="#111111">D9</text>
+    <text x="346" y="794">9:16</text>
+    <text x="346" y="804">cards</text>
+
+    <rect x="365" y="766" width="36" height="50" rx="3" fill="#FAFAFA" stroke="#9B9B9B"/>
+    <text x="383" y="780" font-weight="700" fill="#111111">D10</text>
+    <text x="383" y="794">Paywall</text>
+    <text x="383" y="804">A/B+2</text>
+
+    <rect x="402" y="766" width="36" height="50" rx="3" fill="#FAFAFA" stroke="#9B9B9B"/>
+    <text x="420" y="780" font-weight="700" fill="#111111">D11</text>
+    <text x="420" y="794">Funnel</text>
+    <text x="420" y="804">dashes</text>
+
+    <rect x="439" y="766" width="36" height="50" rx="3" fill="#FAFAFA" stroke="#9B9B9B"/>
+    <text x="457" y="780" font-weight="700" fill="#111111">D12</text>
+    <text x="457" y="794">Launch</text>
+    <text x="457" y="804">copy</text>
+
+    <rect x="476" y="766" width="36" height="50" rx="3" fill="#FFF3E8" stroke="#DC5401"/>
+    <text x="494" y="780" font-weight="700" fill="#111111">D13</text>
+    <text x="494" y="794">Soft</text>
+    <text x="494" y="804">launch 50</text>
+
+    <rect x="513" y="766" width="36" height="50" rx="3" fill="#DC5401"/>
+    <text x="531" y="780" font-weight="700" fill="#FFFFFF">D14</text>
+    <text x="531" y="794" fill="#FFFFFF">Public</text>
+    <text x="531" y="804" fill="#FFFFFF">launch</text>
+  </g>
+
+  <!-- footer caption -->
+  <text x="32" y="832" font-size="8" fill="#9B9B9B">Generated 2026-05-17 · 55 defects logged · 2 launch blockers · evidence-backed</text>
+</svg>
