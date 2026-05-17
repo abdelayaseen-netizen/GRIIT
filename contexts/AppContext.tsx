@@ -405,7 +405,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshPremiumStatus = useCallback(async () => {
     const info = await getCustomerInfo();
     if (info) {
-      const ent = info.entitlements?.active?.['premium'];
+      const ent = info.entitlements?.active?.['GRIIT Pro'];
       const premium = ent != null;
       setSubscriptionState(premium ? 'premium' : 'free', ent?.expirationDate ?? null);
       setIsPremium(premium);
