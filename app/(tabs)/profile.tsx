@@ -327,6 +327,24 @@ export default function ProfileScreen() {
     }));
   }, [heatmapQuery.data]);
 
+  // Top active challenge for the swipe-to-clear strip (self view only).
+  // Semantic: "current challenge at a glance," NOT "incomplete today" — that
+  // would require a second fan-out to getTodayCheckinsForUser, deferred to a
+  // follow-up where incompleteChallenges can be lifted to useApp() context.
+  const topInProgressTask = useMemo(() => {
+    if (mode !== 'self') return null;
+    const rows = (activeListQuery.data ?? []) as ActiveRow[];
+    const first = rows[0];
+    if (!first) return null;
+    const title = first.challenges?.title ?? "Challenge";
+    const currentDay = first.current_day ?? 1;
+    const totalDays = first.challenges?.duration_days ?? 1;
+    return {
+      taskName: title,
+      dayOfTotal: `Day ${currentDay} of ${totalDays}`,
+    };
+  }, [mode, activeListQuery.data]);
+
   // TODO(profile-v2): replace with postsQuery.data (new endpoint)
   const profileV2PostsStub = useMemo(
     () =>
@@ -684,15 +702,15 @@ export default function ProfileScreen() {
               onShare={() => void handleShareStreak()}
             />
 
-            {mode === 'self' ? (
+            {mode === 'self' && topInProgressTask ? (
               <TodayTaskStrip
-                taskName="5-Minute Morning Prayer"
-                dayOfTotal="Day 3 of 30"
+                taskName={topInProgressTask.taskName}
+                dayOfTotal={topInProgressTask.dayOfTotal}
                 onClear={() => {
-                  /* TODO(profile-v2): wire to checkin mutation */
+                  /* TODO(profile-v2): wire to checkin mutation in follow-up PR */
                 }}
                 onTap={() => {
-                  /* TODO(profile-v2): navigate to task flow */
+                  /* TODO(profile-v2): navigate to task flow in follow-up PR */
                 }}
               />
             ) : null}
@@ -863,6 +881,7 @@ export default function ProfileScreen() {
       done,
       stats?.tier,
       heatmapDays,
+      topInProgressTask,
       tab,
       setTab,
       setMiniActiveSheetOpen,
