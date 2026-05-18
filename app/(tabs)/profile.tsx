@@ -141,6 +141,19 @@ export default function ProfileScreen() {
   });
   if (badgesQuery.isError) captureError(badgesQuery.error, "ProfileV2.getBadges");
 
+  type HeatmapDay = { date: string; level: 0 | 1 | 2 | 3 | 4 };
+
+  const heatmapQuery = useQuery({
+    queryKey: ["profile", user?.id, "heatmap"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getCheckinHeatmap, { days: 30 }) as Promise<{
+        days: HeatmapDay[];
+      }>,
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  if (heatmapQuery.isError) captureError(heatmapQuery.error, "ProfileV2.getCheckinHeatmap");
+
   const refreshing = activeListQuery.isRefetching || followCountsQuery.isRefetching;
   const onRefresh = useCallback(async () => {
     await refetchAll();
@@ -304,12 +317,15 @@ export default function ProfileScreen() {
   );
 
   // TODO(profile-v2): replace with checkinsQuery.data
-  const streakHeatmapStubDays = useMemo(() => {
+  // Real 30-day check-in heatmap. Falls back to all-zero levels while loading
+  // so day-0 users do not see fake orange activity.
+  const heatmapDays = useMemo<HeatmapDay[]>(() => {
+    if (heatmapQuery.data?.days) return heatmapQuery.data.days;
     return Array.from({ length: 30 }, (_, i) => ({
       date: new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10),
-      level: (((i + 11) * 29) % 5) as 0 | 1 | 2 | 3 | 4,
+      level: 0 as const,
     }));
-  }, []);
+  }, [heatmapQuery.data]);
 
   // TODO(profile-v2): replace with postsQuery.data (new endpoint)
   const profileV2PostsStub = useMemo(
@@ -697,7 +713,7 @@ export default function ProfileScreen() {
               }
             />
 
-            <StreakHeatmap days={streakHeatmapStubDays} />
+            <StreakHeatmap days={heatmapDays} />
 
             <View style={styles.tabsBar}>
               <Pressable
@@ -846,7 +862,7 @@ export default function ProfileScreen() {
       active,
       done,
       stats?.tier,
-      streakHeatmapStubDays,
+      heatmapDays,
       tab,
       setTab,
       setMiniActiveSheetOpen,
