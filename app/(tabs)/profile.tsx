@@ -118,6 +118,42 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
+  type BadgeProcRow = {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+    dimension: string;
+    description: string;
+    progress: number;
+    total: number;
+  };
+
+  const badgesQuery = useQuery({
+    queryKey: ["profile", user?.id, "badges"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getBadges, { userId: user!.id }) as Promise<{
+        earned: BadgeProcRow[];
+        next: BadgeProcRow[];
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  if (badgesQuery.isError) captureError(badgesQuery.error, "ProfileV2.getBadges");
+
+  type HeatmapDay = { date: string; level: 0 | 1 | 2 | 3 | 4 };
+
+  const heatmapQuery = useQuery({
+    queryKey: ["profile", user?.id, "heatmap"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getCheckinHeatmap, { days: 30 }) as Promise<{
+        days: HeatmapDay[];
+      }>,
+    staleTime: 5 * 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  if (heatmapQuery.isError) captureError(heatmapQuery.error, "ProfileV2.getCheckinHeatmap");
+
   const refreshing = activeListQuery.isRefetching || followCountsQuery.isRefetching;
   const onRefresh = useCallback(async () => {
     await refetchAll();
@@ -281,12 +317,33 @@ export default function ProfileScreen() {
   );
 
   // TODO(profile-v2): replace with checkinsQuery.data
-  const streakHeatmapStubDays = useMemo(() => {
+  // Real 30-day check-in heatmap. Falls back to all-zero levels while loading
+  // so day-0 users do not see fake orange activity.
+  const heatmapDays = useMemo<HeatmapDay[]>(() => {
+    if (heatmapQuery.data?.days) return heatmapQuery.data.days;
     return Array.from({ length: 30 }, (_, i) => ({
       date: new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10),
-      level: (((i + 11) * 29) % 5) as 0 | 1 | 2 | 3 | 4,
+      level: 0 as const,
     }));
-  }, []);
+  }, [heatmapQuery.data]);
+
+  // Top active challenge for the swipe-to-clear strip (self view only).
+  // Semantic: "current challenge at a glance," NOT "incomplete today" — that
+  // would require a second fan-out to getTodayCheckinsForUser, deferred to a
+  // follow-up where incompleteChallenges can be lifted to useApp() context.
+  const topInProgressTask = useMemo(() => {
+    if (mode !== 'self') return null;
+    const rows = (activeListQuery.data ?? []) as ActiveRow[];
+    const first = rows[0];
+    if (!first) return null;
+    const title = first.challenges?.title ?? "Challenge";
+    const currentDay = first.current_day ?? 1;
+    const totalDays = first.challenges?.duration_days ?? 1;
+    return {
+      taskName: title,
+      dayOfTotal: `Day ${currentDay} of ${totalDays}`,
+    };
+  }, [mode, activeListQuery.data]);
 
   // TODO(profile-v2): replace with postsQuery.data (new endpoint)
   const profileV2PostsStub = useMemo(
@@ -302,18 +359,24 @@ export default function ProfileScreen() {
     []
   );
 
-  // TODO(profile-v2): replace with badgesQuery.data via API
-  const profileV2BadgesStub = useMemo((): BadgeGridRow[] => {
-    const rows: BadgeGridRow[] = [
-      { id: "badge-ignite", name: "Ignition", iconName: "flame", unlocked: true },
-      { id: "badge-sprint10", name: "Sprint Ten", iconName: "star", unlocked: true },
-      { id: "badge-focus", name: "Focus Forge", iconName: "target", unlocked: false },
-      { id: "badge-sunrise", name: "Sunrise", iconName: "sun", unlocked: false },
-      { id: "badge-marathon", name: "Road Ready", iconName: "trophy", unlocked: false },
-      { id: "badge-voltage", name: "Voltage", iconName: "zap", unlocked: false },
-    ];
-    return rows;
-  }, []);
+  // Real badges from profiles.getBadges. Maps procedure shape -> BadgeGridRow.
+  // Procedure returns icon names in PascalCase ("Zap"); BadgesGrid ICONS map
+  // keys are lowercase, so we lowercase here. Cap to 6 to match prior grid size.
+  const badgeRows = useMemo((): BadgeGridRow[] => {
+    const earned = (badgesQuery.data?.earned ?? []).map((b) => ({
+      id: b.id,
+      name: b.name,
+      iconName: (b.icon ?? "").toLowerCase(),
+      unlocked: true,
+    }));
+    const next = (badgesQuery.data?.next ?? []).map((b) => ({
+      id: b.id,
+      name: b.name,
+      iconName: (b.icon ?? "").toLowerCase(),
+      unlocked: false,
+    }));
+    return [...earned, ...next].slice(0, 6);
+  }, [badgesQuery.data]);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -437,9 +500,10 @@ export default function ProfileScreen() {
       const profileContentUnlocked =
         mode === 'self' || mode === 'public' || mode === 'friends-allowed';
 
-      // TODO(profile-v2): wire tier from profile.tier once tier system ships (varies by viewer visibility)
-      const profileV2TierStub =
-        mode === 'self' ? "Builder" : mode === 'friends-allowed' ? "Ally" : mode === 'public' ? "Explorer" : "";
+      // Tier from stats (self view only). Other modes hide the chip per privacy
+      // until viewer-visible tier exposure is decided in a follow-up.
+      const tierLabel =
+        mode === 'self' ? (stats?.tier ?? "Starter") : "";
 
       return (
       <View>
@@ -578,9 +642,9 @@ export default function ProfileScreen() {
             <Text style={styles.username}>{primaryLine}</Text>
             <View style={styles.handleTierRow}>
               {showHandleRow && handleAt ? <Text style={styles.handleCompact}>{handleAt}</Text> : null}
-              {profileContentUnlocked && profileV2TierStub ? (
+              {profileContentUnlocked && tierLabel ? (
                 <View style={styles.v2TierChip}>
-                  <Text style={styles.v2TierChipText}>{profileV2TierStub}</Text>
+                  <Text style={styles.v2TierChipText}>{tierLabel}</Text>
                 </View>
               ) : null}
             </View>
@@ -638,15 +702,15 @@ export default function ProfileScreen() {
               onShare={() => void handleShareStreak()}
             />
 
-            {mode === 'self' ? (
+            {mode === 'self' && topInProgressTask ? (
               <TodayTaskStrip
-                taskName="5-Minute Morning Prayer"
-                dayOfTotal="Day 3 of 30"
+                taskName={topInProgressTask.taskName}
+                dayOfTotal={topInProgressTask.dayOfTotal}
                 onClear={() => {
-                  /* TODO(profile-v2): wire to checkin mutation */
+                  /* TODO(profile-v2): wire to checkin mutation in follow-up PR */
                 }}
                 onTap={() => {
-                  /* TODO(profile-v2): navigate to task flow */
+                  /* TODO(profile-v2): navigate to task flow in follow-up PR */
                 }}
               />
             ) : null}
@@ -667,7 +731,7 @@ export default function ProfileScreen() {
               }
             />
 
-            <StreakHeatmap days={streakHeatmapStubDays} />
+            <StreakHeatmap days={heatmapDays} />
 
             <View style={styles.tabsBar}>
               <Pressable
@@ -754,7 +818,7 @@ export default function ProfileScreen() {
             ) : null}
 
             {tab === "badges" ? (
-              <BadgesGrid badges={profileV2BadgesStub} onBadgePress={(payload) => setSelectedBadge(payload)} />
+              <BadgesGrid badges={badgeRows} onBadgePress={(payload) => setSelectedBadge(payload)} />
             ) : null}
           </>
         ) : (
@@ -815,7 +879,9 @@ export default function ProfileScreen() {
       handleShareStreak,
       active,
       done,
-      streakHeatmapStubDays,
+      stats?.tier,
+      heatmapDays,
+      topInProgressTask,
       tab,
       setTab,
       setMiniActiveSheetOpen,
@@ -823,7 +889,7 @@ export default function ProfileScreen() {
       setProfileV2PreviewMode,
       activeItems,
       profileV2PostsStub,
-      profileV2BadgesStub,
+      badgeRows,
       keyExtractorActiveChallenge,
       renderActiveChallengeItem,
     ]

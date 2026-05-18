@@ -400,5 +400,95 @@ export const profilesStatsProcedures = {
       return { earned, next };
     }),
 
+  getCheckinHeatmap: protectedProcedure
+    .input(
+      z
+        .object({
+          userId: z.string().uuid().optional(),
+          days: z.number().min(7).max(90).default(30),
+        })
+        .optional()
+    )
+    .query(async ({ input, ctx }) => {
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const userId = input?.userId ?? ctx.userId;
+      const days = input?.days ?? 30;
+
+      const buildEmpty = () =>
+        Array.from({ length: days }, (_, i) => ({
+          date: new Date(Date.now() - (days - 1 - i) * 86400000).toISOString().slice(0, 10),
+          level: 0 as const,
+        }));
+
+      let canSee = userId === ctx.userId;
+      if (!canSee) {
+        const { data: pr } = await server
+          .from("profiles")
+          .select("profile_visibility")
+          .eq("user_id", userId)
+          .maybeSingle();
+        const vis = String(
+          (pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public"
+        ).toLowerCase();
+        if (vis === "public") {
+          canSee = true;
+        } else {
+          const { data: fol } = await ctx.supabase
+            .from("user_follows")
+            .select("status")
+            .eq("follower_id", ctx.userId)
+            .eq("following_id", userId)
+            .maybeSingle();
+          canSee = Boolean(
+            fol && String((fol as { status?: string }).status ?? "").toLowerCase() === "accepted"
+          );
+        }
+      }
+      if (!canSee) {
+        return { days: buildEmpty() };
+      }
+
+      const startDate = new Date(Date.now() - (days - 1) * 86400000)
+        .toISOString()
+        .slice(0, 10);
+
+      const { data: checkinRows, error } = await server
+        .from("check_ins")
+        .select("date_key")
+        .eq("user_id", userId)
+        .gte("date_key", startDate)
+        .limit(2000);
+
+      if (error) {
+        return { days: buildEmpty() };
+      }
+
+      const countByDate = new Map<string, number>();
+      for (const row of checkinRows ?? []) {
+        const key = (row as { date_key: string }).date_key;
+        countByDate.set(key, (countByDate.get(key) ?? 0) + 1);
+      }
+
+      // Map count -> level (0-4). Tuned for typical multi-task days: 0 quiet,
+      // 1 light, 2 medium, 3-4 heavy, 5+ saturated.
+      const toLevel = (n: number): 0 | 1 | 2 | 3 | 4 => {
+        if (n === 0) return 0;
+        if (n === 1) return 1;
+        if (n === 2) return 2;
+        if (n <= 4) return 3;
+        return 4;
+      };
+
+      const result = Array.from({ length: days }, (_, i) => {
+        const date = new Date(Date.now() - (days - 1 - i) * 86400000)
+          .toISOString()
+          .slice(0, 10);
+        const count = countByDate.get(date) ?? 0;
+        return { date, level: toLevel(count) };
+      });
+
+      return { days: result };
+    }),
+
   /** Delete account: clears profile data; when SUPABASE_SERVICE_ROLE_KEY is set, also deletes auth user. Client must sign out after. */
 };
