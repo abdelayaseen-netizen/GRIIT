@@ -118,6 +118,29 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
+  type BadgeProcRow = {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+    dimension: string;
+    description: string;
+    progress: number;
+    total: number;
+  };
+
+  const badgesQuery = useQuery({
+    queryKey: ["profile", user?.id, "badges"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getBadges, { userId: user!.id }) as Promise<{
+        earned: BadgeProcRow[];
+        next: BadgeProcRow[];
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  if (badgesQuery.isError) captureError(badgesQuery.error, "ProfileV2.getBadges");
+
   const refreshing = activeListQuery.isRefetching || followCountsQuery.isRefetching;
   const onRefresh = useCallback(async () => {
     await refetchAll();
@@ -302,18 +325,24 @@ export default function ProfileScreen() {
     []
   );
 
-  // TODO(profile-v2): replace with badgesQuery.data via API
-  const profileV2BadgesStub = useMemo((): BadgeGridRow[] => {
-    const rows: BadgeGridRow[] = [
-      { id: "badge-ignite", name: "Ignition", iconName: "flame", unlocked: true },
-      { id: "badge-sprint10", name: "Sprint Ten", iconName: "star", unlocked: true },
-      { id: "badge-focus", name: "Focus Forge", iconName: "target", unlocked: false },
-      { id: "badge-sunrise", name: "Sunrise", iconName: "sun", unlocked: false },
-      { id: "badge-marathon", name: "Road Ready", iconName: "trophy", unlocked: false },
-      { id: "badge-voltage", name: "Voltage", iconName: "zap", unlocked: false },
-    ];
-    return rows;
-  }, []);
+  // Real badges from profiles.getBadges. Maps procedure shape -> BadgeGridRow.
+  // Procedure returns icon names in PascalCase ("Zap"); BadgesGrid ICONS map
+  // keys are lowercase, so we lowercase here. Cap to 6 to match prior grid size.
+  const badgeRows = useMemo((): BadgeGridRow[] => {
+    const earned = (badgesQuery.data?.earned ?? []).map((b) => ({
+      id: b.id,
+      name: b.name,
+      iconName: (b.icon ?? "").toLowerCase(),
+      unlocked: true,
+    }));
+    const next = (badgesQuery.data?.next ?? []).map((b) => ({
+      id: b.id,
+      name: b.name,
+      iconName: (b.icon ?? "").toLowerCase(),
+      unlocked: false,
+    }));
+    return [...earned, ...next].slice(0, 6);
+  }, [badgesQuery.data]);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -755,7 +784,7 @@ export default function ProfileScreen() {
             ) : null}
 
             {tab === "badges" ? (
-              <BadgesGrid badges={profileV2BadgesStub} onBadgePress={(payload) => setSelectedBadge(payload)} />
+              <BadgesGrid badges={badgeRows} onBadgePress={(payload) => setSelectedBadge(payload)} />
             ) : null}
           </>
         ) : (
@@ -825,7 +854,7 @@ export default function ProfileScreen() {
       setProfileV2PreviewMode,
       activeItems,
       profileV2PostsStub,
-      profileV2BadgesStub,
+      badgeRows,
       keyExtractorActiveChallenge,
       renderActiveChallengeItem,
     ]
