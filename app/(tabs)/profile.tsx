@@ -437,9 +437,10 @@ export default function ProfileScreen() {
       const profileContentUnlocked =
         mode === 'self' || mode === 'public' || mode === 'friends-allowed';
 
-      // TODO(profile-v2): wire tier from profile.tier once tier system ships (varies by viewer visibility)
-      const profileV2TierStub =
-        mode === 'self' ? "Builder" : mode === 'friends-allowed' ? "Ally" : mode === 'public' ? "Explorer" : "";
+      // Tier from stats (self view only). Other modes hide the chip per privacy
+      // until viewer-visible tier exposure is decided in a follow-up.
+      const tierLabel =
+        mode === 'self' ? (stats?.tier ?? "Starter") : "";
 
       return (
       <View>
@@ -578,9 +579,9 @@ export default function ProfileScreen() {
             <Text style={styles.username}>{primaryLine}</Text>
             <View style={styles.handleTierRow}>
               {showHandleRow && handleAt ? <Text style={styles.handleCompact}>{handleAt}</Text> : null}
-              {profileContentUnlocked && profileV2TierStub ? (
+              {profileContentUnlocked && tierLabel ? (
                 <View style={styles.v2TierChip}>
-                  <Text style={styles.v2TierChipText}>{profileV2TierStub}</Text>
+                  <Text style={styles.v2TierChipText}>{tierLabel}</Text>
                 </View>
               ) : null}
             </View>
@@ -815,6 +816,7 @@ export default function ProfileScreen() {
       handleShareStreak,
       active,
       done,
+      stats?.tier,
       streakHeatmapStubDays,
       tab,
       setTab,
