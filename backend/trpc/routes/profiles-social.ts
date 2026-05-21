@@ -270,6 +270,84 @@ export const profilesSocialProcedures = {
       return { followers: followers ?? 0, following: following ?? 0 };
     }),
 
+  /**
+   * Discover — Suggested people to follow.
+   *
+   * Returns up to `limit` (default 10) profiles the viewer is NOT already
+   * following (or pending) and is not the viewer themselves. Excludes private
+   * profiles. Ranked by `streaks.active_streak_count` desc, then by
+   * `total_days_secured` desc as a tiebreaker, then most-recently created.
+   */
+  suggested: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(20).default(10) }).optional())
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 10;
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const viewerId = ctx.userId;
+
+      const { data: existing } = await ctx.supabase
+        .from("user_follows")
+        .select("following_id, status")
+        .eq("follower_id", viewerId)
+        .limit(500);
+      const exclude = new Set<string>([viewerId]);
+      for (const r of (existing ?? []) as { following_id: string; status?: string | null }[]) {
+        const s = String(r.status ?? "").toLowerCase();
+        if (s === "accepted" || s === "pending") exclude.add(r.following_id);
+      }
+
+      const { data: rows, error } = await server
+        .from("profiles")
+        .select(
+          "user_id, username, display_name, avatar_url, total_days_secured, profile_visibility, created_at"
+        )
+        .in("profile_visibility", ["public", "friends"])
+        .order("total_days_secured", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(80);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      type SuggestedRow = ProfileRow & {
+        profile_visibility?: string | null;
+        created_at?: string | null;
+      };
+      const candidates = ((rows ?? []) as SuggestedRow[]).filter((p) => !exclude.has(p.user_id));
+      if (candidates.length === 0) return [];
+
+      const ids = candidates.map((p) => p.user_id);
+      const { data: streakRows } = await server
+        .from("streaks")
+        .select("user_id, active_streak_count")
+        .in("user_id", ids)
+        .limit(200);
+      const streakMap = new Map<string, number>();
+      for (const s of (streakRows ?? []) as { user_id: string; active_streak_count?: number | null }[]) {
+        streakMap.set(s.user_id, Math.max(0, Number(s.active_streak_count ?? 0)));
+      }
+
+      const ranked = [...candidates].sort((a, b) => {
+        const sa = streakMap.get(a.user_id) ?? 0;
+        const sb = streakMap.get(b.user_id) ?? 0;
+        if (sb !== sa) return sb - sa;
+        const da = Number(a.total_days_secured ?? 0);
+        const db = Number(b.total_days_secured ?? 0);
+        if (db !== da) return db - da;
+        const ta = new Date(String(a.created_at ?? 0)).getTime();
+        const tb = new Date(String(b.created_at ?? 0)).getTime();
+        return tb - ta;
+      });
+
+      return ranked.slice(0, limit).map((r) => ({
+        user_id: r.user_id,
+        username: r.username ?? "",
+        display_name: r.display_name ?? r.username ?? "",
+        avatar_url: r.avatar_url ?? null,
+        current_streak: streakMap.get(r.user_id) ?? 0,
+        is_private: String(r.profile_visibility ?? "public").toLowerCase() !== "public",
+      }));
+    }),
+
   getPendingFollowRequests: protectedProcedure.query(async ({ ctx }) => {
     const { data: rows, error } = await ctx.supabase
       .from("user_follows")

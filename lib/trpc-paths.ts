@@ -37,6 +37,7 @@ export const TRPC = {
     getFollowers: 'profiles.getFollowers',
     getFollowing: 'profiles.getFollowing',
     isFollowing: 'profiles.isFollowing',
+    suggested: 'profiles.suggested',
   },
   challenges: {
     list: 'challenges.list',
@@ -133,6 +134,7 @@ export const TRPC = {
     getUserPosts: 'feed.getUserPosts',
     getRecentCompletions: 'feed.getRecentCompletions',
     getStreakAtRisk: 'feed.getStreakAtRisk',
+    getTrending: 'feed.getTrending',
   },
   achievements: {
     getForUser: 'achievements.getForUser',

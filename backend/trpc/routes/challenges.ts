@@ -79,6 +79,26 @@ export const challengesRouter = createTRPCRouter({
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);
 
+      // Map Discover chip categories to the underlying DB values. Mirrors
+      // `dbCategoriesForChip` in challenges-discover.ts so the public list
+      // procedure can be used by Discover infinite-scroll without a fan-out
+      // through `getDiscoverHabits` (which is capped to 4 results).
+      const rawCat = input.category?.trim().toLowerCase();
+      if (rawCat && rawCat !== "all") {
+        const dbCats =
+          rawCat === "body"
+            ? ["body", "fitness"]
+            : rawCat === "focus"
+              ? ["focus", "discipline"]
+              : rawCat === "mind"
+                ? ["mind"]
+                : rawCat === "faith"
+                  ? ["faith"]
+                  : [rawCat];
+        if (dbCats.length === 1) query = query.eq("category", dbCats[0]!);
+        else query = query.in("category", dbCats);
+      }
+
       const search = input.search?.trim();
       if (search) {
         const safeSearch = escapeLikeWildcards(search);

@@ -953,4 +953,94 @@ export const feedRouter = createTRPCRouter({
       proof_type: deriveProofTypeFromTasks(challenge.challenge_tasks ?? null),
     };
   }),
+
+  /**
+   * Discover — Trending this week.
+   *
+   * Returns the top N (default 6) public-feed posts from the past 7 days, ranked
+   * by raw reaction count. Reuses the live-feed activity types and runs the same
+   * visibility rules as `getLiveFeed` so private/friends-only content never
+   * leaks into Discover.
+   */
+  getTrending: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(20).default(6) }).optional())
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 6;
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const viewerId = ctx.userId;
+      const sinceIso = new Date(Date.now() - 7 * 86400000).toISOString();
+
+      const followingIds = new Set<string>();
+      const { data: follows } = await ctx.supabase
+        .from("user_follows")
+        .select("following_id, status")
+        .eq("follower_id", viewerId)
+        .limit(200);
+      for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) {
+        if (followRowAccepted(r)) followingIds.add(r.following_id);
+      }
+
+      const { data: rawEvents, error: evErr } = await server
+        .from("activity_events")
+        .select("id, user_id, event_type, challenge_id, metadata, created_at")
+        .in("event_type", [...LIVE_FEED_TYPES])
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (evErr) {
+        logger.error({ err: evErr }, "[feed.getTrending] activity_events query failed");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
+      }
+      const events = (rawEvents ?? []) as EvRow[];
+      if (events.length === 0) return { posts: [] };
+
+      const eventUserIds = [...new Set(events.map((e) => e.user_id))];
+      const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((id): id is string => !!id))];
+      const [visResult, chResult] = await Promise.all([
+        eventUserIds.length > 0
+          ? server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds).limit(500)
+          : Promise.resolve({ data: [] }),
+        challengeIds.length > 0
+          ? server.from("challenges").select("id, visibility").in("id", challengeIds).limit(500)
+          : Promise.resolve({ data: [] }),
+      ]);
+      const privateUserIds = new Set<string>();
+      for (const r of ((visResult.data ?? []) as { user_id: string; profile_visibility?: string | null }[])) {
+        const v = String(r.profile_visibility ?? "public").toLowerCase();
+        if (v === "private") privateUserIds.add(r.user_id);
+      }
+      const publicChallengeIds = new Set(
+        ((chResult.data ?? []) as { id: string; visibility?: string | null }[])
+          .filter((c) => normalizeChallengeVisibility(c.visibility) === "public")
+          .map((c) => c.id)
+      );
+
+      const eligible = events.filter((ev) => {
+        if (ev.user_id !== viewerId && privateUserIds.has(ev.user_id)) return false;
+        if (!ev.challenge_id) return false;
+        if (!publicChallengeIds.has(ev.challenge_id)) return false;
+        return true;
+      });
+      if (eligible.length === 0) return { posts: [] };
+
+      const eligibleIds = eligible.map((e) => e.id);
+      const reactionCount = new Map<string, number>();
+      const { data: reactions } = await ctx.supabase
+        .from("feed_reactions")
+        .select("event_id")
+        .in("event_id", eligibleIds);
+      for (const r of (reactions ?? []) as { event_id: string }[]) {
+        reactionCount.set(r.event_id, (reactionCount.get(r.event_id) ?? 0) + 1);
+      }
+
+      const ranked = [...eligible].sort((a, b) => {
+        const da = reactionCount.get(a.id) ?? 0;
+        const db = reactionCount.get(b.id) ?? 0;
+        if (db !== da) return db - da;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      const top = ranked.slice(0, limit);
+      const posts = await hydrateActivityEventsToPosts(top, viewerId, followingIds, ctx, server);
+      return { posts };
+    }),
 });

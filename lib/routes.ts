@@ -13,6 +13,8 @@ export const ROUTES = {
   TABS: "/(tabs)",
   TABS_HOME: "/(tabs)",
   TABS_DISCOVER: "/(tabs)/discover",
+  /** Full Discover category list (Body / Mind / Faith / Focus). */
+  DISCOVER_CATEGORY: (slug: string) => `/discover/category/${slug}` as const,
   TABS_CREATE: "/(tabs)/create",
   /** Full-screen challenge creation wizard (hides tab bar). */
   CREATE_WIZARD: "/create",

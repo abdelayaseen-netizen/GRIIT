@@ -1,15 +1,20 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
   Pressable,
-  ScrollView,
   StyleSheet,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Search } from "lucide-react-native";
 
 import { trpcQuery } from "@/lib/trpc";
@@ -30,8 +35,12 @@ import {
 } from "@/components/skeletons";
 import SectionHeader from "@/components/shared/SectionHeader";
 import { captureError } from "@/lib/sentry";
+import { trackEvent } from "@/lib/analytics";
 
-import { StreakRiskBanner, type StreakAtRiskData } from "@/components/discover/StreakRiskBanner";
+import {
+  StreakRiskBanner,
+  type StreakAtRiskData,
+} from "@/components/discover/StreakRiskBanner";
 import {
   CategoryChips,
   type DiscoverCategory,
@@ -44,13 +53,71 @@ import { DailyCard, type DailyCardData } from "@/components/challenges/DailyCard
 import {
   CompactChallengeRow,
   type CompactChallengeRowData,
+  type CompactChallengeProofType,
 } from "@/components/challenges/CompactChallengeRow";
 import {
-  TeamChallengeCard,
-  type TeamChallengeCardData,
-} from "@/components/challenges/TeamChallengeCard";
+  type ChallengeCategory,
+  type ChallengeDifficulty,
+} from "@/components/challenges/_card-helpers";
+import { SuggestedPeopleRow } from "@/components/discover/SuggestedPeopleRow";
+import { TrendingPostsSection } from "@/components/discover/TrendingPostsSection";
+import { CategoryRail } from "@/components/discover/CategoryRail";
+import { FindMoreFooter } from "@/components/discover/FindMoreFooter";
 
-type HabitItem = (CompactChallengeRowData & { is_team: false }) | (TeamChallengeCardData & { is_team: true });
+const HABIT_PAGE_SIZE = 10;
+
+type ChallengeRow = {
+  id: string;
+  title?: string | null;
+  duration_days?: number | null;
+  difficulty?: string | null;
+  category?: string | null;
+  challenge_tasks?:
+    | { task_type?: string | null; config?: Record<string, unknown> | null }[]
+    | null;
+};
+
+type ListPage = { items: ChallengeRow[]; nextCursor?: string };
+type ListResponse = ChallengeRow[] | ListPage;
+
+function asListPage(resp: ListResponse): ListPage {
+  if (Array.isArray(resp)) {
+    return { items: resp, nextCursor: undefined };
+  }
+  return { items: resp.items ?? [], nextCursor: resp.nextCursor };
+}
+
+function deriveProofType(
+  tasks: ChallengeRow["challenge_tasks"]
+): CompactChallengeProofType {
+  for (const t of tasks ?? []) {
+    const tt = String(t.task_type ?? "").toLowerCase();
+    const cfg = (t.config ?? {}) as Record<string, unknown>;
+    if (tt === "location" || cfg.require_location === true) return "location";
+    if (
+      tt === "photo" ||
+      cfg.require_photo_proof === true ||
+      cfg.photo_required === true
+    )
+      return "photo";
+  }
+  return "text";
+}
+
+function toDifficulty(d: string | null | undefined): ChallengeDifficulty {
+  const x = String(d ?? "medium").toLowerCase();
+  if (x === "easy") return "EASY";
+  if (x === "hard" || x === "extreme") return "HARD";
+  return "MED";
+}
+
+function toCategory(cat: string | null | undefined): ChallengeCategory {
+  const x = String(cat ?? "").toLowerCase();
+  if (x === "body" || x === "fitness") return "body";
+  if (x === "mind") return "mind";
+  if (x === "faith") return "faith";
+  return "focus";
+}
 
 function DiscoverHeader() {
   const router = useRouter();
@@ -129,21 +196,6 @@ function DailyGrid({ challenges }: { challenges: DailyCardData[] }) {
   );
 }
 
-function HabitList({ items }: { items: HabitItem[] }) {
-  if (items.length === 0) return null;
-  return (
-    <View style={styles.habitList}>
-      {items.map((item) =>
-        item.is_team ? (
-          <TeamChallengeCard key={item.id} data={item} />
-        ) : (
-          <CompactChallengeRow key={item.id} data={item} />
-        )
-      )}
-    </View>
-  );
-}
-
 function DiscoverScreenInner() {
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<DiscoverCategory>("all");
@@ -173,105 +225,109 @@ function DiscoverScreenInner() {
     staleTime: 60 * 1000,
   });
 
-  const habitsQuery = useQuery({
-    queryKey: ["discover", "habits", selectedCategory],
-    queryFn: () =>
-      trpcQuery(TRPC.challenges.getDiscoverHabits, {
+  const habitsInfinite = useInfiniteQuery<ListPage, Error>({
+    queryKey: ["discover", "habits-infinite", selectedCategory],
+    initialPageParam: undefined,
+    queryFn: async ({ pageParam }) => {
+      const cursor = typeof pageParam === "string" ? pageParam : undefined;
+      const resp = (await trpcQuery(TRPC.challenges.list, {
         category: selectedCategory,
-      }) as Promise<
-        ({
-          id: string;
-          slug: string | null;
-          name: string;
-          duration_days: number;
-          difficulty: "EASY" | "MED" | "HARD";
-          proof_type: "photo" | "text" | "location";
-          category: "body" | "mind" | "faith" | "focus";
-          is_team: boolean;
-          team_size: number | null;
-          filled_spots: number;
-          team_preview: { user_id: string; username: string | null; avatar_url: string | null }[];
-        })[]
-      >,
+        limit: HABIT_PAGE_SIZE,
+        cursor,
+      })) as ListResponse;
+      return asListPage(resp);
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 60 * 1000,
   });
 
-  const isFeaturedLoading = featuredQuery.isPending;
-  const isGridLoading = gridQuery.isPending;
-  const isHabitsLoading = habitsQuery.isPending;
-
-  if (featuredQuery.isError) captureError(featuredQuery.error, "DiscoverV3.getDiscoverFeatured");
+  if (featuredQuery.isError)
+    captureError(featuredQuery.error, "DiscoverV3.getDiscoverFeatured");
   if (streakAtRiskQuery.isError)
     captureError(streakAtRiskQuery.error, "DiscoverV3.getStreakAtRisk");
   if (gridQuery.isError) captureError(gridQuery.error, "DiscoverV3.getDiscoverGrid");
-  if (habitsQuery.isError) captureError(habitsQuery.error, "DiscoverV3.getDiscoverHabits");
+  if (habitsInfinite.isError)
+    captureError(habitsInfinite.error, "DiscoverV3.habitsInfinite");
+
+  const habitItems: CompactChallengeRowData[] = useMemo(() => {
+    const pages = habitsInfinite.data?.pages ?? [];
+    const out: CompactChallengeRowData[] = [];
+    const seen = new Set<string>();
+    for (const page of pages) {
+      for (const c of page.items) {
+        if (seen.has(c.id)) continue;
+        seen.add(c.id);
+        out.push({
+          id: c.id,
+          slug: null,
+          name: (c.title ?? "Challenge").trim() || "Challenge",
+          duration_days: Math.max(1, Number(c.duration_days ?? 7)),
+          difficulty: toDifficulty(c.difficulty),
+          proof_type: deriveProofType(c.challenge_tasks ?? null),
+          category: toCategory(c.category),
+        });
+      }
+    }
+    return out;
+  }, [habitsInfinite.data]);
+
+  const isFeaturedLoading = featuredQuery.isPending;
+  const isGridLoading = gridQuery.isPending;
+  const isHabitsLoading = habitsInfinite.isPending;
 
   const isRefreshing =
     featuredQuery.isRefetching ||
     gridQuery.isRefetching ||
-    habitsQuery.isRefetching ||
-    streakAtRiskQuery.isRefetching;
+    streakAtRiskQuery.isRefetching ||
+    habitsInfinite.isRefetching;
 
   const onRefresh = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["discover"] });
   }, [queryClient]);
 
-  const habitItems: HabitItem[] = (habitsQuery.data ?? []).map((row) =>
-    row.is_team
-      ? ({
-          id: row.id,
-          slug: row.slug,
-          name: row.name,
-          duration_days: row.duration_days,
-          difficulty: row.difficulty,
-          category: row.category,
-          team_size: row.team_size,
-          filled_spots: row.filled_spots,
-          team_preview: row.team_preview,
-          is_team: true,
-        } as const)
-      : ({
-          id: row.id,
-          slug: row.slug,
-          name: row.name,
-          duration_days: row.duration_days,
-          difficulty: row.difficulty,
-          proof_type: row.proof_type,
-          category: row.category,
-          is_team: false,
-        } as const)
+  const onEndReached = useCallback(() => {
+    if (!habitsInfinite.hasNextPage) return;
+    if (habitsInfinite.isFetchingNextPage) return;
+    trackEvent("discover_habits_page_loaded", {
+      page_count: habitsInfinite.data?.pages.length ?? 0,
+      category: selectedCategory,
+    });
+    void habitsInfinite.fetchNextPage();
+  }, [habitsInfinite, selectedCategory]);
+
+  const renderHabit = useCallback(
+    ({ item }: { item: CompactChallengeRowData }) => (
+      <View style={styles.habitItemWrap}>
+        <CompactChallengeRow data={item} />
+      </View>
+    ),
+    []
   );
 
-  return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={onRefresh}
-            tintColor={DS_COLORS.ACCENT}
-          />
-        }
-      >
+  const handleCategorySelect = useCallback((next: DiscoverCategory) => {
+    setSelectedCategory(next);
+    trackEvent("discover_category_chip_tapped", { category: next });
+  }, []);
+
+  const listHeader = useMemo(
+    () => (
+      <View>
         <DiscoverHeader />
-
         <StreakRiskBanner data={streakAtRiskQuery.data ?? null} />
-
         <CategoryChips
           selected={selectedCategory}
-          onSelect={setSelectedCategory}
+          onSelect={handleCategorySelect}
         />
-
         {isFeaturedLoading ? (
           <FeaturedSkeleton />
         ) : (
           <HeroFeaturedCard data={featuredQuery.data ?? null} />
         )}
-
         <View style={styles.sectionPad}>
-          <SectionHeader title="Quick wins · 24 hours" style={styles.sectionHeader} />
+          <SectionHeader
+            title="Quick wins · 24 hours"
+            style={styles.sectionHeader}
+          />
         </View>
         {isGridLoading ? (
           <View style={styles.gridWrap}>
@@ -283,17 +339,76 @@ function DiscoverScreenInner() {
             <DailyGrid challenges={gridQuery.data ?? []} />
           </View>
         )}
-
         <View style={styles.sectionPad}>
           <SectionHeader title="Build a habit" style={styles.sectionHeader} />
-          <Text style={styles.sectionSub}>Multi-day challenges · solo or with friends</Text>
+          <Text style={styles.sectionSub}>
+            Multi-day challenges · solo or with friends
+          </Text>
         </View>
-        {isHabitsLoading ? (
-          <HabitListSkeleton />
-        ) : (
-          <HabitList items={habitItems} />
-        )}
-      </ScrollView>
+      </View>
+    ),
+    [
+      streakAtRiskQuery.data,
+      selectedCategory,
+      handleCategorySelect,
+      isFeaturedLoading,
+      featuredQuery.data,
+      isGridLoading,
+      gridQuery.data,
+    ]
+  );
+
+  const listEmpty = useMemo(() => {
+    if (isHabitsLoading) return <HabitListSkeleton />;
+    return (
+      <View style={styles.emptyHabits}>
+        <Text style={styles.emptyText}>No challenges in this category yet.</Text>
+      </View>
+    );
+  }, [isHabitsLoading]);
+
+  const listFooter = useMemo(
+    () => (
+      <View>
+        {habitsInfinite.isFetchingNextPage ? (
+          <View style={styles.loadMoreRow}>
+            <ActivityIndicator size="small" color={DS_COLORS.ACCENT} />
+          </View>
+        ) : null}
+        <SuggestedPeopleRow />
+        <TrendingPostsSection />
+        <CategoryRail slug="body" />
+        <CategoryRail slug="mind" />
+        <CategoryRail slug="faith" />
+        <CategoryRail slug="focus" />
+        <FindMoreFooter />
+      </View>
+    ),
+    [habitsInfinite.isFetchingNextPage]
+  );
+
+  return (
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
+      <FlashList
+        data={habitItems}
+        renderItem={renderHabit}
+        keyExtractor={(item) => item.id}
+        estimatedItemSize={84}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={listFooter}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={DS_COLORS.ACCENT}
+          />
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -311,7 +426,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DS_COLORS.BG_PAGE,
   },
-  scrollContent: {
+  listContent: {
     paddingBottom: DS_MEASURES.TAB_BAR_HEIGHT + DS_SPACING.xxl,
   },
   header: {
@@ -362,6 +477,10 @@ const styles = StyleSheet.create({
   gridCell: {
     flex: 1,
   },
+  habitItemWrap: {
+    paddingHorizontal: DS_SPACING.lg,
+    marginBottom: DS_SPACING.sm,
+  },
   habitList: {
     paddingHorizontal: DS_SPACING.lg,
     gap: DS_SPACING.sm,
@@ -369,5 +488,18 @@ const styles = StyleSheet.create({
   skeletonHeroOuter: {
     paddingHorizontal: DS_SPACING.lg,
     marginTop: DS_SPACING.md,
+  },
+  emptyHabits: {
+    paddingHorizontal: DS_SPACING.lg,
+    paddingVertical: DS_SPACING.lg,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_SECONDARY,
+  },
+  loadMoreRow: {
+    paddingVertical: DS_SPACING.md,
+    alignItems: "center",
   },
 });

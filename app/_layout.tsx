@@ -259,6 +259,7 @@ function AuthRedirector() {
       "follow-list",
       "invite",
       "post",
+      "discover",
     ]);
     const inAllowedSegment = AUTHENTICATED_SEGMENTS.has(first);
 
@@ -392,6 +393,7 @@ function RootLayoutNav() {
       <Stack.Screen name="profile/[username]" options={{ headerShown: false }} />
       <Stack.Screen name="follow-list" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="post/[id]" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="discover/category/[slug]" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen 
         name="task/run" 
         options={{ 
