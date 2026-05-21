@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
@@ -27,6 +28,7 @@ import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
 import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
 import { Avatar } from "@/components/Avatar";
+import { Users } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
 
@@ -34,20 +36,61 @@ type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
 const RESPECT_DEBOUNCE_MS = 300;
 
+type LiveFeedScope = "following" | "everyone";
+
 type LiveFeedSectionProps = {
-  onScrollToFeed?: () => void;
+  ListHeaderComponent?: React.ReactElement | null;
+  /** Optional parent-driven refresh (e.g. home tab refetches stats + feed together). Falls back to internal feed refetch. */
+  onRefresh?: () => Promise<void> | void;
+  /** Composed with the internal feedQuery.isRefetching. */
+  refreshing?: boolean;
 };
 
-function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
+function FriendsEmptyState({
+  scope,
+  onPressDiscover,
+}: {
+  scope: LiveFeedScope;
+  onPressDiscover: () => void;
+}) {
+  useEffect(() => {
+    trackEvent("home_feed_empty_state_viewed", { scope });
+  }, [scope]);
+
+  return (
+    <View style={styles.emptyFriends}>
+      <Users size={40} color={DS_COLORS.TEXT_MUTED} strokeWidth={1.75} />
+      <Text style={styles.emptyFriendsTitle}>Your feed is quiet</Text>
+      <Text style={styles.emptyFriendsBody}>
+        Follow people in Discover to see their check-ins here, or switch to Everyone to see the
+        whole community.
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Go to Discover"
+        onPress={() => {
+          trackEvent("home_feed_empty_state_cta_tapped", { scope });
+          onPressDiscover();
+        }}
+        style={styles.emptyFriendsCta}
+      >
+        <Text style={styles.emptyFriendsCtaText}>Go to Discover</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function LiveFeedSection({ ListHeaderComponent, onRefresh, refreshing }: LiveFeedSectionProps) {
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [scope, setScope] = useState<"following" | "everyone">("everyone");
+  const [scope, setScope] = useState<LiveFeedScope>("everyone");
   const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
   const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
+  const listRef = useRef<FlashList<LiveFeedPost> | null>(null);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -358,20 +401,65 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
     [navigateProfile, onRespect, onShare, openPost, openPostMenu, previewByPostId, submitComment]
   );
 
+  const goToDiscover = useCallback(() => {
+    router.push(ROUTES.TABS_DISCOVER as never);
+  }, [router]);
+
   const listEmpty = useMemo(() => {
-    if (feedQuery.isPending) return null;
-    return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyTitle}>No activity yet</Text>
-        <Text style={styles.emptySub}>Be the first to check in today</Text>
-      </View>
-    );
-  }, [feedQuery.isPending]);
+    if (feedQuery.isPending) {
+      return (
+        <View style={styles.feedSkeletonStack}>
+          <SkeletonFeedCard />
+          <SkeletonFeedCard />
+          <SkeletonFeedCard />
+        </View>
+      );
+    }
+    if (feedQuery.isError) {
+      return (
+        <View style={styles.empty}>
+          <Text style={styles.emptyTitle}>Couldn&apos;t load feed</Text>
+          <Pressable
+            onPress={() => void feedQuery.refetch()}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading feed"
+          >
+            <Text style={styles.retry}>Tap to retry</Text>
+          </Pressable>
+        </View>
+      );
+    }
+    if (scope === "everyone") {
+      return (
+        <View style={styles.empty}>
+          <Text style={styles.emptySub}>No posts yet — be the first to check in today.</Text>
+        </View>
+      );
+    }
+    return <FriendsEmptyState scope={scope} onPressDiscover={goToDiscover} />;
+  }, [feedQuery, scope, goToDiscover]);
+
+  const handleRefresh = useCallback(() => {
+    if (onRefresh) {
+      const result = onRefresh();
+      if (result && typeof (result as Promise<void>).then === "function") {
+        void (result as Promise<void>);
+      }
+      return;
+    }
+    void feedQuery.refetch();
+  }, [onRefresh, feedQuery]);
+
+  const scrollToFeed = useCallback(() => {
+    if (finalFeed.length === 0) return;
+    listRef.current?.scrollToIndex({ index: 0, animated: true, viewPosition: 0 });
+  }, [finalFeed.length]);
 
   if (!user?.id) return null;
 
-  return (
-    <View style={styles.wrap}>
+  const composedHeader = (
+    <>
+      {ListHeaderComponent ?? null}
       <View style={styles.feedHeader}>
         <View style={styles.feedHeaderLeft}>
           <View style={styles.feedTitleRow}>
@@ -407,7 +495,7 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
       {finalFeed.length > 0 ? (
         <Pressable
           style={styles.digestCard}
-          onPress={() => onScrollToFeed?.()}
+          onPress={scrollToFeed}
           accessibilityRole="button"
           accessibilityLabel="While you were away summary"
         >
@@ -425,36 +513,35 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
           </Text>
         </Pressable>
       ) : null}
+    </>
+  );
 
-      {feedQuery.isPending ? (
-        <View style={styles.feedSkeletonStack}>
-          <SkeletonFeedCard />
-          <SkeletonFeedCard />
-          <SkeletonFeedCard />
-        </View>
-      ) : feedQuery.isError ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>Couldn&apos;t load feed</Text>
-          <Pressable onPress={() => void feedQuery.refetch()} accessibilityRole="button" accessibilityLabel="Retry loading feed">
-            <Text style={styles.retry}>Tap to retry</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <FlashList
-          data={finalFeed}
-          estimatedItemSize={380}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={FeedSeparator}
-          ListEmptyComponent={listEmpty}
-          ListFooterComponent={
-            <DiscoverCTA variant="feed" onPress={() => router.push(ROUTES.TABS_DISCOVER as never)} />
-          }
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+  return (
+    <View style={styles.wrap}>
+      <FlashList
+        ref={listRef}
+        data={finalFeed}
+        estimatedItemSize={380}
+        keyExtractor={(item) => item.id}
+        scrollEnabled
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={FeedSeparator}
+        ListHeaderComponent={composedHeader}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={
+          <DiscoverCTA variant="feed" onPress={goToDiscover} />
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={(refreshing ?? false) || feedQuery.isRefetching}
+            onRefresh={handleRefresh}
+            tintColor={DS_COLORS.ACCENT}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
 
       {feedSnack ? (
         <Text style={styles.feedSnack} accessibilityRole="alert" accessibilityLiveRegion="polite">
@@ -543,9 +630,8 @@ function LiveFeedSection({ onScrollToFeed }: LiveFeedSectionProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: DS_SPACING.md,
-    marginHorizontal: DS_SPACING.sm,
-    marginBottom: DS_SPACING.sm,
+    flex: 1,
+    backgroundColor: DS_COLORS.BG_PAGE,
   },
   feedHeader: {
     flexDirection: "row",
@@ -588,13 +674,44 @@ const styles = StyleSheet.create({
   },
   toggleText: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED, fontWeight: "500" },
   toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
-  listContent: { paddingHorizontal: 10, paddingBottom: 8 },
-  feedSkeletonStack: { gap: 10 },
+  listContent: { paddingHorizontal: DS_SPACING.sm, paddingBottom: 32 },
+  feedSkeletonStack: { gap: 10, paddingHorizontal: 4, paddingTop: 4 },
   listItemSeparator: { height: 8 },
-  empty: { paddingVertical: 32, alignItems: "center" },
+  empty: { paddingVertical: 32, paddingHorizontal: DS_SPACING.lg, alignItems: "center" },
   emptyTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
-  emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY },
+  emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
   retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginTop: 8 },
+  emptyFriends: {
+    alignItems: "center",
+    paddingVertical: 32,
+    paddingHorizontal: DS_SPACING.lg,
+    gap: 10,
+  },
+  emptyFriendsTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS.TEXT_PRIMARY,
+    marginTop: 4,
+  },
+  emptyFriendsBody: {
+    fontSize: 13,
+    color: DS_COLORS.TEXT_SECONDARY,
+    textAlign: "center",
+    maxWidth: 280,
+    lineHeight: 18,
+  },
+  emptyFriendsCta: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: DS_RADIUS.XL,
+    backgroundColor: DS_COLORS.ACCENT,
+  },
+  emptyFriendsCtaText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: DS_COLORS.TEXT_ON_ACCENT,
+  },
   feedSnack: {
     textAlign: "center",
     fontSize: 13,

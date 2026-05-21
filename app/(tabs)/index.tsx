@@ -1,23 +1,21 @@
-import React, { useMemo, useCallback, useRef } from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  RefreshControl,
   TouchableOpacity,
   LayoutAnimation,
   Platform,
   UIManager,
   Modal,
-  Pressable,
+  type LayoutChangeEvent,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { InlineError } from "@/components/InlineError";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { Bell, ChevronRight, Target } from "lucide-react-native";
+import { ChevronRight, Target } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,19 +27,12 @@ import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import type { TodayCheckinForUser, StatsFromApi } from "@/types";
 import DailyQuote from "@/components/home/DailyQuote";
-import { ActiveTaskCard } from "@/components/home/ActiveTaskCard";
-import StreakHeroV3 from "@/components/home/StreakHeroV3";
-import DailyBonus from "@/components/home/DailyBonusV2";
 import GoalCard from "@/components/home/GoalCard";
 import PointsExplainer from "@/components/home/PointsExplainer";
-import WeekStrip from "@/components/home/WeekStrip";
-import NextUnlock from "@/components/home/NextUnlock";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SkeletonHomeChallengeCard } from "@/components/skeletons";
-import ErrorState from "@/components/shared/ErrorState";
-import SectionHeader from "@/components/shared/SectionHeader";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_SPACING_V2, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { HomeHeader, type HomeHeaderChallengeGoalGroup } from "@/components/home/HomeHeader";
+import LiveFeedSection from "@/components/LiveFeedSection";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { prefetchActiveChallengeById } from "@/lib/prefetch-queries";
@@ -142,8 +133,6 @@ export default function HomeScreen() {
   // fine for now since freezeUsedToday is hardcoded false anyway.
   const [hasAcknowledgedFreezeUsed, setHasAcknowledgedFreezeUsed] =
     React.useState(false);
-  const scrollRef = useRef<FlashList<{ key: string }> | null>(null);
-  const goalsSectionYRef = useRef(0);
 
   const freezeStatusQuery = useQuery({
     queryKey: ["streaks", "getFreezeStatus", user?.id ?? ""],
@@ -189,16 +178,7 @@ export default function HomeScreen() {
     },
   });
 
-  type ChallengeGoalGroup = {
-    activeChallengeId: string;
-    challengeId: string;
-    challengeName: string;
-    currentDay: number;
-    durationDays: number;
-    goals: { id: string; title: string; completed: boolean; taskType: string; taskConfig: string }[];
-  };
-
-  const challengeGroups: ChallengeGoalGroup[] = useMemo(() => {
+  const challengeGroups: HomeHeaderChallengeGoalGroup[] = useMemo(() => {
     const activeList = homeQuery.data?.activeList ?? [];
     const checkins = homeQuery.data?.todayCheckins ?? [];
 
@@ -230,14 +210,7 @@ export default function HomeScreen() {
     });
   }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
 
-  const scrollToGoalsSection = useCallback(() => {
-    scrollRef.current?.scrollToOffset({
-      offset: Math.max(0, goalsSectionYRef.current - 12),
-      animated: true,
-    });
-  }, []);
-
-  const isCompleteForToday = useCallback((group: ChallengeGoalGroup) => {
+  const isCompleteForToday = useCallback((group: HomeHeaderChallengeGoalGroup) => {
     if (group.goals.length === 0) return false;
     return group.goals.every((goal) => goal.completed);
   }, []);
@@ -261,7 +234,7 @@ export default function HomeScreen() {
 
   const streak = stats?.activeStreak ?? 0;
 
-  const homeState = useMemo(() => {
+  const heroMetrics = useMemo(() => {
     const totalTasksToday = challengeGroups.reduce(
       (sum, g) => sum + g.goals.length,
       0,
@@ -274,11 +247,21 @@ export default function HomeScreen() {
     const now = new Date();
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0);
-    const minutesToMidnight = Math.floor(
+    const minutesRemaining = Math.floor(
       (midnight.getTime() - now.getTime()) / 60000,
     );
-    return computeHomeState({ streak, tasksRemaining, minutesToMidnight });
-  }, [streak, challengeGroups]);
+    return { totalTasksToday, tasksDoneToday, tasksRemaining, minutesRemaining };
+  }, [challengeGroups]);
+
+  const homeState = useMemo(
+    () =>
+      computeHomeState({
+        streak,
+        tasksRemaining: heroMetrics.tasksRemaining,
+        minutesToMidnight: heroMetrics.minutesRemaining,
+      }),
+    [streak, heroMetrics.tasksRemaining, heroMetrics.minutesRemaining],
+  );
 
   const lastHomeStateFiredRef = React.useRef<string | null>(null);
   React.useEffect(() => {
@@ -300,6 +283,7 @@ export default function HomeScreen() {
   const statsAllZero = streak === 0 && points === 0 && completedChallengesCount === 0;
 
   const freezeStatus = freezeStatusQuery.data;
+  const freezeCount = (stats as StatsFromApi | null)?.lastStandsAvailable ?? 0;
 
   const showCelebration = useCelebrationStore((s) => s.show);
 
@@ -393,14 +377,14 @@ export default function HomeScreen() {
   );
 
   const keyExtractorHomeKey = useCallback((item: { key: string }) => item.key, []);
-  const keyExtractorIncompleteGroup = useCallback((group: ChallengeGoalGroup) => group.activeChallengeId, []);
+  const keyExtractorIncompleteGroup = useCallback((group: HomeHeaderChallengeGoalGroup) => group.activeChallengeId, []);
   const keyExtractorCompletedGroup = useCallback(
-    (group: ChallengeGoalGroup) => `${group.activeChallengeId}-completed`,
+    (group: HomeHeaderChallengeGoalGroup) => `${group.activeChallengeId}-completed`,
     []
   );
 
   const renderIncompleteGoalGroup = useCallback(
-    ({ item: group, index }: { item: ChallengeGoalGroup; index: number }) => {
+    ({ item: group, index }: { item: HomeHeaderChallengeGoalGroup; index: number }) => {
       if (index > 0) {
         return (
           <TouchableOpacity
@@ -503,7 +487,7 @@ export default function HomeScreen() {
   );
 
   const renderCompletedGoalGroup = useCallback(
-    ({ item: group }: { item: ChallengeGoalGroup }) => (
+    ({ item: group }: { item: HomeHeaderChallengeGoalGroup }) => (
       <GoalCard
         defaultExpanded={false}
         challengeName={group.challengeName}
@@ -539,212 +523,47 @@ export default function HomeScreen() {
     [router]
   );
 
-  const homeRootContent = useMemo(
-    () => (
-      <View>
-        {leaveChallengeError ? (
-          <InlineError message={leaveChallengeError} onDismiss={() => setLeaveChallengeError(null)} />
-        ) : null}
-        <View style={s.headerRow}>
-          <View style={s.headerTextCol}>
-            <Text style={s.greeting}>
-              {`${getGreeting()}, ${profilePrimaryName(
-                profile ?? {},
-                user?.email?.includes("@") ? user.email.split("@")[0] : undefined,
-              ).split(" ")[0]}`}
-            </Text>
-            <Text style={s.todayTitle}>Today</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open notifications"
-            onPress={() => router.navigate("/(tabs)/activity" as never)}
-            style={s.bellButton}
-          >
-            <Bell size={16} color={DS_COLORS.TEXT_PRIMARY} strokeWidth={1.75} />
-            <View style={s.bellDot} />
-          </Pressable>
-        </View>
+  const onPressBell = useCallback(() => {
+    router.navigate("/(tabs)/activity" as never);
+  }, [router]);
 
-        {(() => {
-          // StreakHeroV3 wiring (PR #19 bold home — light flame-inline variant).
-          // Inline computations rather than helpers per migration plan; if
-          // multiple screens need them, factor out in a follow-up.
-          const totalTasksToday = challengeGroups.reduce(
-            (sum, g) => sum + g.goals.length,
-            0,
-          );
-          const tasksDoneToday = challengeGroups.reduce(
-            (sum, g) => sum + g.goals.filter((gl) => gl.completed).length,
-            0,
-          );
-          const tasksRemaining = Math.max(0, totalTasksToday - tasksDoneToday);
-          const freezesAvailable = freezeStatus?.remaining ?? 0;
-          const now = new Date();
-          const midnight = new Date(now);
-          midnight.setHours(24, 0, 0, 0);
-          const minutesRemaining = Math.floor(
-            (midnight.getTime() - now.getTime()) / 60000,
-          );
-          return (
-            <View style={s.heroWrap}>
-              <StreakHeroV3
-                streak={streak}
-                // TODO: wire lastStreak from store when previous-streak field
-                // lands. Without this, the lost / comeback state never triggers
-                // for users whose streak just broke.
-                lastStreak={0}
-                minutesRemaining={minutesRemaining}
-                tasksRemaining={tasksRemaining}
-                totalTasksToday={totalTasksToday}
-                freezesAvailable={freezesAvailable}
-                // TODO: wire freezeUsedToday from store when the
-                // freeze-applied-today flag lands (profiles.last_freeze_used_at
-                // exists in DB per lib/notifications.ts:13 — needs surfacing).
-                // The `&& !hasAcknowledgedFreezeUsed` clause already exists so
-                // dismissal works the moment the real flag arrives; until then
-                // it's a no-op AND with `false`.
-                freezeUsedToday={false && !hasAcknowledgedFreezeUsed}
-                onStartFirstTask={scrollToGoalsSection}
-                onSaveStreak={scrollToGoalsSection}
-                onUseFreeze={() => setShowFreezeModal(true)}
-                onAcknowledgeFreezeUsed={() => setHasAcknowledgedFreezeUsed(true)}
-                onSkip={() => {}}
-                onStartComeback={scrollToGoalsSection}
-              />
-            </View>
-          );
-        })()}
+  const onDiscover = useCallback(() => {
+    router.push(ROUTES.TABS_DISCOVER as never);
+  }, [router]);
 
-        {!FLAGS.PR3_ZERO_STATE_GATES || streak >= 1 ? (
-          <WeekStrip
-            securedDateKeys={securedKeys}
-            currentStreak={streak}
-            freezeCount={(stats as StatsFromApi | null)?.lastStandsAvailable ?? 0}
-          />
-        ) : null}
+  const onClearLeaveChallengeError = useCallback(() => {
+    setLeaveChallengeError(null);
+  }, []);
 
-        {statsAllZero ? (
-          <View style={s.welcomeCard}>
-            <Text style={s.welcomeTitle}>Welcome to GRIIT</Text>
-            <Text style={s.welcomeBody}>Your stats will appear here as you build your streak.</Text>
-            <TouchableOpacity accessibilityRole="button"
-              style={s.welcomeCta}
-              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
-              accessibilityLabel="Start your first challenge"
-            >
-              <Text style={s.welcomeCtaText}>Start your first challenge</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+  const onToggleCompletedExpanded = useCallback(() => {
+    setCompletedExpanded((v) => !v);
+  }, []);
 
-        {!FLAGS.PR3_ZERO_STATE_GATES || streak >= 1 ? <DailyBonus /> : null}
+  const onRetryHome = useCallback(() => {
+    void homeQuery.refetch();
+  }, [homeQuery]);
 
-        <ActiveTaskCard />
+  const onUseFreeze = useCallback(() => {
+    setShowFreezeModal(true);
+  }, []);
 
-        {homeQuery.isPending && !homeQuery.data ? (
-          <View style={s.goalsSection}>
-            <SkeletonHomeChallengeCard />
-            <SkeletonHomeChallengeCard />
-          </View>
-        ) : homeQuery.isError ? (
-          <ErrorState message="Couldn't load your dashboard" onRetry={() => void homeQuery.refetch()} />
-        ) : challengeGroups.length === 0 ? (
-          <EmptyState
-            icon={Target}
-            title="No active challenges"
-            subtitle="Find a challenge that pushes your limits"
-            action={{
-              label: "Browse challenges",
-              onPress: () => router.push(ROUTES.TABS_DISCOVER as never),
-            }}
-          />
-        ) : (
-          <View
-            style={s.goalsSection}
-            onLayout={(e) => {
-              goalsSectionYRef.current = e.nativeEvent.layout.y;
-            }}
-          >
-            {incompleteChallenges.length === 0 ? (
-              <View style={s.allDoneBanner}>
-                <Text style={s.allDoneTitle}>🔥 All tasks secured for today</Text>
-                <Text style={s.allDoneSubtitle}>Come back tomorrow to continue</Text>
-              </View>
-            ) : null}
-            <SectionHeader
-              title="Today's goals"
-              actionLabel={`${incompleteChallenges.reduce((sum, g) => sum + g.goals.filter((gl) => !gl.completed).length, 0)} remaining`}
-              onPressAction={() => {}}
-            />
-            <FlashList
-              data={incompleteChallenges}
-              keyExtractor={keyExtractorIncompleteGroup}
-              scrollEnabled={false}
-              nestedScrollEnabled
-              renderItem={renderIncompleteGoalGroup}
-              estimatedItemSize={320}
-            />
-            {completedTodayChallenges.length > 0 ? (
-              <>
-                <TouchableOpacity accessibilityRole="button"
-                  style={s.completedHeader}
-                  onPress={() => setCompletedExpanded((v) => !v)}
-                  accessibilityLabel="Show or hide completed today tasks"
-                  accessibilityState={{ expanded: completedExpanded }}
-                >
-                  <Text style={s.completedHeaderText}>Completed today ✓</Text>
-                  <Text style={s.completedHeaderCount}>
-                    {completedExpanded ? "Hide" : "Show"} ({completedTodayChallenges.length})
-                  </Text>
-                </TouchableOpacity>
-                {completedExpanded ? (
-                  <FlashList
-                    data={completedTodayChallenges}
-                    keyExtractor={keyExtractorCompletedGroup}
-                    scrollEnabled={false}
-                    nestedScrollEnabled
-                    renderItem={renderCompletedGoalGroup}
-                    estimatedItemSize={320}
-                  />
-                ) : null}
-              </>
-            ) : null}
-          </View>
-        )}
+  const onAcknowledgeFreezeUsed = useCallback(() => {
+    setHasAcknowledgedFreezeUsed(true);
+  }, []);
 
-        <NextUnlock currentStreak={streak} />
+  const noopGoalsScroll = useCallback(() => {}, []);
 
-        <View style={s.sectionDivider} />
+  const onGoalsSectionLayout = useCallback((_e: LayoutChangeEvent) => {
+    /* layout-Y tracking removed with the outer FlashList; goals sit immediately
+     * below the StreakHero, so the auto-scroll-to-goals UX is no longer needed. */
+  }, []);
 
-        <DailyQuote />
-      </View>
-    ),
-    [
-      leaveChallengeError,
-      streak,
-      profile,
-      user?.email,
-      securedKeys,
-      statsAllZero,
-      router,
-      stats,
-      homeQuery,
-      challengeGroups,
-      incompleteChallenges,
-      completedTodayChallenges,
-      completedExpanded,
-      scrollToGoalsSection,
-      renderIncompleteGoalGroup,
-      renderCompletedGoalGroup,
-      keyExtractorIncompleteGroup,
-      keyExtractorCompletedGroup,
-      freezeStatus?.remaining,
-      hasAcknowledgedFreezeUsed,
-    ]
-  );
-
-  const renderHomeRootItem = useCallback(() => homeRootContent, [homeRootContent]);
+  const firstName = useMemo(() => {
+    return profilePrimaryName(
+      profile ?? {},
+      user?.email?.includes("@") ? user.email.split("@")[0] : undefined,
+    ).split(" ")[0] ?? "";
+  }, [profile, user?.email]);
 
   if (isGuest) {
     return (
@@ -763,217 +582,204 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-    <SafeAreaView style={s.container}>
-      <FlashList
-        ref={scrollRef}
-        data={[{ key: "home-root" }]}
-        keyExtractor={keyExtractorHomeKey}
-        renderItem={renderHomeRootItem}
-        estimatedItemSize={2200} // TODO(perf): tune with sampled item heights from production sessions
-        refreshControl={
-          <RefreshControl
-            refreshing={homeQuery.isRefetching}
-            onRefresh={refresh}
-            tintColor={DS_COLORS.ACCENT}
-          />
-        }
-        contentContainerStyle={{ paddingBottom: 32 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      />
-      <PointsExplainer
-        visible={showPointsExplainer}
-        onClose={() => setShowPointsExplainer(false)}
-        currentPoints={points}
-        currentRank={rank}
-      />
-      <ConfirmDialog
-        visible={leaveConfirmChallengeId !== null}
-        title="Leave challenge?"
-        message="You'll lose your progress. This can't be undone."
-        confirmLabel="Leave"
-        destructive
-        onCancel={() => setLeaveConfirmChallengeId(null)}
-        onConfirm={() => void confirmLeaveChallenge()}
-      />
-      <StreakFreezeModal
-        visible={showFreezeModal}
-        streakCount={streak}
-        freezesRemaining={profile?.streak_freezes_remaining ?? 1}
-        onUseFreeze={() => {
-          setShowFreezeModal(false);
-        }}
-        onLetReset={() => setShowFreezeModal(false)}
-      />
-      <Modal
-        visible={showFreezeInfoModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowFreezeInfoModal(false)}
-      >
-        <View style={s.rankModalRoot}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            style={s.rankModalBackdrop}
-            activeOpacity={1}
-            onPress={() => setShowFreezeInfoModal(false)}
-            accessibilityLabel="Close"
-          />
-          <View style={s.rankModalSheet}>
-            <Text style={s.rankModalTitle}>Streak freezes</Text>
-            <Text style={{ fontSize: 15, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 22, marginBottom: 16 }}>
-              If you miss one day, a streak freeze can keep your streak alive. Free accounts get 1 freeze per month;
-              GRIIT Pro includes 4. Freezes reset about every 30 days.
-            </Text>
+      <SafeAreaView style={s.container}>
+        <LiveFeedSection
+          refreshing={homeQuery.isRefetching}
+          onRefresh={refresh}
+          ListHeaderComponent={
+            <HomeHeader
+              leaveChallengeError={leaveChallengeError}
+              onClearLeaveChallengeError={onClearLeaveChallengeError}
+              greeting={getGreeting()}
+              firstName={firstName}
+              onPressBell={onPressBell}
+              streak={streak}
+              minutesRemaining={heroMetrics.minutesRemaining}
+              tasksRemaining={heroMetrics.tasksRemaining}
+              totalTasksToday={heroMetrics.totalTasksToday}
+              freezesAvailable={freezeStatus?.remaining ?? 0}
+              hasAcknowledgedFreezeUsed={hasAcknowledgedFreezeUsed}
+              onStartFirstTask={noopGoalsScroll}
+              onSaveStreak={noopGoalsScroll}
+              onUseFreeze={onUseFreeze}
+              onAcknowledgeFreezeUsed={onAcknowledgeFreezeUsed}
+              onSkip={noopGoalsScroll}
+              onStartComeback={noopGoalsScroll}
+              securedDateKeys={securedKeys}
+              freezeCount={freezeCount}
+              statsAllZero={statsAllZero}
+              onDiscover={onDiscover}
+              homeIsPending={homeQuery.isPending}
+              homeHasData={!!homeQuery.data}
+              homeIsError={homeQuery.isError}
+              onRetryHome={onRetryHome}
+              challengeGroupsCount={challengeGroups.length}
+              incompleteChallenges={incompleteChallenges}
+              completedTodayChallenges={completedTodayChallenges}
+              completedExpanded={completedExpanded}
+              onToggleCompletedExpanded={onToggleCompletedExpanded}
+              renderIncompleteGoalGroup={renderIncompleteGoalGroup}
+              renderCompletedGoalGroup={renderCompletedGoalGroup}
+              keyExtractorIncompleteGroup={keyExtractorIncompleteGroup}
+              keyExtractorCompletedGroup={keyExtractorCompletedGroup}
+              onGoalsSectionLayout={onGoalsSectionLayout}
+            />
+          }
+        />
+        <PointsExplainer
+          visible={showPointsExplainer}
+          onClose={() => setShowPointsExplainer(false)}
+          currentPoints={points}
+          currentRank={rank}
+        />
+        <ConfirmDialog
+          visible={leaveConfirmChallengeId !== null}
+          title="Leave challenge?"
+          message="You'll lose your progress. This can't be undone."
+          confirmLabel="Leave"
+          destructive
+          onCancel={() => setLeaveConfirmChallengeId(null)}
+          onConfirm={() => void confirmLeaveChallenge()}
+        />
+        <StreakFreezeModal
+          visible={showFreezeModal}
+          streakCount={streak}
+          freezesRemaining={profile?.streak_freezes_remaining ?? 1}
+          onUseFreeze={() => {
+            setShowFreezeModal(false);
+          }}
+          onLetReset={() => setShowFreezeModal(false)}
+        />
+        <Modal
+          visible={showFreezeInfoModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowFreezeInfoModal(false)}
+        >
+          <View style={s.rankModalRoot}>
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Dismiss streak freeze info"
-              style={s.rankRow}
+              style={s.rankModalBackdrop}
+              activeOpacity={1}
               onPress={() => setShowFreezeInfoModal(false)}
-            >
-              <Text style={[s.rankRowName, { color: DS_COLORS.ACCENT }]}>Got it</Text>
-            </TouchableOpacity>
+              accessibilityLabel="Close"
+            />
+            <View style={s.rankModalSheet}>
+              <Text style={s.rankModalTitle}>Streak freezes</Text>
+              <Text style={{ fontSize: 15, color: DS_COLORS.TEXT_SECONDARY, lineHeight: 22, marginBottom: 16 }}>
+                If you miss one day, a streak freeze can keep your streak alive. Free accounts get 1 freeze per month;
+                GRIIT Pro includes 4. Freezes reset about every 30 days.
+              </Text>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss streak freeze info"
+                style={s.rankRow}
+                onPress={() => setShowFreezeInfoModal(false)}
+              >
+                <Text style={[s.rankRowName, { color: DS_COLORS.ACCENT }]}>Got it</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-      <Modal
-        visible={longPressMenuChallenge !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLongPressMenuChallenge(null)}
-      >
-        <View style={s.rankModalRoot}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            style={s.rankModalBackdrop}
-            activeOpacity={1}
-            onPress={() => setLongPressMenuChallenge(null)}
-            accessibilityLabel="Close"
-          />
-          <View style={s.rankModalSheet}>
-            <Text style={s.rankModalTitle}>{longPressMenuChallenge?.title ?? "Challenge"}</Text>
+        </Modal>
+        <Modal
+          visible={longPressMenuChallenge !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setLongPressMenuChallenge(null)}
+        >
+          <View style={s.rankModalRoot}>
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Report this challenge"
-              style={s.rankRow}
-              onPress={() => {
-                const ch = longPressMenuChallenge;
-                setLongPressMenuChallenge(null);
-                if (!ch) return;
-                setReportingChallengeId(ch.id);
-                setReportingChallengeTitle(ch.title);
-              }}
-            >
-              <Text style={[s.rankRowName, { color: DS_COLORS.TEXT_PRIMARY }]}>Report this challenge</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="Leave challenge"
-              style={s.rankRow}
-              onPress={() => {
-                const ch = longPressMenuChallenge;
-                setLongPressMenuChallenge(null);
-                if (!ch) return;
-                setLeaveChallengeError(null);
-                setLeaveConfirmChallengeId(ch.id);
-              }}
-            >
-              <Text style={[s.rankRowName, { color: DS_COLORS.DISCOVER_CORAL }]}>Leave challenge</Text>
-            </TouchableOpacity>
+              style={s.rankModalBackdrop}
+              activeOpacity={1}
+              onPress={() => setLongPressMenuChallenge(null)}
+              accessibilityLabel="Close"
+            />
+            <View style={s.rankModalSheet}>
+              <Text style={s.rankModalTitle}>{longPressMenuChallenge?.title ?? "Challenge"}</Text>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Report this challenge"
+                style={s.rankRow}
+                onPress={() => {
+                  const ch = longPressMenuChallenge;
+                  setLongPressMenuChallenge(null);
+                  if (!ch) return;
+                  setReportingChallengeId(ch.id);
+                  setReportingChallengeTitle(ch.title);
+                }}
+              >
+                <Text style={[s.rankRowName, { color: DS_COLORS.TEXT_PRIMARY }]}>Report this challenge</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Leave challenge"
+                style={s.rankRow}
+                onPress={() => {
+                  const ch = longPressMenuChallenge;
+                  setLongPressMenuChallenge(null);
+                  if (!ch) return;
+                  setLeaveChallengeError(null);
+                  setLeaveConfirmChallengeId(ch.id);
+                }}
+              >
+                <Text style={[s.rankRowName, { color: DS_COLORS.DISCOVER_CORAL }]}>Leave challenge</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-      <ReportChallengeModal
-        visible={reportingChallengeId !== null}
-        challengeId={reportingChallengeId}
-        challengeTitle={reportingChallengeTitle}
-        onClose={() => {
-          setReportingChallengeId(null);
-          setReportingChallengeTitle(undefined);
-        }}
-      />
-      <Modal
-        visible={showRankModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowRankModal(false)}
-      >
-        <View style={s.rankModalRoot}>
-          <TouchableOpacity accessibilityRole="button"
-            style={s.rankModalBackdrop}
-            activeOpacity={1}
-            onPress={() => setShowRankModal(false)}
-            accessibilityLabel="Close"
-          />
-          <View style={s.rankModalSheet}>
-            <Text style={s.rankModalTitle}>Rank ladder</Text>
-            {RANK_LADDER.map((r, i) => {
-              const active = i === rankLadderIndex(streak);
-              return (
-                <View key={r.name} style={s.rankRow}>
-                  {active ? <View style={s.rankDot} /> : <View style={s.rankDotPlaceholder} />}
-                  <Text style={[s.rankRowName, active && s.rankRowNameActive]}>{r.name}</Text>
-                  <Text style={s.rankRowDays}>({r.days}d)</Text>
-                </View>
-              );
-            })}
+        </Modal>
+        <ReportChallengeModal
+          visible={reportingChallengeId !== null}
+          challengeId={reportingChallengeId}
+          challengeTitle={reportingChallengeTitle}
+          onClose={() => {
+            setReportingChallengeId(null);
+            setReportingChallengeTitle(undefined);
+          }}
+        />
+        <Modal
+          visible={showRankModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowRankModal(false)}
+        >
+          <View style={s.rankModalRoot}>
+            <TouchableOpacity accessibilityRole="button"
+              style={s.rankModalBackdrop}
+              activeOpacity={1}
+              onPress={() => setShowRankModal(false)}
+              accessibilityLabel="Close"
+            />
+            <View style={s.rankModalSheet}>
+              <Text style={s.rankModalTitle}>Rank ladder</Text>
+              {RANK_LADDER.map((r, i) => {
+                const active = i === rankLadderIndex(streak);
+                return (
+                  <View key={r.name} style={s.rankRow}>
+                    {active ? <View style={s.rankDot} /> : <View style={s.rankDotPlaceholder} />}
+                    <Text style={[s.rankRowName, active && s.rankRowNameActive]}>{r.name}</Text>
+                    <Text style={s.rankRowDays}>({r.days}d)</Text>
+                  </View>
+                );
+              })}
+            </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
     </ErrorBoundary>
   );
 }
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
-  heroWrap: { paddingHorizontal: DS_SPACING_V2.md },
-  headerRow: {
-    paddingHorizontal: DS_SPACING.xl,
-    paddingTop: DS_SPACING.md,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerTextCol: {
-    flex: 1,
-    minWidth: 0,
-    marginRight: DS_SPACING.md,
-  },
   header: { paddingHorizontal: DS_SPACING.xl, paddingTop: DS_SPACING.md },
   greeting: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_MUTED },
-  todayTitle: {
-    marginTop: 2,
-    fontSize: 18,
-    fontWeight: "500",
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
   word: {
     marginTop: 2,
     fontSize: DS_TYPOGRAPHY.SIZE_LG,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     letterSpacing: -0.3,
-  },
-  bellButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS.BORDER,
-    backgroundColor: DS_COLORS.BG_CARD,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-  bellDot: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: DS_COLORS.ACCENT,
   },
   primaryGoalCard: {
     marginHorizontal: DS_SPACING.xl,
@@ -1065,59 +871,6 @@ const s = StyleSheet.create({
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.TEXT_SECONDARY,
   },
-  pills: { flexDirection: "row", gap: 6 },
-  pill: {
-    backgroundColor: DS_COLORS.WHITE,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: DS_SPACING.md,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  pillWarm: { backgroundColor: DS_COLORS.ACCENT_TINT },
-  pillPurple: { backgroundColor: DS_COLORS.purpleTintWarm },
-  pillText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
-  statsRow: { marginTop: DS_SPACING.md, marginHorizontal: DS_SPACING.xl, flexDirection: "row", gap: DS_SPACING.sm },
-  statTouchable: { flex: 1 },
-  stat: {
-    flex: 1,
-    backgroundColor: DS_COLORS.WHITE,
-    borderRadius: DS_RADIUS.button,
-    paddingVertical: 14,
-    paddingHorizontal: DS_SPACING.sm,
-    alignItems: "center",
-  },
-  statIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: DS_RADIUS.SM,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 6,
-  },
-  statValueNum: {
-    fontSize: 22,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
-    lineHeight: 26,
-  },
-  statLabelLower: {
-    marginTop: 2,
-    fontSize: 10,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_MUTED,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    lineHeight: 14,
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: DS_COLORS.BORDER,
-    marginHorizontal: DS_SPACING.xl,
-    marginTop: DS_SPACING.md,
-    marginBottom: DS_SPACING.sm,
-  },
   rankModalRoot: {
     flex: 1,
     justifyContent: "center",
@@ -1155,88 +908,4 @@ const s = StyleSheet.create({
   rankRowName: { flex: 1, fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_SECONDARY, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   rankRowNameActive: { color: DS_COLORS.TEXT_PRIMARY },
   rankRowDays: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
-  welcomeCard: {
-    marginTop: DS_SPACING.md,
-    marginHorizontal: DS_SPACING.xl,
-    backgroundColor: DS_COLORS.WHITE,
-    borderRadius: DS_RADIUS.button,
-    padding: DS_SPACING.lg,
-    alignItems: "center",
-  },
-  welcomeTitle: {
-    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
-  welcomeBody: {
-    marginTop: 6,
-    fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    color: DS_COLORS.TEXT_SECONDARY,
-    textAlign: "center",
-  },
-  welcomeCta: {
-    marginTop: 12,
-    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-  },
-  welcomeCtaText: {
-    color: DS_COLORS.WHITE,
-    fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-  },
-  goalsSection: { paddingTop: 14 },
-  goalsSectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: DS_SPACING.xl,
-    marginBottom: DS_SPACING.sm,
-  },
-  goalsSectionTitle: {
-    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
-  goalsSectionCount: {
-    fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.DISCOVER_CORAL,
-  },
-  completedHeader: {
-    marginTop: DS_SPACING.md,
-    marginBottom: DS_SPACING.xs,
-    paddingHorizontal: DS_SPACING.xl,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  completedHeaderText: {
-    fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_SECONDARY,
-  },
-  completedHeaderCount: {
-    fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    color: DS_COLORS.TEXT_MUTED,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-  },
-  allDoneBanner: {
-    marginHorizontal: DS_SPACING.xl,
-    marginBottom: DS_SPACING.sm,
-    padding: DS_SPACING.lg,
-    borderRadius: DS_RADIUS.button,
-    backgroundColor: DS_COLORS.ACCENT_TINT,
-  },
-  allDoneTitle: {
-    fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
-  allDoneSubtitle: {
-    marginTop: 4,
-    fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    color: DS_COLORS.TEXT_SECONDARY,
-  },
 });

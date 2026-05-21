@@ -72,7 +72,7 @@ export default function ActivityScreen() {
           {mainTab === "feed" ? (
             <View style={styles.tabShell}>
               {activityHeader}
-              <LiveFeedSection onScrollToFeed={() => {}} />
+              <LiveFeedSection />
             </View>
           ) : mainTab === "notifications" ? (
             <NotificationsTab userId={user.id} listHeader={activityHeader} />
