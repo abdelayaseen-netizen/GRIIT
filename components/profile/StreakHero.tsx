@@ -1,14 +1,16 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Flame, Share2 } from "lucide-react-native";
+import { Flame, Share2, ChevronRight } from "lucide-react-native";
 
-import { DS_COLORS, DS_RADIUS, DS_SPACING } from "@/lib/design-system";
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 export type StreakHeroProps = {
   streakDays: number;
   bestStreak: number;
   nextBadgeIn: number | null;
   onShare: () => void;
+  /** Optional zero-state CTA tap (e.g. opens Discover). When omitted, the slim card renders without arrow affordance. */
+  onPressZeroCta?: () => void;
 };
 
 const SHARE_PILL_BG = "rgba(255,255,255,0.22)";
@@ -20,9 +22,43 @@ function formatNextBadgeMessage(nextBadgeIn: number | null): string | null {
   return `${nextBadgeIn} days to your next badge`;
 }
 
-export function StreakHero({ streakDays, bestStreak, nextBadgeIn, onShare }: StreakHeroProps) {
-  const nextBadgeMessage = streakDays > 0 ? formatNextBadgeMessage(nextBadgeIn) : null;
-  const showBestLine = streakDays > 0 && bestStreak > 0;
+export function StreakHero({
+  streakDays,
+  bestStreak,
+  nextBadgeIn,
+  onShare,
+  onPressZeroCta,
+}: StreakHeroProps) {
+  if (streakDays === 0) {
+    const Wrap = onPressZeroCta ? Pressable : View;
+    return (
+      <Wrap
+        accessibilityRole={onPressZeroCta ? "button" : undefined}
+        accessibilityLabel={onPressZeroCta ? "Start your streak by joining a challenge" : undefined}
+        onPress={onPressZeroCta}
+        style={styles.slimWrap}
+      >
+        <View style={styles.slimIcon}>
+          <Flame size={20} color={DS_COLORS.ACCENT} fill="transparent" strokeWidth={2} />
+        </View>
+        <View style={styles.slimCopy}>
+          <Text style={styles.slimTitle}>Start your streak</Text>
+          <Text style={styles.slimSub}>Join a challenge to begin Day 1.</Text>
+        </View>
+        {onPressZeroCta ? (
+          <ChevronRight
+            size={18}
+            color={DS_COLORS.TEXT_PRIMARY}
+            strokeWidth={2}
+            accessibilityElementsHidden
+          />
+        ) : null}
+      </Wrap>
+    );
+  }
+
+  const nextBadgeMessage = formatNextBadgeMessage(nextBadgeIn);
+  const showBestLine = bestStreak > 0;
 
   return (
     <View style={styles.wrap}>
@@ -38,21 +74,17 @@ export function StreakHero({ streakDays, bestStreak, nextBadgeIn, onShare }: Str
 
       <View style={styles.bodyRow}>
         <View style={styles.copyCol}>
-          {streakDays === 0 ? (
-            <Text style={styles.zeroHeadline}>Start your streak today</Text>
-          ) : (
-            <>
-              <Text style={styles.streakNumeral}>{streakDays}</Text>
-              <Text style={styles.dayStreakLabel}>day streak</Text>
-              {nextBadgeMessage !== null ? <Text style={styles.progressLine}>{nextBadgeMessage}</Text> : null}
-              {showBestLine ? (
-                <Text style={styles.bestLine}>
-                  Best · {bestStreak}
-                  {bestStreak === 1 ? " day" : " days"}
-                </Text>
-              ) : null}
-            </>
-          )}
+          <Text style={styles.streakNumeral}>{streakDays}</Text>
+          <Text style={styles.dayStreakLabel}>day streak</Text>
+          {nextBadgeMessage !== null ? (
+            <Text style={styles.progressLine}>{nextBadgeMessage}</Text>
+          ) : null}
+          {showBestLine ? (
+            <Text style={styles.bestLine}>
+              Best · {bestStreak}
+              {bestStreak === 1 ? " day" : " days"}
+            </Text>
+          ) : null}
         </View>
 
         <View
@@ -60,11 +92,7 @@ export function StreakHero({ streakDays, bestStreak, nextBadgeIn, onShare }: Str
           accessibilityRole="image"
           accessibilityLabel="Streak flame illustration"
         >
-          {streakDays === 0 ? (
-            <Flame size={34} color={DS_COLORS.WHITE} fill="transparent" strokeWidth={2} />
-          ) : (
-            <Flame size={34} color={DS_COLORS.WHITE} fill={DS_COLORS.WHITE} strokeWidth={0} />
-          )}
+          <Flame size={34} color={DS_COLORS.WHITE} fill={DS_COLORS.WHITE} strokeWidth={0} />
         </View>
       </View>
     </View>
@@ -79,6 +107,40 @@ const styles = StyleSheet.create({
     marginBottom: DS_SPACING.md,
     position: "relative",
     overflow: "hidden",
+  },
+  slimWrap: {
+    backgroundColor: DS_COLORS.BG_CARD,
+    borderRadius: DS_RADIUS.LG,
+    borderWidth: 1,
+    borderColor: DS_COLORS.BORDER,
+    paddingVertical: DS_SPACING.sm,
+    paddingHorizontal: DS_SPACING.md,
+    marginBottom: DS_SPACING.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_SPACING.md,
+  },
+  slimIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: DS_RADIUS.MD,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slimCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  slimTitle: {
+    fontSize: 14,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    color: DS_COLORS.TEXT_PRIMARY,
+  },
+  slimSub: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_SECONDARY,
+    marginTop: 2,
   },
   sharePill: {
     position: "absolute",
@@ -109,12 +171,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: DS_COLORS.WHITE,
     letterSpacing: -0.5,
-  },
-  zeroHeadline: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: DS_COLORS.WHITE,
-    lineHeight: 28,
   },
   dayStreakLabel: {
     marginTop: 4,

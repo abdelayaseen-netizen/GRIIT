@@ -693,6 +693,14 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {profileContentUnlocked && profile?.bio?.trim() ? (
+          <View style={styles.bioWrap}>
+            <Text style={styles.bioText} numberOfLines={3}>
+              {profile.bio.trim()}
+            </Text>
+          </View>
+        ) : null}
+
         {profileContentUnlocked ? (
           <>
             <StreakHero
@@ -700,6 +708,11 @@ export default function ProfileScreen() {
               bestStreak={best}
               nextBadgeIn={nextBadgeIn}
               onShare={() => void handleShareStreak()}
+              onPressZeroCta={
+                mode === 'self' && streak === 0
+                  ? () => router.push(ROUTES.TABS_DISCOVER as never)
+                  : undefined
+              }
             />
 
             {mode === 'self' && topInProgressTask ? (
@@ -1134,6 +1147,16 @@ const styles = StyleSheet.create({
   followInlineBtn: { flexDirection: "row", alignItems: "baseline" },
   followCompactNum: { fontSize: 12, fontWeight: "500", color: DS_COLORS.PROFILE_TEXT_PRIMARY },
   followCompactLbl: { fontSize: 12, fontWeight: "400", color: DS_COLORS.PROFILE_TEXT_SECONDARY },
+  bioWrap: {
+    paddingHorizontal: 20,
+    marginTop: 6,
+    marginBottom: DS_SPACING.sm,
+  },
+  bioText: {
+    fontSize: 13,
+    color: DS_COLORS.PROFILE_TEXT_SECONDARY,
+    lineHeight: 18,
+  },
   identityIconStack: { gap: 8, marginTop: 2 },
   identityIconSq: {
     width: 32,
