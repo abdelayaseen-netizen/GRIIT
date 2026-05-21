@@ -572,7 +572,6 @@ export default function HomeScreen() {
           data={[{ key: "guest-home" }]}
           keyExtractor={keyExtractorHomeKey}
           renderItem={renderGuestHomeItem}
-          estimatedItemSize={700}
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
         />

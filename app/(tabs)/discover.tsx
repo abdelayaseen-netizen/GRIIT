@@ -393,7 +393,6 @@ function DiscoverScreenInner() {
         data={habitItems}
         renderItem={renderHabit}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={84}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}

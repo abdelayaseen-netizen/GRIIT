@@ -6,13 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "griit",
-    "linking": {
-      "prefixes": [
-        "griit://",
-        "https://griit.app/",
-        "https://griit.fit/"
-      ]
-    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",

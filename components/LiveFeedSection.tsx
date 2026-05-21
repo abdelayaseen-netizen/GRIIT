@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from "react-native";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -90,7 +90,7 @@ function LiveFeedSection({ ListHeaderComponent, onRefresh, refreshing }: LiveFee
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
-  const listRef = useRef<FlashList<LiveFeedPost> | null>(null);
+  const listRef = useRef<FlashListRef<LiveFeedPost> | null>(null);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -521,7 +521,6 @@ function LiveFeedSection({ ListHeaderComponent, onRefresh, refreshing }: LiveFee
       <FlashList
         ref={listRef}
         data={finalFeed}
-        estimatedItemSize={380}
         keyExtractor={(item) => item.id}
         scrollEnabled
         renderItem={renderItem}

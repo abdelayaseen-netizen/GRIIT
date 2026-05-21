@@ -199,7 +199,6 @@ function HomeHeaderInner(props: HomeHeaderProps) {
             scrollEnabled={false}
             nestedScrollEnabled
             renderItem={props.renderIncompleteGoalGroup}
-            estimatedItemSize={320}
           />
           {props.completedTodayChallenges.length > 0 ? (
             <>
@@ -222,7 +221,6 @@ function HomeHeaderInner(props: HomeHeaderProps) {
                   scrollEnabled={false}
                   nestedScrollEnabled
                   renderItem={props.renderCompletedGoalGroup}
-                  estimatedItemSize={320}
                 />
               ) : null}
             </>

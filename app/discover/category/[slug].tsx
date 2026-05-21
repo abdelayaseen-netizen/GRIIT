@@ -224,7 +224,6 @@ function CategoryScreenInner() {
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={84}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}
         onEndReached={onEndReached}
