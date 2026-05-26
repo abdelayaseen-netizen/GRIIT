@@ -5,6 +5,7 @@ import type { PgError, ProfileRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { sendPushToProfile } from "../../lib/sendPush";
 import { logger } from "../../lib/logger";
+import { followRowAccepted } from "../../lib/feed-activity-hydrate";
 
 export const profilesSocialProcedures = {
   followUser: protectedProcedure
@@ -375,5 +376,91 @@ export const profilesSocialProcedures = {
       };
     });
   }),
+
+  /**
+   * Mutual followers — accounts the viewer follows that also follow `targetUserId`.
+   * Used by `MutualFollowersRow` on the public profile screen as social proof.
+   * Returns up to `limit` display names plus the total mutual count. Self-views
+   * return an empty result so the row never renders for one's own profile.
+   */
+  getMutualFollowers: protectedProcedure
+    .input(
+      z.object({
+        targetUserId: z.string().uuid(),
+        limit: z.number().min(1).max(10).default(3),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const viewerId = ctx.userId;
+      if (viewerId === input.targetUserId) {
+        return { topNames: [], totalCount: 0 };
+      }
+
+      // Step 1: who does the viewer follow (accepted only)?
+      const { data: viewerFollowing, error: vErr } = await ctx.supabase
+        .from("user_follows")
+        .select("following_id, status")
+        .eq("follower_id", viewerId)
+        .limit(500);
+      if (vErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: vErr.message });
+      }
+
+      const viewerFollowingIds = ((viewerFollowing ?? []) as {
+        following_id: string;
+        status?: string | null;
+      }[])
+        .filter(followRowAccepted)
+        .map((r) => r.following_id);
+
+      if (viewerFollowingIds.length === 0) {
+        return { topNames: [], totalCount: 0 };
+      }
+
+      // Step 2: of those, which ones follow the target (accepted only)?
+      const { data: mutuals, error: mErr } = await ctx.supabase
+        .from("user_follows")
+        .select("follower_id, status")
+        .eq("following_id", input.targetUserId)
+        .in("follower_id", viewerFollowingIds)
+        .limit(500);
+      if (mErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: mErr.message });
+      }
+
+      const mutualIds = ((mutuals ?? []) as {
+        follower_id: string;
+        status?: string | null;
+      }[])
+        .filter(followRowAccepted)
+        .map((r) => r.follower_id);
+
+      if (mutualIds.length === 0) {
+        return { topNames: [], totalCount: 0 };
+      }
+
+      // Step 3: hydrate display names for the top N mutuals.
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const { data: profiles, error: pErr } = await server
+        .from("profiles")
+        .select("user_id, display_name, username")
+        .in("user_id", mutualIds.slice(0, input.limit))
+        .limit(input.limit);
+      if (pErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: pErr.message });
+      }
+
+      const topNames = ((profiles ?? []) as {
+        display_name?: string | null;
+        username?: string | null;
+      }[])
+        .map((p) => (p.display_name ?? "").trim() || (p.username ?? "").trim() || "Someone")
+        .filter((n) => n.length > 0);
+
+      return {
+        topNames,
+        totalCount: mutualIds.length,
+      };
+    }),
 
 };

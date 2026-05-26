@@ -38,6 +38,7 @@ export const TRPC = {
     getFollowing: 'profiles.getFollowing',
     isFollowing: 'profiles.isFollowing',
     suggested: 'profiles.suggested',
+    getMutualFollowers: 'profiles.getMutualFollowers',
   },
   challenges: {
     list: 'challenges.list',

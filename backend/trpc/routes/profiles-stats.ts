@@ -405,7 +405,7 @@ export const profilesStatsProcedures = {
       z
         .object({
           userId: z.string().uuid().optional(),
-          days: z.number().min(7).max(90).default(30),
+          days: z.number().min(7).max(365).default(30),
         })
         .optional()
     )
