@@ -1142,6 +1142,25 @@ export const DS_COLORS_V2 = {
     frozenOuter: '#85B7EB',
     frozenInner: '#B5D4F4',
     frozenStroke: '#185FA5',
+
+    // Secured — celebration yellow for "Streak secured" label / "+1 day stronger"
+    // sub-copy on the dark hero. Distinct from `semantic.warning` (#854F0B,
+    // dark amber for light surfaces).
+    securedYellow: '#FCDE5A',
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Overlays (rgba) — for translucent surfaces / borders on dark hero.
+  // Centralized so components never inline rgba(...) strings.
+  // ──────────────────────────────────────────────────────────────────────────
+  overlay: {
+    onDarkSurface04: 'rgba(255,255,255,0.04)',
+    onDarkSurface08: 'rgba(255,255,255,0.08)',
+    onDarkSurface10: 'rgba(255,255,255,0.10)',
+    onDarkBorder08: 'rgba(255,255,255,0.08)',
+    onDarkBorder25: 'rgba(255,255,255,0.25)',
+    /** Frozen blue tint for freeze-button background on dark surface (8% of frozenOuter). */
+    frozenTint08: 'rgba(133,183,235,0.08)',
   },
 } as const;
 
