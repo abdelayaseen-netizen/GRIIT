@@ -1161,6 +1161,22 @@ export const DS_COLORS_V2 = {
     onDarkBorder25: 'rgba(255,255,255,0.25)',
     /** Frozen blue tint for freeze-button background on dark surface (8% of frozenOuter). */
     frozenTint08: 'rgba(133,183,235,0.08)',
+    // Text on photo — dim white tones for attribution / meta lines on the
+    // immersive hero / proof tiles.
+    textOnPhoto100: 'rgba(255,255,255,1)',
+    textOnPhoto85: 'rgba(255,255,255,0.85)',
+    textOnPhoto70: 'rgba(255,255,255,0.7)',
+    // Photo gradient stops — bottom-anchored linear gradient for legibility
+    // on top of the proof photo. Three stops (deep / mid / clear) reused by
+    // ForYouHero and grid/ProofTile.
+    photoGradientDeep: 'rgba(0,0,0,0.92)',
+    photoGradientStrong: 'rgba(0,0,0,0.85)',
+    photoGradientMid: 'rgba(0,0,0,0.6)',
+    photoGradientLight: 'rgba(0,0,0,0.4)',
+    photoGradientClear: 'rgba(0,0,0,0)',
+    // Pill backdrops on photo (badges, kudos chip).
+    chipOnPhoto55: 'rgba(0,0,0,0.55)',
+    chipOnPhoto70: 'rgba(0,0,0,0.7)',
   },
 } as const;
 
