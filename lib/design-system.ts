@@ -1038,6 +1038,12 @@ export const DS_COLORS_V2 = {
     heroDark: '#0F0F0F',        // The signature dark surface — streak hero, trophies, etc.
     heroDarkWarm: '#262321',    // Secondary effort surface — active task, in-task screens
 
+    // Streak hero — default state surface (slightly lighter than heroDark, matches v1 BG_DARK).
+    // Used by StreakHeroV4 default/day0/secured backgrounds.
+    heroNeutral: '#1A1A1A',
+    // Streak hero — at-risk state surface (very dark red-tinted).
+    heroDanger: '#1A0E0E',
+
     // Warm gradient ramp — used by HeroFeaturedCard. Three stops top->bottom.
     heroDarkWarmGradient: ['#2a2520', '#4a3a30', '#6b4a30'] as const,
 
@@ -1104,6 +1110,38 @@ export const DS_COLORS_V2 = {
     easy: { fg: '#3B6D11', bg: '#EAF3DE' },
     medium: { fg: '#854F0B', bg: '#FAEEDA' },
     hard: { fg: '#791F1F', bg: '#FCEBEB' },
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Streak flame state palette (StreakFlame component, StreakHeroV4)
+  // ──────────────────────────────────────────────────────────────────────────
+  // Each entry below is the layered fill/stroke for a single state of the
+  // SVG flame. Keep tones aligned with the brand orange ramp so the building
+  // → locked → onFire progression reads as intensity, not hue shift.
+  streak: {
+    // Day 0 — never streaked. Cool grey (no warmth).
+    day0Outer: '#555555',
+    day0Inner: '#3A3A3A',
+    day0Stroke: '#777777',
+
+    // Building (1–6) and locked (7–29) and onFire (30+) share the orange ramp.
+    // The variant differences are size/layer count, not color.
+    flameOuter: '#BB471D',     // matches brand.primary (ACCENT)
+    flameMid: '#E0A282',       // warm amber (was v1 HEATMAP_L2)
+    flameStroke: '#9E3A14',    // matches brand.primaryHover (ACCENT_DARK)
+    flameHotspot: '#F2D4C0',   // soft peach center (was v1 HEATMAP_L1)
+    flameCenter: '#EEE9E0',    // tiny white-cream highlight (was v1 HEATMAP_L0)
+
+    // At-risk — red flame on dark surface. Same hex as semantic.dangerOnDark/Text
+    // but namespaced to streak so the StreakFlame component reads cleanly.
+    atRiskOuter: '#E24B4A',
+    atRiskInner: '#F09595',
+    atRiskStroke: '#A32D2D',
+
+    // Frozen — blue flame with snowflake glyph.
+    frozenOuter: '#85B7EB',
+    frozenInner: '#B5D4F4',
+    frozenStroke: '#185FA5',
   },
 } as const;
 
