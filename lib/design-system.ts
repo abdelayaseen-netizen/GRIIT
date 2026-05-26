@@ -1150,11 +1150,27 @@ export const DS_COLORS_V2 = {
   },
 
   // ──────────────────────────────────────────────────────────────────────────
+  // Heatmap (year activity grid) — 5 levels of intensity + future / today ring.
+  // Mirrors v1 HEATMAP_L0..L4 hex values. Used by `YearHeatmap`.
+  // ──────────────────────────────────────────────────────────────────────────
+  heatmap: {
+    L0: '#EEE9E0',                // empty / no activity (cream)
+    L1: '#F2D4C0',                // light (peach)
+    L2: '#E0A282',                // medium (warm amber)
+    L3: '#BB471D',                // strong (brand orange)
+    L4: '#9E3A14',                // saturated (deep brand)
+    todayRing: '#1A1A1A',         // optional ring around today's cell
+    /** Future cells (dates after today) — slightly lighter than L0 for legibility. */
+    future: '#F7F4ED',
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
   // Overlays (rgba) — for translucent surfaces / borders on dark hero.
   // Centralized so components never inline rgba(...) strings.
   // ──────────────────────────────────────────────────────────────────────────
   overlay: {
     onDarkSurface04: 'rgba(255,255,255,0.04)',
+    onDarkSurface05: 'rgba(255,255,255,0.05)',
     onDarkSurface08: 'rgba(255,255,255,0.08)',
     onDarkSurface10: 'rgba(255,255,255,0.10)',
     onDarkBorder08: 'rgba(255,255,255,0.08)',
