@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
+import * as Notifications from "expo-notifications";
 import { useApp } from "@/contexts/AppContext";
 import { haversineDistance } from "@/lib/geo";
 import { DS_COLORS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
@@ -877,6 +878,72 @@ export function TaskCompleteScreenInner() {
     hardGatesPassed,
   ]);
 
+  // Build the "other tasks today" list — incomplete tasks for the same
+  // active challenge, excluding the missed task itself.
+  const otherTasksToday = useMemo(() => {
+    const tasks =
+      ((challenge as { challenge_tasks?: { id: string; title?: string | null; type?: string; require_photo_proof?: boolean }[] } | null)?.challenge_tasks ?? []);
+    const checkinsArr = todayCheckins as { task_id?: string }[] | undefined;
+    return tasks
+      .filter((t) => t.id !== taskId)
+      .filter((t) => !(checkinsArr ?? []).some((c) => c.task_id === t.id))
+      .map((t) => ({
+        id: t.id,
+        name: t.title ?? "Untitled task",
+        proofType: t.require_photo_proof ? "Photo proof" : "Self-report",
+        remainingHint: "until midnight",
+        onPress: () => {
+          if (!activeChallengeId) return;
+          router.push(ROUTES.CHALLENGE_ACTIVE(activeChallengeId) as never);
+        },
+      }));
+  }, [challenge, todayCheckins, taskId, activeChallengeId, router]);
+
+  const handleSetAlarm = useCallback(async () => {
+    try {
+      const perm = await Notifications.getPermissionsAsync();
+      if (perm.status !== "granted") {
+        const req = await Notifications.requestPermissionsAsync();
+        if (req.status !== "granted") {
+          showError("Allow notifications to set tomorrow's alarm.");
+          return;
+        }
+      }
+      const winStart = config.schedule_window_start;
+      const trigger = new Date();
+      trigger.setDate(trigger.getDate() + 1);
+      if (winStart && /^\d{1,2}:\d{2}$/.test(winStart)) {
+        const [hRaw, mRaw] = winStart.split(":");
+        const h = parseInt(hRaw ?? "0", 10);
+        const m = parseInt(mRaw ?? "0", 10);
+        trigger.setHours(h, m, 0, 0);
+      } else {
+        trigger.setHours(7, 0, 0, 0);
+      }
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `${taskName} — window opens soon`,
+          body: `Tap to start before ${config.schedule_window_end ?? "the deadline"}.`,
+          data: { type: "task_window_alarm", taskId, activeChallengeId },
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: trigger },
+      });
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (e) {
+      captureError(e, "TaskCompleteSetAlarm");
+      showError("Could not schedule alarm. Try again.");
+    }
+  }, [
+    config.schedule_window_start,
+    config.schedule_window_end,
+    taskName,
+    taskId,
+    activeChallengeId,
+    showError,
+  ]);
+
   // Missed-task state — fires when hard-mode time window failed.
   const shellMissedState: TaskShellMissedState | undefined = useMemo(() => {
     if (!timeWindowFailed) return undefined;
@@ -890,9 +957,11 @@ export function TaskCompleteScreenInner() {
         ((stats as { currentStreak?: number; current_streak?: number } | null)?.currentStreak ??
           (stats as { current_streak?: number } | null)?.current_streak ??
           0),
-      otherTasks: [],
+      otherTasks: otherTasksToday,
       nextWindow: config.schedule_window_start ? `Tomorrow at ${config.schedule_window_start}` : undefined,
-      onSetAlarm: () => undefined,
+      onSetAlarm: () => {
+        void handleSetAlarm();
+      },
       onPressDoOtherTasks: () => {
         if (activeChallengeId) {
           router.push(ROUTES.CHALLENGE_ACTIVE(activeChallengeId) as never);
@@ -908,6 +977,8 @@ export function TaskCompleteScreenInner() {
     stats,
     activeChallengeId,
     router,
+    otherTasksToday,
+    handleSetAlarm,
   ]);
 
   // Primary CTA state-driven label.
