@@ -1194,6 +1194,29 @@ export const DS_COLORS_V2 = {
     chipOnPhoto55: 'rgba(0,0,0,0.55)',
     chipOnPhoto70: 'rgba(0,0,0,0.7)',
   },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Proof / verification — task-flow specific badges + gate states.
+  // Used by `VerificationGates`, `TaskShell`, `NewTaskSheet`, the create wizard's
+  // difficulty cards, and the missed-task state.
+  // ──────────────────────────────────────────────────────────────────────────
+  proof: {
+    // Hard-mode badge (text + bg) — rendered on dark hero proof tiles, the
+    // create-wizard hard-mode card, and the NewTaskSheet hard-mode toggle.
+    hardFg: '#A32D2D',
+    hardBg: '#FCEBEB',
+    // Recommended / standard badge — paired with the standard difficulty card.
+    standardFg: '#3D7A5A',
+    standardBg: '#EBF5EE',
+    // Verification gate states. Three statuses (pass / pending / fail) mirror
+    // the icons stacked in the gates card on the task completion screen.
+    gateFailBg: '#FCEBEB',
+    gateFailFg: '#A32D2D',
+    gatePendingBg: '#F5F5F5',
+    gatePendingFg: '#888888',
+    gatePassBg: '#EBF5EE',
+    gatePassFg: '#3D7A5A',
+  },
 } as const;
 
 // ============================================================================
