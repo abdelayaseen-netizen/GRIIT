@@ -2,7 +2,7 @@
  * Task completion screen state, handlers, and layout (extracted from app/task/complete.tsx).
  */
 import React, { useState, useCallback, useMemo, useRef, useEffect, useLayoutEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Platform, Animated } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Animated } from "react-native";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
@@ -34,8 +34,16 @@ import { useActiveSessionStore } from "@/store/activeSessionStore";
 import { useJournalInput } from "@/hooks/useJournalInput";
 import { useTaskCompleteShareCardProps } from "@/hooks/useTaskCompleteShareCardProps";
 import { TaskCompleteCelebration } from "@/components/task/TaskCompleteCelebration";
-import { TaskCompleteForm } from "@/components/task/TaskCompleteForm";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { TaskShell, type TaskShellGates, type TaskShellMissedState } from "@/components/task/TaskShell";
+import { TaskSimpleBody } from "@/components/task/bodies/TaskSimpleBody";
+import { TaskPhotoBody } from "@/components/task/bodies/TaskPhotoBody";
+import { TaskTimerBody, type TimerSound } from "@/components/task/bodies/TaskTimerBody";
+import { TaskRunBody } from "@/components/task/bodies/TaskRunBody";
+import { TaskWorkoutBody } from "@/components/task/bodies/TaskWorkoutBody";
+import { TaskJournalBody } from "@/components/task/bodies/TaskJournalBody";
+import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/TaskCounterBody";
+import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
 import {
   firstString,
   parseConfig,
@@ -106,6 +114,12 @@ export function TaskCompleteScreenInner() {
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
   const [timeWindowFailed, setTimeWindowFailed] = useState(false);
   const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
+  // V2 body-component local state (counter / water / reading + timer sound)
+  const [counterValue, setCounterValue] = useState<number>(0);
+  const [bookTitle, setBookTitle] = useState<string>("");
+  const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
+  const [timerSound, setTimerSound] = useState<TimerSound>("silent");
+  const [photoCapturedAt, setPhotoCapturedAt] = useState<string | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [completionMeta, setCompletionMeta] = useState<{
     taskId: string;
@@ -183,10 +197,23 @@ export function TaskCompleteScreenInner() {
     ((taskTypeRaw === "workout" && effectiveRunOrWorkout === "workout") ||
       (taskTypeRaw === "run" && effectiveRunOrWorkout === "workout"));
 
-  const { photoUri, photoUrl, photoUploading, handleTakePhoto, handlePickImage, clearPhoto } = usePhotoCapture({
+  const photoCapture = usePhotoCapture({
     requireCameraOnly: config.require_camera_only === true,
     onError: showError,
   });
+  const { photoUri, photoUrl, photoUploading } = photoCapture;
+  const handleTakePhoto = useCallback(async () => {
+    await photoCapture.handleTakePhoto();
+    setPhotoCapturedAt(new Date().toISOString());
+  }, [photoCapture]);
+  const handlePickImage = useCallback(async () => {
+    await photoCapture.handlePickImage();
+    setPhotoCapturedAt(new Date().toISOString());
+  }, [photoCapture]);
+  const clearPhoto = useCallback(() => {
+    photoCapture.clearPhoto();
+    setPhotoCapturedAt(null);
+  }, [photoCapture]);
 
   const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer } =
     useTaskTimer({
@@ -366,6 +393,18 @@ export function TaskCompleteScreenInner() {
     !config.require_heart_rate &&
     !config.require_location;
 
+  // Counter / water / reading — extract goal from config (with sensible fallbacks).
+  const isCounterFamily = taskTypeRaw === "counter" || taskTypeRaw === "water" || taskTypeRaw === "reading";
+  const counterGoal = useMemo<number>(() => {
+    const c = config as Partial<{ daily_target: number; goal: number; cup_count: number; pages: number }>;
+    if (typeof c.daily_target === "number" && c.daily_target > 0) return c.daily_target;
+    if (typeof c.goal === "number" && c.goal > 0) return c.goal;
+    if (taskTypeRaw === "water" && typeof c.cup_count === "number" && c.cup_count > 0) return c.cup_count;
+    if (taskTypeRaw === "reading" && typeof c.pages === "number" && c.pages > 0) return c.pages;
+    return taskTypeRaw === "water" ? 8 : taskTypeRaw === "reading" ? 10 : 1;
+  }, [config, taskTypeRaw]);
+  const counterOk = !isCounterFamily || counterValue >= counterGoal;
+
   const canSubmit = useMemo(() => {
     if (isHardVerificationTask && (!hardGatesPassed || timeWindowFailed)) return false;
     if (taskTypeRaw === "journal" && !journalOk) return false;
@@ -378,6 +417,7 @@ export function TaskCompleteScreenInner() {
     if (config.require_location && !locationOk) return false;
     if (showRunEntry && !runFormOk) return false;
     if (showWorkoutEntry && !workoutOk) return false;
+    if (isCounterFamily && !counterOk) return false;
     return true;
   }, [
     isHardVerificationTask,
@@ -400,6 +440,8 @@ export function TaskCompleteScreenInner() {
     showRunEntry,
     showWorkoutEntry,
     workoutOk,
+    isCounterFamily,
+    counterOk,
   ]);
 
   const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
@@ -442,6 +484,8 @@ export function TaskCompleteScreenInner() {
         valueOut = Math.floor(timerSeconds / 60);
       } else if (taskTypeRaw === "run") {
         valueOut = isRunTimed && isHardMode ? Math.floor(timerSeconds / 60) : runMin;
+      } else if (isCounterFamily) {
+        valueOut = counterValue;
       } else {
         valueOut = undefined;
       }
@@ -527,6 +571,8 @@ export function TaskCompleteScreenInner() {
     onScreenSecondsRef,
     clearActiveSession,
     isChallengeHardMode,
+    isCounterFamily,
+    counterValue,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -619,164 +665,335 @@ export function TaskCompleteScreenInner() {
     isHardMode,
   });
 
-  const renderTaskCompleteFormItem = useCallback(
-    () => (
-      <TaskCompleteForm
-        error={error}
-        clearError={clearError}
-        isHardVerificationTask={isHardVerificationTask}
-        hardVerificationConfig={hardVerificationConfig}
-        onHardGatesResolved={onHardGatesResolved}
-        onHardTimeWindowFailed={onHardTimeWindowFailed}
-        timeWindowFailed={timeWindowFailed}
-        hardGatesPassed={hardGatesPassed}
-        taskName={taskName}
-        headerChallengeName={headerChallengeName}
-        headerCurrentDay={headerCurrentDay}
-        headerDurationDays={headerDurationDays}
-        taskTypeRaw={taskTypeRaw}
-        config={config}
-        isPureManual={isPureManual}
-        canSubmit={canSubmit}
-        runManualComplete={runManualComplete}
-        isSubmitting={isSubmitting}
-        manualScale={manualScale}
-        journalPrompt={journalPrompt}
-        journalText={journalText}
-        handleJournalChange={handleJournalChange}
-        minWords={minWords}
-        wordCount={wordCount}
-        showWorkoutTimer={showWorkoutTimer}
-        requiredSeconds={requiredSeconds}
-        isHardMode={isHardMode}
-        isCountdown={isCountdown}
-        timerDisplay={timerDisplay}
-        progressFrac={progressFrac}
-        timerSeconds={timerSeconds}
-        timerOk={timerOk}
-        isTimerRunning={isTimerRunning}
-        toggleTimer={toggleTimer}
-        showWorkoutEntry={showWorkoutEntry}
-        workoutDuration={workoutDuration}
-        setWorkoutDuration={setWorkoutDuration}
-        workoutKind={workoutKind}
-        setWorkoutKind={setWorkoutKind}
-        workoutNotes={workoutNotes}
-        setWorkoutNotes={setWorkoutNotes}
-        showRunEntry={showRunEntry}
-        isRunTimed={isRunTimed}
-        runDistance={runDistance}
-        setRunDistance={setRunDistance}
-        runDuration={runDuration}
-        setRunDuration={setRunDuration}
-        runDistanceKm={runDistanceKm}
-        runDurationMin={runDurationMin}
-        runKm={runKm}
-        runMin={runMin}
-        minDurMinutes={minDurMinutes}
-        needsPhotoProof={needsPhotoProof}
-        photoUri={photoUri}
-        photoUrl={photoUrl}
-        photoUploading={photoUploading}
-        handleTakePhoto={handleTakePhoto}
-        handlePickImage={handlePickImage}
-        clearPhoto={clearPhoto}
-        photoCaption={photoCaption}
-        setPhotoCaption={setPhotoCaption}
-        handleSubmit={handleSubmit}
-        onRequestMinimumDay={() => setMinimumConfirmVisible(true)}
-        disableMinimumDay={isChallengeHardMode || isSubmitting}
-        minimumDayBlockedReason={isChallengeHardMode ? "Hard mode challenges require full completion." : undefined}
-        heartRateData={heartRateData}
-        setHeartRateData={setHeartRateData}
-        heartRateManual={heartRateManual}
-        setHeartRateManual={setHeartRateManual}
-        threshold={threshold}
-        showError={showError}
-        userLocation={userLocation}
-        setUserLocation={setUserLocation}
-        distance={distance}
-        radius={radius}
-        handleCheckLocation={handleCheckLocation}
-      />
-    ),
-    [
-      error,
-      clearError,
-      isHardVerificationTask,
-      hardVerificationConfig,
-      onHardGatesResolved,
-      onHardTimeWindowFailed,
-      timeWindowFailed,
-      hardGatesPassed,
-      taskName,
-      headerChallengeName,
-      headerCurrentDay,
-      headerDurationDays,
-      taskTypeRaw,
-      config,
-      isPureManual,
-      canSubmit,
-      runManualComplete,
-      isSubmitting,
-      manualScale,
-      journalPrompt,
-      journalText,
-      handleJournalChange,
-      minWords,
-      wordCount,
-      showWorkoutTimer,
-      requiredSeconds,
-      isHardMode,
-      isCountdown,
-      timerDisplay,
-      progressFrac,
-      timerSeconds,
-      timerOk,
-      isTimerRunning,
-      toggleTimer,
-      showWorkoutEntry,
-      workoutDuration,
-      setWorkoutDuration,
-      workoutKind,
-      setWorkoutKind,
-      workoutNotes,
-      setWorkoutNotes,
-      showRunEntry,
-      isRunTimed,
-      runDistance,
-      setRunDistance,
-      runDuration,
-      setRunDuration,
-      runDistanceKm,
-      runDurationMin,
-      runKm,
-      runMin,
-      minDurMinutes,
-      needsPhotoProof,
-      photoUri,
-      photoUrl,
-      photoUploading,
-      handleTakePhoto,
-      handlePickImage,
-      clearPhoto,
-      photoCaption,
-      setPhotoCaption,
-      handleSubmit,
-      heartRateData,
-      setHeartRateData,
-      heartRateManual,
-      setHeartRateManual,
-      threshold,
-      showError,
-      userLocation,
-      setUserLocation,
-      distance,
-      radius,
-      handleCheckLocation,
-      isChallengeHardMode,
-    ]
-  );
+  // ─────────────────────────────────────────────────────────────────────────
+  // V2 body switch + TaskShell composition.
+  //
+  // The hook continues to own state (timer, photo, journal, run, workout,
+  // counter, location). Each body component is purely controlled.
+  // ─────────────────────────────────────────────────────────────────────────
+  const counterVariant: CounterVariant = useMemo(() => {
+    if (taskTypeRaw === "water") return "water";
+    if (taskTypeRaw === "reading") return "reading";
+    return "counter";
+  }, [taskTypeRaw]);
+
+  const counterUnits = useMemo(() => {
+    if (counterVariant === "water") return { singular: "cup", plural: "cups" };
+    if (counterVariant === "reading") return { singular: "page", plural: "pages" };
+    return { singular: "unit", plural: "units" };
+  }, [counterVariant]);
+
+  const renderBody = useCallback(() => {
+    switch (taskTypeRaw) {
+      case "photo":
+        return (
+          <TaskPhotoBody
+            value={{ caption: photoCaption }}
+            onChangeCaption={setPhotoCaption}
+            photoUri={photoUri}
+            photoUploading={photoUploading}
+            capturedAt={photoCapturedAt ?? undefined}
+            onTakePhoto={() => {
+              void handleTakePhoto();
+            }}
+            onClearPhoto={clearPhoto}
+            cameraOnly={config.require_camera_only === true}
+          />
+        );
+      case "timer":
+        return (
+          <TaskTimerBody
+            value={{ sound: timerSound }}
+            onChangeSound={setTimerSound}
+            timerDisplay={timerDisplay}
+            progressFrac={progressFrac}
+            totalLabel={
+              requiredSeconds > 0
+                ? `of ${Math.floor(requiredSeconds / 60)}:${String(requiredSeconds % 60).padStart(2, "0")}`
+                : "open-ended"
+            }
+            isRunning={isTimerRunning}
+            isComplete={timerOk}
+            onTogglePlay={toggleTimer}
+            onReset={() => {
+              if (isTimerRunning) toggleTimer();
+            }}
+          />
+        );
+      case "run":
+        return (
+          <TaskRunBody
+            value={{
+              distanceKm: parseFloat(runDistance.replace(",", ".")) || 0,
+              elapsedSeconds: timerSeconds,
+            }}
+            goalKm={
+              typeof (config as { goal_km?: number }).goal_km === "number"
+                ? (config as { goal_km?: number }).goal_km
+                : undefined
+            }
+            goalMinutes={minDurMinutes > 0 ? minDurMinutes : undefined}
+            isRunning={isTimerRunning}
+            hasGps={false}
+            manualInput={{
+              distance: runDistance,
+              onChangeDistance: setRunDistance,
+              duration: runDuration,
+              onChangeDuration: setRunDuration,
+            }}
+          />
+        );
+      case "workout":
+        return (
+          <TaskWorkoutBody
+            mode="simple"
+            kind={workoutKind}
+            onChangeKind={setWorkoutKind}
+            durationMinutes={workoutDuration}
+            onChangeDurationMinutes={setWorkoutDuration}
+            notes={workoutNotes}
+            onChangeNotes={setWorkoutNotes}
+            kinds={WORKOUT_KINDS}
+            minMinutes={minDurMinutes}
+          />
+        );
+      case "journal":
+        return (
+          <TaskJournalBody
+            value={{ text: journalText }}
+            onChangeText={handleJournalChange}
+            prompt={journalPrompt}
+            wordCount={wordCount}
+            minWords={minWords}
+          />
+        );
+      case "counter":
+      case "water":
+      case "reading":
+        return (
+          <TaskCounterBody
+            variant={counterVariant}
+            value={{
+              count: counterValue,
+              bookTitle,
+              remindersEnabled,
+            }}
+            onChangeCount={setCounterValue}
+            onChangeBookTitle={setBookTitle}
+            onToggleReminders={setRemindersEnabled}
+            onAddPagePhoto={
+              counterVariant === "reading"
+                ? () => {
+                    void handleTakePhoto();
+                  }
+                : undefined
+            }
+            goal={counterGoal}
+            unitSingular={counterUnits.singular}
+            unitPlural={counterUnits.plural}
+          />
+        );
+      case "checkin":
+        return (
+          <TaskCheckinBody
+            value={{ inRange: locationOk }}
+            locationName={config.location_name ?? "Saved location"}
+            distanceMeters={distance ?? undefined}
+            requiredStayMinutes={(config as { required_stay_minutes?: number }).required_stay_minutes ?? 0}
+            hasGps={!!userLocation}
+          />
+        );
+      case "manual":
+      case "simple":
+      default:
+        return <TaskSimpleBody value={{ done: false }} taskName={taskName} />;
+    }
+  }, [
+    taskTypeRaw,
+    photoCaption,
+    photoUri,
+    photoUploading,
+    photoCapturedAt,
+    handleTakePhoto,
+    clearPhoto,
+    config,
+    timerSound,
+    timerDisplay,
+    progressFrac,
+    requiredSeconds,
+    isTimerRunning,
+    timerOk,
+    toggleTimer,
+    runDistance,
+    runDuration,
+    setRunDistance,
+    setRunDuration,
+    timerSeconds,
+    minDurMinutes,
+    workoutKind,
+    workoutDuration,
+    workoutNotes,
+    journalText,
+    handleJournalChange,
+    journalPrompt,
+    wordCount,
+    minWords,
+    counterVariant,
+    counterValue,
+    counterGoal,
+    counterUnits,
+    bookTitle,
+    remindersEnabled,
+    locationOk,
+    distance,
+    userLocation,
+    taskName,
+  ]);
+
+  // Verification gates payload for TaskShell.
+  const shellGates: TaskShellGates | undefined = useMemo(() => {
+    if (!isHardVerificationTask) return undefined;
+    const detail = (() => {
+      const start = config.schedule_window_start;
+      const end = config.schedule_window_end;
+      if (start && end) return `Open ${start} – ${end}`;
+      return "Active now";
+    })();
+    return {
+      timeWindow: {
+        status: timeWindowFailed ? "fail" : hardGatesPassed ? "pass" : "pending",
+        detail,
+      },
+      cameraOnly: config.require_camera_only === true,
+      requireLocation: config.require_location === true,
+    };
+  }, [
+    isHardVerificationTask,
+    config.schedule_window_start,
+    config.schedule_window_end,
+    config.require_camera_only,
+    config.require_location,
+    timeWindowFailed,
+    hardGatesPassed,
+  ]);
+
+  // Missed-task state — fires when hard-mode time window failed.
+  const shellMissedState: TaskShellMissedState | undefined = useMemo(() => {
+    if (!timeWindowFailed) return undefined;
+    return {
+      reason: "time_window",
+      detail:
+        config.schedule_window_end
+          ? `Window closed at ${config.schedule_window_end}`
+          : "Window closed",
+      currentStreak:
+        ((stats as { currentStreak?: number; current_streak?: number } | null)?.currentStreak ??
+          (stats as { current_streak?: number } | null)?.current_streak ??
+          0),
+      otherTasks: [],
+      nextWindow: config.schedule_window_start ? `Tomorrow at ${config.schedule_window_start}` : undefined,
+      onSetAlarm: () => undefined,
+      onPressDoOtherTasks: () => {
+        if (activeChallengeId) {
+          router.push(ROUTES.CHALLENGE_ACTIVE(activeChallengeId) as never);
+        } else {
+          goBackOrHome(router);
+        }
+      },
+    };
+  }, [
+    timeWindowFailed,
+    config.schedule_window_end,
+    config.schedule_window_start,
+    stats,
+    activeChallengeId,
+    router,
+  ]);
+
+  // Primary CTA state-driven label.
+  const primaryCta = useMemo(() => {
+    let label = "Mark complete";
+    let disabledReason: string | undefined;
+    if (taskTypeRaw === "manual" || taskTypeRaw === "simple") {
+      label = "Yes — I did it";
+    } else if (taskTypeRaw === "photo") {
+      label = "Submit proof";
+      if (!photoOk) disabledReason = "Take photo to submit";
+    } else if (taskTypeRaw === "timer") {
+      label = timerOk ? "Complete" : "Finish early";
+      if (!timerOk && isHardMode) disabledReason = "Stay on screen until done";
+    } else if (taskTypeRaw === "run") {
+      label = runFormOk ? "End run & save" : "End early";
+      if (!runFormOk) disabledReason = "Add distance & time";
+    } else if (taskTypeRaw === "workout") {
+      label = "Finish workout";
+      if (!workoutOk) disabledReason = `Need at least ${Math.max(1, minDurMinutes)} min`;
+    } else if (taskTypeRaw === "journal") {
+      label = "Save entry";
+      if (!journalOk) disabledReason = `Need ${Math.max(0, minWords - wordCount)} more word${minWords - wordCount === 1 ? "" : "s"}`;
+    } else if (isCounterFamily) {
+      label = "Mark today complete";
+      if (!counterOk) disabledReason = `${Math.max(0, counterGoal - counterValue)} more to go`;
+    } else if (taskTypeRaw === "checkin") {
+      label = "I'm here — check in";
+      if (!locationOk) {
+        const meters = distance != null ? `${Math.round(distance)} m away` : "Locating…";
+        disabledReason = `Get closer to check in (${meters})`;
+      }
+    }
+    return {
+      label,
+      onPress: () => void handleSubmit(),
+      disabled: !canSubmit,
+      disabledReason,
+      loading: isSubmitting,
+    };
+  }, [
+    taskTypeRaw,
+    photoOk,
+    timerOk,
+    isHardMode,
+    runFormOk,
+    workoutOk,
+    minDurMinutes,
+    journalOk,
+    minWords,
+    wordCount,
+    isCounterFamily,
+    counterOk,
+    counterGoal,
+    counterValue,
+    locationOk,
+    distance,
+    canSubmit,
+    isSubmitting,
+    handleSubmit,
+  ]);
+
+  // Suppress unused warnings for legacy state retained for future migration.
+  void error;
+  void clearError;
+  void hardVerificationConfig;
+  void onHardGatesResolved;
+  void onHardTimeWindowFailed;
+  void runManualComplete;
+  void manualScale;
+  void runDistanceKm;
+  void runDurationMin;
+  void runKm;
+  void heartRateData;
+  void setHeartRateData;
+  void heartRateManual;
+  void setHeartRateManual;
+  void threshold;
+  void heartRateOk;
+  void setUserLocation;
+  void radius;
+  void handleCheckLocation;
+  void handlePickImage;
+  void isPureManual;
+  void isChallengeHardMode;
+  void setMinimumConfirmVisible;
 
   if (!taskId.trim() || !activeChallengeId.trim()) {
     if (!paramsReady) {
@@ -850,20 +1067,22 @@ export function TaskCompleteScreenInner() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
-      <Stack.Screen options={{ title: taskName, headerBackVisible: true }} />
-      <FlatList
-        data={[{ key: "task-complete-root" }]}
-        keyExtractor={(item) => item.key}
-        initialNumToRender={1}
-        maxToRenderPerBatch={1}
-        windowSize={1}
-        removeClippedSubviews={false}
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        renderItem={renderTaskCompleteFormItem}
-      />
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <TaskShell
+        challengeName={headerChallengeName}
+        dayNumber={headerCurrentDay}
+        taskName={taskName}
+        hardMode={isHardVerificationTask}
+        verificationGates={shellGates}
+        onBack={() => goBackOrHome(router)}
+        primaryCta={primaryCta}
+        missedState={shellMissedState}
+        inlineError={error || null}
+        onDismissInlineError={clearError}
+      >
+        {renderBody()}
+      </TaskShell>
       <ConfirmDialog
         visible={minimumConfirmVisible}
         title="Mark minimum day?"
@@ -872,6 +1091,6 @@ export function TaskCompleteScreenInner() {
         onCancel={() => setMinimumConfirmVisible(false)}
         onConfirm={handleMinimumDayConfirm}
       />
-    </SafeAreaView>
+    </>
   );
 }
