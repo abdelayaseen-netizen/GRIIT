@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -369,9 +369,38 @@ function PostThreadScreenInner() {
           <Pressable onPress={() => router.back()} style={styles.back} accessibilityRole="button" accessibilityLabel="Back">
             <ChevronLeft size={22} color={DS_COLORS.TEXT_PRIMARY} />
           </Pressable>
-          <Text style={styles.topTitle} numberOfLines={1}>
-            {title}
-          </Text>
+          {displayPost?.challengeId ? (
+            <Pressable
+              onPress={() => {
+                track({
+                  name: "post_detail_challenge_tapped",
+                  postId: id,
+                  challengeId: displayPost.challengeId ?? "",
+                });
+                router.push(
+                  ROUTES.CHALLENGE_ID(displayPost.challengeId ?? "") as never,
+                );
+              }}
+              style={styles.topTitleWrap}
+              accessibilityRole="link"
+              accessibilityLabel={`Go to ${title} challenge`}
+              hitSlop={8}
+            >
+              <Text style={styles.topTitle} numberOfLines={1}>
+                {title}
+              </Text>
+              <ChevronRight
+                size={14}
+                color={DS_COLORS.FEED_USERNAME}
+                style={styles.topTitleChevron}
+                strokeWidth={2}
+              />
+            </Pressable>
+          ) : (
+            <Text style={styles.topTitle} numberOfLines={1}>
+              {title}
+            </Text>
+          )}
           <View style={{ width: 40 }} />
         </View>
 
@@ -514,6 +543,16 @@ const styles = StyleSheet.create({
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_COLORS.FEED_USERNAME,
     textAlign: "center",
+  },
+  topTitleWrap: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  topTitleChevron: {
+    opacity: 0.4,
   },
   postHeaderWrap: { paddingHorizontal: DS_SPACING.sm, marginBottom: 8 },
   postError: { paddingVertical: 16, fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },

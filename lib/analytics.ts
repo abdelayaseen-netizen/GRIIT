@@ -114,7 +114,8 @@ type AnalyticsEvent =
   | { name: "cold_start_bucket"; bucket: "fast" | "ok" | "slow" | "very_slow"; cold_start_ms: number }
   | { name: "identity_line_shown"; streak_count: number; tier: IdentityTier }
   | { name: "minimum_day_completed"; challenge_id?: string; streak_count?: number; day_number?: number }
-  | { name: "review_prompted"; total_days_secured: number; trigger: string };
+  | { name: "review_prompted"; total_days_secured: number; trigger: string }
+  | { name: "post_detail_challenge_tapped"; postId: string; challengeId: string };
 
 type UserProperties = {
   days_since_signup?: number;
