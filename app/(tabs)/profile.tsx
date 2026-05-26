@@ -12,7 +12,7 @@ import {
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   Settings,
   Camera,
@@ -56,6 +56,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type ProfileTab = "challenges" | "posts" | "badges";
 
+function isProfileTab(value: string | undefined): value is ProfileTab {
+  return value === "challenges" || value === "posts" || value === "badges";
+}
+
 type ProfileV2Mode = "self" | "public" | "friends-allowed" | "friends-blocked" | "private";
 
 
@@ -71,11 +75,22 @@ const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 365] as const;
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const qc = useQueryClient();
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const { profile, profileLoading, profileMissing, isError, stats, refetchAll } = useApp();
-  const [tab, setTab] = useState<ProfileTab>("challenges");
+  const [tab, setTab] = useState<ProfileTab>(
+    isProfileTab(tabParam) ? tabParam : "challenges",
+  );
+
+  useEffect(() => {
+    if (isProfileTab(tabParam) && tabParam !== tab) {
+      setTab(tabParam);
+    }
+  // tab intentionally excluded — only react to query-param changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam]);
   const [uploading, setUploading] = useState(false);
   const [avatarInlineError, setAvatarInlineError] = useState<string | null>(null);
   const [avatarDisplayOverride, setAvatarDisplayOverride] = useState<string | null>(null);
