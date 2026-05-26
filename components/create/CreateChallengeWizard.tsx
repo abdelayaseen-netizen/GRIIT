@@ -1,3 +1,4 @@
+// DEPRECATED: replaced by CreateWizardV2.tsx. Remove after one production cycle.
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
