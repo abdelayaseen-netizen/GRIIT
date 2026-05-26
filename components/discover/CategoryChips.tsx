@@ -11,11 +11,24 @@ import {
   Brain,
   BookHeart,
   Target,
+  Sparkles,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react-native";
 import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
-export type DiscoverCategory = "all" | "body" | "mind" | "faith" | "focus";
+/**
+ * `all` is kept as an alias for legacy callers; new code should use `for_you`
+ * which is the default landing chip on the redesigned Discover tab.
+ */
+export type DiscoverCategory =
+  | "for_you"
+  | "trending"
+  | "all"
+  | "body"
+  | "mind"
+  | "faith"
+  | "focus";
 
 export interface CategoryChipsProps {
   selected: DiscoverCategory;
@@ -29,7 +42,8 @@ interface ChipDef {
 }
 
 const CHIPS: ChipDef[] = [
-  { id: "all", label: "All", Icon: null },
+  { id: "for_you", label: "For you", Icon: Sparkles },
+  { id: "trending", label: "Trending", Icon: TrendingUp },
   { id: "body", label: "Body", Icon: Dumbbell },
   { id: "mind", label: "Mind", Icon: Brain },
   { id: "faith", label: "Faith", Icon: BookHeart },

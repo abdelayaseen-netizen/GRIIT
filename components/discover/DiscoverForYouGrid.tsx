@@ -94,16 +94,18 @@ function categoryMatches(
   challenge: RecommendedChallenge,
   selected: DiscoverCategory,
 ): boolean {
-  if (selected === 'all') return true;
+  if (selected === 'all' || selected === 'for_you' || selected === 'trending') {
+    return true;
+  }
   const c = (challenge.category ?? '').toLowerCase();
   if (selected === 'body') return c === 'body' || c === 'fitness';
   return c === selected;
 }
 
-function postCategoryMatches(_post: LiveFeedPost, selected: DiscoverCategory): boolean {
+function postCategoryMatches(_post: LiveFeedPost, _selected: DiscoverCategory): boolean {
   // LiveFeedPost has no category today — show trending across the board so
-  // the grid never looks empty when a niche chip is selected.
-  if (selected === 'all') return true;
+  // the grid never looks empty when a niche chip is selected. Future: wire
+  // category through the trending tRPC endpoint and filter here.
   return true;
 }
 
