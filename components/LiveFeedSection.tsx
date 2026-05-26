@@ -44,6 +44,18 @@ type LiveFeedSectionProps = {
   onRefresh?: () => Promise<void> | void;
   /** Composed with the internal feedQuery.isRefetching. */
   refreshing?: boolean;
+  /**
+   * Controlled scope. When provided, the home owns the source of truth and
+   * the internal toggle calls `onScopeChange` instead of mutating local state.
+   */
+  scope?: LiveFeedScope;
+  /** Required when `scope` is provided. */
+  onScopeChange?: (next: LiveFeedScope) => void;
+  /**
+   * Hide the internal "Feed" header row (title + live dot + toggle). Use when
+   * the parent renders its own equivalent UI (e.g. HomeHeaderV2 on home).
+   */
+  hideHeaderToggle?: boolean;
 };
 
 function FriendsEmptyState({
@@ -80,11 +92,26 @@ function FriendsEmptyState({
   );
 }
 
-function LiveFeedSection({ ListHeaderComponent, onRefresh, refreshing }: LiveFeedSectionProps) {
+function LiveFeedSection({
+  ListHeaderComponent,
+  onRefresh,
+  refreshing,
+  scope: scopeProp,
+  onScopeChange,
+  hideHeaderToggle,
+}: LiveFeedSectionProps) {
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [scope, setScope] = useState<LiveFeedScope>("everyone");
+  const [internalScope, setInternalScope] = useState<LiveFeedScope>("everyone");
+  const scope = scopeProp ?? internalScope;
+  const setScope = useCallback(
+    (next: LiveFeedScope) => {
+      if (onScopeChange) onScopeChange(next);
+      else setInternalScope(next);
+    },
+    [onScopeChange],
+  );
   const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
   const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
@@ -460,37 +487,39 @@ function LiveFeedSection({ ListHeaderComponent, onRefresh, refreshing }: LiveFee
   const composedHeader = (
     <>
       {ListHeaderComponent ?? null}
-      <View style={styles.feedHeader}>
-        <View style={styles.feedHeaderLeft}>
-          <View style={styles.feedTitleRow}>
-            <Text style={styles.feedTitle}>Feed</Text>
-            <View style={styles.liveRow}>
-              <Animated.View style={[styles.liveDot, { opacity: dotOpacity }]} />
-              <Text style={styles.liveCountMeta}>{activeChallengesCount} live</Text>
+      {hideHeaderToggle ? null : (
+        <View style={styles.feedHeader}>
+          <View style={styles.feedHeaderLeft}>
+            <View style={styles.feedTitleRow}>
+              <Text style={styles.feedTitle}>Feed</Text>
+              <View style={styles.liveRow}>
+                <Animated.View style={[styles.liveDot, { opacity: dotOpacity }]} />
+                <Text style={styles.liveCountMeta}>{activeChallengesCount} live</Text>
+              </View>
             </View>
           </View>
+          <View style={styles.feedToggle}>
+            <Pressable
+              onPress={() => setScope("following")}
+              style={[styles.togglePill, scope === "following" && styles.togglePillActive]}
+              accessibilityRole="button"
+              accessibilityLabel="Show feed from friends you follow"
+              accessibilityState={{ selected: scope === "following" }}
+            >
+              <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>Friends</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setScope("everyone")}
+              style={[styles.togglePill, scope === "everyone" && styles.togglePillActive]}
+              accessibilityRole="button"
+              accessibilityLabel="Show feed from everyone"
+              accessibilityState={{ selected: scope === "everyone" }}
+            >
+              <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextActive]}>Everyone</Text>
+            </Pressable>
+          </View>
         </View>
-        <View style={styles.feedToggle}>
-          <Pressable
-            onPress={() => setScope("following")}
-            style={[styles.togglePill, scope === "following" && styles.togglePillActive]}
-            accessibilityRole="button"
-            accessibilityLabel="Show feed from friends you follow"
-            accessibilityState={{ selected: scope === "following" }}
-          >
-            <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>Friends</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setScope("everyone")}
-            style={[styles.togglePill, scope === "everyone" && styles.togglePillActive]}
-            accessibilityRole="button"
-            accessibilityLabel="Show feed from everyone"
-            accessibilityState={{ selected: scope === "everyone" }}
-          >
-            <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextActive]}>Everyone</Text>
-          </Pressable>
-        </View>
-      </View>
+      )}
 
       {finalFeed.length > 0 ? (
         <Pressable

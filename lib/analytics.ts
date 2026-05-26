@@ -79,6 +79,7 @@ type AnalyticsEvent =
   | { name: "streak_freeze_used" }
   | { name: "streak_saved_last_stand" }
   | { name: "streak_lost_no_last_stand" }
+  | { name: "streak_secured_shared"; streak: number }
   | { name: "last_stand_earned" }
   | { name: "last_stand_used" }
   | { name: "comeback_mode_started" }
