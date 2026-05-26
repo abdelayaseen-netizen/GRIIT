@@ -15,12 +15,14 @@
  * Each card is wrapped in an `ErrorBoundary` so one bad row never blanks the
  * whole grid.
  */
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 
 import { trpcQuery } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
+import { ROUTES } from '@/lib/routes';
 import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
@@ -56,6 +58,8 @@ type NudgeData =
       variant: 'badge_in_reach';
       badgeName: string;
       daysAway?: number;
+      /** Challenge id to navigate to when the nudge is tapped. */
+      challengeId: string;
     }
   | {
       variant: 'streak_at_risk';
@@ -197,6 +201,7 @@ function interleave(args: {
           data: {
             variant: 'badge_in_reach',
             badgeName: easyChallenge.title,
+            challengeId: easyChallenge.id,
           },
         });
       }
@@ -237,6 +242,16 @@ function interleave(args: {
 }
 
 function GridCard({ section }: { section: GridSection }) {
+  const router = useRouter();
+  const badgeChallengeId =
+    section.type === 'nudge' && section.data.variant === 'badge_in_reach'
+      ? section.data.challengeId
+      : null;
+  const handleBadgePress = useCallback(() => {
+    if (!badgeChallengeId) return;
+    router.push(ROUTES.CHALLENGE_ID(badgeChallengeId) as never);
+  }, [router, badgeChallengeId]);
+
   if (section.type === 'proof') {
     return <ProofTile post={section.data} variant={section.variant} />;
   }
@@ -253,6 +268,7 @@ function GridCard({ section }: { section: GridSection }) {
         variant="badge_in_reach"
         badgeName={section.data.badgeName}
         daysAway={section.data.daysAway}
+        onPress={handleBadgePress}
       />
     );
   }
