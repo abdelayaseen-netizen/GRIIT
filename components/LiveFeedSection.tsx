@@ -111,6 +111,16 @@ function LiveFeedSection({
     },
     [onScopeChange],
   );
+  const prevScopeRef = useRef<LiveFeedScope>(scope);
+  useEffect(() => {
+    if (prevScopeRef.current !== scope) {
+      trackEvent("feed_scope_changed", {
+        from: prevScopeRef.current,
+        to: scope,
+      });
+      prevScopeRef.current = scope;
+    }
+  }, [scope]);
   const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
   const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
@@ -169,9 +179,9 @@ function LiveFeedSection({
     const postCount = feedQuery.data?.posts?.length ?? 0;
     if (postCount > 0 && !feedViewTracked.current) {
       feedViewTracked.current = true;
-      trackEvent("feed_viewed", { post_count: postCount });
+      trackEvent("feed_viewed", { scope, post_count: postCount });
     }
-  }, [feedQuery.data?.posts?.length]);
+  }, [feedQuery.data?.posts?.length, scope]);
   const activeChallengesCount = Array.isArray(myActiveQuery.data) ? myActiveQuery.data.length : 0;
 
   const postsWithComments = useMemo(() => finalFeed.filter((p) => p.commentCount > 0), [finalFeed]);

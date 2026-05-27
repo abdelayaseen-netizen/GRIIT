@@ -17,7 +17,7 @@ import { WhoRespectedSheet } from "./WhoRespectedSheet";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
 import { Avatar } from "@/components/Avatar";
 import { ImageViewerModal } from "@/components/shared/ImageViewerModal";
-import { track } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 
 function placeholderBg(challengeName: string): string {
@@ -143,6 +143,30 @@ function FeedPostCardInner({
 
   const isCompact = !showProof && isFakeCaption(post.caption, post.taskName);
   const isMilestone = post.eventType === "completed_challenge" || post.isCompleted;
+
+  const milestoneTrackedRef = React.useRef<boolean>(false);
+  React.useEffect(() => {
+    if (isMilestone && !milestoneTrackedRef.current) {
+      milestoneTrackedRef.current = true;
+      trackEvent("feed_card_milestone_shown", {
+        post_id: post.id,
+        challenge_id: post.challengeId ?? "unknown",
+      });
+    }
+  }, [isMilestone, post.id, post.challengeId]);
+
+  const verifiedTrackedRef = React.useRef<boolean>(false);
+  React.useEffect(() => {
+    if (post.verified && !verifiedTrackedRef.current) {
+      verifiedTrackedRef.current = true;
+      trackEvent("feed_card_verified_shown", { post_id: post.id });
+    }
+  }, [post.verified, post.id]);
+
+  const handlePreviewCommentPress = React.useCallback(() => {
+    trackEvent("feed_comment_preview_tapped", { post_id: post.id });
+    onComment();
+  }, [onComment, post.id]);
 
   if (isCompact) {
     return (
@@ -290,7 +314,7 @@ function FeedPostCardInner({
       {previewComment ? (
         <Pressable
           style={styles.commentPreview}
-          onPress={onComment}
+          onPress={handlePreviewCommentPress}
           accessibilityRole="button"
           accessibilityLabel={`Top comment from ${previewComment.displayName}: ${previewComment.text}. Tap to view all.`}
         >
