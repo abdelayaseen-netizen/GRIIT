@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Camera, Check, Heart } from "lucide-react-native";
+import { Camera, Check, Heart, Trophy } from "lucide-react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
@@ -142,6 +142,7 @@ function FeedPostCardInner({
   }, [quickDraft, sending, onSubmitComment]);
 
   const isCompact = !showProof && isFakeCaption(post.caption, post.taskName);
+  const isMilestone = post.eventType === "completed_challenge" || post.isCompleted;
 
   if (isCompact) {
     return (
@@ -175,7 +176,15 @@ function FeedPostCardInner({
   }
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isMilestone ? styles.cardMilestone : null]}>
+      {isMilestone ? (
+        <View style={styles.milestoneBanner} accessibilityLabel="Challenge completed">
+          <Trophy size={14} color="#FFFFFF" strokeWidth={2} />
+          <Text style={styles.milestoneBannerText}>
+            Finished Day {post.totalDays} · {post.challengeName}
+          </Text>
+        </View>
+      ) : null}
       <FeedCardHeader post={post} onProfilePress={onProfilePress} onMenuPress={onMenuPress} />
 
       {showProof ? (
@@ -382,6 +391,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 6,
     paddingBottom: 6,
+  },
+  cardMilestone: {
+    borderColor: "#F5C4B3",
+    borderWidth: 1,
+  },
+  milestoneBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: DS_COLORS.ACCENT,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  milestoneBannerText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#FFFFFF",
+    flex: 1,
   },
   verifiedPill: {
     position: "absolute",
