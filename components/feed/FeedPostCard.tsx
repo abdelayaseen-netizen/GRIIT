@@ -11,7 +11,6 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Camera, Check, Heart } from "lucide-react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
-import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
@@ -279,6 +278,36 @@ function FeedPostCardInner({
         </View>
       ) : null}
 
+      {previewComment ? (
+        <Pressable
+          style={styles.commentPreview}
+          onPress={onComment}
+          accessibilityRole="button"
+          accessibilityLabel={`Top comment from ${previewComment.displayName}: ${previewComment.text}. Tap to view all.`}
+        >
+          <Avatar
+            url={previewComment.avatarUrl}
+            name={previewComment.displayName || previewComment.username || "?"}
+            userId={previewComment.userId}
+            size={22}
+          />
+          <View style={styles.commentPreviewBody}>
+            <Text style={styles.commentPreviewName} numberOfLines={1}>
+              {previewComment.displayName || previewComment.username}
+            </Text>
+            <Text style={styles.commentPreviewText} numberOfLines={2}>
+              {previewComment.text}
+            </Text>
+            {post.commentCount > 1 ? (
+              <Text style={styles.commentPreviewMore}>
+                View {post.commentCount - 1} more{" "}
+                {post.commentCount - 1 === 1 ? "reply" : "replies"}
+              </Text>
+            ) : null}
+          </View>
+        </Pressable>
+      ) : null}
+
       <FeedEngagementRow
         respectCount={post.respectCount}
         reactedByMe={post.reactedByMe}
@@ -311,24 +340,6 @@ function FeedPostCardInner({
           >
             <Text style={styles.quickSendText}>{sending ? "..." : "Post"}</Text>
           </Pressable>
-        </View>
-      ) : null}
-
-      {previewComment ? (
-        <View style={styles.commentPreview}>
-          <Avatar
-            url={previewComment.avatarUrl}
-            name={previewComment.displayName || previewComment.username || "?"}
-            userId={previewComment.userId}
-            size={24}
-          />
-          <View style={styles.commentBody}>
-            <Text style={styles.commentLine} numberOfLines={2}>
-              <Text style={styles.commentUser}>{previewComment.displayName || previewComment.username}</Text>
-              <Text style={styles.commentText}> {previewComment.text}</Text>
-            </Text>
-            <Text style={styles.commentTime}>{relativeTime(previewComment.createdAt)}</Text>
-          </View>
         </View>
       ) : null}
 
@@ -550,26 +561,33 @@ const styles = StyleSheet.create({
   },
   commentPreview: {
     flexDirection: "row",
-    gap: 10,
-    borderTopWidth: 0.5,
-    borderTopColor: DS_COLORS.FEED_COMMENT_BORDER,
-    paddingTop: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 14,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    alignItems: "flex-start",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DS_COLORS.BORDER_LIGHT,
   },
-  commentBody: { flex: 1 },
-  commentLine: { fontSize: 12 },
-  commentUser: {
+  commentPreviewBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  commentPreviewName: {
+    fontSize: 12,
     fontWeight: "500",
-    color: DS_COLORS.FEED_USERNAME,
+    color: DS_COLORS.TEXT_PRIMARY,
+    lineHeight: 16,
   },
-  commentText: {
-    fontWeight: "400",
-    color: DS_COLORS.FEED_COMMENT_BODY,
+  commentPreviewText: {
+    fontSize: 12,
+    color: DS_COLORS.TEXT_PRIMARY,
+    lineHeight: 17,
+    marginTop: 1,
   },
-  commentTime: {
-    marginTop: 2,
+  commentPreviewMore: {
     fontSize: 11,
-    color: DS_COLORS.FEED_META_MUTED,
+    fontWeight: "500",
+    color: DS_COLORS.ACCENT,
+    marginTop: 4,
   },
 });
