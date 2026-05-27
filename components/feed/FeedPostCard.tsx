@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Camera, Heart } from "lucide-react-native";
+import { Camera, Check, Heart } from "lucide-react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
@@ -174,6 +174,16 @@ function FeedPostCardInner({
                 >
                   <Heart size={80} color={DS_COLORS.FEED_RESPECT_ICON_FILL} fill={DS_COLORS.FEED_RESPECT_ICON_FILL} />
                 </Animated.View>
+                {post.verified ? (
+                  <View
+                    style={styles.verifiedPill}
+                    accessibilityLabel="Photo proof verified"
+                    pointerEvents="none"
+                  >
+                    <Check size={11} color="#0F6E56" strokeWidth={2.5} />
+                    <Text style={styles.verifiedPillText}>Verified</Text>
+                  </View>
+                ) : null}
               </View>
 
               <View style={styles.overlayAnchored}>
@@ -314,6 +324,24 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.BG_CARD,
     borderRadius: DS_RADIUS.XL,
     overflow: "hidden",
+  },
+  verifiedPill: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(15, 15, 15, 0.55)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    zIndex: 2,
+  },
+  verifiedPillText: {
+    fontSize: 10,
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   captionFallback: {
     fontSize: 12,
