@@ -1,5 +1,9 @@
 /**
- * CreateWizardV2 — 3-step challenge creation wizard.
+ * @deprecated Replaced by `components/create/proposal/ProposalScreen.tsx`.
+ *
+ * CreateWizardV2 — 3-step challenge creation wizard. No longer routed; kept in
+ * the repo for one ship cycle as fallback while the proposal-pattern flow is
+ * verified in production. Safe to delete after that.
  *
  * Replaces the legacy 4-step `CreateChallengeWizard.tsx`:
  *   Step 1 (Basics)  — name, duration, solo/group

@@ -1,14 +1,15 @@
 import React from "react";
-import { CreateWizardV2 } from "@/components/create/CreateWizardV2";
+import { ProposalScreen } from "@/components/create/proposal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
- * Create tab — renders CreateWizardV2 (3-step). The legacy 4-step wizard
- * (`CreateChallengeWizard.tsx`) is kept in the repo with a deprecation
- * comment for one ship cycle and can be deleted once v2 is verified in prod.
+ * Create tab — renders the proposal-pattern, single-screen curated proposal.
+ * The legacy 3-step wizard and the older 4-step wizard are kept in the repo
+ * for one ship cycle as fallback and can be deleted once the proposal flow is
+ * verified in production.
  */
 function CreateTabScreenInner() {
-  return <CreateWizardV2 />;
+  return <ProposalScreen />;
 }
 
 export default function CreateTabScreen() {
