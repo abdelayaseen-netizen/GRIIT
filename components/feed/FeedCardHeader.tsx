@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Check, MoreHorizontal } from "lucide-react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { Check, Flame, MoreHorizontal } from "lucide-react-native";
+import { DS_COLORS, DS_COLORS_V2, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
+import { trackEvent } from "@/lib/analytics";
 import type { LiveFeedPost } from "./feedTypes";
 import { FLAGS } from "@/lib/feature-flags";
 
@@ -39,6 +40,18 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
       post.verified);
 
   const showStreakBadge = !completedToday && post.streakCount >= 7;
+  const showStreakChip = post.streakCount >= 3;
+
+  const streakChipTrackedRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (showStreakChip && !streakChipTrackedRef.current) {
+      streakChipTrackedRef.current = true;
+      trackEvent("feed_card_streak_chip_shown", {
+        post_id: post.id,
+        streak: post.streakCount,
+      });
+    }
+  }, [showStreakChip, post.id, post.streakCount]);
 
   return (
     <View style={styles.header}>
@@ -86,9 +99,24 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
           </View>
         </View>
         <View style={styles.subtitleRow}>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {challengeTask}
-          </Text>
+          <View style={styles.subtitleLeft}>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {challengeTask}
+            </Text>
+            {showStreakChip ? (
+              <>
+                <Text style={styles.dot}>·</Text>
+                <View style={styles.streakChip}>
+                  <Flame
+                    size={11}
+                    color={DS_COLORS_V2.brand.primary}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.streakChipText}>{post.streakCount}</Text>
+                </View>
+              </>
+            ) : null}
+          </View>
           <Text style={styles.subtitleTime}>
             {timeAgo}
           </Text>
@@ -178,10 +206,32 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 2,
   },
+  subtitleLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 0,
+  },
   subtitle: {
     fontSize: 11,
     color: DS_COLORS.FEED_META_MUTED,
-    flex: 1,
+    flexShrink: 1,
+  },
+  streakChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  streakChipText: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: DS_COLORS_V2.brand.primary,
+    fontVariant: ["tabular-nums"],
+  },
+  dot: {
+    fontSize: 11,
+    color: DS_COLORS_V2.text.tertiary,
+    marginHorizontal: 2,
   },
   subtitleTime: {
     fontSize: 11,
