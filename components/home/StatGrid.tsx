@@ -72,7 +72,7 @@ function StatCard({
     <>
       <View style={styles.topRow}>
         {icon}
-        <Text style={styles.label} numberOfLines={1}>
+        <Text style={styles.label} numberOfLines={2}>
           {label}
         </Text>
       </View>
@@ -80,6 +80,8 @@ function StatCard({
         <Text
           style={[styles.primary, primaryColor ? { color: primaryColor } : null]}
           numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.72}
         >
           {primary}
         </Text>
@@ -337,6 +339,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     height: 88,
+    minHeight: 78,
     borderRadius: DS_RADIUS_V2.md,
     padding: 12,
     backgroundColor: DS_COLORS_V2.surface.card,
