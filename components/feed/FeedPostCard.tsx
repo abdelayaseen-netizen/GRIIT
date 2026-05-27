@@ -23,9 +23,6 @@ import { FLAGS } from "@/lib/feature-flags";
 // from a JSX-free module (vitest's transformer doesn't handle JSX).
 import { isFakeCaption } from "./feedCaption";
 
-// Re-export so callers importing from FeedPostCard get the helper too.
-export { isFakeCaption } from "./feedCaption";
-
 function placeholderBg(challengeName: string): string {
   const s = challengeName.toLowerCase();
   if (s.includes("water") || s.includes("gallon") || s.includes("hydrat")) return DS_COLORS.FEED_PLACEHOLDER_WATER;
