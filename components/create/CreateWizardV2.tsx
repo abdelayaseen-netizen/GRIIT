@@ -233,19 +233,18 @@ export function CreateWizardV2() {
         participationType: state.who === "group" ? "team" : "solo",
         teamSize: state.who === "group" ? 10 : 1,
         visibility: state.who === "group" ? "FRIENDS" : "PUBLIC",
-        replayPolicy: "ALLOW_REPLAY",
+        replayPolicy: "allow_replay",
         showReplayLabel: false,
         requireSameRules: state.difficulty === "hard",
         liveDate: "",
-        tasks: tasksForApi.map((t, i) => ({
+        tasks: tasksForApi.map((t) => ({
           title: t.name,
           type: t.type,
           required: true,
-          require_photo_proof: requirePhoto || (allowPhoto && t.requirePhoto === true),
-          strict_timer_mode: state.difficulty === "hard" && t.type === "timer",
-          duration_minutes: t.durationMinutes ?? null,
-          min_words: t.minWords ?? null,
-          order_index: i,
+          requirePhotoProof: requirePhoto || (allowPhoto && t.requirePhoto === true),
+          strictTimerMode: state.difficulty === "hard" && t.type === "timer",
+          durationMinutes: t.durationMinutes ?? undefined,
+          minWords: t.minWords ?? undefined,
         })),
       };
 
