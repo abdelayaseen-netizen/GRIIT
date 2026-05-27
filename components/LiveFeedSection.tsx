@@ -27,7 +27,6 @@ import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
 import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
-import { Avatar } from "@/components/Avatar";
 import { Users } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
@@ -477,11 +476,6 @@ function LiveFeedSection({
     void feedQuery.refetch();
   }, [onRefresh, feedQuery]);
 
-  const scrollToFeed = useCallback(() => {
-    if (finalFeed.length === 0) return;
-    listRef.current?.scrollToIndex({ index: 0, animated: true, viewPosition: 0 });
-  }, [finalFeed.length]);
-
   if (!user?.id) return null;
 
   const composedHeader = (
@@ -521,27 +515,6 @@ function LiveFeedSection({
         </View>
       )}
 
-      {finalFeed.length > 0 ? (
-        <Pressable
-          style={styles.digestCard}
-          onPress={scrollToFeed}
-          accessibilityRole="button"
-          accessibilityLabel="While you were away summary"
-        >
-          <View style={styles.digestAvatars}>
-            {Array.from(new Map(finalFeed.map((p) => [p.userId, p])).values())
-              .slice(0, 3)
-              .map((p, i) => (
-                <View key={p.userId} style={[styles.digestAvatarWrap, i === 0 && { marginLeft: 0 }]}>
-                  <Avatar url={p.avatarUrl} name={p.displayName || p.username} userId={p.userId} size={28} />
-                </View>
-              ))}
-          </View>
-          <Text style={styles.digestText} numberOfLines={2}>
-            While you were away, your network kept moving — catch up below.
-          </Text>
-        </Pressable>
-      ) : null}
     </>
   );
 
@@ -770,32 +743,6 @@ const styles = StyleSheet.create({
   androidMenuDefault: { fontSize: 17, color: DS_COLORS.TEXT_PRIMARY, fontWeight: "500" },
   androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   androidMenuCancel: { fontSize: 17, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "500" },
-  digestCard: {
-    marginHorizontal: DS_SPACING.sm,
-    marginBottom: DS_SPACING.sm,
-    padding: DS_SPACING.md,
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: DS_RADIUS.MD,
-    borderWidth: 1,
-    borderColor: DS_COLORS.BORDER,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_SPACING.md,
-  },
-  digestAvatars: { flexDirection: "row", alignItems: "center" },
-  digestAvatarWrap: {
-    marginLeft: -10,
-    borderWidth: 2,
-    borderColor: DS_COLORS.WHITE,
-    borderRadius: DS_RADIUS.LG,
-  },
-  digestText: {
-    flex: 1,
-    fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    color: DS_COLORS.TEXT_SECONDARY,
-    fontWeight: "500",
-    lineHeight: 18,
-  },
   thoughtCard: {
     backgroundColor: DS_COLORS.BG_CARD,
     borderRadius: DS_RADIUS.XL,
