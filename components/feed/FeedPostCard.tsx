@@ -19,6 +19,12 @@ import { Avatar } from "@/components/Avatar";
 import { ImageViewerModal } from "@/components/shared/ImageViewerModal";
 import { track, trackEvent } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
+// The implementation lives in `./feedCaption` so unit tests can import it
+// from a JSX-free module (vitest's transformer doesn't handle JSX).
+import { isFakeCaption } from "./feedCaption";
+
+// Re-export so callers importing from FeedPostCard get the helper too.
+export { isFakeCaption } from "./feedCaption";
 
 function placeholderBg(challengeName: string): string {
   const s = challengeName.toLowerCase();
@@ -26,12 +32,6 @@ function placeholderBg(challengeName: string): string {
   if (s.includes("cold") || s.includes("ice") || s.includes("shower")) return DS_COLORS.FEED_PLACEHOLDER_COLD;
   return DS_COLORS.FEED_PLACEHOLDER_GENERAL;
 }
-
-// Re-export so callers importing from FeedPostCard get the helper too.
-// The implementation lives in `./feedCaption` so unit tests can import it
-// from a JSX-free module (vitest's transformer doesn't handle JSX).
-export { isFakeCaption } from "./feedCaption";
-import { isFakeCaption } from "./feedCaption";
 
 type Props = {
   post: LiveFeedPost;
