@@ -142,6 +142,39 @@ function FeedPostCardInner({
     }
   }, [quickDraft, sending, onSubmitComment]);
 
+  const isCompact = !showProof && isFakeCaption(post.caption, post.taskName);
+
+  if (isCompact) {
+    return (
+      <View style={[styles.card, styles.cardCompact]}>
+        <FeedCardHeader
+          post={post}
+          onProfilePress={onProfilePress}
+          onMenuPress={onMenuPress}
+        />
+        <View style={styles.progressBlockCompact}>
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${pct}%` }]} />
+          </View>
+        </View>
+        <FeedEngagementRow
+          respectCount={post.respectCount}
+          reactedByMe={post.reactedByMe}
+          commentCount={post.commentCount}
+          onRespect={onRespect}
+          onComment={onSubmitComment ? () => setShowQuickComment((v) => !v) : onComment}
+          onShare={onShare}
+          onRespectCountPress={() => setShowWhoRespected(true)}
+        />
+        <WhoRespectedSheet
+          visible={showWhoRespected}
+          eventId={post.id}
+          onClose={() => setShowWhoRespected(false)}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.card}>
       <FeedCardHeader post={post} onProfilePress={onProfilePress} onMenuPress={onMenuPress} />
@@ -330,6 +363,14 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.BG_CARD,
     borderRadius: DS_RADIUS.XL,
     overflow: "hidden",
+  },
+  cardCompact: {
+    paddingBottom: 4,
+  },
+  progressBlockCompact: {
+    paddingHorizontal: 14,
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   verifiedPill: {
     position: "absolute",
