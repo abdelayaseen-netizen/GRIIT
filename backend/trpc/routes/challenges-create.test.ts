@@ -1,5 +1,114 @@
 import { describe, it, expect } from "vitest";
 import { dbTaskType, journalMinWords, taskStrictAndPhoto } from "./challenges";
+import { challengeCreateInputSchema } from "./challenges-create";
+
+describe("challenges.create input schema (P0 bug regression)", () => {
+  it("rejects the exact uppercase 'ALLOW_REPLAY' replayPolicy the old wizard sent", () => {
+    const oldWizardBuggyPayload = {
+      title: "30 Day Reset",
+      description: "",
+      type: "standard" as const,
+      durationDays: 30,
+      difficulty: "standard" as const,
+      status: "published" as const,
+      categories: ["fitness"],
+      participationType: "solo" as const,
+      teamSize: 1,
+      visibility: "PUBLIC" as const,
+      replayPolicy: "ALLOW_REPLAY",
+      showReplayLabel: false,
+      requireSameRules: false,
+      liveDate: "",
+      tasks: [
+        {
+          title: "Workout",
+          type: "simple",
+          required: true,
+          require_photo_proof: true,
+          strict_timer_mode: false,
+          duration_minutes: null,
+          min_words: null,
+          order_index: 0,
+        },
+      ],
+    };
+    const result = challengeCreateInputSchema.safeParse(oldWizardBuggyPayload);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const replayPolicyIssue = result.error.issues.find((iss) =>
+        iss.path.includes("replayPolicy")
+      );
+      expect(replayPolicyIssue).toBeDefined();
+    }
+  });
+
+  it("accepts lowercase replayPolicy + camelCase task fields and preserves requirePhotoProof", () => {
+    const correctPayload = {
+      title: "30 Day Reset",
+      description: "",
+      type: "standard" as const,
+      durationDays: 30,
+      difficulty: "standard" as const,
+      status: "published" as const,
+      categories: ["fitness"],
+      participationType: "solo" as const,
+      teamSize: 1,
+      visibility: "PUBLIC" as const,
+      replayPolicy: "allow_replay" as const,
+      showReplayLabel: false,
+      requireSameRules: false,
+      liveDate: "",
+      tasks: [
+        {
+          title: "Workout",
+          type: "timer",
+          required: true,
+          requirePhotoProof: true,
+          strictTimerMode: true,
+          durationMinutes: 45,
+          minWords: undefined,
+        },
+      ],
+    };
+    const result = challengeCreateInputSchema.safeParse(correctPayload);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.replayPolicy).toBe("allow_replay");
+      expect(result.data.tasks[0]?.requirePhotoProof).toBe(true);
+      expect(result.data.tasks[0]?.strictTimerMode).toBe(true);
+      expect(result.data.tasks[0]?.durationMinutes).toBe(45);
+    }
+  });
+
+  it("does NOT preserve snake_case fields (Zod strips unknown keys, which is exactly the bug)", () => {
+    const partialBuggyPayload = {
+      title: "X",
+      type: "standard" as const,
+      durationDays: 30,
+      replayPolicy: "allow_replay" as const,
+      tasks: [
+        {
+          title: "Workout",
+          type: "simple",
+          required: true,
+          require_photo_proof: true,
+          strict_timer_mode: true,
+          duration_minutes: 30,
+          min_words: 50,
+          order_index: 0,
+        },
+      ],
+    };
+    const result = challengeCreateInputSchema.safeParse(partialBuggyPayload);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.tasks[0]?.requirePhotoProof).toBeUndefined();
+      expect(result.data.tasks[0]?.strictTimerMode).toBeUndefined();
+      expect(result.data.tasks[0]?.durationMinutes).toBeUndefined();
+      expect(result.data.tasks[0]?.minWords).toBeUndefined();
+    }
+  });
+});
 
 describe("challenges.create helpers (regression)", () => {
   describe("dbTaskType", () => {

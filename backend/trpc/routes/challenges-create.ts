@@ -41,9 +41,7 @@ async function autoJoinCreatorAfterCreate(
   return activeChallenge;
 }
 
-export const challengesCreateProcedures = {
-  create: protectedProcedure
-    .input(z.object({
+export const challengeCreateInputSchema = z.object({
       title: z.string().min(1, "Title is required").max(200, "Title too long"),
       description: z.string().max(5000).optional().default(""),
       type: z.enum(['standard', 'one_day']),
@@ -137,7 +135,11 @@ export const challengesCreateProcedures = {
       if (data.participationType !== "shared_goal" && data.tasks.length < 1) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one task is required for non–shared-goal challenges." });
       }
-    }))
+    });
+
+export const challengesCreateProcedures = {
+  create: protectedProcedure
+    .input(challengeCreateInputSchema)
     .mutation(async ({ input, ctx }) => {
       const isSharedGoal = input.participationType === "shared_goal";
       if (!isSharedGoal && input.tasks.length === 0) {
