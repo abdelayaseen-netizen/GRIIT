@@ -28,6 +28,12 @@ function placeholderBg(challengeName: string): string {
   return DS_COLORS.FEED_PLACEHOLDER_GENERAL;
 }
 
+// Re-export so callers importing from FeedPostCard get the helper too.
+// The implementation lives in `./feedCaption` so unit tests can import it
+// from a JSX-free module (vitest's transformer doesn't handle JSX).
+export { isFakeCaption } from "./feedCaption";
+import { isFakeCaption } from "./feedCaption";
+
 type Props = {
   post: LiveFeedPost;
   onProfilePress: () => void;
@@ -194,7 +200,7 @@ function FeedPostCardInner({
                   <Text style={styles.overlayTag} numberOfLines={2}>
                     {taskOrDayTag}
                   </Text>
-                  {post.caption?.trim() ? (
+                  {!isFakeCaption(post.caption, post.taskName) ? (
                     <Text
                       style={styles.overlayCaption}
                       numberOfLines={2}
@@ -209,7 +215,7 @@ function FeedPostCardInner({
             </Pressable>
           </View>
         </View>
-      ) : post.caption?.trim() ? (
+      ) : !isFakeCaption(post.caption, post.taskName) ? (
         <Text style={styles.captionFallback} accessibilityRole="text">
           {post.caption}
         </Text>
