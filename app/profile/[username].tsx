@@ -32,6 +32,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import {
+  Ban,
   ChevronLeft,
   ChevronRight,
   Lock,
@@ -119,6 +120,8 @@ function PublicProfileScreenInner() {
   const [followActionError, setFollowActionError] = useState<string | null>(null);
   const [androidMenuOpen, setAndroidMenuOpen] = useState(false);
   const [copyToast, setCopyToast] = useState<string | null>(null);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
   const respectLastAtUserPosts = useRef<Map<string, number>>(new Map());
 
   const decoded = useMemo(() => {
@@ -191,6 +194,20 @@ function PublicProfileScreenInner() {
     enabled: !!profileUserId && !!user?.id && user.id !== profileUserId,
     staleTime: 30 * 1000,
   });
+
+  const blockStatusQuery = useQuery({
+    queryKey: ["blockStatus", profileUserId, user?.id],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.isBlocked, {
+        userId: profileUserId,
+      }) as Promise<{ blockedByMe: boolean; blocksMe: boolean }>,
+    enabled: !!profileUserId && !!user?.id && user.id !== profileUserId,
+    staleTime: 30 * 1000,
+  });
+
+  const blockedByMe = blockStatusQuery.data?.blockedByMe ?? false;
+  const blocksMe = blockStatusQuery.data?.blocksMe ?? false;
+  const blockRelationship = blockedByMe || blocksMe;
 
   const vis = String(profile?.profile_visibility ?? "public").toLowerCase();
   const needsRequest = vis === "private" || vis === "friends";
@@ -375,21 +392,60 @@ function PublicProfileScreenInner() {
     }
   }, [profile?.username]);
 
+  const handleConfirmBlock = useCallback(async () => {
+    if (!profile?.user_id) return;
+    setShowBlockConfirm(false);
+    setBlockBusy(true);
+    try {
+      await trpcMutate(TRPC.profiles.blockUser, { userId: profile.user_id });
+      await queryClient.invalidateQueries({ queryKey: ["blockStatus", profile.user_id] });
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+      await invalidatePublic();
+    } catch (e) {
+      captureError(e, "PublicProfileBlock");
+      setFollowActionError("Could not block. Try again.");
+    } finally {
+      setBlockBusy(false);
+    }
+  }, [profile?.user_id, queryClient, invalidatePublic]);
+
+  const handleUnblock = useCallback(async () => {
+    if (!profile?.user_id) return;
+    setBlockBusy(true);
+    try {
+      await trpcMutate(TRPC.profiles.unblockUser, { userId: profile.user_id });
+      await queryClient.invalidateQueries({ queryKey: ["blockStatus", profile.user_id] });
+      await invalidatePublic();
+    } catch (e) {
+      captureError(e, "PublicProfileUnblock");
+      setFollowActionError("Could not unblock. Try again.");
+    } finally {
+      setBlockBusy(false);
+    }
+  }, [profile?.user_id, queryClient, invalidatePublic]);
+
   const onPressMore = useCallback(() => {
+    const blockLabel = profile ? `Block @${profile.username}` : "Block";
     if (Platform.OS === "ios") {
+      // Never offer block on your own profile (this screen redirects self-views).
+      const options = blockedByMe
+        ? ["Copy link", "Cancel"]
+        : ["Copy link", blockLabel, "Cancel"];
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ["Copy link", "Cancel"],
-          cancelButtonIndex: 1,
+          options,
+          cancelButtonIndex: options.length - 1,
+          ...(blockedByMe ? {} : { destructiveButtonIndex: 1 }),
         },
         (buttonIndex) => {
           if (buttonIndex === 0) void handleCopyLink();
+          else if (!blockedByMe && buttonIndex === 1) setShowBlockConfirm(true);
         },
       );
     } else {
       setAndroidMenuOpen(true);
     }
-  }, [handleCopyLink]);
+  }, [handleCopyLink, profile, blockedByMe]);
 
   const onUserPostRespect = useCallback(
     async (post: LiveFeedPost) => {
@@ -535,6 +591,57 @@ function PublicProfileScreenInner() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.fillCenter}>
           <ActivityIndicator size="large" color={DS_COLORS_V2.brand.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Block relationship (either direction) → minimal unavailable state, mirroring
+  // the private-account gate. If I blocked them, offer Unblock.
+  if (blockRelationship) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={() =>
+              router.canGoBack()
+                ? router.back()
+                : router.replace(ROUTES.TABS_HOME as never)
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            hitSlop={12}
+            style={styles.iconBtn}
+          >
+            <ChevronLeft size={20} color={DS_COLORS_V2.text.primary} strokeWidth={2} />
+          </Pressable>
+          <View style={styles.topBarCenter}>
+            <Text style={styles.handle} numberOfLines={1}>{`@${profile.username}`}</Text>
+          </View>
+          <View style={styles.iconBtnGhost} />
+        </View>
+        <View style={[styles.fillCenter, styles.padX24]}>
+          <View style={styles.gateIcon}>
+            <Ban size={28} color={DS_COLORS_V2.text.tertiary} strokeWidth={2} />
+          </View>
+          <Text style={styles.gateTitle}>Profile unavailable</Text>
+          <Text style={styles.gateBody}>
+            {blockedByMe
+              ? `You blocked @${profile.username}. Unblock to see their profile again.`
+              : "This profile isn't available."}
+          </Text>
+          {blockedByMe ? (
+            <Pressable
+              style={styles.retry}
+              onPress={() => void handleUnblock()}
+              disabled={blockBusy}
+              accessibilityRole="button"
+              accessibilityLabel={`Unblock @${profile.username}`}
+            >
+              <Text style={styles.retryTxt}>{blockBusy ? "Unblocking…" : "Unblock"}</Text>
+            </Pressable>
+          ) : null}
         </View>
       </SafeAreaView>
     );
@@ -957,6 +1064,17 @@ function PublicProfileScreenInner() {
           onConfirm={() => void handleConfirmUnfollow()}
         />
 
+        <ConfirmDialog
+          visible={showBlockConfirm}
+          title={profile ? `Block @${profile.username}?` : ""}
+          message="They won't see your posts and you won't see theirs. They won't be notified."
+          cancelLabel="Cancel"
+          confirmLabel="Block"
+          destructive
+          onCancel={() => setShowBlockConfirm(false)}
+          onConfirm={() => void handleConfirmBlock()}
+        />
+
         <Modal
           visible={androidMenuOpen}
           transparent
@@ -981,6 +1099,20 @@ function PublicProfileScreenInner() {
               >
                 <Text style={styles.androidRowText}>Copy link</Text>
               </Pressable>
+              {blockedByMe ? null : (
+                <Pressable
+                  onPress={() => {
+                    setAndroidMenuOpen(false);
+                    setShowBlockConfirm(true);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Block @${profile.username}`}
+                  style={styles.androidRow}
+                >
+                  <Ban size={16} color={DS_COLORS_V2.semantic.danger} strokeWidth={2} />
+                  <Text style={styles.androidRowDanger}>{`Block @${profile.username}`}</Text>
+                </Pressable>
+              )}
               <Pressable
                 onPress={() => setAndroidMenuOpen(false)}
                 accessibilityRole="button"
@@ -1070,6 +1202,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: DS_COLORS_V2.surface.divider,
   },
+  iconBtnGhost: { width: 32, height: 32 },
 
   contentPad: {
     paddingHorizontal: DS_SPACING_V2.md,
@@ -1317,6 +1450,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: DS_COLORS_V2.text.secondary,
+  },
+  androidRowDanger: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS_V2.semantic.danger,
   },
 
   hiddenA11y: { height: 0, width: 0, overflow: "hidden" },

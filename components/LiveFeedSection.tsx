@@ -19,7 +19,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 import { SkeletonFeedCard } from "@/components/skeletons";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
@@ -27,7 +27,8 @@ import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
 import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
-import { Users } from "lucide-react-native";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { Users, Ban } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
 
@@ -123,6 +124,7 @@ function LiveFeedSection({
   }, [scope]);
   const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
   const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
+  const [blockTarget, setBlockTarget] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
@@ -356,6 +358,29 @@ function LiveFeedSection({
     [queryClient]
   );
 
+  const handleConfirmBlock = useCallback(async () => {
+    const post = blockTarget;
+    setBlockTarget(null);
+    if (!post?.userId) return;
+    // Optimistically remove all of this author's posts from the current feed.
+    setHiddenPostIds((prev) => {
+      const toHide = (feedQuery.data?.posts ?? [])
+        .filter((p) => p.userId === post.userId)
+        .map((p) => p.id);
+      return [...new Set([...prev, ...toHide])];
+    });
+    try {
+      await trpcMutate(TRPC.profiles.blockUser, { userId: post.userId });
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+      setFeedSnack(`Blocked @${post.username}`);
+      setTimeout(() => setFeedSnack(null), 2500);
+    } catch (e) {
+      captureError(e, "LiveFeedBlockUser");
+      setFeedSnack("Couldn't block. Try again.");
+      setTimeout(() => setFeedSnack(null), 2500);
+    }
+  }, [blockTarget, feedQuery.data?.posts, queryClient]);
+
   const openPostMenu = useCallback(
     (post: LiveFeedPost) => {
       if (!user?.id) return;
@@ -369,17 +394,21 @@ function LiveFeedSection({
           setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
           setTimeout(() => setFeedSnack(null), 2500);
         } else if (index === 1) {
+          setBlockTarget(post);
+        } else if (index === 2) {
           setHiddenPostIds((prev) => (prev.includes(post.id) ? prev : [...prev, post.id]));
         }
       };
 
       if (Platform.OS === "ios") {
-        const options = isOwn ? ["Delete post", "Cancel"] : ["Report", "Hide post", "Cancel"];
+        const options = isOwn
+          ? ["Delete post", "Cancel"]
+          : ["Report", `Block @${post.username}`, "Hide post", "Cancel"];
         ActionSheetIOS.showActionSheetWithOptions(
           {
             options,
             cancelButtonIndex: options.length - 1,
-            ...(isOwn ? { destructiveButtonIndex: 0 } : {}),
+            destructiveButtonIndex: isOwn ? 0 : 1,
           },
           (buttonIndex) => {
             if (isOwn) runOwn(buttonIndex);
@@ -611,6 +640,19 @@ function LiveFeedSection({
                   <Text style={styles.androidMenuDefault}>Report</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  style={[styles.androidMenuRow, styles.androidMenuRowIcon]}
+                  onPress={() => {
+                    const p = androidMenuPost;
+                    setAndroidMenuPost(null);
+                    setBlockTarget(p);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Block ${androidMenuPost.username}`}
+                >
+                  <Ban size={18} color={DS_COLORS_V2.semantic.danger} strokeWidth={2} />
+                  <Text style={styles.androidMenuBlock}>{`Block @${androidMenuPost.username}`}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={styles.androidMenuRow}
                   onPress={() => {
                     const p = androidMenuPost;
@@ -635,6 +677,17 @@ function LiveFeedSection({
           </View>
         </View>
       </Modal>
+
+      <ConfirmDialog
+        visible={blockTarget !== null}
+        title={blockTarget ? `Block @${blockTarget.username}?` : ""}
+        message="They won't see your posts and you won't see theirs. They won't be notified."
+        cancelLabel="Cancel"
+        confirmLabel="Block"
+        destructive
+        onCancel={() => setBlockTarget(null)}
+        onConfirm={() => void handleConfirmBlock()}
+      />
     </View>
   );
 }
@@ -750,8 +803,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: "center",
   },
+  androidMenuRowIcon: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+  },
   androidMenuDefault: { fontSize: 17, color: DS_COLORS.TEXT_PRIMARY, fontWeight: "500" },
   androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  androidMenuBlock: { fontSize: 17, color: DS_COLORS_V2.semantic.danger, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   androidMenuCancel: { fontSize: 17, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "500" },
   thoughtCard: {
     backgroundColor: DS_COLORS.BG_CARD,
