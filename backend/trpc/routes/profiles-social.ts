@@ -89,6 +89,117 @@ export const profilesSocialProcedures = {
       return { success: true as const };
     }),
 
+  /**
+   * Block a user (Apple UGC Guideline 1.2). Idempotent: a second block is a
+   * no-op. Also tears down any follow relationship in BOTH directions so a block
+   * fully severs the connection. No notification is sent to the blocked user.
+   */
+  blockUser: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId === ctx.userId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "You cannot block yourself." });
+      }
+      const { error } = await ctx.supabase.from("blocked_users").insert({
+        blocker_id: ctx.userId,
+        blocked_id: input.userId,
+      });
+      // 23505 = unique_violation -> already blocked; treat as success (idempotent).
+      if (error && (error as PgError).code !== "23505") {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+
+      // Remove follows in both directions (best-effort; a block must not be left
+      // partially applied, but a follow-cleanup hiccup shouldn't fail the block).
+      const { error: f1 } = await ctx.supabase
+        .from("user_follows")
+        .delete()
+        .eq("follower_id", ctx.userId)
+        .eq("following_id", input.userId);
+      const { error: f2 } = await ctx.supabase
+        .from("user_follows")
+        .delete()
+        .eq("follower_id", input.userId)
+        .eq("following_id", ctx.userId);
+      if ((f1 || f2) && process.env.NODE_ENV !== "test") {
+        logger.warn({ f1, f2 }, "[profiles.blockUser] follow cleanup");
+      }
+
+      return { success: true as const };
+    }),
+
+  /** Unblock a user. Deletes the block row; does not restore prior follows. */
+  unblockUser: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { error } = await ctx.supabase
+        .from("blocked_users")
+        .delete()
+        .eq("blocker_id", ctx.userId)
+        .eq("blocked_id", input.userId);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      return { success: true as const };
+    }),
+
+  /** Users the caller has blocked (for a future settings screen). */
+  blockedUsers: protectedProcedure.query(async ({ ctx }) => {
+    const { data: rows, error } = await ctx.supabase
+      .from("blocked_users")
+      .select("blocked_id, created_at")
+      .eq("blocker_id", ctx.userId)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+    }
+    const ids = [...new Set((rows ?? []).map((r: { blocked_id: string }) => r.blocked_id))];
+    if (ids.length === 0) return [];
+    const server = getSupabaseServer() ?? ctx.supabase;
+    const { data: profs } = await server
+      .from("profiles")
+      .select("user_id, username, display_name, avatar_url")
+      .in("user_id", ids)
+      .limit(500);
+    const pmap = new Map((profs ?? []).map((p: ProfileRow) => [p.user_id, p]));
+    return ids.map((id) => {
+      const p = pmap.get(id);
+      return {
+        user_id: id,
+        username: p?.username ?? "",
+        display_name: p?.display_name ?? p?.username ?? "",
+        avatar_url: p?.avatar_url ?? null,
+      };
+    });
+  }),
+
+  /** Block status between the caller and another user, in both directions. */
+  isBlocked: protectedProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      if (input.userId === ctx.userId) {
+        return { blockedByMe: false, blocksMe: false };
+      }
+      const { data, error } = await ctx.supabase
+        .from("blocked_users")
+        .select("blocker_id, blocked_id")
+        .or(
+          `and(blocker_id.eq.${ctx.userId},blocked_id.eq.${input.userId}),and(blocker_id.eq.${input.userId},blocked_id.eq.${ctx.userId})`
+        )
+        .limit(2);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+      }
+      let blockedByMe = false;
+      let blocksMe = false;
+      for (const row of (data ?? []) as { blocker_id: string; blocked_id: string }[]) {
+        if (row.blocker_id === ctx.userId) blockedByMe = true;
+        if (row.blocker_id === input.userId) blocksMe = true;
+      }
+      return { blockedByMe, blocksMe };
+    }),
+
   sendFollowRequest: protectedProcedure
     .input(z.object({ userId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {

@@ -39,6 +39,10 @@ export const TRPC = {
     isFollowing: 'profiles.isFollowing',
     suggested: 'profiles.suggested',
     getMutualFollowers: 'profiles.getMutualFollowers',
+    blockUser: 'profiles.blockUser',
+    unblockUser: 'profiles.unblockUser',
+    blockedUsers: 'profiles.blockedUsers',
+    isBlocked: 'profiles.isBlocked',
   },
   challenges: {
     list: 'challenges.list',
