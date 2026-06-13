@@ -131,7 +131,7 @@ export default React.memo(function GoalCard({
           accessibilityHint="Long press for options."
         >
           <View style={[s.iconBox, completedSection && s.iconBoxCompleted]}>
-            {completedSection ? <Check size={16} color={DS_COLORS.GREEN} /> : <Target size={16} color={DS_COLORS.GREEN} />}
+            {completedSection ? <Check size={16} color={DS_COLORS.GREEN} /> : <Target size={16} color={DS_COLORS.ACCENT} />}
           </View>
           <View style={s.challengeMid}>
             <TouchableOpacity
@@ -239,7 +239,7 @@ const s = StyleSheet.create({
     borderRadius: DS_RADIUS.card,
     padding: 14,
     borderLeftWidth: 3,
-    borderLeftColor: DS_COLORS.DISCOVER_GREEN,
+    borderLeftColor: DS_COLORS.ACCENT,
   },
   cardCompleted: {
     opacity: 0.8,
@@ -249,7 +249,7 @@ const s = StyleSheet.create({
   iconBox: {
     width: 34,
     height: 34,
-    backgroundColor: DS_COLORS.GREEN_BG,
+    backgroundColor: DS_COLORS.ACCENT_TINT,
     borderRadius: DS_RADIUS.MD,
     alignItems: "center",
     justifyContent: "center",
@@ -270,7 +270,7 @@ const s = StyleSheet.create({
     borderRadius: DS_RADIUS.SM,
     overflow: "hidden",
   },
-  progressFill: { height: 3, backgroundColor: DS_COLORS.DISCOVER_GREEN, borderRadius: DS_RADIUS.SM },
+  progressFill: { height: 3, backgroundColor: DS_COLORS.ACCENT, borderRadius: DS_RADIUS.SM },
   progressFillCompleted: { backgroundColor: DS_COLORS.GREEN },
   count: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_CORAL },
   countCompleted: { color: DS_COLORS.GREEN },

@@ -259,7 +259,7 @@ export function StatGrid(props: StatGridProps) {
               ? freezesAvailable / props.freezesMaxPerWeek
               : 0
           }
-          color={DS_COLORS_V2.streak.frozenStroke}
+          color={DS_COLORS_V2.brand.primary}
         />
       }
       onPress={onPressFreezes}
