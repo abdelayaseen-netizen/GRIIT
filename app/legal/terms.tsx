@@ -5,13 +5,16 @@ import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const CONTENT = [
-  { heading: "Acceptance of Terms", body: "By using GRIIT you agree to these Terms of Service. If you do not agree, do not use the app." },
-  { heading: "Account Responsibilities", body: "You are responsible for keeping your account credentials secure. You must provide accurate information when creating an account. You must be at least 13 years of age (or the minimum age in your jurisdiction) to use GRIIT." },
-  { heading: "Subscription and Billing", body: "Subscriptions auto-renew unless cancelled before the end of the current period. You can cancel or manage your subscription in your device's subscription settings or via RevenueCat. Refunds are subject to the platform (App Store / Google Play) policies." },
-  { heading: "Acceptable Use", body: "You may not use GRIIT for any illegal or harmful purpose. You may not abuse, harass, or impersonate other users. You may not attempt to circumvent verification or game the system." },
-  { heading: "Intellectual Property", body: "GRIIT and its content (including design, text, and branding) are owned by us. You retain ownership of content you create; you grant us a license to use it to operate the service." },
-  { heading: "Limitation of Liability", body: "GRIIT is provided as is. We do not guarantee uninterrupted or error-free service. To the extent permitted by law, we are not liable for indirect, incidental, or consequential damages." },
-  { heading: "Termination", body: "We may suspend or terminate your account for violation of these terms. You may delete your account at any time from Settings." },
+  { heading: "Acceptance and Eligibility", body: "By using GRIIT you agree to these Terms. You must be at least 13 years old. If you are under 18, a parent or guardian must agree to these Terms on your behalf." },
+  { heading: "Your Account", body: "You are responsible for your account and credentials. Provide accurate information. No impersonation or automated account creation. You may delete your account at any time in Settings." },
+  { heading: "Subscriptions and Billing", body: "GRIIT Pro is billed through your Apple ID. Payment is charged at purchase, or at the end of the free trial if not cancelled at least 24 hours before it ends. Subscriptions auto-renew unless turned off at least 24 hours before the period ends. Manage or cancel in Settings, Apple ID, Subscriptions. Deleting the app does not cancel a subscription. Refunds are handled by Apple." },
+  { heading: "Your Content", body: "You own the content you post. By posting, you grant us a license to host, store, and display it within GRIIT so the service can function. The license ends when you delete the content or your account." },
+  { heading: "Community Rules", body: "GRIIT has zero tolerance for objectionable content: no sexually explicit, violent, threatening, harassing, hateful, illegal, deceptive, or infringing content. Every post can be reported in-app. We review reports promptly, typically within 24 hours, remove violating content, and suspend or ban offending accounts." },
+  { heading: "Acceptable Use", body: "Do not circumvent proof verification, manipulate streaks or leaderboards, scrape data, reverse engineer the app, or interfere with the service." },
+  { heading: "Health Disclaimer", body: "Challenges may involve physical activity or lifestyle changes. GRIIT does not provide medical advice. Consult a physician before starting any fitness or diet challenge. You participate at your own risk." },
+  { heading: "Disclaimers and Liability", body: "GRIIT is provided as is. We do not guarantee uninterrupted or error-free service or that data will never be lost. To the fullest extent permitted by law, we are not liable for indirect or consequential damages, and our total liability is limited to what you paid us in the prior 12 months." },
+  { heading: "Termination", body: "We may suspend or terminate accounts that violate these Terms. You may stop using GRIIT at any time." },
+  { heading: "Governing Law", body: "These Terms are governed by the laws of the State of New Jersey, United States." },
   { heading: "Contact", body: "griit.health@gmail.com" },
 ];
 
@@ -20,7 +23,7 @@ function TermsScreenInner() {
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.title}>GRIIT Terms of Service</Text>
-        <Text style={styles.updated}>Last updated: March 2025</Text>
+        <Text style={styles.updated}>Last updated: June 12, 2026</Text>
         {CONTENT.map((section, i) => (
           <View key={i} style={styles.section}>
             <Text style={styles.heading}>{section.heading}</Text>
