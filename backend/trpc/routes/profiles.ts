@@ -8,6 +8,7 @@
 // NOTE(architecture): Split into sub-routers — see docs/ARCHITECTURE.md
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../create-context";
 import { requireNoError } from "../errors";
 import type { PgError, ProfileRow } from "../../types/db";
@@ -28,6 +29,45 @@ const PROFILE_UPDATE_KEYS = [
   "profile_visibility", "weekly_goal",
   "timezone",
 ] as const;
+
+/**
+ * Storage buckets that key objects under a top-level `${userId}/` folder.
+ * Proof photos: lib/uploadProofImage.ts (path `${user.id}/...`).
+ * Avatars: lib/uploadAvatar.ts (path `${userId}/avatar.ext`).
+ */
+const USER_OWNED_STORAGE_BUCKETS = ["task-proofs", "avatars"] as const;
+
+const STORAGE_LIST_PAGE_SIZE = 100;
+
+/**
+ * Remove every storage object owned by `userId` from the user-owned buckets.
+ * The userId is the top-level folder in each bucket, so a non-recursive list of
+ * that folder enumerates the user's objects. Throws on the first storage error so
+ * the caller can report it; callers must treat storage cleanup as best-effort and
+ * not let a failure block the rest of account deletion.
+ */
+async function deleteUserStorageObjects(admin: SupabaseClient, userId: string): Promise<void> {
+  for (const bucket of USER_OWNED_STORAGE_BUCKETS) {
+    const paths: string[] = [];
+    let offset = 0;
+    for (;;) {
+      const { data, error } = await admin.storage
+        .from(bucket)
+        .list(userId, { limit: STORAGE_LIST_PAGE_SIZE, offset });
+      if (error) throw error;
+      const files = data ?? [];
+      for (const file of files) {
+        paths.push(`${userId}/${file.name}`);
+      }
+      if (files.length < STORAGE_LIST_PAGE_SIZE) break;
+      offset += files.length;
+    }
+    if (paths.length > 0) {
+      const { error } = await admin.storage.from(bucket).remove(paths);
+      if (error) throw error;
+    }
+  }
+}
 
 type SubscriptionStatus = "free" | "premium" | "trial";
 
@@ -494,6 +534,35 @@ export const profilesRouter = createTRPCRouter({
   deleteAccount: protectedProcedure
     .input(z.object({}))
     .mutation(async ({ ctx }) => {
+      const Sentry = await import("@sentry/node");
+      const { hasSupabaseAdmin, getSupabaseAdmin } = await import("../../lib/supabase-admin");
+      const adminAvailable = hasSupabaseAdmin();
+      const admin = adminAvailable ? getSupabaseAdmin() : null;
+
+      // 1. Storage cleanup (proof photos + avatar). Best-effort: a storage failure
+      //    must NOT block deletion of the account, but is reported to Sentry.
+      if (admin) {
+        try {
+          await deleteUserStorageObjects(admin, ctx.userId);
+        } catch (storageErr) {
+          Sentry.captureException(
+            storageErr instanceof Error ? storageErr : new Error(String(storageErr)),
+            {
+              tags: { path: "profiles.deleteAccount", phase: "storage-cleanup" },
+              extra: { userId: ctx.userId },
+            }
+          );
+        }
+      } else {
+        // No service-role key configured: we cannot reach storage server-side.
+        Sentry.captureMessage(
+          "profiles.deleteAccount: SUPABASE_SERVICE_ROLE_KEY not configured; skipped storage cleanup",
+          "warning"
+        );
+      }
+
+      // 2. Delete the profile row. The cascade-hardening migration removes all
+      //    user-owned rows (check-ins, posts, respects, streaks, etc.) from here.
       const { error: profileError } = await ctx.supabase
         .from("profiles")
         .delete()
@@ -501,11 +570,12 @@ export const profilesRouter = createTRPCRouter({
       if (profileError) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete account data." });
       }
-      const { hasSupabaseAdmin, getSupabaseAdmin } = await import("../../lib/supabase-admin");
-      if (hasSupabaseAdmin()) {
-        const admin = getSupabaseAdmin();
+
+      // 3. Delete the auth user (requires the admin client).
+      if (admin) {
         await admin.auth.admin.deleteUser(ctx.userId);
       }
+
       return { ok: true };
     }),
 });
