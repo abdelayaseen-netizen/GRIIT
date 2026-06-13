@@ -29,6 +29,7 @@ import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
   DS_SPACING_V2,
+  DS_TYPOGRAPHY,
 } from '@/lib/design-system';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
@@ -580,6 +581,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   streakNumber: {
+    ...DS_TYPOGRAPHY.display.numeral,
     fontWeight: '500',
     letterSpacing: -1,
     marginTop: 2,

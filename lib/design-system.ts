@@ -718,6 +718,16 @@ export const GRIIT_COLORS = {
   error: DS_COLORS.danger,
 } as const;
 
+// ════════════════════════════════════════════════════════════════════════════
+// DISPLAY FONT (Archivo) — the ONLY non-system typeface in the app. Loaded in
+// app/_layout.tsx (Archivo_800ExtraBold + Archivo_900Black). Referenced
+// EXCLUSIVELY through the display-tier tokens below (DS_TYPOGRAPHY.display,
+// pageTitle, screenTitle); never named at a call site. Body/labels/buttons/
+// metadata stay on the platform system font.
+// ════════════════════════════════════════════════════════════════════════════
+const ARCHIVO_TITLE = 'Archivo_800ExtraBold' as const;
+const ARCHIVO_NUMERAL = 'Archivo_900Black' as const;
+
 export const DS_TYPOGRAPHY = {
   // Font sizes
   SIZE_XS: 11,
@@ -748,7 +758,7 @@ export const DS_TYPOGRAPHY = {
   // ═══════════════════════════════════════════════════════════════════════════
   wordmark: { fontSize: 24, fontWeight: '800' as const, letterSpacing: 3, lineHeight: 28 },
   wordmarkSubtitle: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
-  pageTitle: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.5, lineHeight: 34 },
+  pageTitle: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.5, lineHeight: 34, fontFamily: ARCHIVO_TITLE },
   sectionTitle: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 26 },
   cardTitle: { fontSize: 17, fontWeight: '700' as const, letterSpacing: -0.2 },
   body: { fontSize: 15, fontWeight: '500' as const, lineHeight: 24 },
@@ -763,10 +773,17 @@ export const DS_TYPOGRAPHY = {
   tabLabel: { fontSize: 11, fontWeight: '600' as const },
   /** Section titles on secondary screens (e.g. pricing) */
   sectionHeader: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 26 },
-  screenTitle: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.5, lineHeight: 34 },
+  screenTitle: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.5, lineHeight: 34, fontFamily: ARCHIVO_TITLE },
   screenSubtitle: { fontSize: 13, fontWeight: '400' as const, lineHeight: 20 },
   cardSubtitle: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22 },
   ctaButton: { fontSize: 17, fontWeight: '700' as const, lineHeight: 22 },
+  // Display-tier (Archivo). `title` for large screen/page headers, `numeral`
+  // for the big tabular streak/stat numbers. Spread these into a style; never
+  // reference the Archivo family name directly at a call site.
+  display: {
+    title: { fontFamily: ARCHIVO_TITLE },
+    numeral: { fontFamily: ARCHIVO_NUMERAL, fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
+  },
 } as const;
 
 export const DS_SPACING = {

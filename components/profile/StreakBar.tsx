@@ -12,6 +12,7 @@ import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
   DS_SPACING_V2,
+  DS_TYPOGRAPHY,
 } from '@/lib/design-system';
 
 export type StreakBarProps = {
@@ -142,6 +143,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   number: {
+    ...DS_TYPOGRAPHY.display.numeral,
     fontSize: 28,
     fontWeight: '500',
     color: DS_COLORS_V2.text.onDark,
@@ -149,6 +151,7 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   numberHighlight: {
+    ...DS_TYPOGRAPHY.display.numeral,
     fontSize: 28,
     fontWeight: '500',
     color: DS_COLORS_V2.brand.primaryOnDark,

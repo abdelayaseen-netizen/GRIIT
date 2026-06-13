@@ -23,7 +23,7 @@
     "ios": "expo run:ios"
   },
   "dependencies": {
-    "@expo-google-fonts/inter": "^0.2.3",
+    "@expo-google-fonts/archivo": "^0.2.3",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hono/node-server": "^1.0.0",

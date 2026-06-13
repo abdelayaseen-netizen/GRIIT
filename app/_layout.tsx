@@ -10,8 +10,8 @@ import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
-import { useFonts } from "@expo-google-fonts/inter/useFonts";
-import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+import { useFonts } from "@expo-google-fonts/archivo/useFonts";
+import { Archivo_800ExtraBold, Archivo_900Black } from "@expo-google-fonts/archivo";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -436,9 +436,8 @@ function RootLayoutNav() {
 
 function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_800ExtraBold,
+    Archivo_800ExtraBold,
+    Archivo_900Black,
   });
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
 
