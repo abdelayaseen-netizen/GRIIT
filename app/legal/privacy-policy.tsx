@@ -5,12 +5,14 @@ import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const CONTENT = [
-  { heading: "Information We Collect", body: "Account information (email, username, display name); challenge activity and progress data; device information for push notifications; usage analytics (anonymized)." },
-  { heading: "How We Use Your Information", body: "To provide and improve the GRIIT service; to track your challenge progress and streaks; to send push notifications you've opted into; to display leaderboards and social features." },
-  { heading: "Data Storage", body: "Your data is stored securely on Supabase (cloud infrastructure). We use industry-standard encryption for data in transit." },
-  { heading: "Your Rights", body: "You can request deletion of your account and data. You can opt out of push notifications at any time. You can contact us at griit.health@gmail.com for any privacy concerns." },
-  { heading: "Third-Party Services", body: "Supabase (database and authentication), RevenueCat (subscription management), PostHog (anonymized analytics), Expo (app infrastructure)." },
-  { heading: "Changes to This Policy", body: "We may update this policy from time to time. We will notify you of significant changes." },
+  { heading: "Information We Collect", body: "Account information: email, username, display name, and optional profile photo and bio. Photos and captions you post as proof, captured with your permission via camera or photo library, only when you choose to post. Location, only for Hard Mode tasks, checked once at the moment you submit proof to verify the check-in; we never track location continuously. Challenge activity: check-ins, streaks, freezes, badges, respects, comments, and follows. Subscription status via RevenueCat; we never see your payment card details. Device data: device type, OS version, app version, push token if you enable notifications, and crash reports. Usage analytics via PostHog to improve the product." },
+  { heading: "How We Use Your Information", body: "To run your challenges and streaks, display your posts to the audience you choose, verify Hard Mode check-ins, process your subscription, send notifications you've opted into, show leaderboards, fix crashes, and improve GRIIT based on how it's used." },
+  { heading: "What Other Users Can See", body: "Your username, display name, profile photo, bio, streaks, badges, and challenge activity are visible to other users. Proof posts follow the proof visibility setting (off, optional, or public) chosen for the challenge. You control what appears in each photo you post." },
+  { heading: "Sharing With Third Parties", body: "We do not sell your personal data and we do not show ads. We share data only with providers needed to run GRIIT: Supabase (database, auth, photo storage), RevenueCat (subscriptions), Apple (payments), PostHog (analytics), Sentry (crash reporting), and Expo (infrastructure and push delivery). We may disclose data if required by law." },
+  { heading: "Data Storage and Security", body: "Your data is stored on Supabase cloud infrastructure, encrypted in transit, with restricted access to production data." },
+  { heading: "Deletion and Your Rights", body: "Delete your account any time in Settings; this removes your profile, posts, photos, check-ins, and challenge history. Depending on where you live you may also have rights to access, correct, or export your data. Contact us and we will respond within 30 days." },
+  { heading: "Children", body: "GRIIT is not directed at children under 13 and we do not knowingly collect data from anyone under 13. If you believe a child under 13 has an account, contact us and we will delete it." },
+  { heading: "Changes to This Policy", body: "If we make material changes we will update the date above and notify you in the app." },
   { heading: "Contact", body: "griit.health@gmail.com" },
 ];
 
@@ -19,7 +21,7 @@ function PrivacyPolicyScreenInner() {
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.title}>GRIIT Privacy Policy</Text>
-        <Text style={styles.updated}>Last updated: March 2025</Text>
+        <Text style={styles.updated}>Last updated: June 12, 2026</Text>
         {CONTENT.map((section, i) => (
           <View key={i} style={styles.section}>
             <Text style={styles.heading}>{section.heading}</Text>
