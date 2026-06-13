@@ -9,13 +9,13 @@ export const DS_COLORS = {
   // ═══════════════════════════════════════════════════════════════════════════
   // CORE BACKGROUNDS (from approved reference)
   // ═══════════════════════════════════════════════════════════════════════════
-  BG_PAGE: '#F5F5F5',           // Cool neutral grey — main screen background
+  BG_PAGE: '#F5F2ED',           // Warm cream — canonical page background (matches create flow)
   BG_CARD: '#FFFFFF',           // Pure white — all card surfaces
   BG_CARD_TINTED: '#F7F5F0',    // Warm card variant
   BG_DARK: '#111111',           // Near-black overlays / dark UI elements
 
   // Legacy uppercase aliases
-  BG_PRIMARY: '#F5F5F5',
+  BG_PRIMARY: '#F5F2ED',
   BG_HEADER_DEFAULT: '#BB471D',
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -520,7 +520,7 @@ export const DS_COLORS = {
   // BACKWARD COMPATIBILITY ALIASES (lowercase — for gradual migration)
   // These are DIRECT properties, NOT added via Object.assign
   // ═══════════════════════════════════════════════════════════════════════════
-  background: '#F5F5F5',
+  background: '#F5F2ED',
   surface: '#FFFFFF',
   card: '#FFFFFF',
   textPrimary: '#111111',
@@ -606,7 +606,7 @@ export const DS_COLORS = {
   avatarColor6: '#D94040',
   avatarColor7: '#7C6BC4',
   avatarColor8: '#2563EB',
-  settingsPageBg: '#F5F5F5',
+  settingsPageBg: '#F5F2ED',
   switchThumbInactive: '#E8E5DF',
   settingsBackCircle: '#F3F4F6',
   difficultyExtremeText: '#DC2626',
