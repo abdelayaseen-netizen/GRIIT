@@ -907,9 +907,6 @@ function PublicProfileScreenInner() {
                           post={post}
                           onProfilePress={() => navigateToProfile(post)}
                           onRespect={() => void onUserPostRespect(post)}
-                          onComment={() =>
-                            router.push(ROUTES.POST_ID(post.id) as never)
-                          }
                           onShare={() => {
                             // Share is handled inside FeedPostCard via shareSheet; no-op here.
                           }}

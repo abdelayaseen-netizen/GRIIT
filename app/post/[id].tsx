@@ -282,13 +282,16 @@ function PostThreadScreenInner() {
       post: p,
       onProfilePress: () => navigateProfile(p),
       onRespect: () => void onRespect(p),
-      onComment: () => {},
       onShare: () => void onShare(p),
       onMenuPress: () => openMenu(p),
     };
+    const milestoneCommon = {
+      ...common,
+      onComment: () => {},
+    };
     return (
       <View style={styles.postHeaderWrap}>
-        {p.isCompleted ? <MilestonePostCard {...common} /> : <FeedPostCard {...common} />}
+        {p.isCompleted ? <MilestonePostCard {...milestoneCommon} /> : <FeedPostCard {...common} />}
       </View>
     );
   }, [displayPost, postQuery.isPending, postQuery.isError, postQuery.error, navigateProfile, onRespect, onShare, openMenu]);
@@ -540,7 +543,7 @@ const styles = StyleSheet.create({
   topTitle: {
     flex: 1,
     fontSize: 17,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.FEED_USERNAME,
     textAlign: "center",
   },
@@ -562,7 +565,7 @@ const styles = StyleSheet.create({
   commentBlock: { marginBottom: 16 },
   commentRow: { flexDirection: "row", gap: 10 },
   commentMain: { flex: 1 },
-  commentName: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.FEED_USERNAME },
+  commentName: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.FEED_USERNAME },
   commentBody: { fontSize: 14, color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },
   commentTime: { fontSize: 11, color: DS_COLORS.FEED_META_MUTED, marginTop: 4 },
   deleteCommentBar: {
@@ -577,8 +580,8 @@ const styles = StyleSheet.create({
   deleteCommentQuestion: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 8 },
   deleteCommentActions: { flexDirection: "row", alignItems: "center", gap: 16 },
   deleteCommentBtn: { paddingVertical: 4, paddingHorizontal: 4, minWidth: 64, alignItems: "center" },
-  deleteCommentCancel: { fontSize: 14, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
-  deleteCommentConfirm: { fontSize: 14, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  deleteCommentCancel: { fontSize: 14, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
+  deleteCommentConfirm: { fontSize: 14, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -608,7 +611,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.MD,
   },
   sendDisabled: { opacity: 0.5 },
-  sendText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, fontSize: 15 },
+  sendText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, fontSize: 15 },
   androidMenuRoot: { flex: 1, justifyContent: "flex-end" },
   androidMenuBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: DS_COLORS.OVERLAY_BLACK_40 },
   androidMenuSheet: {
@@ -619,6 +622,6 @@ const styles = StyleSheet.create({
   },
   androidMenuRow: { paddingVertical: 16, paddingHorizontal: 20 },
   androidMenuDefault: { fontSize: 16, color: DS_COLORS.TEXT_PRIMARY },
-  androidMenuDestructive: { fontSize: 16, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  androidMenuDestructive: { fontSize: 16, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   androidMenuCancel: { fontSize: 16, color: DS_COLORS.TEXT_MUTED, textAlign: "center" },
 });

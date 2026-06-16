@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Pressable,
   Animated,
-  TextInput,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -14,6 +13,7 @@ import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
+import { CommentsSheet } from "./CommentsSheet";
 import type { FeedCommentPreview, LiveFeedPost } from "./feedTypes";
 import { Avatar } from "@/components/Avatar";
 import { ImageViewerModal } from "@/components/shared/ImageViewerModal";
@@ -34,31 +34,27 @@ type Props = {
   post: LiveFeedPost;
   onProfilePress: () => void;
   onRespect: () => void;
-  onComment: () => void;
   onShare: () => void;
   onMenuPress?: () => void;
   previewComment?: FeedCommentPreview | null;
-  onSubmitComment?: (text: string) => Promise<void>;
+  onCommentCountChange?: (count: number) => void;
 };
 
 function FeedPostCardInner({
   post,
   onProfilePress,
   onRespect,
-  onComment,
   onShare,
   onMenuPress,
   previewComment,
-  onSubmitComment,
+  onCommentCountChange,
 }: Props) {
   const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
   const proofUri = post.proofPhotoUrl || post.photoUrl;
   const showProof = post.hasProof || Boolean(proofUri);
 
   const [showWhoRespected, setShowWhoRespected] = React.useState(false);
-  const [showQuickComment, setShowQuickComment] = React.useState(false);
-  const [quickDraft, setQuickDraft] = React.useState("");
-  const [sending, setSending] = React.useState(false);
+  const [commentsOpen, setCommentsOpen] = React.useState(false);
   const [viewerOpen, setViewerOpen] = React.useState(false);
   const viewerOpenedAtRef = React.useRef<number>(0);
 
@@ -123,21 +119,6 @@ function FeedPostCardInner({
     }
   }, [post.reactedByMe, post.id, onRespect, heartScale, heartOpacity, proofUri]);
 
-  const handleQuickSend = React.useCallback(async () => {
-    const text = quickDraft.trim();
-    if (!text || sending || !onSubmitComment) return;
-    setSending(true);
-    try {
-      await onSubmitComment(text);
-      setQuickDraft("");
-      setShowQuickComment(false);
-    } catch {
-      // Error handled upstream
-    } finally {
-      setSending(false);
-    }
-  }, [quickDraft, sending, onSubmitComment]);
-
   const isCompact = !showProof && isFakeCaption(post.caption, post.taskName);
   const isMilestone = post.eventType === "completed_challenge" || post.isCompleted;
 
@@ -162,8 +143,21 @@ function FeedPostCardInner({
 
   const handlePreviewCommentPress = React.useCallback(() => {
     trackEvent("feed_comment_preview_tapped", { post_id: post.id });
-    onComment();
-  }, [onComment, post.id]);
+    setCommentsOpen(true);
+  }, [post.id]);
+
+  const openComments = React.useCallback(() => {
+    setCommentsOpen(true);
+  }, []);
+
+  const sheet = (
+    <CommentsSheet
+      visible={commentsOpen}
+      eventId={post.id}
+      onClose={() => setCommentsOpen(false)}
+      onCountChange={onCommentCountChange}
+    />
+  );
 
   if (isCompact) {
     return (
@@ -183,7 +177,7 @@ function FeedPostCardInner({
           reactedByMe={post.reactedByMe}
           commentCount={post.commentCount}
           onRespect={onRespect}
-          onComment={onSubmitComment ? () => setShowQuickComment((v) => !v) : onComment}
+          onComment={openComments}
           onShare={onShare}
           onRespectCountPress={() => setShowWhoRespected(true)}
         />
@@ -192,6 +186,7 @@ function FeedPostCardInner({
           eventId={post.id}
           onClose={() => setShowWhoRespected(false)}
         />
+        {sheet}
       </View>
     );
   }
@@ -343,37 +338,13 @@ function FeedPostCardInner({
         reactedByMe={post.reactedByMe}
         commentCount={post.commentCount}
         onRespect={onRespect}
-        onComment={onSubmitComment ? () => setShowQuickComment((v) => !v) : onComment}
+        onComment={openComments}
         onShare={onShare}
         onRespectCountPress={() => setShowWhoRespected(true)}
       />
 
-      {showQuickComment && onSubmitComment ? (
-        <View style={styles.quickCommentRow}>
-          <TextInput
-            style={styles.quickCommentInput}
-            placeholder="Add a comment..."
-            placeholderTextColor={DS_COLORS.TEXT_MUTED}
-            value={quickDraft}
-            onChangeText={setQuickDraft}
-            maxLength={200}
-            autoFocus
-            returnKeyType="send"
-            onSubmitEditing={() => void handleQuickSend()}
-          />
-          <Pressable
-            onPress={() => void handleQuickSend()}
-            disabled={!quickDraft.trim() || sending}
-            style={[styles.quickSendBtn, (!quickDraft.trim() || sending) && styles.quickSendBtnDisabled]}
-            accessibilityRole="button"
-            accessibilityLabel="Send comment"
-          >
-            <Text style={styles.quickSendText}>{sending ? "..." : "Post"}</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
       <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
+      {sheet}
 
       {FLAGS.PR3_IMAGE_VIEWER && proofUri ? (
         <ImageViewerModal
@@ -517,13 +488,13 @@ const styles = StyleSheet.create({
   },
   overlayChallenge: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.WHITE,
     opacity: 0.7,
   },
   overlayTag: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.WHITE,
     opacity: 0.92,
   },
@@ -571,41 +542,8 @@ const styles = StyleSheet.create({
     color: DS_COLORS.TEXT_SECONDARY,
   },
   respectedByBold: {
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
-  },
-  quickCommentRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: DS_COLORS.FEED_COMMENT_BORDER,
-  },
-  quickCommentInput: {
-    flex: 1,
-    fontSize: 13,
-    color: DS_COLORS.TEXT_PRIMARY,
-    backgroundColor: DS_COLORS.INPUT_BG,
-    borderRadius: DS_RADIUS.XL,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minHeight: 36,
-  },
-  quickSendBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.ACCENT,
-  },
-  quickSendBtnDisabled: {
-    opacity: 0.4,
-  },
-  quickSendText: {
-    fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_ON_DARK,
   },
   commentPreview: {
     flexDirection: "row",

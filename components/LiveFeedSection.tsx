@@ -301,21 +301,6 @@ function LiveFeedSection({
     }
   }, []);
 
-  const submitComment = useCallback(
-    async (postId: string, text: string) => {
-      try {
-        await trpcMutate(TRPC.feed.comment, { eventId: postId, text });
-        updatePost(postId, (p) => ({ ...p, commentCount: p.commentCount + 1 }));
-        void queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", postId] });
-        void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-      } catch (e) {
-        captureError(e, "LiveFeedQuickComment");
-        throw e;
-      }
-    },
-    [updatePost, queryClient]
-  );
-
   const navigateProfile = useCallback(
     (post: LiveFeedPost) => {
       if (!post.userId) return;
@@ -429,7 +414,6 @@ function LiveFeedSection({
         post: item,
         onProfilePress: () => navigateProfile(item),
         onRespect: () => void onRespect(item),
-        onComment: () => openPost(item),
         onShare: () => void onShare(item),
         onMenuPress: () => openPostMenu(item),
       };
@@ -453,17 +437,24 @@ function LiveFeedSection({
         );
       }
       if (item.isCompleted) {
-        return <MilestonePostCard {...baseCardProps} />;
+        return (
+          <MilestonePostCard
+            {...baseCardProps}
+            onComment={() => openPost(item)}
+          />
+        );
       }
       return (
         <FeedPostCard
           {...baseCardProps}
           previewComment={preview}
-          onSubmitComment={(text) => submitComment(item.id, text)}
+          onCommentCountChange={(n) =>
+            updatePost(item.id, (p) => ({ ...p, commentCount: n }))
+          }
         />
       );
     },
-    [navigateProfile, onRespect, onShare, openPost, openPostMenu, previewByPostId, submitComment]
+    [navigateProfile, onRespect, onShare, openPost, openPostMenu, previewByPostId, updatePost]
   );
 
   const goToDiscover = useCallback(() => {
@@ -744,7 +735,7 @@ const styles = StyleSheet.create({
   empty: { paddingVertical: 32, paddingHorizontal: DS_SPACING.lg, alignItems: "center" },
   emptyTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
-  retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginTop: 8 },
+  retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, marginTop: 8 },
   emptyFriends: {
     alignItems: "center",
     paddingVertical: 32,
@@ -809,8 +800,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   androidMenuDefault: { fontSize: 17, color: DS_COLORS.TEXT_PRIMARY, fontWeight: "500" },
-  androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
-  androidMenuBlock: { fontSize: 17, color: DS_COLORS_V2.semantic.danger, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
+  androidMenuBlock: { fontSize: 17, color: DS_COLORS_V2.semantic.danger, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   androidMenuCancel: { fontSize: 17, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "500" },
   thoughtCard: {
     backgroundColor: DS_COLORS.BG_CARD,
@@ -820,7 +811,7 @@ const styles = StyleSheet.create({
   },
   thoughtEyebrow: {
     fontSize: 9,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.5,

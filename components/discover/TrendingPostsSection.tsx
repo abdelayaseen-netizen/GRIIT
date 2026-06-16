@@ -155,8 +155,11 @@ function TrendingPostsSectionInner() {
             post,
             onProfilePress: () => navigateProfile(post),
             onRespect: () => void onRespect(post),
-            onComment: () => openPost(post),
             onShare: () => void onShare(post),
+          };
+          const milestoneProps = {
+            ...baseProps,
+            onComment: () => openPost(post),
           };
           return (
             <View key={post.id} style={styles.cardWrap}>
@@ -172,7 +175,7 @@ function TrendingPostsSectionInner() {
                   </Text>
                 </Pressable>
               ) : post.isCompleted ? (
-                <MilestonePostCard {...baseProps} />
+                <MilestonePostCard {...milestoneProps} />
               ) : (
                 <FeedPostCard {...baseProps} />
               )}
