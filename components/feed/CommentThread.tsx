@@ -21,6 +21,7 @@ import {
 } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { useAuth } from "@/contexts/AuthContext";
+import { track } from "@/lib/analytics";
 
 const QUICK_CHIPS = ["respect", "let's go", "keep going"] as const;
 
@@ -59,6 +60,20 @@ function patchCommentRespect(
     }
     if (n.replies.length) {
       return { ...n, replies: patchCommentRespect(n.replies, commentId, reacted, respectCount) };
+    }
+    return n;
+  });
+}
+
+function appendOptimisticComment(
+  nodes: CommentThreadNode[],
+  optimistic: CommentThreadNode,
+  parentId?: string
+): CommentThreadNode[] {
+  if (!parentId) return [...nodes, optimistic];
+  return nodes.map((n) => {
+    if (n.id === parentId) {
+      return { ...n, replies: [...n.replies, optimistic] };
     }
     return n;
   });
@@ -205,6 +220,13 @@ export function CommentThread({
             ? patchCommentRespect(old, node.id, result.reacted, result.respectCount)
             : old
         );
+        if (result.reacted) {
+          try {
+            track({ name: "comment_respected", comment_id: node.id });
+          } catch {
+            /* non-fatal */
+          }
+        }
       } catch {
         queryClient.setQueryData<CommentThreadNode[]>(queryKey, (old) =>
           old ? patchCommentRespect(old, node.id, prevReacted, prevCount) : old
@@ -218,24 +240,63 @@ export function CommentThread({
 
   const handleSend = useCallback(async () => {
     const text = draft.trim();
-    if (!text || sending) return;
+    if (!text || sending || !user?.id) return;
     setSending(true);
+    const parentId = replyingTo?.id;
+    const snapshot = queryClient.getQueryData<CommentThreadNode[]>(queryKey);
+    const optimisticNode: CommentThreadNode = {
+      id: `optimistic-${Date.now()}`,
+      eventId,
+      userId: user.id,
+      text,
+      createdAt: new Date().toISOString(),
+      parentCommentId: parentId ?? null,
+      displayName:
+        (user.user_metadata?.display_name as string | undefined) ??
+        user.email ??
+        "You",
+      username: (user.user_metadata?.username as string | undefined) ?? "you",
+      avatarUrl: (user.user_metadata?.avatar_url as string | undefined) ?? null,
+      respectCount: 0,
+      reactedByMe: false,
+      replies: [],
+    };
+    queryClient.setQueryData<CommentThreadNode[]>(queryKey, (old) =>
+      appendOptimisticComment(old ?? [], optimisticNode, parentId)
+    );
+    const optimisticTotal = threadTotal(
+      appendOptimisticComment(snapshot ?? [], optimisticNode, parentId)
+    );
+    onCountChange?.(optimisticTotal);
+
     try {
       await trpcMutate(TRPC.feed.comment, {
         eventId,
         text,
-        parentCommentId: replyingTo?.id,
+        parentCommentId: parentId,
       });
       setDraft("");
       setReplyingTo(null);
+      try {
+        if (parentId) {
+          track({ name: "comment_reply_posted", post_id: eventId, parent_comment_id: parentId });
+        } else {
+          track({ name: "comment_posted", post_id: eventId });
+        }
+      } catch {
+        /* non-fatal */
+      }
       const refreshed = await query.refetch();
       const nextTotal = threadTotal(refreshed.data ?? []);
       onCountChange?.(nextTotal);
       void queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", eventId] });
+    } catch {
+      queryClient.setQueryData(queryKey, snapshot);
+      onCountChange?.(threadTotal(snapshot ?? []));
     } finally {
       setSending(false);
     }
-  }, [draft, sending, eventId, replyingTo, query, queryClient, onCountChange]);
+  }, [draft, sending, eventId, replyingTo, query, queryClient, queryKey, onCountChange, user]);
 
   const renderThreadItem = useCallback(
     ({ item }: { item: CommentThreadNode }) => (

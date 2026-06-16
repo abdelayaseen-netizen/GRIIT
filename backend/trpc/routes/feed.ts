@@ -799,25 +799,26 @@ export const feedRouter = createTRPCRouter({
           .maybeSingle();
         const evTyped = evRow as { user_id?: string; challenge_id?: string | null; metadata?: Record<string, unknown> } | null;
         const ownerId = evTyped?.user_id;
+        const commentActorUsername = profile?.username ?? "someone";
+        const commentActorDisplayName = profile?.display_name ?? commentActorUsername;
+
+        let commentChallengeTitle = "challenge";
+        const cMeta = evTyped?.metadata ?? {};
+        if (typeof cMeta.challenge_name === "string" && cMeta.challenge_name.trim()) {
+          commentChallengeTitle = cMeta.challenge_name.trim();
+        } else if (evTyped?.challenge_id) {
+          const { data: chRow } = await srv.from("challenges").select("title").eq("id", evTyped.challenge_id).maybeSingle();
+          commentChallengeTitle = (chRow as { title?: string } | null)?.title ?? "challenge";
+        }
+
+        const anySrv = srv as unknown as {
+          from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
+        };
+
         const commentBlocked = ownerId && ownerId !== ctx.userId
           ? await isBlockRelationship(ctx.supabase, ctx.userId, ownerId)
           : false;
         if (ownerId && ownerId !== ctx.userId && !commentBlocked) {
-          const commentActorUsername = profile?.username ?? "someone";
-          const commentActorDisplayName = profile?.display_name ?? commentActorUsername;
-
-          let commentChallengeTitle = "challenge";
-          const cMeta = evTyped?.metadata ?? {};
-          if (typeof cMeta.challenge_name === "string" && cMeta.challenge_name.trim()) {
-            commentChallengeTitle = cMeta.challenge_name.trim();
-          } else if (evTyped?.challenge_id) {
-            const { data: chRow } = await srv.from("challenges").select("title").eq("id", evTyped.challenge_id).maybeSingle();
-            commentChallengeTitle = (chRow as { title?: string } | null)?.title ?? "challenge";
-          }
-
-          const anySrv = srv as unknown as {
-            from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }> };
-          };
           const { error: nErr } = await anySrv.from("in_app_notifications").insert({
             user_id: ownerId,
             type: "comment",
@@ -847,6 +848,54 @@ export const feedRouter = createTRPCRouter({
             });
           } catch (pushErr) {
             logger.error({ err: pushErr }, "[feed.comment] push send error");
+          }
+        }
+
+        if (input.parentCommentId) {
+          const { data: parentRow } = await srv
+            .from("feed_comments")
+            .select("user_id")
+            .eq("id", input.parentCommentId)
+            .maybeSingle();
+          const parentAuthorId = (parentRow as { user_id?: string } | null)?.user_id;
+          if (parentAuthorId && parentAuthorId !== ctx.userId) {
+            const replyBlocked = await isBlockRelationship(ctx.supabase, ctx.userId, parentAuthorId);
+            if (!replyBlocked) {
+              const { error: replyNErr } = await anySrv.from("in_app_notifications").insert({
+                user_id: parentAuthorId,
+                type: "comment_reply",
+                read: false,
+                data: {
+                  actor_id: ctx.userId,
+                  actor_username: commentActorUsername,
+                  actor_display_name: commentActorDisplayName,
+                  actor_avatar_url: profile?.avatar_url ?? null,
+                  event_id: input.eventId,
+                  comment_text: input.text.trim().slice(0, 200),
+                  challenge_title: commentChallengeTitle,
+                  parent_comment_id: input.parentCommentId,
+                },
+              });
+              if (replyNErr) {
+                logger.error({ err: replyNErr }, "[feed.comment] reply in_app_notifications insert");
+              }
+
+              try {
+                const replyPreview = input.text.trim().slice(0, 60);
+                await sendPushToProfile(srv, parentAuthorId, {
+                  title: "GRIIT",
+                  body: `${commentActorUsername} replied: "${replyPreview}"`,
+                  data: {
+                    type: "comment_reply",
+                    postId: input.eventId,
+                    commentId: inserted?.id ?? "",
+                    parentCommentId: input.parentCommentId,
+                  },
+                });
+              } catch (pushErr) {
+                logger.error({ err: pushErr }, "[feed.comment] reply push send error");
+              }
+            }
           }
         }
       }

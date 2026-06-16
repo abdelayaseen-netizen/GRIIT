@@ -115,7 +115,10 @@ type AnalyticsEvent =
   | { name: "identity_line_shown"; streak_count: number; tier: IdentityTier }
   | { name: "minimum_day_completed"; challenge_id?: string; streak_count?: number; day_number?: number }
   | { name: "review_prompted"; total_days_secured: number; trigger: string }
-  | { name: "post_detail_challenge_tapped"; postId: string; challengeId: string };
+  | { name: "post_detail_challenge_tapped"; postId: string; challengeId: string }
+  | { name: "comment_posted"; post_id: string }
+  | { name: "comment_reply_posted"; post_id: string; parent_comment_id: string }
+  | { name: "comment_respected"; comment_id: string };
 
 type UserProperties = {
   days_since_signup?: number;
