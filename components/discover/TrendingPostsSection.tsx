@@ -177,7 +177,12 @@ function TrendingPostsSectionInner() {
               ) : post.isCompleted ? (
                 <MilestonePostCard {...milestoneProps} />
               ) : (
-                <FeedPostCard {...baseProps} />
+                <FeedPostCard
+                  {...baseProps}
+                  onCommentCountChange={(n) =>
+                    updatePost(post.id, (p) => ({ ...p, commentCount: n }))
+                  }
+                />
               )}
             </View>
           );

@@ -910,6 +910,21 @@ function PublicProfileScreenInner() {
                           onShare={() => {
                             // Share is handled inside FeedPostCard via shareSheet; no-op here.
                           }}
+                          onCommentCountChange={(n) => {
+                            if (!profileUserId || tab !== "posts") return;
+                            queryClient.setQueryData(
+                              ["userPosts", profileUserId, tab],
+                              (old: { posts: LiveFeedPost[] } | undefined) => {
+                                if (!old) return old;
+                                return {
+                                  ...old,
+                                  posts: old.posts.map((p) =>
+                                    p.id === post.id ? { ...p, commentCount: n } : p,
+                                  ),
+                                };
+                              },
+                            );
+                          }}
                         />
                       ))
                     )}
