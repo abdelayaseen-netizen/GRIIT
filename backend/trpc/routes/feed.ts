@@ -607,11 +607,164 @@ export const feedRouter = createTRPCRouter({
       });
     }),
 
+  getCommentThread: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        limit: z.number().min(1).max(200).default(100),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { data: rows, error } = await ctx.supabase
+        .from("feed_comments")
+        .select("id, event_id, user_id, text, created_at, parent_comment_id")
+        .eq("event_id", input.eventId)
+        .order("created_at", { ascending: true })
+        .limit(input.limit);
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message || "Failed to load comments.",
+        });
+      }
+      const comments = (rows ?? []) as {
+        id: string;
+        event_id: string;
+        user_id: string;
+        text: string;
+        created_at: string;
+        parent_comment_id: string | null;
+      }[];
+
+      const userIds = [...new Set(comments.map((c) => c.user_id))];
+      const commentIds = comments.map((c) => c.id);
+      const [profRes, reactRes] = await Promise.all([
+        userIds.length
+          ? ctx.supabase
+              .from("profiles")
+              .select("user_id, display_name, username, avatar_url")
+              .in("user_id", userIds)
+              .limit(200)
+          : Promise.resolve({
+              data: [] as {
+                user_id: string;
+                display_name?: string | null;
+                username?: string | null;
+                avatar_url?: string | null;
+              }[],
+            }),
+        commentIds.length
+          ? ctx.supabase
+              .from("feed_comment_reactions")
+              .select("comment_id, user_id")
+              .in("comment_id", commentIds)
+          : Promise.resolve({ data: [] as { comment_id: string; user_id: string }[] }),
+      ]);
+      const profileMap = new Map(
+        (
+          (profRes as { data: unknown }).data as {
+            user_id: string;
+            display_name?: string | null;
+            username?: string | null;
+            avatar_url?: string | null;
+          }[]
+        ).map((p) => [p.user_id, p])
+      );
+      const respectByComment = new Map<string, { count: number; mine: boolean }>();
+      for (const r of (reactRes as { data: unknown }).data as {
+        comment_id: string;
+        user_id: string;
+      }[]) {
+        const prev = respectByComment.get(r.comment_id) ?? { count: 0, mine: false };
+        respectByComment.set(r.comment_id, {
+          count: prev.count + 1,
+          mine: prev.mine || r.user_id === ctx.userId,
+        });
+      }
+      type ThreadNode = {
+        id: string;
+        eventId: string;
+        userId: string;
+        text: string;
+        createdAt: string;
+        parentCommentId: string | null;
+        displayName: string;
+        username: string;
+        avatarUrl: string | null;
+        respectCount: number;
+        reactedByMe: boolean;
+        replies: ThreadNode[];
+      };
+      const hydrate = (row: (typeof comments)[number]): ThreadNode => {
+        const p = profileMap.get(row.user_id);
+        const stat = respectByComment.get(row.id);
+        return {
+          id: row.id,
+          eventId: row.event_id,
+          userId: row.user_id,
+          text: row.text,
+          createdAt: row.created_at,
+          parentCommentId: row.parent_comment_id,
+          displayName: p?.display_name ?? p?.username ?? "Someone",
+          username: p?.username ?? "?",
+          avatarUrl: p?.avatar_url ?? null,
+          respectCount: stat?.count ?? 0,
+          reactedByMe: stat?.mine ?? false,
+          replies: [],
+        };
+      };
+      const nodes = comments.map(hydrate);
+      const byId = new Map(nodes.map((n) => [n.id, n]));
+      const roots: ThreadNode[] = [];
+      for (const n of nodes) {
+        if (n.parentCommentId && byId.has(n.parentCommentId)) {
+          byId.get(n.parentCommentId)!.replies.push(n);
+        } else {
+          roots.push(n);
+        }
+      }
+      return roots;
+    }),
+
+  reactComment: protectedProcedure
+    .input(z.object({ commentId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const { data: existing } = await ctx.supabase
+        .from("feed_comment_reactions")
+        .select("id")
+        .eq("comment_id", input.commentId)
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      if (existing) {
+        const { error } = await ctx.supabase
+          .from("feed_comment_reactions")
+          .delete()
+          .eq("id", (existing as { id: string }).id);
+        if (error) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+        }
+      } else {
+        const { error } = await ctx.supabase.from("feed_comment_reactions").insert({
+          user_id: ctx.userId,
+          comment_id: input.commentId,
+        });
+        if (error) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
+        }
+      }
+      const { count } = await ctx.supabase
+        .from("feed_comment_reactions")
+        .select("id", { count: "exact", head: true })
+        .eq("comment_id", input.commentId);
+      return { reacted: !existing, respectCount: count ?? 0 };
+    }),
+
   comment: protectedProcedure
     .input(
       z.object({
         eventId: z.string().uuid(),
         text: z.string().trim().min(1).max(200),
+        parentCommentId: z.string().uuid().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -626,6 +779,7 @@ export const feedRouter = createTRPCRouter({
         user_id: ctx.userId,
         event_id: input.eventId,
         text: input.text.trim(),
+        parent_comment_id: input.parentCommentId ?? null,
       }).select("id, event_id, user_id, text, created_at").single();
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to comment." });
