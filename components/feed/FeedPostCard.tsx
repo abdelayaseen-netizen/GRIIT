@@ -38,6 +38,7 @@ type Props = {
   onMenuPress?: () => void;
   previewComment?: FeedCommentPreview | null;
   onCommentCountChange?: (count: number) => void;
+  onCommentPress?: () => void;
 };
 
 function FeedPostCardInner({
@@ -48,6 +49,7 @@ function FeedPostCardInner({
   onMenuPress,
   previewComment,
   onCommentCountChange,
+  onCommentPress,
 }: Props) {
   const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
   const proofUri = post.proofPhotoUrl || post.photoUrl;
@@ -147,10 +149,14 @@ function FeedPostCardInner({
   }, [post.id]);
 
   const openComments = React.useCallback(() => {
+    if (onCommentPress) {
+      onCommentPress();
+      return;
+    }
     setCommentsOpen(true);
-  }, []);
+  }, [onCommentPress]);
 
-  const sheet = (
+  const sheet = onCommentPress ? null : (
     <CommentsSheet
       visible={commentsOpen}
       eventId={post.id}

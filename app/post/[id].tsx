@@ -3,8 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  TextInput,
+  ScrollView,
   Pressable,
   KeyboardAvoidingView,
   Platform,
@@ -18,33 +17,22 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
-import { Avatar } from "@/components/Avatar";
-import { relativeTime } from "@/lib/utils/relativeTime";
+import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
+import { CommentThread } from "@/components/feed/CommentThread";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InlineError } from "@/components/InlineError";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
-
-type CommentRow = {
-  id: string;
-  user_id: string;
-  text: string;
-  created_at: string;
-  display_name: string;
-  username: string;
-  avatar_url: string | null;
-};
 
 const RESPECT_DEBOUNCE_MS = 300;
 
@@ -54,9 +42,7 @@ function PostThreadScreenInner() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : "";
   const queryClient = useQueryClient();
-  const [draft, setDraft] = useState("");
   const [androidMenuOpen, setAndroidMenuOpen] = useState(false);
-  const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
   const [deleteErr, setDeleteErr] = useState("");
   const respectLastAt = useRef<Map<string, number>>(new Map());
 
@@ -91,49 +77,9 @@ function PostThreadScreenInner() {
     [queryClient, id]
   );
 
-  const commentsQuery = useQuery({
-    queryKey: ["feed", "comments", id],
-    queryFn: () => trpcQuery(TRPC.feed.getComments, { eventId: id, limit: 100 }) as Promise<CommentRow[]>,
-    enabled: !!id,
-  });
-
   const onRefresh = useCallback(() => {
-    void Promise.all([postQuery.refetch(), commentsQuery.refetch()]);
-  }, [postQuery, commentsQuery]);
-
-  const commentMutation = useMutation({
-    mutationFn: (text: string) => trpcMutate(TRPC.feed.comment, { eventId: id, text }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
-      await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
-      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-      void postQuery.refetch();
-      setDraft("");
-    },
-    onError: (e) => {
-      captureError(e, "PostThreadComment");
-    },
-  });
-
-  const deleteCommentMutation = useMutation({
-    mutationFn: (commentId: string) => trpcMutate(TRPC.feed.deleteComment, { commentId }),
-    onSuccess: async () => {
-      setDeleteCommentTargetId(null);
-      await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
-      await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
-      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-      void postQuery.refetch();
-    },
-    onError: (e) => {
-      captureError(e, "PostThreadDeleteComment");
-    },
-  });
-
-  const onSend = useCallback(() => {
-    const t = draft.trim();
-    if (!t || !id) return;
-    commentMutation.mutate(t);
-  }, [draft, id, commentMutation]);
+    void postQuery.refetch();
+  }, [postQuery]);
 
   const navigateProfile = useCallback(
     (post: LiveFeedPost) => {
@@ -253,7 +199,7 @@ function PostThreadScreenInner() {
 
   const title = displayPost?.challengeName ?? "Post";
 
-  const listHeader = useMemo(() => {
+  const postCard = useMemo(() => {
     if (postQuery.isPending && !displayPost) {
       return (
         <View style={styles.postHeaderWrap}>
@@ -284,80 +230,30 @@ function PostThreadScreenInner() {
       onRespect: () => void onRespect(p),
       onShare: () => void onShare(p),
       onMenuPress: () => openMenu(p),
-    };
-    const milestoneCommon = {
-      ...common,
-      onComment: () => {},
+      onCommentPress: () => {},
+      onCommentCountChange: (n: number) =>
+        updateCachedPost((post) => ({ ...post, commentCount: n })),
     };
     return (
       <View style={styles.postHeaderWrap}>
-        {p.isCompleted ? <MilestonePostCard {...milestoneCommon} /> : <FeedPostCard {...common} />}
+        {p.isCompleted ? (
+          <MilestonePostCard {...common} onComment={() => {}} />
+        ) : (
+          <FeedPostCard {...common} />
+        )}
       </View>
     );
-  }, [displayPost, postQuery.isPending, postQuery.isError, postQuery.error, navigateProfile, onRespect, onShare, openMenu]);
-
-  const renderCommentItem = useCallback(
-    ({ item }: { item: CommentRow }) => {
-      const isMine = Boolean(user?.id && item.user_id === user.id);
-      return (
-        <View style={styles.commentBlock}>
-          <Pressable
-            onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
-            delayLongPress={450}
-            style={styles.commentRow}
-            accessibilityRole="button"
-            accessibilityLabel={
-              isMine
-                ? "Your comment — long press to delete"
-                : `Comment by ${item.display_name || item.username}`
-            }
-            {...(isMine ? { accessibilityHint: "Long press to show delete options" } : {})}
-          >
-            <Avatar
-              url={item.avatar_url}
-              name={item.display_name || item.username}
-              userId={item.user_id}
-              size={36}
-            />
-            <View style={styles.commentMain}>
-              <Text style={styles.commentName}>{item.display_name || item.username}</Text>
-              <Text style={styles.commentBody}>{item.text}</Text>
-              <Text style={styles.commentTime}>{relativeTime(item.created_at)}</Text>
-            </View>
-          </Pressable>
-          {deleteCommentTargetId === item.id ? (
-            <View style={styles.deleteCommentBar}>
-              <Text style={styles.deleteCommentQuestion}>Delete this comment?</Text>
-              <View style={styles.deleteCommentActions}>
-                <Pressable
-                  onPress={() => setDeleteCommentTargetId(null)}
-                  style={styles.deleteCommentBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Cancel delete"
-                >
-                  <Text style={styles.deleteCommentCancel}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => deleteCommentMutation.mutate(item.id)}
-                  disabled={deleteCommentMutation.isPending}
-                  style={styles.deleteCommentBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Confirm delete comment"
-                >
-                  {deleteCommentMutation.isPending ? (
-                    <ActivityIndicator size="small" color={DS_COLORS.errorText} />
-                  ) : (
-                    <Text style={styles.deleteCommentConfirm}>Delete</Text>
-                  )}
-                </Pressable>
-              </View>
-            </View>
-          ) : null}
-        </View>
-      );
-    },
-    [user?.id, deleteCommentTargetId, deleteCommentMutation]
-  );
+  }, [
+    displayPost,
+    postQuery.isPending,
+    postQuery.isError,
+    postQuery.error,
+    navigateProfile,
+    onRespect,
+    onShare,
+    openMenu,
+    updateCachedPost,
+  ]);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -407,58 +303,29 @@ function PostThreadScreenInner() {
           <View style={{ width: 40 }} />
         </View>
 
-        {commentsQuery.isPending && !commentsQuery.data ? (
-          <ActivityIndicator style={styles.loader} color={DS_COLORS.DISCOVER_CORAL} />
-        ) : (
-          <FlatList
-            data={commentsQuery.data ?? []}
-            keyExtractor={(c) => c.id}
-            contentContainerStyle={styles.list}
-            ListHeaderComponent={listHeader}
-            refreshControl={
-              <RefreshControl
-                refreshing={
-                  (commentsQuery.isRefetching && !commentsQuery.isPending) ||
-                  (postQuery.isRefetching && !postQuery.isPending)
-                }
-                onRefresh={onRefresh}
-                tintColor={DS_COLORS.DISCOVER_CORAL}
-              />
-            }
-            ListEmptyComponent={<Text style={styles.empty}>No comments yet. Say something kind.</Text>}
-            renderItem={renderCommentItem}
-            initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            removeClippedSubviews={Platform.OS === "android"}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            placeholder="Add a comment…"
-            placeholderTextColor={DS_COLORS.INPUT_PLACEHOLDER}
-            value={draft}
-            onChangeText={setDraft}
-            maxLength={200}
-            multiline
-          />
-          <Pressable
-            onPress={onSend}
-            disabled={commentMutation.isPending || !draft.trim()}
-            style={[styles.send, (!draft.trim() || commentMutation.isPending) && styles.sendDisabled]}
-            accessibilityRole="button"
-            accessibilityLabel="Send comment"
-          >
-            {commentMutation.isPending ? (
-              <ActivityIndicator size="small" color={DS_COLORS.TEXT_ON_DARK} />
-            ) : (
-              <Text style={styles.sendText}>Send</Text>
-            )}
-          </Pressable>
-        </View>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={postQuery.isRefetching && !postQuery.isPending}
+              onRefresh={onRefresh}
+              tintColor={DS_COLORS.DISCOVER_CORAL}
+            />
+          }
+        >
+          {postCard}
+          {id && displayPost ? (
+            <CommentThread
+              eventId={id}
+              embedded
+              onCountChange={(n) =>
+                updateCachedPost((p) => ({ ...p, commentCount: n }))
+              }
+            />
+          ) : null}
+        </ScrollView>
       </KeyboardAvoidingView>
 
       <Modal visible={androidMenuOpen} transparent animationType="fade" onRequestClose={() => setAndroidMenuOpen(false)}>
@@ -533,6 +400,7 @@ export default function PostThreadScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
   flex: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: 16 },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -559,59 +427,6 @@ const styles = StyleSheet.create({
   },
   postHeaderWrap: { paddingHorizontal: DS_SPACING.sm, marginBottom: 8 },
   postError: { paddingVertical: 16, fontSize: 14, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
-  loader: { marginTop: 24 },
-  list: { paddingHorizontal: DS_SPACING.lg, paddingBottom: 16 },
-  empty: { textAlign: "center", color: DS_COLORS.FEED_META_MUTED, marginTop: 24, fontSize: 14 },
-  commentBlock: { marginBottom: 16 },
-  commentRow: { flexDirection: "row", gap: 10 },
-  commentMain: { flex: 1 },
-  commentName: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.FEED_USERNAME },
-  commentBody: { fontSize: 14, color: DS_COLORS.TEXT_PRIMARY, marginTop: 2 },
-  commentTime: { fontSize: 11, color: DS_COLORS.FEED_META_MUTED, marginTop: 4 },
-  deleteCommentBar: {
-    marginTop: 8,
-    marginLeft: 46,
-    padding: 10,
-    borderRadius: DS_RADIUS.MD,
-    backgroundColor: DS_COLORS.INPUT_BG,
-    borderWidth: 1,
-    borderColor: DS_COLORS.INPUT_BORDER,
-  },
-  deleteCommentQuestion: { fontSize: 13, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 8 },
-  deleteCommentActions: { flexDirection: "row", alignItems: "center", gap: 16 },
-  deleteCommentBtn: { paddingVertical: 4, paddingHorizontal: 4, minWidth: 64, alignItems: "center" },
-  deleteCommentCancel: { fontSize: 14, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
-  deleteCommentConfirm: { fontSize: 14, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
-    padding: DS_SPACING.md,
-    borderTopWidth: 0.5,
-    borderTopColor: DS_COLORS.FEED_COMMENT_BORDER,
-    backgroundColor: DS_COLORS.BG_CARD,
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
-    borderRadius: DS_RADIUS.MD,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: DS_COLORS.INPUT_BG,
-    borderWidth: 1,
-    borderColor: DS_COLORS.INPUT_BORDER,
-    fontSize: 15,
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
-  send: {
-    backgroundColor: DS_COLORS.DISCOVER_CORAL,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: DS_RADIUS.MD,
-  },
-  sendDisabled: { opacity: 0.5 },
-  sendText: { color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, fontSize: 15 },
   androidMenuRoot: { flex: 1, justifyContent: "flex-end" },
   androidMenuBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: DS_COLORS.OVERLAY_BLACK_40 },
   androidMenuSheet: {
