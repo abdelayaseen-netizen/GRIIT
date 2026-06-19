@@ -1,4 +1,84 @@
-<!-- This file is assembled in phases. The executive summary is prepended in Phase 5. -->
+# GRIIT — Overnight Audit: Executive Summary
+
+_Branch `chore/overnight-audit-20260618` (off `feat/comments-sheet`). Generated autonomously overnight. All claims backed by grep evidence in the phase sections below._
+
+## 1. Overall scorecard (worst-first)
+
+| Section | Grade | Launch-blocker |
+|---|---|---|
+| Analytics / PostHog | **D+** | Yes (irreversible data gap) |
+| Onboarding | **C** | Yes (Guideline 2.1 personalization gap) |
+| Design system | **C+** | No (high debt: 1025 off-scale fontSize) |
+| Paywall & Subscriptions | **B-** | Yes (device smoke test not run) |
+| Auth | **B** | Yes (reviewer account UNVERIFIED) |
+| Profile & Account | **B** | Yes (deletion E2E missing) |
+| Challenges | **B** | No |
+| Home Feed | **B** | No |
+| Database (Supabase) | **B** | Yes (2 pending migrations UNVERIFIED) |
+| Comments | **B+** | No (code complete; DB-gated) |
+| Camera & Photo Proof | **B+** | No |
+| Error handling / Sentry | **B+** | No |
+| Backend (tRPC/Hono/Railway) | **A-** | No |
+| Push notifications | **A-** | No |
+
+## 2. What changed tonight
+
+**Zero source-code changes.** Every cleanup item was already clean or carried behavioral/visual/surface risk on a build-under-review (Rule 2) → flagged, not executed.
+
+| Commit | Scope | Source files touched |
+|---|---|---|
+| `2f89324` | Snapshot of pre-existing uncommitted WIP (font-weight migration, **not** audit work) | 70 (carried, not authored) |
+| `b9daed3` | Phase 0 baseline | report only |
+| `5e92b52` | Phase 1 safe cleanup | **0** (report only) |
+| `0ecc1e8` | Phase 2 consolidation | **0** (report only) |
+| `555c138` | Phase 3 scorecard | report only |
+| `385c59f` | Phase 4 launch audit | report only |
+
+**tsc error delta: 0 (baseline) → 0 (final).** Lint clean, 100 tests pass. The only file authored by this audit is `docs/audit/OVERNIGHT_REPORT.md`.
+
+## 3. What was flagged, not changed (deferred — needs human)
+
+1. **Type-scale `fontSize` migration** — 1025 off-scale numeric literals (counted, untouched per Rule 2).
+2. **Pre-existing font-weight WIP** — 70 files (SEMIBOLD→BOLD), snapshotted on this branch; lives uncommitted on `feat/comments-sheet`.
+3. **`DS_COLORS` flat → `DS_COLORS_V2` nested** — 136 vs 42 files, 48 `.ACCENT` uses (large, color-drift risk).
+4. **Emoji in UI** — 29 files (incl. `CommitModal` 🤝); no like-for-like swaps → not replaced.
+5. **Raw hex** — 5 in `FeedPostCard.tsx` (1 has no token; others ambiguous semantic token).
+6. **Unused exports** — ts-prune 127 (mostly router/type false positives).
+7. **Unused deps** — depcheck 16 (all false positives — backend/native; verified used).
+8. **Dead component** `StreakHeroV2.tsx` + `HomeHeader`/`HomeHeaderV2` sprawl.
+9. **Duplicate types** — `ChallengeRow` (3, non-identical), `StreakState`/`TaskRow`/etc.
+10. **Heart-vs-Flame respect icon** mismatch (feed vs comments).
+
+## 4. Top 10 prioritized actions for the morning (launch-blocking × effort)
+
+1. **Apply/confirm the 2 June-15 Supabase comment migrations on prod** (`feed_comments_replies`, `feed_comment_reactions`) — blocking, low effort. Comments Phase 3 client code is shipped and will fail without them.
+2. **Wire onboarding `selectedGoals` → suggestions/discover** (resolve `challenges-discover.ts:603 NOTE(v2)`) — Guideline 2.1 blocker, medium effort.
+3. **Run the 8-scenario paywall smoke test on a device** — blocking, low-medium.
+4. **Verify Railway env: `UPSTASH_REDIS_REST_URL/TOKEN`, `CRON_SECRET`, deployed commit == HEAD** — blocking-ish, low.
+5. **Confirm Apple reviewer/demo account is provisioned** (seeded user + review-notes creds) — blocking, low.
+6. **Add account-deletion E2E test** (Guideline 5.1.1(v) evidence) — blocking, medium.
+7. **Switch RevenueCat trial 30→7 days** (dashboard only, no code) — blocking-ish, trivial.
+8. **Wire the ~30 dead analytics events** — start with `first_task_completed`, `streak_lost`, `streak_freeze_used`, `feed_posted`, `screen_viewed` — data-loss, medium.
+9. **Reconcile Heart vs Flame respect icon** across feed/comments — design, low.
+10. **Infer `category` from pack in create wizard; delete dead `StreakHeroV2` + legacy wizard** — debt, low.
+
+## 5. Run integrity check
+
+```
+$ git log --oneline origin/feat/comments-sheet..HEAD
+385c59f docs: phase 4 launch audit
+555c138 docs: phase 3 app scorecard
+0ecc1e8 refactor: phase 2 consolidation
+5e92b52 chore: phase 1 safe cleanup
+b9daed3 chore: overnight audit baseline
+2f89324 chore: snapshot pre-existing uncommitted WIP (font-weight migration) before audit
+$ npx tsc --noEmit ; grep -c "error TS"  ->  0   (matches baseline; hard gate held every phase)
+```
+Branch pushed to `origin/chore/overnight-audit-20260618`. **No PR opened, no merge, `main` and `feat/comments-sheet` untouched.** (The `docs: overnight report summary` commit + final push status appear at the bottom of Phase 5.)
+
+---
+
+<!-- This file is assembled in phases. The executive summary above was prepended in Phase 5. -->
 
 # GRIIT — Overnight Deep Clean, Consolidation & Full App Scorecard
 
