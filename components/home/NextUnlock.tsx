@@ -54,7 +54,7 @@ const s = StyleSheet.create({
   },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   head: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_INK },
-  away: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.ACCENT },
+  away: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.ACCENT },
   row: { marginTop: 10, flexDirection: "row", alignItems: "center", gap: 10 },
   iconBox: {
     width: 32,

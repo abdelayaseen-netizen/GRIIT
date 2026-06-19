@@ -45,5 +45,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.challengeHeaderDark, marginBottom: 12 },
   body: { fontSize: 15, color: DS_COLORS.textSecondary, lineHeight: 22 },
   btn: { marginTop: 24, backgroundColor: DS_COLORS.challengeHeaderDark, paddingVertical: 14, borderRadius: DS_RADIUS.MD, alignItems: "center" },
-  btnText: { color: DS_COLORS.white, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, fontSize: 16 },
+  btnText: { color: DS_COLORS.white, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, fontSize: 16 },
 });

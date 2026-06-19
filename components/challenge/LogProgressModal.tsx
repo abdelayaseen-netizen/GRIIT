@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     marginBottom: 6,
   },
   input: {
@@ -181,7 +181,7 @@ color: DS_COLORS.dangerDark,
   },
   cancelText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   logBtn: {
     flex: 1,
@@ -191,7 +191,7 @@ color: DS_COLORS.dangerDark,
   },
   logBtnText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 });

@@ -39,7 +39,7 @@ function TaskTypeCardInner(p: {
       <Text
         style={[
           styles.label,
-          p.selected && { color: p.accentColor, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+          p.selected && { color: p.accentColor, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
         ]}
       >
         {p.label}

@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   },
   planPrice: {
     fontSize: DS_TYPOGRAPHY.SIZE_LG,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
 });

@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   tierText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.grayDarker,
   },
 });

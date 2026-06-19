@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   backBtn: {},
-  backText: { fontSize: 16, color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  backText: { fontSize: 16, color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   headerTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   headerSpacer: { width: 56 },
   inputWrap: { padding: 16, position: "relative" },
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
+  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
   inviteBtn: {
     backgroundColor: DS_COLORS.accent,

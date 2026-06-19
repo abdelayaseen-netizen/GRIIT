@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { padding: 16 },
   countRow: { marginBottom: 16 },
-  countText: { fontSize: 15, color: DS_COLORS.textSecondary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  countText: { fontSize: 15, color: DS_COLORS.textSecondary, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.5 },
   card: {
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     borderBottomColor: DS_COLORS.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
+  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
   removeBtn: { padding: 8 },
   actions: { flexDirection: "row", gap: 8 },
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   acceptBtn: { backgroundColor: DS_COLORS.acceptGreen },
   declineBtn: { backgroundColor: DS_COLORS.border },
   cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.border },
-  cancelBtnText: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
+  cancelBtnText: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   addBtn: {
     flexDirection: "row",
     alignItems: "center",

@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  statLabel: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textSecondary },
+  statLabel: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textSecondary },
   statValue: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, color: DS_COLORS.textPrimary },
   divider: {
     height: 1,

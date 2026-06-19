@@ -78,7 +78,7 @@ export default function CommitModal({
               marginBottom: 24,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10 }}>
+            <Text style={{ fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 10 }}>
               Your commitment:
             </Text>
             {[
@@ -145,7 +145,7 @@ export default function CommitModal({
             }}
           >
             <Ionicons name="send" size={16} color={DS_COLORS.TEXT_ON_DARK} />
-            <Text style={{ fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_ON_DARK }}>I&apos;m in. Launch it.</Text>
+            <Text style={{ fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_ON_DARK }}>I&apos;m in. Launch it.</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

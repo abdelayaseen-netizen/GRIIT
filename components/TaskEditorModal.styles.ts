@@ -20,7 +20,7 @@ export const createFlowStyles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     letterSpacing: 0.5,
     marginBottom: DS_SPACING.md,
@@ -36,7 +36,7 @@ export const createFlowStyles = StyleSheet.create({
   },
   settingsTitle: {
     fontSize: 20,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: DS_SPACING.lg,
   },
@@ -52,7 +52,7 @@ export const createFlowStyles = StyleSheet.create({
   },
   allowedPillText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.success,
   },
   hardPill: {
@@ -64,7 +64,7 @@ export const createFlowStyles = StyleSheet.create({
   },
   hardPillText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.danger,
   },
 });

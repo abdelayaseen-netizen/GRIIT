@@ -43,7 +43,7 @@ const s = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   textSelected: { color: DS_COLORS.accent },

@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 15, textAlign: "center", paddingHorizontal: 8 },
   form: { width: "100%" },
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, marginBottom: 8 },
   input: {
     borderWidth: 1,
     borderRadius: DS_RADIUS.MD,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 16,
   },
-  backLinkText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  backLinkText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   sentBlock: { paddingHorizontal: 24, alignItems: "center" },
   sentTitle: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, marginBottom: 12 },
   sentBody: { fontSize: 15, textAlign: "center", marginBottom: 24 },

@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.ACCENT,
   },
 });

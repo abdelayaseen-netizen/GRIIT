@@ -155,11 +155,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  headline: { fontSize: DS_TYPOGRAPHY.SIZE_3XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK, color: DS_COLORS.TEXT_PRIMARY },
+  headline: { fontSize: DS_TYPOGRAPHY.SIZE_3XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, color: DS_COLORS.TEXT_PRIMARY },
   subheadline: { fontSize: DS_TYPOGRAPHY.SIZE_MD, color: DS_COLORS.TEXT_SECONDARY, marginTop: 8 },
   valueCard: { backgroundColor: DS_COLORS.BG_CARD, borderRadius: DS_RADIUS.LG, padding: DS_SPACING.BASE, marginBottom: 28 },
   valueLine: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 8 },
-  planSectionLabel: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 12 },
+  planSectionLabel: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 12 },
   loadingPlans: { minHeight: 120, alignItems: "center", justifyContent: "center", marginBottom: 20 },
   noPlansText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: GRIIT_COLORS.error, textAlign: "center", marginBottom: 20 },
   stickyBar: {

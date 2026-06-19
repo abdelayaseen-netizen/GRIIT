@@ -260,7 +260,7 @@ const s = StyleSheet.create({
   challengeMid: { flex: 1 },
   challengeName: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginBottom: 2,
   },
@@ -322,7 +322,7 @@ const s = StyleSheet.create({
   },
   todoText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.grayDarker },
   taskTimeSub: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 1 },
-  doneRight: { fontSize: 10, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.DISCOVER_GREEN },
+  doneRight: { fontSize: 10, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.DISCOVER_GREEN },
   startBtn: {
     backgroundColor: DS_COLORS.TEXT_PRIMARY,
     paddingHorizontal: 14,
@@ -331,7 +331,7 @@ const s = StyleSheet.create({
   },
   startBtnText: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
   empty: {

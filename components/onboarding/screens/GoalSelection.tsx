@@ -80,7 +80,7 @@ export default function GoalSelection({ onContinue }: GoalSelectionProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.background, paddingHorizontal: S.screenPadding, paddingTop: 20, paddingBottom: 40 },
   header: { marginBottom: 20 },
-  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
+  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
   title: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
   subtitle: { fontSize: T.bodySize, fontWeight: "400", lineHeight: 24, color: C.textSecondary },
   scroll: { flex: 1 },
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   goalCardSelected: { borderWidth: 2, borderColor: C.borderActive, backgroundColor: C.surface },
   goalEmoji: { fontSize: 28, width: 40, textAlign: "center" },
   goalTextContainer: { flex: 1 },
-  goalTitle: { fontSize: T.bodySize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.textPrimary, marginBottom: 2 },
+  goalTitle: { fontSize: T.bodySize, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.textPrimary, marginBottom: 2 },
   goalTitleSelected: { color: C.textPrimary },
   goalSubtitle: { fontSize: T.captionSize, color: C.textTertiary },
   checkMark: {

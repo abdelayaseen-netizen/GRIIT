@@ -76,7 +76,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   emptyBtnText: {
     fontSize: DS_TYPOGRAPHY.buttonSmall.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 
@@ -116,7 +116,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   topNavTitle: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     letterSpacing: 0.5,
   },
@@ -159,7 +159,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   activeBadgeText: {
     fontSize: 11,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: "rgba(255,255,255,0.85)",
     letterSpacing: 1,
   },
@@ -178,7 +178,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   dailyLabelText: {
     fontSize: 11,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: "rgba(255,255,255,0.9)",
     letterSpacing: 1.5,
     textTransform: "uppercase" as const,
@@ -222,7 +222,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   difficultyPillText: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   infoChip: {
     paddingHorizontal: 14,
@@ -263,7 +263,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   socialProofTitle: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.challengeHeaderDark,
   },
   socialProofSub: {
@@ -281,7 +281,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   dayCounterText: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
     marginBottom: 10,
   },
@@ -310,7 +310,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   todayGoalTitle: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.challengeHeaderDark,
   },
   todayGoalSubtitle: {
@@ -372,7 +372,7 @@ export const challengeDetailStyles = StyleSheet.create({
   progressLabelStart: {
     fontSize: 10,
     color: DS_COLORS.accent,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
 
   countdownCard: {
@@ -444,7 +444,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   progressValue: {
@@ -489,7 +489,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   failAlertText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.dangerDark,
   },
   failCtaWrap: {
@@ -511,7 +511,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   failCtaBtnText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
 
@@ -691,7 +691,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   journalPillText: {
     fontSize: 10,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
   timePill: {
@@ -705,7 +705,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   timePillText: {
     fontSize: 10,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.linkBlue,
   },
   proBadge: {
@@ -721,7 +721,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   missionTitle: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     letterSpacing: -0.1,
   },
@@ -770,7 +770,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   startActionText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   completedBadge: {
     flexDirection: "row",
@@ -783,7 +783,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   completedBadgeText: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.success,
   },
 
@@ -831,7 +831,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   ruleTextWarning: {
     color: DS_COLORS.danger,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   aboutSection: {
     marginBottom: DS_SPACING.lg,
@@ -871,7 +871,7 @@ export const challengeDetailStyles = StyleSheet.create({
   aboutDetailValue: {
     flex: 1,
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "right" as const,
   },
@@ -900,7 +900,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   leaveBtnInFlowText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textSecondary,
   },
   commitCtaInFlow: {
@@ -961,7 +961,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   inviteLinkText: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
   },
   ctaMicro: {
@@ -981,7 +981,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   disabledCtaText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textMuted,
   },
 
@@ -1014,7 +1014,7 @@ export const challengeDetailStyles = StyleSheet.create({
   commitmentCloseText: {
     fontSize: 20,
     color: DS_COLORS.textMuted,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   commitmentShieldWrap: {
     width: 60,
@@ -1090,7 +1090,7 @@ export const challengeDetailStyles = StyleSheet.create({
   },
   commitmentValue: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "right",
     flex: 1,

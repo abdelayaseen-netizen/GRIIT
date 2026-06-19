@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   btnSecondaryText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   btnPrimary: {

@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   letter: {
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_ON_DARK,
   },
 });

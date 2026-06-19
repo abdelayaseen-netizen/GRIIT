@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   closeHit: { paddingVertical: 8, paddingHorizontal: 4 },
   closeText: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
   inlineMsg: {
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   },
   inlineMsgText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     textAlign: "center",
   },
   inlineMsgTextSuccess: { color: DS_COLORS.GREEN },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   },
   thumbLabel: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_SECONDARY,
     paddingHorizontal: DS_SPACING.lg,
     marginBottom: 8,
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   },
   thumbText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_SECONDARY,
   },
   thumbTextOn: {
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     color: DS_COLORS.WHITE,
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   secondaryBtn: {
     backgroundColor: DS_COLORS.BG_CARD,
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   secondaryBtnText: {
     color: DS_COLORS.TEXT_PRIMARY,
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   tertiaryBtn: {
     paddingVertical: 10,

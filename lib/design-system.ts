@@ -739,13 +739,12 @@ export const DS_TYPOGRAPHY = {
   SIZE_2XL: 28,
   SIZE_3XL: 34,
 
-  // Font weights (React Native string values)
+  // Font weights (React Native string values). Trimmed to four: 600 (semibold)
+  // and 900 (black) were collapsed into 700/800 for typographic discipline.
   WEIGHT_REGULAR: '400' as const,
   WEIGHT_MEDIUM: '500' as const,
-  WEIGHT_SEMIBOLD: '600' as const,
   WEIGHT_BOLD: '700' as const,
   WEIGHT_EXTRABOLD: '800' as const,
-  WEIGHT_BLACK: '900' as const,
 
   // Line heights
   LINE_TIGHT: 1.15,

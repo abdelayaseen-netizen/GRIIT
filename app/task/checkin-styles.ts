@@ -38,7 +38,7 @@ export const checkinStyles = StyleSheet.create({
   },
   requirementText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     flex: 1,
   },
@@ -83,7 +83,7 @@ export const checkinStyles = StyleSheet.create({
   },
   statusChipText: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   violationBanner: {
     flexDirection: "row",
@@ -97,7 +97,7 @@ export const checkinStyles = StyleSheet.create({
   },
   violationText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.dangerMid,
     flex: 1,
   },
@@ -126,7 +126,7 @@ export const checkinStyles = StyleSheet.create({
   },
   liveText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.success,
   },
   lockWarning: {
@@ -300,7 +300,7 @@ export const checkinStyles = StyleSheet.create({
   },
   minimumDayButtonText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   verifiedContainer: {
@@ -341,7 +341,7 @@ export const checkinStyles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
 });

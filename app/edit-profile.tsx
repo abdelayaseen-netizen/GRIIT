@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
   topTitle: {
     fontSize: 17,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   saveBtn: {
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: DS_COLORS.white,
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   inputGroup: {},
   label: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },

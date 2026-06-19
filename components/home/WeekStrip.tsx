@@ -116,7 +116,7 @@ const s = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: DS_SPACING.sm,
   },
-  freezeText: { fontSize: 11, color: DS_COLORS.GREEN, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  freezeText: { fontSize: 11, color: DS_COLORS.GREEN, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   getFreezePill: {
     flexDirection: "row",
     gap: DS_SPACING.xs,
@@ -126,7 +126,7 @@ const s = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: DS_SPACING.sm,
   },
-  getFreeze: { fontSize: 11, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  getFreeze: { fontSize: 11, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   daysRow: { flexDirection: "row", justifyContent: "space-between" },
   dayCol: { alignItems: "center" },
   circle: { width: 28, height: 28, borderRadius: DS_RADIUS.button, alignItems: "center", justifyContent: "center" },
@@ -136,7 +136,7 @@ const s = StyleSheet.create({
   todayOpen: { backgroundColor: DS_COLORS.WHITE, borderWidth: 2, borderColor: DS_COLORS.DISCOVER_CORAL },
   todayDot: { width: 8, height: 8, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.DISCOVER_CORAL },
   dayLabel: { marginTop: 5, fontSize: 9, color: DS_COLORS.grayMuted },
-  todayLabel: { color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  todayLabel: { color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   streak: {
     textAlign: "center",
     marginTop: 10,
@@ -144,5 +144,5 @@ const s = StyleSheet.create({
     fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
-  note: { marginTop: 2, textAlign: "center", fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  note: { marginTop: 2, textAlign: "center", fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
 });

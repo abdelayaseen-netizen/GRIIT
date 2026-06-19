@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     flex: 1,
     textAlign: "center",
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   rightBtnDisabled: { opacity: 0.5 },
   rightText: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   rightTextSoft: {

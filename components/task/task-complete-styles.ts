@@ -74,7 +74,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: DS_COLORS.GREEN_BG,
   },
-  manualHint: { marginTop: DS_SPACING.lg, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
+  manualHint: { marginTop: DS_SPACING.lg, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   journalInput: {
     backgroundColor: DS_COLORS.WHITE,
     borderWidth: 1,
@@ -103,7 +103,7 @@ export const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.input / 2,
     marginBottom: DS_SPACING.md,
   },
-  hardModeText: { fontSize: 12, color: GRIIT_COLORS.primary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  hardModeText: { fontSize: 12, color: GRIIT_COLORS.primary, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   timerDisplay: {
     fontSize: 56,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
@@ -131,7 +131,7 @@ export const styles = StyleSheet.create({
     paddingVertical: DS_SPACING.sm,
     alignItems: "center",
   },
-  stravaBtnText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_MUTED },
+  stravaBtnText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_MUTED },
   stravaNote: {
     marginTop: DS_SPACING.md,
     padding: DS_SPACING.md,
@@ -147,7 +147,7 @@ export const styles = StyleSheet.create({
   hrRow: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
   hrValue: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, textAlign: "center" },
   locBox: { alignItems: "center", gap: DS_SPACING.sm },
-  locStatus: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  locStatus: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   locCta: {
     flexDirection: "row",
     alignItems: "center",
@@ -157,7 +157,7 @@ export const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.card,
     backgroundColor: DS_COLORS.ACCENT_TINT,
   },
-  locCtaText: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_PRIMARY },
+  locCtaText: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
   photoPreview: { width: "100%", height: 200, borderRadius: DS_RADIUS.card, backgroundColor: DS_COLORS.BG_CARD_TINTED },
   photoBig: {
     minHeight: 160,
@@ -168,7 +168,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: DS_COLORS.BG_CARD_TINTED,
   },
-  photoBigText: { marginTop: DS_SPACING.sm, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_SECONDARY },
+  photoBigText: { marginTop: DS_SPACING.sm, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_SECONDARY },
   photoGrid: {
     flexDirection: "row",
     gap: 8,
@@ -191,7 +191,7 @@ export const styles = StyleSheet.create({
     color: DS_COLORS.TEXT_SECONDARY,
   },
   galleryLink: { marginTop: DS_SPACING.md, alignItems: "center" },
-  link: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: GRIIT_COLORS.primary, marginTop: DS_SPACING.sm },
+  link: { fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: GRIIT_COLORS.primary, marginTop: DS_SPACING.sm },
   textField: {
     borderWidth: DS_BORDERS.width,
     borderColor: DS_COLORS.BORDER,
@@ -256,7 +256,7 @@ export const styles = StyleSheet.create({
   missedGoBackBtnText: {
     color: DS_COLORS.TEXT_SECONDARY,
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   submitSection: { marginTop: DS_SPACING.xxl, paddingBottom: DS_SPACING.xxl },
   minimumDividerWrap: {
@@ -297,7 +297,7 @@ export const styles = StyleSheet.create({
   primaryBtnText: { color: DS_COLORS.WHITE, fontSize: 16, fontWeight: "500" },
   pickerLabel: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_SECONDARY,
     marginBottom: 6,
     marginTop: DS_SPACING.sm,
@@ -334,7 +334,7 @@ export const styles = StyleSheet.create({
     backgroundColor: DS_COLORS.WHITE,
   },
   kindChipOn: { borderColor: DS_COLORS.DISCOVER_CORAL, backgroundColor: DS_COLORS.ACCENT_TINT },
-  kindChipText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_SECONDARY },
+  kindChipText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_SECONDARY },
   kindChipTextOn: { color: DS_COLORS.DISCOVER_CORAL },
   secondaryBtn: {
     backgroundColor: DS_COLORS.BORDER,
@@ -342,7 +342,7 @@ export const styles = StyleSheet.create({
     paddingVertical: DS_SPACING.lg,
     alignItems: "center",
   },
-  secondaryBtnText: { color: DS_COLORS.TEXT_PRIMARY, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  secondaryBtnText: { color: DS_COLORS.TEXT_PRIMARY, fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   successWrap: { flex: 1, padding: DS_SPACING.xl, justifyContent: "center", alignItems: "center" },
   successIconCircle: {
     width: 96,
@@ -428,7 +428,7 @@ export const celebStyles = StyleSheet.create({
   },
   photoChangeBadgeText: {
     fontSize: 11,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.WHITE,
   },
   photoPickerRow: {
@@ -455,7 +455,7 @@ export const celebStyles = StyleSheet.create({
   captionLabel: {
     alignSelf: "stretch",
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_ON_DARK_45,
     marginTop: 20,
     marginBottom: 8,
@@ -472,7 +472,7 @@ export const celebStyles = StyleSheet.create({
     backgroundColor: DS_COLORS.OVERLAY_WHITE_6,
     marginBottom: 12,
   },
-  postedOk: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.GREEN, marginBottom: 8 },
+  postedOk: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.GREEN, marginBottom: 8 },
   postedErr: { fontSize: 13, color: DS_COLORS.ERROR_RED, marginBottom: 8, textAlign: "center" },
   shareToFeedBtn: {
     alignSelf: "stretch",
@@ -482,7 +482,7 @@ export const celebStyles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  shareToFeedText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.WHITE },
+  shareToFeedText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
   shareStoriesBtn: {
     marginTop: 10,
     alignSelf: "stretch",
@@ -511,7 +511,7 @@ export const celebStyles = StyleSheet.create({
   },
   shareCardBtnText: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.WHITE,
   },
 });

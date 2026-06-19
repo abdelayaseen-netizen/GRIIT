@@ -127,6 +127,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
 });

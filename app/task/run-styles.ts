@@ -50,7 +50,7 @@ export const styles = StyleSheet.create({
   },
   modeButtonText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textSecondary,
   },
   modeButtonTextActive: {
@@ -68,7 +68,7 @@ export const styles = StyleSheet.create({
   },
   requirementText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     flex: 1,
   },
@@ -163,7 +163,7 @@ export const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textSecondary,
     textAlign: "center",
   },
@@ -212,7 +212,7 @@ export const styles = StyleSheet.create({
   },
   resetButtonText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textSecondary,
   },
   trackingIndicator: {
@@ -232,7 +232,7 @@ export const styles = StyleSheet.create({
   },
   trackingText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.success,
   },
   trackingTextTimer: {
@@ -280,7 +280,7 @@ export const styles = StyleSheet.create({
   },
   stepLabelActive: {
     color: DS_COLORS.accent,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   timerSection: {
     alignItems: "center",
@@ -298,7 +298,7 @@ export const styles = StyleSheet.create({
   },
   violationText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.dangerMid,
   },
   lockNotice: {
@@ -313,7 +313,7 @@ export const styles = StyleSheet.create({
   },
   lockNoticeText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.amberDarkText,
     textAlign: "center",
   },
@@ -372,7 +372,7 @@ export const styles = StyleSheet.create({
   },
   retakeButtonText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   continueButton: {
@@ -419,7 +419,7 @@ export const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -473,7 +473,7 @@ export const styles = StyleSheet.create({
   },
   summaryValueText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   footer: {
@@ -520,7 +520,7 @@ export const styles = StyleSheet.create({
   },
   minimumDayButtonText: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   verifiedContainer: {
@@ -561,7 +561,7 @@ export const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
 });

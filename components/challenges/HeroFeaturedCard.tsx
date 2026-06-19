@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   attributionText: {
     fontSize: 11,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.FEATURED_TEXT_PRIMARY,
   },
   body: {

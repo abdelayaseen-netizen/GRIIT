@@ -75,7 +75,7 @@ export const styles = StyleSheet.create({
   notifBody: { flex: 1 },
   notifMain: { fontSize: 12, color: DS_COLORS.grayDarker, lineHeight: 17 },
   notifBold: { fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
-  notifTime: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 2, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  notifTime: { fontSize: 10, color: DS_COLORS.TEXT_MUTED, marginTop: 2, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   followBtn: {
     backgroundColor: DS_COLORS.DISCOVER_CORAL,
     borderRadius: DS_RADIUS.PILL,
@@ -180,7 +180,7 @@ export const styles = StyleSheet.create({
   crownSub: { fontSize: 11, color: DS_COLORS.TEXT_ON_DARK, lineHeight: 15 },
   crownPts: { fontSize: 20, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.CELEB_BONUS_AMBER, lineHeight: 20 },
   crownPtsLabelWrap: { opacity: 0.45 },
-  crownPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  crownPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_ON_DARK, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   regRow: {
     position: "relative",
     backgroundColor: DS_COLORS.WHITE,
@@ -225,7 +225,7 @@ export const styles = StyleSheet.create({
   },
   regFill: { height: 2, backgroundColor: DS_COLORS.DISCOVER_CORAL, borderRadius: DS_RADIUS.PILL },
   regPts: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY },
-  regPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  regPtsLabel: { fontSize: 9, color: DS_COLORS.TEXT_MUTED, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   yourRankDivider: {
     flexDirection: "row",
@@ -376,7 +376,7 @@ export const styles = StyleSheet.create({
   },
   emptyTitleStrong: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginTop: 16,
     textAlign: "center",
@@ -398,7 +398,7 @@ export const styles = StyleSheet.create({
   emptyTextCta: {
     marginTop: 20,
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.DISCOVER_CORAL,
   },
   emptyInvitePill: {
@@ -408,7 +408,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 28,
   },
-  emptyInvitePillText: { color: DS_COLORS.WHITE, fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  emptyInvitePillText: { color: DS_COLORS.WHITE, fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   emptyTitle: {
     fontSize: 16,
     fontWeight: "500",

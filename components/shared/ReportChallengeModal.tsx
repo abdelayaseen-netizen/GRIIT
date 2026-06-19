@@ -158,7 +158,7 @@ const s = StyleSheet.create({
   },
   label: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginTop: DS_SPACING.md,
     marginBottom: DS_SPACING.sm,
@@ -219,7 +219,7 @@ const s = StyleSheet.create({
   cancelBtnText: {
     color: DS_COLORS.TEXT_PRIMARY,
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   submitBtn: {
     flex: 1,

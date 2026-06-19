@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 6,
     color: GRIIT_COLORS.primaryAccent,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     marginBottom: 20,
   },
   dayBadge: {
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   challengeTitle: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
     textAlign: "center",
     marginBottom: 6,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
   streakCount: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: GRIIT_COLORS.primaryAccent,
   },
   cta: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   shareBtnText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   skipBtn: {

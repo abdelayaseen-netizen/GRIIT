@@ -119,13 +119,13 @@ const styles = StyleSheet.create({
   },
   streakLabel: {
     fontSize: 18,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textSecondary,
     marginTop: 4,
   },
   challengeName: {
     fontSize: 18,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     textAlign: "center",
     marginBottom: 8,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
     marginBottom: 8,
   },

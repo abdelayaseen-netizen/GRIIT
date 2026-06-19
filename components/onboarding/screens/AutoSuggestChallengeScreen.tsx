@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: C.background, gap: 16 },
   loadingText: { fontSize: 14, color: C.textSecondary },
   header: { marginBottom: 20 },
-  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
+  stepLabel: { fontSize: 11, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, letterSpacing: 1, lineHeight: 16, color: C.accent, marginBottom: 12 },
   title: { fontSize: 28, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, letterSpacing: -0.5, lineHeight: 34, color: C.textPrimary, marginBottom: 8 },
   subtitle: { fontSize: 15, fontWeight: "400", lineHeight: 24, color: C.textSecondary },
   card: {
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   badgePopular: {
     alignSelf: "flex-start",
     fontSize: 9,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     overflow: "hidden",
     paddingVertical: 3,
     paddingHorizontal: 8,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   badgeStarter: {
     alignSelf: "flex-start",
     fontSize: 9,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     overflow: "hidden",
     paddingVertical: 3,
     paddingHorizontal: 8,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
   },
-  outlineCtaText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.textSecondary },
+  outlineCtaText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.textSecondary },
   ctaDisabled: { opacity: 0.7 },
   inlineRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: 8 },
   linkCoral: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.coral },
@@ -326,5 +326,5 @@ const styles = StyleSheet.create({
   linkMuted: { fontSize: 15, color: C.textSecondary },
   errorBlock: { marginTop: 16, alignItems: "center", gap: 8 },
   errorText: { fontSize: 13, color: C.accent, textAlign: "center" },
-  errorLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: C.coral },
+  errorLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: C.coral },
 });

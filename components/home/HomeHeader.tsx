@@ -329,7 +329,7 @@ const s = StyleSheet.create({
   completedHeaderCount: {
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
     color: DS_COLORS.TEXT_MUTED,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   allDoneBanner: {
     marginHorizontal: DS_SPACING.xl,

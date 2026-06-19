@@ -5,7 +5,7 @@ import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/
 /** Inlined from lib/theme/tokens.ts `typography.label` — value-preserving migration (Phase 2). */
 const THEME_TYPO_LABEL = {
   fontSize: 12,
-  fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+  fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   lineHeight: 16,
 };
 

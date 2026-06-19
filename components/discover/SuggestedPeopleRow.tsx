@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
     marginTop: 4,
     textAlign: "center",
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   followText: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_ON_ACCENT,
   },
   followTextSecondary: {

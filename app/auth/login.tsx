@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  btnAppleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
+  btnAppleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
   btnGoogle: {
     height: 52,
     borderRadius: DS_RADIUS.button,
@@ -465,12 +465,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  btnGoogleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.white },
+  btnGoogleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
   },
   footerText: { fontSize: 15, color: DS_COLORS.textSecondary },
-  footerLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.accent },
+  footerLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.accent },
 });

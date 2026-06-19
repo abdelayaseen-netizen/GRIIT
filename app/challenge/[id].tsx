@@ -1214,7 +1214,7 @@ export default function ChallengeDetailScreen() {
 
             {(isTeamChallenge || isSharedGoal) && runStatus === "waiting" && !teamMembers.some((m) => m.user_id === currentUserId && m.role === "creator") && (
               <View style={{ backgroundColor: DS_COLORS.ACCENT_TINT, borderRadius: DS_RADIUS.MD, padding: 16, marginBottom: 16, alignItems: "center" }}>
-                <Text style={{ fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.challengeHeaderDark }}>
+                <Text style={{ fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.challengeHeaderDark }}>
                   Waiting for the creator to start...
                 </Text>
               </View>
@@ -1396,7 +1396,7 @@ export default function ChallengeDetailScreen() {
                   >
                     <Text style={s.aboutDetailLabel}>{row.label}</Text>
                     <Text
-                      style={[s.aboutDetailValue, row.valueAccent && { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD }]}
+                      style={[s.aboutDetailValue, row.valueAccent && { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD }]}
                     >
                       {row.value}
                     </Text>
@@ -1486,7 +1486,7 @@ export default function ChallengeDetailScreen() {
               </View>
               <View style={s.commitmentRow}>
                 <Text style={s.commitmentLabel}>Mode</Text>
-                <Text style={[s.commitmentValue, { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD }]}>
+                <Text style={[s.commitmentValue, { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD }]}>
                   {difficultyLabel}{difficulty === "hard" || difficulty === "extreme" ? " Mode" : ""}
                 </Text>
               </View>

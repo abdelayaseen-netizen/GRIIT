@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   tertiaryBtn: {

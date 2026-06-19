@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
     color: DS_COLORS.DISCOVER_CORAL,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   list: {
     paddingHorizontal: DS_SPACING.lg,

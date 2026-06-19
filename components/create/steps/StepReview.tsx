@@ -205,7 +205,7 @@ export function StepReview({
             <Text
               style={{
                 fontSize: 14,
-                fontWeight: visibility === v.key ? DS_TYPOGRAPHY.WEIGHT_SEMIBOLD : "400",
+                fontWeight: visibility === v.key ? DS_TYPOGRAPHY.WEIGHT_BOLD : "400",
                 color: visibility === v.key ? DS_COLORS.PRIMARY : DS_COLORS.TEXT_SECONDARY,
               }}
             >

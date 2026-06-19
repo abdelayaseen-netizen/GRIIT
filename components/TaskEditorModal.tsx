@@ -1555,7 +1555,7 @@ const s = StyleSheet.create({
   },
   collapsibleTitle: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textSecondary,
   },
   collapsibleBody: {
@@ -1585,7 +1585,7 @@ const s = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 11,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.silverRank,
     letterSpacing: 1,
     textTransform: "uppercase",
@@ -1593,7 +1593,7 @@ const s = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 11,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.silverRank,
     marginBottom: 8,
     textTransform: "uppercase",
@@ -1674,7 +1674,7 @@ const s = StyleSheet.create({
   previewContent: { flex: 1, gap: 3 },
   previewTitle: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   previewMeta: {
@@ -1688,12 +1688,12 @@ const s = StyleSheet.create({
     fontStyle: "normal",
   },
   previewBadge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  previewBadgeText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  previewBadgeText: { fontSize: 12, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
   taskPhotoSection: { marginTop: 20, marginBottom: 8 },
   descriptionSection: { marginBottom: 8 },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
     marginBottom: 4,
   },

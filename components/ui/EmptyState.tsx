@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   primaryCtaText: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.white,
   },
   secondaryCta: {
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   secondaryCtaText: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.accent,
   },
 });

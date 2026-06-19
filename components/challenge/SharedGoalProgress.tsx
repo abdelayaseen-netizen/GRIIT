@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
   percent: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   remaining: {
     fontSize: 13,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   },
   contributionName: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   contributionValue: {
     fontSize: 13,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   contributionPct: {
     fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     minWidth: 32,
   },
   loader: {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   logName: {
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   logTime: {
     fontSize: 12,

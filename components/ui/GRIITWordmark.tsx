@@ -28,7 +28,7 @@ export function GRIITWordmark({
           {
             color: textColor,
             fontSize: DS_TYPOGRAPHY.SIZE_2XL,
-            fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK,
+            fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
             letterSpacing: -0.5,
             lineHeight: DS_TYPOGRAPHY.SIZE_2XL * DS_TYPOGRAPHY.LINE_TIGHT,
           },

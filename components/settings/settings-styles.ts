@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   headerSpacer: { width: 40 },
@@ -98,7 +98,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  deleteConfirmBtnText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.white },
+  deleteConfirmBtnText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
   deleteCancelBtn: {
     borderWidth: 1,
     borderRadius: DS_RADIUS.button,
@@ -125,7 +125,7 @@ export const styles = StyleSheet.create({
   },
   friendsLabel: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     letterSpacing: 0.5,
     marginTop: 2,
   },
@@ -174,7 +174,7 @@ export const styles = StyleSheet.create({
   consequenceTextWrap: { flex: 1 },
   consequenceTitle: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.textPrimary,
   },
   reminderPill: {
@@ -189,7 +189,7 @@ export const styles = StyleSheet.create({
   },
   reminderPillTextActive: {
     color: DS_COLORS.white,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   consequenceSub: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,

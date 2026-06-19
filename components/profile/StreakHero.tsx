@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   slimTitle: {
     fontSize: 14,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: DS_COLORS.TEXT_PRIMARY,
   },
   slimSub: {

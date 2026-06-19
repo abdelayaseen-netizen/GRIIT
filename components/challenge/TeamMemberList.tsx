@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   avatarLetter: {
     fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   info: {
     flex: 1,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 15,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     flex: 1,
   },
   creatorBadge: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   },
   creatorText: {
     fontSize: 11,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
   statusRow: {
     flexDirection: "row",

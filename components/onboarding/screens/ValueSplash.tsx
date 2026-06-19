@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   statLbl: {
     marginTop: 6,
     fontSize: 9,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     color: C.textTertiary,
     letterSpacing: 0.8,
     textTransform: "uppercase",

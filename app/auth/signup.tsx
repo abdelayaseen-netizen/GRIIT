@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   form: { width: "100%" },
   label: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     marginBottom: DS_SPACING.sm,
   },
   input: {
@@ -560,12 +560,12 @@ const styles = StyleSheet.create({
     marginTop: DS_SPACING.lg,
   },
   footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
-  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.accent },
+  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.accent },
   termsText: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     color: DS_COLORS.textSecondary,
     textAlign: "center",
     marginTop: DS_SPACING.xxl,
   },
-  termsLink: { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  termsLink: { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD },
 });
