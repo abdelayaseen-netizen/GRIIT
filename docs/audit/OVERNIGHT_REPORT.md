@@ -174,3 +174,77 @@ The devDeps (`@babel/core`, `@sentry/node`, vitest coverage, depcheck/knip/ts-pr
 $ npx tsc --noEmit ; grep -c "error TS"   ->  0   (unchanged from baseline; no code touched)
 ```
 
+---
+
+## Phase 2 — Consolidation (non-behavioral)
+
+**Net code changes applied this phase: 0.** The codebase is already well-consolidated. The remaining duplicates are either not structurally identical (cannot merge per the rule) or live in versioned component variants where merging adds coupling risk on a review build. All flagged with before/after grep.
+
+### 2.1 Duplicate types / interfaces — FLAGGED, none merged
+
+Detection (definition sites only, imports excluded):
+```
+$ for t in StreakState TaskRow ChallengeRow SuggestedPerson TeamRules; do echo "$t -> $(rg "^\s*(export )?(type $t\s*=|interface $t\b)" lib app components store -g '*.ts' -g '*.tsx' | wc -l) defs"; done
+StreakState -> 2   TaskRow -> 2   ChallengeRow -> 3   SuggestedPerson -> 2   TeamRules -> 2
+```
+- **`ChallengeRow` (3 defs)** — **NOT identical**, so cannot merge per rule:
+  ```
+  app/challenge/active/[activeChallengeId].tsx:115  { id; title?; description?; ... }
+  app/discover/category/[slug].tsx:48               { id; title?; duration_days?; ... }
+  components/discover/CategoryRail.tsx:36            { id; title?; duration_days?; ... }
+  ```
+  Active-challenge variant has `description`; discover variants have `duration_days`. Different shapes → flagged for human (move the 2 discover variants to a shared discover type).
+- **`StreakState` (2 defs, identical)** — `components/home/StreakHeroV2.tsx:68` and `StreakHeroV3.tsx:74`, both `'lost' | 'frozen' | 'atRisk' | 'day1' | 'healthy'`. Structurally identical BUT they are private types of two versioned component variants; `StreakHeroV2` is dead (see 2.x below). Merging couples independent versions. Flagged; resolve by deleting the dead V2.
+- `TaskRow` (2), `SuggestedPerson` (2), `TeamRules` (2) — local private types in distinct feature surfaces; verify identity before merging. Flagged for human.
+
+**Shared types are already centralized** in `types/index.ts` and `components/challenges/_card-helpers.tsx` (e.g. `ChallengeDifficulty = "EASY"|"MED"|"HARD"`, `ChallengeCategory = "body"|"mind"|"faith"|"focus"` — single source, imported/aliased across 6 files each).
+
+### 2.2 Duplicate utility functions — none found requiring consolidation
+
+```
+$ rg -n "function formatCount" app components lib
+app/challenge/[id].tsx:187:function formatCount(n: number): string { ... }   # single definition
+```
+No common formatter (formatCount/formatDay/pluralize/clamp/etc.) is defined in 2+ places. No safe consolidation available.
+
+### 2.3 Analytics consistency — CLEAN ✅
+
+```
+$ rg -n "\.capture\(" lib app components store backend -g '*.ts' -g '*.tsx'
+lib/analytics.ts:184:    ph?.capture(event, funnelPropsForCapture(properties));
+lib/analytics.ts:196:      ph.capture(name, eventPayloadForCapture(rest));
+```
+Both `.capture()` calls are inside the canonical `lib/analytics.ts` wrapper. **Nothing bypasses `trackEvent()`.**
+
+### 2.4 Store layout — CLEAN ✅
+
+```
+$ ls lib/stores  ->  No such file or directory
+$ rg -n "create<" store -g '*.ts' | wc -l  ->  6 (all stores)
+```
+All 6 zustand stores live in `store/`; **no stray stores in `lib/stores/`**.
+
+### 2.5 Color token usage — VIOLATIONS FLAGGED (large, behavioral-risk → not changed)
+
+```
+$ rg -c 'DS_COLORS_V2' app components | wc -l   -> 42 files
+$ rg -c 'DS_COLORS\b'  app components | wc -l   -> 136 files
+$ rg -n '\.ACCENT\b' app components | wc -l     -> 48 occurrences (flat shape)
+```
+Both `DS_COLORS` (flat, exported `lib/design-system.ts:8`) and `DS_COLORS_V2` (nested, `:1043`) are exported and in active use. The flat shape (incl. `DS_COLORS.ACCENT`) is still **dominant (136 files)** vs V2 (42 files). Migrating flat→nested is a large refactor that risks color/value drift and is explicitly behavioral-surface → **FLAGGED, not changed** (Rule 2). Tracked in Phase 3 §Design system.
+
+### 2.x Component version sprawl — FLAGGED (dead-code candidate)
+
+```
+$ rg -n "import.*StreakHeroV2" app components   -> (none; only a comment ref in StreakHeroV3)
+$ rg -n "import.*StreakHeroV3" app components    -> components/home/HomeHeader.tsx:15
+$ rg -n "StreakHeroV4" app components            -> app/(tabs)/index.tsx, components/home/HomeHeaderV2.tsx
+```
+`StreakHeroV2.tsx` is imported nowhere → **dead component**. Also `HomeHeader` vs `HomeHeaderV2` coexist. Deleting component files changes the module surface (not strictly non-behavioral, and could break dynamic refs), so **flagged for human deletion**, not executed overnight.
+
+### Phase 2 verification gate
+
+```
+$ npx tsc --noEmit ; grep -c "error TS"   ->  0   (no code touched)
+```
+
