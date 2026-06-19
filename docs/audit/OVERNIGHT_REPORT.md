@@ -535,3 +535,44 @@ $ npx tsc --noEmit ; grep -c "error TS"   ->  0   (no code touched)
 **Recommended actions (prioritized):**
 1. Audit empty `catch {}` blocks in async data fetches to ensure `captureError` is called (e.g. onboarding auto-suggest).
 
+---
+
+## Phase 4 — Launch blockers
+
+| Blocker | Status (grep/verify) | Evidence | Owner action |
+|---|---|---|---|
+| Account deletion E2E test (5.1.1(v)) | ⚠️ Partial | `backend/trpc/routes/profiles-deletion.test.ts` = backend **unit** test (`describe("profiles.deleteAccount")`); **no device E2E** among 18 test files (`rg --files | grep test`). | Add device E2E for in-app deletion. |
+| Paywall smoke test on device (8 scenarios) | ❌ Not run | Only `tests/MANUAL_TEST_CHECKLIST.md` exists (manual). No automated paywall test. | Run 8-scenario device smoke test. |
+| Upstash rate-limit env vars active in Railway | ❓ UNVERIFIED | Code reads `process.env.UPSTASH_REDIS_REST_URL`+`_TOKEN` (`backend/lib/rate-limit.ts:82-83`, `cache.ts:11-12`); cannot inspect Railway from repo. | Verify both vars set in Railway `grit-backend`. |
+| 2 pending Supabase migrations applied | ❓ UNVERIFIED | Latest committed: `20260615010000_feed_comments_replies.sql`, `20260615020000_feed_comment_reactions.sql`; prod applied-state not queryable from repo. | `supabase migration list` on prod; apply if missing. |
+| 13 missing PostHog funnel events | ⚠️ Improved | The flagged trio now FIRED: `trial_started` (`subscription.ts:168`), `onboarding_completed` (2 sites), `day_secured` (1 site). BUT **~30 defined events still never emitted** (`first_task_completed`, `streak_lost`, `feed_posted`, `screen_viewed`, …). | Wire activation/retention + screen-view events. |
+| Onboarding rebuild (Guideline 2.1) | ❌ Open | `AutoSuggestChallengeScreen.tsx:59` ignores `selectedGoals`; backend `challenges-discover.ts:603 NOTE(v2): Personalize by user goals…`. Goals collected but unused downstream. | Wire goals into suggestions/discover. |
+| App Store screenshots + submission | ❓ UNVERIFIED | Not determinable from repo (asset/store-side). | Track outside repo. |
+
+### TODO / FIXME / HACK / XXX inventory
+
+```
+$ rg -n "TODO|FIXME|HACK|XXX" app components lib store backend -g '*.ts' -g '*.tsx'
+components/home/StreakHeroV3.tsx:208: * TODO(PR #19): lost / frozen / atRisk layouts are stubbed for the bold-home
+components/home/StreakHeroV3.tsx:286: // TODO(PR #19): lost / frozen / atRisk — stubbed; polish light layouts in follow-up.
+```
+**Total: 2** (both in `components/home/StreakHeroV3.tsx`).
+
+| Area | Count | Detail |
+|---|---|---|
+| Home / Streak UI | 2 | StreakHeroV3 `lost/frozen/atRisk` light-mode layouts stubbed (PR #19 follow-up). Verify those streak states render acceptably before launch. |
+| All other areas | 0 | Backend, lib, app routes, store, other components: no TODO/FIXME/HACK/XXX. |
+
+Exceptionally clean — only 2 markers across 398 source files.
+
+### buildNumber check (appVersionSource: remote requires absence)
+
+```
+$ rg -n "buildNumber" app.json
+(no matches)  ->  CORRECT
+$ rg -n "appVersionSource|autoIncrement" eas.json
+4:  "appVersionSource": "remote"
+31:  "autoIncrement": true
+```
+✅ No `buildNumber` in `app.json`; `appVersionSource: "remote"` + `autoIncrement: true` in `eas.json`. Configuration is correct (remote build numbers; absence is required and satisfied).
+
