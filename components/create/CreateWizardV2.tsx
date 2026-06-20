@@ -81,7 +81,7 @@ const INITIAL_STATE: WizardState = {
   useCustom: false,
   difficulty: "standard",
   photoProof: "optional",
-  category: null,
+  category: "discipline",
 };
 
 function canAdvanceStep1(s: WizardState): boolean {
@@ -98,7 +98,6 @@ function canAdvanceStep2(s: WizardState): boolean {
 function canLaunch(s: WizardState): boolean {
   if (!canAdvanceStep1(s)) return false;
   if (!canAdvanceStep2(s)) return false;
-  if (!s.category) return false;
   return true;
 }
 
@@ -137,7 +136,11 @@ export function CreateWizardV2() {
     setState((p) => ({ ...p, who }));
   }, []);
   const setPack = useCallback((pack: WizardPack | null) => {
-    setState((p) => ({ ...p, pack }));
+    setState((p) => ({
+      ...p,
+      pack,
+      category: pack ? pack.category : p.category,
+    }));
   }, []);
   const setUseCustom = useCallback((v: boolean) => {
     setState((p) => ({ ...p, useCustom: v }));
@@ -201,7 +204,6 @@ export function CreateWizardV2() {
       if (!canAdvanceStep2(state)) return "Pick a pack or add a task";
       return "Next: rules";
     }
-    if (!state.category) return "Pick a category";
     return "Review & launch";
   }, [state]);
 
