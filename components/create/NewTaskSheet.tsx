@@ -33,6 +33,7 @@ import {
   Pencil,
   Plus,
   ShieldAlert,
+  Target,
   Timer as TimerIcon,
   Footprints,
   Dumbbell,
@@ -89,7 +90,7 @@ const PROOF_TYPES: readonly ProofTypeDef[] = [
     id: "counter",
     label: "Counter",
     sub: "Hit a daily target",
-    icon: (p) => <GlassWater {...p} />,
+    icon: (p) => <Target {...p} />,
   },
   {
     id: "workout",
