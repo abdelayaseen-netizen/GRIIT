@@ -45,12 +45,21 @@ export type WizardTaskType =
   | "checkin"
   | "water";
 
+export type RunGoalType = "distance" | "time" | "pace";
+export type RunTrackingMode = "gps" | "manual";
+export type RunUnit = "mi" | "km";
+
 export type WizardTask = {
   name: string;
   type: WizardTaskType;
   durationMinutes?: number;
   minWords?: number;
   requirePhoto?: boolean;
+  runGoalType?: RunGoalType;
+  /** Target value for the chosen goal type. Omitted = "just track it" (no target). */
+  runTarget?: number;
+  runTrackingMode?: RunTrackingMode;
+  runUnit?: RunUnit;
 };
 
 export type WizardPack = {

@@ -45,7 +45,13 @@ import {
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
-import type { WizardTask, WizardTaskType } from "@/components/create/v2/StepTasks";
+import type {
+  RunGoalType,
+  RunTrackingMode,
+  RunUnit,
+  WizardTask,
+  WizardTaskType,
+} from "@/components/create/v2/StepTasks";
 
 type ProofTypeDef = {
   id: WizardTaskType;
@@ -131,6 +137,22 @@ const TIMER_PRESETS: readonly { mins: number; label: string }[] = [
 
 const NAME_MAX = 60;
 
+const RUN_GOAL_TYPES: readonly { id: RunGoalType; label: string }[] = [
+  { id: "distance", label: "Distance" },
+  { id: "time", label: "Time" },
+  { id: "pace", label: "Pace" },
+] as const;
+
+const RUN_TRACKING_MODES: readonly { id: RunTrackingMode; label: string }[] = [
+  { id: "gps", label: "GPS auto-track" },
+  { id: "manual", label: "Manual" },
+] as const;
+
+// TODO(profile-unit): source the user's distance unit from profile/locale.
+// No profile unit preference exists yet, so default to "mi" (matches the
+// miles-based run completion screen). Display only — never asked per task.
+const RUN_UNIT: RunUnit = "mi";
+
 type NewTaskState = {
   name: string;
   type: WizardTaskType | null;
@@ -139,12 +161,19 @@ type NewTaskState = {
   minWords?: number;
   counterGoal?: number;
   counterUnit?: string;
+  runGoalType: RunGoalType;
+  runTarget?: number;
+  runJustTrack: boolean;
+  runTrackingMode: RunTrackingMode;
 };
 
 const INITIAL_STATE: NewTaskState = {
   name: "",
   type: null,
   verified: false,
+  runGoalType: "distance",
+  runJustTrack: false,
+  runTrackingMode: "gps",
 };
 
 export type NewTaskSheetProps = {
@@ -187,6 +216,14 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
       durationMinutes: state.durationMinutes,
       minWords: state.minWords,
       requirePhoto: state.type === "photo" || state.verified,
+      ...(state.type === "run"
+        ? {
+            runGoalType: state.runGoalType,
+            runTarget: state.runJustTrack ? undefined : state.runTarget,
+            runTrackingMode: state.runTrackingMode,
+            runUnit: RUN_UNIT,
+          }
+        : {}),
     };
     onSave(task);
     reset();
@@ -293,6 +330,140 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
               />
             </>
           ) : null}
+        </View>
+      );
+    }
+    if (state.type === "run") {
+      const unitUpper = RUN_UNIT.toUpperCase();
+      const goalLabel =
+        state.runGoalType === "time"
+          ? "TARGET TIME (MIN)"
+          : state.runGoalType === "pace"
+            ? `TARGET PACE (MIN/${unitUpper})`
+            : `TARGET DISTANCE (${unitUpper})`;
+      const unitSuffix =
+        state.runGoalType === "time"
+          ? "min"
+          : state.runGoalType === "pace"
+            ? `min/${RUN_UNIT}`
+            : RUN_UNIT;
+      const targetPlaceholder =
+        state.runGoalType === "time"
+          ? "30"
+          : state.runGoalType === "pace"
+            ? "9"
+            : "5";
+      return (
+        <View style={styles.configCard}>
+          <Text style={styles.label}>GOAL TYPE</Text>
+          <View style={styles.chipRow}>
+            {RUN_GOAL_TYPES.map((g) => {
+              const selected = state.runGoalType === g.id;
+              return (
+                <Pressable
+                  key={g.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${g.label} goal`}
+                  accessibilityState={{ selected }}
+                  onPress={() => setState((p) => ({ ...p, runGoalType: g.id }))}
+                  style={[
+                    styles.presetChip,
+                    selected ? styles.presetChipSelected : null,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.presetChipText,
+                      selected ? styles.presetChipTextSelected : null,
+                    ]}
+                  >
+                    {g.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.runTargetHeader}>
+            <Text style={styles.label}>{goalLabel}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Just track it, no target"
+              accessibilityState={{ selected: state.runJustTrack }}
+              onPress={() =>
+                setState((p) => ({
+                  ...p,
+                  runJustTrack: !p.runJustTrack,
+                  runTarget: undefined,
+                }))
+              }
+              style={[
+                styles.justTrackChip,
+                state.runJustTrack ? styles.justTrackChipSelected : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.justTrackText,
+                  state.runJustTrack ? styles.justTrackTextSelected : null,
+                ]}
+              >
+                Just track it
+              </Text>
+            </Pressable>
+          </View>
+          {!state.runJustTrack ? (
+            <View style={styles.runTargetRow}>
+              <TextInput
+                accessibilityLabel={goalLabel}
+                value={state.runTarget != null ? String(state.runTarget) : ""}
+                onChangeText={(v) => {
+                  const cleaned = v.replace(/[^0-9.]/g, "");
+                  const n = parseFloat(cleaned);
+                  setState((p) => ({
+                    ...p,
+                    runTarget: Number.isNaN(n) ? undefined : n,
+                  }));
+                }}
+                keyboardType="decimal-pad"
+                placeholder={targetPlaceholder}
+                placeholderTextColor={DS_COLORS_V2.text.tertiary}
+                style={[styles.configInput, styles.runTargetInput]}
+              />
+              <Text style={styles.runUnitText}>{unitSuffix}</Text>
+            </View>
+          ) : null}
+
+          <Text style={[styles.label, { marginTop: 8 }]}>TRACKING</Text>
+          <View style={styles.chipRow}>
+            {RUN_TRACKING_MODES.map((m) => {
+              const selected = state.runTrackingMode === m.id;
+              return (
+                <Pressable
+                  key={m.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${m.label} tracking`}
+                  accessibilityState={{ selected }}
+                  onPress={() =>
+                    setState((p) => ({ ...p, runTrackingMode: m.id }))
+                  }
+                  style={[
+                    styles.presetChip,
+                    selected ? styles.presetChipSelected : null,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.presetChipText,
+                      selected ? styles.presetChipTextSelected : null,
+                    ]}
+                  >
+                    {m.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       );
     }
@@ -640,6 +811,38 @@ const styles = StyleSheet.create({
     color: DS_COLORS_V2.text.primary,
   },
   presetChipTextSelected: { color: DS_COLORS_V2.brand.primary },
+
+  runTargetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  runTargetRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  runTargetInput: { flex: 1 },
+  runUnitText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.secondary,
+  },
+  justTrackChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    borderWidth: 1,
+    borderColor: DS_COLORS_V2.surface.divider,
+  },
+  justTrackChipSelected: {
+    borderColor: DS_COLORS_V2.brand.primary,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+  },
+  justTrackText: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.secondary,
+  },
+  justTrackTextSelected: { color: DS_COLORS_V2.brand.primary },
 
   hardCard: {
     backgroundColor: DS_COLORS_V2.surface.heroDark,
