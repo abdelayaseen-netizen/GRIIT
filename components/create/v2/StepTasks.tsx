@@ -28,6 +28,10 @@ import {
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
+import type {
+  WizardCategory,
+  WizardDifficulty,
+} from "@/components/create/v2/StepRules";
 
 export type WizardTaskType =
   | "simple"
@@ -54,6 +58,9 @@ export type WizardPack = {
   name: string;
   subtitle: string;
   tasks: WizardTask[];
+  category: WizardCategory;
+  durationDays?: number;
+  difficulty?: WizardDifficulty;
 };
 
 export const PACKS: readonly WizardPack[] = [
@@ -61,6 +68,9 @@ export const PACKS: readonly WizardPack[] = [
     id: "75-hard",
     name: "75 Hard Classic",
     subtitle: "5 strict tasks · original framework",
+    category: "discipline",
+    durationDays: 75,
+    difficulty: "hard",
     tasks: [
       { name: "Workout 1 (45 min)", type: "timer", durationMinutes: 45 },
       { name: "Workout 2 outdoors (45 min)", type: "timer", durationMinutes: 45 },
@@ -73,6 +83,7 @@ export const PACKS: readonly WizardPack[] = [
     id: "athlete",
     name: "Athlete",
     subtitle: "3 tasks · Run, train, check-in",
+    category: "fitness",
     tasks: [
       { name: "Run 3 km", type: "run" },
       { name: "Strength session (30 min)", type: "timer", durationMinutes: 30 },
@@ -83,6 +94,7 @@ export const PACKS: readonly WizardPack[] = [
     id: "faith",
     name: "Faith",
     subtitle: "3 tasks · Prayer, read, gratitude",
+    category: "faith",
     tasks: [
       { name: "Prayer (15 min)", type: "timer", durationMinutes: 15 },
       { name: "Read scripture", type: "reading" },
@@ -93,6 +105,7 @@ export const PACKS: readonly WizardPack[] = [
     id: "morning",
     name: "Morning routine",
     subtitle: "5 tasks · Win the morning",
+    category: "discipline",
     tasks: [
       { name: "Wake up by 6am", type: "simple" },
       { name: "Cold shower", type: "simple" },
@@ -105,6 +118,7 @@ export const PACKS: readonly WizardPack[] = [
     id: "entrepreneur",
     name: "Entrepreneur",
     subtitle: "3 tasks · Ship, journal, learn",
+    category: "discipline",
     tasks: [
       { name: "Ship one thing", type: "simple" },
       { name: "Journal lessons (60 words)", type: "journal", minWords: 60 },
