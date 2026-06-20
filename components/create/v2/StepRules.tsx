@@ -133,7 +133,7 @@ export function StepRules({
           strokeWidth={2}
         />
         <Text style={styles.statChipText}>
-          Public proof boosts completion 43% → 76%.
+          Public accountability lifted goal completion from 43% to 76% (Matthews, 2015).
         </Text>
       </View>
 
@@ -214,11 +214,6 @@ function DifficultyCard({
             {subtitle}
           </Text>
         </View>
-        {selected ? (
-          <View style={styles.selectedBadge}>
-            <Text style={styles.selectedBadgeText}>Selected</Text>
-          </View>
-        ) : null}
       </View>
       <Text style={styles.diffDescription}>{description}</Text>
     </Pressable>
@@ -251,6 +246,7 @@ const styles = StyleSheet.create({
   diffCardSelected: {
     borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   diffHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   diffIconWrap: {
@@ -269,19 +265,6 @@ const styles = StyleSheet.create({
   diffSubtitle: {
     fontSize: 11,
     color: DS_COLORS_V2.text.secondary,
-  },
-  selectedBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-  },
-  selectedBadgeText: {
-    fontSize: 9,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.brand.primary,
-    textTransform: "uppercase",
   },
   diffDescription: {
     fontSize: 12,
@@ -353,6 +336,7 @@ const styles = StyleSheet.create({
   catChipSelected: {
     borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   catText: {
     fontSize: 12,

@@ -13,7 +13,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
   Briefcase,
   Camera,
-  Check,
   Dumbbell,
   Feather,
   Flame,
@@ -269,16 +268,6 @@ export function StepTasks({
                     {p.subtitle}
                   </Text>
                 </View>
-                {selected ? (
-                  <View style={styles.packSelected}>
-                    <Check
-                      size={14}
-                      color={DS_COLORS_V2.brand.primary}
-                      strokeWidth={2.5}
-                    />
-                    <Text style={styles.packSelectedText}>Selected</Text>
-                  </View>
-                ) : null}
               </Pressable>
             );
           })}
@@ -417,6 +406,7 @@ const styles = StyleSheet.create({
   packRowSelected: {
     borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   packIconWrap: {
     width: 42,
@@ -436,17 +426,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: DS_COLORS_V2.text.secondary,
   },
-  packSelected: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  packSelectedText: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
-  },
-
   customWrap: { gap: 8, marginTop: 4 },
   emptyAdd: {
     paddingVertical: 28,
