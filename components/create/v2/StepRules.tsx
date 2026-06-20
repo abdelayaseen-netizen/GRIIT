@@ -77,7 +77,7 @@ export function StepRules({
           iconBg={DS_COLORS_V2.semantic.successSoft}
           title="Standard"
           subtitle="Recommended for first challenge"
-          description="Self-reported or photo proof. 2 streak freezes per week. Miss a day? Use a freeze or restart."
+          description="Streak freezes on. Miss a day and you don't reset."
           selected={difficulty === "standard"}
           onPress={() => onChangeDifficulty("standard")}
         />
@@ -92,7 +92,7 @@ export function StepRules({
           iconBg={DS_COLORS_V2.proof.hardBg}
           title="Hard mode"
           subtitle="75 Hard style — no exceptions"
-          description="Camera-only photos. Time windows enforced. No freezes. Miss a day → restart from Day 1."
+          description="No freezes. Miss a day, restart from day 1."
           selected={difficulty === "hard"}
           onPress={() => onChangeDifficulty("hard")}
         />
