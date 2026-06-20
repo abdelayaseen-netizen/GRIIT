@@ -6,7 +6,7 @@
  *   1. Task name input
  *   2. Proof type grid (6 visible types, "Need more?" expands to 4 advanced)
  *   3. Inline type-specific config (timer duration, counter target, etc.)
- *   4. Hard mode card (dark)
+ *   4. Verified proof card (dark)
  *   5. Add task CTA
  *
  * The sheet returns a `WizardTask` to the parent on save.
@@ -133,7 +133,7 @@ const NAME_MAX = 60;
 type NewTaskState = {
   name: string;
   type: WizardTaskType | null;
-  hardMode: boolean;
+  verified: boolean;
   durationMinutes?: number;
   minWords?: number;
   counterGoal?: number;
@@ -143,7 +143,7 @@ type NewTaskState = {
 const INITIAL_STATE: NewTaskState = {
   name: "",
   type: null,
-  hardMode: false,
+  verified: false,
 };
 
 export type NewTaskSheetProps = {
@@ -185,7 +185,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
       type: state.type,
       durationMinutes: state.durationMinutes,
       minWords: state.minWords,
-      requirePhoto: state.type === "photo" || state.hardMode,
+      requirePhoto: state.type === "photo" || state.verified,
     };
     onSave(task);
     reset();
@@ -446,12 +446,12 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                   color={DS_COLORS_V2.streak.securedYellow}
                   strokeWidth={2}
                 />
-                <Text style={styles.hardTitle}>Hard mode</Text>
+                <Text style={styles.hardTitle}>Verified proof</Text>
                 <Switch
-                  accessibilityLabel="Enable hard mode for this task"
-                  value={state.hardMode}
+                  accessibilityLabel="Require verified proof for this task"
+                  value={state.verified}
                   onValueChange={(v) =>
-                    setState((p) => ({ ...p, hardMode: v }))
+                    setState((p) => ({ ...p, verified: v }))
                   }
                   trackColor={{
                     false: DS_COLORS_V2.overlay.onDarkSurface10,
@@ -461,7 +461,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                 />
               </View>
               <Text style={styles.hardSub}>
-                Camera-only photos. Time-window enforcement. Location check. If you miss the window, the task fails for that day.
+                Requires a photo as proof to complete this task each day.
               </Text>
             </View>
           </ScrollView>
