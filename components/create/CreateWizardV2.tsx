@@ -34,6 +34,7 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { TRPC } from "@/lib/trpc-paths";
 import { trpcMutate } from "@/lib/trpc";
+import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
@@ -274,6 +275,17 @@ export function CreateWizardV2() {
       if (!result?.id) {
         throw new Error("Create returned no id.");
       }
+      trackEvent("challenge_created", {
+        challenge_id: result.id,
+        source: state.useCustom ? "custom" : "pack",
+        pack_id: state.useCustom ? undefined : state.pack?.id,
+        length_days: state.durationDays ?? 30,
+        mode: state.who === "group" ? "group" : "solo",
+        strictness: state.difficulty,
+        public_proof: state.photoProof,
+        task_count: tasksForApi.length,
+        has_verified_task: tasksForApi.some((t) => t.requirePhoto === true),
+      });
       void queryClient.invalidateQueries({ queryKey: ["home"] });
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
