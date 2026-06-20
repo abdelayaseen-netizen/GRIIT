@@ -230,6 +230,17 @@ export function CreateWizardV2() {
         state.photoProof === "required" || state.difficulty === "hard";
       const allowPhoto = state.photoProof !== "off";
 
+      // TODO(run-backend): Run goal config (runGoalType / runTarget /
+      // runTrackingMode / runUnit) is captured on the WizardTask but is NOT
+      // persisted here on purpose. challenges.create has no goal_type /
+      // tracking_mode columns yet — that schema is its own migration in a
+      // follow-up PR (verify live). Do not partially map distance ->
+      // strava_min_distance_meters: persisting distance while time/pace
+      // silently drop is worse than clean UI behind one TODO. Related:
+      //  - Completion post should carry distance + time + pace; the UI sets
+      //    only the chosen goal, the other two are derived server-side.
+      //  - "Manual only on Standard" must be enforced in the proof/completion
+      //    engine, not the create sheet (difficulty isn't reliable at task-add).
       const payload = {
         title: state.title.trim(),
         description: "",
