@@ -26,6 +26,12 @@ export const FLAGS = {
   PR3_ZERO_STATE_GATES: true,
   /** PR#3: instrument home_state_viewed analytics event. */
   PR3_HOME_STATE_ANALYTICS: true,
+  /**
+   * Run goal-type config in the Add-task sheet (goal type, target, tracking
+   * mode). Off until the backend goal_type/tracking_mode schema lands —
+   * keeping it off avoids letting users set run goals that don't persist.
+   */
+  RUN_GOAL_CONFIG: false,
 } as const;
 
 // ============================================

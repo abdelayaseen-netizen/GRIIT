@@ -45,6 +45,7 @@ import {
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
+import { FLAGS } from "@/lib/feature-flags";
 import type {
   RunGoalType,
   RunTrackingMode,
@@ -338,7 +339,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
         </View>
       );
     }
-    if (state.type === "run") {
+    if (state.type === "run" && FLAGS.RUN_GOAL_CONFIG) {
       const unitUpper = RUN_UNIT.toUpperCase();
       const goalLabel =
         state.runGoalType === "time"
