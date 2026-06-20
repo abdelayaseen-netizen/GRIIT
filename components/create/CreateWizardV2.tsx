@@ -136,11 +136,17 @@ export function CreateWizardV2() {
     setState((p) => ({ ...p, who }));
   }, []);
   const setPack = useCallback((pack: WizardPack | null) => {
-    setState((p) => ({
-      ...p,
-      pack,
-      category: pack ? pack.category : p.category,
-    }));
+    setState((p) => {
+      if (!pack) return { ...p, pack };
+      return {
+        ...p,
+        pack,
+        category: pack.category,
+        durationDays: pack.durationDays ?? INITIAL_STATE.durationDays,
+        difficulty: pack.difficulty ?? INITIAL_STATE.difficulty,
+        customDuration: "",
+      };
+    });
   }, []);
   const setUseCustom = useCallback((v: boolean) => {
     setState((p) => ({ ...p, useCustom: v }));
