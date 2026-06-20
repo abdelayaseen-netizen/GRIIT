@@ -314,6 +314,7 @@ const styles = StyleSheet.create({
   whoCardSelected: {
     borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   whoBody: { gap: 2 },
   whoTitle: {
