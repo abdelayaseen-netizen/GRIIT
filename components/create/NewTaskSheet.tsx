@@ -208,6 +208,11 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
   const canSave =
     state.name.trim().length >= 2 && state.type !== null;
 
+  // Verified and Manual tracking are mutually exclusive on a Run: a manual
+  // Run can never wear Verified. When Manual is selected, Verified is locked off.
+  const verifiedLocked =
+    state.type === "run" && state.runTrackingMode === "manual";
+
   const handleSave = useCallback(() => {
     if (!canSave || state.type == null) return;
     const task: WizardTask = {
@@ -438,24 +443,34 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
           <View style={styles.chipRow}>
             {RUN_TRACKING_MODES.map((m) => {
               const selected = state.runTrackingMode === m.id;
+              // Manual is disabled while Verified is on (mutually exclusive).
+              const disabled = m.id === "manual" && state.verified;
               return (
                 <Pressable
                   key={m.id}
                   accessibilityRole="button"
                   accessibilityLabel={`${m.label} tracking`}
-                  accessibilityState={{ selected }}
+                  accessibilityState={{ selected, disabled }}
+                  disabled={disabled}
                   onPress={() =>
-                    setState((p) => ({ ...p, runTrackingMode: m.id }))
+                    setState((p) => ({
+                      ...p,
+                      runTrackingMode: m.id,
+                      // Selecting Manual forces Verified off.
+                      verified: m.id === "manual" ? false : p.verified,
+                    }))
                   }
                   style={[
                     styles.presetChip,
                     selected ? styles.presetChipSelected : null,
+                    disabled ? styles.presetChipDisabled : null,
                   ]}
                 >
                   <Text
                     style={[
                       styles.presetChipText,
                       selected ? styles.presetChipTextSelected : null,
+                      disabled ? styles.presetChipTextDisabled : null,
                     ]}
                   >
                     {m.label}
@@ -464,6 +479,11 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
               );
             })}
           </View>
+          {state.runTrackingMode === "manual" ? (
+            <Text style={styles.runHint}>
+              Manual runs can&apos;t be verified.
+            </Text>
+          ) : null}
         </View>
       );
     }
@@ -621,9 +641,17 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                 <Text style={styles.hardTitle}>Verified proof</Text>
                 <Switch
                   accessibilityLabel="Require verified proof for this task"
-                  value={state.verified}
+                  accessibilityState={{ disabled: verifiedLocked }}
+                  disabled={verifiedLocked}
+                  value={state.verified && !verifiedLocked}
                   onValueChange={(v) =>
-                    setState((p) => ({ ...p, verified: v }))
+                    setState((p) => ({
+                      ...p,
+                      verified: v,
+                      // Enabling Verified on a Run forces GPS — manual runs can't be verified.
+                      runTrackingMode:
+                        v && p.type === "run" ? "gps" : p.runTrackingMode,
+                    }))
                   }
                   trackColor={{
                     false: DS_COLORS_V2.overlay.onDarkSurface10,
@@ -633,7 +661,9 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                 />
               </View>
               <Text style={styles.hardSub}>
-                Requires a photo as proof to complete this task each day.
+                {verifiedLocked
+                  ? "Switch tracking to GPS to require verified proof. Manual runs can't be verified."
+                  : "Requires a photo as proof to complete this task each day."}
               </Text>
             </View>
           </ScrollView>
@@ -811,6 +841,16 @@ const styles = StyleSheet.create({
     color: DS_COLORS_V2.text.primary,
   },
   presetChipTextSelected: { color: DS_COLORS_V2.brand.primary },
+  presetChipDisabled: {
+    opacity: 0.4,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    borderColor: DS_COLORS_V2.surface.divider,
+  },
+  presetChipTextDisabled: { color: DS_COLORS_V2.text.tertiary },
+  runHint: {
+    fontSize: 11,
+    color: DS_COLORS_V2.text.tertiary,
+  },
 
   runTargetHeader: {
     flexDirection: "row",
