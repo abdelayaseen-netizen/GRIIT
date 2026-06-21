@@ -13,6 +13,14 @@ export type OnboardingGoal =
 
 export type IntensityLevel = 'beginner' | 'intermediate' | 'extreme';
 
+/**
+ * OnboardingFlowV2 commitment mode (screen 05). Added (not reused from
+ * `intensityLevel`) because `intensityLevel` encodes a 3-level
+ * beginner/intermediate/extreme scale, not the binary Standard/Hard the
+ * commitment screen needs.
+ */
+export type OnboardingCommitment = 'standard' | 'hard' | null;
+
 const ONBOARDING_STORAGE_KEY = "griit-onboarding";
 
 export type ProfileSetupHints = {
@@ -36,6 +44,10 @@ export interface OnboardingState {
   hasCompletedOnboarding: boolean;
   selectedGoals: OnboardingGoal[];
   intensityLevel: IntensityLevel | null;
+  /** OnboardingFlowV2 (screen 05) — Standard vs Hard mode. */
+  commitment: OnboardingCommitment;
+  /** OnboardingFlowV2 (screen 06) — whether the reminders primer has been shown/answered. */
+  notificationsAsked: boolean;
   /** Ephemeral hints for ProfileSetup (email prefix, Apple full name); not persisted. */
   profileSetupHints: ProfileSetupHints | null;
   setMotivation: (v: string) => void;
@@ -55,6 +67,8 @@ export interface OnboardingState {
   prevStep: () => void;
   toggleGoal: (goal: OnboardingGoal) => void;
   setIntensityLevel: (level: IntensityLevel) => void;
+  setCommitment: (commitment: OnboardingCommitment) => void;
+  setNotificationsAsked: (asked: boolean) => void;
   setProfileSetupHints: (hints: ProfileSetupHints | null) => void;
   reset: () => void;
 }
@@ -75,6 +89,8 @@ const initialState = {
   hasCompletedOnboarding: false,
   selectedGoals: [] as OnboardingGoal[],
   intensityLevel: null as IntensityLevel | null,
+  commitment: null as OnboardingCommitment,
+  notificationsAsked: false,
   profileSetupHints: null as ProfileSetupHints | null,
 };
 
@@ -109,6 +125,8 @@ export const useOnboardingStore = create<OnboardingState>()(
         return { selectedGoals: [...s.selectedGoals, goal] };
       }),
       setIntensityLevel: (level) => set({ intensityLevel: level }),
+      setCommitment: (commitment) => set({ commitment }),
+      setNotificationsAsked: (asked) => set({ notificationsAsked: asked }),
       setProfileSetupHints: (hints) => set({ profileSetupHints: hints }),
       reset: () => set(initialState),
     }),
@@ -131,6 +149,8 @@ export const useOnboardingStore = create<OnboardingState>()(
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         selectedGoals: state.selectedGoals,
         intensityLevel: state.intensityLevel,
+        commitment: state.commitment,
+        notificationsAsked: state.notificationsAsked,
         // profileSetupHints intentionally omitted from persist
       }),
     }

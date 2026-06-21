@@ -71,6 +71,12 @@ type AnalyticsEvent =
   | { name: "notification_permission_denied" }
   | { name: "notification_permission_deferred_to_post_first_day" }
   | { name: "onboarding_goals_selected"; goals: string[] }
+  // OnboardingFlowV2 funnel additions.
+  | { name: "commitment_selected"; commitment: "standard" | "hard" }
+  | { name: "notifications_prompt_shown" }
+  | { name: "notifications_prompt_result"; granted: boolean }
+  | { name: "account_created"; method?: "apple" | "email" | "google" }
+  | { name: "first_challenge_started"; challenge_type?: string }
   | { name: "onboarding_signup_completed" }
   | { name: "onboarding_profile_created" }
   | { name: "onboarding_challenge_auto_suggested"; challenge_id: string; challenge_name: string }

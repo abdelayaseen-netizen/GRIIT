@@ -32,6 +32,11 @@ export const FLAGS = {
    * keeping it off avoids letting users set run goals that don't persist.
    */
   RUN_GOAL_CONFIG: false,
+  /**
+   * New 9-screen onboarding (OnboardingFlowV2). Off until verified on device.
+   * When false, app/onboarding/index.tsx renders the existing OnboardingFlow.
+   */
+  ONBOARDING_V2: false,
 } as const;
 
 // ============================================
