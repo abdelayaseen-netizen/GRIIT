@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import StreakFlame from "@/components/home/StreakFlame";
 import { useOnboardingStore, type OnboardingCommitment } from "@/store/onboardingStore";
+import { track } from "@/lib/analytics";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { PrimaryButton } from "../ui";
 
@@ -56,7 +57,9 @@ export default function CommitmentScreen({ onContinue }: { onContinue: () => voi
   const selected: Mode = commitment ?? "hard";
 
   const handleContinue = useCallback(() => {
+    const chosen: Mode = commitment ?? "hard";
     if (!commitment) setCommitment("hard");
+    track({ name: "commitment_selected", commitment: chosen });
     onContinue();
   }, [commitment, setCommitment, onContinue]);
 

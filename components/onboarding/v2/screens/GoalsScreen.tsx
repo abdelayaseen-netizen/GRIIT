@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { track } from "@/lib/analytics";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { PrimaryButton, ProgressBar } from "../ui";
 
@@ -12,6 +13,11 @@ import { PrimaryButton, ProgressBar } from "../ui";
 export default function GoalsScreen({ onContinue }: { onContinue: () => void }) {
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const toggleGoal = useOnboardingStore((s) => s.toggleGoal);
+
+  const handleContinue = useCallback(() => {
+    track({ name: "onboarding_goals_selected", goals: selectedGoals });
+    onContinue();
+  }, [selectedGoals, onContinue]);
 
   return (
     <View style={styles.content}>
@@ -42,7 +48,7 @@ export default function GoalsScreen({ onContinue }: { onContinue: () => void }) 
 
       <View style={styles.grow} />
       <View style={styles.footer}>
-        <PrimaryButton label="Continue" onPress={onContinue} disabled={selectedGoals.length === 0} />
+        <PrimaryButton label="Continue" onPress={handleContinue} disabled={selectedGoals.length === 0} />
       </View>
     </View>
   );

@@ -8,9 +8,11 @@ import { supabase } from "@/lib/supabase";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { captureError } from "@/lib/sentry";
+import { track } from "@/lib/analytics";
 
 export async function completeOnboardingV2(): Promise<void> {
   const store = useOnboardingStore.getState();
+  track({ name: "onboarding_completed" });
   store.completeOnboarding();
   store.setProfileSetupHints(null);
 

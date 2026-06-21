@@ -83,6 +83,7 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
         email: credential.email ?? undefined,
       });
       track({ name: "signup_completed", method: "apple" });
+      track({ name: "account_created", method: "apple" });
       onAuthSuccess(user.id);
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
@@ -128,6 +129,7 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
           if (signInData.session?.user) {
             setProfileSetupHints({ email: email.trim() });
             track({ name: "signup_completed", method: "email" });
+            track({ name: "account_created", method: "email" });
             onAuthSuccess(signInData.session.user.id);
             return;
           }
@@ -139,6 +141,7 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
       if (sessionUser) {
         setProfileSetupHints({ email: email.trim() });
         track({ name: "signup_completed", method: "email" });
+        track({ name: "account_created", method: "email" });
         onAuthSuccess(sessionUser.id);
         return;
       }

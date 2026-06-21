@@ -7,10 +7,11 @@
  * Steps 0–6 + 8 render in-flow; the paywall (mockup 08) is the existing
  * offering-driven /paywall route, presented between Account and First-challenge.
  */
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
+import { track } from "@/lib/analytics";
 import { OBV2_COLOR, OBV2_TYPE } from "./theme";
 import WelcomeScreen from "./screens/WelcomeScreen";
 import WhyProofScreen from "./screens/WhyProofScreen";
@@ -48,12 +49,15 @@ export default function OnboardingFlowV2() {
   const router = useRouter();
   const [step, setStep] = useState<OnboardingV2Step>("welcome");
 
-  const goNext = useCallback(() => {
-    setStep((cur) => {
-      const idx = ORDER.indexOf(cur);
-      return ORDER[Math.min(idx + 1, ORDER.length - 1)] ?? cur;
-    });
+  useEffect(() => {
+    track({ name: "onboarding_started" });
   }, []);
+
+  const goNext = useCallback(() => {
+    const idx = ORDER.indexOf(step);
+    track({ name: "onboarding_step_completed", step: idx, total: ORDER.length, step_name: step });
+    setStep(ORDER[Math.min(idx + 1, ORDER.length - 1)] ?? step);
+  }, [step]);
 
   const goToLogin = useCallback(() => {
     router.push(ROUTES.AUTH_LOGIN as never);
@@ -70,7 +74,13 @@ export default function OnboardingFlowV2() {
   // Completion (mockup 09). Both the featured "30-day reset" and "Build my own"
   // mark onboarding complete (storage + DB + store) then hand off to the existing
   // create/start flow. The 30-day reset is a static default — goals aren't wired.
-  const finishToCreate = useCallback(async () => {
+  const handleStartFeatured = useCallback(async () => {
+    track({ name: "first_challenge_started", challenge_type: "30_day_reset" });
+    await completeOnboardingV2();
+    router.replace(ROUTES.CREATE_WIZARD as never);
+  }, [router]);
+
+  const handleBuildOwn = useCallback(async () => {
     await completeOnboardingV2();
     router.replace(ROUTES.CREATE_WIZARD as never);
   }, [router]);
@@ -92,7 +102,7 @@ export default function OnboardingFlowV2() {
       case "account":
         return <AccountScreen onAuthSuccess={handleAccountSuccess} />;
       case "first_challenge":
-        return <FirstChallengeScreen onStart={finishToCreate} onBuildOwn={finishToCreate} />;
+        return <FirstChallengeScreen onStart={handleStartFeatured} onBuildOwn={handleBuildOwn} />;
       default:
         return (
           <View style={styles.placeholder}>

@@ -1,24 +1,32 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Bell, Flame } from "lucide-react-native";
 import { requestNotificationPermissions } from "@/lib/notifications";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { track } from "@/lib/analytics";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { PrimaryButton, TextLink } from "../ui";
 
 export default function RemindersScreen({ onContinue }: { onContinue: () => void }) {
   const setNotificationsAsked = useOnboardingStore((s) => s.setNotificationsAsked);
 
+  useEffect(() => {
+    track({ name: "notifications_prompt_shown" });
+  }, []);
+
   const handleEnable = useCallback(async () => {
+    let granted = false;
     try {
-      await requestNotificationPermissions();
+      granted = await requestNotificationPermissions();
     } finally {
+      track({ name: "notifications_prompt_result", granted });
       setNotificationsAsked(true);
       onContinue();
     }
   }, [setNotificationsAsked, onContinue]);
 
   const handleLater = useCallback(() => {
+    track({ name: "notifications_prompt_result", granted: false });
     setNotificationsAsked(true);
     onContinue();
   }, [setNotificationsAsked, onContinue]);
