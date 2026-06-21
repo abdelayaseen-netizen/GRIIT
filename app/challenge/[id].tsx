@@ -341,7 +341,7 @@ function MissionRow({
   stravaVerifyPending,
   onConnectStrava,
   onVerifyStrava,
-  isPro = true,
+  isPro = false,
   dayNumber,
   totalDays,
 }: {
