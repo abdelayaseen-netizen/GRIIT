@@ -34,6 +34,7 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { TRPC } from "@/lib/trpc-paths";
 import { trpcMutate } from "@/lib/trpc";
+import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
@@ -81,7 +82,7 @@ const INITIAL_STATE: WizardState = {
   useCustom: false,
   difficulty: "standard",
   photoProof: "optional",
-  category: null,
+  category: "discipline",
 };
 
 function canAdvanceStep1(s: WizardState): boolean {
@@ -98,7 +99,6 @@ function canAdvanceStep2(s: WizardState): boolean {
 function canLaunch(s: WizardState): boolean {
   if (!canAdvanceStep1(s)) return false;
   if (!canAdvanceStep2(s)) return false;
-  if (!s.category) return false;
   return true;
 }
 
@@ -137,7 +137,17 @@ export function CreateWizardV2() {
     setState((p) => ({ ...p, who }));
   }, []);
   const setPack = useCallback((pack: WizardPack | null) => {
-    setState((p) => ({ ...p, pack }));
+    setState((p) => {
+      if (!pack) return { ...p, pack };
+      return {
+        ...p,
+        pack,
+        category: pack.category,
+        durationDays: pack.durationDays ?? INITIAL_STATE.durationDays,
+        difficulty: pack.difficulty ?? INITIAL_STATE.difficulty,
+        customDuration: "",
+      };
+    });
   }, []);
   const setUseCustom = useCallback((v: boolean) => {
     setState((p) => ({ ...p, useCustom: v }));
@@ -201,7 +211,6 @@ export function CreateWizardV2() {
       if (!canAdvanceStep2(state)) return "Pick a pack or add a task";
       return "Next: rules";
     }
-    if (!state.category) return "Pick a category";
     return "Review & launch";
   }, [state]);
 
@@ -222,6 +231,17 @@ export function CreateWizardV2() {
         state.photoProof === "required" || state.difficulty === "hard";
       const allowPhoto = state.photoProof !== "off";
 
+      // TODO(run-backend): Run goal config (runGoalType / runTarget /
+      // runTrackingMode / runUnit) is captured on the WizardTask but is NOT
+      // persisted here on purpose. challenges.create has no goal_type /
+      // tracking_mode columns yet — that schema is its own migration in a
+      // follow-up PR (verify live). Do not partially map distance ->
+      // strava_min_distance_meters: persisting distance while time/pace
+      // silently drop is worse than clean UI behind one TODO. Related:
+      //  - Completion post should carry distance + time + pace; the UI sets
+      //    only the chosen goal, the other two are derived server-side.
+      //  - "Manual only on Standard" must be enforced in the proof/completion
+      //    engine, not the create sheet (difficulty isn't reliable at task-add).
       const payload = {
         title: state.title.trim(),
         description: "",
@@ -255,6 +275,17 @@ export function CreateWizardV2() {
       if (!result?.id) {
         throw new Error("Create returned no id.");
       }
+      trackEvent("challenge_created", {
+        challenge_id: result.id,
+        source: state.useCustom ? "custom" : "pack",
+        pack_id: state.useCustom ? undefined : state.pack?.id,
+        length_days: state.durationDays ?? 30,
+        mode: state.who === "group" ? "group" : "solo",
+        strictness: state.difficulty,
+        public_proof: state.photoProof,
+        task_count: tasksForApi.length,
+        has_verified_task: tasksForApi.some((t) => t.requirePhoto === true),
+      });
       void queryClient.invalidateQueries({ queryKey: ["home"] });
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });

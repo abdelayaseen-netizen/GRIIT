@@ -77,7 +77,7 @@ export function StepRules({
           iconBg={DS_COLORS_V2.semantic.successSoft}
           title="Standard"
           subtitle="Recommended for first challenge"
-          description="Self-reported or photo proof. 2 streak freezes per week. Miss a day? Use a freeze or restart."
+          description="Streak freezes on. Miss a day and you don't reset."
           selected={difficulty === "standard"}
           onPress={() => onChangeDifficulty("standard")}
         />
@@ -92,7 +92,7 @@ export function StepRules({
           iconBg={DS_COLORS_V2.proof.hardBg}
           title="Hard mode"
           subtitle="75 Hard style — no exceptions"
-          description="Camera-only photos. Time windows enforced. No freezes. Miss a day → restart from Day 1."
+          description="No freezes. Miss a day, restart from day 1."
           selected={difficulty === "hard"}
           onPress={() => onChangeDifficulty("hard")}
         />
@@ -133,7 +133,7 @@ export function StepRules({
           strokeWidth={2}
         />
         <Text style={styles.statChipText}>
-          Public proof boosts completion 43% → 76%.
+          Public accountability lifted goal completion from 43% to 76% (Matthews, 2015).
         </Text>
       </View>
 
@@ -214,11 +214,6 @@ function DifficultyCard({
             {subtitle}
           </Text>
         </View>
-        {selected ? (
-          <View style={styles.selectedBadge}>
-            <Text style={styles.selectedBadgeText}>Selected</Text>
-          </View>
-        ) : null}
       </View>
       <Text style={styles.diffDescription}>{description}</Text>
     </Pressable>
@@ -251,6 +246,7 @@ const styles = StyleSheet.create({
   diffCardSelected: {
     borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   diffHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   diffIconWrap: {
@@ -269,19 +265,6 @@ const styles = StyleSheet.create({
   diffSubtitle: {
     fontSize: 11,
     color: DS_COLORS_V2.text.secondary,
-  },
-  selectedBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-  },
-  selectedBadgeText: {
-    fontSize: 9,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.brand.primary,
-    textTransform: "uppercase",
   },
   diffDescription: {
     fontSize: 12,
@@ -353,6 +336,7 @@ const styles = StyleSheet.create({
   catChipSelected: {
     borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   catText: {
     fontSize: 12,
