@@ -75,7 +75,7 @@ type AnalyticsEvent =
   | { name: "commitment_selected"; commitment: "standard" | "hard" }
   | { name: "notifications_prompt_shown" }
   | { name: "notifications_prompt_result"; granted: boolean }
-  | { name: "account_created"; method?: "apple" | "email" }
+  | { name: "account_created"; method?: "apple" | "email" | "google" }
   | { name: "first_challenge_started"; challenge_type?: string }
   | { name: "onboarding_signup_completed" }
   | { name: "onboarding_profile_created" }

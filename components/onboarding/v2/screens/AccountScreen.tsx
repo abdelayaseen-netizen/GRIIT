@@ -21,11 +21,14 @@ import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { DarkButton, GhostButton, PrimaryButton } from "../ui";
 
 /**
- * Auth wiring harvested from components/onboarding/screens/SignUpScreen.tsx
- * (Apple via signInWithIdToken, email via signUp + signInWithPassword fallback).
- * Apple-first. Google is intentionally omitted — SignUpScreen has no Google
- * wiring to harvest and the rule is "do not reinvent".
- * TODO(onboarding-v2): add Google sign-in once a Google auth path exists to reuse.
+ * Auth wiring harvested from existing screens (do not reinvent):
+ *   - Apple via signInWithIdToken + email via signUp/signInWithPassword fallback
+ *     (from components/onboarding/screens/SignUpScreen.tsx).
+ *   - Google via supabase.auth.signInWithOAuth({ provider: "google" })
+ *     (from app/auth/login.tsx handleGoogle).
+ * Apple-first. Google OAuth completes asynchronously via the global auth
+ * listener (no synchronous session), so it does not call onAuthSuccess here —
+ * matching login.tsx, which relies on the root auth/redirect flow.
  */
 export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userId: string) => void }) {
   const router = useRouter();
@@ -95,6 +98,21 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
       setLoading(false);
     }
   }, [appleAvailable, onAuthSuccess, setProfileSetupHints]);
+
+  const handleGoogle = useCallback(async () => {
+    setError("");
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google" });
+      if (oauthError) {
+        setError(oauthError.message);
+        return;
+      }
+      track({ name: "account_created", method: "google" });
+    } catch (e) {
+      captureError(e, "OnboardingV2Google");
+      setError(e instanceof Error ? e.message : "Sign in failed.");
+    }
+  }, []);
 
   const handleEmail = useCallback(async () => {
     if (!email.trim() || !password.trim()) {
@@ -174,6 +192,8 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
               icon={<Apple size={19} color={OBV2_COLOR.onDark} fill={OBV2_COLOR.onDark} />}
             />
           ) : null}
+
+          <GhostButton label="Continue with Google" onPress={handleGoogle} disabled={loading} />
 
           {!emailMode ? (
             <GhostButton
