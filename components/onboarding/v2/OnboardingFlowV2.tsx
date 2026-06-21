@@ -19,6 +19,8 @@ import GoalsScreen from "./screens/GoalsScreen";
 import CommitmentScreen from "./screens/CommitmentScreen";
 import RemindersScreen from "./screens/RemindersScreen";
 import AccountScreen from "./screens/AccountScreen";
+import FirstChallengeScreen from "./screens/FirstChallengeScreen";
+import { completeOnboardingV2 } from "./completeOnboarding";
 
 /** In-flow step keys (paywall is a pushed route, not an in-flow step). */
 export type OnboardingV2Step =
@@ -65,6 +67,14 @@ export default function OnboardingFlowV2() {
     router.push({ pathname: ROUTES.PAYWALL, params: { source: "onboarding" } } as never);
   }, [router]);
 
+  // Completion (mockup 09). Both the featured "30-day reset" and "Build my own"
+  // mark onboarding complete (storage + DB + store) then hand off to the existing
+  // create/start flow. The 30-day reset is a static default — goals aren't wired.
+  const finishToCreate = useCallback(async () => {
+    await completeOnboardingV2();
+    router.replace(ROUTES.CREATE_WIZARD as never);
+  }, [router]);
+
   const renderScreen = () => {
     switch (step) {
       case "welcome":
@@ -81,6 +91,8 @@ export default function OnboardingFlowV2() {
         return <RemindersScreen onContinue={goNext} />;
       case "account":
         return <AccountScreen onAuthSuccess={handleAccountSuccess} />;
+      case "first_challenge":
+        return <FirstChallengeScreen onStart={finishToCreate} onBuildOwn={finishToCreate} />;
       default:
         return (
           <View style={styles.placeholder}>
