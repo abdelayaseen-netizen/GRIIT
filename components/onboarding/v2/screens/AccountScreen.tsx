@@ -1,0 +1,261 @@
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { useRouter } from "expo-router";
+import { Apple, Mail } from "lucide-react-native";
+import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/analytics";
+import { captureError } from "@/lib/sentry";
+import { ROUTES } from "@/lib/routes";
+import { useOnboardingStore } from "@/store/onboardingStore";
+import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
+import { DarkButton, GhostButton, PrimaryButton } from "../ui";
+
+/**
+ * Auth wiring harvested from components/onboarding/screens/SignUpScreen.tsx
+ * (Apple via signInWithIdToken, email via signUp + signInWithPassword fallback).
+ * Apple-first. Google is intentionally omitted — SignUpScreen has no Google
+ * wiring to harvest and the rule is "do not reinvent".
+ * TODO(onboarding-v2): add Google sign-in once a Google auth path exists to reuse.
+ */
+export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userId: string) => void }) {
+  const router = useRouter();
+  const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  const [emailMode, setEmailMode] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (Platform.OS === "ios") {
+      void AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+    }
+  }, []);
+
+  const handleApple = useCallback(async () => {
+    if (Platform.OS !== "ios" || !appleAvailable) {
+      setError("Apple Sign-In is available on iOS. Use email for now.");
+      setEmailMode(true);
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!credential.identityToken) {
+        setError("Apple Sign-In did not return a token.");
+        return;
+      }
+      const { data, error: idError } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+      });
+      if (idError) {
+        setError(idError.message);
+        return;
+      }
+      const user = data?.user;
+      if (!user?.id) {
+        setError("Sign in failed. Please try again.");
+        return;
+      }
+      const displayNameFromApple = credential.fullName
+        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(" ").trim()
+        : "";
+      setProfileSetupHints({
+        displayNameFromApple: displayNameFromApple || undefined,
+        email: credential.email ?? undefined,
+      });
+      track({ name: "signup_completed", method: "apple" });
+      onAuthSuccess(user.id);
+    } catch (e: unknown) {
+      if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
+        return;
+      }
+      captureError(e, "OnboardingV2Apple");
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  }, [appleAvailable, onAuthSuccess, setProfileSetupHints]);
+
+  const handleEmail = useCallback(async () => {
+    if (!email.trim() || !password.trim()) {
+      setError("Please fill in email and password");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+      });
+      if (signUpError) {
+        if (
+          signUpError.message.includes("already registered") ||
+          signUpError.message.includes("already been registered") ||
+          signUpError.message.includes("User already registered")
+        ) {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
+          if (signInError) {
+            setError("Account exists but wrong password. Try again.");
+            return;
+          }
+          if (signInData.session?.user) {
+            setProfileSetupHints({ email: email.trim() });
+            track({ name: "signup_completed", method: "email" });
+            onAuthSuccess(signInData.session.user.id);
+            return;
+          }
+        }
+        setError(signUpError.message);
+        return;
+      }
+      const sessionUser = signUpData.session?.user ?? signUpData.user;
+      if (sessionUser) {
+        setProfileSetupHints({ email: email.trim() });
+        track({ name: "signup_completed", method: "email" });
+        onAuthSuccess(sessionUser.id);
+        return;
+      }
+      setError("Sign up succeeded but could not create session. Try again.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [email, password, onAuthSuccess, setProfileSetupHints]);
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+    >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={styles.head}>
+          <Text style={styles.h1}>Create your{"\n"}account</Text>
+          <Text style={styles.sub}>So your streaks and circle follow you everywhere.</Text>
+        </View>
+
+        <View style={styles.buttons}>
+          {Platform.OS === "ios" && appleAvailable ? (
+            <DarkButton
+              label="Sign in with Apple"
+              onPress={handleApple}
+              disabled={loading}
+              icon={<Apple size={19} color={OBV2_COLOR.onDark} fill={OBV2_COLOR.onDark} />}
+            />
+          ) : null}
+
+          {!emailMode ? (
+            <GhostButton
+              label="Continue with email"
+              onPress={() => setEmailMode(true)}
+              disabled={loading}
+              icon={<Mail size={18} color={OBV2_COLOR.ink} strokeWidth={2} />}
+            />
+          ) : (
+            <View style={styles.emailForm}>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor={OBV2_COLOR.ink3}
+                value={email}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  setError("");
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                accessibilityLabel="Email address"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password (min 6 characters)"
+                placeholderTextColor={OBV2_COLOR.ink3}
+                value={password}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  setError("");
+                }}
+                secureTextEntry
+                accessibilityLabel="Password"
+              />
+              <PrimaryButton
+                label={loading ? "" : "Create account"}
+                onPress={handleEmail}
+                disabled={loading}
+                icon={loading ? <ActivityIndicator color={OBV2_COLOR.onDark} /> : undefined}
+              />
+            </View>
+          )}
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </View>
+
+        <View style={styles.grow} />
+        <Text style={styles.terms}>
+          By continuing you agree to GRIIT&apos;s{" "}
+          <Text style={styles.termsLink} onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
+            Terms
+          </Text>{" "}
+          and{" "}
+          <Text style={styles.termsLink} onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
+            Privacy Policy
+          </Text>
+          .
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 36, paddingBottom: 24 },
+  head: { marginBottom: 30 },
+  h1: { fontSize: 32, fontWeight: "800", lineHeight: 34, letterSpacing: -0.64, color: OBV2_COLOR.ink },
+  sub: { fontSize: 16, fontWeight: "400", lineHeight: 23, color: OBV2_COLOR.ink2, marginTop: 12 },
+  buttons: { gap: 12 },
+  emailForm: { gap: 12 },
+  input: {
+    height: 54,
+    backgroundColor: OBV2_COLOR.card,
+    borderRadius: OBV2_RADIUS.button,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: OBV2_COLOR.ink,
+    borderWidth: 1.5,
+    borderColor: OBV2_COLOR.hair,
+  },
+  error: { fontSize: 13, color: OBV2_COLOR.orangeInk, textAlign: "center", marginTop: 4 },
+  grow: { flex: 1, minHeight: 24 },
+  terms: { fontSize: 13, color: OBV2_COLOR.ink3, textAlign: "center", lineHeight: 20, paddingHorizontal: 14, paddingBottom: 22 },
+  termsLink: { color: OBV2_COLOR.ink2, textDecorationLine: "underline" },
+});
