@@ -23,11 +23,7 @@ import { useRouter } from 'expo-router';
 import { trpcQuery } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
 import { ROUTES } from '@/lib/routes';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SkeletonBase } from '@/components/skeletons';
 import { captureError } from '@/lib/sentry';
@@ -287,14 +283,14 @@ function GridSkeleton() {
   return (
     <View style={styles.columns}>
       <View style={styles.column}>
-        <SkeletonBase width="100%" height={170} borderRadius={DS_RADIUS_V2.lg} />
-        <SkeletonBase width="100%" height={120} borderRadius={DS_RADIUS_V2.lg} />
-        <SkeletonBase width="100%" height={200} borderRadius={DS_RADIUS_V2.lg} />
+        <SkeletonBase width="100%" height={170} borderRadius={DS_DAYLIGHT.radius.cardSm} />
+        <SkeletonBase width="100%" height={120} borderRadius={DS_DAYLIGHT.radius.cardSm} />
+        <SkeletonBase width="100%" height={200} borderRadius={DS_DAYLIGHT.radius.cardSm} />
       </View>
       <View style={styles.column}>
-        <SkeletonBase width="100%" height={130} borderRadius={DS_RADIUS_V2.lg} />
-        <SkeletonBase width="100%" height={180} borderRadius={DS_RADIUS_V2.lg} />
-        <SkeletonBase width="100%" height={150} borderRadius={DS_RADIUS_V2.lg} />
+        <SkeletonBase width="100%" height={130} borderRadius={DS_DAYLIGHT.radius.cardSm} />
+        <SkeletonBase width="100%" height={180} borderRadius={DS_DAYLIGHT.radius.cardSm} />
+        <SkeletonBase width="100%" height={150} borderRadius={DS_DAYLIGHT.radius.cardSm} />
       </View>
     </View>
   );
@@ -369,7 +365,7 @@ export const DiscoverForYouGrid = React.memo(function DiscoverForYouGrid({
         <GridSkeleton />
         <ActivityIndicator
           size="small"
-          color={DS_COLORS_V2.brand.primary}
+          color={DS_DAYLIGHT.color.accent}
           style={styles.spinner}
         />
       </View>
@@ -427,6 +423,7 @@ export const DiscoverForYouGrid = React.memo(function DiscoverForYouGrid({
 
   return (
     <View style={styles.wrap}>
+      <Text style={styles.sectionHeader}>Popular with your circle</Text>
       {top.map((s) => (
         <View key={s.key} style={styles.fullWidthNudge}>
           <ErrorBoundary>
@@ -465,32 +462,42 @@ export default DiscoverForYouGrid;
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingTop: DS_SPACING_V2.sm,
-    gap: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: 12,
+    gap: 14,
+  },
+  sectionHeader: {
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.cardTitle,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    letterSpacing: -0.2,
+    color: DS_DAYLIGHT.color.ink,
+    paddingTop: 14,
+    paddingBottom: 2,
   },
   columns: {
     flexDirection: 'row',
-    gap: DS_SPACING_V2.sm,
+    gap: 14,
   },
   column: {
     flex: 1,
-    gap: DS_SPACING_V2.sm,
+    gap: 14,
   },
   fullWidthNudge: {
     width: '100%',
   },
   spinner: {
-    marginTop: DS_SPACING_V2.sm,
+    marginTop: 12,
   },
   empty: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingVertical: DS_SPACING_V2.lg,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingVertical: 20,
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.secondary,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    color: DS_DAYLIGHT.color.inkMuted,
     textAlign: 'center',
   },
 });

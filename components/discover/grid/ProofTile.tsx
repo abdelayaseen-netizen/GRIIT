@@ -17,19 +17,18 @@ import { Flame } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import { ROUTES } from '@/lib/routes';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 import type { LiveFeedPost } from '@/components/feed/feedTypes';
 
 const TILE_GRADIENT: readonly [string, string] = [
-  DS_COLORS_V2.overlay.photoGradientStrong,
-  DS_COLORS_V2.overlay.photoGradientClear,
+  DS_DAYLIGHT.color.photoGradientStrong,
+  'transparent',
 ];
 
-const FALLBACK_GRADIENT = DS_COLORS_V2.surface.heroDarkWarmGradient;
+const FALLBACK_GRADIENT: readonly [string, string] = [
+  DS_DAYLIGHT.color.photoBaseDark,
+  DS_DAYLIGHT.color.darkCanvas,
+];
 
 export type ProofTileVariant = 'normal' | 'tall';
 
@@ -97,7 +96,7 @@ export const ProofTile = React.memo(function ProofTile({
         <View style={styles.kudos}>
           <Flame
             size={9}
-            color={DS_COLORS_V2.brand.primaryOnDark}
+            color={DS_DAYLIGHT.color.textOnPhoto}
             strokeWidth={2}
           />
           <Text style={styles.kudosText}>{post.respectCount}</Text>
@@ -121,64 +120,72 @@ export default ProofTile;
 const styles = StyleSheet.create({
   tile: {
     width: '100%',
-    borderRadius: DS_RADIUS_V2.lg,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
     overflow: 'hidden',
-    backgroundColor: DS_COLORS_V2.surface.heroDark,
+    backgroundColor: DS_DAYLIGHT.color.photoBaseDark,
   },
   legibility: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: '50%',
+    height: '55%',
   },
   dayBadge: {
     position: 'absolute',
-    top: DS_SPACING_V2.sm,
-    left: DS_SPACING_V2.sm,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.overlay.chipOnPhoto55,
+    top: 10,
+    left: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.glassChipOnPhotoBg,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.glassChipOnPhotoBorder,
   },
   dayBadgeText: {
-    fontSize: 8,
-    fontWeight: '500',
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 9,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
     letterSpacing: 0.4,
-    color: DS_COLORS_V2.text.onDark,
+    color: DS_DAYLIGHT.color.textOnPhoto,
   },
   kudos: {
     position: 'absolute',
-    top: DS_SPACING_V2.sm,
-    right: DS_SPACING_V2.sm,
+    top: 10,
+    right: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.overlay.chipOnPhoto55,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.glassChipOnPhotoBg,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.glassChipOnPhotoBorder,
   },
   kudosText: {
+    fontFamily: DS_DAYLIGHT.fontFamily,
     fontSize: 9,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.onDark,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.textOnPhoto,
   },
   bottom: {
     position: 'absolute',
-    left: DS_SPACING_V2.sm,
-    right: DS_SPACING_V2.sm,
-    bottom: DS_SPACING_V2.sm,
+    left: 12,
+    right: 12,
+    bottom: 12,
     gap: 1,
   },
   challengeLine: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.onDark,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 13.5,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.textOnPhoto,
   },
   authorLine: {
-    fontSize: 8,
-    fontWeight: '400',
-    color: DS_COLORS_V2.overlay.textOnPhoto70,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 11,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.textOnPhotoDim,
   },
 });

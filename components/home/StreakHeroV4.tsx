@@ -1,15 +1,16 @@
 /**
- * StreakHeroV4 — state-aware streak hero card.
+ * StreakHeroV4 — Daylight v3 streak hero.
  *
  * Four states (derived from streak / tasksRemaining / minutesRemaining):
- *   day0       streak === 0           label "Start your streak"
- *   default    streak >= 1, mid-day   label "Current streak"
- *   atRisk     streak >= 1, < 60min   label "Current streak" (red), countdown banner
- *   secured    all tasks done today   label "Streak secured" (yellow), badge bar, dual CTAs
+ *   day0       streak === 0           "Current streak" · 0 · "Post today to reach day 1."
+ *   default    streak >= 1, mid-day   "Current streak" · N · next-badge caption
+ *   atRisk     streak >= 1, < 60min   "Current streak" + countdown banner
+ *   secured    all tasks done today   "Streak secured" + badge progress + dual CTA
  *
- * The shape of the card is constant across all states so the home stays calm —
- * the only differences are background tone, palette, and the bottom block
- * (task list vs. badge progress). Reuses StreakFlame for the visual.
+ * Daylight language: the "owned" streak is a calm stat that sits directly on the
+ * canvas (big ink number + days + small accent flame). Today's tasks live inside
+ * a pure-white "Today's proof" card with an accent post CTA. The shape stays
+ * constant across states so the home reads calm.
  */
 import React from 'react';
 import {
@@ -19,17 +20,12 @@ import {
   View,
 } from 'react-native';
 import {
-  AlignLeft,
   Camera,
   Check,
   Clock,
   Snowflake,
 } from 'lucide-react-native';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -110,11 +106,7 @@ function flameStateFor(
 function CountdownBanner({ minutesRemaining }: { minutesRemaining: number }) {
   return (
     <View style={styles.countdownBanner} accessibilityRole="alert">
-      <Clock
-        size={14}
-        color={DS_COLORS_V2.semantic.dangerOnDark}
-        strokeWidth={2}
-      />
+      <Clock size={16} color={DS_DAYLIGHT.color.accent} strokeWidth={2} />
       <Text style={styles.countdownText}>
         Streak ends in {minutesRemaining} minutes
       </Text>
@@ -125,18 +117,15 @@ function CountdownBanner({ minutesRemaining }: { minutesRemaining: number }) {
 function TaskRow({
   task,
   onPress,
-  atRisk,
 }: {
   task: StreakHeroV4Task;
   onPress: () => void;
-  atRisk: boolean;
 }) {
-  const ProofIcon = task.proofType === 'photo' ? Camera : AlignLeft;
-  const iconColor = task.done
-    ? DS_COLORS_V2.semantic.success
-    : atRisk
-      ? DS_COLORS_V2.semantic.dangerOnDark
-      : DS_COLORS_V2.brand.primaryOnDark;
+  const meta = task.done
+    ? 'done'
+    : task.proofType === 'photo'
+      ? 'Photo'
+      : 'Text';
 
   return (
     <Pressable
@@ -152,41 +141,23 @@ function TaskRow({
       hitSlop={HIT_SLOP}
       style={({ pressed }) => [
         styles.taskRow,
-        atRisk && !task.done ? styles.taskRowAtRisk : null,
-        pressed && !task.done ? styles.taskRowPressed : null,
+        pressed && !task.done ? styles.rowPressed : null,
       ]}
     >
       <View
         style={[
           styles.taskCheck,
-          task.done
-            ? styles.taskCheckDone
-            : atRisk
-              ? styles.taskCheckAtRisk
-              : styles.taskCheckPending,
+          task.done ? styles.taskCheckDone : styles.taskCheckPending,
         ]}
       >
         {task.done ? (
-          <Check size={12} color={DS_COLORS_V2.text.onDark} strokeWidth={3} />
+          <Check size={13} color={DS_DAYLIGHT.color.white} strokeWidth={3} />
         ) : null}
       </View>
-      <View style={styles.taskTextCol}>
-        <Text
-          style={[
-            styles.taskName,
-            task.done ? styles.taskNameDone : null,
-          ]}
-          numberOfLines={1}
-        >
-          {task.name}
-        </Text>
-        {task.description ? (
-          <Text style={styles.taskDescription} numberOfLines={1}>
-            {task.description}
-          </Text>
-        ) : null}
-      </View>
-      <ProofIcon size={14} color={iconColor} strokeWidth={1.75} />
+      <Text style={styles.taskName} numberOfLines={1}>
+        {task.name}
+      </Text>
+      <Text style={styles.taskMeta}>{meta}</Text>
     </Pressable>
   );
 }
@@ -214,7 +185,7 @@ function BadgeProgressBar({
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Header block (label + number + sub + flame)
+// Header block (label + big number + days + flame + caption)
 // ──────────────────────────────────────────────────────────────────────────
 
 function HeaderBlock({
@@ -232,68 +203,49 @@ function HeaderBlock({
 
   let label: string;
   let labelColor: string;
-  let numberColor: string;
-  let numberSize: number;
-  let sub: string;
-  let subColor: string;
+  let caption: string;
 
   switch (state) {
     case 'day0':
-      label = 'Start your streak';
-      labelColor = DS_COLORS_V2.text.onDarkSecondary;
-      numberColor = DS_COLORS_V2.text.tertiaryDark;
-      numberSize = 48;
-      sub = 'Post proof to light the fire';
-      subColor = DS_COLORS_V2.text.onDarkSecondary;
+      label = 'Current streak';
+      labelColor = DS_DAYLIGHT.color.inkMuted;
+      caption = 'Post today to reach day 1.';
       break;
     case 'atRisk':
       label = 'Current streak';
-      labelColor = DS_COLORS_V2.semantic.dangerOnDarkText;
-      numberColor = DS_COLORS_V2.semantic.dangerOnDark;
-      numberSize = 48;
-      sub = "Don't break the chain";
-      subColor = DS_COLORS_V2.semantic.dangerOnDarkText;
+      labelColor = DS_DAYLIGHT.color.accent;
+      caption = "Don't break the chain.";
       break;
     case 'secured':
       label = 'Streak secured';
-      labelColor = DS_COLORS_V2.streak.securedYellow;
-      numberColor = DS_COLORS_V2.brand.primaryOnDark;
-      numberSize = 54;
-      sub = '+1 day stronger';
-      subColor = DS_COLORS_V2.streak.securedYellow;
+      labelColor = DS_DAYLIGHT.color.accent;
+      caption = '+1 day stronger.';
       break;
     default: {
       label = 'Current streak';
-      labelColor = DS_COLORS_V2.text.onDarkSecondary;
-      numberColor = DS_COLORS_V2.brand.primaryOnDark;
-      numberSize = 48;
+      labelColor = DS_DAYLIGHT.color.inkMuted;
       const days = Math.max(0, nextBadgeDaysAway);
-      sub =
+      caption =
         days <= 0
           ? `${nextBadgeName} unlocked`
           : `${days} more to your ${nextBadgeName} badge`;
-      subColor = DS_COLORS_V2.text.onDarkSecondary;
       break;
     }
   }
 
   return (
-    <View style={styles.headerRow}>
-      <View style={styles.headerTextCol}>
-        <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
-        <Text
-          style={[
-            styles.streakNumber,
-            { color: numberColor, fontSize: numberSize },
-          ]}
-        >
-          {streak.toLocaleString()}
-        </Text>
-        <Text style={[styles.sub, { color: subColor }]} numberOfLines={2}>
-          {sub}
-        </Text>
+    <View style={styles.headerBlock}>
+      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+      <View style={styles.numberRow}>
+        <Text style={styles.streakNumber}>{streak.toLocaleString()}</Text>
+        <Text style={styles.daysWord}>days</Text>
+        <View style={styles.flameWrap}>
+          <StreakFlame streak={streak} state={flameState} size={22} />
+        </View>
       </View>
-      <StreakFlame streak={streak} state={flameState} size={64} />
+      <Text style={styles.caption} numberOfLines={2}>
+        {caption}
+      </Text>
     </View>
   );
 }
@@ -305,11 +257,11 @@ function HeaderBlock({
 function PrimaryCTA({
   label,
   onPress,
-  variant,
+  withIcon = true,
 }: {
   label: string;
   onPress: () => void;
-  variant: 'default' | 'atRisk';
+  withIcon?: boolean;
 }) {
   return (
     <Pressable
@@ -317,12 +269,11 @@ function PrimaryCTA({
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={HIT_SLOP}
-      style={({ pressed }) => [
-        styles.cta,
-        variant === 'atRisk' ? styles.ctaAtRisk : styles.ctaDefault,
-        pressed ? styles.ctaPressed : null,
-      ]}
+      style={({ pressed }) => [styles.cta, pressed ? styles.rowPressed : null]}
     >
+      {withIcon ? (
+        <Camera size={18} color={DS_DAYLIGHT.color.white} strokeWidth={2} />
+      ) : null}
       <Text style={styles.ctaText}>{label}</Text>
     </Pressable>
   );
@@ -351,15 +302,13 @@ function FreezeButton({
       style={({ pressed }) => [
         styles.freezeBtn,
         disabled ? styles.freezeBtnDisabled : null,
-        pressed && !disabled ? styles.ctaPressed : null,
+        pressed && !disabled ? styles.rowPressed : null,
       ]}
     >
       <Snowflake
-        size={14}
+        size={16}
         color={
-          disabled
-            ? DS_COLORS_V2.text.onDarkTertiary
-            : DS_COLORS_V2.streak.frozenOuter
+          disabled ? DS_DAYLIGHT.color.inkMuted3 : DS_DAYLIGHT.color.accent
         }
         strokeWidth={2}
       />
@@ -390,7 +339,7 @@ function SecondaryGhostCTA({
       hitSlop={HIT_SLOP}
       style={({ pressed }) => [
         styles.ghostCta,
-        pressed ? styles.ctaPressed : null,
+        pressed ? styles.rowPressed : null,
       ]}
     >
       <Text style={styles.ghostCtaText}>{label}</Text>
@@ -406,25 +355,16 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
   const state = deriveStreakHeroV4State(props);
 
   const tasksDone = Math.max(0, props.totalTasksToday - props.tasksRemaining);
-  const taskHeader =
-    state === 'atRisk'
-      ? 'Still to do today'
-      : state === 'day0'
-        ? 'Your first challenge'
-        : "Today's challenges";
 
-  // Container background swap (atRisk vs everything else)
-  const containerStyle = [
-    styles.card,
-    state === 'atRisk' ? styles.cardAtRisk : styles.cardDefault,
-  ];
-
-  // Secured state — replace task list + CTA
+  // Secured state — badge progress + dual CTA inside the white proof card.
   if (state === 'secured') {
     const segmentsTotal = 5;
-    const filled = Math.min(segmentsTotal, props.streak % segmentsTotal || segmentsTotal);
+    const filled = Math.min(
+      segmentsTotal,
+      props.streak % segmentsTotal || segmentsTotal,
+    );
     return (
-      <View style={containerStyle}>
+      <View style={styles.root}>
         <HeaderBlock
           state={state}
           streak={props.streak}
@@ -432,27 +372,36 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
           nextBadgeDaysAway={props.nextBadgeDaysAway}
         />
 
-        <View style={styles.middleBlock}>
-          <BadgeProgressBar totalSegments={segmentsTotal} filled={filled} />
-          <View style={styles.badgeLabelRow}>
-            {Array.from({ length: segmentsTotal }, (_, i) => (
-              <Text key={i} style={styles.badgeDayLabel}>
-                Day {i + 1}
-              </Text>
-            ))}
+        <View style={styles.proofCard}>
+          <View style={styles.proofHeader}>
+            <View style={styles.proofTitleCol}>
+              <Text style={styles.proofTitle}>Streak secured</Text>
+              <Text style={styles.proofSubtitle}>Next badge progress</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.dualCtaRow}>
-          <SecondaryGhostCTA
-            label="Share streak"
-            onPress={props.onPressShare}
-          />
-          <PrimaryCTA
-            label="See feed"
-            variant="default"
-            onPress={props.onPressSeeFeed ?? props.onPressPrimaryCTA}
-          />
+          <View style={styles.badgeBlock}>
+            <BadgeProgressBar totalSegments={segmentsTotal} filled={filled} />
+            <View style={styles.badgeLabelRow}>
+              {Array.from({ length: segmentsTotal }, (_, i) => (
+                <Text key={i} style={styles.badgeDayLabel}>
+                  Day {i + 1}
+                </Text>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.dualCtaRow}>
+            <SecondaryGhostCTA
+              label="Share streak"
+              onPress={props.onPressShare}
+            />
+            <PrimaryCTA
+              label="See feed"
+              withIcon={false}
+              onPress={props.onPressSeeFeed ?? props.onPressPrimaryCTA}
+            />
+          </View>
         </View>
       </View>
     );
@@ -462,10 +411,19 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
   const primaryCtaLabel =
     state === 'day0'
       ? 'Post your first proof'
-      : `Secure Day ${props.streak + 1}`;
+      : state === 'atRisk'
+        ? `Secure Day ${props.streak + 1}`
+        : "Post today's proof";
+
+  const subtitle =
+    props.tasks.length > 0 && props.tasks[0]
+      ? `${props.tasks[0].challengeName} · Day ${props.tasks[0].currentDay}`
+      : undefined;
+
+  const visibleTasks = props.tasks.slice(0, 4);
 
   return (
-    <View style={containerStyle}>
+    <View style={styles.root}>
       {state === 'atRisk' ? (
         <CountdownBanner minutesRemaining={props.minutesRemaining} />
       ) : null}
@@ -477,51 +435,58 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
         nextBadgeDaysAway={props.nextBadgeDaysAway}
       />
 
-      <View style={styles.middleBlock}>
-        <View style={styles.taskHeader}>
-          <Text style={styles.taskHeaderLabel}>{taskHeader}</Text>
-          <Text style={styles.taskHeaderCount}>
-            {`${tasksDone} of ${props.totalTasksToday} done`}
-          </Text>
+      <View style={styles.proofCard}>
+        <View style={styles.proofHeader}>
+          <View style={styles.proofTitleCol}>
+            <Text style={styles.proofTitle}>Today's proof</Text>
+            {subtitle ? (
+              <Text style={styles.proofSubtitle} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
+          {props.totalTasksToday > 0 ? (
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>
+                {`${tasksDone} / ${props.totalTasksToday}`}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
-        {props.tasks.length === 0 ? (
+        {visibleTasks.length === 0 ? (
           <Text style={styles.emptyTasks}>
             No active challenges yet. Tap below to find one.
           </Text>
         ) : (
           <View style={styles.taskList}>
-            {props.tasks.slice(0, 4).map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                onPress={() => props.onPressTask(task)}
-                atRisk={state === 'atRisk'}
-              />
+            {visibleTasks.map((task, idx) => (
+              <React.Fragment key={task.id}>
+                {idx > 0 ? <View style={styles.divider} /> : null}
+                <TaskRow task={task} onPress={() => props.onPressTask(task)} />
+              </React.Fragment>
             ))}
           </View>
         )}
-      </View>
 
-      {state === 'atRisk' ? (
-        <View style={styles.dualCtaRow}>
+        {state === 'atRisk' ? (
+          <View style={styles.dualCtaRow}>
+            <PrimaryCTA
+              label={primaryCtaLabel}
+              onPress={props.onPressPrimaryCTA}
+            />
+            <FreezeButton
+              onPress={props.onPressFreeze}
+              freezesAvailable={props.freezesAvailable}
+            />
+          </View>
+        ) : (
           <PrimaryCTA
             label={primaryCtaLabel}
-            variant="atRisk"
             onPress={props.onPressPrimaryCTA}
           />
-          <FreezeButton
-            onPress={props.onPressFreeze}
-            freezesAvailable={props.freezesAvailable}
-          />
-        </View>
-      ) : (
-        <PrimaryCTA
-          label={primaryCtaLabel}
-          variant="default"
-          onPress={props.onPressPrimaryCTA}
-        />
-      )}
+        )}
+      </View>
     </View>
   );
 }
@@ -533,236 +498,246 @@ export default StreakHeroV4;
 // ──────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
-    gap: DS_SPACING_V2.md,
+  root: {
+    gap: 22,
   },
-  cardDefault: {
-    backgroundColor: DS_COLORS_V2.surface.heroNeutral,
-  },
-  cardAtRisk: {
-    backgroundColor: DS_COLORS_V2.surface.heroDanger,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.semantic.danger,
-  },
+
+  // ── Countdown banner (atRisk) ──
   countdownBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.heroDark,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS_V2.semantic.danger,
-    alignSelf: 'flex-start',
+    gap: 13,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   countdownText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: DS_COLORS_V2.semantic.dangerOnDark,
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    flex: 1,
   },
 
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: DS_SPACING_V2.md,
+  // ── Header (owned streak) ──
+  headerBlock: {
+    gap: 2,
   },
-  headerTextCol: {
+  label: {
+    fontSize: DS_DAYLIGHT.size.eyebrow,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+  },
+  numberRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    marginTop: 2,
+  },
+  streakNumber: {
+    fontSize: DS_DAYLIGHT.size.streakNumber,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -1.5,
+    lineHeight: 68,
+  },
+  daysWord: {
+    fontSize: 18,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted,
+    marginBottom: 12,
+  },
+  flameWrap: {
+    marginBottom: 12,
+  },
+  caption: {
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
+    marginTop: 6,
+  },
+
+  // ── White "Today's proof" card ──
+  proofCard: {
+    backgroundColor: DS_DAYLIGHT.color.card,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderRadius: DS_DAYLIGHT.radius.card,
+    padding: DS_DAYLIGHT.space.cardPad,
+  },
+  proofHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  proofTitleCol: {
     flex: 1,
     minWidth: 0,
   },
-  label: {
-    fontSize: 11,
-    fontWeight: '500',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
+  proofTitle: {
+    fontSize: DS_DAYLIGHT.size.cardTitle,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -0.2,
   },
-  streakNumber: {
-    fontWeight: '500',
-    letterSpacing: -1,
-    marginTop: 2,
-    lineHeight: 56,
+  proofSubtitle: {
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted,
+    marginTop: 3,
   },
-  sub: {
-    fontSize: 12,
-    fontWeight: '400',
-    marginTop: 2,
+  countPill: {
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderRadius: DS_DAYLIGHT.radius.pill,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+  },
+  countPillText: {
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.accent,
   },
 
-  middleBlock: {
-    gap: DS_SPACING_V2.xs,
-  },
-  taskHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  taskHeaderLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.onDark,
-  },
-  taskHeaderCount: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: DS_COLORS_V2.text.onDarkSecondary,
-  },
-  emptyTasks: {
-    fontSize: 12,
-    color: DS_COLORS_V2.text.onDarkSecondary,
-    paddingVertical: 6,
-  },
+  // ── Task rows ──
   taskList: {
-    gap: 6,
+    marginTop: 14,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: DS_DAYLIGHT.color.divider,
   },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    borderRadius: DS_RADIUS_V2.md,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS_V2.overlay.onDarkBorder08,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface04,
+    gap: 13,
+    paddingVertical: 12,
   },
-  taskRowAtRisk: {
-    borderColor: DS_COLORS_V2.semantic.dangerOnDark,
-  },
-  taskRowPressed: {
-    opacity: 0.85,
+  rowPressed: {
+    opacity: 0.7,
   },
   taskCheck: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 25,
+    height: 25,
+    borderRadius: 12.5,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
   },
   taskCheckPending: {
-    borderColor: DS_COLORS_V2.brand.primaryOnDark,
-    backgroundColor: 'transparent',
-  },
-  taskCheckAtRisk: {
-    borderColor: DS_COLORS_V2.semantic.dangerOnDark,
+    borderWidth: 2,
+    borderColor: DS_DAYLIGHT.color.dashedBorder,
     backgroundColor: 'transparent',
   },
   taskCheckDone: {
-    borderColor: DS_COLORS_V2.semantic.success,
-    backgroundColor: DS_COLORS_V2.semantic.success,
-  },
-  taskTextCol: {
-    flex: 1,
-    minWidth: 0,
+    backgroundColor: DS_DAYLIGHT.color.ink,
   },
   taskName: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.onDark,
+    flex: 1,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.ink,
   },
-  taskNameDone: {
-    color: DS_COLORS_V2.text.onDarkSecondary,
-    textDecorationLine: 'line-through',
-    opacity: 0.55,
+  taskMeta: {
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
-  taskDescription: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: DS_COLORS_V2.text.onDarkSecondary,
-    marginTop: 1,
+  emptyTasks: {
+    fontSize: DS_DAYLIGHT.size.meta,
+    color: DS_DAYLIGHT.color.inkMuted,
+    marginTop: 12,
+    paddingVertical: 6,
   },
 
+  // ── Badge progress (secured) ──
+  badgeBlock: {
+    marginTop: 16,
+    marginBottom: 4,
+  },
   badgeRow: {
     flexDirection: 'row',
     gap: 4,
   },
   badgeSegment: {
     flex: 1,
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
   },
   badgeSegmentFilled: {
-    backgroundColor: DS_COLORS_V2.brand.primaryOnDark,
+    backgroundColor: DS_DAYLIGHT.color.accent,
   },
   badgeSegmentEmpty: {
-    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface10,
+    backgroundColor: DS_DAYLIGHT.color.pillNeutral,
   },
   badgeLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 6,
   },
   badgeDayLabel: {
-    fontSize: 9,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.onDarkSecondary,
+    fontSize: DS_DAYLIGHT.size.dayLetter,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
     flex: 1,
     textAlign: 'center',
   },
 
+  // ── CTAs ──
   dualCtaRow: {
     flexDirection: 'row',
     gap: 8,
+    marginTop: 14,
   },
   cta: {
     flex: 1,
-    height: 44,
-    borderRadius: DS_RADIUS_V2.md,
+    height: 52,
+    borderRadius: DS_DAYLIGHT.radius.button,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  ctaDefault: {
-    backgroundColor: DS_COLORS_V2.brand.primaryOnDark,
-  },
-  ctaAtRisk: {
-    backgroundColor: DS_COLORS_V2.semantic.dangerOnDark,
-  },
-  ctaPressed: {
-    opacity: 0.85,
+    gap: 9,
+    backgroundColor: DS_DAYLIGHT.color.accent,
   },
   ctaText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: DS_COLORS_V2.brand.primaryText,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.white,
   },
   freezeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    height: 44,
-    paddingHorizontal: 16,
-    borderRadius: DS_RADIUS_V2.md,
+    height: 52,
+    paddingHorizontal: 18,
+    borderRadius: DS_DAYLIGHT.radius.button,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.streak.frozenOuter,
-    backgroundColor: DS_COLORS_V2.overlay.frozenTint08,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
   },
   freezeBtnDisabled: {
-    borderColor: DS_COLORS_V2.text.onDarkTertiary,
     backgroundColor: 'transparent',
   },
   freezeBtnText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: DS_COLORS_V2.streak.frozenOuter,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
   freezeBtnTextDisabled: {
-    color: DS_COLORS_V2.text.onDarkTertiary,
+    color: DS_DAYLIGHT.color.inkMuted3,
   },
   ghostCta: {
     flex: 1,
-    height: 44,
-    borderRadius: DS_RADIUS_V2.md,
+    height: 52,
+    borderRadius: DS_DAYLIGHT.radius.button,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.overlay.onDarkBorder25,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+    backgroundColor: DS_DAYLIGHT.color.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ghostCtaText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.onDark,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
 });

@@ -19,7 +19,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLIGHT } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 import { SkeletonFeedCard } from "@/components/skeletons";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
@@ -659,7 +659,7 @@ function LiveFeedSection({
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    backgroundColor: DS_COLORS.BG_PAGE,
+    backgroundColor: DS_DAYLIGHT.color.canvas,
   },
   feedHeader: {
     flexDirection: "row",
@@ -672,10 +672,10 @@ const styles = StyleSheet.create({
   feedHeaderLeft: { flex: 1 },
   feedTitleRow: { flexDirection: "row", alignItems: "baseline", gap: 8, flexWrap: "wrap" },
   feedTitle: {
-    fontSize: 20,
-    fontWeight: "500",
-    color: DS_COLORS.FEED_USERNAME,
-    letterSpacing: -0.3,
+    fontSize: DS_DAYLIGHT.size.greeting,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -0.5,
   },
   liveRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   liveDot: {
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
   },
   toggleText: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED, fontWeight: "500" },
   toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
-  listContent: { paddingHorizontal: DS_SPACING.sm, paddingBottom: 32 },
+  listContent: { paddingHorizontal: DS_SPACING.sm, paddingBottom: 110 },
   feedSkeletonStack: { gap: 10, paddingHorizontal: 4, paddingTop: 4 },
   listItemSeparator: { height: 8 },
   empty: { paddingVertical: 32, paddingHorizontal: DS_SPACING.lg, alignItems: "center" },

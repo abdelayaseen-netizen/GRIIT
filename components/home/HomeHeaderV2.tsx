@@ -11,11 +11,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Bell } from 'lucide-react-native';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 import { StreakHeroV4, type StreakHeroV4Props } from './StreakHeroV4';
 import { StatGrid, type StatGridVariant } from './StatGrid';
 import type { FeedScope } from '@/store/feedToggleStore';
@@ -35,25 +31,6 @@ const WEEKDAYS = [
   'Friday',
   'Saturday',
 ] as const;
-
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
-
-function formatDate(d: Date): string {
-  return `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
-}
 
 function formatTime(d: Date): string {
   let hours = d.getHours();
@@ -126,15 +103,14 @@ export function HomeHeaderV2(props: HomeHeaderV2Props) {
   const now = props.now ?? new Date();
 
   const greetingText = greetingFor(props.heroState, props.firstName, now);
+  // Daylight greeting eyebrow is a calm single weekday; atRisk keeps the time
+  // so the "last chance" framing still reads urgent.
   const dateText =
     props.heroState === 'atRisk'
-      ? `${formatDate(now)} · ${formatTime(now)}`
-      : formatDate(now);
+      ? `${WEEKDAYS[now.getDay()]} · ${formatTime(now)}`
+      : WEEKDAYS[now.getDay()];
 
-  const dotColor =
-    props.heroState === 'atRisk'
-      ? DS_COLORS_V2.semantic.danger
-      : DS_COLORS_V2.brand.primary;
+  const dotColor = DS_DAYLIGHT.color.accent;
 
   const statGridVariant: StatGridVariant =
     props.heroState === 'atRisk'
@@ -171,7 +147,7 @@ export function HomeHeaderV2(props: HomeHeaderV2Props) {
         >
           <Bell
             size={22}
-            color={DS_COLORS_V2.text.primary}
+            color={DS_DAYLIGHT.color.iconInk}
             strokeWidth={1.75}
           />
           {props.notificationCount && props.notificationCount > 0 ? (
@@ -264,93 +240,93 @@ export default HomeHeaderV2;
 
 const styles = StyleSheet.create({
   root: {
-    paddingTop: DS_SPACING_V2.xs,
+    paddingTop: 12,
   },
   greetRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingVertical: DS_SPACING_V2.sm,
-    gap: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    gap: 12,
   },
   greetTextCol: {
     flex: 1,
     minWidth: 0,
   },
   dateText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
+    fontSize: DS_DAYLIGHT.size.eyebrow,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted,
   },
   greetingText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.greeting,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -0.5,
     marginTop: 2,
   },
   bellBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: DS_RADIUS_V2.full,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    backgroundColor: DS_DAYLIGHT.color.avatarBg,
   },
   bellBtnPressed: {
     opacity: 0.85,
   },
   bellDot: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 9,
+    right: 9,
     width: 8,
     height: 8,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: DS_COLORS_V2.surface.canvas,
+    borderColor: DS_DAYLIGHT.color.avatarBg,
   },
   heroWrap: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingTop: DS_SPACING_V2.xs,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: 26,
   },
   statGridWrap: {
-    paddingTop: DS_SPACING_V2.sm,
+    paddingTop: 16,
   },
   feedToggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingTop: DS_SPACING_V2.lg,
-    paddingBottom: DS_SPACING_V2.xs,
-    gap: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: 26,
+    paddingBottom: 4,
+    gap: 12,
   },
   feedToggleLabel: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.3,
+    fontSize: DS_DAYLIGHT.size.cardTitle,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -0.2,
     flex: 1,
   },
   toggleGroup: {
     flexDirection: 'row',
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: DS_DAYLIGHT.color.segmentTrack,
+    borderRadius: DS_DAYLIGHT.radius.pill,
     padding: 3,
   },
   togglePill: {
     paddingVertical: 6,
     paddingHorizontal: 14,
-    borderRadius: DS_RADIUS_V2.full,
+    borderRadius: DS_DAYLIGHT.radius.pill,
   },
   togglePillActive: {
-    backgroundColor: DS_COLORS_V2.text.primary,
+    backgroundColor: DS_DAYLIGHT.color.ink,
   },
   toggleText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.secondary,
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkMuted,
   },
   toggleTextActive: {
-    color: DS_COLORS_V2.text.onDark,
+    color: DS_DAYLIGHT.color.white,
   },
 });

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Star } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
+import { DS_DAYLIGHT } from "@/lib/design-system";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
@@ -32,7 +32,6 @@ function MilestonePostCardInner({
   onMenuPress,
 }: Props) {
   const { title, subtitle } = milestoneCopy(post);
-  const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
   const [showWhoRespected, setShowWhoRespected] = React.useState(false);
 
   return (
@@ -41,22 +40,11 @@ function MilestonePostCardInner({
 
       <View style={styles.banner}>
         <View style={styles.iconBox}>
-          <Star size={24} color={DS_COLORS.FEED_MILESTONE_STAR} fill={DS_COLORS.FEED_MILESTONE_STAR} />
+          <Star size={24} color={DS_DAYLIGHT.color.accent} fill={DS_DAYLIGHT.color.accent} />
         </View>
         <View style={styles.bannerText}>
           <Text style={styles.bannerTitle}>{title}</Text>
           <Text style={styles.bannerSub}>{subtitle}</Text>
-        </View>
-      </View>
-
-      <View style={styles.progressBlock}>
-        <View style={styles.progressTop}>
-          <Text style={styles.progressLabel}>
-            Day {post.currentDay} of {post.totalDays}
-          </Text>
-        </View>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${pct}%` }]} />
         </View>
       </View>
 
@@ -70,6 +58,8 @@ function MilestonePostCardInner({
         onRespectCountPress={() => setShowWhoRespected(true)}
       />
 
+      <View style={styles.divider} />
+
       <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
     </View>
   );
@@ -79,60 +69,43 @@ export const MilestonePostCard = React.memo(MilestonePostCardInner);
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: DS_RADIUS.XL,
-    overflow: "hidden",
+    backgroundColor: DS_DAYLIGHT.color.canvas,
+    paddingTop: 6,
   },
   banner: {
-    backgroundColor: DS_COLORS.FEED_MILESTONE_SURFACE,
-    padding: 20,
+    marginHorizontal: DS_DAYLIGHT.space.cardPad,
+    marginTop: 13,
+    padding: 16,
     flexDirection: "row",
-    gap: 16,
+    gap: 14,
     alignItems: "center",
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderRadius: DS_DAYLIGHT.radius.cardMd,
   },
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: DS_RADIUS.button,
-    backgroundColor: DS_COLORS.FEED_MILESTONE_ICON_SURFACE,
+    borderRadius: DS_DAYLIGHT.radius.button,
+    backgroundColor: DS_DAYLIGHT.color.card,
     alignItems: "center",
     justifyContent: "center",
   },
   bannerText: { flex: 1 },
   bannerTitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: DS_COLORS.FEED_MILESTONE_TITLE,
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
   bannerSub: {
     marginTop: 3,
-    fontSize: 12,
-    color: DS_COLORS.FEED_MILESTONE_SUBTITLE,
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
-  progressBlock: {
-    paddingTop: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 2,
-  },
-  progressTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  progressLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: DS_COLORS.FEED_PROGRESS_LABEL,
-  },
-  track: {
-    height: 3,
-    borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
-    overflow: "hidden",
-  },
-  fill: {
-    height: 3,
-    borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_COLORS.DISCOVER_CORAL,
+  divider: {
+    height: 1,
+    backgroundColor: DS_DAYLIGHT.color.dividerStrong,
+    marginTop: 18,
+    marginHorizontal: DS_DAYLIGHT.space.screenH,
   },
 });

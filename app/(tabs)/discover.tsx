@@ -25,12 +25,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import {
-  DS_COLORS,
-  DS_SPACING,
-  DS_TYPOGRAPHY,
-  DS_MEASURES,
-} from "@/lib/design-system";
+import { DS_DAYLIGHT } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
@@ -89,7 +84,7 @@ function DiscoverScreenInner() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={DS_COLORS.ACCENT}
+            tintColor={DS_DAYLIGHT.color.accent}
           />
         }
       >
@@ -118,20 +113,21 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: DS_COLORS.BG_PAGE,
+    backgroundColor: DS_DAYLIGHT.color.canvas,
   },
   header: {
-    paddingHorizontal: DS_SPACING.lg,
-    paddingTop: DS_SPACING.sm,
-    paddingBottom: DS_SPACING.xs,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: DS_DAYLIGHT.space.rowGapV,
+    paddingBottom: DS_DAYLIGHT.space.rowGapV,
   },
   title: {
-    fontSize: 28,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
-    letterSpacing: -0.4,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.screenTitle,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -0.6,
   },
   scrollContent: {
-    paddingBottom: DS_MEASURES.TAB_BAR_HEIGHT + DS_SPACING.xxl,
+    paddingBottom: 115,
   },
 });

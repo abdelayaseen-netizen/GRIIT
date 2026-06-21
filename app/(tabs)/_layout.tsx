@@ -3,7 +3,7 @@ import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Sentry from "@sentry/react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING, DS_MEASURES, DS_SHADOWS, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
+import { DS_COLORS, DS_TYPOGRAPHY, DS_SHADOWS, GRIIT_COLORS, DS_RADIUS, DS_DAYLIGHT } from "@/lib/design-system"
 
 export default function TabLayout() {
   void usePathname();
@@ -29,12 +29,13 @@ export default function TabLayout() {
     >
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: DS_COLORS.TAB_ACTIVE,
-        tabBarInactiveTintColor: DS_COLORS.TAB_INACTIVE,
+        tabBarActiveTintColor: DS_DAYLIGHT.color.accent,
+        tabBarInactiveTintColor: DS_DAYLIGHT.color.tabInactive,
         headerShown: false,
-        sceneStyle: { backgroundColor: DS_COLORS.BG_PRIMARY },
+        sceneStyle: { backgroundColor: DS_DAYLIGHT.color.canvas },
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
+        tabBarItemStyle: styles.tabBarItem,
       }}
     >
       <Tabs.Screen
@@ -126,19 +127,32 @@ const styles = StyleSheet.create({
     color: DS_COLORS.WHITE,
     fontWeight: "500",
   },
+  // Daylight: floating translucent-white pill (no blur — expo-blur not installed).
   tabBar: {
-    backgroundColor: DS_COLORS.TAB_BG,
-    borderTopColor: DS_COLORS.BORDER_DEFAULT,
-    borderTopWidth: 1,
-    height: DS_MEASURES.TAB_BAR_HEIGHT,
-    paddingTop: DS_SPACING.SM,
-    paddingBottom: DS_SPACING.SM,
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 14,
+    height: 64,
+    backgroundColor: DS_DAYLIGHT.color.tabGlassBg,
+    borderTopWidth: 0,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.tabGlassBorder,
+    borderRadius: DS_DAYLIGHT.radius.glassBar,
+    paddingHorizontal: 10,
+    paddingTop: 0,
+    paddingBottom: 0,
+    ...DS_DAYLIGHT.shadow.glassBar,
+  },
+  tabBarItem: {
+    height: 64,
+    paddingVertical: 8,
   },
   tabBarLabel: {
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM,
-    marginTop: DS_SPACING.XS,
-    marginBottom: DS_SPACING.SM,
+    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    marginTop: 3,
+    marginBottom: 0,
   },
   centerButtonWrapper: {
     position: "relative",
@@ -146,13 +160,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   centerButton: {
-    width: DS_MEASURES.CENTER_BUTTON_SIZE,
-    height: DS_MEASURES.CENTER_BUTTON_SIZE,
-    borderRadius: DS_MEASURES.CENTER_BUTTON_SIZE / 2,
-    backgroundColor: DS_COLORS.BLACK,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: DS_DAYLIGHT.color.centerButton,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
     ...DS_SHADOWS.centerButton,
   },
 });

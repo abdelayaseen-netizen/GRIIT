@@ -15,7 +15,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_DAYLIGHT } from "@/lib/design-system";
 
 /**
  * `all` is kept as an alias for legacy callers; new code should use `for_you`
@@ -71,7 +71,9 @@ export const CategoryChips = React.memo(function CategoryChips({
     >
       {CHIPS.map(({ id, label, Icon }) => {
         const isSelected = selected === id;
-        const textColor = isSelected ? DS_COLORS.WHITE : DS_COLORS.TEXT_PRIMARY;
+        const textColor = isSelected
+          ? DS_DAYLIGHT.color.accent
+          : DS_DAYLIGHT.color.inkSecondary;
         return (
           <Pressable
             key={id}
@@ -86,7 +88,14 @@ export const CategoryChips = React.memo(function CategoryChips({
                 <Icon size={ICON_SIZE} color={textColor} strokeWidth={2} />
               </View>
             ) : null}
-            <Text style={[styles.label, { color: textColor }]} numberOfLines={1}>
+            <Text
+              style={[
+                styles.label,
+                isSelected ? styles.labelSelected : styles.labelUnselected,
+                { color: textColor },
+              ]}
+              numberOfLines={1}
+            >
               {label}
             </Text>
           </Pressable>
@@ -100,24 +109,24 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_SPACING.sm,
-    paddingHorizontal: DS_SPACING.lg,
-    paddingVertical: DS_SPACING.sm,
+    gap: 9,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingVertical: DS_DAYLIGHT.space.rowGapV,
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: DS_RADIUS.PILL,
-    backgroundColor: DS_COLORS.WHITE,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: DS_DAYLIGHT.radius.pill,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS.BORDER,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
   chipSelected: {
-    backgroundColor: DS_COLORS.TEXT_PRIMARY,
-    borderColor: DS_COLORS.TEXT_PRIMARY,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderColor: DS_DAYLIGHT.color.accentTint,
   },
   iconWrap: {
     width: ICON_SIZE,
@@ -126,7 +135,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
-    fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 14,
+  },
+  labelSelected: {
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+  },
+  labelUnselected: {
+    fontWeight: DS_DAYLIGHT.weight.regular,
   },
 });

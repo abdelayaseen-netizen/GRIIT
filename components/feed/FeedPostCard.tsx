@@ -9,8 +9,9 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { Camera, Heart } from "lucide-react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_DAYLIGHT } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
@@ -20,13 +21,6 @@ import { Avatar } from "@/components/Avatar";
 import { ImageViewerModal } from "@/components/shared/ImageViewerModal";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
-
-function placeholderBg(challengeName: string): string {
-  const s = challengeName.toLowerCase();
-  if (s.includes("water") || s.includes("gallon") || s.includes("hydrat")) return DS_COLORS.FEED_PLACEHOLDER_WATER;
-  if (s.includes("cold") || s.includes("ice") || s.includes("shower")) return DS_COLORS.FEED_PLACEHOLDER_COLD;
-  return DS_COLORS.FEED_PLACEHOLDER_GENERAL;
-}
 
 type Props = {
   post: LiveFeedPost;
@@ -49,7 +43,6 @@ function FeedPostCardInner({
   previewComment,
   onSubmitComment,
 }: Props) {
-  const pct = Math.min(100, Math.max(0, (post.currentDay / Math.max(1, post.totalDays)) * 100));
   const proofUri = post.proofPhotoUrl || post.photoUrl;
   const showProof = post.hasProof || Boolean(proofUri);
 
@@ -63,6 +56,9 @@ function FeedPostCardInner({
   const taskOrDayTag = post.taskName?.trim()
     ? post.taskName.trim()
     : `Day ${post.currentDay} of ${post.totalDays}`;
+
+  const posterName = post.displayName || post.username || "";
+  const posterFirst = posterName.trim().split(/\s+/)[0] || posterName;
 
   const lastTapRef = React.useRef<number>(0);
   const tapTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,97 +132,70 @@ function FeedPostCardInner({
     }
   }, [quickDraft, sending, onSubmitComment]);
 
+  const captionText = post.caption?.trim();
+
   return (
     <View style={styles.card}>
       <FeedCardHeader post={post} onProfilePress={onProfilePress} onMenuPress={onMenuPress} />
 
       {showProof ? (
         <View style={styles.proofWrap}>
-          <View style={styles.proofMedia}>
-            <Pressable
-              style={styles.heroPressable}
-              onPress={handleImagePress}
-              accessibilityRole="button"
-              accessibilityLabel="Tap photo to view full screen, double tap to respect"
-            >
-              <View style={styles.proofImageArea}>
-                {proofUri ? (
-                  <Image
-                    source={{ uri: proofUri }}
-                    style={styles.proofImage}
-                    contentFit="cover"
-                    accessibilityRole="image"
-                  />
-                ) : (
-                  <View style={[styles.placeholder, { backgroundColor: placeholderBg(post.challengeName) }]}>
-                    <Camera size={40} color={DS_COLORS.TEXT_PRIMARY} style={{ opacity: 0.35 }} />
-                  </View>
-                )}
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    styles.heartOverlay,
-                    {
-                      opacity: heartOpacity,
-                      transform: [{ scale: heartScale }],
-                    },
-                  ]}
-                >
-                  <Heart size={80} color={DS_COLORS.FEED_RESPECT_ICON_FILL} fill={DS_COLORS.FEED_RESPECT_ICON_FILL} />
-                </Animated.View>
-              </View>
-
-              <View style={styles.overlayAnchored}>
-                <View style={styles.overlayBackdrop}>
-                  <Text style={styles.overlayChallenge} numberOfLines={2}>
-                    {post.challengeName}
-                  </Text>
-                  <Text style={styles.overlayTag} numberOfLines={2}>
-                    {taskOrDayTag}
-                  </Text>
-                  {post.caption?.trim() ? (
-                    <Text
-                      style={styles.overlayCaption}
-                      numberOfLines={2}
-                      ellipsizeMode="tail"
-                      accessibilityRole="text"
-                    >
-                      {post.caption}
-                    </Text>
-                  ) : null}
+          <Pressable
+            style={styles.heroPressable}
+            onPress={handleImagePress}
+            accessibilityRole="button"
+            accessibilityLabel="Tap photo to view full screen, double tap to respect"
+          >
+            <View style={styles.proofImageArea}>
+              {proofUri ? (
+                <Image
+                  source={{ uri: proofUri }}
+                  style={styles.proofImage}
+                  contentFit="cover"
+                  accessibilityRole="image"
+                />
+              ) : (
+                <View style={styles.placeholder}>
+                  <Camera size={40} color={DS_DAYLIGHT.color.inkMuted} style={{ opacity: 0.5 }} />
                 </View>
+              )}
+
+              <LinearGradient
+                colors={["transparent", DS_DAYLIGHT.color.photoGradientStrong]}
+                style={styles.photoGradient}
+                pointerEvents="none"
+              />
+
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.heartOverlay,
+                  {
+                    opacity: heartOpacity,
+                    transform: [{ scale: heartScale }],
+                  },
+                ]}
+              >
+                <Heart size={80} color={DS_DAYLIGHT.color.accent} fill={DS_DAYLIGHT.color.accent} />
+              </Animated.View>
+
+              {post.respectCount > 0 ? (
+                <View style={styles.kudosChip} pointerEvents="none">
+                  <Heart size={13} color={DS_DAYLIGHT.color.textOnPhoto} fill={DS_DAYLIGHT.color.textOnPhoto} />
+                  <Text style={styles.kudosChipText}>{post.respectCount}</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.overlayAnchored} pointerEvents="none">
+                <Text style={styles.overlayTitle} numberOfLines={2}>
+                  {post.challengeName}
+                </Text>
+                <Text style={styles.overlayMeta} numberOfLines={1}>
+                  {taskOrDayTag}
+                </Text>
               </View>
-            </Pressable>
-          </View>
-        </View>
-      ) : post.caption?.trim() ? (
-        <Text style={styles.captionFallback} accessibilityRole="text">
-          {post.caption}
-        </Text>
-      ) : null}
-
-      <View style={styles.progressBlock}>
-        {!FLAGS.PR3_FEED_DEDUPE ? (
-          <View style={styles.progressTop}>
-            <Text style={styles.progressLabel}>
-              Day {post.currentDay} of {post.totalDays}
-            </Text>
-          </View>
-        ) : null}
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${pct}%` }]} />
-        </View>
-      </View>
-
-      {post.respectCount > 0 && post.lastReactorName ? (
-        <View style={styles.respectedByRow}>
-          <Text style={styles.respectedByText}>
-            <Text style={styles.respectedByBold}>{post.lastReactorName}</Text>
-            {post.respectCount > 1
-              ? ` and ${post.respectCount - 1} other${post.respectCount > 2 ? "s" : ""}`
-              : ""}
-            {" respected this"}
-          </Text>
+            </View>
+          </Pressable>
         </View>
       ) : null}
 
@@ -240,12 +209,33 @@ function FeedPostCardInner({
         onRespectCountPress={() => setShowWhoRespected(true)}
       />
 
+      {captionText ? (
+        <View style={styles.captionWrap}>
+          <Text style={styles.captionText} accessibilityRole="text">
+            {posterFirst ? <Text style={styles.captionName}>{posterFirst} </Text> : null}
+            {post.caption}
+          </Text>
+        </View>
+      ) : null}
+
+      {post.respectCount > 0 && post.lastReactorName ? (
+        <View style={styles.respectedByRow}>
+          <Text style={styles.respectedByText}>
+            {"Respected by "}
+            <Text style={styles.respectedByName}>{post.lastReactorName}</Text>
+            {post.respectCount > 1
+              ? ` and ${post.respectCount - 1} other${post.respectCount > 2 ? "s" : ""}`
+              : ""}
+          </Text>
+        </View>
+      ) : null}
+
       {showQuickComment && onSubmitComment ? (
         <View style={styles.quickCommentRow}>
           <TextInput
             style={styles.quickCommentInput}
             placeholder="Add a comment..."
-            placeholderTextColor={DS_COLORS.TEXT_MUTED}
+            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
             value={quickDraft}
             onChangeText={setQuickDraft}
             maxLength={200}
@@ -283,6 +273,8 @@ function FeedPostCardInner({
         </View>
       ) : null}
 
+      <View style={styles.divider} />
+
       <WhoRespectedSheet visible={showWhoRespected} eventId={post.id} onClose={() => setShowWhoRespected(false)} />
 
       {FLAGS.PR3_IMAGE_VIEWER && proofUri ? (
@@ -311,27 +303,15 @@ export const FeedPostCard = React.memo(FeedPostCardInner);
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderRadius: DS_RADIUS.XL,
-    overflow: "hidden",
-  },
-  captionFallback: {
-    fontSize: 12,
-    color: DS_COLORS.TEXT_PRIMARY,
-    lineHeight: 20,
-    paddingHorizontal: 14,
+    backgroundColor: DS_DAYLIGHT.color.canvas,
     paddingTop: 6,
   },
   proofWrap: {
-    marginHorizontal: 14,
-    marginTop: 8,
-    borderRadius: DS_RADIUS.MD,
+    marginHorizontal: DS_DAYLIGHT.space.cardPad,
+    marginTop: 13,
+    borderRadius: DS_DAYLIGHT.radius.card,
     overflow: "hidden",
-    backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
-  },
-  proofMedia: {
-    position: "relative",
-    width: "100%",
+    backgroundColor: DS_DAYLIGHT.color.photoPlaceholder,
   },
   heroPressable: {
     width: "100%",
@@ -358,6 +338,14 @@ const styles = StyleSheet.create({
     top: 0,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: DS_DAYLIGHT.color.photoPlaceholder,
+  },
+  photoGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "42%",
   },
   heartOverlay: {
     position: "absolute",
@@ -368,93 +356,83 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  kudosChip: {
+    position: "absolute",
+    top: 13,
+    right: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: DS_DAYLIGHT.color.glassChipOnPhotoBg,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.glassChipOnPhotoBorder,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: DS_DAYLIGHT.radius.pill,
+  },
+  kudosChipText: {
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.textOnPhoto,
+  },
   overlayAnchored: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 14,
   },
-  overlayBackdrop: {
-    backgroundColor: "rgba(0, 0, 0, 0.45)",
-    paddingHorizontal: 12,
-    paddingTop: 14,
-    paddingBottom: 12,
-    gap: 4,
+  overlayTitle: {
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.textOnPhoto,
   },
-  overlayChallenge: {
-    fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.WHITE,
-    opacity: 0.7,
-  },
-  overlayTag: {
-    fontSize: 12,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.WHITE,
-    opacity: 0.92,
-  },
-  overlayCaption: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "400",
-    color: DS_COLORS.WHITE,
-    opacity: 1,
+  overlayMeta: {
     marginTop: 2,
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.textOnPhotoDim,
   },
-  progressBlock: {
-    paddingTop: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 2,
+  captionWrap: {
+    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingTop: 9,
   },
-  progressTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
+  captionText: {
+    fontSize: DS_DAYLIGHT.size.body,
+    lineHeight: 22,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.ink,
   },
-  progressLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: DS_COLORS.FEED_PROGRESS_LABEL,
-  },
-  track: {
-    height: 3,
-    borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_COLORS.FEED_PROGRESS_TRACK,
-    overflow: "hidden",
-  },
-  fill: {
-    height: 3,
-    borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_COLORS.ACCENT,
+  captionName: {
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
   respectedByRow: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 2,
+    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingTop: 6,
   },
   respectedByText: {
-    fontSize: 12,
-    color: DS_COLORS.TEXT_SECONDARY,
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
-  respectedByBold: {
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
+  respectedByName: {
+    color: DS_DAYLIGHT.color.inkSecondary,
   },
   quickCommentRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: DS_COLORS.FEED_COMMENT_BORDER,
+    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingTop: 12,
   },
   quickCommentInput: {
     flex: 1,
-    fontSize: 13,
-    color: DS_COLORS.TEXT_PRIMARY,
-    backgroundColor: DS_COLORS.INPUT_BG,
-    borderRadius: DS_RADIUS.XL,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    color: DS_DAYLIGHT.color.ink,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderRadius: DS_DAYLIGHT.radius.field,
     paddingHorizontal: 14,
     paddingVertical: 8,
     minHeight: 36,
@@ -462,39 +440,42 @@ const styles = StyleSheet.create({
   quickSendBtn: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.ACCENT,
+    borderRadius: DS_DAYLIGHT.radius.field,
+    backgroundColor: DS_DAYLIGHT.color.accent,
   },
   quickSendBtnDisabled: {
     opacity: 0.4,
   },
   quickSendText: {
-    fontSize: 13,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_ON_DARK,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.white,
   },
   commentPreview: {
     flexDirection: "row",
     gap: 10,
-    borderTopWidth: 0.5,
-    borderTopColor: DS_COLORS.FEED_COMMENT_BORDER,
     paddingTop: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 14,
+    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
   },
   commentBody: { flex: 1 },
-  commentLine: { fontSize: 12 },
+  commentLine: { fontSize: DS_DAYLIGHT.size.bodySm },
   commentUser: {
-    fontWeight: "500",
-    color: DS_COLORS.FEED_USERNAME,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.inkSecondary,
   },
   commentText: {
-    fontWeight: "400",
-    color: DS_COLORS.FEED_COMMENT_BODY,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkSecondary,
   },
   commentTime: {
     marginTop: 2,
-    fontSize: 11,
-    color: DS_COLORS.FEED_META_MUTED,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    color: DS_DAYLIGHT.color.inkMuted2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: DS_DAYLIGHT.color.dividerStrong,
+    marginTop: 18,
+    marginHorizontal: DS_DAYLIGHT.space.screenH,
   },
 });

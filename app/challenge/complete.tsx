@@ -5,22 +5,25 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
-  FlatList,
+  ScrollView,
+  StatusBar,
 } from "react-native";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Shield, Share2, ChevronRight, Home } from "lucide-react-native";
+import { Flame, Send } from "lucide-react-native";
 import ViewShot from "react-native-view-shot";
 import Celebration from "@/components/Celebration";
 import { ShareCard } from "@/components/ShareCard";
 import { shareProgressImage, shareChallengeComplete } from "@/lib/share";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_DAYLIGHT } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { track, trackEvent } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
 import { captureError } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+
+const C = DS_DAYLIGHT.color;
 
 function ChallengeCompleteScreenInner() {
   const router = useRouter();
@@ -74,117 +77,15 @@ function ChallengeCompleteScreenInner() {
     }
   }, [challengeName, totalDays]);
 
-  const handleWhatsNext = useCallback(() => {
-    if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace(ROUTES.TABS_DISCOVER as never);
-  }, [router]);
-
-  const handleBackToHome = useCallback(() => {
+  const handleKeepGoing = useCallback(() => {
     if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace(ROUTES.TABS_HOME as never);
   }, [router]);
 
-  const renderCompleteBody = useCallback(
-    () => (
-      <>
-        <View style={styles.badgeWrap}>
-          <View style={styles.badgeOuter}>
-            <View style={styles.badgeInner}>
-              <Shield size={48} color={DS_COLORS.white} fill={DS_COLORS.white} />
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.title}>You completed {challengeName}!</Text>
-
-        <View style={styles.statsCard}>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Total days</Text>
-            <Text style={styles.statValue}>{totalDays}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Final streak</Text>
-            <Text style={styles.statValue}>{streakCount} days</Text>
-          </View>
-          {tier ? (
-            <>
-              <View style={styles.divider} />
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Tier</Text>
-                <Text style={styles.statValue}>{tier}</Text>
-              </View>
-            </>
-          ) : null}
-        </View>
-
-        <ViewShot
-          ref={shareCardRef}
-          options={{ format: "png", result: "tmpfile", width: 400, height: 500 }}
-          style={styles.viewShotWrap}
-        >
-          <ShareCard
-            type="completion"
-            streakCount={streakCount}
-            challengeName={challengeName}
-            totalDays={totalDays}
-            tier={tier}
-          />
-        </ViewShot>
-
-        {shareError && (
-          <Text style={styles.shareError}>Share failed. Tap to retry.</Text>
-        )}
-        <TouchableOpacity
-          style={styles.shareButton}
-          onPress={handleShare}
-          activeOpacity={0.85}
-          accessibilityLabel="Share your achievement"
-          accessibilityRole="button"
-        >
-          <Share2 size={20} color={DS_COLORS.white} />
-          <Text style={styles.shareButtonText}>Share your achievement</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.whatsNextButton}
-          onPress={handleWhatsNext}
-          activeOpacity={0.85}
-          accessibilityLabel="Find your next challenge"
-          accessibilityRole="button"
-        >
-          <Text style={styles.whatsNextText}>What&apos;s next?</Text>
-          <Text style={styles.whatsNextSub}>Ready for your next challenge?</Text>
-          <ChevronRight size={22} color={DS_COLORS.accent} style={styles.chevron} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.backHomeLink}
-          onPress={handleBackToHome}
-          activeOpacity={0.7}
-          accessibilityLabel="Back to Home"
-          accessibilityRole="button"
-        >
-          <Home size={16} color={DS_COLORS.textMuted} />
-          <Text style={styles.backHomeText}>Back to Home</Text>
-        </TouchableOpacity>
-      </>
-    ),
-    [
-      challengeName,
-      totalDays,
-      streakCount,
-      tier,
-      shareError,
-      handleShare,
-      handleWhatsNext,
-      handleBackToHome,
-    ]
-  );
-
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="light-content" />
 
       <Celebration
         visible={showCelebration}
@@ -193,18 +94,71 @@ function ChallengeCompleteScreenInner() {
         streakCount={streakCount}
       />
 
-      <FlatList
-        style={styles.scroll}
-        data={[{ key: "complete-body" }]}
-        keyExtractor={(item) => item.key}
+      {/* Offscreen capture target — preserves image sharing. */}
+      <ViewShot
+        ref={shareCardRef}
+        options={{ format: "png", result: "tmpfile", width: 400, height: 500 }}
+        style={styles.viewShotWrap}
+      >
+        <ShareCard
+          type="completion"
+          streakCount={streakCount}
+          challengeName={challengeName}
+          totalDays={totalDays}
+          tier={tier}
+        />
+      </ViewShot>
+
+      <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        initialNumToRender={1}
-        maxToRenderPerBatch={1}
-        windowSize={2}
-        removeClippedSubviews={false}
-        renderItem={renderCompleteBody}
-      />
+      >
+        <View style={styles.heroCard}>
+          <Flame size={72} color={C.accent} fill={C.accent} />
+        </View>
+
+        <View style={styles.completeRow}>
+          <Flame size={20} color={C.accent} fill={C.accent} />
+          <Text style={styles.completeLabel} numberOfLines={1}>
+            {challengeName} · complete
+          </Text>
+        </View>
+
+        <View style={styles.numberRow}>
+          <Text style={styles.bigNumber}>{totalDays}</Text>
+          <Text style={styles.daysLabel}>days</Text>
+        </View>
+
+        <Text style={styles.message}>
+          {totalDays} days, every one logged. That&apos;s yours now — nobody can take it.
+        </Text>
+      </ScrollView>
+
+      <View style={styles.footer}>
+        {shareError ? (
+          <Text style={styles.shareError}>Share failed. Tap to retry.</Text>
+        ) : null}
+        <TouchableOpacity
+          style={styles.shareButton}
+          onPress={handleShare}
+          activeOpacity={0.85}
+          accessibilityLabel="Share your achievement"
+          accessibilityRole="button"
+        >
+          <Send size={17} color={C.white} />
+          <Text style={styles.shareButtonText}>Share it</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.keepGoing}
+          onPress={handleKeepGoing}
+          activeOpacity={0.7}
+          accessibilityLabel="Keep going — back to Home"
+          accessibilityRole="button"
+        >
+          <Text style={styles.keepGoingText}>Keep going</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -218,117 +172,97 @@ export default function ChallengeCompleteScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: DS_COLORS.background },
-  scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: DS_SPACING.screenHorizontal,
-    paddingBottom: DS_SPACING.xxxl,
-    alignItems: "center",
-  },
-  badgeWrap: { marginBottom: 24 },
-  badgeOuter: {
-    width: 120,
-    height: 120,
-    borderRadius: DS_RADIUS.PILL,
-    backgroundColor: DS_COLORS.success + "20",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeInner: {
-    width: 88,
-    height: 88,
-    borderRadius: DS_RADIUS.modal,
-    backgroundColor: DS_COLORS.success,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
-    color: DS_COLORS.textPrimary,
-    textAlign: "center",
-    marginBottom: 24,
-    paddingHorizontal: 16,
-  },
-  statsCard: {
-    width: "100%",
-    maxWidth: 340,
-    backgroundColor: DS_COLORS.card,
-    borderRadius: DS_RADIUS.card,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: DS_COLORS.border,
-  },
-  statRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  statLabel: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textSecondary },
-  statValue: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD, color: DS_COLORS.textPrimary },
-  divider: {
-    height: 1,
-    backgroundColor: DS_COLORS.border,
-    marginVertical: 12,
-  },
+  container: { flex: 1, backgroundColor: C.darkCanvas },
   viewShotWrap: { position: "absolute", left: -9999, opacity: 0 },
+  content: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 48,
+    paddingHorizontal: 32,
+  },
+  heroCard: {
+    width: 188,
+    height: 235,
+    borderRadius: DS_DAYLIGHT.radius.card,
+    backgroundColor: C.darkHeroCard,
+    alignItems: "center",
+    justifyContent: "center",
+    ...DS_DAYLIGHT.shadow.heroCard,
+  },
+  completeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 38,
+    maxWidth: 320,
+  },
+  completeLabel: {
+    fontSize: DS_DAYLIGHT.size.eyebrow,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: C.darkMuted,
+    flexShrink: 1,
+  },
+  numberRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 10,
+    marginTop: 14,
+  },
+  bigNumber: {
+    fontSize: DS_DAYLIGHT.size.streakMomentNumber,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    letterSpacing: -3,
+    color: C.darkText,
+    lineHeight: 76,
+  },
+  daysLabel: {
+    fontSize: DS_DAYLIGHT.size.cardTitle,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: C.darkFaint,
+  },
+  message: {
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    lineHeight: 25,
+    color: C.darkBody,
+    textAlign: "center",
+    marginTop: 18,
+    maxWidth: 280,
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    paddingTop: 8,
+  },
   shareError: {
-    fontSize: 13,
-    color: DS_COLORS.danger,
-    marginBottom: 8,
+    fontSize: DS_DAYLIGHT.size.meta,
+    color: C.accent,
+    textAlign: "center",
+    marginBottom: 10,
   },
   shareButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    width: "100%",
-    maxWidth: 340,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: DS_RADIUS.button,
-    backgroundColor: DS_COLORS.accent,
-    marginBottom: 12,
+    gap: 9,
+    height: 54,
+    borderRadius: DS_DAYLIGHT.radius.buttonLg,
+    backgroundColor: C.accent,
   },
   shareButtonText: {
-    fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.white,
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: C.white,
   },
-  whatsNextButton: {
-    width: "100%",
-    maxWidth: 340,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: DS_RADIUS.button,
-    borderWidth: 2,
-    borderColor: DS_COLORS.accent,
-    backgroundColor: "transparent",
-    marginBottom: 24,
-    position: "relative",
-  },
-  whatsNextText: {
-    fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.accent,
-    textAlign: "center",
-  },
-  whatsNextSub: {
-    fontSize: 13,
-    color: DS_COLORS.textSecondary,
-    textAlign: "center",
-    marginTop: 4,
-  },
-  chevron: { position: "absolute", right: 16, top: "50%", marginTop: -11 },
-  backHomeLink: {
-    flexDirection: "row",
+  keepGoing: {
     alignItems: "center",
-    gap: 6,
+    justifyContent: "center",
+    marginTop: 18,
+    minHeight: 44,
   },
-  backHomeText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS.textMuted,
+  keepGoingText: {
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: C.darkFaint,
   },
 });
