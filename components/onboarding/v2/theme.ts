@@ -37,6 +37,13 @@ export const OBV2_COLOR = {
   avatar: DS_COLORS_V2.surface.divider,
   /** Progress-bar empty segment. */
   progressEmpty: DS_COLORS_V2.surface.divider,
+  /** Dark photo placeholder surface (proof / featured cards). */
+  photoDark: DS_COLORS_V2.surface.heroDark,
+  /** Translucent chip backdrop on a photo. */
+  chipOnPhoto: DS_COLORS_V2.overlay.chipOnPhoto55,
+  /** Text on a photo. */
+  onPhoto: DS_COLORS_V2.overlay.textOnPhoto100,
+  onPhotoDim: DS_COLORS_V2.overlay.textOnPhoto85,
 } as const;
 
 export const OBV2_RADIUS = {
