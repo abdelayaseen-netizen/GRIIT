@@ -68,11 +68,12 @@ export const reportsRouter = createTRPCRouter({
       try {
         const { data: moderators } = await ctx.supabase
           .from("profiles")
-          .select("user_id, push_token")
+          .select("user_id, expo_push_token, push_token")
           .in("user_id", MODERATOR_USER_IDS as unknown as string[]);
         const challengeTitle = (challenge as { title?: string }).title ?? "a challenge";
         for (const mod of moderators ?? []) {
-          const token = (mod as { push_token?: string | null }).push_token;
+          const modRow = mod as { expo_push_token?: string | null; push_token?: string | null };
+          const token = (modRow.expo_push_token ?? modRow.push_token)?.trim();
           if (!token) continue;
           await sendPush({
             toToken: token,
