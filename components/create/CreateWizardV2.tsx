@@ -288,9 +288,12 @@ export function CreateWizardV2() {
       router.replace(ROUTES.CHALLENGE_ACTIVE(result.id) as never);
     } catch (err) {
       captureError(err, "CreateWizardV2Launch");
-      setLaunchError(
-        err instanceof Error ? err.message : "Could not launch. Try again."
-      );
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("FREE_LIMIT_REACHED")) {
+        router.push(ROUTES.PAYWALL as never);
+        return;
+      }
+      setLaunchError(msg || "Could not launch. Try again.");
     } finally {
       setLaunchBusy(false);
     }
