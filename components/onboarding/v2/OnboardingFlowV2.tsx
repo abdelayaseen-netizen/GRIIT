@@ -57,6 +57,14 @@ export default function OnboardingFlowV2() {
     router.push(ROUTES.AUTH_LOGIN as never);
   }, [router]);
 
+  // After account creation, present the existing offering-driven paywall (mockup
+  // 08), then land on the first-challenge step. On dismiss the paywall returns
+  // here (first_challenge); on purchase the paywall routes to the app itself.
+  const handleAccountSuccess = useCallback(() => {
+    setStep("first_challenge");
+    router.push({ pathname: ROUTES.PAYWALL, params: { source: "onboarding" } } as never);
+  }, [router]);
+
   const renderScreen = () => {
     switch (step) {
       case "welcome":
@@ -72,7 +80,7 @@ export default function OnboardingFlowV2() {
       case "reminders":
         return <RemindersScreen onContinue={goNext} />;
       case "account":
-        return <AccountScreen onAuthSuccess={() => goNext()} />;
+        return <AccountScreen onAuthSuccess={handleAccountSuccess} />;
       default:
         return (
           <View style={styles.placeholder}>
