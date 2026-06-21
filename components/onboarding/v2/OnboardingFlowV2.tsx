@@ -17,6 +17,7 @@ import WhyProofScreen from "./screens/WhyProofScreen";
 import WhyCircleScreen from "./screens/WhyCircleScreen";
 import GoalsScreen from "./screens/GoalsScreen";
 import CommitmentScreen from "./screens/CommitmentScreen";
+import RemindersScreen from "./screens/RemindersScreen";
 
 /** In-flow step keys (paywall is a pushed route, not an in-flow step). */
 export type OnboardingV2Step =
@@ -67,6 +68,8 @@ export default function OnboardingFlowV2() {
         return <GoalsScreen onContinue={goNext} />;
       case "commitment":
         return <CommitmentScreen onContinue={goNext} />;
+      case "reminders":
+        return <RemindersScreen onContinue={goNext} />;
       default:
         return (
           <View style={styles.placeholder}>
