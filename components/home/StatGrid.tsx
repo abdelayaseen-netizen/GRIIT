@@ -1,13 +1,14 @@
 /**
- * StatGrid — three-card horizontal bento grid below the StreakHero.
+ * StatGrid — Daylight v3 week strip.
  *
- * Each card has identical anatomy:
- *   row 1: lucide icon (size 13) + uppercase label (9pt, letter-spaced)
- *   row 2: primary number / value (18pt, weight 500)
- *   row 3: visual indicator (3px-tall bar or 7-segment row)
+ * In the Daylight language the home's week visualization is a calm 7-column
+ * strip: a single-letter weekday over a tall rounded bar. Completed days read
+ * as solid ink, today carries the accent-tint highlight, future days stay
+ * neutral. The freeze + next-badge entry points are preserved as quiet,
+ * tappable footer chips so their navigation/analytics survive the reskin.
  *
- * Variants reflect home state — they only swap copy + segment colors, not the
- * card geometry, so the grid never shifts row-height between renders.
+ * Variants reflect home state — they only swap copy + bar colors, never the
+ * geometry, so the strip never shifts height between renders.
  */
 import React from 'react';
 import {
@@ -17,12 +18,8 @@ import {
   View,
   type GestureResponderEvent,
 } from 'react-native';
-import { Calendar, Snowflake, Medal } from 'lucide-react-native';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { Snowflake, Medal } from 'lucide-react-native';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 
 export type StatGridVariant = 'default' | 'day0' | 'atRisk' | 'secured';
 
@@ -33,7 +30,7 @@ export type StatGridProps = {
   freezesMaxPerWeek: number;
   nextBadgeName: string;
   nextBadgeProgress: number;
-  /** Used by atRisk variant to render "{streak} days at stake". */
+  /** Used by atRisk variant to render "{streak} days at risk". */
   streak?: number;
   variant?: StatGridVariant;
   onPressWeek?: () => void;
@@ -41,91 +38,23 @@ export type StatGridProps = {
   onPressBadge?: () => void;
 };
 
-// ──────────────────────────────────────────────────────────────────────────
-// Card primitives
-// ──────────────────────────────────────────────────────────────────────────
+const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 
-type CardProps = {
-  label: string;
-  icon: React.ReactNode;
-  primary: string;
-  sub?: string;
-  subColor?: string;
-  primaryColor?: string;
-  indicator: React.ReactNode;
-  onPress?: () => void;
-  accessibilityLabel: string;
-};
+// Monday-first single-letter weekday labels.
+const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
 
-function StatCard({
-  label,
-  icon,
-  primary,
-  sub,
-  subColor,
-  primaryColor,
-  indicator,
-  onPress,
-  accessibilityLabel,
-}: CardProps) {
-  const content = (
-    <>
-      <View style={styles.topRow}>
-        {icon}
-        <Text style={styles.label} numberOfLines={1}>
-          {label}
-        </Text>
-      </View>
-      <View style={styles.midCol}>
-        <Text
-          style={[styles.primary, primaryColor ? { color: primaryColor } : null]}
-          numberOfLines={1}
-        >
-          {primary}
-        </Text>
-        {sub ? (
-          <Text
-            style={[styles.sub, subColor ? { color: subColor } : null]}
-            numberOfLines={1}
-          >
-            {sub}
-          </Text>
-        ) : null}
-      </View>
-      <View style={styles.indicatorWrap}>{indicator}</View>
-    </>
-  );
-
-  if (!onPress) {
-    return (
-      <View
-        style={styles.card}
-        accessibilityRole="text"
-        accessibilityLabel={accessibilityLabel}
-      >
-        {content}
-      </View>
-    );
-  }
-
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.card, pressed ? styles.cardPressed : null]}
-      onPress={(_e: GestureResponderEvent) => onPress()}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      hitSlop={HIT_SLOP}
-    >
-      {content}
-    </Pressable>
-  );
+/** Today's index in a Monday-first week (Mon = 0 … Sun = 6). */
+function mondayFirstIndex(d: Date): number {
+  return (d.getDay() + 6) % 7;
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Indicators
+// Week strip
 // ──────────────────────────────────────────────────────────────────────────
 
-function WeekSegments({
+type DayKind = 'completed' | 'today' | 'future';
+
+function WeekStrip({
   weekSecured,
   weekTotal,
   variant,
@@ -134,74 +63,45 @@ function WeekSegments({
   weekTotal: number;
   variant: StatGridVariant;
 }) {
+  const todayIndex = mondayFirstIndex(new Date());
+  const total = Math.min(7, Math.max(1, weekTotal));
+
   const cells = [] as React.ReactElement[];
-  for (let i = 0; i < weekTotal; i++) {
-    let bg: string;
-    if (variant === 'day0') {
-      bg = DS_COLORS_V2.surface.cardChipNeutral;
-    } else if (variant === 'atRisk' && i === weekTotal - 1) {
-      bg = DS_COLORS_V2.semantic.danger;
-    } else if (i < weekSecured) {
-      bg = DS_COLORS_V2.brand.primary;
-    } else if (i === weekSecured) {
-      bg = DS_COLORS_V2.streak.flameMid;
+  for (let i = 0; i < total; i++) {
+    let kind: DayKind;
+    if (i === todayIndex) {
+      kind = 'today';
+    } else if (variant !== 'day0' && i < weekSecured) {
+      kind = 'completed';
     } else {
-      bg = DS_COLORS_V2.surface.cardChipNeutral;
+      kind = 'future';
     }
-    cells.push(<View key={i} style={[styles.weekSegment, { backgroundColor: bg }]} />);
+
+    const barStyle =
+      kind === 'completed'
+        ? styles.dayBarDone
+        : kind === 'today'
+          ? styles.dayBarToday
+          : styles.dayBarFuture;
+
+    cells.push(
+      <View key={i} style={styles.dayCol}>
+        <Text
+          style={kind === 'today' ? styles.dayLetterToday : styles.dayLetter}
+        >
+          {DAY_LETTERS[i]}
+        </Text>
+        <View style={[styles.dayBar, barStyle]} />
+      </View>,
+    );
   }
+
   return <View style={styles.weekRow}>{cells}</View>;
-}
-
-function ProgressBar({
-  fraction,
-  color,
-  trackColor,
-}: {
-  fraction: number;
-  color: string;
-  trackColor?: string;
-}) {
-  const clamped = Math.max(0, Math.min(1, fraction));
-  return (
-    <View
-      style={[
-        styles.progressTrack,
-        { backgroundColor: trackColor ?? DS_COLORS_V2.surface.cardChipNeutral },
-      ]}
-    >
-      <View
-        style={[
-          styles.progressFill,
-          { width: `${clamped * 100}%`, backgroundColor: color },
-        ]}
-      />
-    </View>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────────
-// Variant copy
-// ──────────────────────────────────────────────────────────────────────────
-
-function freezeSubFor(variant: StatGridVariant): string {
-  switch (variant) {
-    case 'day0':
-      return 'Saves a missed day';
-    case 'atRisk':
-      return 'Use one tonight';
-    case 'secured':
-      return 'Saved for later';
-    default:
-      return 'Next in 3 days';
-  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────
 // Component
 // ──────────────────────────────────────────────────────────────────────────
-
-const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 
 export function StatGrid(props: StatGridProps) {
   const {
@@ -217,107 +117,96 @@ export function StatGrid(props: StatGridProps) {
     onPressBadge,
   } = props;
 
-  // Card 1 — Week
-  const weekCard = (
-    <StatCard
-      key="week"
-      label="WEEK"
-      icon={<Calendar size={13} color={DS_COLORS_V2.brand.primary} strokeWidth={1.75} />}
-      primary={`${weekSecured}/${weekTotal}`}
-      sub={variant === 'day0' ? 'Start today' : 'days secured'}
-      indicator={
-        <WeekSegments
-          weekSecured={weekSecured}
-          weekTotal={weekTotal}
-          variant={variant}
-        />
-      }
-      onPress={onPressWeek}
-      accessibilityLabel={`Week progress, ${weekSecured} of ${weekTotal} days secured`}
+  const securedLabel =
+    variant === 'day0'
+      ? 'Start today'
+      : `${weekSecured} of ${weekTotal} days secured this week`;
+
+  const freezePlural = freezesAvailable === 1 ? '' : 's';
+  const badgeName = variant === 'day0' ? 'First badge' : nextBadgeName;
+  const badgeText =
+    variant === 'atRisk'
+      ? `${streak} day${streak === 1 ? '' : 's'} at risk`
+      : `${badgeName} · ${Math.round(nextBadgeProgress * 100)}%`;
+
+  const strip = (
+    <WeekStrip
+      weekSecured={weekSecured}
+      weekTotal={weekTotal}
+      variant={variant}
     />
   );
-
-  // Card 2 — Freezes
-  const freezeSubColor =
-    variant === 'atRisk' ? DS_COLORS_V2.streak.frozenStroke : undefined;
-  const freezeCard = (
-    <StatCard
-      key="freezes"
-      label="FREEZES"
-      icon={
-        <Snowflake size={13} color={DS_COLORS_V2.brand.primary} strokeWidth={1.75} />
-      }
-      primary={`${freezesAvailable} left`}
-      sub={freezeSubFor(variant)}
-      subColor={freezeSubColor}
-      indicator={
-        <ProgressBar
-          fraction={
-            props.freezesMaxPerWeek > 0
-              ? freezesAvailable / props.freezesMaxPerWeek
-              : 0
-          }
-          color={DS_COLORS_V2.streak.frozenStroke}
-        />
-      }
-      onPress={onPressFreezes}
-      accessibilityLabel={`Streak freezes, ${freezesAvailable} of ${props.freezesMaxPerWeek} available`}
-    />
-  );
-
-  // Card 3 — Badge / Risk swap
-  let thirdCard: React.ReactElement;
-  if (variant === 'atRisk') {
-    thirdCard = (
-      <StatCard
-        key="risk"
-        label="RISK"
-        icon={
-          <Medal size={13} color={DS_COLORS_V2.semantic.danger} strokeWidth={1.75} />
-        }
-        primary={`${streak} day${streak === 1 ? '' : 's'}`}
-        sub="at stake"
-        primaryColor={DS_COLORS_V2.semantic.danger}
-        subColor={DS_COLORS_V2.semantic.danger}
-        indicator={
-          <ProgressBar
-            fraction={1}
-            color={DS_COLORS_V2.semantic.danger}
-            trackColor={DS_COLORS_V2.semantic.dangerSoft}
-          />
-        }
-        onPress={onPressBadge}
-        accessibilityLabel={`Streak at risk, ${streak} days at stake`}
-      />
-    );
-  } else {
-    const badgeName = variant === 'day0' ? 'First badge' : nextBadgeName;
-    thirdCard = (
-      <StatCard
-        key="badge"
-        label="NEXT BADGE"
-        icon={
-          <Medal size={13} color={DS_COLORS_V2.brand.primary} strokeWidth={1.75} />
-        }
-        primary={badgeName}
-        sub={`${Math.round(nextBadgeProgress * 100)}%`}
-        indicator={
-          <ProgressBar
-            fraction={variant === 'day0' ? 0 : nextBadgeProgress}
-            color={DS_COLORS_V2.brand.primary}
-          />
-        }
-        onPress={onPressBadge}
-        accessibilityLabel={`Next badge ${badgeName}, ${Math.round(nextBadgeProgress * 100)} percent complete`}
-      />
-    );
-  }
 
   return (
-    <View style={styles.row}>
-      {weekCard}
-      {freezeCard}
-      {thirdCard}
+    <View style={styles.root}>
+      {onPressWeek ? (
+        <Pressable
+          onPress={(_e: GestureResponderEvent) => onPressWeek()}
+          accessibilityRole="button"
+          accessibilityLabel={securedLabel}
+          style={({ pressed }) => (pressed ? styles.pressed : null)}
+        >
+          {strip}
+        </Pressable>
+      ) : (
+        <View accessibilityRole="text" accessibilityLabel={securedLabel}>
+          {strip}
+        </View>
+      )}
+
+      <View style={styles.footerRow}>
+        <Pressable
+          onPress={onPressFreezes}
+          disabled={!onPressFreezes}
+          accessibilityRole="button"
+          accessibilityLabel={`Streak freezes, ${freezesAvailable} available`}
+          hitSlop={HIT_SLOP}
+          style={({ pressed }) => [
+            styles.chip,
+            pressed && onPressFreezes ? styles.pressed : null,
+          ]}
+        >
+          <Snowflake
+            size={13}
+            color={DS_DAYLIGHT.color.accent}
+            strokeWidth={1.75}
+          />
+          <Text style={styles.chipText} numberOfLines={1}>
+            {`${freezesAvailable} freeze${freezePlural} left`}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={onPressBadge}
+          disabled={!onPressBadge}
+          accessibilityRole="button"
+          accessibilityLabel={
+            variant === 'atRisk'
+              ? `Streak at risk, ${streak} days at stake`
+              : `Next badge ${badgeName}, ${Math.round(nextBadgeProgress * 100)} percent complete`
+          }
+          hitSlop={HIT_SLOP}
+          style={({ pressed }) => [
+            styles.chip,
+            pressed && onPressBadge ? styles.pressed : null,
+          ]}
+        >
+          <Medal
+            size={13}
+            color={DS_DAYLIGHT.color.accent}
+            strokeWidth={1.75}
+          />
+          <Text
+            style={[
+              styles.chipText,
+              variant === 'atRisk' ? styles.chipTextAlert : null,
+            ]}
+            numberOfLines={1}
+          >
+            {badgeText}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -329,74 +218,66 @@ export default StatGrid;
 // ──────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: DS_SPACING_V2.md,
+  root: {
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
   },
-  card: {
-    flex: 1,
-    height: 88,
-    borderRadius: DS_RADIUS_V2.md,
-    padding: 12,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS_V2.surface.divider,
-    justifyContent: 'space-between',
-  },
-  cardPressed: {
-    opacity: 0.85,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  label: {
-    fontSize: 9,
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.secondary,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-  },
-  midCol: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-    flexWrap: 'nowrap',
-  },
-  primary: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
-    flexShrink: 1,
-  },
-  sub: {
-    fontSize: 10,
-    color: DS_COLORS_V2.text.secondary,
-    fontWeight: '400',
-    flexShrink: 0,
-  },
-  indicatorWrap: {
-    minHeight: 3,
-    justifyContent: 'flex-end',
+  pressed: {
+    opacity: 0.7,
   },
   weekRow: {
     flexDirection: 'row',
-    gap: 2,
+    gap: 7,
   },
-  weekSegment: {
+  dayCol: {
     flex: 1,
-    height: 3,
-    borderRadius: 1.5,
+    alignItems: 'center',
+    gap: 8,
   },
-  progressTrack: {
-    height: 3,
-    borderRadius: 1.5,
-    overflow: 'hidden',
+  dayLetter: {
+    fontSize: DS_DAYLIGHT.size.dayLetter,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted3,
   },
-  progressFill: {
-    height: 3,
-    borderRadius: 1.5,
+  dayLetterToday: {
+    fontSize: DS_DAYLIGHT.size.dayLetter,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+  },
+  dayBar: {
+    width: '100%',
+    height: 36,
+    borderRadius: 11,
+  },
+  dayBarDone: {
+    backgroundColor: DS_DAYLIGHT.color.ink,
+  },
+  dayBarToday: {
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderWidth: 2,
+    borderColor: DS_DAYLIGHT.color.accent,
+  },
+  dayBarFuture: {
+    backgroundColor: DS_DAYLIGHT.color.pillNeutral,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  chipText: {
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
+    flexShrink: 1,
+  },
+  chipTextAlert: {
+    color: DS_DAYLIGHT.color.accent,
+    fontWeight: DS_DAYLIGHT.weight.medium,
   },
 });

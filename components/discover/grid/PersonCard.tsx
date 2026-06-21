@@ -22,11 +22,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
 import { ROUTES } from '@/lib/routes';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 import { Avatar } from '@/components/Avatar';
 import { trackEvent } from '@/lib/analytics';
 import { captureError } from '@/lib/sentry';
@@ -150,7 +146,7 @@ export const PersonCard = React.memo(function PersonCard({
         {pending ? (
           <ActivityIndicator
             size="small"
-            color={DS_COLORS_V2.brand.primaryText}
+            color={DS_DAYLIGHT.color.white}
           />
         ) : (
           <Text
@@ -171,9 +167,11 @@ export default PersonCard;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS_V2.surface.heroDark,
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
+    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+    padding: DS_DAYLIGHT.space.cardPad,
     gap: 6,
   },
   body: {
@@ -185,40 +183,43 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 26,
     borderWidth: 2,
-    borderColor: DS_COLORS_V2.brand.primaryOnDark,
+    borderColor: DS_DAYLIGHT.color.dividerStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
   },
   name: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.onDark,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
     textAlign: 'center',
   },
   sub: {
-    fontSize: 10,
-    color: DS_COLORS_V2.overlay.textOnPhoto70,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.meta,
+    color: DS_DAYLIGHT.color.inkMuted2,
     textAlign: 'center',
   },
   followBtn: {
     marginTop: 6,
     width: '100%',
-    paddingVertical: 7,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    paddingVertical: 8,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   followBtnSecondary: {
-    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface10,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   followText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: DS_COLORS_V2.brand.primaryText,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 12,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.white,
   },
   followTextSecondary: {
-    color: DS_COLORS_V2.text.onDark,
+    color: DS_DAYLIGHT.color.accent,
   },
 });

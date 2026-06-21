@@ -26,7 +26,7 @@ import {
   deriveStreakHeroV4State,
   type StreakHeroV4Task,
 } from "@/components/home/StreakHeroV4";
-import { DS_COLORS, DS_COLORS_V2, DS_SPACING_V2, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_DAYLIGHT } from "@/lib/design-system";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
@@ -442,7 +442,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           )}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 96 }}
           showsVerticalScrollIndicator={false}
         />
       </SafeAreaView>
@@ -490,21 +490,21 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas },
+  container: { flex: 1, backgroundColor: DS_DAYLIGHT.color.canvas },
   guestWrap: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingTop: DS_SPACING_V2.xl,
-    gap: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: 32,
+    gap: 12,
   },
   guestTitle: {
-    fontSize: DS_TYPOGRAPHY.SIZE_XL,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
-    letterSpacing: 2,
+    fontSize: DS_DAYLIGHT.size.screenTitle,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: 1,
   },
   guestBody: {
-    fontSize: DS_TYPOGRAPHY.SIZE_BASE,
-    color: DS_COLORS.TEXT_SECONDARY,
-    lineHeight: 22,
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    color: DS_DAYLIGHT.color.inkSecondary,
+    lineHeight: 24,
   },
 });

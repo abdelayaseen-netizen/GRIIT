@@ -1374,3 +1374,168 @@ export const DS_BUTTON = {
 } as const;
 
 // (v2 default export intentionally omitted — consumers use named imports only.)
+
+// ============================================================================
+//
+//  DAYLIGHT — iOS redesign v3 token set
+//
+//  Source of truth: project handoff "GRIIT Daylight v3.dc.html" (Claude Design).
+//  Design intent: neutral near-white canvas, pure-white cards, SF Pro throughout
+//  (system font; weights 400/600), photography as the hero, ONE orange selection
+//  language, calm "owned" streak. One dark screen (the streak moment).
+//
+//  These tokens are ADDITIVE and namespaced under DS_DAYLIGHT — they do not touch
+//  v1 (DS_COLORS) or v2 (DS_COLORS_V2) tokens, so the existing contrast test
+//  (tests/design-system-contrast.test.ts, which audits DS_COLORS.ACCENT etc.)
+//  is unaffected. All hex for the redesign lives here, per the "no raw hex
+//  outside design-system" rule.
+//
+//  A11Y NOTE: Daylight's accent (#DC5401) measures ~3.96:1 for white text —
+//  below the WCAG AA normal-text bar (4.5:1) that the v1 ACCENT (#BB471D, 5.2:1)
+//  was deliberately tuned to. It clears the AA large-text bar (3:1). CTA labels
+//  use 17pt/600 (borderline "large"). `accentAccessible` (#BB471D) is provided
+//  for surfaces that must clear 4.5:1 with white text.
+//
+// ============================================================================
+
+export const DS_DAYLIGHT = {
+  color: {
+    // Canvas / backgrounds
+    canvas: '#F6F6F4',          // phone screen background (neutral near-white)
+    canvasDeep: '#E4E4E1',      // surrounding board / deeper neutral
+    canvasSheetBackdrop: '#EDEDEB', // dimmed backdrop behind bottom sheets
+    darkCanvas: '#161514',      // the one dark screen (streak moment)
+
+    // Surfaces
+    card: '#FFFFFF',
+    cardBorder: '#ECECEA',
+    divider: '#F0F0EE',
+    dividerStrong: '#EAEAE8',
+    segmentTrack: '#F0F0EE',    // segmented control / pill group track
+    fieldNeutral: '#F6F6F4',    // unselected segment / inset field on a card
+    pillNeutral: '#EDEDEB',     // empty day cell / neutral chip
+    avatarBg: '#EAEAE8',
+    avatarBgAlt: '#DCDAD6',
+    handle: '#DCDAD6',          // bottom-sheet grab handle
+    dashedBorder: '#D2CFCA',    // "choose from library" dashed control
+    toggleOffTrack: '#E2E2DF',
+
+    // Text (ink ramp)
+    ink: '#1C1B19',             // primary text
+    inkSecondary: '#57544F',    // body / secondary
+    inkMuted: '#8E8B86',        // labels, metadata
+    inkMuted2: '#A9A6A1',       // fainter metadata
+    inkMuted3: '#B4B1AC',       // faintest (day letters, placeholders)
+    inkFaint: '#8C8A85',        // section eyebrow on canvasDeep
+    placeholder: '#B4B1AC',
+
+    // Accent (single orange selection language)
+    accent: '#DC5401',
+    accentTint: '#FBEEE5',      // light orange bg — selected chips, badges, banners
+    accentAccessible: '#BB471D', // AA-safe (5.2:1 white) fallback for dense text on orange
+    accentBannerSubtext: '#9A7256', // muted brown subtext on accentTint banner
+
+    // Icon strokes
+    iconInk: '#3A3935',
+    iconMuted: '#C4C1BB',
+    chevronMuted: '#C4C1BB',
+
+    // Floating glass tab bar
+    tabGlassBg: 'rgba(255,255,255,0.74)',
+    tabGlassBorder: 'rgba(255,255,255,0.7)',
+    tabInactive: '#ABA8A3',
+    centerButton: '#1C1B19',
+
+    // Photo treatments
+    photoPlaceholder: '#EFEFEC',
+    photoBaseDark: '#23211f',
+    photoGradientStrong: 'rgba(0,0,0,0.6)',
+    photoGradientSoft: 'rgba(0,0,0,0.55)',
+    textOnPhoto: '#FFFFFF',
+    textOnPhotoDim: 'rgba(255,255,255,0.8)',
+    glassChipOnPhotoBg: 'rgba(255,255,255,0.18)',
+    glassChipOnPhotoBorder: 'rgba(255,255,255,0.3)',
+
+    // Dark screen (streak moment)
+    darkText: '#FFFFFF',
+    darkBody: '#D8D4CC',
+    darkMuted: '#9A968F',
+    darkFaint: '#8C8579',
+    darkHeroCard: '#232220',
+
+    white: '#FFFFFF',
+    black: '#0a0a0a',           // device bezel
+  },
+
+  // SF Pro = system font on iOS; null lets RN fall back to San Francisco.
+  fontFamily: undefined as undefined,
+
+  weight: {
+    regular: '400' as const,
+    medium: '500' as const,
+    semibold: '600' as const,
+  },
+
+  // Sizes pulled directly from the mockup.
+  size: {
+    statusTime: 16,
+    eyebrow: 14,        // "Wednesday", "Current streak"
+    dayLetter: 11,
+    metaSm: 12.5,
+    meta: 13,
+    bodySm: 13.5,
+    body: 15,
+    bodyLg: 16,
+    title: 17,          // row titles, CTA label
+    cardTitle: 20,      // "Today's proof", section headers
+    greeting: 27,       // "Morning, Marcus"
+    screenTitle: 32,    // "Discover"
+    streakNumber: 64,   // owned streak figure
+    streakMomentNumber: 76, // dark streak-moment figure
+    heroTitle: 50,
+  },
+
+  radius: {
+    chip: 13,
+    field: 14,
+    button: 15,
+    buttonLg: 16,
+    card: 22,
+    cardSm: 18,
+    cardMd: 20,
+    sheet: 30,
+    glassBar: 30,
+    phone: 46,
+    pill: 20,
+  },
+
+  space: {
+    screenH: 24,        // horizontal screen padding
+    cardPad: 20,
+    rowGapV: 12,
+  },
+
+  shadow: {
+    card: {
+      shadowColor: 'rgba(28,27,25,0.20)',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 1,
+      shadowRadius: 32,
+      elevation: 6,
+    },
+    heroCard: {
+      shadowColor: 'rgba(0,0,0,0.6)',
+      shadowOffset: { width: 0, height: 24 },
+      shadowOpacity: 1,
+      shadowRadius: 50,
+      elevation: 12,
+    },
+    glassBar: {
+      shadowColor: 'rgba(28,27,25,0.20)',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 1,
+      shadowRadius: 32,
+      elevation: 8,
+    },
+  },
+} as const;

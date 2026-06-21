@@ -18,7 +18,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path, Circle, Line } from 'react-native-svg';
-import { DS_COLORS_V2 } from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 
 export type StreakFlameState =
   | 'day0'
@@ -82,46 +82,48 @@ type Palette = {
 };
 
 function paletteFor(state: StreakFlameState): Palette {
-  const s = DS_COLORS_V2.streak;
+  const c = DS_DAYLIGHT.color;
+  // Daylight uses ONE orange selection language — the flame reads as a calm,
+  // solid accent glyph. day0/frozen drop to neutral ink-muted tones.
   switch (state) {
     case 'day0':
       return {
-        outer: s.day0Outer,
-        outerStroke: s.day0Stroke,
-        inner: s.day0Inner,
+        outer: c.iconMuted,
+        outerStroke: c.iconMuted,
+        inner: c.pillNeutral,
       };
     case 'building':
       return {
-        outer: s.flameOuter,
-        outerStroke: s.flameStroke,
-        inner: s.flameMid,
+        outer: c.accent,
+        outerStroke: c.accent,
+        inner: c.accentTint,
       };
     case 'locked':
       return {
-        outer: s.flameOuter,
-        outerStroke: s.flameStroke,
-        inner: s.flameMid,
-        hotspot: s.flameHotspot,
+        outer: c.accent,
+        outerStroke: c.accent,
+        inner: c.accentTint,
+        hotspot: c.white,
       };
     case 'onFire':
       return {
-        outer: s.flameStroke,
-        outerStroke: s.flameStroke,
-        inner: s.flameMid,
-        hotspot: s.flameHotspot,
-        center: s.flameCenter,
+        outer: c.accent,
+        outerStroke: c.accent,
+        inner: c.accentTint,
+        hotspot: c.white,
+        center: c.accent,
       };
     case 'atRisk':
       return {
-        outer: s.atRiskOuter,
-        outerStroke: s.atRiskStroke,
-        inner: s.atRiskInner,
+        outer: c.accent,
+        outerStroke: c.accent,
+        inner: c.accentTint,
       };
     case 'frozen':
       return {
-        outer: s.frozenOuter,
-        outerStroke: s.frozenStroke,
-        inner: s.frozenInner,
+        outer: c.inkMuted3,
+        outerStroke: c.inkMuted2,
+        inner: c.pillNeutral,
       };
   }
 }
@@ -161,7 +163,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               stroke={p.outerStroke}
               strokeWidth={1.5}
             />
-            <Path d={FLAME_MID_ON_FIRE} fill={DS_COLORS_V2.streak.flameOuter} />
+            <Path d={FLAME_MID_ON_FIRE} fill={DS_DAYLIGHT.color.accent} />
             <Path d={FLAME_INNER_ON_FIRE} fill={p.inner} />
             {p.hotspot ? (
               <Circle cx={24} cy={36} r={4.5} fill={p.hotspot} />
@@ -205,7 +207,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={12}
               x2={24}
               y2={26}
-              stroke={DS_COLORS_V2.streak.frozenStroke}
+              stroke={DS_DAYLIGHT.color.inkMuted2}
               strokeWidth={1.5}
               strokeLinecap="round"
             />
@@ -214,7 +216,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={19}
               x2={31}
               y2={19}
-              stroke={DS_COLORS_V2.streak.frozenStroke}
+              stroke={DS_DAYLIGHT.color.inkMuted2}
               strokeWidth={1.5}
               strokeLinecap="round"
             />
@@ -223,7 +225,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={14}
               x2={29}
               y2={24}
-              stroke={DS_COLORS_V2.streak.frozenStroke}
+              stroke={DS_DAYLIGHT.color.inkMuted2}
               strokeWidth={1.5}
               strokeLinecap="round"
             />
@@ -232,7 +234,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={14}
               x2={19}
               y2={24}
-              stroke={DS_COLORS_V2.streak.frozenStroke}
+              stroke={DS_DAYLIGHT.color.inkMuted2}
               strokeWidth={1.5}
               strokeLinecap="round"
             />

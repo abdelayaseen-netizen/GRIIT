@@ -13,18 +13,14 @@
  *   `user_display_name`, not `username` — see project memory + spec push-back.
  */
 import React, { useCallback } from 'react';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Flame } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import { ROUTES } from '@/lib/routes';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 import { Avatar } from '@/components/Avatar';
 import { SkeletonBase } from '@/components/skeletons';
 import {
@@ -40,25 +36,24 @@ export type ForYouHeroProps = {
   loading: boolean;
 };
 
-const FALLBACK_GRADIENT = DS_COLORS_V2.surface.heroDarkWarmGradient;
+const HERO_HEIGHT = 236;
 
-const PHOTO_GRADIENT: readonly [string, string, string] = [
-  DS_COLORS_V2.overlay.photoGradientDeep,
-  DS_COLORS_V2.overlay.photoGradientLight,
-  DS_COLORS_V2.overlay.photoGradientClear,
+const FALLBACK_GRADIENT: readonly [string, string] = [
+  DS_DAYLIGHT.color.photoBaseDark,
+  DS_DAYLIGHT.color.darkCanvas,
 ];
 
-// Difficulty pill colour ramps. We render the pill on a *photo*, so the
-// background is a translucent black chip and the text picks up the green /
-// amber / red foreground from the V2 difficulty palette.
-function difficultyTone(d: HeroFeaturedDifficulty): { label: string; fg: string } {
-  if (d === 'EASY') {
-    return { label: 'EASY', fg: DS_COLORS_V2.difficulty.easy.fg };
-  }
-  if (d === 'HARD') {
-    return { label: 'HARD', fg: DS_COLORS_V2.difficulty.hard.fg };
-  }
-  return { label: 'MED', fg: DS_COLORS_V2.difficulty.medium.fg };
+const PHOTO_GRADIENT: readonly [string, string] = [
+  DS_DAYLIGHT.color.photoGradientStrong,
+  'transparent',
+];
+
+// Difficulty label only. On a Daylight photo card the pill is a glass chip with
+// white text, so we no longer ramp the foreground colour by difficulty.
+function difficultyLabel(d: HeroFeaturedDifficulty): string {
+  if (d === 'EASY') return 'EASY';
+  if (d === 'HARD') return 'HARD';
+  return 'MED';
 }
 
 function proofTypeLabel(p: HeroFeaturedProofType): string {
@@ -90,16 +85,18 @@ export const ForYouHero = React.memo(function ForYouHero({
   }, [router, data?.id, data?.slug]);
 
   if (loading || !data) {
-    const w = Dimensions.get('window').width - DS_SPACING_V2.md * 2;
-    const h = Math.round(w * (5 / 4));
     return (
       <View style={styles.outer}>
-        <SkeletonBase width="100%" height={h} borderRadius={DS_RADIUS_V2.xl} />
+        <SkeletonBase
+          width="100%"
+          height={HERO_HEIGHT}
+          borderRadius={DS_DAYLIGHT.radius.card}
+        />
       </View>
     );
   }
 
-  const { label: diffLabel, fg: diffFg } = difficultyTone(data.difficulty);
+  const diffLabel = difficultyLabel(data.difficulty);
   const photo = data.featuredProof?.photo_url ?? null;
   const attributionLine = data.featuredProof
     ? `${data.featuredProof.user_display_name}'s day ${data.featuredProof.day_number} proof`
@@ -137,7 +134,7 @@ export const ForYouHero = React.memo(function ForYouHero({
         {/* Bottom-anchored single gradient — anchored to bottom 65% of card */}
         <LinearGradient
           colors={PHOTO_GRADIENT}
-          locations={[0, 0.5, 1]}
+          locations={[0, 1]}
           start={{ x: 0.5, y: 1 }}
           end={{ x: 0.5, y: 0 }}
           style={styles.legibilityGradient}
@@ -148,7 +145,7 @@ export const ForYouHero = React.memo(function ForYouHero({
         <View style={styles.trendingBadge}>
           <Flame
             size={11}
-            color={DS_COLORS_V2.brand.primaryOnDark}
+            color={DS_DAYLIGHT.color.textOnPhoto}
             strokeWidth={2}
           />
           <Text style={styles.trendingText}>TRENDING NOW</Text>
@@ -156,33 +153,35 @@ export const ForYouHero = React.memo(function ForYouHero({
 
         {/* Top-right difficulty pill */}
         <View style={styles.diffPill}>
-          <Text style={[styles.diffPillText, { color: diffFg }]}>{diffLabel}</Text>
+          <Text style={styles.diffPillText}>{diffLabel}</Text>
         </View>
 
         {/* Bottom content */}
         <View style={styles.bottom}>
-          {attributionLine ? (
-            <View style={styles.attributionRow}>
-              <Avatar
-                url={null}
-                name={data.featuredProof?.user_display_name ?? '?'}
-                size={24}
-                userId={data.featuredProof?.user_display_name ?? data.id}
-                style={styles.avatarRing}
-              />
-              <Text style={styles.attributionText} numberOfLines={1}>
-                {attributionLine}
-              </Text>
-            </View>
-          ) : null}
+          <View style={styles.bottomTextCol}>
+            {attributionLine ? (
+              <View style={styles.attributionRow}>
+                <Avatar
+                  url={null}
+                  name={data.featuredProof?.user_display_name ?? '?'}
+                  size={20}
+                  userId={data.featuredProof?.user_display_name ?? data.id}
+                  style={styles.avatarRing}
+                />
+                <Text style={styles.attributionText} numberOfLines={1}>
+                  {attributionLine}
+                </Text>
+              </View>
+            ) : null}
 
-          <Text style={styles.title} numberOfLines={2}>
-            {data.name}
-          </Text>
+            <Text style={styles.title} numberOfLines={2}>
+              {data.name}
+            </Text>
 
-          <Text style={styles.meta} numberOfLines={1}>
-            {metaLine}
-          </Text>
+            <Text style={styles.meta} numberOfLines={1}>
+              {metaLine}
+            </Text>
+          </View>
 
           <Pressable
             onPress={handleOpen}
@@ -191,7 +190,7 @@ export const ForYouHero = React.memo(function ForYouHero({
             hitSlop={HIT_SLOP}
             style={({ pressed }) => [styles.cta, pressed ? styles.ctaPressed : null]}
           >
-            <Text style={styles.ctaText}>Start challenge</Text>
+            <Text style={styles.ctaText}>Start</Text>
           </Pressable>
         </View>
       </Pressable>
@@ -203,15 +202,15 @@ export default ForYouHero;
 
 const styles = StyleSheet.create({
   outer: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    marginBottom: DS_SPACING_V2.xs,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    marginBottom: DS_DAYLIGHT.space.rowGapV,
   },
   card: {
-    aspectRatio: 4 / 5,
+    height: HERO_HEIGHT,
     width: '100%',
-    borderRadius: DS_RADIUS_V2.xl,
+    borderRadius: DS_DAYLIGHT.radius.card,
     overflow: 'hidden',
-    backgroundColor: DS_COLORS_V2.surface.heroDark,
+    backgroundColor: DS_DAYLIGHT.color.photoBaseDark,
   },
   legibilityGradient: {
     position: 'absolute',
@@ -229,14 +228,17 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.overlay.chipOnPhoto55,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.glassChipOnPhotoBg,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.glassChipOnPhotoBorder,
   },
   trendingText: {
+    fontFamily: DS_DAYLIGHT.fontFamily,
     fontSize: 9,
-    fontWeight: '500',
+    fontWeight: DS_DAYLIGHT.weight.semibold,
     letterSpacing: 0.8,
-    color: DS_COLORS_V2.text.onDark,
+    color: DS_DAYLIGHT.color.textOnPhoto,
   },
   diffPill: {
     position: 'absolute',
@@ -244,20 +246,31 @@ const styles = StyleSheet.create({
     right: 14,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.overlay.chipOnPhoto70,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.glassChipOnPhotoBg,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.glassChipOnPhotoBorder,
   },
   diffPillText: {
+    fontFamily: DS_DAYLIGHT.fontFamily,
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: DS_DAYLIGHT.weight.semibold,
     letterSpacing: 0.6,
+    color: DS_DAYLIGHT.color.textOnPhoto,
   },
   bottom: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 14,
-    gap: 6,
+    left: 22,
+    right: 22,
+    bottom: 20,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  bottomTextCol: {
+    flex: 1,
+    gap: 4,
   },
   attributionRow: {
     flexDirection: 'row',
@@ -267,32 +280,35 @@ const styles = StyleSheet.create({
   },
   avatarRing: {
     borderWidth: 1.5,
-    borderColor: DS_COLORS_V2.brand.primaryOnDark,
-    borderRadius: 12,
+    borderColor: DS_DAYLIGHT.color.textOnPhoto,
+    borderRadius: 10,
   },
   attributionText: {
     flex: 1,
-    fontSize: 10,
-    fontWeight: '400',
-    color: DS_COLORS_V2.overlay.textOnPhoto85,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 11,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.textOnPhotoDim,
   },
   title: {
-    fontSize: 26,
-    fontWeight: '500',
-    lineHeight: 29,
-    letterSpacing: -0.4,
-    color: DS_COLORS_V2.text.onDark,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 24,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    lineHeight: 27,
+    letterSpacing: -0.24,
+    color: DS_DAYLIGHT.color.textOnPhoto,
   },
   meta: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: DS_COLORS_V2.overlay.textOnPhoto70,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.textOnPhotoDim,
   },
   cta: {
-    marginTop: DS_SPACING_V2.sm,
-    backgroundColor: DS_COLORS_V2.brand.primary,
-    borderRadius: 12,
-    paddingVertical: 13,
+    backgroundColor: DS_DAYLIGHT.color.white,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -300,8 +316,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   ctaText: {
+    fontFamily: DS_DAYLIGHT.fontFamily,
     fontSize: 14,
-    fontWeight: '500',
-    color: DS_COLORS_V2.brand.primaryText,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
 });

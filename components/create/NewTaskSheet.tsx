@@ -40,11 +40,7 @@ import {
   BookOpen,
 } from "lucide-react-native";
 
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from "@/lib/design-system";
+import { DS_DAYLIGHT } from "@/lib/design-system";
 import { FLAGS } from "@/lib/feature-flags";
 import type {
   RunGoalType,
@@ -293,7 +289,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
             }}
             keyboardType="number-pad"
             placeholder="30"
-            placeholderTextColor={DS_COLORS_V2.text.tertiary}
+            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
             style={styles.configInput}
           />
         </View>
@@ -320,7 +316,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
             }}
             keyboardType="number-pad"
             placeholder={state.type === "water" ? "8" : "10"}
-            placeholderTextColor={DS_COLORS_V2.text.tertiary}
+            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
             style={styles.configInput}
           />
           {state.type === "counter" ? (
@@ -331,7 +327,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                 value={state.counterUnit ?? ""}
                 onChangeText={(v) => setState((p) => ({ ...p, counterUnit: v }))}
                 placeholder="cups, pages, reps…"
-                placeholderTextColor={DS_COLORS_V2.text.tertiary}
+                placeholderTextColor={DS_DAYLIGHT.color.placeholder}
                 style={styles.configInput}
               />
             </>
@@ -433,7 +429,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                 }}
                 keyboardType="decimal-pad"
                 placeholder={targetPlaceholder}
-                placeholderTextColor={DS_COLORS_V2.text.tertiary}
+                placeholderTextColor={DS_DAYLIGHT.color.placeholder}
                 style={[styles.configInput, styles.runTargetInput]}
               />
               <Text style={styles.runUnitText}>{unitSuffix}</Text>
@@ -503,6 +499,9 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <SafeAreaView edges={["bottom"]} style={styles.flex}>
+          <View style={styles.handleRow}>
+            <View style={styles.handle} />
+          </View>
           <View style={styles.header}>
             <Pressable
               accessibilityRole="button"
@@ -549,7 +548,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                     setState((p) => ({ ...p, name: v.slice(0, NAME_MAX) }))
                   }
                   placeholder="e.g. Morning run, Read 10 pages"
-                  placeholderTextColor={DS_COLORS_V2.text.tertiary}
+                  placeholderTextColor={DS_DAYLIGHT.color.placeholder}
                   maxLength={NAME_MAX}
                   style={styles.nameInput}
                 />
@@ -575,10 +574,19 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                     >
                       {t.icon({
                         size: 20,
-                        color: DS_COLORS_V2.brand.primary,
+                        color: selected
+                          ? DS_DAYLIGHT.color.accent
+                          : DS_DAYLIGHT.color.inkSecondary,
                         strokeWidth: 2,
                       })}
-                      <Text style={styles.typeLabel}>{t.label}</Text>
+                      <Text
+                        style={[
+                          styles.typeLabel,
+                          selected ? styles.typeLabelSelected : null,
+                        ]}
+                      >
+                        {t.label}
+                      </Text>
                       <Text style={styles.typeSub} numberOfLines={1}>
                         {t.sub}
                       </Text>
@@ -616,10 +624,19 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                       >
                         {t.icon({
                           size: 20,
-                          color: DS_COLORS_V2.brand.primary,
+                          color: selected
+                            ? DS_DAYLIGHT.color.accent
+                            : DS_DAYLIGHT.color.inkSecondary,
                           strokeWidth: 2,
                         })}
-                        <Text style={styles.typeLabel}>{t.label}</Text>
+                        <Text
+                          style={[
+                            styles.typeLabel,
+                            selected ? styles.typeLabelSelected : null,
+                          ]}
+                        >
+                          {t.label}
+                        </Text>
                         <Text style={styles.typeSub} numberOfLines={1}>
                           {t.sub}
                         </Text>
@@ -635,9 +652,9 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
             <View style={styles.hardCard}>
               <View style={styles.hardHeader}>
                 <ShieldAlert
-                  size={16}
-                  color={DS_COLORS_V2.streak.securedYellow}
-                  strokeWidth={2}
+                  size={19}
+                  color={DS_DAYLIGHT.color.inkSecondary}
+                  strokeWidth={1.9}
                 />
                 <Text style={styles.hardTitle}>Verified proof</Text>
                 <Switch
@@ -655,10 +672,10 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
                     }))
                   }
                   trackColor={{
-                    false: DS_COLORS_V2.overlay.onDarkSurface10,
-                    true: DS_COLORS_V2.brand.primaryOnDark,
+                    false: DS_DAYLIGHT.color.toggleOffTrack,
+                    true: DS_DAYLIGHT.color.accent,
                   }}
-                  thumbColor={DS_COLORS_V2.text.onDark}
+                  thumbColor={DS_DAYLIGHT.color.white}
                 />
               </View>
               <Text style={styles.hardSub}>
@@ -683,11 +700,11 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
               ]}
             >
               <Plus
-                size={14}
+                size={16}
                 color={
                   canSave
-                    ? DS_COLORS_V2.brand.primaryText
-                    : DS_COLORS_V2.text.tertiary
+                    ? DS_DAYLIGHT.color.white
+                    : DS_DAYLIGHT.color.inkMuted2
                 }
                 strokeWidth={2}
               />
@@ -708,15 +725,24 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas },
+  flex: { flex: 1, backgroundColor: DS_DAYLIGHT.color.canvas },
+  handleRow: {
+    alignItems: "center",
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: DS_DAYLIGHT.color.handle,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: DS_SPACING_V2.md,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
     paddingVertical: 12,
     gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS_V2.surface.divider,
   },
   headerBtn: {
     minWidth: 56,
@@ -728,129 +754,141 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   cancelText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.accent,
   },
   headerTitle: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.cardTitle,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
     textAlign: "center",
+    letterSpacing: -0.2,
   },
   saveText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.accent,
   },
-  saveTextDisabled: { color: DS_COLORS_V2.text.tertiary },
+  saveTextDisabled: { color: DS_DAYLIGHT.color.inkMuted2 },
 
   scroll: { flex: 1 },
   scrollContent: {
-    padding: DS_SPACING_V2.md,
-    gap: DS_SPACING_V2.md,
+    padding: DS_DAYLIGHT.space.screenH,
+    gap: 14,
     paddingBottom: 40,
   },
 
   section: { gap: 8 },
   label: {
-    fontSize: 9,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.secondary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: DS_DAYLIGHT.color.inkMuted,
   },
   nameCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.md,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_DAYLIGHT.radius.field,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
   nameInput: {
-    fontSize: 14,
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.title,
+    color: DS_DAYLIGHT.color.ink,
     paddingVertical: 8,
   },
 
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   typeCard: {
     flexBasis: "31%",
     flexGrow: 0,
     paddingHorizontal: 10,
-    paddingVertical: 12,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    paddingVertical: 13,
+    borderRadius: DS_DAYLIGHT.radius.field,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
     alignItems: "flex-start",
-    gap: 4,
+    gap: 6,
   },
   typeCardSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
+    borderColor: DS_DAYLIGHT.color.accent,
     borderWidth: 1.5,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   typeLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkSecondary,
+  },
+  typeLabelSelected: {
+    color: DS_DAYLIGHT.color.accent,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
   },
   typeSub: {
-    fontSize: 10,
-    color: DS_COLORS_V2.text.secondary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
   needMore: { paddingVertical: 4 },
   needMoreText: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.accent,
   },
 
   configCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.md,
-    padding: 12,
+    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
   configInput: {
-    fontSize: 14,
-    color: DS_COLORS_V2.text.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-  },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  presetChip: {
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    color: DS_DAYLIGHT.color.ink,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+  },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
+  presetChip: {
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
   presetChipSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    borderColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   presetChipText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkSecondary,
   },
-  presetChipTextSelected: { color: DS_COLORS_V2.brand.primary },
+  presetChipTextSelected: {
+    color: DS_DAYLIGHT.color.accent,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+  },
   presetChipDisabled: {
     opacity: 0.4,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-    borderColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
-  presetChipTextDisabled: { color: DS_COLORS_V2.text.tertiary },
+  presetChipTextDisabled: { color: DS_DAYLIGHT.color.inkMuted2 },
   runHint: {
-    fontSize: 11,
-    color: DS_COLORS_V2.text.tertiary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
 
   runTargetHeader: {
@@ -862,70 +900,74 @@ const styles = StyleSheet.create({
   runTargetRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   runTargetInput: { flex: 1 },
   runUnitText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.secondary,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkMuted,
   },
   justTrackChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
   justTrackChipSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    borderColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   justTrackText: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.secondary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkMuted,
   },
-  justTrackTextSelected: { color: DS_COLORS_V2.brand.primary },
+  justTrackTextSelected: {
+    color: DS_DAYLIGHT.color.accent,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+  },
 
   hardCard: {
-    backgroundColor: DS_COLORS_V2.surface.heroDark,
-    borderRadius: DS_RADIUS_V2.md,
-    padding: 14,
+    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    padding: 16,
     gap: 8,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
-  hardHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  hardHeader: { flexDirection: "row", alignItems: "center", gap: 11 },
   hardTitle: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.onDark,
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.ink,
   },
   hardSub: {
-    fontSize: 11,
-    color: DS_COLORS_V2.text.onDarkSecondary,
-    lineHeight: 16,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    color: DS_DAYLIGHT.color.inkMuted,
+    lineHeight: 17,
   },
 
   footer: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingVertical: DS_SPACING_V2.sm,
-    borderTopWidth: 1,
-    borderTopColor: DS_COLORS_V2.surface.divider,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   footerCta: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    paddingVertical: 13,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    height: 54,
+    borderRadius: DS_DAYLIGHT.radius.buttonLg,
+    backgroundColor: DS_DAYLIGHT.color.accent,
   },
-  footerCtaDisabled: { backgroundColor: DS_COLORS_V2.surface.divider },
+  footerCtaDisabled: { backgroundColor: DS_DAYLIGHT.color.segmentTrack },
   footerCtaText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primaryText,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.white,
   },
-  footerCtaTextDisabled: { color: DS_COLORS_V2.text.tertiary },
+  footerCtaTextDisabled: { color: DS_DAYLIGHT.color.inkMuted2 },
   pressed: { opacity: 0.85 },
 });
 

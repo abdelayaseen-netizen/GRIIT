@@ -26,11 +26,7 @@ import { useRouter } from "expo-router";
 import { ChevronLeft, X } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from "@/lib/design-system";
+import { DS_DAYLIGHT } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import { TRPC } from "@/lib/trpc-paths";
 import { trpcMutate } from "@/lib/trpc";
@@ -332,7 +328,7 @@ export function CreateWizardV2() {
             ) : (
               <ChevronLeft
                 size={20}
-                color={DS_COLORS_V2.text.primary}
+                color={DS_DAYLIGHT.color.ink}
                 strokeWidth={2}
               />
             )}
@@ -439,6 +435,9 @@ export function CreateWizardV2() {
         >
           <View style={styles.modalBackdrop}>
             <View style={styles.modalCard}>
+              <View style={styles.modalHandleRow}>
+                <View style={styles.modalHandle} />
+              </View>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Review &amp; launch</Text>
                 <Pressable
@@ -449,7 +448,7 @@ export function CreateWizardV2() {
                 >
                   <X
                     size={18}
-                    color={DS_COLORS_V2.text.secondary}
+                    color={DS_DAYLIGHT.color.inkMuted}
                     strokeWidth={2}
                   />
                 </Pressable>
@@ -496,14 +495,14 @@ export function CreateWizardV2() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas },
+  flex: { flex: 1, backgroundColor: DS_DAYLIGHT.color.canvas },
   headerBar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: DS_SPACING_V2.md,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
     paddingTop: 4,
-    paddingBottom: DS_SPACING_V2.sm,
-    gap: DS_SPACING_V2.sm,
+    paddingBottom: 12,
+    gap: 12,
   },
   headerBtn: {
     minWidth: 56,
@@ -513,64 +512,77 @@ const styles = StyleSheet.create({
   },
   headerBtnSpacer: { minWidth: 56, height: 32 },
   cancelText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.accent,
   },
   stepLabel: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkMuted,
     textAlign: "center",
   },
   progressRow: {
     flexDirection: "row",
     gap: 6,
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingBottom: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingBottom: 12,
   },
-  progressSeg: { flex: 1, height: 3, borderRadius: 2 },
-  progressSegActive: { backgroundColor: DS_COLORS_V2.brand.primary },
-  progressSegInactive: { backgroundColor: DS_COLORS_V2.surface.divider },
+  progressSeg: { flex: 1, height: 4, borderRadius: 2 },
+  progressSegActive: { backgroundColor: DS_DAYLIGHT.color.accent },
+  progressSegInactive: { backgroundColor: DS_DAYLIGHT.color.dividerStrong },
 
   scroll: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingBottom: DS_SPACING_V2.lg,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingBottom: 24,
   },
 
   footer: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingTop: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: 12,
     paddingBottom: 4,
   },
   primaryBtn: {
-    paddingVertical: 13,
-    borderRadius: DS_RADIUS_V2.md,
+    height: 56,
+    borderRadius: DS_DAYLIGHT.radius.buttonLg,
     alignItems: "center",
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    justifyContent: "center",
+    backgroundColor: DS_DAYLIGHT.color.accent,
   },
-  primaryBtnDisabled: { backgroundColor: DS_COLORS_V2.surface.divider },
+  primaryBtnDisabled: { backgroundColor: DS_DAYLIGHT.color.segmentTrack },
   primaryBtnText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primaryText,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.white,
   },
-  primaryBtnTextDisabled: { color: DS_COLORS_V2.text.tertiary },
+  primaryBtnTextDisabled: { color: DS_DAYLIGHT.color.inkMuted2 },
   pressed: { opacity: 0.85 },
 
   modalBackdrop: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: DS_COLORS_V2.overlay.photoGradientStrong,
+    backgroundColor: DS_DAYLIGHT.color.photoGradientStrong,
   },
   modalCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderTopLeftRadius: DS_RADIUS_V2.xl,
-    borderTopRightRadius: DS_RADIUS_V2.xl,
-    padding: DS_SPACING_V2.md,
+    backgroundColor: DS_DAYLIGHT.color.canvas,
+    borderTopLeftRadius: DS_DAYLIGHT.radius.sheet,
+    borderTopRightRadius: DS_DAYLIGHT.radius.sheet,
+    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingTop: 12,
+    paddingBottom: 28,
     gap: 12,
+  },
+  modalHandleRow: {
+    alignItems: "center",
+    paddingBottom: 8,
+  },
+  modalHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: DS_DAYLIGHT.color.handle,
   },
   modalHeader: {
     flexDirection: "row",
@@ -578,37 +590,40 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   modalTitle: {
-    fontSize: 17,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
   summaryLine: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
   summaryText: {
-    fontSize: 12,
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    color: DS_DAYLIGHT.color.inkSecondary,
   },
   errorText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS_V2.semantic.danger,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.accentAccessible,
     textAlign: "center",
   },
   modalCta: {
-    paddingVertical: 13,
-    borderRadius: DS_RADIUS_V2.md,
+    height: 54,
+    borderRadius: DS_DAYLIGHT.radius.buttonLg,
     alignItems: "center",
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    justifyContent: "center",
+    backgroundColor: DS_DAYLIGHT.color.accent,
     marginTop: 4,
   },
   modalCtaText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primaryText,
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.white,
   },
 });
 

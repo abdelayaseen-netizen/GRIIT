@@ -14,11 +14,7 @@ import {
 } from "react-native";
 import { Lightbulb, User, Users } from "lucide-react-native";
 
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from "@/lib/design-system";
+import { DS_DAYLIGHT } from "@/lib/design-system";
 
 export type WizardWho = "solo" | "group";
 
@@ -71,7 +67,7 @@ export function StepBasics({
           value={title}
           onChangeText={(t) => onChangeTitle(t.slice(0, TITLE_MAX))}
           placeholder="e.g. Read 30 min before phone"
-          placeholderTextColor={DS_COLORS_V2.text.tertiary}
+          placeholderTextColor={DS_DAYLIGHT.color.placeholder}
           maxLength={TITLE_MAX}
           style={styles.input}
         />
@@ -136,7 +132,7 @@ export function StepBasics({
               }
             }}
             placeholder="Custom"
-            placeholderTextColor={DS_COLORS_V2.text.tertiary}
+            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
             keyboardType="number-pad"
             style={styles.durationCustomInput}
           />
@@ -156,8 +152,8 @@ export function StepBasics({
             size={18}
             color={
               who === "solo"
-                ? DS_COLORS_V2.brand.primary
-                : DS_COLORS_V2.text.primary
+                ? DS_DAYLIGHT.color.accent
+                : DS_DAYLIGHT.color.inkSecondary
             }
             strokeWidth={2}
           />
@@ -177,8 +173,8 @@ export function StepBasics({
             size={18}
             color={
               who === "group"
-                ? DS_COLORS_V2.brand.primary
-                : DS_COLORS_V2.text.primary
+                ? DS_DAYLIGHT.color.accent
+                : DS_DAYLIGHT.color.inkSecondary
             }
             strokeWidth={2}
           />
@@ -192,7 +188,7 @@ export function StepBasics({
       <View style={styles.hintCard}>
         <Lightbulb
           size={14}
-          color={DS_COLORS_V2.brand.primary}
+          color={DS_DAYLIGHT.color.accent}
           strokeWidth={2}
         />
         <Text style={styles.hintText}>
@@ -204,34 +200,33 @@ export function StepBasics({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, paddingTop: DS_SPACING_V2.sm },
+  wrap: { gap: 12, paddingTop: 8 },
   h1: {
-    fontSize: 22,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: 23,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
     letterSpacing: -0.4,
   },
   sub: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.secondary,
-    marginTop: -6,
+    fontSize: DS_DAYLIGHT.size.eyebrow,
+    color: DS_DAYLIGHT.color.inkMuted,
+    marginTop: -2,
   },
   inputCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.md,
-    padding: 12,
+    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_DAYLIGHT.radius.field,
+    padding: 14,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
     gap: 8,
     marginTop: 4,
   },
   inputCardFocused: {
-    borderColor: DS_COLORS_V2.brand.primary,
-    borderWidth: 2,
+    borderColor: DS_DAYLIGHT.color.accent,
   },
   input: {
-    fontSize: 15,
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.title,
+    color: DS_DAYLIGHT.color.ink,
     paddingVertical: 4,
   },
   inputFootRow: {
@@ -239,63 +234,63 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   inputFootText: {
-    fontSize: 11,
-    color: DS_COLORS_V2.text.secondary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
-  inputFootOk: { color: DS_COLORS_V2.semantic.success },
+  inputFootOk: { color: DS_DAYLIGHT.color.accent },
   exampleText: {
-    fontSize: 11,
-    color: DS_COLORS_V2.text.tertiary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    color: DS_DAYLIGHT.color.inkMuted2,
     marginTop: -2,
   },
 
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
     marginTop: 12,
   },
   durationGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 9,
   },
   durationChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
-  durationChipRecommended: {
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-    borderColor: DS_COLORS_V2.brand.primary,
-  },
+  durationChipRecommended: {},
   durationChipSelected: {
-    backgroundColor: DS_COLORS_V2.brand.primary,
-    borderColor: DS_COLORS_V2.brand.primary,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderColor: DS_DAYLIGHT.color.accentTint,
   },
   durationText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: 14,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkSecondary,
   },
-  durationTextSelected: { color: DS_COLORS_V2.brand.primaryText },
+  durationTextSelected: {
+    color: DS_DAYLIGHT.color.accent,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+  },
   durationCustomCell: {
     minWidth: 100,
     flexShrink: 0,
   },
   durationCustomInput: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+    fontSize: 14,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.ink,
     minWidth: 100,
   },
 
@@ -306,27 +301,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     padding: 14,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: DS_DAYLIGHT.radius.cardMd,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
   },
   whoCardSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
+    borderColor: DS_DAYLIGHT.color.accent,
     borderWidth: 1.5,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   whoBody: { gap: 2 },
   whoTitle: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
   whoSub: {
-    fontSize: 9,
-    fontWeight: "500",
+    fontSize: 10,
+    fontWeight: DS_DAYLIGHT.weight.medium,
     letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.secondary,
+    color: DS_DAYLIGHT.color.inkMuted,
     textTransform: "uppercase",
   },
 
@@ -334,16 +329,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    padding: 10,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    padding: 12,
+    borderRadius: DS_DAYLIGHT.radius.cardMd,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
     marginTop: 4,
   },
   hintText: {
     flex: 1,
-    fontSize: 11,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.accent,
   },
 });
 

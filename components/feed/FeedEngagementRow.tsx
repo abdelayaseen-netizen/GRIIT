@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Heart, MessageCircle, ArrowUpRight } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
+import { DS_DAYLIGHT } from "@/lib/design-system";
 
 type Props = {
   respectCount: number;
@@ -27,7 +27,7 @@ function FeedEngagementRowInner({
 
   return (
     <View style={styles.row}>
-      <View style={[styles.pill, reactedByMe && styles.pillActive]}>
+      <View style={styles.item}>
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -48,15 +48,16 @@ function FeedEngagementRowInner({
             ]).start();
             onRespect();
           }}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={reactedByMe ? "Remove respect" : "Give respect"}
           accessibilityState={{ selected: reactedByMe }}
         >
           <Animated.View style={{ transform: [{ scale: heartBounce }] }}>
             <Heart
-              size={16}
-              color={reactedByMe ? DS_COLORS.FEED_RESPECT_ICON_FILL : DS_COLORS.FEED_ENGAGEMENT_MUTED}
-              fill={reactedByMe ? DS_COLORS.FEED_RESPECT_ICON_FILL : "none"}
+              size={23}
+              color={DS_DAYLIGHT.color.accent}
+              fill={reactedByMe ? DS_DAYLIGHT.color.accent : "none"}
             />
           </Animated.View>
         </Pressable>
@@ -68,21 +69,18 @@ function FeedEngagementRowInner({
             accessibilityRole="button"
             accessibilityLabel="See who respected"
           >
-            <Text style={[styles.count, reactedByMe && styles.countActive]}>{respectCount}</Text>
+            <Text style={styles.count}>{respectCount}</Text>
           </Pressable>
         ) : null}
       </View>
 
-      <Pressable onPress={onComment} style={styles.pill} accessibilityRole="button" accessibilityLabel="Comments">
-        <MessageCircle size={16} color={DS_COLORS.FEED_ENGAGEMENT_MUTED} />
+      <Pressable onPress={onComment} style={styles.item} hitSlop={8} accessibilityRole="button" accessibilityLabel="Comments">
+        <MessageCircle size={22} color={DS_DAYLIGHT.color.iconInk} strokeWidth={2} />
         {commentCount > 0 ? <Text style={styles.count}>{commentCount}</Text> : null}
       </Pressable>
 
-      <View style={styles.spacer} />
-
-      <Pressable onPress={onShare} style={styles.pill} accessibilityRole="button" accessibilityLabel="Share">
-        <ArrowUpRight size={16} color={DS_COLORS.FEED_ENGAGEMENT_MUTED} />
-        <Text style={styles.shareLabel}>Share</Text>
+      <Pressable onPress={onShare} style={styles.item} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share">
+        <ArrowUpRight size={22} color={DS_DAYLIGHT.color.iconInk} strokeWidth={2} />
       </Pressable>
     </View>
   );
@@ -94,34 +92,18 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    gap: 4,
+    paddingTop: 13,
+    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    gap: 22,
   },
-  pill: {
+  item: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: DS_RADIUS.modal,
-    backgroundColor: DS_COLORS.TRANSPARENT,
-  },
-  pillActive: {
-    backgroundColor: DS_COLORS.FEED_RESPECT_ACTIVE_BG,
+    gap: 7,
   },
   count: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS.FEED_ENGAGEMENT_MUTED,
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
-  countActive: {
-    color: DS_COLORS.FEED_RESPECT_ACTIVE_TEXT,
-  },
-  shareLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS.FEED_ENGAGEMENT_MUTED,
-  },
-  spacer: { flex: 1 },
 });

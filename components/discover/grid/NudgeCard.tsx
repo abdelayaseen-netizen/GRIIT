@@ -17,11 +17,7 @@ import { Flame, Plus, Zap } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import { ROUTES } from '@/lib/routes';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 
 export type NudgeVariant =
   | 'badge_in_reach'
@@ -88,7 +84,7 @@ export const NudgeCard = React.memo(function NudgeCard({
           <View style={styles.iconWrapBadge}>
             <Zap
               size={16}
-              color={DS_COLORS_V2.brand.primary}
+              color={DS_DAYLIGHT.color.accent}
               strokeWidth={2}
             />
           </View>
@@ -115,7 +111,7 @@ export const NudgeCard = React.memo(function NudgeCard({
           <View style={styles.iconWrapRisk}>
             <Flame
               size={16}
-              color={DS_COLORS_V2.semantic.danger}
+              color={DS_DAYLIGHT.color.accent}
               strokeWidth={2}
             />
           </View>
@@ -141,7 +137,7 @@ export const NudgeCard = React.memo(function NudgeCard({
         <View style={styles.iconWrapCreate}>
           <Plus
             size={16}
-            color={DS_COLORS_V2.text.primary}
+            color={DS_DAYLIGHT.color.ink}
             strokeWidth={2}
           />
         </View>
@@ -160,22 +156,22 @@ export default NudgeCard;
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    padding: DS_DAYLIGHT.space.cardPad,
     gap: 4,
     minHeight: 96,
     justifyContent: 'space-between',
   },
   badgeBg: {
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   riskBg: {
-    backgroundColor: DS_COLORS_V2.semantic.dangerSoft,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   createBg: {
-    backgroundColor: DS_COLORS_V2.surface.card,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.dashedBorder,
     borderStyle: 'dashed',
   },
   iconRow: {
@@ -184,52 +180,58 @@ const styles = StyleSheet.create({
   iconWrapBadge: {
     width: 30,
     height: 30,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconWrapRisk: {
     width: 30,
     height: 30,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconWrapCreate: {
     width: 30,
     height: 30,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.canvas,
+    borderRadius: DS_DAYLIGHT.radius.chip,
+    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
     alignItems: 'center',
     justifyContent: 'center',
   },
   titleBadge: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: DS_COLORS_V2.brand.primaryHover,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.accentAccessible,
   },
   subBadge: {
-    fontSize: 10,
-    color: DS_COLORS_V2.brand.primary,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.meta,
+    color: DS_DAYLIGHT.color.accent,
   },
   titleRisk: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: DS_COLORS_V2.semantic.danger,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.accentAccessible,
   },
   subRisk: {
-    fontSize: 10,
-    color: DS_COLORS_V2.semantic.danger,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.meta,
+    color: DS_DAYLIGHT.color.accent,
   },
   titleCreate: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
   subCreate: {
-    fontSize: 10,
-    color: DS_COLORS_V2.text.secondary,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.meta,
+    color: DS_DAYLIGHT.color.inkMuted,
   },
 });

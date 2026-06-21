@@ -16,11 +16,7 @@ import {
   Zap,
 } from "lucide-react-native";
 
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from "@/lib/design-system";
+import { DS_DAYLIGHT } from "@/lib/design-system";
 
 export type WizardDifficulty = "standard" | "hard";
 export type WizardPhotoProof = "off" | "optional" | "required";
@@ -70,11 +66,19 @@ export function StepRules({
           icon={
             <ShieldCheck
               size={18}
-              color={DS_COLORS_V2.semantic.success}
+              color={
+                difficulty === "standard"
+                  ? DS_DAYLIGHT.color.accent
+                  : DS_DAYLIGHT.color.inkSecondary
+              }
               strokeWidth={2}
             />
           }
-          iconBg={DS_COLORS_V2.semantic.successSoft}
+          iconBg={
+            difficulty === "standard"
+              ? DS_DAYLIGHT.color.accentTint
+              : DS_DAYLIGHT.color.fieldNeutral
+          }
           title="Standard"
           subtitle="Recommended for first challenge"
           description="Streak freezes on. Miss a day and you don't reset."
@@ -85,11 +89,19 @@ export function StepRules({
           icon={
             <ShieldAlert
               size={18}
-              color={DS_COLORS_V2.proof.hardFg}
+              color={
+                difficulty === "hard"
+                  ? DS_DAYLIGHT.color.accent
+                  : DS_DAYLIGHT.color.inkSecondary
+              }
               strokeWidth={2}
             />
           }
-          iconBg={DS_COLORS_V2.proof.hardBg}
+          iconBg={
+            difficulty === "hard"
+              ? DS_DAYLIGHT.color.accentTint
+              : DS_DAYLIGHT.color.fieldNeutral
+          }
           title="Hard mode"
           subtitle="75 Hard style — no exceptions"
           description="No freezes. Miss a day, restart from day 1."
@@ -129,7 +141,7 @@ export function StepRules({
       <View style={styles.statChip}>
         <TrendingUp
           size={12}
-          color={DS_COLORS_V2.brand.primary}
+          color={DS_DAYLIGHT.color.accent}
           strokeWidth={2}
         />
         <Text style={styles.statChipText}>
@@ -156,8 +168,8 @@ export function StepRules({
               {c.icon({
                 size: 16,
                 color: selected
-                  ? DS_COLORS_V2.brand.primary
-                  : DS_COLORS_V2.text.primary,
+                  ? DS_DAYLIGHT.color.accent
+                  : DS_DAYLIGHT.color.inkSecondary,
                 strokeWidth: 2,
               })}
               <Text
@@ -221,129 +233,133 @@ function DifficultyCard({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, paddingTop: DS_SPACING_V2.sm },
+  wrap: { gap: 12, paddingTop: 8 },
   h1: {
-    fontSize: 22,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: 23,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
     letterSpacing: -0.4,
   },
   sub: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.secondary,
-    marginTop: -6,
+    fontSize: DS_DAYLIGHT.size.eyebrow,
+    color: DS_DAYLIGHT.color.inkMuted,
+    marginTop: -2,
   },
 
   diffStack: { gap: 10, marginTop: 4 },
   diffCard: {
     padding: 14,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
     gap: 8,
   },
   diffCardSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
+    borderColor: DS_DAYLIGHT.color.accent,
     borderWidth: 1.5,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   diffHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   diffIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: DS_DAYLIGHT.radius.field,
     alignItems: "center",
     justifyContent: "center",
   },
   diffHeaderBody: { flex: 1, gap: 2 },
   diffTitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.bodyLg,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
   },
   diffSubtitle: {
-    fontSize: 11,
-    color: DS_COLORS_V2.text.secondary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    color: DS_DAYLIGHT.color.inkMuted,
   },
   diffDescription: {
-    fontSize: 12,
-    color: DS_COLORS_V2.text.secondary,
-    lineHeight: 17,
+    fontSize: DS_DAYLIGHT.size.meta,
+    color: DS_DAYLIGHT.color.inkSecondary,
+    lineHeight: 18,
   },
 
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
     marginTop: 8,
   },
   pillRow: {
     flexDirection: "row",
-    padding: 4,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    padding: 3,
+    borderRadius: DS_DAYLIGHT.radius.field,
+    backgroundColor: DS_DAYLIGHT.color.segmentTrack,
   },
   pill: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 9,
     alignItems: "center",
-    borderRadius: DS_RADIUS_V2.full,
+    borderRadius: DS_DAYLIGHT.radius.chip,
   },
-  pillSelected: { backgroundColor: DS_COLORS_V2.surface.heroDark },
+  pillSelected: { backgroundColor: DS_DAYLIGHT.color.accentTint },
   pillText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkMuted,
   },
-  pillTextSelected: { color: DS_COLORS_V2.text.onDark },
+  pillTextSelected: {
+    color: DS_DAYLIGHT.color.accent,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+  },
 
   statChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    paddingVertical: 7,
+    borderRadius: DS_DAYLIGHT.radius.pill,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
     alignSelf: "flex-start",
   },
   statChipText: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.accent,
   },
 
   catGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 9,
   },
   catChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    paddingVertical: 12,
+    borderRadius: DS_DAYLIGHT.radius.field,
+    backgroundColor: DS_DAYLIGHT.color.card,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
     minWidth: "47%",
   },
   catChipSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
+    borderColor: DS_DAYLIGHT.color.accent,
     borderWidth: 1.5,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: DS_DAYLIGHT.color.accentTint,
   },
   catText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontSize: DS_DAYLIGHT.size.bodySm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.inkSecondary,
   },
-  catTextSelected: { color: DS_COLORS_V2.brand.primary },
+  catTextSelected: {
+    color: DS_DAYLIGHT.color.accent,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+  },
 });
 
 export default StepRules;

@@ -19,11 +19,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import { ROUTES } from '@/lib/routes';
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from '@/lib/design-system';
+import { DS_DAYLIGHT } from '@/lib/design-system';
 import { Avatar } from '@/components/Avatar';
 
 export type RecommendedChallengeDifficulty = 'EASY' | 'MED' | 'HARD';
@@ -58,30 +54,10 @@ function iconFor(category: string): LucideIcon {
   return Target;
 }
 
-function difficultyTone(d: RecommendedChallengeDifficulty): {
-  label: string;
-  fg: string;
-  bg: string;
-} {
-  if (d === 'EASY') {
-    return {
-      label: 'EASY',
-      fg: DS_COLORS_V2.difficulty.easy.fg,
-      bg: DS_COLORS_V2.difficulty.easy.bg,
-    };
-  }
-  if (d === 'HARD') {
-    return {
-      label: 'HARD',
-      fg: DS_COLORS_V2.difficulty.hard.fg,
-      bg: DS_COLORS_V2.difficulty.hard.bg,
-    };
-  }
-  return {
-    label: 'MED',
-    fg: DS_COLORS_V2.difficulty.medium.fg,
-    bg: DS_COLORS_V2.difficulty.medium.bg,
-  };
+function difficultyLabel(d: RecommendedChallengeDifficulty): string {
+  if (d === 'EASY') return 'Easy';
+  if (d === 'HARD') return 'Hard';
+  return 'Medium';
 }
 
 function dayWord(n: number): string {
@@ -97,10 +73,10 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
   }, [router, challenge.id]);
 
   const Icon = iconFor(challenge.category);
-  const diff = difficultyTone(challenge.difficulty);
+  const diffLabel = difficultyLabel(challenge.difficulty);
   const friendsCount = challenge.previewUsers.length;
-  const meta = `${challenge.duration} ${dayWord(challenge.duration)} · ${challenge.category}`;
-  const a11y = `${challenge.title}, ${meta}, ${diff.label} difficulty, tap to view`;
+  const meta = `${challenge.duration} ${dayWord(challenge.duration)} · ${diffLabel}`;
+  const a11y = `${challenge.title}, ${meta}, ${friendsCount === 1 ? '1 friend' : `${friendsCount} friends`}, tap to view`;
 
   return (
     <Pressable
@@ -109,35 +85,26 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
       accessibilityLabel={a11y}
       style={styles.card}
     >
-      <View style={styles.topRow}>
-        <View style={styles.iconWrap}>
-          <Icon
-            size={18}
-            color={DS_COLORS_V2.brand.primary}
-            strokeWidth={2}
-          />
-        </View>
-        <View style={[styles.diffPill, { backgroundColor: diff.bg }]}>
-          <Text style={[styles.diffText, { color: diff.fg }]}>{diff.label}</Text>
-        </View>
+      <View style={styles.photo}>
+        <Icon
+          size={30}
+          color={DS_DAYLIGHT.color.iconMuted}
+          strokeWidth={1.75}
+        />
       </View>
 
-      <Text style={styles.title} numberOfLines={2}>
-        {challenge.title}
-      </Text>
-      <Text style={styles.meta} numberOfLines={1}>
-        {meta}
-      </Text>
-
-      {friendsCount > 0 ? (
-        <View style={styles.socialRow}>
+      <View style={styles.titleRow}>
+        <Text style={styles.title} numberOfLines={1}>
+          {challenge.title}
+        </Text>
+        {friendsCount > 0 ? (
           <View style={styles.avatarStack}>
             {challenge.previewUsers.slice(0, 3).map((u, i) => (
               <Avatar
                 key={u.user_id}
                 url={u.avatar_url}
                 name={u.username ?? '?'}
-                size={18}
+                size={20}
                 userId={u.user_id}
                 style={[
                   styles.stackedAvatar,
@@ -146,13 +113,12 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
               />
             ))}
           </View>
-          <Text style={styles.socialText} numberOfLines={1}>
-            {friendsCount === 1 ? '1 friend' : `${friendsCount} friends`}
-          </Text>
-        </View>
-      ) : (
-        <Text style={styles.firstToday}>Be first today</Text>
-      )}
+        ) : null}
+      </View>
+
+      <Text style={styles.meta} numberOfLines={1}>
+        {meta}
+      </Text>
     </Pressable>
   );
 });
@@ -161,54 +127,36 @@ export default ChallengeGridCard;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    gap: 6,
+    gap: 1,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+  photo: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    backgroundColor: DS_DAYLIGHT.color.photoPlaceholder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  diffPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: DS_RADIUS_V2.sm,
-  },
-  diffText: {
-    fontSize: 9,
-    fontWeight: '500',
-    letterSpacing: 0.5,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.1,
-    marginTop: 4,
-  },
-  meta: {
-    fontSize: 10,
-    fontWeight: '400',
-    color: DS_COLORS_V2.text.secondary,
-  },
-  socialRow: {
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 6,
-    marginTop: 4,
+    marginTop: 10,
+  },
+  title: {
+    flex: 1,
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: 15.5,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -0.1,
+  },
+  meta: {
+    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
   avatarStack: {
     flexDirection: 'row',
@@ -216,21 +164,10 @@ const styles = StyleSheet.create({
   },
   stackedAvatar: {
     borderWidth: 1.5,
-    borderColor: DS_COLORS_V2.surface.card,
-    borderRadius: 9,
+    borderColor: DS_DAYLIGHT.color.canvas,
+    borderRadius: 10,
   },
   stackedAvatarOverlap: {
-    marginLeft: -5,
-  },
-  socialText: {
-    fontSize: 10,
-    fontWeight: '400',
-    color: DS_COLORS_V2.text.secondary,
-  },
-  firstToday: {
-    fontSize: 9,
-    fontWeight: '500',
-    color: DS_COLORS_V2.brand.primary,
-    marginTop: 4,
+    marginLeft: -7,
   },
 });
