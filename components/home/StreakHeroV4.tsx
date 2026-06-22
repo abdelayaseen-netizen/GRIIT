@@ -491,7 +491,6 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
   );
 }
 
-export default StreakHeroV4;
 
 // ──────────────────────────────────────────────────────────────────────────
 // Styles

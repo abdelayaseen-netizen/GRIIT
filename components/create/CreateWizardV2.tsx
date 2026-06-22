@@ -630,4 +630,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateWizardV2;
