@@ -26,16 +26,23 @@ export async function sendPush(params: {
 }
 
 /**
- * Loads profiles.push_token for the recipient. Skips if missing or empty.
- * Yaseen: ensure `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS push_token text;` has been run in Supabase.
+ * Loads the recipient's Expo push token from profiles.
+ * expo_push_token is the canonical column (original schema, written since launch).
+ * push_token is a later alias (20260429083000); both are written by registerToken.
+ * We select both and prefer the canonical one so either column satisfies the read.
  */
 export async function sendPushToProfile(
   supabase: SupabaseClient,
   recipientUserId: string,
   params: { title: string; body: string; data?: Record<string, unknown> }
 ): Promise<void> {
-  const { data } = await supabase.from("profiles").select("push_token").eq("user_id", recipientUserId).maybeSingle();
-  const token = (data as { push_token?: string | null } | null)?.push_token?.trim();
+  const { data } = await supabase
+    .from("profiles")
+    .select("expo_push_token, push_token")
+    .eq("user_id", recipientUserId)
+    .maybeSingle();
+  const row = data as { expo_push_token?: string | null; push_token?: string | null } | null;
+  const token = (row?.expo_push_token ?? row?.push_token)?.trim();
   if (!token) return;
   await sendPush({ toToken: token, ...params });
 }
