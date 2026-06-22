@@ -1,0 +1,75 @@
+Branch: chore/dead-code-sweep-20260621
+HEAD: 9b9c3c8d71152b3613021746dd2fcd29b4919751
+Date: Sun Jun 21 20:44:03 EDT 2026
+
+
+> expo-app@1.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ✓ backend/trpc/routes/last-stand.test.ts (10 tests) 3ms
+ ✓ lib/home-state.test.ts (4 tests) 1ms
+ ✓ backend/lib/progression.test.ts (9 tests) 3ms
+ ✓ backend/lib/streak.test.ts (5 tests) 2ms
+ ✓ lib/formatTimeAgo.test.ts (5 tests) 2ms
+ ✓ lib/time-enforcement.test.ts (8 tests) 2ms
+ ✓ tests/design-system-contrast.test.ts (2 tests) 2ms
+ ✓ lib/api.test.ts (8 tests) 2ms
+ ✓ lib/trpc-errors.test.ts (3 tests) 2ms
+ ✓ tests/task-progress.test.ts (4 tests) 3ms
+ ✓ backend/trpc/routes/challenges-create.test.ts (7 tests) 2ms
+{"level":"info","time":"2026-06-22T00:44:05.161Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc profiles.blockUser ok 0ms"}
+{"level":"info","time":"2026-06-22T00:44:05.162Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"BAD_REQUEST","msg":"trpc accountability.invite BAD_REQUEST 1ms"}
+{"level":"info","time":"2026-06-22T00:44:05.163Z","pid":14335,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"nudges.send","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc nudges.send BAD_REQUEST 0ms"}
+{"level":"info","time":"2026-06-22T00:44:05.162Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc profiles.blockUser ok 0ms"}
+{"level":"info","time":"2026-06-22T00:44:05.162Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc profiles.blockUser BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.163Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"You cannot block yourself.","ts":"2026-06-22T00:44:05.162Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.163Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.unblockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc profiles.unblockUser ok 0ms"}
+{"level":"info","time":"2026-06-22T00:44:05.164Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc feed.getLiveFeed ok 1ms"}
+{"level":"info","time":"2026-06-22T00:44:05.164Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"","durationMs":0,"errorCode":"UNAUTHORIZED","msg":"trpc profiles.blockUser UNAUTHORIZED 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.164Z","pid":14331,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"","code":"UNAUTHORIZED","message":"UNAUTHORIZED","ts":"2026-06-22T00:44:05.164Z","msg":"trpc:error"}
+ ✓ backend/trpc/routes/blocking.test.ts (6 tests) 4ms
+{"level":"error","time":"2026-06-22T00:44:05.164Z","pid":14335,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"nudges.send","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"You cannot nudge yourself.","ts":"2026-06-22T00:44:05.163Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.164Z","pid":14335,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"nudges.send","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"TOO_MANY_REQUESTS","msg":"trpc nudges.send TOO_MANY_REQUESTS 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.164Z","pid":14335,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"nudges.send","userId":"11111111-1111-4111-8111-111111111111","code":"TOO_MANY_REQUESTS","message":"You already nudged them today.","ts":"2026-06-22T00:44:05.164Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.165Z","pid":14335,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"nudges.send","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc nudges.send ok 0ms"}
+ ✓ backend/trpc/routes/nudges.test.ts (5 tests) 5ms
+{"level":"info","time":"2026-06-22T00:44:05.165Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"profiles.get","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"msg":"trpc profiles.get ok 0ms"}
+{"level":"info","time":"2026-06-22T00:44:05.166Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.getById BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.162Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"You cannot add yourself as a partner.","ts":"2026-06-22T00:44:05.162Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.164Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc accountability.invite BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.164Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"You can have at most 3 accountability partners.","ts":"2026-06-22T00:44:05.164Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.164Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"NOT_FOUND","msg":"trpc accountability.invite NOT_FOUND 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.164Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","code":"NOT_FOUND","message":"User not found.","ts":"2026-06-22T00:44:05.164Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.164Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc accountability.invite ok 0ms"}
+{"level":"info","time":"2026-06-22T00:44:05.165Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.respond","userId":"22222222-2222-4222-8222-222222222222","durationMs":0,"errorCode":"NOT_FOUND","msg":"trpc accountability.respond NOT_FOUND 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.165Z","pid":14333,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.respond","userId":"22222222-2222-4222-8222-222222222222","code":"NOT_FOUND","message":"Invite not found.","ts":"2026-06-22T00:44:05.165Z","msg":"trpc:error"}
+ ✓ backend/trpc/routes/accountability.test.ts (5 tests) 5ms
+{"level":"error","time":"2026-06-22T00:44:05.166Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","code":"BAD_REQUEST","message":"[\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]","ts":"2026-06-22T00:44:05.166Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.167Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.get","userId":null,"durationMs":0,"errorCode":"UNAUTHORIZED","msg":"trpc profiles.get UNAUTHORIZED 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.167Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.get","userId":null,"code":"UNAUTHORIZED","message":"UNAUTHORIZED","ts":"2026-06-22T00:44:05.167Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.167Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.update","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc profiles.update BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.167Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.update","userId":"a0000000-0000-4000-8000-000000000001","code":"BAD_REQUEST","message":"[\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 3,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 3 character(s)\",\n    \"path\": [\n      \"username\"\n    ]\n  }\n]","ts":"2026-06-22T00:44:05.167Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.171Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.create","userId":"a0000000-0000-4000-8000-000000000001","durationMs":4,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc challenges.create INTERNAL_SERVER_ERROR 4ms"}
+{"level":"error","time":"2026-06-22T00:44:05.171Z","pid":14334,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.create","userId":"a0000000-0000-4000-8000-000000000001","code":"INTERNAL_SERVER_ERROR","message":"ctx.supabase.from(...).upsert is not a function","ts":"2026-06-22T00:44:05.171Z","msg":"trpc:error"}
+ ✓ tests/flows/edge-cases.test.ts (4 tests) 650ms
+{"level":"info","time":"2026-06-22T00:44:05.168Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.list","userId":"a0000000-0000-4000-8000-000000000001","durationMs":2,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc challenges.list INTERNAL_SERVER_ERROR 2ms"}
+{"level":"error","time":"2026-06-22T00:44:05.169Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.list","userId":"a0000000-0000-4000-8000-000000000001","code":"INTERNAL_SERVER_ERROR","message":"ctx.supabase.from(...).select(...).eq(...).order is not a function","ts":"2026-06-22T00:44:05.168Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.170Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.getById BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.170Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","code":"BAD_REQUEST","message":"[\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]","ts":"2026-06-22T00:44:05.170Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.170Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","input":{"challengeId":"b0000000-0000-4000-8000-000000000002"},"userId":"a0000000-0000-4000-8000-000000000001","msg":"[JOIN-BACKEND] Join procedure called"}
+{"level":"info","time":"2026-06-22T00:44:05.170Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.join","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc challenges.join INTERNAL_SERVER_ERROR 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.170Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.join","userId":"a0000000-0000-4000-8000-000000000001","code":"INTERNAL_SERVER_ERROR","message":"ctx.supabase.from(...).select(...).eq(...).maybeSingle is not a function","ts":"2026-06-22T00:44:05.170Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.171Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"checkins.secureDay","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"NOT_FOUND","msg":"trpc checkins.secureDay NOT_FOUND 0ms"}
+{"level":"error","time":"2026-06-22T00:44:05.171Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"checkins.secureDay","userId":"a0000000-0000-4000-8000-000000000001","code":"NOT_FOUND","message":"Active challenge not found.","ts":"2026-06-22T00:44:05.171Z","msg":"trpc:error"}
+{"level":"info","time":"2026-06-22T00:44:05.172Z","pid":14332,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"profiles.getPublicByUsername","userId":"a0000000-0000-4000-8000-000000000001","durationMs":1,"msg":"trpc profiles.getPublicByUsername ok 1ms"}
+ ✓ tests/flows/critical-paths.test.ts (6 tests) 667ms
+
+ Test Files  16 passed (16)
+      Tests  91 passed (91)
+   Start at  20:44:04
+   Duration  937ms (transform 674ms, setup 0ms, collect 3.22s, tests 1.36s, environment 1ms, prepare 897ms)
+
+EXIT: 0

@@ -18,7 +18,7 @@ import { useNotificationPrefsStore } from "@/store/notificationPrefsStore";
 
 import { styles } from "@/components/settings/settings-styles";
 
-export const REMINDER_PRESETS = [
+const REMINDER_PRESETS = [
   { label: "6:00 AM", value: "06:00" },
   { label: "7:00 AM", value: "07:00" },
   { label: "8:00 AM", value: "08:00" },

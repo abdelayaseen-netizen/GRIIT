@@ -19,7 +19,7 @@ import {
 } from '@/lib/design-system';
 import { StreakRingAvatar } from '@/components/shared/StreakRingAvatar';
 
-export type ProfileHeaderMode = 'self' | 'public';
+type ProfileHeaderMode = 'self' | 'public';
 
 export type ProfileHeaderProps = {
   // Identity
@@ -408,4 +408,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileHeader;

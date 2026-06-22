@@ -51,8 +51,6 @@ export const ACHIEVEMENTS = {
   THREE_CATEGORIES: { key: "three_categories", label: "Renaissance", dimension: "mastery", icon: "Target", color: "teal", description: "Complete challenges in 3 different categories.", threshold: 3 },
 } satisfies Record<string, AchievementDef>;
 
-export type AchievementKey = string;
-
 /** Get all achievements as an array, optionally filtered by dimension. */
 export function getAchievementsByDimension(dimension?: AchievementDef["dimension"]): AchievementDef[] {
   const all = Object.values(ACHIEVEMENTS);

@@ -12,7 +12,7 @@ import {
   type ChallengeDifficulty as CompactChallengeDifficulty,
 } from "./_card-helpers";
 
-export type { CompactChallengeCategory, CompactChallengeDifficulty };
+// CompactChallengeCategory and CompactChallengeDifficulty are local re-exports of _card-helpers; unused externally.
 export type CompactChallengeProofType = "photo" | "text" | "location";
 
 export interface CompactChallengeRowData {

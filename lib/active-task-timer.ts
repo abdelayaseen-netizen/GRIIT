@@ -11,7 +11,7 @@ import { useNotificationPrefsStore } from "@/store/notificationPrefsStore";
 
 const ACTIVE_TASK_NOTIF_ID = "griit-active-task-timer";
 
-export type ActiveTaskTimerType = "checkin" | "run_gps" | "run_treadmill";
+type ActiveTaskTimerType = "checkin" | "run_gps" | "run_treadmill";
 
 export interface ActiveTaskTimerPayload {
   taskId: string;

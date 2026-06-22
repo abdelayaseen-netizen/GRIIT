@@ -22,7 +22,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 
-export type TaskRunValue = {
+type TaskRunValue = {
   /** kilometers travelled (live or manual). */
   distanceKm: number;
   /** elapsed seconds. */
@@ -378,4 +378,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TaskRunBody;

@@ -935,7 +935,7 @@ export const DS_BORDERS = {
   colorStrong: '#111111',
 } as const;
 
-export const CHALLENGE_CATEGORY_COLORS = {
+const CHALLENGE_CATEGORY_COLORS = {
   discipline: {
     header: '#2B3A2E',
     subtitleText: '#E8D5B5',
@@ -968,7 +968,7 @@ export const CHALLENGE_CATEGORY_COLORS = {
   },
 } as const;
 
-export const DEFAULT_CATEGORY_COLOR = CHALLENGE_CATEGORY_COLORS.discipline;
+const DEFAULT_CATEGORY_COLOR = CHALLENGE_CATEGORY_COLORS.discipline;
 
 export function getCategoryColors(category: string) {
   const key = String(category ?? "").toLowerCase().trim();
@@ -1317,61 +1317,6 @@ export const DS_RADIUS_V2 = {
   full: 9999, // Avatars, circular buttons, tab pills
 } as const;
 
-// ============================================================================
-// HIT TARGETS (Apple HIG minimum 44pt)
-// ============================================================================
-
-export const DS_TOUCH = {
-  minSize: 44, // Apple HIG minimum touch target
-} as const;
-
-/**
- * Pre-baked button configurations.
- */
-export const DS_BUTTON = {
-  primary: {
-    backgroundColor: DS_COLORS_V2.brand.primary,
-    color: DS_COLORS_V2.brand.primaryText,
-    borderRadius: DS_RADIUS_V2.md,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minHeight: DS_TOUCH.minSize,
-    ...DS_TYPE.headline,
-    fontWeight: '500' as const,
-  },
-  primaryOnDark: {
-    backgroundColor: DS_COLORS_V2.brand.primaryOnDark,
-    color: DS_COLORS_V2.brand.primaryText,
-    borderRadius: DS_RADIUS_V2.md,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minHeight: DS_TOUCH.minSize,
-    ...DS_TYPE.headline,
-    fontWeight: '500' as const,
-  },
-  secondary: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    color: DS_COLORS_V2.text.primary,
-    borderRadius: DS_RADIUS_V2.md,
-    borderWidth: 0.5,
-    borderColor: DS_COLORS_V2.surface.divider,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minHeight: DS_TOUCH.minSize,
-    ...DS_TYPE.headline,
-    fontWeight: '500' as const,
-  },
-  ghostOnDark: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    color: DS_COLORS_V2.text.onDark,
-    borderRadius: DS_RADIUS_V2.md,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    minHeight: DS_TOUCH.minSize,
-    ...DS_TYPE.headline,
-    fontWeight: '500' as const,
-  },
-} as const;
 
 // (v2 default export intentionally omitted — consumers use named imports only.)
 

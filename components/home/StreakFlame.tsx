@@ -245,7 +245,6 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
   );
 }
 
-export default StreakFlame;
 
 const styles = StyleSheet.create({
   wrap: {

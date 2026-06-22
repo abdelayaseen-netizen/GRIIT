@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ActiveSession = {
+type ActiveSession = {
   taskId: string;
   taskName: string;
   taskType: string;

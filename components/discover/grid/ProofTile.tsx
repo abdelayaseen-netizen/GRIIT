@@ -115,7 +115,6 @@ export const ProofTile = React.memo(function ProofTile({
   );
 });
 
-export default ProofTile;
 
 const styles = StyleSheet.create({
   tile: {

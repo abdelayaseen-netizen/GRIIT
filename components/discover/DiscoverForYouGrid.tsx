@@ -458,7 +458,6 @@ export const DiscoverForYouGrid = React.memo(function DiscoverForYouGrid({
   );
 });
 
-export default DiscoverForYouGrid;
 
 const styles = StyleSheet.create({
   wrap: {

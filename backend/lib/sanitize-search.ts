@@ -22,7 +22,7 @@ export function requireUuidForPostgrestOr(id: string): string {
 }
 
 /** Escape PostgREST filter-syntax chars so user input cannot break out of a filter value. */
-export function escapePostgrestFilter(input: string): string {
+function escapePostgrestFilter(input: string): string {
   // Remove characters that are structural in PostgREST filter syntax
   return input.replace(/[,.()"'\\]/g, "");
 }

@@ -21,7 +21,7 @@ export function setSubscriptionState(
  * Returns true if the user has an active premium or trial subscription.
  * Reads from state set by setSubscriptionState(); when not set, returns false.
  */
-export function isPremium(): boolean {
+function isPremium(): boolean {
   if (_subscriptionStatus !== "premium" && _subscriptionStatus !== "trial") return false;
   if (!_subscriptionExpiry) return _subscriptionStatus === "premium";
   const expiry = new Date(_subscriptionExpiry);

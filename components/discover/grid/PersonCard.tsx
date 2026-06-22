@@ -163,7 +163,6 @@ export const PersonCard = React.memo(function PersonCard({
   );
 });
 
-export default PersonCard;
 
 const styles = StyleSheet.create({
   card: {

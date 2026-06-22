@@ -24,7 +24,7 @@ import { Avatar } from '@/components/Avatar';
 
 export type RecommendedChallengeDifficulty = 'EASY' | 'MED' | 'HARD';
 
-export type RecommendedChallengePreviewUser = {
+type RecommendedChallengePreviewUser = {
   user_id: string;
   username: string | null;
   avatar_url: string | null;
@@ -123,7 +123,6 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
   );
 });
 
-export default ChallengeGridCard;
 
 const styles = StyleSheet.create({
   card: {

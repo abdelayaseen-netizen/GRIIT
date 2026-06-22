@@ -14,7 +14,7 @@ import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 import { InlineError } from "@/components/InlineError";
 import { styles } from "@/components/settings/settings-styles";
 
-export const CONSEQUENCES = [
+const CONSEQUENCES = [
   { bulletColor: DS_COLORS.warning, title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
   { bulletColor: DS_COLORS.accent, title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
   { bulletColor: DS_COLORS.danger, title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },

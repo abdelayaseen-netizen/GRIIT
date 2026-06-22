@@ -20,7 +20,7 @@ import { captureError } from "@/lib/sentry";
 import { useNotificationPrefsStore } from "@/store/notificationPrefsStore";
 import { DS_COLORS } from "@/lib/design-system";
 
-export type LiveActivityTimerType = "checkin" | "run_gps" | "run_treadmill";
+type LiveActivityTimerType = "checkin" | "run_gps" | "run_treadmill";
 
 export interface LiveActivityPayload {
   taskId: string;

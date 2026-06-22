@@ -20,7 +20,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 
-export type TaskJournalValue = { text: string };
+type TaskJournalValue = { text: string };
 
 export type TaskJournalBodyProps = {
   value: TaskJournalValue;
@@ -218,4 +218,3 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
 });
 
-export default TaskJournalBody;

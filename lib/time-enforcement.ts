@@ -1,11 +1,11 @@
 import type { TimeEnforcementConfig } from "@/types";
 
-export interface TimeWindow {
+interface TimeWindow {
   start: Date;
   end: Date;
 }
 
-export type TimeWindowStatus = "before" | "active" | "missed";
+type TimeWindowStatus = "before" | "active" | "missed";
 
 export interface TimeWindowState {
   status: TimeWindowStatus;
@@ -33,7 +33,7 @@ export function formatTimeHHMM(time: string): string {
   return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
-export function computeTimeWindow(
+function computeTimeWindow(
   config: TimeEnforcementConfig,
   now: Date = new Date(),
   isHardMode: boolean = false

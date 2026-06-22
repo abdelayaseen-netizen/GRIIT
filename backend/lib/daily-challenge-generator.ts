@@ -9,7 +9,7 @@ import { buildTaskInsertPayload } from "./challenge-tasks";
 import { DAILY_CHALLENGE_TEMPLATES } from "./daily-challenge-templates";
 
 /** Pick a template deterministically by date so the same day gets the same challenge. */
-export function pickTemplateForDate(date: Date): (typeof DAILY_CHALLENGE_TEMPLATES)[number] {
+function pickTemplateForDate(date: Date): (typeof DAILY_CHALLENGE_TEMPLATES)[number] {
   const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
   let n = 0;
   for (let i = 0; i < dayKey.length; i++) n = (n * 31 + dayKey.charCodeAt(i)) >>> 0;

@@ -58,7 +58,7 @@ const TASK_PREP_PREFIX = "task-prep-";
 const WEEKLY_SUMMARY_ID = "weekly-summary";
 const STREAK_CELEBRATION_ID = "streak-celebration";
 /** Reserved for friend-activity / server-triggered social pushes. */
-export const SOCIAL_TRIGGER_ID = "social-trigger";
+
 const CHALLENGE_COUNTDOWN_PREFIX = "challenge-countdown-";
 
 function scheduleWithReminderType(content: Notifications.NotificationContentInput, reminderType: ReminderType) {
@@ -76,20 +76,13 @@ function scheduleWithReminderType(content: Notifications.NotificationContentInpu
 const DEFAULT_PREFERRED_TIME = "20:00";
 
 /** If true, also schedule a "2 hours left" reminder when close to midnight. */
-export const ENABLE_TWO_HOURS_LEFT = true;
+const ENABLE_TWO_HOURS_LEFT = true;
 
 function parsePreferredTime(preferredTime: string): { hour: number; minute: number } {
   const seg = (preferredTime || DEFAULT_PREFERRED_TIME).split(":");
   const h = Number(seg[0]);
   const m = Number(seg[1]);
   return { hour: Number.isFinite(h) ? h : 20, minute: Number.isFinite(m) ? m : 0 };
-}
-
-/** Format hour/minute as "8:00 PM" for notification body. */
-export function formatTimeForNotification(hour: number, minute: number): string {
-  const h = hour % 12 || 12;
-  const ampm = hour < 12 ? "AM" : "PM";
-  return `${h}:${minute.toString().padStart(2, "0")} ${ampm}`;
 }
 
 /** Next calendar date at hour:minute on or after fromDate. */
@@ -201,20 +194,6 @@ export async function scheduleNextSecureReminder(
   }
 }
 
-/**
- * Set up notification channel (Android). Call once on app load.
- */
-export async function setupNotificationChannel(): Promise<void> {
-  try {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "Default",
-      importance: Notifications.AndroidImportance.DEFAULT,
-      sound: "default",
-    });
-  } catch {
-    // ignore
-  }
-}
 
 /**
  * Request permissions and return whether we can schedule.
@@ -703,19 +682,6 @@ export async function scheduleStreakReminder(streakCount: number): Promise<void>
   }
 }
 
-/**
- * Cancel scheduled notifications for a challenge (task-* identifiers).
- */
-export async function cancelChallengeReminders(challengeId: string): Promise<void> {
-  try {
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const prefix = `task-${challengeId}`;
-    const toCancel = scheduled.filter((n) => (n.identifier ?? "").startsWith(prefix));
-    await Promise.all(toCancel.map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier!)));
-  } catch (error) {
-    captureError(error, "cancelChallengeReminders");
-  }
-}
 
 /**
  * Cancel ALL scheduled notifications (e.g. sign out).

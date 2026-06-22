@@ -14,7 +14,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 
-export type TaskCheckinValue = {
+type TaskCheckinValue = {
   /** True when user is within the geofence radius. */
   inRange: boolean;
 };
@@ -270,4 +270,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TaskCheckinBody;

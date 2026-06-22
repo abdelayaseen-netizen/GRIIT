@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type ActiveChallengeRow = {
+type ActiveChallengeRow = {
   id: string;
   user_id: string;
   challenge_id: string;

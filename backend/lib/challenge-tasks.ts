@@ -5,7 +5,7 @@
 
 import type { TaskConfig } from "./task-config";
 
-export type { TaskConfig };
+
 
 /** Strava (or other provider) verification rule stored in config.verification_rule_json */
 export interface VerificationRuleStrava {
@@ -85,7 +85,7 @@ export interface ChallengeTaskApiShape {
 }
 
 /** Map a raw challenge_tasks row to the API shape expected by the frontend. */
-export function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): ChallengeTaskApiShape | null {
+function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): ChallengeTaskApiShape | null {
   if (!row) return null;
   const config = row.config ?? {};
   const r = row as TaskRowWithVerification;
@@ -188,14 +188,14 @@ export function getTaskVerification(row: ChallengeTaskRowRaw | null | undefined)
 }
 
 /** Map UI task type to DB task_type (e.g. simple/photo -> manual). */
-export function toTaskType(type: string): string {
+function toTaskType(type: string): string {
   if (type === "simple" || type === "photo") return "manual";
   if (type === "workout") return "run";
   return type;
 }
 
 /** Build config object for a task from create-flow input. */
-export function buildTaskConfigFromInput(task: {
+function buildTaskConfigFromInput(task: {
   type: string;
   required?: boolean;
   minWords?: number | null;

@@ -438,7 +438,7 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
       <View style={styles.proofCard}>
         <View style={styles.proofHeader}>
           <View style={styles.proofTitleCol}>
-            <Text style={styles.proofTitle}>Today's proof</Text>
+            <Text style={styles.proofTitle}>Today&apos;s proof</Text>
             {subtitle ? (
               <Text style={styles.proofSubtitle} numberOfLines={1}>
                 {subtitle}
@@ -491,7 +491,6 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
   );
 }
 
-export default StreakHeroV4;
 
 // ──────────────────────────────────────────────────────────────────────────
 // Styles

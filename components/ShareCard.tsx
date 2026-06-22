@@ -3,10 +3,10 @@ import { View, Text, StyleSheet } from "react-native";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 /** Fixed size for consistent image capture (e.g. 1080x1080 for stories). */
-export const SHARE_CARD_WIDTH = 400;
-export const SHARE_CARD_HEIGHT = 500;
+const SHARE_CARD_WIDTH = 400;
+const SHARE_CARD_HEIGHT = 500;
 
-export type ShareCardType = "progress" | "completion" | "milestone";
+type ShareCardType = "progress" | "completion" | "milestone";
 
 export interface ShareCardProps {
   type?: ShareCardType;

@@ -211,7 +211,6 @@ export function StatGrid(props: StatGridProps) {
   );
 }
 
-export default StatGrid;
 
 // ──────────────────────────────────────────────────────────────────────────
 // Styles

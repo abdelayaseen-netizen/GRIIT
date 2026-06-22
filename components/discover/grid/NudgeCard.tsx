@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 import { ROUTES } from '@/lib/routes';
 import { DS_DAYLIGHT } from '@/lib/design-system';
 
-export type NudgeVariant =
+type NudgeVariant =
   | 'badge_in_reach'
   | 'streak_at_risk'
   | 'create_your_own';
@@ -152,7 +152,6 @@ export const NudgeCard = React.memo(function NudgeCard({
   );
 });
 
-export default NudgeCard;
 
 const styles = StyleSheet.create({
   card: {

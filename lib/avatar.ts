@@ -6,7 +6,7 @@ import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 import { captureError } from "@/lib/sentry";
 
 /** Deterministic avatar colors from user id (design tokens only). */
-export const AVATAR_COLORS = [
+const AVATAR_COLORS = [
   { bg: DS_COLORS.ACCENT_TINT, letter: DS_COLORS.DISCOVER_CORAL },
   { bg: DS_COLORS.GREEN_BG, letter: DS_COLORS.GREEN },
   { bg: DS_COLORS.purpleTintLight, letter: DS_COLORS.CATEGORY_MIND },

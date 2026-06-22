@@ -6,7 +6,7 @@ import { DS_COLORS } from "@/lib/design-system";
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
 
-export interface BaseCardProps {
+interface BaseCardProps {
   challengeName: string;
   dayNumber: number;
   totalDays: number;

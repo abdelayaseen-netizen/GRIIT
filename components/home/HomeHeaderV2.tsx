@@ -232,7 +232,6 @@ export function HomeHeaderV2(props: HomeHeaderV2Props) {
   );
 }
 
-export default HomeHeaderV2;
 
 // ──────────────────────────────────────────────────────────────────────────
 // Styles

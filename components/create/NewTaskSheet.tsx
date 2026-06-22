@@ -971,4 +971,3 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
 });
 
-export default NewTaskSheet;
