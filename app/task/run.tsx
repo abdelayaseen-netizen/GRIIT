@@ -638,7 +638,7 @@ export default function RunTaskScreen() {
               <>
                 <MapPin size={16} color={DS_COLORS.white} />
                 <Text style={styles.requirementText}>
-                  {minDistanceMiles} mile{minDistanceMiles !== 1 ? "s" : ""} minimum · GPS verified
+                  {minDistanceMiles} mile{minDistanceMiles !== 1 ? "s" : ""} minimum · GPS tracked
                 </Text>
               </>
             ) : (

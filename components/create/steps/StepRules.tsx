@@ -80,12 +80,12 @@ export function StepRules({
           style={[styles.ruleCard, difficultyMode === "hard" && styles.ruleCardSel]}
           onPress={() => setDifficultyMode("hard")}
           accessibilityRole="button"
-          accessibilityLabel="Hard mode - camera-only photos, verification gates, Strava/HR-rule support - tap to select"
+          accessibilityLabel="Hard mode - camera-only photos and an optional completion time window - tap to select"
           accessibilityState={{ selected: difficultyMode === "hard" }}
         >
-          <Text style={styles.ruleTitle}>Hard mode ??</Text>
+          <Text style={styles.ruleTitle}>Hard mode</Text>
           {(
-            ["Camera-only photos (no roll)", "Verification gates (time, location)", "Strava/HR-rule support"] as const
+            ["Camera-only photos (no roll)", "Optional completion time window"] as const
           ).map((item, i) => (
             <View key={i} style={styles.rowStartGap8Mb4}>
               <Ionicons
@@ -111,7 +111,7 @@ export function StepRules({
       {difficultyMode === "hard" ? (
         <View style={styles.hardWarningBox}>
           <Text style={styles.hardWarningText}>
-            Hard mode adds verification gates (time window, location, Strava rules) on top of your photo-proof setting.
+            Hard mode requires camera-only photos and lets you set a completion time window, on top of your photo-proof setting.
             Each task can still be configured individually.
           </Text>
         </View>

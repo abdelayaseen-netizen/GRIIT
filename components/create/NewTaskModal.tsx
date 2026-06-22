@@ -1529,7 +1529,7 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal, 
             <View style={s.hardModeToggleRow}>
               <View style={s.flex1}>
                 <Text style={s.hardModeTitle}>Hard mode</Text>
-                <Text style={s.hardModeSubtitle}>Enforce verification gates</Text>
+                <Text style={s.hardModeSubtitle}>Camera-only photos + time window</Text>
               </View>
               <Switch
                 value={hardMode}
