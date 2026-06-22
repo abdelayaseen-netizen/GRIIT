@@ -15,6 +15,7 @@ import {
   hydrateActivityEventsToPosts,
   type EvRow,
 } from "../../lib/feed-activity-hydrate";
+import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-user-ids";
 
 type ProofType = "photo" | "text" | "location";
 
@@ -66,6 +67,8 @@ export const feedRouter = createTRPCRouter({
     const followingIds = new Set<string>();
     const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
+    // Two-way block set: hide blocked authors (both directions) once per request.
+    const blockedIds = await getBlockedUserIds(ctx.supabase, viewerId);
     const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(60);
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
@@ -100,6 +103,7 @@ export const feedRouter = createTRPCRouter({
     const preFiltered: EvRow[] = [];
     for (const ev of events) {
       if (preFiltered.length >= input.limit) break;
+      if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) continue;
       if (input.scope === "everyone" && ev.user_id !== viewerId && privateUserIds.has(ev.user_id)) continue;
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) continue;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
@@ -115,6 +119,10 @@ export const feedRouter = createTRPCRouter({
   getUserPosts: protectedProcedure.input(z.object({ userId: z.string().uuid(), limit: z.number().min(1).max(50).default(20) })).query(async ({ ctx, input }) => {
     const viewerId = ctx.userId;
     const server = getSupabaseServer() ?? ctx.supabase;
+    // Block relationship (either direction) hides the target's posts entirely.
+    if (input.userId !== viewerId && (await isBlockRelationship(ctx.supabase, viewerId, input.userId))) {
+      return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
+    }
     const { data: targetRow, error: pErr } = await server.from("profiles").select("user_id, profile_visibility").eq("user_id", input.userId).maybeSingle();
     if (pErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: pErr.message });
     if (!targetRow) return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
@@ -143,6 +151,9 @@ export const feedRouter = createTRPCRouter({
     if (!raw) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     const ev = raw as EvRow;
     if (!LIVE_FEED_TYPES.includes(ev.event_type as (typeof LIVE_FEED_TYPES)[number])) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+    if (ev.user_id !== viewerId && (await isBlockRelationship(ctx.supabase, viewerId, ev.user_id))) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+    }
     const followingIds = new Set<string>();
     const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
@@ -471,7 +482,10 @@ export const feedRouter = createTRPCRouter({
             .maybeSingle();
           const evTyped = evRow as { user_id?: string; challenge_id?: string | null; metadata?: Record<string, unknown> } | null;
           const ownerId = evTyped?.user_id;
-          if (ownerId && ownerId !== ctx.userId) {
+          const reactBlocked = ownerId && ownerId !== ctx.userId
+            ? await isBlockRelationship(ctx.supabase, ctx.userId, ownerId)
+            : false;
+          if (ownerId && ownerId !== ctx.userId && !reactBlocked) {
             // Notification batching: skip if there's an unread respect notif for this event in last 5 min
             const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
             const { data: recentRespectRows } = await srv
@@ -567,7 +581,11 @@ export const feedRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load comments." });
       }
-      const userIds = [...new Set((comments ?? []).map((c: { user_id: string }) => c.user_id))];
+      const blockedCommentIds = await getBlockedUserIds(ctx.supabase, ctx.userId);
+      const visibleComments = blockedCommentIds.size > 0
+        ? (comments ?? []).filter((c: { user_id: string }) => !blockedCommentIds.has(c.user_id))
+        : (comments ?? []);
+      const userIds = [...new Set(visibleComments.map((c: { user_id: string }) => c.user_id))];
       const { data: profiles } = userIds.length
         ? await ctx.supabase
             .from("profiles")
@@ -578,7 +596,7 @@ export const feedRouter = createTRPCRouter({
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.user_id, p])
       );
-      return (comments ?? []).map((row) => {
+      return visibleComments.map((row) => {
         const profile = profileMap.get(row.user_id);
         return {
           id: row.id,
@@ -631,7 +649,10 @@ export const feedRouter = createTRPCRouter({
           .maybeSingle();
         const evTyped = evRow as { user_id?: string; challenge_id?: string | null; metadata?: Record<string, unknown> } | null;
         const ownerId = evTyped?.user_id;
-        if (ownerId && ownerId !== ctx.userId) {
+        const commentBlocked = ownerId && ownerId !== ctx.userId
+          ? await isBlockRelationship(ctx.supabase, ctx.userId, ownerId)
+          : false;
+        if (ownerId && ownerId !== ctx.userId && !commentBlocked) {
           const commentActorUsername = profile?.username ?? "someone";
           const commentActorDisplayName = profile?.display_name ?? commentActorUsername;
 
@@ -979,6 +1000,7 @@ export const feedRouter = createTRPCRouter({
       for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) {
         if (followRowAccepted(r)) followingIds.add(r.following_id);
       }
+      const blockedIds = await getBlockedUserIds(ctx.supabase, viewerId);
 
       const { data: rawEvents, error: evErr } = await server
         .from("activity_events")
@@ -1016,6 +1038,7 @@ export const feedRouter = createTRPCRouter({
       );
 
       const eligible = events.filter((ev) => {
+        if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) return false;
         if (ev.user_id !== viewerId && privateUserIds.has(ev.user_id)) return false;
         if (!ev.challenge_id) return false;
         if (!publicChallengeIds.has(ev.challenge_id)) return false;

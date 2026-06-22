@@ -13,6 +13,7 @@ import { requireNoError } from "../errors";
 import type { PgError, ProfileRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { sanitizeSearchQuery } from "../../lib/sanitize-search";
+import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { profilesSocialProcedures } from "./profiles-social";
 import { profilesStatsProcedures } from "./profiles-stats";
 
@@ -360,7 +361,8 @@ export const profilesRouter = createTRPCRouter({
         .or(`username.ilike.%${escapedSafe}%,display_name.ilike.%${escapedSafe}%`)
         .limit(20);
       requireNoError(error, "Failed to search profiles.");
-      const rows = (data ?? []) as ProfileRow[];
+      const blockedIds = await getBlockedUserIds(ctx.supabase, ctx.userId);
+      const rows = ((data ?? []) as ProfileRow[]).filter((r) => !blockedIds.has(r.user_id));
       const ids = rows.map((r) => r.user_id);
       const { data: streakRows } =
         ids.length > 0
