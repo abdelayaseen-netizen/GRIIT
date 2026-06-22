@@ -92,8 +92,6 @@ export function TaskCompleteScreenInner() {
   const headerDurationDays = Math.max(1, parseInt(firstString(params.durationDays) || "14", 10) || 14);
 
   const { error, showError, clearError } = useInlineError();
-  const [heartRateData, setHeartRateData] = useState<{ avg: number; peak: number } | null>(null);
-  const [heartRateManual, setHeartRateManual] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [minimumConfirmVisible, setMinimumConfirmVisible] = useState(false);
@@ -362,8 +360,6 @@ export function TaskCompleteScreenInner() {
   const needsPhotoProof = config.require_photo === true || taskTypeRaw === "photo";
   /** Submit only after upload returns a URL (not just local uri). */
   const photoOk = !needsPhotoProof || !!photoUrl;
-  const threshold = config.heart_rate_threshold ?? 100;
-  const heartRateOk = !config.require_heart_rate || (heartRateData !== null && heartRateData.avg >= threshold);
   const distance = useMemo(() => {
     if (!userLocation || config.location_latitude == null || config.location_longitude == null) return null;
     return haversineDistance(config.location_latitude, config.location_longitude, userLocation.lat, userLocation.lng);
@@ -414,7 +410,6 @@ export function TaskCompleteScreenInner() {
       if (isHardMode && !hardModeOk) return false;
     }
     if (needsPhotoProof && !photoOk) return false;
-    if (config.require_heart_rate && !heartRateOk) return false;
     if (config.require_location && !locationOk) return false;
     if (showRunEntry && !runFormOk) return false;
     if (showWorkoutEntry && !workoutOk) return false;
@@ -432,10 +427,8 @@ export function TaskCompleteScreenInner() {
     hardModeOk,
     isHardMode,
     photoOk,
-    heartRateOk,
     locationOk,
     needsPhotoProof,
-    config.require_heart_rate,
     config.require_location,
     runFormOk,
     showRunEntry,
@@ -498,8 +491,6 @@ export function TaskCompleteScreenInner() {
         value: valueOut,
         proofUrl: photoUrl ?? undefined,
         photo_url: photoUrl ?? undefined,
-        heart_rate_avg: heartRateData?.avg,
-        heart_rate_peak: heartRateData?.peak,
         location_latitude: gatesLocation?.lat ?? userLocation?.lat,
         location_longitude: gatesLocation?.lng ?? userLocation?.lng,
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
@@ -551,7 +542,6 @@ export function TaskCompleteScreenInner() {
     journalText,
     timerSeconds,
     photoUrl,
-    heartRateData,
     userLocation,
     gatesLocation,
     isHardMode,
@@ -1052,12 +1042,6 @@ export function TaskCompleteScreenInner() {
   void runDistanceKm;
   void runDurationMin;
   void runKm;
-  void heartRateData;
-  void setHeartRateData;
-  void heartRateManual;
-  void setHeartRateManual;
-  void threshold;
-  void heartRateOk;
   void setUserLocation;
   void radius;
   void handleCheckLocation;
