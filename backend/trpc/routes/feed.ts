@@ -581,7 +581,11 @@ export const feedRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load comments." });
       }
-      const userIds = [...new Set((comments ?? []).map((c: { user_id: string }) => c.user_id))];
+      const blockedCommentIds = await getBlockedUserIds(ctx.supabase, ctx.userId);
+      const visibleComments = blockedCommentIds.size > 0
+        ? (comments ?? []).filter((c: { user_id: string }) => !blockedCommentIds.has(c.user_id))
+        : (comments ?? []);
+      const userIds = [...new Set(visibleComments.map((c: { user_id: string }) => c.user_id))];
       const { data: profiles } = userIds.length
         ? await ctx.supabase
             .from("profiles")
@@ -592,7 +596,7 @@ export const feedRouter = createTRPCRouter({
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.user_id, p])
       );
-      return (comments ?? []).map((row) => {
+      return visibleComments.map((row) => {
         const profile = profileMap.get(row.user_id);
         return {
           id: row.id,

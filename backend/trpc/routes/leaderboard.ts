@@ -5,6 +5,7 @@ import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db
 import { getTodayDateKey, getRollingWeekStartDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { consistencyScore } from "../../lib/scoring";
 
 const LEADERBOARD_MAX = 100;
@@ -77,7 +78,13 @@ export const leaderboardRouter = createTRPCRouter({
         .map(([uid]) => uid)
         .slice(safeOffset, safeOffset + limit);
 
-      if (sortedUserIds.length === 0) {
+      // Filter blocked users from leaderboard entries (two-way: I don't see them, they don't see me).
+      const blockedLbIds = userId ? await getBlockedUserIds(ctx.supabase, userId) : new Set<string>();
+      const filteredIds = blockedLbIds.size > 0
+        ? sortedUserIds.filter((uid) => !blockedLbIds.has(uid))
+        : sortedUserIds;
+
+      if (filteredIds.length === 0) {
         const empty = { entries: [], currentUserRank: null, totalSecuredToday: 0 };
         const out = noPagination ? empty : { ...empty, nextCursor: undefined };
         if (canCacheWeekly) await setCached(weeklyCacheKey, out, 120);
@@ -88,12 +95,12 @@ export const leaderboardRouter = createTRPCRouter({
         server
           .from("profiles")
           .select("user_id, username, display_name, avatar_url")
-          .in("user_id", sortedUserIds)
+          .in("user_id", filteredIds)
           .limit(200),
         server
           .from("streaks")
           .select("user_id, active_streak_count")
-          .in("user_id", sortedUserIds)
+          .in("user_id", filteredIds)
           .limit(200),
         server
           .from("day_secures")
@@ -103,7 +110,7 @@ export const leaderboardRouter = createTRPCRouter({
         server
           .from("respects")
           .select("recipient_id")
-          .in("recipient_id", sortedUserIds)
+          .in("recipient_id", filteredIds)
           .limit(10000),
       ]);
       const profiles = profilesResult.data;
@@ -126,7 +133,7 @@ export const leaderboardRouter = createTRPCRouter({
         (streaks ?? []).map((s: LeaderboardStreakRow) => [s.user_id, s])
       );
 
-      const entries = sortedUserIds.map((uid, index) => {
+      const entries = filteredIds.map((uid, index) => {
         const p = profileMap.get(uid);
         const s = streakMap.get(uid);
         return {
