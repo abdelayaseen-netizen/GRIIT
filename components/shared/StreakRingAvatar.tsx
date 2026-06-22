@@ -152,7 +152,6 @@ export const StreakRingAvatar = React.memo(function StreakRingAvatar({
   );
 });
 
-export default StreakRingAvatar;
 
 const styles = StyleSheet.create({
   outer: {

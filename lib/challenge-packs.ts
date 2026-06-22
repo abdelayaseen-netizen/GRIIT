@@ -5,9 +5,9 @@
 
 import type { JournalCategory } from "@/types";
 
-export type PackTaskPhoto = "none" | "optional" | "required";
+type PackTaskPhoto = "none" | "optional" | "required";
 
-export type PackTaskDef = {
+type PackTaskDef = {
   name: string;
   type: string;
   config: Record<string, unknown>;

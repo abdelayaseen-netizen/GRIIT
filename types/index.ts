@@ -1,4 +1,3 @@
-export type TaskType = "run" | "journal" | "timer" | "photo" | "checklist" | "custom" | "checkin";
 
 /** Task shape returned by API (challenge_tasks mapped from DB). Use for typing challenge detail, timer, index. */
 export interface ChallengeTaskFromApi {
@@ -18,9 +17,7 @@ export interface ChallengeTaskFromApi {
 
 export type JournalCategory = "self_reflection" | "emotions" | "mental_clarity" | "physical_state" | "gratitude" | "wins_losses" | "discipline_check" | "free_write";
 
-export type MoodLevel = "very_bad" | "bad" | "neutral" | "good" | "very_good";
 
-export type BodyState = "fresh" | "ok" | "sore" | "exhausted";
 
 export type WordLimitMode = "PRESET" | "CUSTOM";
 
@@ -44,38 +41,18 @@ export interface TimeEnforcementConfig {
   challengeTimezone: string | null;
 }
 
-export interface JournalConfig {
-  journalType: JournalCategory[];
-  journalPrompt: string;
-  allowFreeWrite: boolean;
-  captureMood: boolean;
-  captureEnergy: boolean;
-  captureBodyState: boolean;
-  wordLimitEnabled: boolean;
-  wordLimitMode: WordLimitMode;
-  wordLimitWords: number | null;
-}
-
 export type ChallengeType = "standard" | "one_day" | "solo" | "team" | "both";
-export type GoalMode = "individual" | "shared";
-export type TeamStatus = "active" | "completed" | "abandoned";
-export type TeamMemberRole = "creator" | "member";
-export type InviteType = "code" | "link" | "in_app";
-export type InviteStatus = "pending" | "accepted" | "expired" | "revoked";
+type GoalMode = "individual" | "shared";
+type TeamStatus = "active" | "completed" | "abandoned";
+type TeamMemberRole = "creator" | "member";
 
 export type ReplayPolicy = "live_only" | "allow_replay";
 
-export type CompletionType = "completed_live" | "completed_replay";
 
-export type VerificationType = "gps" | "timer" | "in_app_entry" | "photo" | "manual" | "manual_with_proof" | "geo_time_checkin";
 
-export type ChallengeCategory = "fitness" | "mind" | "faith" | "discipline" | "mental" | "other";
 
-export type ChallengeDifficulty = "easy" | "medium" | "hard" | "extreme";
 
-export type ChallengeMode = "normal" | "hard";
 
-export type TaskStatus = "locked" | "pending" | "submitted" | "verified" | "rejected" | "missed";
 
 /** Row shape from checkins.getTodayCheckinsForUser (today's check-ins across all active challenges). */
 export interface TodayCheckinForUser {
@@ -96,28 +73,6 @@ export interface TodayCheckinForUser {
 
 export type ChallengeVisibility = "PUBLIC" | "FRIENDS" | "PRIVATE";
 
-export type ChallengeStatus = "active" | "failed" | "completed";
-
-export interface User {
-  id: string;
-  username: string;
-  avatar: string;
-  avatarUrl?: string;
-  timezone: string;
-  createdAt: string;
-  streakCount: number;
-  joinedChallenges: string[];
-}
-
-export interface ChallengePolicy {
-  mode: ChallengeMode;
-  cutoffTimeLocal: string;
-  allowPause: boolean;
-  maxMissesAllowed: number;
-  missedDayAction: "streak_reset_only" | "challenge_failed";
-  showFailureToPublic: boolean;
-  showFailureToAccountabilityCircle: boolean;
-}
 
 export interface AllowedLocation {
   id: string;
@@ -127,172 +82,7 @@ export interface AllowedLocation {
   radiusMeters: number;
 }
 
-export interface LocationPolicy {
-  enabled: boolean;
-  allowedLocations: AllowedLocation[];
-  requireLocationAtStart: boolean;
-  requireLocationAtFinish: boolean;
-  requireContinuousPresence: boolean;
-  maxOutsideRadiusSeconds?: number;
-}
-
-export interface TimeWindowPolicy {
-  enabled: boolean;
-  startTimeLocal: string;
-  startWindowMinutes: number;
-  endWindowMinutes?: number;
-  mustStartWithinWindow: boolean;
-  mustFinishWithinWindow: boolean;
-  requireExactStart: boolean;
-  allowGraceSeconds: number;
-}
-
-export interface SessionPolicy {
-  enabled: boolean;
-  minSessionSeconds: number;
-  lockScreenDuringSession: boolean;
-  allowBackgroundSeconds: number;
-}
-
-export interface TaskRules {
-  minDistanceMiles?: number;
-  minDurationSeconds?: number;
-  allowTreadmill?: boolean;
-  requireGpsRoute?: boolean;
-  minWords?: number;
-  minTypingSeconds?: number;
-  allowPaste?: boolean;
-  allowBackground?: boolean;
-  maxBackgroundSeconds?: number;
-  requireCameraCapture?: boolean;
-  requireSameDay?: boolean;
-  requireTimestampOverlay?: boolean;
-  locationPolicy?: LocationPolicy;
-  timeWindowPolicy?: TimeWindowPolicy;
-  sessionPolicy?: SessionPolicy;
-}
-
-export interface TaskTemplate {
-  id: string;
-  challengeId: string;
-  title: string;
-  type: TaskType;
-  verificationType: VerificationType;
-  required: boolean;
-  rules: TaskRules;
-  requirementText?: string;
-  journalConfig?: JournalConfig;
-  timeEnforcement?: TimeEnforcementConfig;
-}
-
-export interface ReplayRules {
-  allowReplay: boolean;
-  requireSameRules: boolean;
-  allowDifferentDayCompletion: boolean;
-  maxReplaysPerUser?: number;
-  showAsReplayLabel: boolean;
-}
-
-export interface DailyChallengeConfig {
-  liveDate: string;
-  liveWindowStart?: string;
-  liveWindowEnd?: string;
-  replayPolicy: ReplayPolicy;
-  replayRules?: ReplayRules;
-}
-
-export interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  shortHook?: string;
-  coverImageUrl?: string;
-  themeColor?: string;
-  challengeType: ChallengeType;
-  durationDays: number;
-  categories: ChallengeCategory[];
-  difficulty: ChallengeDifficulty;
-  createdBy: "system" | "user";
-  creatorId?: string;
-  isPublic: boolean;
-  visibility: ChallengeVisibility;
-  policy: ChallengePolicy;
-  tasks: TaskTemplate[];
-  participantsCount: number;
-  activeTodayCount?: number;
-  completionRateStandard?: number;
-  completionRateHard?: number;
-  hardPickRate?: number;
-  dailyConfig?: DailyChallengeConfig;
-  hasStrictVerification?: boolean;
-  joinVelocity?: number;
-  creatorReputation?: number;
-}
-
 export type RunMode = "outdoor_gps" | "treadmill_proof";
-
-export interface GeoTimeCheckinVerificationData {
-  type: "geo_time_checkin";
-  locationMatched?: {
-    locationId: string;
-    name: string;
-    radiusMeters: number;
-  };
-  start?: {
-    startedAtLocal: string;
-    lat: number;
-    lng: number;
-    accuracyMeters: number;
-    insideGeofence: boolean;
-    timeWindowOpen: boolean;
-  };
-  end?: {
-    endedAtLocal: string;
-    lat: number;
-    lng: number;
-    accuracyMeters: number;
-    insideGeofence: boolean;
-  };
-  session?: {
-    elapsedSeconds: number;
-    backgroundSeconds: number;
-    continuousPresenceEnabled: boolean;
-    outsideRadiusSeconds: number;
-  };
-  antiCheat?: {
-    mockLocationDetected: boolean;
-    accuracyTooLow: boolean;
-  };
-}
-
-export interface VerificationData {
-  gpsPoints?: { lat: number; lng: number }[];
-  distanceMiles?: number;
-  durationSeconds?: number;
-  startedAt?: string;
-  endedAt?: string;
-  text?: string;
-  wordCount?: number;
-  typingSeconds?: number;
-  pasteDetected?: boolean;
-  submittedAt?: string;
-  backgroundSeconds?: number;
-  photoUrl?: string;
-  capturedAt?: string;
-  uploadedAt?: string;
-  photoDateLocal?: string;
-  runMode?: RunMode;
-  timerActiveSeconds?: number;
-  timerBackgroundViolation?: boolean;
-  proofUrl?: string;
-  proofType?: "photo" | "video";
-  proofSource?: "camera" | "gallery";
-  proofCapturedAt?: string;
-  proofDateLocal?: string;
-  distanceMilesShown?: number;
-  durationShown?: string;
-  geoTimeCheckin?: GeoTimeCheckinVerificationData;
-}
 
 /** Challenge detail as returned by challenges.getById (with optional team/shared goal fields). */
 export interface ChallengeDetailFromApi {
@@ -331,7 +121,7 @@ export interface ChallengeDetailFromApi {
   created_by?: string | null;
 }
 
-export interface TeamMemberForListApi {
+interface TeamMemberForListApi {
   id: string;
   user_id: string;
   role: string;
@@ -352,7 +142,7 @@ export interface ActiveChallengeFromApi {
   challenges?: Record<string, unknown>;
 }
 
-export interface Team {
+interface Team {
   id: string;
   name: string;
   challenge_id: string;
@@ -365,7 +155,7 @@ export interface Team {
   updated_at: string;
 }
 
-export interface TeamMember {
+interface TeamMember {
   id: string;
   team_id: string;
   user_id: string;
@@ -376,17 +166,6 @@ export interface TeamMember {
 }
 
 // keep: planned for Q4 2026 team challenges
-export interface TeamInvite {
-  id: string;
-  team_id: string;
-  invited_by: string;
-  invited_user_id?: string;
-  invite_type: InviteType;
-  status: InviteStatus;
-  created_at: string;
-  expires_at: string;
-}
-
 // keep: planned for Q4 2026 team challenges
 export interface TeamWithMembers extends Team {
   members: TeamMember[];

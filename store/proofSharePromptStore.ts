@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ProofSharePayload = {
+type ProofSharePayload = {
   userName: string;
   challengeTitle: string;
   dayNumber: number;

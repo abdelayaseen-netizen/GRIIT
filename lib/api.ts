@@ -67,7 +67,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function fetchWithTimeout(
+async function fetchWithTimeout(
   input: RequestInfo | URL,
   init?: RequestInit,
   timeoutMs: number = 12000,

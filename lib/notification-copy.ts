@@ -107,7 +107,7 @@ export const TASK_PREP_LEAD_MINUTES: Record<string, number> = {
   simple: 10,
 };
 
-export const TASK_PREP_COPY: Record<string, { title: string; body: string }[]> = {
+const TASK_PREP_COPY: Record<string, { title: string; body: string }[]> = {
   run: [
     { title: "Run in 30 min", body: "Lace up, hydrate, and get moving. Your {challenge} run starts soon." },
     { title: "Time to gear up", body: "Your run window opens in 30 minutes. Lay out your kit and stretch." },

@@ -7,13 +7,13 @@ const HTML_TAG_REGEX = /<[^>]*>/g;
 /**
  * Strip HTML tags from a string. Use for challenge title, description, username, bio.
  */
-export function stripHtml(input: string): string {
+function stripHtml(input: string): string {
   if (typeof input !== "string") return "";
   return input.replace(HTML_TAG_REGEX, "").trim();
 }
 
 /** Max lengths for DB/API. Keep in sync with backend. */
-export const MAX_LENGTHS = {
+const MAX_LENGTHS = {
   CHALLENGE_TITLE: 120,
   CHALLENGE_DESCRIPTION: 2000,
   USERNAME: 30,
@@ -24,7 +24,7 @@ export const MAX_LENGTHS = {
 /**
  * Sanitize and truncate to max length. Strips HTML first.
  */
-export function sanitizeText(
+function sanitizeText(
   input: string,
   maxLength: number = 1000
 ): string {

@@ -17,7 +17,7 @@ import {
 
 export type TimerSound = "silent" | "chime" | "rain";
 
-export type TaskTimerValue = { sound: TimerSound };
+type TaskTimerValue = { sound: TimerSound };
 
 export type TaskTimerBodyProps = {
   value: TaskTimerValue;
@@ -275,4 +275,3 @@ const styles = StyleSheet.create({
   soundChipTextSelected: { color: DS_COLORS_V2.brand.primary },
 });
 
-export default TaskTimerBody;

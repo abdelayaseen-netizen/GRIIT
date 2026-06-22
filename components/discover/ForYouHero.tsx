@@ -198,7 +198,6 @@ export const ForYouHero = React.memo(function ForYouHero({
   );
 });
 
-export default ForYouHero;
 
 const styles = StyleSheet.create({
   outer: {

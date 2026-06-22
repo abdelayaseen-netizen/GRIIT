@@ -12,7 +12,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 
-export type TaskSimpleValue = { done: boolean };
+type TaskSimpleValue = { done: boolean };
 
 export type TaskSimpleBodyProps = {
   value: TaskSimpleValue;
@@ -103,4 +103,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TaskSimpleBody;

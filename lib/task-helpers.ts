@@ -1,7 +1,7 @@
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 
-export const JOURNAL_PROMPTS = [
+const JOURNAL_PROMPTS = [
   "What did you learn about yourself today?",
   "What was the hardest part of today and how did you push through?",
   "Write about one win and one loss from today.",

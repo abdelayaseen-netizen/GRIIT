@@ -141,7 +141,6 @@ function renderStyledSentence(
   );
 }
 
-export default MutualFollowersRow;
 
 const styles = StyleSheet.create({
   row: {

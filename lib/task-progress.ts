@@ -62,7 +62,7 @@ export function getDailyTarget(
 /**
  * Maps challenge_tasks row + config to end targets used by getDailyTarget.
  */
-export function getEndTargetsForTaskType(
+function getEndTargetsForTaskType(
   taskType: string,
   config: Record<string, unknown> | null | undefined
 ): { target_value: number | null; duration_minutes: number | null } {

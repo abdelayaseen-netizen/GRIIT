@@ -7,7 +7,7 @@ import type { ChallengeType } from "@/types";
 import { styles } from "@/components/create/wizard-styles";
 import { DurationPill, DURATION_PRESETS } from "@/components/create/wizard-shared";
 
-export type WhoBasics = "solo" | "duo" | "squad";
+type WhoBasics = "solo" | "duo" | "squad";
 
 export interface StepBasicsProps {
   title: string;

@@ -67,7 +67,7 @@ export type WizardPack = {
   difficulty?: WizardDifficulty;
 };
 
-export const PACKS: readonly WizardPack[] = [
+const PACKS: readonly WizardPack[] = [
   {
     id: "75-hard",
     name: "75 Hard Classic",
@@ -517,4 +517,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StepTasks;

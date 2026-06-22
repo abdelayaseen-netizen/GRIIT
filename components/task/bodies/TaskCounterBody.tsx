@@ -25,7 +25,7 @@ import {
 
 export type CounterVariant = "counter" | "water" | "reading";
 
-export type TaskCounterValue = {
+type TaskCounterValue = {
   count: number;
   bookTitle?: string;
   remindersEnabled?: boolean;
@@ -392,4 +392,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TaskCounterBody;

@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import StreakFlame from "@/components/home/StreakFlame";
+import { StreakFlame } from "@/components/home/StreakFlame";
 import { useOnboardingStore, type OnboardingCommitment } from "@/store/onboardingStore";
 import { track } from "@/lib/analytics";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";

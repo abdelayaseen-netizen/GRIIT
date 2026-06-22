@@ -38,7 +38,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 
-export type TaskShellGateStatus = "pending" | "pass" | "fail";
+type TaskShellGateStatus = "pending" | "pass" | "fail";
 
 export type TaskShellGates = {
   timeWindow?: { status: TaskShellGateStatus; detail: string };
@@ -46,7 +46,7 @@ export type TaskShellGates = {
   requireLocation?: boolean;
 };
 
-export type TaskShellOtherTask = {
+type TaskShellOtherTask = {
   id: string;
   name: string;
   proofType: string;
@@ -64,7 +64,7 @@ export type TaskShellMissedState = {
   onPressDoOtherTasks?: () => void;
 };
 
-export type TaskShellPrimaryCta = {
+type TaskShellPrimaryCta = {
   label: string;
   onPress: () => void;
   disabled?: boolean;
@@ -73,7 +73,7 @@ export type TaskShellPrimaryCta = {
   variant?: "primary" | "danger";
 };
 
-export type TaskShellSecondaryCta = {
+type TaskShellSecondaryCta = {
   label: string;
   onPress: () => void;
   icon?: React.ReactNode;
@@ -654,4 +654,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TaskShell;

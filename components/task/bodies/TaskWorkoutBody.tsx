@@ -15,9 +15,9 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 
-export type WorkoutSet = { reps: number; weight: number };
+type WorkoutSet = { reps: number; weight: number };
 
-export type WorkoutExercise = {
+type WorkoutExercise = {
   name: string;
   plannedSets: WorkoutSet[];
   loggedSets: (WorkoutSet & { loggedAt: string })[];
@@ -592,4 +592,3 @@ const styles = StyleSheet.create({
   kindChipTextSelected: { color: DS_COLORS_V2.brand.primary },
 });
 
-export default TaskWorkoutBody;

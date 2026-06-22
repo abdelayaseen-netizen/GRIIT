@@ -24,7 +24,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 
-export type TaskPhotoValue = { caption: string };
+type TaskPhotoValue = { caption: string };
 
 export type TaskPhotoBodyProps = {
   value: TaskPhotoValue;
@@ -274,4 +274,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TaskPhotoBody;

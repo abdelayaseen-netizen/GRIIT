@@ -103,7 +103,6 @@ export const StreakBar = React.memo(function StreakBar({
   );
 });
 
-export default StreakBar;
 
 const styles = StyleSheet.create({
   card: {

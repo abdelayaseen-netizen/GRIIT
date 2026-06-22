@@ -3,7 +3,7 @@
  * Use for display (formatTimeRemainingHMS) and guards (isChallengeExpired).
  */
 
-export function getChallengeTimeRemaining(endsAt: string): {
+function getChallengeTimeRemaining(endsAt: string): {
   hours: number;
   minutes: number;
   seconds: number;

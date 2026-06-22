@@ -16,7 +16,7 @@ import {
   DS_TYPOGRAPHY,
 } from '@/lib/design-system';
 
-export type YearHeatmapDay = {
+type YearHeatmapDay = {
   date: string;
   level: 0 | 1 | 2 | 3 | 4;
 };
@@ -123,7 +123,6 @@ export const YearHeatmap = React.memo(function YearHeatmap({
   );
 });
 
-export default YearHeatmap;
 
 const styles = StyleSheet.create({
   card: {
