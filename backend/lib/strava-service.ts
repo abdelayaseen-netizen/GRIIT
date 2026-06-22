@@ -89,7 +89,7 @@ export async function exchangeCodeForToken(code: string): Promise<StravaTokenRes
   return data;
 }
 
-export async function refreshAccessToken(connection: ConnectedAccountRow): Promise<StravaTokenResponse> {
+async function refreshAccessToken(connection: ConnectedAccountRow): Promise<StravaTokenResponse> {
   const { clientId, clientSecret, enabled } = getStravaConfig();
   if (!enabled) throw new Error("Strava is not configured");
   if (!connection.refresh_token) throw new Error("No refresh token");

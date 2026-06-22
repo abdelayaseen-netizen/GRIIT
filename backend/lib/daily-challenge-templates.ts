@@ -3,7 +3,7 @@
  * Used by the daily challenge generator (cron or manual).
  */
 
-export interface DailyChallengeTaskTemplate {
+interface DailyChallengeTaskTemplate {
   title: string;
   type: "simple" | "journal" | "timer" | "photo";
   required?: boolean;

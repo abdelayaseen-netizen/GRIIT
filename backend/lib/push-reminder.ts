@@ -106,7 +106,7 @@ function pickEveningCopy(streak: number): { title: string; body: string } {
 }
 
 /** "Come back" notification templates for users inactive 3+ days. */
-export const COMEBACK_TEMPLATES: { title: string; body: string }[] = [
+const COMEBACK_TEMPLATES: { title: string; body: string }[] = [
   { title: "We miss you", body: "Your streak is waiting. Come back and secure today." },
   { title: "Ready when you are", body: "A few days off — no judgment. Tap to pick up where you left off." },
   { title: "Your discipline doesn't expire", body: "Come back and secure your next day." },

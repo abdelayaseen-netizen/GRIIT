@@ -11,17 +11,17 @@ export interface StreakRow {
 }
 
 /** Minimal task row; API responses use mapped shape from backend/lib/challenge-tasks (ChallengeTaskApiShape). */
-export interface ChallengeTaskRow {
+interface ChallengeTaskRow {
   id: string;
   /** Present on legacy rows; `required` may live in config JSONB only. */
   required?: boolean;
 }
 
 /** Participation type: solo (default), duo, team daily discipline, or shared goal. */
-export type ParticipationType = "solo" | "duo" | "team" | "shared_goal";
+type ParticipationType = "solo" | "duo" | "team" | "shared_goal";
 
 /** Run status for team/shared_goal only. Solo ignores this. */
-export type RunStatus = "waiting" | "active" | "completed" | "failed";
+type RunStatus = "waiting" | "active" | "completed" | "failed";
 
 /** Challenge row with nested challenge_tasks (list/getFeatured). */
 export interface ChallengeWithTasksRow {

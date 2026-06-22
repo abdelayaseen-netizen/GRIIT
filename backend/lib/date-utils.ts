@@ -15,7 +15,7 @@ export function addCalendarDaysToDateKey(dateKey: string, deltaDays: number): st
   return dt.toISOString().slice(0, 10);
 }
 
-export function formatDateKeyInTimeZone(isoInstant: Date, timeZone: string): string {
+function formatDateKeyInTimeZone(isoInstant: Date, timeZone: string): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -111,12 +111,12 @@ export function getWeekEndDateKey(date: Date = new Date(), timeZone?: string | n
   return addCalendarDaysToDateKey(start, 6);
 }
 
-export function dateKeyFromDate(d: Date): string {
+function dateKeyFromDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
 /** Parse YYYY-MM-DD to Date at midnight local time (matches streak/freeze "yesterday" logic). */
-export function parseDateKey(key: string): Date {
+function parseDateKey(key: string): Date {
   const parts = key.split("-").map(Number);
   const y = parts[0];
   const m = parts[1];
