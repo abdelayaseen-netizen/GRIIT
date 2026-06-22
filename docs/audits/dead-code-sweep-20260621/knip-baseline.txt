@@ -1,0 +1,253 @@
+Unused files (35)
+components/cards/DarkHeroCard.tsx           
+components/challenges/DailyCard.tsx         
+components/challenges/TeamChallengeCard.tsx 
+components/discover/CategoryRail.tsx        
+components/discover/FindMoreFooter.tsx      
+components/discover/SuggestedPeopleRow.tsx  
+components/discover/TrendingPostsSection.tsx
+components/home/ActiveTaskCard.tsx          
+components/home/DailyBonusV2.tsx            
+components/home/DailyQuote.tsx              
+components/home/GoalCard.tsx                
+components/home/HomeHeader.tsx              
+components/home/NextUnlock.tsx              
+components/home/PointsExplainer.tsx         
+components/home/StreakHeroV2.tsx            
+components/home/StreakHeroV3.tsx            
+components/home/WeekStrip.tsx               
+components/profile/MiniStats.tsx            
+components/profile/StreakHeatmap.tsx        
+components/profile/StreakHero.tsx           
+components/profile/TodayTaskStrip.tsx       
+components/shared/ReportChallengeModal.tsx  
+components/shared/SectionHeader.tsx         
+components/task/RunPickerColumn.tsx         
+components/task/TaskCompleteForm.tsx        
+components/task/VerificationGates.tsx       
+components/typography/_resolveColor.ts      
+components/typography/Body.tsx              
+components/typography/Caption.tsx           
+components/typography/Display.tsx           
+components/typography/Headline.tsx          
+components/typography/index.ts              
+components/typography/Label.tsx             
+lib/prefetch-queries.ts                     
+lib/quotes.ts                               
+Unused devDependencies (2)
+depcheck  package.json:92:6
+ts-prune  package.json:96:6
+Unlisted dependencies (2)
+expo-system-ui  app.json                              
+docx            scripts/audit/build_scorecard.mjs:28:8
+Unresolved imports (1)
+babel-preset-expo  babel.config.js
+Unused exports (81)
+mapTaskRowToApi             function  backend/lib/challenge-tasks.ts:88:17                   
+toTaskType                  function  backend/lib/challenge-tasks.ts:191:17                  
+buildTaskConfigFromInput    function  backend/lib/challenge-tasks.ts:198:17                  
+pickTemplateForDate         function  backend/lib/daily-challenge-generator.ts:12:17         
+formatDateKeyInTimeZone     function  backend/lib/date-utils.ts:18:17                        
+dateKeyFromDate             function  backend/lib/date-utils.ts:114:17                       
+parseDateKey                function  backend/lib/date-utils.ts:119:17                       
+COMEBACK_TEMPLATES                    backend/lib/push-reminder.ts:109:14                    
+escapePostgrestFilter       function  backend/lib/sanitize-search.ts:25:17                   
+refreshAccessToken          function  backend/lib/strava-service.ts:92:23                    
+HeroFeaturedCard                      components/challenges/HeroFeaturedCard.tsx:76:14       
+default                     function  components/create/CreateWizardV2.tsx:633:16            
+default                     function  components/create/NewTaskSheet.tsx:974:16              
+default                     function  components/create/v2/StepBasics.tsx:345:16             
+default                     function  components/create/v2/StepRules.tsx:365:16              
+PACKS                                 components/create/v2/StepTasks.tsx:70:14               
+default                     function  components/create/v2/StepTasks.tsx:520:16              
+default                     variable  components/discover/DiscoverForYouGrid.tsx:461:16      
+default                     variable  components/discover/ForYouHero.tsx:201:16              
+default                     variable  components/discover/grid/ChallengeGridCard.tsx:126:16  
+default                     variable  components/discover/grid/NudgeCard.tsx:155:16          
+default                     variable  components/discover/grid/PersonCard.tsx:166:16         
+default                     variable  components/discover/grid/ProofTile.tsx:118:16          
+StreakRiskBanner                      components/discover/StreakRiskBanner.tsx:37:14         
+default                     function  components/home/HomeHeaderV2.tsx:235:16                
+default                     function  components/home/StatGrid.tsx:214:16                    
+default                     function  components/home/StreakHeroV4.tsx:494:16                
+OBV2_SPACE                            components/onboarding/v2/theme.ts:57:14                
+default                     variable  components/profile/MutualFollowersRow.tsx:144:16       
+default                     variable  components/profile/ProfileHeader.tsx:411:16            
+default                     variable  components/profile/StreakBar.tsx:106:16                
+default                     variable  components/profile/YearHeatmap.tsx:126:16              
+CONSEQUENCES                          components/settings/AccountDangerZone.tsx:17:14        
+REMINDER_PRESETS                      components/settings/ReminderSection.tsx:21:14          
+SHARE_CARD_WIDTH                      components/ShareCard.tsx:6:14                          
+SHARE_CARD_HEIGHT                     components/ShareCard.tsx:7:14                          
+default                     variable  components/shared/StreakRingAvatar.tsx:155:16          
+SkeletonChallengeCard                 components/skeletons/index.ts:3:10                     
+SkeletonHomeChallengeCard             components/skeletons/index.ts:5:10                     
+SkeletonHeroCard                      components/skeletons/index.ts:6:10                     
+SkeletonChallengeCard                 components/skeletons/SkeletonChallengeCard.tsx:6:14    
+SkeletonHeroCard                      components/skeletons/SkeletonHeroCard.tsx:6:14         
+SkeletonHomeChallengeCard             components/skeletons/SkeletonHomeChallengeCard.tsx:6:14
+default                     function  components/task/bodies/TaskCheckinBody.tsx:273:16      
+default                     function  components/task/bodies/TaskCounterBody.tsx:395:16      
+default                     function  components/task/bodies/TaskJournalBody.tsx:221:16      
+default                     function  components/task/bodies/TaskPhotoBody.tsx:277:16        
+default                     function  components/task/bodies/TaskRunBody.tsx:381:16          
+default                     function  components/task/bodies/TaskSimpleBody.tsx:106:16       
+default                     function  components/task/bodies/TaskTimerBody.tsx:278:16        
+default                     function  components/task/bodies/TaskWorkoutBody.tsx:595:16      
+celebStyles                           components/task/task-complete-styles.ts:359:14         
+default                     function  components/task/TaskShell.tsx:657:16                   
+default                     function  components/TaskEditorModal.tsx:258:25                  
+PrimaryButton                         components/ui/index.ts:1:10                            
+EmptyState                            components/ui/index.ts:2:10                            
+trackNotificationSent       function  lib/analytics.ts:321:17                                
+fetchWithTimeout            function  lib/api.ts:70:23                                       
+AVATAR_COLORS                         lib/avatar.ts:9:14                                     
+getChallengeTimeRemaining   function  lib/challenge-timer.ts:6:17                            
+CHALLENGE_CATEGORY_COLORS             lib/design-system.ts:938:14                            
+DEFAULT_CATEGORY_COLOR                lib/design-system.ts:971:14                            
+DS_TOUCH                              lib/design-system.ts:1324:14                           
+DS_BUTTON                             lib/design-system.ts:1331:14                           
+TASK_PREP_COPY                        lib/notification-copy.ts:110:14                        
+SOCIAL_TRIGGER_ID                     lib/notifications.ts:61:14                             
+ENABLE_TWO_HOURS_LEFT                 lib/notifications.ts:79:14                             
+formatTimeForNotification   function  lib/notifications.ts:89:17                             
+setupNotificationChannel    function  lib/notifications.ts:207:23                            
+cancelChallengeReminders    function  lib/notifications.ts:709:23                            
+isPremium                   function  lib/premium.ts:24:17                                   
+isAutoGeneratedUsername     function  lib/profile-display.ts:3:17                            
+profileHandleAt             function  lib/profile-display.ts:22:17                           
+stripHtml                   function  lib/sanitize.ts:10:17                                  
+MAX_LENGTHS                           lib/sanitize.ts:16:14                                  
+sanitizeText                function  lib/sanitize.ts:27:17                                  
+initializeRevenueCat        function  lib/subscription.ts:51:23                              
+syncSubscriptionToSupabase  function  lib/subscription.ts:105:23                             
+JOURNAL_PROMPTS                       lib/task-helpers.ts:4:14                               
+getEndTargetsForTaskType    function  lib/task-progress.ts:65:17                             
+computeTimeWindow           function  lib/time-enforcement.ts:36:17                          
+Unused exported types (74)
+AchievementKey                   type       backend/lib/achievement-definitions.ts:54:13        
+TaskConfig                       type       backend/lib/challenge-tasks.ts:8:15                 
+DailyChallengeTaskTemplate       interface  backend/lib/daily-challenge-templates.ts:6:18       
+ActiveChallengeRow               type       backend/trpc/guards.ts:4:13                         
+ChallengeTaskRow                 interface  backend/types/db.ts:14:18                           
+ParticipationType                type       backend/types/db.ts:21:13                           
+RunStatus                        type       backend/types/db.ts:24:13                           
+CompactChallengeCategory         type       components/challenges/CompactChallengeRow.tsx:15:15 
+CompactChallengeDifficulty       type       components/challenges/CompactChallengeRow.tsx:15:41 
+HeroFeaturedCategory             type       components/challenges/HeroFeaturedCard.tsx:19:13    
+HeroFeaturedCardProps            interface  components/challenges/HeroFeaturedCard.tsx:41:18    
+WhoBasics                        type       components/create/steps/StepBasics.tsx:10:13        
+RecommendedChallengePreviewUser  type       components/discover/grid/ChallengeGridCard.tsx:27:13
+NudgeVariant                     type       components/discover/grid/NudgeCard.tsx:22:13        
+StreakRiskBannerProps            interface  components/discover/StreakRiskBanner.tsx:17:18      
+ProfileHeaderMode                type       components/profile/ProfileHeader.tsx:22:13          
+YearHeatmapDay                   type       components/profile/YearHeatmap.tsx:19:13            
+BaseCardProps                    interface  components/share/ShareCards.tsx:9:18                
+ShareCardType                    type       components/ShareCard.tsx:9:13                       
+TaskCheckinValue                 type       components/task/bodies/TaskCheckinBody.tsx:17:13    
+TaskCounterValue                 type       components/task/bodies/TaskCounterBody.tsx:28:13    
+TaskJournalValue                 type       components/task/bodies/TaskJournalBody.tsx:23:13    
+TaskPhotoValue                   type       components/task/bodies/TaskPhotoBody.tsx:27:13      
+TaskRunValue                     type       components/task/bodies/TaskRunBody.tsx:25:13        
+TaskSimpleValue                  type       components/task/bodies/TaskSimpleBody.tsx:15:13     
+TaskTimerValue                   type       components/task/bodies/TaskTimerBody.tsx:20:13      
+WorkoutSet                       type       components/task/bodies/TaskWorkoutBody.tsx:18:13    
+WorkoutExercise                  type       components/task/bodies/TaskWorkoutBody.tsx:20:13    
+TaskShellGateStatus              type       components/task/TaskShell.tsx:41:13                 
+TaskShellOtherTask               type       components/task/TaskShell.tsx:49:13                 
+TaskShellPrimaryCta              type       components/task/TaskShell.tsx:67:13                 
+TaskShellSecondaryCta            type       components/task/TaskShell.tsx:76:13                 
+ActiveTaskTimerType              type       lib/active-task-timer.ts:14:13                      
+PackTaskPhoto                    type       lib/challenge-packs.ts:8:13                         
+PackTaskDef                      type       lib/challenge-packs.ts:10:13                        
+LiveActivityTimerType            type       lib/live-activity.ts:23:13                          
+TimeWindow                       interface  lib/time-enforcement.ts:3:18                        
+TimeWindowStatus                 type       lib/time-enforcement.ts:8:13                        
+ActiveSession                    type       store/activeSessionStore.ts:3:13                    
+NotificationPrefs                type       store/notificationPrefsStore.ts:5:13                
+ProofSharePayload                type       store/proofSharePromptStore.ts:3:13                 
+TaskType                         type       types/index.ts:1:13                                 
+MoodLevel                        type       types/index.ts:21:13                                
+BodyState                        type       types/index.ts:23:13                                
+JournalConfig                    interface  types/index.ts:47:18                                
+GoalMode                         type       types/index.ts:60:13                                
+TeamStatus                       type       types/index.ts:61:13                                
+TeamMemberRole                   type       types/index.ts:62:13                                
+InviteType                       type       types/index.ts:63:13                                
+InviteStatus                     type       types/index.ts:64:13                                
+CompletionType                   type       types/index.ts:68:13                                
+VerificationType                 type       types/index.ts:70:13                                
+ChallengeCategory                type       types/index.ts:72:13                                
+ChallengeDifficulty              type       types/index.ts:74:13                                
+ChallengeMode                    type       types/index.ts:76:13                                
+TaskStatus                       type       types/index.ts:78:13                                
+ChallengeStatus                  type       types/index.ts:99:13                                
+User                             interface  types/index.ts:101:18                               
+ChallengePolicy                  interface  types/index.ts:112:18                               
+LocationPolicy                   interface  types/index.ts:130:18                               
+TimeWindowPolicy                 interface  types/index.ts:139:18                               
+SessionPolicy                    interface  types/index.ts:150:18                               
+TaskRules                        interface  types/index.ts:157:18                               
+TaskTemplate                     interface  types/index.ts:175:18                               
+ReplayRules                      interface  types/index.ts:188:18                               
+DailyChallengeConfig             interface  types/index.ts:196:18                               
+Challenge                        interface  types/index.ts:204:18                               
+GeoTimeCheckinVerificationData   interface  types/index.ts:234:18                               
+VerificationData                 interface  types/index.ts:268:18                               
+TeamMemberForListApi             interface  types/index.ts:334:18                               
+Team                             interface  types/index.ts:355:18                               
+TeamMember                       interface  types/index.ts:368:18                               
+TeamInvite                       interface  types/index.ts:379:18                               
+TeamWithMembers                  interface  types/index.ts:391:18                               
+Duplicate exports (29)
+CreateWizardV2|default      components/create/CreateWizardV2.tsx          
+NewTaskSheet|default        components/create/NewTaskSheet.tsx            
+StepBasics|default          components/create/v2/StepBasics.tsx           
+StepRules|default           components/create/v2/StepRules.tsx            
+StepTasks|default           components/create/v2/StepTasks.tsx            
+DiscoverForYouGrid|default  components/discover/DiscoverForYouGrid.tsx    
+ForYouHero|default          components/discover/ForYouHero.tsx            
+ChallengeGridCard|default   components/discover/grid/ChallengeGridCard.tsx
+NudgeCard|default           components/discover/grid/NudgeCard.tsx        
+PersonCard|default          components/discover/grid/PersonCard.tsx       
+ProofTile|default           components/discover/grid/ProofTile.tsx        
+HomeHeaderV2|default        components/home/HomeHeaderV2.tsx              
+StatGrid|default            components/home/StatGrid.tsx                  
+StreakFlame|default         components/home/StreakFlame.tsx               
+StreakHeroV4|default        components/home/StreakHeroV4.tsx              
+MutualFollowersRow|default  components/profile/MutualFollowersRow.tsx     
+ProfileHeader|default       components/profile/ProfileHeader.tsx          
+StreakBar|default           components/profile/StreakBar.tsx              
+YearHeatmap|default         components/profile/YearHeatmap.tsx            
+StreakRingAvatar|default    components/shared/StreakRingAvatar.tsx        
+TaskCheckinBody|default     components/task/bodies/TaskCheckinBody.tsx    
+TaskCounterBody|default     components/task/bodies/TaskCounterBody.tsx    
+TaskJournalBody|default     components/task/bodies/TaskJournalBody.tsx    
+TaskPhotoBody|default       components/task/bodies/TaskPhotoBody.tsx      
+TaskRunBody|default         components/task/bodies/TaskRunBody.tsx        
+TaskSimpleBody|default      components/task/bodies/TaskSimpleBody.tsx     
+TaskTimerBody|default       components/task/bodies/TaskTimerBody.tsx      
+TaskWorkoutBody|default     components/task/bodies/TaskWorkoutBody.tsx    
+TaskShell|default           components/task/TaskShell.tsx                 
+Configuration hints (21)
+. (root)                                 knip.json  Add entry and/or refine project files (35 unused files)
+.expo/**                                 knip.json  Remove from ignore                                     
+dist/**                                  knip.json  Remove from ignore                                     
+ios/**                                   knip.json  Remove from ignore                                     
+android/**                               knip.json  Remove from ignore                                     
+node_modules/**                          knip.json  Remove from ignore                                     
+griit_brand/**                           knip.json  Remove from ignore                                     
+tests/**                                 knip.json  Remove from ignore                                     
+expo-router                              knip.json  Remove from ignoreDependencies                         
+expo-status-bar                          knip.json  Remove from ignoreDependencies                         
+babel-plugin-transform-remove-console    knip.json  Remove from ignoreDependencies                         
+@babel/core                              knip.json  Remove from ignoreDependencies                         
+@expo/ngrok                              knip.json  Remove from ignoreDependencies                         
+concurrently                             knip.json  Remove from ignoreDependencies                         
+tsx                                      knip.json  Remove from ignoreBinaries                             
+expo                                     knip.json  Remove from ignoreBinaries                             
+backend/server.ts                        knip.json  Remove redundant entry pattern                         
+metro.config.js                          knip.json  Remove redundant entry pattern                         
+babel.config.js                          knip.json  Remove redundant entry pattern                         
+eslint.config.js                         knip.json  Remove redundant entry pattern                         
+vitest.config.ts                         knip.json  Remove redundant entry pattern                         

@@ -1,0 +1,9 @@
+Branch: chore/dead-code-sweep-20260621
+HEAD: 9b9c3c8d71152b3613021746dd2fcd29b4919751
+Date: Sun Jun 21 20:44:02 EDT 2026
+
+
+> expo-app@1.0.0 typecheck
+> tsc --noEmit
+
+EXIT: 0
