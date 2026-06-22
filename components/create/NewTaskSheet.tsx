@@ -29,7 +29,6 @@ import {
   Camera,
   CheckSquare,
   GlassWater,
-  MapPin,
   Pencil,
   Plus,
   ShieldAlert,
@@ -107,13 +106,6 @@ const PROOF_TYPES: readonly ProofTypeDef[] = [
     label: "Reading",
     sub: "Pages",
     icon: (p) => <BookOpen {...p} />,
-    advanced: true,
-  },
-  {
-    id: "checkin",
-    label: "Check-in",
-    sub: "Location",
-    icon: (p) => <MapPin {...p} />,
     advanced: true,
   },
   {

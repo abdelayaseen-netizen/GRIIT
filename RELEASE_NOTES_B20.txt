@@ -1,0 +1,26 @@
+Build 20 — Home + Feed polish
+
+Fixes
+• Stat-grid badge no longer truncates ("First Badge" renders fully now, even with longer badge names)
+
+Feed improvements
+• Streak chip on every card showing how many days the user has secured
+• Verified pill overlay on photos with confirmed proof
+• No-photo posts now render in a compact card to keep the feed scannable
+• Top comment now previews above the engagement row
+• Milestone banner on completed-challenge posts
+• Removed the empty "While you were away" banner
+
+Behind the scenes
+• 6 new PostHog events for funnel analytics on feed interactions
+
+Known limitations / not in this build
+• Restart events on the feed (event type not yet emitted by backend)
+• Multi-photo carousels (schema change required, planned next)
+• Avatar "secured today" ring (planned)
+
+Please test
+1. Home → check the "Next Badge" card shows the full badge name
+2. Scroll the feed → confirm streak chips, verified pills, and milestone banners render where applicable
+3. Tap a comment preview → opens the full comment thread
+4. Photo-less posts → confirm they're now compact, not full-height

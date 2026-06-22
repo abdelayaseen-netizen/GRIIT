@@ -31,7 +31,7 @@ type WizardTaskType =
   | "workout"
   | "counter";
 
-const MORE_TASK_TYPES: WizardTaskType[] = ["water", "journal", "reading", "photo", "checkin", "counter"];
+const MORE_TASK_TYPES: WizardTaskType[] = ["water", "journal", "reading", "photo", "counter"];
 
 function NewTaskTypeCard({
   icon,
@@ -1513,14 +1513,6 @@ export default function NewTaskModal({ visible, onClose, onAdd, hardModeGlobal, 
                 />
               </View>
               <View style={s.rowGap8}>
-                <NewTaskTypeCard
-                  icon="📍"
-                  name="Check-in"
-                  subtitle="Location stamp"
-                  selected={kind === "checkin"}
-                  onPress={() => setKind("checkin")}
-                  style={s.flex1}
-                />
                 <NewTaskTypeCard
                   icon="#️⃣"
                   name="Counter"
