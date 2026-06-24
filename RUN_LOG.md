@@ -179,13 +179,123 @@ Entry method: **Home modal takeover** — fires once per day (AsyncStorage key `
 
 ## Phase 6 — Full Wiring Audit + Smoke
 
-### Final Checks
-- `grep -rn "onPress={() =>" app/ components/ | grep -E "\{\}\)|console\.log|// TODO"` → none
-- Every new screen reachable + exitable
-- Wiring Map re-walked — each row resolved or in BLOCKERS.md
-- `npx tsc --noEmit` → 0
+### Checks Run (2026-06-24)
 
-**Commit:** `feat(daylight-v3): final wiring audit + RUN_LOG complete`
+**Dead onPress grep:**
+```
+grep -rn "onPress={() =>" app/ components/ | grep -E "\{\}\)|console\.log|// TODO"
+```
+→ **0 matches** — no dead handlers.
+
+**Raw hex grep (app/ + components/):**
+```
+grep -rn "#[0-9A-Fa-f]{6}" app/ components/
+```
+→ Only 2 matches, both in JSDoc comment text in `components/onboarding/v2/theme.ts` — no raw hex in code.
+
+**Font weight 600+ grep (in-scope Daylight files):**
+```
+grep -rniE "fontweight.*(600|700|800|900)" components/home/ components/task/TaskCompleteCelebration.tsx app/
+```
+→ **0 matches** — all Daylight v3 files use DS tokens or 400/500 weights.
+
+Pre-existing violations in `components/profile/`, `components/Celebration.tsx`, `components/task/task-complete-styles.ts`, `components/onboarding/v2/*` not introduced by this branch.
+
+**No wizard internals in Discover:**
+```
+grep -rn "create/|CreateWizardV2|CreateChallengeWizard|wizard" app/(tabs)/discover.tsx components/discover/
+```
+→ Only comment text — no route into wizard internals.
+
+**Wiring Map Re-Walk — each row resolved or in BLOCKERS.md:**
+
+| Element | Result |
+|---------|--------|
+| Home avatar → Profile | ✅ RESOLVED — onPressAvatar → ROUTES.TABS_PROFILE |
+| Home "Post today's proof" CTA | ✅ RESOLVED — onPressPrimaryCTA → onPressTask → TASK_COMPLETE |
+| Home freeze tokens | ✅ RESOLVED — onPressFreeze → StreakFreezeModal |
+| Home incomplete task row | ✅ RESOLVED — onPressTask → TASK_COMPLETE |
+| Home bottom nav | ✅ RESOLVED — 5 real tab routes |
+| Home streak/ledger | ✅ RESOLVED — from trpcQuery (no hardcoded data) |
+| Home "Come back tomorrow" | ✅ RESOLVED — inert View, a11y hidden |
+| Home bell icon | ✅ RESOLVED — onPressBell → ACTIVITY tab |
+| S3 "Finish & post proof" | ✅ RESOLVED — onJeopardyFinish → onPressTask → TASK_COMPLETE |
+| S3 "Use a freeze instead" | ✅ RESOLVED — FLAGS.FREEZE_SERVER_ENFORCED guard, calls StreakFreezeModal |
+| S3 dismiss | ✅ RESOLVED — X button + backdrop onDismiss |
+| S3 streak_jeopardy_shown | ✅ RESOLVED — fires in useEffect on visible |
+| S3 streak_freeze_used | ✅ RESOLVED — fires in handleFreeze |
+| S4 Friends/Everyone toggle | ✅ RESOLVED — scope filter on feed.getLiveFeed |
+| S4 avatar/name | ✅ RESOLVED — navigateProfile → PROFILE_USERNAME |
+| S4 respect gesture | ✅ RESOLVED — TRPC.feed.react (optimistic + server) |
+| S4 comment | ✅ RESOLVED — openPost → POST_ID |
+| S4 share | ✅ RESOLVED — Share.share() native sheet |
+| S4 card tap | ✅ RESOLVED — openPost → POST_ID |
+| S5 Retake photo | ✅ RESOLVED — handleTakePhoto → launchCameraAsync |
+| S5 caption | ✅ RESOLVED — photoCaption state bound |
+| S5 Share proof | ✅ RESOLVED — handleShareToFeed → TRPC.feed.shareCompletion |
+| S5 success → Home secured | ✅ RESOLVED — FLAGS.REAL_VERIFICATION=false, completeTask is real server |
+| S5 proof_posted event | ✅ RESOLVED — fires in handleSubmit success |
+| S6 THIS WEEK card | ✅ RESOLVED — ForYouHero with real featured query |
+| S6 chips | ✅ RESOLVED — CategoryChips with scope filter |
+| S6 Start | ✅ RESOLVED — ForYouHero → CHALLENGE_ID |
+| S6 Build your own | ✅ RESOLVED — new CTA → CREATE_WIZARD (existing entry) |
+| S6 bottom nav | ✅ RESOLVED — 5 real tab routes |
+| S12 Share it | ✅ RESOLVED — Share.share() native sheet |
+| S12 Keep going | ✅ RESOLVED — onKeepGoing → TABS_DISCOVER |
+| S12 dismiss | ✅ RESOLVED — X button + backdrop onDismiss |
+
+**TypeScript:** `npx tsc --noEmit` → **0 errors**
+
+**Tests:** `npx vitest run` → **91 tests passed / 16 files** (all pre-existing tests unaffected)
+
+**Commit:** `feat(daylight-v3): Phase 6 final wiring audit + RUN_LOG complete`
+
+---
+
+## Final Summary
+
+### Phases Completed
+| Phase | Status | Commit |
+|-------|--------|--------|
+| 0 — Recon + Wiring Map | ✅ | 6e7fae2 |
+| 1 — Tokens + primitives | ✅ | 6e7fae2 |
+| 2 — Home (S1+S2+S11) | ✅ | bc85f4e |
+| 3 — Jeopardy (S3) + Streak moment (S12) | ✅ | c2395d4 |
+| 4 — Post proof (S5) | ✅ | 1d3b22a |
+| 5 — Feed (S4) + Discover (S6) | ✅ | e5f40dc |
+| 6 — Full wiring audit | ✅ | (this commit) |
+
+### Files Created
+- `components/home/JeopardyModal.tsx` — S3 streak jeopardy modal
+- `components/home/StreakMomentOverlay.tsx` — S12 streak moment full-screen overlay
+- `RUN_LOG.md` — this file
+- `BLOCKERS.md` — B1–B5 gaps
+
+### Files Modified
+- `lib/design-system.ts` — DS_COLORS_V2.brand.primary → #DC5401
+- `lib/feature-flags.ts` — REAL_VERIFICATION, FREEZE_SERVER_ENFORCED flags
+- `lib/analytics.ts` — proof_posted event type
+- `components/home/HomeHeaderV2.tsx` — avatar button, remove emoji
+- `components/home/StreakHeroV4.tsx` — "Come back tomorrow" inert element
+- `app/(tabs)/index.tsx` — all S1/S2/S3/S11/S12 wiring
+- `app/(tabs)/discover.tsx` — Build your own CTA
+- `hooks/useTaskCompleteScreen.tsx` — proof_posted trackEvent
+
+### Flags Introduced
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `FLAGS.REAL_VERIFICATION` | `false` | Gates secured-transition on real server verification ack |
+| `FLAGS.FREEZE_SERVER_ENFORCED` | `false` | Gates freeze action on server-enforced confirmation |
+
+### BLOCKERS.md Digest
+- **B1:** Real verification (camera-only) not server-enforced — `FLAGS.REAL_VERIFICATION`
+- **B2:** Freeze not session-server-enforced — `FLAGS.FREEZE_SERVER_ENFORCED`
+- **B3:** Respect daily limit server enforcement (minor hardening)
+- **B4:** Streak moment fires on Home focus, not immediately on completion nav
+- **B5:** Create wizard mid-migration — Build your own routes to existing entry only
+
+### Branch
+`feat/daylight-v3` — **do not merge to main until device verification.**
 
 ---
 
