@@ -335,16 +335,19 @@ export default function HomeScreen() {
 
   const onPressPrimaryCTA = useCallback(() => {
     if (heroTasks.length === 0) {
+      track({ name: 'discover_challenge_tapped' });
       router.push(ROUTES.TABS_DISCOVER as never);
       return;
     }
     if (heroMetrics.tasksRemaining > 0) {
       const next = heroTasks.find((t) => !t.done);
-      if (next) onPressTask(next);
+      if (next) {
+        track({ name: 'task_completed' });
+        onPressTask(next);
+      }
       return;
     }
-    // tasksRemaining === 0 → already on home; no-op (could scroll to feed in
-    // a follow-up).
+    // tasksRemaining === 0 and on home — no-op; "Come back tomorrow" is shown.
   }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router]);
 
   const onPressFreeze = useCallback(() => {
@@ -371,6 +374,10 @@ export default function HomeScreen() {
       }
     }
   }, [streak, profile?.username]);
+
+  const onPressAvatar = useCallback(() => {
+    router.push(ROUTES.TABS_PROFILE as never);
+  }, [router]);
 
   const onPressBell = useCallback(() => {
     router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
@@ -461,6 +468,9 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <HomeHeaderV2
               firstName={firstName}
+              avatarUrl={(profile as { avatar_url?: string | null } | null)?.avatar_url ?? null}
+              userId={user?.id}
+              onPressAvatar={onPressAvatar}
               hero={heroProps}
               heroState={heroState}
               onPressBell={onPressBell}
