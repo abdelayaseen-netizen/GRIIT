@@ -1059,7 +1059,7 @@ export const DS_COLORS_V2 = {
 
   // Brand
   brand: {
-    primary: '#BB471D',         // The GRIIT orange — 5.2:1 contrast with white
+    primary: '#DC5401',         // Daylight brand orange (locked). AA large-text (3.96:1). accentAccessible (#BB471D) for dense text.
     primaryHover: '#9E3A14',    // Pressed/hover state
     primarySoft: '#FAECE7',     // Subtle tint backgrounds (light mode only)
     primaryOnDark: '#E8693E',   // Slightly brighter for OLED compensation
