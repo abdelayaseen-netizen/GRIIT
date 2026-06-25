@@ -130,32 +130,29 @@ Both screens' `verifyTask` calls are now wired to the real `AppContext.verifyTas
 
 ---
 
-## 7. Migrations to apply manually
+## 7. Migration status
 
-Two migration files are in the repo and committed to `fix/real-verification`. Apply both in the Supabase SQL editor in order:
+| File | Purpose | Live status |
+|------|---------|-------------|
+| `20260625000000_add_capture_source_to_check_ins.sql` | Add `capture_source` column | **✓ APPLIED** |
+| `20260625000001_fix_secure_day_rpc_required_column.sql` | Fix `secure_day` RPC broken `ct.required` column | **PENDING — apply manually** |
+| `20260625000002_check_ins_rls_s2_baseline.sql` | S2 RLS policy definitions (fresh-DB / staging only) | **DO NOT apply to production** |
 
-### S1 — `capture_source` column (required for camera-only enforcement)
-```
-supabase/migrations/20260625000000_add_capture_source_to_check_ins.sql
-```
-```sql
-ALTER TABLE public.check_ins
-  ADD COLUMN IF NOT EXISTS capture_source TEXT
-  CONSTRAINT check_ins_capture_source_check
-    CHECK (capture_source IN ('camera', 'library', 'strava', 'unknown'));
-```
+### The only pending migration: `20260625000001`
 
-### S2 — RLS baseline (documents already-live state; safe to re-run)
-```
-supabase/migrations/20260625000002_check_ins_rls_s2_baseline.sql
-```
-This migration drops the old weak INSERT/UPDATE policies and re-creates the live tightened ones. Safe to run even if already applied (uses `DROP POLICY IF EXISTS`).
+Apply in the Supabase SQL editor (copy the file contents directly):
 
-### Secure_day RPC fix (unlocks streak advancement)
 ```
 supabase/migrations/20260625000001_fix_secure_day_rpc_required_column.sql
 ```
-**CRITICAL**: Until this is applied, `secure_day` will error at runtime and `streakAdvanced` will always be `false`. The verification itself (`verified: true`) still succeeds — the error is caught and logged without failing the completion.
+
+**Why it matters:** Until this is applied, `secure_day` errors at runtime with `column challenge_tasks.required does not exist` every time a user finishes all their required tasks. `checkins.verifyTask` catches this error and returns `verified: true` anyway (the completion saves correctly), but `streakAdvanced` will always be `false` and the streak count won't increment. Apply this to restore streak advancement.
+
+### `20260625000002` — repo-history record, production-safe, do not apply manually
+
+This file records the S2 INSERT/UPDATE policy definitions that were applied directly in the Supabase SQL editor by the repo owner. It is **not intended for manual application to production** — the policies are already live and correct. Running it on production would cause an unnecessary (if brief) policy-drop window.
+
+The file is guarded: each block uses a `pg_policies` existence check inside a `DO $$ ... $$` block, so it is a true no-op on any DB where the policies already exist. It exists so that a fresh DB (staging, CI, local dev) gets the correct policies automatically.
 
 ---
 
@@ -163,8 +160,8 @@ supabase/migrations/20260625000001_fix_secure_day_rpc_required_column.sql
 
 | Phase | Commits | Status |
 |-------|---------|--------|
-| S1 migration — `capture_source` column | `c201b7c` | ✓ Done — apply manually |
-| `secure_day` RPC fix | `c201b7c` | ✓ Done — apply manually |
+| S1 migration — `capture_source` column | `c201b7c` | ✓ Applied to live |
+| `secure_day` RPC fix | `c201b7c` | Pending — apply `20260625000001` |
 | `checkins.verifyTask` server mutation | `c201b7c` | ✓ Deployed on push |
 | Client swap — primary + legacy flows | `1446066` | ✓ Deployed on push |
 | Rejection paths + enriched analytics | `0bde0b9` | ✓ Deployed on push |
