@@ -45,6 +45,35 @@ Branch: `feat/daylight-v3` | Date: 2026-06-24
 
 ---
 
+## B6 — Phase 8: TestFlight build blocked (EXPO_TOKEN absent + no ASC API key)
+
+**Screen:** N/A — CI/ship blocker  
+**What's missing:** Two credentials are required for a fully non-interactive EAS build + submit:
+
+1. **`EXPO_TOKEN`** — EAS account token for `pure.soul.business@gmail.com`. Must be set as an env var before running `eas build`. Currently absent from the shell environment.
+
+2. **ASC API Key** — `eas.json` submit profile (`production`) has `appleTeamId` and `ascAppId` but is missing the App Store Connect API key fields (`appleApiKeyId`, `appleApiIssuerId`, `appleApiKeyPath`). Without these, `eas submit --non-interactive` cannot authenticate to App Store Connect and will fail or hang.
+
+**Impact:** EAS build and submit were skipped entirely in Phase 8. The branch is pushed and the PR is open. No build artifact exists.
+
+**To unblock:**
+1. Export `EXPO_TOKEN=<eas-token-for-pure.soul.business@gmail.com>`
+2. Add to `eas.json` under `submit.production.ios`:
+   ```json
+   "appleApiKeyId": "<key-id>",
+   "appleApiIssuerId": "<issuer-id>",
+   "appleApiKeyPath": "<path-to-.p8>"
+   ```
+3. Run from `feat/daylight-v3`:
+   ```bash
+   eas build --platform ios --profile production --non-interactive
+   eas submit --platform ios --latest --profile production --non-interactive
+   ```
+4. Set TestFlight "What to Test":
+   > New Daylight UI across Home, Feed, Discover, Proof, plus the new streak-jeopardy screen. Note: completing/securing a day is intentionally disabled in this build (verification backend pending) — review UI and navigation only.
+
+---
+
 ## B5 — "Build your own" route: Create wizard is mid-migration
 
 **Screen:** Discover (S6)  

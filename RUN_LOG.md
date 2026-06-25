@@ -299,6 +299,63 @@ grep -rn "create/|CreateWizardV2|CreateChallengeWizard|wizard" app/(tabs)/discov
 
 ---
 
+## Phase 7 — GitHub PR
+
+**Status:** Complete  
+**PR URL:** https://github.com/abdelayaseen-netizen/GRIIT/pull/29  
+**Title:** Daylight v3 redesign  
+**Base:** `main` → **UNMERGED** (auto-merge: null, state: OPEN)
+
+PR body contains:
+- Required first line: "Core secure-a-day loop is flag-gated OFF pending real verification (verifyTask stub)."
+- Phase table + commit SHAs
+- Files created/modified
+- Flags introduced (REAL_VERIFICATION, FREEZE_SERVER_ENFORCED)
+- Full BLOCKERS digest (B1–B5)
+- Review checklist
+
+---
+
+## Phase 8 — TestFlight Build + Submit
+
+### Precondition Gate Results
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` → 0 | ✅ Passed (Phase 6) |
+| Phase 6 wiring audit | ✅ Passed |
+| `grep -n "buildNumber" app.json` → empty | ✅ Passed — no buildNumber in app.json |
+| `EXPO_TOKEN` present | ❌ **ABSENT** — env var is empty |
+
+**Gate FAILED on EXPO_TOKEN.** EAS build and submit skipped in full.
+
+### EAS Configuration Read (for future use)
+
+- `eas.json` build profile for TestFlight: **`production`** (`autoIncrement: true`, distribution defaults to store)
+- `eas.json` submit profile: **`production`** (`appleTeamId: WZT43QXHZB`, `ascAppId: 6761116285`)
+- ASC API key: **NOT configured** in `eas.json` (no `appleApiKeyId`, `appleApiIssuerId`, `appleApiKeyPath`) → non-interactive submit would fail even with a valid EXPO_TOKEN
+
+### What to do when creds are ready
+
+```bash
+# 1. Set the EAS token
+export EXPO_TOKEN=<token-for-pure.soul.business@gmail.com>
+
+# 2. Build (non-interactive, production profile)
+eas build --platform ios --profile production --non-interactive
+
+# 3. Submit to TestFlight only after adding ASC API key to eas.json
+#    (add appleApiKeyId, appleApiIssuerId, appleApiKeyPath to submit.production.ios)
+eas submit --platform ios --latest --profile production --non-interactive
+```
+
+TestFlight "What to Test" notes to set:
+> New Daylight UI across Home, Feed, Discover, Proof, plus the new streak-jeopardy screen. Note: completing/securing a day is intentionally disabled in this build (verification backend pending) — review UI and navigation only.
+
+See **BLOCKERS.md B6** for the full Phase 8 blocker entry.
+
+---
+
 ## Flags Introduced
 | Flag | Default | Purpose |
 |------|---------|---------|
