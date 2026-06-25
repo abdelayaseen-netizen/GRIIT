@@ -37,6 +37,18 @@ export const FLAGS = {
    * When false, app/onboarding/index.tsx renders the existing OnboardingFlow.
    */
   ONBOARDING_V2: false,
+  /**
+   * When true, task completion goes through checkins.verifyTask (real server-side
+   * verification). The flag was gating this work; it is now live.
+   * - Server enforces: ownership, schedule window, proof integrity, camera-only.
+   * - secureDay is called automatically when all required tasks pass.
+   * - UI advances only after server returns { verified: true }.
+   *
+   * Requires manual DB migration before full effect:
+   *   20260625000000 — add check_ins.capture_source
+   *   20260625000001 — fix secure_day RPC (ct.required column)
+   */
+  REAL_VERIFICATION: true,
 } as const;
 
 // ============================================
