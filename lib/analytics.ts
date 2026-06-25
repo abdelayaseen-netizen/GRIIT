@@ -121,7 +121,15 @@ type AnalyticsEvent =
   | { name: "identity_line_shown"; streak_count: number; tier: IdentityTier }
   | { name: "minimum_day_completed"; challenge_id?: string; streak_count?: number; day_number?: number }
   | { name: "review_prompted"; total_days_secured: number; trigger: string }
-  | { name: "post_detail_challenge_tapped"; postId: string; challengeId: string };
+  | { name: "post_detail_challenge_tapped"; postId: string; challengeId: string }
+  | { name: "proof_posted"; challenge_id?: string; task_type?: string; has_photo?: boolean }
+  | { name: "task_verified"; challenge_id?: string; task_type?: string; streak_advanced?: boolean }
+  | {
+      name: "task_verify_rejected";
+      reason_code: string;
+      challenge_id?: string;
+      task_type?: string;
+    };
 
 type UserProperties = {
   days_since_signup?: number;

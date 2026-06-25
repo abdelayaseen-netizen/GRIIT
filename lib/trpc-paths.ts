@@ -73,6 +73,7 @@ export const TRPC = {
     getTodayCheckins: 'checkins.getTodayCheckins',
     getTodayCheckinsForUser: 'checkins.getTodayCheckinsForUser',
     complete: 'checkins.complete',
+    verifyTask: 'checkins.verifyTask',
     secureDay: 'checkins.secureDay',
     markAsShared: 'checkins.markAsShared',
     getShareStats: 'checkins.getShareStats',

@@ -397,6 +397,341 @@ export const checkinsRouter = createTRPCRouter({
       return { ...(data ?? {}), isMinimumDay };
     }),
 
+  /**
+   * verifyTask — the single source of truth for "is this task complete."
+   *
+   * Checks in order: ownership, task claimability, no double-claim, schedule window
+   * (server clock), proof integrity (file exists in task-proofs under this user's
+   * folder, content-type image/*, size > 1 KB), camera-only, then records the
+   * verified completion and auto-calls secure_day if all required tasks are done.
+   *
+   * Returns { verified: false, reason, reasonCode } on the first failing gate.
+   * Returns { verified: true, checkinId, streakAdvanced, newStreakCount } on success.
+   *
+   * Never trusts client timestamps or a client "completed: true" flag.
+   * Server time is always authoritative for window checks.
+   */
+  verifyTask: protectedProcedure
+    .input(
+      z.object({
+        activeChallengeId: z.string().uuid(),
+        taskId: z.string().uuid(),
+        photoUrl: z.string().max(2000).optional(),
+        captureSource: z.enum(["camera", "library", "unknown"]).optional(),
+        clocked_in_at: z.string().datetime().optional(),
+        value: z.number().optional(),
+        noteText: z.string().max(2000).optional(),
+        heart_rate_avg: z.number().int().min(0).optional(),
+        heart_rate_peak: z.number().int().min(0).optional(),
+        location_latitude: z.number().optional(),
+        location_longitude: z.number().optional(),
+        timer_seconds_on_screen: z.number().int().min(0).optional(),
+        task_mode: z.enum(["full", "minimum"]).default("full"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      type VerifyResult =
+        | { verified: true; checkinId: string | undefined; streakAdvanced: boolean; newStreakCount: number | undefined }
+        | { verified: false; reason: string; reasonCode: string };
+
+      const reject = (reason: string, reasonCode: string): VerifyResult => ({ verified: false, reason, reasonCode });
+
+      // --- 1. Auth + ownership ---
+      let challenge_id: string;
+      try {
+        const result = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+        challenge_id = result.challenge_id;
+      } catch {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You do not own this challenge." });
+      }
+
+      // --- 2. Load task and verify it belongs to this challenge ---
+      const { data: taskRow, error: taskFetchError } = await ctx.supabase
+        .from("challenge_tasks")
+        .select(
+          "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes"
+        )
+        .eq("id", input.taskId)
+        .eq("challenge_id", challenge_id)
+        .maybeSingle();
+
+      if (taskFetchError) {
+        logger.error({ error: taskFetchError, userId: ctx.userId, taskId: input.taskId }, "[verifyTask] task fetch");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load task." });
+      }
+      if (!taskRow) return reject("This task does not exist in your challenge.", "TASK_NOT_FOUND");
+
+      const task = taskRow as TaskRowWithVerification;
+      const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
+      const config = cfg as TaskConfig;
+      const isMinimumDay = input.task_mode === "minimum";
+
+      // --- 3. Date key (server TZ) ---
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const dateKey = getTodayDateKey(tz);
+
+      // --- 4. No double-claim (idempotent on already-verified) ---
+      const { data: existingCheckin } = await ctx.supabase
+        .from("check_ins")
+        .select("id, status")
+        .eq("active_challenge_id", input.activeChallengeId)
+        .eq("task_id", input.taskId)
+        .eq("date_key", dateKey)
+        .maybeSingle();
+
+      if (existingCheckin?.status === "completed") {
+        // Idempotent: already verified today — return success without re-advancing streak
+        return { verified: true as const, checkinId: existingCheckin.id, streakAdvanced: false, newStreakCount: undefined };
+      }
+
+      // --- 5. Schedule window check (server clock, never client timestamp) ---
+      if (!isMinimumDay) {
+        try {
+          assertHardModeScheduleWindow(config);
+        } catch (e) {
+          return reject(
+            e instanceof TRPCError ? e.message : "This task can only be completed within its scheduled window.",
+            "OUTSIDE_WINDOW"
+          );
+        }
+      }
+
+      // --- 6. Proof integrity (photo exists, is in user's Storage folder, is a real image) ---
+      const { needsProof } = getTaskVerification(task as ChallengeTaskRowRaw);
+      const requirePhoto = !isMinimumDay && (task?.require_photo === true || needsProof);
+      const photoUrl = input.photoUrl?.trim() || null;
+
+      if (requirePhoto) {
+        if (!photoUrl) return reject("This task requires a photo. Take a photo to verify.", "PHOTO_REQUIRED");
+
+        // Path ownership: URL must point into this user's folder in task-proofs
+        const supabaseUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "");
+        const expectedPrefix = `${supabaseUrl}/storage/v1/object/public/task-proofs/${ctx.userId}/`;
+        if (!photoUrl.startsWith(expectedPrefix)) {
+          return reject("Photo must be uploaded from your own camera before submitting.", "PHOTO_NOT_YOURS");
+        }
+
+        // HEAD request: file must exist, be image/*, and be > 1 KB
+        try {
+          const controller = new AbortController();
+          const headTimeout = setTimeout(() => controller.abort(), 6000);
+          let headOk = false;
+          let headReason = "PHOTO_NOT_FOUND";
+          let headMessage = "Photo not found in storage. Re-take the photo and try again.";
+          try {
+            const resp = await fetch(photoUrl, { method: "HEAD", signal: controller.signal });
+            if (!resp.ok) {
+              headReason = "PHOTO_NOT_FOUND";
+              headMessage = "Photo not found in storage. Re-take the photo and try again.";
+            } else {
+              const ct = resp.headers.get("content-type") ?? "";
+              if (!ct.startsWith("image/")) {
+                headReason = "PHOTO_INVALID_TYPE";
+                headMessage = "The submitted proof is not an image. Take a photo and try again.";
+              } else {
+                const cl = Number(resp.headers.get("content-length") ?? "0");
+                if (cl > 0 && cl < 1024) {
+                  headReason = "PHOTO_TOO_SMALL";
+                  headMessage = "The photo is too small to be valid proof. Re-take and try again.";
+                } else {
+                  headOk = true;
+                }
+              }
+            }
+          } finally {
+            clearTimeout(headTimeout);
+          }
+          if (!headOk) return reject(headMessage, headReason);
+        } catch (e) {
+          const isAbort = e instanceof Error && e.name === "AbortError";
+          logger.warn({ userId: ctx.userId, photoUrl, isAbort }, "[verifyTask] photo HEAD check failed");
+          if (isAbort) {
+            return reject("Photo verification timed out. Check your connection and try again.", "PHOTO_CHECK_TIMEOUT");
+          }
+          return reject("Could not verify the photo. Try again.", "PHOTO_CHECK_ERROR");
+        }
+      }
+
+      // --- 7. Camera-only: captureSource must be 'camera' ---
+      if (!isMinimumDay && cfg.require_camera_only) {
+        if (!photoUrl) return reject("This task requires a live camera photo.", "PHOTO_REQUIRED");
+        if (!input.captureSource || input.captureSource !== "camera") {
+          return reject(
+            "This task requires a live camera photo — not one from your photo library.",
+            "CAMERA_REQUIRED"
+          );
+        }
+      }
+
+      // --- 8. Remaining gates (heart rate, location, timer) reused from complete ---
+      if (!isMinimumDay) {
+        try {
+          assertHardModeCameraOnly(cfg, photoUrl, input.photoUrl);
+        } catch (e) {
+          return reject(
+            e instanceof TRPCError ? e.message : "Camera photo required for this task.",
+            "CAMERA_REQUIRED"
+          );
+        }
+      }
+
+      const requireHeartRate = !isMinimumDay && (task?.require_heart_rate === true || cfg.verification_method === "heart_rate");
+      if (requireHeartRate) {
+        const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
+        const threshold =
+          (typeof task?.heart_rate_threshold === "number" ? task.heart_rate_threshold : null) ??
+          (typeof ruleFromCfg?.min_avg_bpm === "number" ? ruleFromCfg.min_avg_bpm : 100);
+        const avg = input.heart_rate_avg ?? 0;
+        if (!avg || avg < threshold) {
+          return reject(
+            `This task requires an elevated heart rate. Your average was ${avg} BPM but ${threshold} BPM is needed.`,
+            "HEART_RATE_TOO_LOW"
+          );
+        }
+      }
+
+      let locationDistanceM: number | undefined;
+      try {
+        const locResult = evaluateTaskLocation(task, cfg, input);
+        locationDistanceM = locResult.locationDistanceM;
+      } catch (e) {
+        return reject(
+          e instanceof TRPCError ? e.message : "Location verification failed.",
+          "LOCATION_GATE_FAILED"
+        );
+      }
+
+      // --- 9. Build verification_gates and record the completion ---
+      const verificationGates: Record<string, unknown> = {};
+      if (!isMinimumDay && config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
+        verificationGates.time_gate = {
+          status: "passed",
+          clocked_in_at: input.clocked_in_at ?? new Date().toISOString(),
+          window: `${config.schedule_window_start}-${config.schedule_window_end}`,
+        };
+      }
+      if (!isMinimumDay && locationDistanceM != null) {
+        verificationGates.location_gate = {
+          status: "passed",
+          distance_meters: Math.round(locationDistanceM),
+          location_name: task?.location_name ?? cfg.location_name ?? "the required location",
+        };
+      }
+      if (!isMinimumDay && photoUrl) {
+        verificationGates.photo_gate = {
+          status: "passed",
+          camera_only: cfg.require_camera_only === true,
+          capture_source: input.captureSource ?? "unknown",
+        };
+      }
+
+      const payload: Record<string, unknown> = {
+        user_id: ctx.userId,
+        active_challenge_id: input.activeChallengeId,
+        task_id: input.taskId,
+        date_key: dateKey,
+        status: "completed",
+        task_mode: input.task_mode,
+        verification_status: "verified",
+      };
+      if (input.value != null) payload.value = input.value;
+      if (input.noteText != null) payload.note_text = input.noteText;
+      if (photoUrl) {
+        payload.proof_url = photoUrl;
+        payload.photo_url = photoUrl;
+        payload.completion_image_url = photoUrl;
+      }
+      if (input.captureSource) payload.capture_source = input.captureSource;
+      if (input.heart_rate_avg != null) payload.heart_rate_avg = input.heart_rate_avg;
+      if (input.heart_rate_peak != null) payload.heart_rate_peak = input.heart_rate_peak;
+      if (input.location_latitude != null) payload.location_latitude = input.location_latitude;
+      if (input.location_longitude != null) payload.location_longitude = input.location_longitude;
+      if (input.timer_seconds_on_screen != null) payload.timer_seconds_on_screen = input.timer_seconds_on_screen;
+      if (input.clocked_in_at != null) payload.clocked_in_at = input.clocked_in_at;
+      if (Object.keys(verificationGates).length > 0) payload.verification_gates = verificationGates;
+
+      const { data: checkin, error: upsertError } = await ctx.supabase
+        .from("check_ins")
+        .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
+        .select("id")
+        .single();
+
+      if (upsertError) {
+        const errObj = upsertError as { code?: string; message?: string };
+        logger.error({ supabaseError: upsertError, code: errObj.code, userId: ctx.userId }, "[verifyTask] upsert FAILED");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save completion." });
+      }
+
+      // --- 10. Update progress ---
+      try {
+        const [{ data: allTasksForProg }, { data: completedForProg }] = await Promise.all([
+          ctx.supabase.from("challenge_tasks").select("id, config").eq("challenge_id", challenge_id).limit(200),
+          ctx.supabase
+            .from("check_ins")
+            .select("task_id")
+            .eq("active_challenge_id", input.activeChallengeId)
+            .eq("date_key", dateKey)
+            .eq("status", "completed")
+            .limit(100),
+        ]);
+        const reqTasks = (allTasksForProg ?? []).filter((t) => isTaskRequired(t as ChallengeTaskRowRaw));
+        const completedReq = (completedForProg ?? []).filter((c) => reqTasks.some((r) => r.id === c.task_id));
+        const prog = reqTasks.length > 0 ? (completedReq.length / reqTasks.length) * 100 : 0;
+        await ctx.supabase.from("active_challenges").update({ progress_percent: prog }).eq("id", input.activeChallengeId);
+      } catch {
+        /* non-fatal */
+      }
+
+      // --- 11. Auto-secure: call secure_day if all required tasks are now done ---
+      let streakAdvanced = false;
+      let newStreakCount: number | undefined;
+
+      try {
+        const [{ data: allTasksRaw }, { data: completedToday }] = await Promise.all([
+          ctx.supabase.from("challenge_tasks").select("id, config").eq("challenge_id", challenge_id).limit(200),
+          ctx.supabase
+            .from("check_ins")
+            .select("task_id")
+            .eq("active_challenge_id", input.activeChallengeId)
+            .eq("date_key", dateKey)
+            .eq("status", "completed")
+            .limit(100),
+        ]);
+        const requiredIds = (allTasksRaw ?? [])
+          .filter((t) => isTaskRequired(t as ChallengeTaskRowRaw))
+          .map((t) => t.id);
+        const completedIds = new Set((completedToday ?? []).map((c: { task_id: string }) => c.task_id));
+        const allDone = requiredIds.length > 0 && requiredIds.every((id) => completedIds.has(id));
+
+        if (allDone) {
+          const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", {
+            p_active_challenge_id: input.activeChallengeId,
+          });
+          if (rpcError) {
+            // RPC may fail if the fixed migration hasn't been applied yet — log, don't fail verification
+            logger.error({ error: rpcError, userId: ctx.userId }, "[verifyTask] secure_day RPC error — apply migration 20260625000001");
+          } else if (Array.isArray(rpcRows) && rpcRows.length > 0) {
+            const row = rpcRows[0] as { new_streak_count: number; last_stand_earned: boolean };
+            streakAdvanced = true;
+            newStreakCount = row.new_streak_count;
+            // Emit activity events via existing secureDay infrastructure (best-effort)
+            try {
+              await ctx.supabase.from("activity_events").insert({
+                user_id: ctx.userId,
+                event_type: "secured_day",
+                challenge_id,
+                metadata: { streak_count: row.new_streak_count },
+              });
+            } catch { /* non-fatal */ }
+          }
+        }
+      } catch (e) {
+        logger.error({ error: e, userId: ctx.userId }, "[verifyTask] auto-secure check failed");
+      }
+
+      return { verified: true as const, checkinId: checkin?.id, streakAdvanced, newStreakCount };
+    }),
+
   getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
     await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
     const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
