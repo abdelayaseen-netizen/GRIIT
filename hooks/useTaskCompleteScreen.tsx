@@ -17,7 +17,7 @@ import { captureError } from "@/lib/sentry";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useQueryClient } from "@tanstack/react-query";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import type { TaskHardVerificationConfig } from "@/lib/task-hard-verification";
 import ViewShot from "react-native-view-shot";
 import { styles } from "@/components/task/task-complete-styles";
@@ -515,12 +515,30 @@ export function TaskCompleteScreenInner() {
         task_mode: taskMode,
       });
 
+      const challengeIdForAnalytics = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
+
       // Server is the trust boundary — never advance UI before server confirms verified.
       if (!verifyResult.verified) {
-        trackEvent("task_verify_rejected", { reason_code: verifyResult.reasonCode });
+        try {
+          track({
+            name: "task_verify_rejected",
+            reason_code: verifyResult.reasonCode,
+            challenge_id: challengeIdForAnalytics,
+            task_type: taskTypeRaw ?? undefined,
+          });
+        } catch { /* non-fatal */ }
         showError(verifyResult.reason);
-        return; // leave user on the screen so they can retry
+        return; // leave user on the screen so they can retry or fix the issue
       }
+
+      try {
+        track({
+          name: "proof_posted",
+          challenge_id: challengeIdForAnalytics,
+          task_type: taskTypeRaw ?? undefined,
+          has_photo: !!photoUrl,
+        });
+      } catch { /* non-fatal */ }
 
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
       setCompletionIdForShare(verifyResult.checkinId);
@@ -549,7 +567,7 @@ export function TaskCompleteScreenInner() {
         setVariableReward(null);
       }
     } catch (err: unknown) {
-      captureError(err, "TaskCompleteCompleteTask");
+      captureError(err, "TaskCompleteVerifyTask");
       showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -559,6 +577,7 @@ export function TaskCompleteScreenInner() {
     taskId,
     canSubmit,
     verifyAndCompleteTask,
+    activeChallenge,
     taskTypeRaw,
     journalText,
     timerSeconds,
