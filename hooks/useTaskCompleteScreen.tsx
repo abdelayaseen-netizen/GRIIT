@@ -69,7 +69,7 @@ export function TaskCompleteScreenInner() {
     durationDays?: string;
   }>();
   const queryClient = useQueryClient();
-  const { activeChallenge, completeTask, challenge, stats, computeProgress, todayCheckins } = useApp();
+  const { activeChallenge, verifyAndCompleteTask, challenge, stats, computeProgress, todayCheckins } = useApp();
   const showCelebration = useCelebrationStore((s) => s.show);
   const setActiveSession = useActiveSessionStore((s) => s.setActiveSession);
   const clearActiveSession = useActiveSessionStore((s) => s.clearActiveSession);
@@ -491,13 +491,21 @@ export function TaskCompleteScreenInner() {
         valueOut = undefined;
       }
       const timeLabel = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-      const completionResult = await completeTask({
+      // captureSource: 'camera' when the task required camera-only (user went through
+      // handleTakePhoto) or when a photo was captured (camera is the only capture path
+      // in TaskPhotoBody). 'unknown' for tasks that don't require a photo at all.
+      const captureSource: "camera" | "library" | "unknown" =
+        config.require_camera_only === true ? "camera"
+        : photoUrl ? "camera"
+        : "unknown";
+
+      const verifyResult = await verifyAndCompleteTask({
         activeChallengeId,
         taskId,
         noteText: noteTextOut,
         value: valueOut,
-        proofUrl: photoUrl ?? undefined,
-        photo_url: photoUrl ?? undefined,
+        photoUrl: photoUrl ?? undefined,
+        captureSource,
         heart_rate_avg: heartRateData?.avg,
         heart_rate_peak: heartRateData?.peak,
         location_latitude: gatesLocation?.lat ?? userLocation?.lat,
@@ -506,12 +514,16 @@ export function TaskCompleteScreenInner() {
         clocked_in_at: isHardVerificationTask ? (clockedInAtRef.current ?? new Date().toISOString()) : undefined,
         task_mode: taskMode,
       });
+
+      // Server is the trust boundary — never advance UI before server confirms verified.
+      if (!verifyResult.verified) {
+        trackEvent("task_verify_rejected", { reason_code: verifyResult.reasonCode });
+        showError(verifyResult.reason);
+        return; // leave user on the screen so they can retry
+      }
+
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
-      setCompletionIdForShare(
-        completionResult && typeof completionResult === "object" && "completionId" in completionResult
-          ? (completionResult as { completionId?: string }).completionId
-          : undefined
-      );
+      setCompletionIdForShare(verifyResult.checkinId);
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void clearActiveTaskNotification();
@@ -546,7 +558,7 @@ export function TaskCompleteScreenInner() {
     activeChallengeId,
     taskId,
     canSubmit,
-    completeTask,
+    verifyAndCompleteTask,
     taskTypeRaw,
     journalText,
     timerSeconds,

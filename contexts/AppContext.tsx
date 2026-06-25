@@ -66,7 +66,26 @@ type AppContextValue = {
   chatRoomSettings: Record<string, { muteRoom: boolean; mentionsOnly: boolean }>;
   updateChatRoomSettings: (roomId: string, settings: Record<string, unknown>) => Promise<void>;
   currentChallenge: { tasks: ChallengeTaskFromApi[] } | null;
-  verifyTask: (taskId: string, verificationData: unknown, task: unknown) => { success: boolean; failureReason: string | undefined };
+  /** @deprecated use verifyAndCompleteTask for the primary completion flow */
+  verifyTask: (taskId: string, verificationData: unknown, task: unknown) => Promise<{ success: boolean; failureReason: string | undefined }>;
+  verifyAndCompleteTask: (params: {
+    activeChallengeId: string;
+    taskId: string;
+    photoUrl?: string;
+    captureSource?: "camera" | "library" | "unknown";
+    value?: number;
+    noteText?: string;
+    heart_rate_avg?: number;
+    heart_rate_peak?: number;
+    location_latitude?: number;
+    location_longitude?: number;
+    timer_seconds_on_screen?: number;
+    clocked_in_at?: string;
+    task_mode?: "full" | "minimum";
+  }) => Promise<
+    | { verified: true; checkinId?: string; streakAdvanced: boolean; newStreakCount?: number }
+    | { verified: false; reason: string; reasonCode: string }
+  >;
   getTaskStateForTemplate: (taskId: string) => unknown;
   isPremium: boolean;
   refreshPremiumStatus: () => Promise<void>;
@@ -360,7 +379,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return computeProgress.progress === 100 && computeProgress.totalRequired > 0;
   }, [computeProgress]);
 
-  const { completeTask, secureDay } = useAppChallengeMutations({
+  const { completeTask, secureDay, verifyAndCompleteTask } = useAppChallengeMutations({
     user,
     queryClient,
     activeChallenge,
@@ -450,7 +469,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateChatRoomSettings: async (_roomId: string, _settings: Record<string, unknown>) => {},
 
     currentChallenge: activeChallenge ? { tasks: (challenge?.challenge_tasks as ChallengeTaskFromApi[]) || [] } : null,
-    verifyTask: (_taskId: string, _verificationData: unknown, _task: unknown) => ({ success: true, failureReason: undefined }),
+    verifyTask: async (_taskId: string, verificationData: unknown, _task: unknown): Promise<{ success: boolean; failureReason: string | undefined }> => {
+      if (!activeChallenge?.id) return { success: false, failureReason: 'No active challenge.' };
+      const vd = verificationData as Record<string, unknown>;
+      const rawProofUrl = typeof vd.proofUrl === 'string' ? vd.proofUrl : undefined;
+      // Only pass photoUrl if it is an https Supabase Storage URL (not a local file:// URI)
+      const photoUrl = rawProofUrl && rawProofUrl.startsWith('https://') ? rawProofUrl : undefined;
+      const captureSource: 'camera' | 'library' | 'unknown' | undefined =
+        vd.proofSource === 'camera' ? 'camera'
+        : vd.proofSource === 'library' ? 'library'
+        : photoUrl ? 'unknown'
+        : undefined;
+      const result = await verifyAndCompleteTask({
+        activeChallengeId: activeChallenge.id,
+        taskId: _taskId,
+        photoUrl,
+        captureSource,
+        value: typeof vd.distanceMiles === 'number' ? vd.distanceMiles : typeof vd.value === 'number' ? vd.value : undefined,
+        clocked_in_at: typeof vd.startedAt === 'string' ? vd.startedAt : undefined,
+        location_latitude: typeof vd.location_latitude === 'number' ? vd.location_latitude : undefined,
+        location_longitude: typeof vd.location_longitude === 'number' ? vd.location_longitude : undefined,
+      });
+      if (result.verified) return { success: true, failureReason: undefined };
+      return { success: false, failureReason: result.reason };
+    },
+    verifyAndCompleteTask,
     getTaskStateForTemplate: (_taskId: string) => null,
     isPremium,
     refreshPremiumStatus,
@@ -477,6 +520,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isPremium,
     refreshPremiumStatus,
     user,
+    verifyAndCompleteTask,
   ]);
 
   return (

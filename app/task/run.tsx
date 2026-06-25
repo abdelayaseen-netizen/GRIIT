@@ -481,13 +481,13 @@ export default function RunTaskScreen() {
     }
 
     if (task) {
-      const result = verifyTask(task.id, {
+      const result = await verifyTask(task.id, {
         runMode: "outdoor_gps",
-        gpsPoints: gpsPoints.length > 0 ? gpsPoints : undefined,
         distanceMiles,
-        durationSeconds: elapsedSeconds,
+        value: distanceMiles,
         startedAt: startedAt || new Date().toISOString(),
-        endedAt: new Date().toISOString(),
+        location_latitude: gpsPoints.at(-1)?.lat,
+        location_longitude: gpsPoints.at(-1)?.lng,
       }, task);
 
       if (result.success) {
@@ -523,19 +523,16 @@ export default function RunTaskScreen() {
     }
 
     if (task) {
-      const result = verifyTask(task.id, {
+      // proofUri is a local file:// URI — it cannot be passed as a Supabase Storage URL.
+      // The server will reject this with PHOTO_NOT_YOURS since the path check will fail.
+      // Users encountering this screen via an old notification deep-link should use the
+      // main task/complete screen instead, which uploads the photo before submitting.
+      const result = await verifyTask(task.id, {
         runMode: "treadmill_proof",
-        timerActiveSeconds: timerSeconds,
-        timerBackgroundViolation: backgroundViolation,
         proofUrl: proofUri,
-        proofType: "photo",
         proofSource: "camera",
-        proofCapturedAt: new Date().toISOString(),
-        proofDateLocal: new Date().toISOString().split("T")[0],
-        distanceMilesShown: parsedDistance,
-        durationShown: durationInput || undefined,
-        startedAt: timerStartedAt || new Date().toISOString(),
-        endedAt: new Date().toISOString(),
+        value: parsedDistance,
+        clocked_in_at: timerStartedAt || new Date().toISOString(),
         durationSeconds: timerSeconds,
       }, task);
 
@@ -545,7 +542,7 @@ export default function RunTaskScreen() {
           safeBack();
         }, 1000);
       } else {
-        showError(result.failureReason || "Verification failed.");
+        showError(result.failureReason || "Verification failed. Use the main task screen to submit photo proof.");
       }
     }
   };

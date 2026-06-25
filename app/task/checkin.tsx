@@ -91,9 +91,9 @@ export default function CheckinTaskScreen() {
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionStartedAt, setSessionStartedAt] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [backgroundSeconds, setBackgroundSeconds] = useState(0);
+  const [_backgroundSeconds, setBackgroundSeconds] = useState(0);
   const [backgroundViolation, setBackgroundViolation] = useState(false);
-  const [outsideRadiusSeconds, setOutsideRadiusSeconds] = useState(0);
+  const [_outsideRadiusSeconds, setOutsideRadiusSeconds] = useState(0);
   const [minimumConfirmVisible, setMinimumConfirmVisible] = useState(false);
 
   const [startLocation, setStartLocation] = useState<CurrentLocation | null>(null);
@@ -375,45 +375,13 @@ export default function CheckinTaskScreen() {
     stopSession();
 
     if (task && currentLocation && startLocation) {
-      const result = verifyTask(
+      const result = await verifyTask(
         task.id,
         {
-          geoTimeCheckin: {
-            type: "geo_time_checkin",
-            locationMatched: matchedLocation ? {
-              locationId: matchedLocation.id,
-              name: matchedLocation.name,
-              radiusMeters: matchedLocation.radiusMeters,
-            } : undefined,
-            start: {
-              startedAtLocal: sessionStartedAt || new Date().toISOString(),
-              lat: startLocation.lat,
-              lng: startLocation.lng,
-              accuracyMeters: startLocation.accuracy,
-              insideGeofence: true,
-              timeWindowOpen: true,
-            },
-            end: {
-              endedAtLocal: new Date().toISOString(),
-              lat: currentLocation.lat,
-              lng: currentLocation.lng,
-              accuracyMeters: currentLocation.accuracy,
-              insideGeofence: locationStatus === "inside",
-            },
-            session: {
-              elapsedSeconds,
-              backgroundSeconds,
-              continuousPresenceEnabled: locationPolicy?.requireContinuousPresence || false,
-              outsideRadiusSeconds,
-            },
-            antiCheat: {
-              mockLocationDetected: false,
-              accuracyTooLow: false,
-            },
-          },
+          location_latitude: currentLocation.lat,
+          location_longitude: currentLocation.lng,
+          clocked_in_at: sessionStartedAt || new Date().toISOString(),
           durationSeconds: elapsedSeconds,
-          startedAt: sessionStartedAt || new Date().toISOString(),
-          endedAt: new Date().toISOString(),
         },
         task
       );

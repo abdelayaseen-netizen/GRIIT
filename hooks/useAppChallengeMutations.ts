@@ -312,5 +312,104 @@ export function useAppChallengeMutations({
     }
   }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats, profile, fallbackProfile, todayCheckins]);
 
-  return { completeTask, secureDay };
+  /**
+   * verifyAndCompleteTask — calls checkins.verifyTask (the real server trust boundary).
+   * Returns { verified: true, checkinId, streakAdvanced, newStreakCount } on success, or
+   *         { verified: false, reason, reasonCode } on any gate failure.
+   * On success, performs the same post-completion work as completeTask
+   * (refetch, analytics, cache invalidation) and updates optimistic checkin state.
+   */
+  const verifyAndCompleteTask = useCallback(
+    async (params: {
+      activeChallengeId: string;
+      taskId: string;
+      photoUrl?: string;
+      captureSource?: "camera" | "library" | "unknown";
+      value?: number;
+      noteText?: string;
+      heart_rate_avg?: number;
+      heart_rate_peak?: number;
+      location_latitude?: number;
+      location_longitude?: number;
+      timer_seconds_on_screen?: number;
+      clocked_in_at?: string;
+      task_mode?: "full" | "minimum";
+    }): Promise<
+      | { verified: true; checkinId?: string; streakAdvanced: boolean; newStreakCount?: number }
+      | { verified: false; reason: string; reasonCode: string }
+    > => {
+      const previousCheckins = todayCheckins.slice();
+      const optimisticCheckin = {
+        active_challenge_id: params.activeChallengeId,
+        task_id: params.taskId,
+        status: "completed" as const,
+      };
+      setTodayCheckins((prev) => [...prev, optimisticCheckin]);
+
+      try {
+        const result = (await trpcMutate(TRPC.checkins.verifyTask, params)) as
+          | { verified: true; checkinId?: string; streakAdvanced: boolean; newStreakCount?: number }
+          | { verified: false; reason: string; reasonCode: string };
+
+        if (!result.verified) {
+          setTodayCheckins(previousCheckins);
+          return result;
+        }
+
+        // Post-success: refetch, analytics, cache invalidation (mirrors completeTask)
+        if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
+        void fetchActiveChallenge();
+        void fetchStats();
+        void queryClient.invalidateQueries({ queryKey: ["home"] });
+        void queryClient.invalidateQueries({ queryKey: ["home", "v2", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["discover", "completed", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
+        void queryClient.invalidateQueries({ queryKey: ["community", "feed", user?.id] });
+        void queryClient.invalidateQueries({ queryKey: ["profile"] });
+
+        const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
+        const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? "unknown";
+        const cid = (activeChallenge as ActiveChallengeFromApi | null)?.challenge_id;
+        if (cid) {
+          try {
+            trackEvent("task_completed", { challenge_id: cid, task_type: String(taskType) });
+            track({ name: "task_verified", challenge_id: cid, task_type: String(taskType), streak_advanced: result.streakAdvanced });
+          } catch { /* non-fatal */ }
+        }
+
+        const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
+        const daysSinceSignup = calculateDaysSinceSignup(profile ?? fallbackProfile);
+        if (currentDay >= 7 && cid) {
+          try { trackEvent("day_7_retained", { challenge_id: cid, day_number: currentDay }); } catch { /* non-fatal */ }
+        }
+        if (daysSinceSignup === 30 && cid) {
+          try { trackDay30Completed({ challenge_id: cid, day_number: currentDay, days_since_signup: daysSinceSignup }); } catch { /* non-fatal */ }
+        }
+        if (currentDay === 1 && cid) {
+          try {
+            track({ name: "day1_task_completed", challengeId: cid, ttfv_seconds: undefined, starter_id: undefined, primary_goal: undefined, daily_time_budget: undefined });
+          } catch { /* non-fatal */ }
+        }
+        try {
+          const isFirstEver = !(await AsyncStorage.getItem("griit_has_completed_task"));
+          if (isFirstEver) {
+            try { track({ name: "first_task_completed", challengeId: cid ?? "" }); } catch { /* non-fatal */ }
+            await AsyncStorage.setItem("griit_has_completed_task", "true");
+          }
+        } catch { /* non-fatal */ }
+
+        return result;
+      } catch (err: unknown) {
+        setTodayCheckins(previousCheckins);
+        const msg = err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
+        captureError(err, "AppContextVerifyTask");
+        throw new Error(msg);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats, queryClient, user?.id]
+  );
+
+  return { completeTask, secureDay, verifyAndCompleteTask };
 }
