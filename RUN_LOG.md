@@ -121,3 +121,28 @@ hooks/useTaskCompleteScreen.tsx  : readyLabel = "Start now"   (timer)
 ### Status
 Phase 1 committed. Proceeding to Phase 2.
 
+---
+
+## Phase 2 — Shared Shell (2026-06-29)
+
+### Changes applied
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `components/task/bodies/TaskReadyCard.tsx` | NEW — gate-info chips (time window, camera-only, word min, tap target, location) + per-type hint text |
+| 2 | `components/task/VerifyingOverlay.tsx` | NEW — full-screen Modal overlay; `buildVerifyingRows()` helper (honest-cut: only evaluated gates); `getTypeSuccessLine()` per-type; 600 ms floor enforced in parent |
+| 3 | `hooks/useTaskCompleteScreen.tsx` | Full `handleArm` (camera + location permission requests); `autoStart: showWorkoutTimer && isArmed` (timer waits for Start); `verifyStartMsRef` + 600 ms `await` delay before `setSubmitted(true)`; `submitTimeLabel` state; `verifyingRows` + `typeSuccessLine` useMemo; `renderBody` returns `<TaskReadyCard>` when `!isArmed`; `<VerifyingOverlay visible={isSubmitting}>` in return JSX; `expo-image-picker` import |
+
+### Honest-cut evidence (VerifyingOverlay rows)
+```
+components/task/VerifyingOverlay.tsx: rows only populated when hasTimeWindow, hasCameraOnly, or hasLocation
+hooks/useTaskCompleteScreen.tsx: buildVerifyingRows({ hasTimeWindow: !!(schedule_window_start && schedule_window_end), hasCameraOnly: !!require_camera_only, hasLocation: !!require_location })
+```
+
+### TSC result
+`npx tsc --noEmit` → **0 errors**
+
+### Status
+Phase 2 committed. Proceeding to Phase 3.
+
+

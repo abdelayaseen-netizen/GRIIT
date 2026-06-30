@@ -11,7 +11,7 @@ import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useApp } from "@/contexts/AppContext";
 import { haversineDistance } from "@/lib/geo";
-import { DS_COLORS, DS_COLORS_V2, DS_SPACING, DS_SPACING_V2, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { trpcMutate } from "@/lib/trpc";
@@ -45,6 +45,13 @@ import { TaskWorkoutBody } from "@/components/task/bodies/TaskWorkoutBody";
 import { TaskJournalBody } from "@/components/task/bodies/TaskJournalBody";
 import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/TaskCounterBody";
 import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
+import { TaskReadyCard } from "@/components/task/bodies/TaskReadyCard";
+import {
+  VerifyingOverlay,
+  buildVerifyingRows,
+  getTypeSuccessLine,
+} from "@/components/task/VerifyingOverlay";
+import * as ImagePicker from "expo-image-picker";
 import { FLAGS } from "@/lib/feature-flags";
 import {
   firstString,
@@ -56,18 +63,6 @@ import {
   type TaskCompleteConfig,
 } from "@/lib/task-helpers";
 
-/** Per-type hint shown in the body slot before the user taps Start. Phase 2 replaces this with TaskReadyCard. */
-const READY_HINTS: Record<string, string> = {
-  photo: "No timer — capture when you're ready.",
-  run: "Manual entry or in-app timer. No GPS.",
-  workout: "Log your type and duration.",
-  timer: "Stay on screen until the session is done.",
-  journal: "No camera — text is the proof.",
-  counter: "Tap up to your daily target.",
-  water: "Tap up to your daily target.",
-  reading: "Reading variant can add a page photo.",
-  checkin: "We confirm GPS range — no photo.",
-};
 
 export function TaskCompleteScreenInner() {
   const router = useRouter();
@@ -126,6 +121,10 @@ export function TaskCompleteScreenInner() {
   const [postedInline, setPostedInline] = useState(false);
   const manualSubmitScheduled = useRef(false);
   const clockedInAtRef = useRef<string | null>(null);
+  /** Timestamp (ms) when the submit mutation started — used for 600 ms Verifying floor. */
+  const verifyStartMsRef = useRef<number>(0);
+  /** Human-readable time label captured at submit-press (e.g. "07:42 AM"). */
+  const [submitTimeLabel, setSubmitTimeLabel] = useState<string>("");
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
   const [timeWindowFailed, setTimeWindowFailed] = useState(false);
   const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -246,7 +245,9 @@ export function TaskCompleteScreenInner() {
       requiredSeconds,
       isCountdown,
       isHardMode,
-      autoStart: showWorkoutTimer,
+      // Timer auto-starts only after the user taps Start now (isArmed).
+      // For non-TASK_START_ARMING builds, keep the legacy autoStart behaviour.
+      autoStart: FLAGS.TASK_START_ARMING ? showWorkoutTimer && isArmed : showWorkoutTimer,
     });
 
   const wasTimerRunningRef = useRef(false);
@@ -470,11 +471,42 @@ export function TaskCompleteScreenInner() {
     counterOk,
   ]);
 
-  // Phase 1: basic arm handler — setIsArmed(true).
-  // Phase 2 adds: camera permission (photo/run), location permission (checkin), timer start.
-  const handleArm = useCallback(() => {
+  // Full arm handler: requests permissions relevant to the task type, then sets isArmed.
+  const handleArm = useCallback(async () => {
+    // Camera permission — photo tasks and any task that requires photo proof.
+    if (
+      taskTypeRaw === "photo" ||
+      (config.require_photo && taskTypeRaw !== "checkin")
+    ) {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        showError("Allow camera access to take proof photos.");
+        // Still arm — the shutter tap will prompt again if denied.
+      }
+    }
+
+    // Location permission — checkin and location-gated tasks.
+    // Note: checkin is currently gated off (FLAGS.LOCATION_CHECKIN_ENABLED = false).
+    // setUserLocation is still in the suppression block (see BLOCKERS.md B-01).
+    if (config.require_location || taskTypeRaw === "checkin") {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        showError("Allow location access to verify your position.");
+      } else {
+        // Kick off a location read so the gate has a reading by the time the user submits.
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).then(
+          (loc) => {
+            // setUserLocation is suppressed (BLOCKERS.md B-01); log for now.
+            void loc;
+          }
+        ).catch((err) => {
+          captureError(err, "TaskCompleteArmLocation");
+        });
+      }
+    }
+
     setIsArmed(true);
-  }, []);
+  }, [taskTypeRaw, config.require_photo, config.require_location, showError]);
 
   const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
     if (!activeChallengeId || !taskId) {
@@ -493,6 +525,13 @@ export function TaskCompleteScreenInner() {
       }
       return;
     }
+    // Record start time for the Verifying overlay 600 ms legibility floor.
+    verifyStartMsRef.current = Date.now();
+    const nowLabel = new Date().toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    setSubmitTimeLabel(nowLabel);
     setIsSubmitting(true);
     try {
       let noteTextOut: string | undefined;
@@ -543,6 +582,12 @@ export function TaskCompleteScreenInner() {
           ? (completionResult as { completionId?: string }).completionId
           : undefined
       );
+      // Enforce 600 ms minimum for Verifying overlay legibility.
+      const elapsed = Date.now() - verifyStartMsRef.current;
+      const MIN_VERIFY_MS = 600;
+      if (elapsed < MIN_VERIFY_MS) {
+        await new Promise<void>((res) => setTimeout(res, MIN_VERIFY_MS - elapsed));
+      }
       setSubmitted(true);
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void clearActiveTaskNotification();
@@ -716,28 +761,15 @@ export function TaskCompleteScreenInner() {
   }, [counterVariant]);
 
   const renderBody = useCallback(() => {
-    // Ready state: show hint text until user taps Start.
-    // Phase 2 replaces this placeholder with <TaskReadyCard>.
+    // Ready state: show TaskReadyCard until the user taps Start.
     if (FLAGS.TASK_START_ARMING && !isArmed) {
       return (
-        <View
-          style={{
-            paddingVertical: DS_SPACING_V2.xl,
-            paddingHorizontal: DS_SPACING_V2.md,
-            alignItems: "center" as const,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 14,
-              lineHeight: 22,
-              color: DS_COLORS_V2.text.secondary,
-              textAlign: "center" as const,
-            }}
-          >
-            {READY_HINTS[taskTypeRaw] ?? "Complete this task."}
-          </Text>
-        </View>
+        <TaskReadyCard
+          taskTypeRaw={taskTypeRaw}
+          config={config}
+          counterGoal={isCounterFamily ? counterGoal : undefined}
+          minWords={taskTypeRaw === "journal" ? minWords : undefined}
+        />
       );
     }
     switch (taskTypeRaw) {
@@ -868,6 +900,10 @@ export function TaskCompleteScreenInner() {
   }, [
     isArmed,
     taskTypeRaw,
+    config,
+    isCounterFamily,
+    counterGoal,
+    minWords,
     photoCaption,
     photoUri,
     photoUploading,
@@ -935,7 +971,24 @@ export function TaskCompleteScreenInner() {
     hardGatesPassed,
   ]);
 
-  // Build the "other tasks today" list — incomplete tasks for the same
+  // Verifying overlay rows (honest-cut: only gates evaluated for this task type).
+  const verifyingRows = useMemo(
+    () =>
+      buildVerifyingRows({
+        hasTimeWindow: !!(config.schedule_window_start && config.schedule_window_end),
+        submitTimeLabel,
+        hasCameraOnly: !!config.require_camera_only,
+        hasLocation: !!config.require_location,
+      }),
+    [
+      config.schedule_window_start,
+      config.schedule_window_end,
+      config.require_camera_only,
+      config.require_location,
+      submitTimeLabel,
+    ]
+  );
+  const typeSuccessLine = getTypeSuccessLine(taskTypeRaw);
   // active challenge, excluding the missed task itself.
   const otherTasksToday = useMemo(() => {
     const tasks =
@@ -1047,7 +1100,7 @@ export function TaskCompleteScreenInner() {
       else if (taskTypeRaw === "timer") readyLabel = "Start now";
       return {
         label: readyLabel,
-        onPress: () => handleArm(),
+        onPress: () => void handleArm(),
         disabled: false,
         disabledReason: undefined,
         loading: false,
@@ -1248,6 +1301,11 @@ export function TaskCompleteScreenInner() {
       >
         {renderBody()}
       </TaskShell>
+      <VerifyingOverlay
+        visible={isSubmitting}
+        rows={verifyingRows}
+        typeSuccessLine={typeSuccessLine}
+      />
       <ConfirmDialog
         visible={minimumConfirmVisible}
         title="Mark minimum day?"
