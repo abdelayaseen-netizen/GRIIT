@@ -233,3 +233,78 @@ Found **34** interactive elements across 10 files.
 ### Status
 Phase 5 complete. Committing.
 
+---
+
+## FINAL REPORT — SHIP_TASK_FLOW (v2)
+
+**Branch:** `feat/task-flow-daylight`  
+**Date:** 2026-06-29  
+**tsc:** 0 errors on every commit  
+
+---
+
+### Commit list (5 commits above base)
+
+| Hash | Phase | Summary |
+|------|-------|---------|
+| `5906251` | Phase 1 | CTA labels, `isArmed`, Day casing, FLAGS, legacy gates |
+| `0cd417b` | Phase 2 | Shared shell: ReadyCard, VerifyingOverlay, `handleArm`, autoStart |
+| `82329cc` | Phase 3 | Per-type bodies: timer reset, run toggle, storyboard copy |
+| `14e4bab` | Phase 4 | Secured screen: streak chip, per-type line, Done, DS_COLORS_V2 |
+| `62807c4` | Phase 5 | Button audit: 34/34 wired, 0 no-ops, audit doc |
+
+---
+
+### Button matrix coverage: 34 / 34
+
+All interactive elements in `app/task/`, `components/task/`, and `hooks/useTaskCompleteScreen.tsx` are wired to real handlers with real destinations. No `onPress={() => {}}`, no `onPress={undefined}` while enabled, no missing `accessibilityLabel`. Full table in `docs/TASK_FLOW_BUTTON_AUDIT.md`.
+
+---
+
+### FLAGS left `false` and why
+
+| Flag | Value | Reason |
+|------|-------|--------|
+| `FLAGS.LOCATION_CHECKIN_ENABLED` | `false` | `setUserLocation` suppression not fixed; location gate always returns `null` → check-in can never honestly verify location. Fix is in BLOCKERS.md B-01. |
+| `FLAGS.LEGACY_CHECKIN_SCREEN` | `false` | Device-verified parity required before deletion per user instruction. Handler: `CheckinTaskScreenInner`. Route: `ROUTES.TASK_CHECKIN`. |
+| `FLAGS.LEGACY_RUN_SCREEN` | `false` | Device-verified parity required before deletion per user instruction. Handler: `RunTaskScreenInner`. Route: `ROUTES.TASK_RUN`. |
+| `FLAGS.JOURNAL_TAGS` | `false` | Mood/Wins/Photo tag chips are a future feature; no backend yet. Handler will be: local tag-picker modal (not implemented). |
+| `FLAGS.WORKOUT_STRUCTURED` | `false` | Structured set-tracking mode (reps/weight/log-set) is unreachable from the hook (`mode` is always `"simple"`). Ships when the hook conditionally passes `mode="structured"`. |
+| `FLAGS.REAL_VERIFICATION` | `false` | Real `verifyTask`/`secureDay` RPC gated; placeholder path used when false. |
+| `FLAGS.TASK_START_ARMING` | **`true`** | Universal Start step — shipped. `simple`/`manual` start already armed; photo/timer/run/journal/counter arm on "Start" tap. |
+
+---
+
+### BLOCKERS.md contents (unresolved)
+
+- **B-01** — Check-in location gate non-functional. `setUserLocation` suppressed → `userLocation` always `null` → location gate always passes trivially. Prerequisite: unsuppress `setUserLocation` in hook and wire `handleCheckLocation` as the arming action for check-in type. `FLAGS.LOCATION_CHECKIN_ENABLED` must stay `false` until fixed.
+- **B-02** — Legacy screens (`app/task/run.tsx`, `app/task/checkin.tsx`) still reachable via deep-link. Gated behind `FLAGS.LEGACY_*=false` which shows a blocked fallback. Full removal requires device-verified parity check.
+- **B-03** — `secure_day` RPC may fail if migration `20260625000001_fix_secure_day_rpc_required_column.sql` is not applied. Apply migration; no code change required.
+
+---
+
+### What each wired button does (spot-check, per inviolable rule)
+
+| Button | Handler | Route / Result |
+|--------|---------|----------------|
+| Primary CTA "Mark done" (simple) | `handleSubmit` → `trpcMutate(TRPC.checkins.verifyTask)` → `setSubmitted(true)` | `TaskCompleteCelebration` rendered |
+| Primary CTA "Submit proof" (photo) | `handleSubmit` (same) + photo uploaded | same |
+| Primary CTA "Start writing" (journal) | arms `isArmed=true` → body becomes editable | n/a |
+| Primary CTA "Submit journal" | `handleSubmit` | `TaskCompleteCelebration` rendered |
+| Primary CTA "Start" (timer) | `handleArm` → `setIsArmed(true)` + starts timer | timer begins |
+| Primary CTA "Done" (celebration) | `onDone` → `goBackOrHome(router)` | `ROUTES.TABS_HOME` |
+| Back (top-left chevron) | `goBackOrHome(router)` | `ROUTES.TABS_HOME` |
+| "Do other tasks" (missed) | `router.push(ROUTES.CHALLENGE_ACTIVE(activeChallengeId))` | challenge screen |
+| "Set tomorrow's alarm" (missed) | `handleSetAlarm()` → `Notifications.scheduleNotificationAsync` | system alarm |
+| "Share to GRIIT feed" | `handleShareToFeed()` → `trpcMutate(TRPC.feed.createPost)` | inline "Posted!" |
+
+---
+
+### tsc status
+`npx tsc --noEmit` = **0 errors** on every commit, including the final Phase 5 commit.
+
+---
+
+### End state
+Branch pushed. Draft PR opened. No EAS build started. No merge to main.
+
