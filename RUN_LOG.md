@@ -201,6 +201,35 @@ grep DS_COLORS[^_] components/task/TaskCompleteCelebration.tsx → 0 matches
 ### Status
 Phase 4 committed. Proceeding to Phase 5.
 
+---
 
+## Phase 5 — Button Audit (2026-06-29)
 
+### Scope
+Grepped all `onPress`/`Pressable`/`TouchableOpacity` across `app/task/`, `components/task/`, and `hooks/useTaskCompleteScreen.tsx`.
+
+### Grep evidence
+```
+rg -n "onPress|Pressable|TouchableOpacity" --glob "*.{ts,tsx}" \
+  app/task/ components/task/ hooks/useTaskCompleteScreen.tsx
+```
+Found **34** interactive elements across 10 files.
+
+### Findings
+- **0** enabled `onPress={() => {}}` or `onPress={undefined}` while rendered enabled.
+- **0** missing `accessibilityLabel` on any interactive element.
+- **8** elements are gated behind `FLAGS.*=false` and therefore never rendered:
+  - `FLAGS.WORKOUT_STRUCTURED=false` → 5 elements in `TaskWorkoutBody` structured mode
+  - `FLAGS.JOURNAL_TAGS=false` → 3 `PlaceholderChip` elements in `TaskJournalBody`
+- `app/task/run.tsx` and `app/task/checkin.tsx` remain gated behind `FLAGS.LEGACY_RUN_SCREEN=false` and `FLAGS.LEGACY_CHECKIN_SCREEN=false` respectively.
+- The nullish coalescing at `TaskShell.tsx:420` (`?? (() => undefined)`) is a defensive guard only — the hook always provides a real `onPressDoOtherTasks`; when `disabled=true` the `PrimaryCta` sets `onPress={undefined}` internally.
+
+### Output artifact
+`docs/TASK_FLOW_BUTTON_AUDIT.md` — full 34-row matrix with handler names, labels, enabled conditions, and status.
+
+### TSC result
+`npx tsc --noEmit` → **0 errors**
+
+### Status
+Phase 5 complete. Committing.
 
