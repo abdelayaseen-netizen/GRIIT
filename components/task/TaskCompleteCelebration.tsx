@@ -74,7 +74,7 @@ export interface TaskCompleteCelebrationProps extends ShareCardPropsBundle {
 
 export function TaskCompleteCelebration({
   taskName,
-  isHardMode,
+  isHardMode: _isHardMode,
   variableReward,
   postedInline,
   postCaption,
@@ -108,7 +108,6 @@ export function TaskCompleteCelebration({
   completeShareProps,
   minimalShareProps,
 }: TaskCompleteCelebrationProps) {
-  const celebPoints = isHardMode ? 8 : 5;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: DS_DAYLIGHT.color.canvas }]} edges={["bottom"]}>
@@ -137,9 +136,9 @@ export function TaskCompleteCelebration({
           bounces={false}
         >
           <Text style={d.title}>Secured.</Text>
-          <Text style={d.subtitle}>
-            +{celebPoints} points · {taskName}
-          </Text>
+          {taskName ? (
+            <Text style={d.subtitle}>{taskName}</Text>
+          ) : null}
 
           {variableReward ? (
             <View style={d.rewardPill}>

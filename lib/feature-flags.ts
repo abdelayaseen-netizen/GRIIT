@@ -37,6 +37,28 @@ export const FLAGS = {
    * When false, app/onboarding/index.tsx renders the existing OnboardingFlow.
    */
   ONBOARDING_V2: false,
+  /**
+   * When false, app/task/run.tsx (legacy GPS/treadmill screen) shows a redirect.
+   * Keep false until device-verified parity with task/complete.tsx is confirmed and
+   * old push-notification deep-links are rotated. See BLOCKERS.md B-02.
+   */
+  LEGACY_RUN_SCREEN: false,
+  /**
+   * When false, app/task/checkin.tsx (legacy location-session screen) shows a redirect.
+   * Keep false — setUserLocation gate is broken in the unified screen (see BLOCKERS.md B-01).
+   */
+  LEGACY_CHECKIN_SCREEN: false,
+  /**
+   * Journal tag chips (Mood / Wins / Photo). Not yet functional — gate until implemented.
+   * See BLOCKERS.md B-04.
+   */
+  JOURNAL_TAGS: false,
+  /**
+   * SHIP_TASK_FLOW: universal Start arming step for every task type (photo, run, workout,
+   * journal, counter/reading/water, timer). Simple/manual skip arming.
+   * Gated to false during Phase 2 implementation; flip to true when ReadyCard ships.
+   */
+  TASK_START_ARMING: true,
 } as const;
 
 // ============================================

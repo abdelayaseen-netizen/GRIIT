@@ -11,7 +11,7 @@ import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useApp } from "@/contexts/AppContext";
 import { haversineDistance } from "@/lib/geo";
-import { DS_COLORS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_COLORS_V2, DS_SPACING, DS_SPACING_V2, GRIIT_COLORS } from "@/lib/design-system";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { trpcMutate } from "@/lib/trpc";
@@ -45,6 +45,7 @@ import { TaskWorkoutBody } from "@/components/task/bodies/TaskWorkoutBody";
 import { TaskJournalBody } from "@/components/task/bodies/TaskJournalBody";
 import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/TaskCounterBody";
 import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
+import { FLAGS } from "@/lib/feature-flags";
 import {
   firstString,
   parseConfig,
@@ -54,6 +55,19 @@ import {
   goBackOrHome,
   type TaskCompleteConfig,
 } from "@/lib/task-helpers";
+
+/** Per-type hint shown in the body slot before the user taps Start. Phase 2 replaces this with TaskReadyCard. */
+const READY_HINTS: Record<string, string> = {
+  photo: "No timer — capture when you're ready.",
+  run: "Manual entry or in-app timer. No GPS.",
+  workout: "Log your type and duration.",
+  timer: "Stay on screen until the session is done.",
+  journal: "No camera — text is the proof.",
+  counter: "Tap up to your daily target.",
+  water: "Tap up to your daily target.",
+  reading: "Reading variant can add a page photo.",
+  checkin: "We confirm GPS range — no photo.",
+};
 
 export function TaskCompleteScreenInner() {
   const router = useRouter();
@@ -115,6 +129,13 @@ export function TaskCompleteScreenInner() {
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
   const [timeWindowFailed, setTimeWindowFailed] = useState(false);
   const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
+  // Arming state — true once the user taps Start (simple/manual start armed immediately).
+  // Phase 2 adds the full ReadyCard + permission-arming logic.
+  const [isArmed, setIsArmed] = useState<boolean>(
+    FLAGS.TASK_START_ARMING
+      ? taskTypeRaw === "simple" || taskTypeRaw === "manual"
+      : true
+  );
   // V2 body-component local state (counter / water / reading + timer sound)
   const [counterValue, setCounterValue] = useState<number>(0);
   const [bookTitle, setBookTitle] = useState<string>("");
@@ -165,12 +186,16 @@ export function TaskCompleteScreenInner() {
     setHardGatesPassed(!isHardVerificationTask);
     setTimeWindowFailed(false);
     setGatesLocation(null);
+    // Reset arming state for the new task
+    if (FLAGS.TASK_START_ARMING) {
+      setIsArmed(taskTypeRaw === "simple" || taskTypeRaw === "manual");
+    }
     if (isHardVerificationTask) {
       clockedInAtRef.current = new Date().toISOString();
     } else {
       clockedInAtRef.current = null;
     }
-  }, [taskId, isHardVerificationTask, params.taskConfig]);
+  }, [taskId, isHardVerificationTask, params.taskConfig, taskTypeRaw]);
 
   const onHardGatesResolved = useCallback((ok: boolean, loc?: { lat: number; lng: number }) => {
     setHardGatesPassed(ok);
@@ -445,6 +470,12 @@ export function TaskCompleteScreenInner() {
     counterOk,
   ]);
 
+  // Phase 1: basic arm handler — setIsArmed(true).
+  // Phase 2 adds: camera permission (photo/run), location permission (checkin), timer start.
+  const handleArm = useCallback(() => {
+    setIsArmed(true);
+  }, []);
+
   const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
     if (!activeChallengeId || !taskId) {
       if (Platform.OS !== "web") {
@@ -685,6 +716,30 @@ export function TaskCompleteScreenInner() {
   }, [counterVariant]);
 
   const renderBody = useCallback(() => {
+    // Ready state: show hint text until user taps Start.
+    // Phase 2 replaces this placeholder with <TaskReadyCard>.
+    if (FLAGS.TASK_START_ARMING && !isArmed) {
+      return (
+        <View
+          style={{
+            paddingVertical: DS_SPACING_V2.xl,
+            paddingHorizontal: DS_SPACING_V2.md,
+            alignItems: "center" as const,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              lineHeight: 22,
+              color: DS_COLORS_V2.text.secondary,
+              textAlign: "center" as const,
+            }}
+          >
+            {READY_HINTS[taskTypeRaw] ?? "Complete this task."}
+          </Text>
+        </View>
+      );
+    }
     switch (taskTypeRaw) {
       case "photo":
         return (
@@ -766,6 +821,7 @@ export function TaskCompleteScreenInner() {
             prompt={journalPrompt}
             wordCount={wordCount}
             minWords={minWords}
+            showTagChips={FLAGS.JOURNAL_TAGS}
           />
         );
       case "counter":
@@ -810,6 +866,7 @@ export function TaskCompleteScreenInner() {
         return <TaskSimpleBody value={{ done: false }} taskName={taskName} />;
     }
   }, [
+    isArmed,
     taskTypeRaw,
     photoCaption,
     photoUri,
@@ -983,30 +1040,56 @@ export function TaskCompleteScreenInner() {
 
   // Primary CTA state-driven label.
   const primaryCta = useMemo(() => {
+    // ── Ready state: shown before user taps Start ───────────────────────────
+    if (FLAGS.TASK_START_ARMING && !isArmed) {
+      let readyLabel = "Start";
+      if (taskTypeRaw === "journal") readyLabel = "Start writing";
+      else if (taskTypeRaw === "timer") readyLabel = "Start now";
+      return {
+        label: readyLabel,
+        onPress: () => handleArm(),
+        disabled: false,
+        disabledReason: undefined,
+        loading: false,
+      };
+    }
+
+    // ── Do-state: storyboard CTA label table ─────────────────────────────────
     let label = "Mark complete";
     let disabledReason: string | undefined;
     if (taskTypeRaw === "manual" || taskTypeRaw === "simple") {
-      label = "Yes — I did it";
+      label = "Mark done";
     } else if (taskTypeRaw === "photo") {
       label = "Submit proof";
       if (!photoOk) disabledReason = "Take photo to submit";
     } else if (taskTypeRaw === "timer") {
-      label = timerOk ? "Complete" : "Finish early";
-      if (!timerOk && isHardMode) disabledReason = "Stay on screen until done";
+      if (timerOk && needsPhotoProof && !photoOk) {
+        label = "I'm done — capture";
+        disabledReason = "Take photo to complete";
+      } else if (timerOk) {
+        label = "Complete";
+      } else {
+        label = "Finish early";
+        if (isHardMode) disabledReason = "Stay on screen until done";
+      }
     } else if (taskTypeRaw === "run") {
-      label = runFormOk ? "End run & save" : "End early";
+      label = "Continue";
       if (!runFormOk) disabledReason = "Add distance & time";
     } else if (taskTypeRaw === "workout") {
-      label = "Finish workout";
+      label = "Finish session";
       if (!workoutOk) disabledReason = `Need at least ${Math.max(1, minDurMinutes)} min`;
     } else if (taskTypeRaw === "journal") {
-      label = "Save entry";
-      if (!journalOk) disabledReason = `Need ${Math.max(0, minWords - wordCount)} more word${minWords - wordCount === 1 ? "" : "s"}`;
+      // "Start writing" is the only CTA — arms when unarmed (handled above); saves when gate met.
+      label = "Start writing";
+      if (!journalOk) {
+        const gap = Math.max(0, minWords - wordCount);
+        if (gap > 0) disabledReason = `${gap} more word${gap === 1 ? "" : "s"} to go`;
+      }
     } else if (isCounterFamily) {
       label = "Mark today complete";
       if (!counterOk) disabledReason = `${Math.max(0, counterGoal - counterValue)} more to go`;
     } else if (taskTypeRaw === "checkin") {
-      label = "I'm here — check in";
+      label = "Confirm check-in";
       if (!locationOk) {
         const meters = distance != null ? `${Math.round(distance)} m away` : "Locating…";
         disabledReason = `Get closer to check in (${meters})`;
@@ -1020,7 +1103,10 @@ export function TaskCompleteScreenInner() {
       loading: isSubmitting,
     };
   }, [
+    isArmed,
+    handleArm,
     taskTypeRaw,
+    needsPhotoProof,
     photoOk,
     timerOk,
     isHardMode,
@@ -1148,6 +1234,14 @@ export function TaskCompleteScreenInner() {
         verificationGates={shellGates}
         onBack={() => goBackOrHome(router)}
         primaryCta={primaryCta}
+        secondaryCta={
+          (taskTypeRaw === "simple" || taskTypeRaw === "manual") && isArmed
+            ? {
+                label: "Not yet",
+                onPress: () => goBackOrHome(router),
+              }
+            : undefined
+        }
         missedState={shellMissedState}
         inlineError={error || null}
         onDismissInlineError={clearError}

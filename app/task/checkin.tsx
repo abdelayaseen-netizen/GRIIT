@@ -23,6 +23,7 @@ import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { DS_COLORS } from "@/lib/design-system";
+import { FLAGS } from "@/lib/feature-flags";
 import { AllowedLocation } from "@/types";
 import { checkinStyles as styles } from "./checkin-styles";
 import Celebration from "@/components/Celebration";
@@ -52,7 +53,7 @@ interface CurrentLocation {
   timestamp: number;
 }
 
-export default function CheckinTaskScreen() {
+function CheckinTaskScreenInner() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { currentChallenge, verifyTask, getTaskStateForTemplate, profile, activeChallenge, completeTask } = useApp();
@@ -695,3 +696,31 @@ export default function CheckinTaskScreen() {
   );
 }
 
+/** Legacy-screen gate. FLAGS.LEGACY_CHECKIN_SCREEN = false → redirect. See BLOCKERS.md B-01 + B-02. */
+function CheckinTaskScreenBlocked() {
+  const router = useRouter();
+  return (
+    <ErrorBoundary>
+      <SafeAreaView style={{ flex: 1, backgroundColor: DS_COLORS.background }} edges={["bottom"] as const}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 16 }}>
+          <Text style={{ fontSize: 17, fontWeight: "600", color: DS_COLORS.textPrimary, textAlign: "center" }}>
+            Check-in coming soon
+          </Text>
+          <Text style={{ fontSize: 14, color: DS_COLORS.textSecondary, textAlign: "center" }}>
+            Location check-in requires a fix to the location gate. See BLOCKERS.md B-01.
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
+            style={{ width: "100%", paddingVertical: 14, borderRadius: 10, backgroundColor: DS_COLORS.accent, alignItems: "center" }}
+          >
+            <Text style={{ color: DS_COLORS.white, fontWeight: "600" }}>Go back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </ErrorBoundary>
+  );
+}
+
+export default FLAGS.LEGACY_CHECKIN_SCREEN ? CheckinTaskScreenInner : CheckinTaskScreenBlocked;
