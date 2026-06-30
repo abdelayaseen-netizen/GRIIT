@@ -601,14 +601,15 @@ export function TaskCompleteScreenInner() {
       clearActiveSession();
 
       const celebTitle = taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
-      const celebPoints = taskMode === "minimum" ? 0 : isHardMode ? 8 : 5;
       showCelebration({
         title: celebTitle,
-        subtitle: `+${celebPoints} points`,
+        subtitle: FLAGS.COMPLETION_REWARDS
+          ? `+${taskMode === "minimum" ? 0 : isHardMode ? 8 : 5} points`
+          : "",
         type: "goal",
       });
 
-      if (Math.random() < 0.3) {
+      if (FLAGS.COMPLETION_REWARDS && Math.random() < 0.3) {
         const rewards = [
           { label: "2x BONUS — double points!", color: DS_COLORS.CELEB_BONUS_AMBER, bg: DS_COLORS.CELEB_BONUS_AMBER_BG },
           { label: "Streak shield earned", color: DS_COLORS.CELEB_BONUS_GREEN, bg: DS_COLORS.CELEB_BONUS_GREEN_BG },

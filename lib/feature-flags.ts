@@ -65,6 +65,14 @@ export const FLAGS = {
    * mode="simple" so this is dormant. Gate here for Phase 5 audit transparency.
    */
   WORKOUT_STRUCTURED: false,
+  /**
+   * Hardcoded completion rewards: points subtitle (`+N points`) and the random
+   * variable-reward chip ("2x BONUS", "Streak shield earned", etc.).
+   * The storyboard specifies streak-only — no points are shown. These mechanics
+   * may become real server-driven rewards later. Keep false until the backend
+   * returns real values. See CLEANUP_LOG.md item 1.
+   */
+  COMPLETION_REWARDS: false,
 } as const;
 
 // ============================================

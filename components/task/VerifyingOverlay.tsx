@@ -17,16 +17,9 @@ import {
   Modal,
 } from "react-native";
 import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2 } from "@/lib/design-system";
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Types
-// ──────────────────────────────────────────────────────────────────────────────
-export type VerifyingRow = {
-  /** Short label e.g. "Within time window" */
-  label: string;
-  /** Contextual detail e.g. "07:42" or "not from library" */
-  detail?: string;
-};
+import type { VerifyingRow } from "@/lib/task-flow-utils";
+export type { VerifyingRow } from "@/lib/task-flow-utils";
+export { buildVerifyingRows, getTypeSuccessLine } from "@/lib/task-flow-utils";
 
 type VerifyingOverlayProps = {
   visible: boolean;
@@ -82,56 +75,6 @@ export function VerifyingOverlay({
       </View>
     </Modal>
   );
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Helpers — build row list from gate flags (honest-cut rule: only evaluated gates)
-// ──────────────────────────────────────────────────────────────────────────────
-export function buildVerifyingRows(opts: {
-  hasTimeWindow: boolean;
-  submitTimeLabel: string;
-  hasCameraOnly: boolean;
-  hasLocation: boolean;
-}): VerifyingRow[] {
-  const rows: VerifyingRow[] = [];
-  if (opts.hasTimeWindow) {
-    rows.push({ label: "Within time window", detail: opts.submitTimeLabel });
-  }
-  if (opts.hasCameraOnly) {
-    rows.push({ label: "Live camera", detail: "not from library" });
-  }
-  if (opts.hasLocation) {
-    rows.push({ label: "On location" });
-  }
-  return rows;
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Per-type success line
-// ──────────────────────────────────────────────────────────────────────────────
-export function getTypeSuccessLine(taskTypeRaw: string): string {
-  switch (taskTypeRaw) {
-    case "photo":
-      return "Photo proof submitted";
-    case "timer":
-      return "Session time recorded";
-    case "run":
-      return "Run entry submitted";
-    case "workout":
-      return "Workout logged";
-    case "journal":
-      return "Journal entry saved";
-    case "counter":
-      return "Daily target recorded";
-    case "water":
-      return "Daily water logged";
-    case "reading":
-      return "Reading pages logged";
-    case "checkin":
-      return "Location confirmed";
-    default:
-      return "Task completed";
-  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

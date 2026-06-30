@@ -14,7 +14,8 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import { Camera, Image as GalleryIcon, Share2 } from "lucide-react-native";
+import { Camera, Flame, Image as GalleryIcon, Share2 } from "lucide-react-native";
+import { FLAGS } from "@/lib/feature-flags";
 import ViewShot from "react-native-view-shot";
 import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
@@ -165,13 +166,18 @@ export function TaskCompleteCelebration({
           ) : null}
           {typeof streakCount === "number" && streakCount > 0 ? (
             <View style={d.streakChip}>
+              <Flame
+                size={13}
+                color={DS_COLORS_V2.brand.primary}
+                strokeWidth={2}
+              />
               <Text style={d.streakChipText}>
-                🔥 {streakCount} day{streakCount === 1 ? "" : " streak"}
+                {streakCount} {streakCount === 1 ? "day" : "days"}
               </Text>
             </View>
           ) : null}
 
-          {variableReward ? (
+          {FLAGS.COMPLETION_REWARDS && variableReward ? (
             <View style={d.rewardPill}>
               <Text style={d.rewardText}>{variableReward.label}</Text>
             </View>
@@ -421,6 +427,9 @@ const d = StyleSheet.create({
     color: DS_COLORS_V2.text.secondary,
   },
   streakChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     alignSelf: "flex-start",
     marginTop: DS_SPACING_V2.xs,
     paddingVertical: 5,
