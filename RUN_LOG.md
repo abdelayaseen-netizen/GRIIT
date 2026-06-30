@@ -145,4 +145,37 @@ hooks/useTaskCompleteScreen.tsx: buildVerifyingRows({ hasTimeWindow: !!(schedule
 ### Status
 Phase 2 committed. Proceeding to Phase 3.
 
+---
+
+## Phase 3 — Per-Type Bodies (2026-06-29)
+
+### Per-type status
+
+| Type | Body file | Change | CTA (footer) | All onPress wired |
+|------|-----------|--------|---------|------|
+| photo | TaskPhotoBody.tsx | No change needed — viewfinder, caption, timestamps, remove all ✅ | Submit proof ✅ | ✅ |
+| timer | TaskTimerBody.tsx | No change needed; `useTaskTimer` fixed | Complete / Finish early / I'm done — capture ✅ | ✅ |
+| run | useTaskCompleteScreen.tsx | `onTogglePlay={isRunTimed ? toggleTimer : undefined}` wired | Continue ✅ | ✅ |
+| workout | TaskWorkoutBody.tsx | mode="simple" always; structured gated (never reached) | Finish session ✅ | ✅ |
+| journal | TaskJournalBody.tsx | showTagChips={FLAGS.JOURNAL_TAGS} already done Ph1 | Start writing ✅ | ✅ (chips hidden) |
+| counter/water/reading | TaskCounterBody.tsx | "Add a {unit}" label done Ph1 | Mark today complete ✅ | ✅ |
+| simple | TaskSimpleBody.tsx | No change needed | Mark done / Not yet ✅ | ✅ |
+| checkin | TaskCheckinBody.tsx | Built, not wired live (BLOCKERS.md B-01) | — | N/A (gated) |
+
+### useTaskTimer fix (B-06)
+- Added `resetTimer: () => void` to `UseTaskTimerReturn` and implementation.
+- `onReset={resetTimer}` wired to `TaskTimerBody` (was: only-pause workaround).
+
+### Grep evidence — onTogglePlay wired
+```
+hooks/useTaskCompleteScreen.tsx: onTogglePlay={isRunTimed ? toggleTimer : undefined}
+```
+
+### TSC result
+`npx tsc --noEmit` → **0 errors**
+
+### Status
+Phase 3 committed. Proceeding to Phase 4.
+
+
 

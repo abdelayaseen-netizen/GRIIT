@@ -240,7 +240,7 @@ export function TaskCompleteScreenInner() {
     setPhotoCapturedAt(null);
   }, [photoCapture]);
 
-  const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer } =
+  const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer, resetTimer } =
     useTaskTimer({
       requiredSeconds,
       isCountdown,
@@ -803,9 +803,7 @@ export function TaskCompleteScreenInner() {
             isRunning={isTimerRunning}
             isComplete={timerOk}
             onTogglePlay={toggleTimer}
-            onReset={() => {
-              if (isTimerRunning) toggleTimer();
-            }}
+            onReset={resetTimer}
           />
         );
       case "run":
@@ -823,6 +821,7 @@ export function TaskCompleteScreenInner() {
             goalMinutes={minDurMinutes > 0 ? minDurMinutes : undefined}
             isRunning={isTimerRunning}
             hasGps={false}
+            onTogglePlay={isRunTimed ? toggleTimer : undefined}
             manualInput={{
               distance: runDistance,
               onChangeDistance: setRunDistance,
@@ -918,10 +917,13 @@ export function TaskCompleteScreenInner() {
     isTimerRunning,
     timerOk,
     toggleTimer,
+    resetTimer,
     runDistance,
     runDuration,
     setRunDistance,
     setRunDuration,
+    isRunTimed,
+    toggleTimer,
     timerSeconds,
     minDurMinutes,
     workoutKind,

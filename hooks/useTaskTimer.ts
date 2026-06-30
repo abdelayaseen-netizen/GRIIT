@@ -20,6 +20,8 @@ interface UseTaskTimerReturn {
   timerOk: boolean;
   hardModeOk: boolean;
   toggleTimer: () => void;
+  /** Stops the timer and resets seconds to 0 (fixes B-06). */
+  resetTimer: () => void;
 }
 
 /**
@@ -136,6 +138,16 @@ export function useTaskTimer({
     if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
+  /** Fully resets the timer to 0 without affecting autoStart state (B-06). */
+  const resetTimer = useCallback(() => {
+    setIsTimerRunning(false);
+    setTimerSeconds(0);
+    startedAtMsRef.current = null;
+    accumulatedPausedMsRef.current = 0;
+    pausedAtMsRef.current = null;
+    onScreenSecondsRef.current = 0;
+  }, []);
+
   const timerDisplay =
     isCountdown && requiredSeconds > 0
       ? `${String(Math.floor(Math.max(0, requiredSeconds - timerSeconds) / 60)).padStart(2, "0")}:${String(Math.max(0, requiredSeconds - timerSeconds) % 60).padStart(2, "0")}`
@@ -157,5 +169,6 @@ export function useTaskTimer({
     timerOk,
     hardModeOk,
     toggleTimer,
+    resetTimer,
   };
 }
