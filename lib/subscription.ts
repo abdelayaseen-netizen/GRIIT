@@ -13,7 +13,7 @@ import { TRPC } from "./trpc-paths";
 import { trackEvent } from "./analytics";
 import { captureError } from "./sentry";
 
-const ENTITLEMENT_ID = "GRIIT Pro";
+export const ENTITLEMENT_ID = "GRIIT Pro";
 
 /** Remove function for RevenueCat customer info listener; null when RC not available (web/Expo Go). */
 let purchaserInfoListener: (() => void) | null = null;
