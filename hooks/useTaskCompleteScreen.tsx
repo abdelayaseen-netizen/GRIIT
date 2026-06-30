@@ -125,6 +125,8 @@ export function TaskCompleteScreenInner() {
   const verifyStartMsRef = useRef<number>(0);
   /** Human-readable time label captured at submit-press (e.g. "07:42 AM"). */
   const [submitTimeLabel, setSubmitTimeLabel] = useState<string>("");
+  /** Streak count returned by the server after task completion — shown on Secured screen. */
+  const [completedStreakCount, setCompletedStreakCount] = useState<number | undefined>(undefined);
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
   const [timeWindowFailed, setTimeWindowFailed] = useState(false);
   const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -577,6 +579,11 @@ export function TaskCompleteScreenInner() {
         task_mode: taskMode,
       });
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
+      // Capture server-returned streak count for the Secured screen chip.
+      const resultStreakCount = (completionResult as { newStreakCount?: number } | null)?.newStreakCount;
+      if (typeof resultStreakCount === "number") {
+        setCompletedStreakCount(resultStreakCount);
+      }
       setCompletionIdForShare(
         completionResult && typeof completionResult === "object" && "completionId" in completionResult
           ? (completionResult as { completionId?: string }).completionId
@@ -1241,6 +1248,8 @@ export function TaskCompleteScreenInner() {
     return (
       <TaskCompleteCelebration
         taskName={taskName}
+        taskTypeRaw={taskTypeRaw}
+        streakCount={completedStreakCount}
         isHardMode={isHardMode}
         variableReward={variableReward}
         postedInline={postedInline}

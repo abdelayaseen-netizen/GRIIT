@@ -177,5 +177,30 @@ hooks/useTaskCompleteScreen.tsx: onTogglePlay={isRunTimed ? toggleTimer : undefi
 ### Status
 Phase 3 committed. Proceeding to Phase 4.
 
+---
+
+## Phase 4 — Secured Screen (2026-06-29)
+
+### Changes applied
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `components/task/TaskCompleteCelebration.tsx` | Added `taskTypeRaw?: string` + `streakCount?: number` props; per-type secured line helper; streak chip (🔥 N day streak); "Skip — go home" → "Done"; full `DS_DAYLIGHT`/`DS_COLORS` → `DS_COLORS_V2`/`DS_RADIUS_V2`/`DS_SPACING_V2` migration in `d` stylesheet and inline |
+| 2 | `hooks/useTaskCompleteScreen.tsx` | `completedStreakCount` state set from `completionResult.newStreakCount`; passed to `TaskCompleteCelebration` |
+| 3 | `lib/feature-flags.ts` | Added `FLAGS.WORKOUT_STRUCTURED = false` (B-05 dormant guard) |
+
+### Grep evidence — DS_DAYLIGHT removed
+```
+grep DS_DAYLIGHT components/task/TaskCompleteCelebration.tsx → 0 matches
+grep DS_COLORS[^_] components/task/TaskCompleteCelebration.tsx → 0 matches
+```
+
+### TSC result
+`npx tsc --noEmit` → **0 errors**
+
+### Status
+Phase 4 committed. Proceeding to Phase 5.
+
+
 
 

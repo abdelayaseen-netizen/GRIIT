@@ -59,6 +59,12 @@ export const FLAGS = {
    * Gated to false during Phase 2 implementation; flip to true when ReadyCard ships.
    */
   TASK_START_ARMING: true,
+  /**
+   * Workout structured mode (sets-and-reps form). The "Add exercise" tile in
+   * TaskWorkoutBody has no onPress when mode="structured". Parent always passes
+   * mode="simple" so this is dormant. Gate here for Phase 5 audit transparency.
+   */
+  WORKOUT_STRUCTURED: false,
 } as const;
 
 // ============================================
