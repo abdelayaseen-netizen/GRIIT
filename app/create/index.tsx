@@ -1,6 +1,6 @@
 import React from "react";
-import CreateChallengeWizard from "@/components/create/CreateChallengeWizard";
+import { CreateWizardV2 } from "@/components/create/CreateWizardV2";
 
 export default function CreateModalScreen() {
-  return <CreateChallengeWizard />;
+  return <CreateWizardV2 />;
 }
