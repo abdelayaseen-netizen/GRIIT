@@ -160,4 +160,22 @@ rg 'rgba\(' components/create/CreateWizardV2.tsx components/create/v2/
 
 ## Phase 4 — PR + EAS build
 
-(pending — build ID + URL below after queue)
+**PR:** https://github.com/abdelayaseen-netizen/GRIIT/pull/33 (`restyle/create-wizard-daylight` → `main`, not merged)
+
+**EAS build 39:**
+
+| Field | Value |
+|-------|-------|
+| Build ID | `63174e35-7bef-4b72-8aa0-d44026b582be` |
+| Build URL | https://expo.dev/accounts/yaseenabdela/projects/griit-challenge-tracker/builds/63174e35-7bef-4b72-8aa0-d44026b582be |
+| Build number | 39 (incremented from 38) |
+| Commit | `bb5bba4` |
+| Auto-submit | ✅ scheduled |
+| Submission URL | https://expo.dev/accounts/yaseenabdela/projects/griit-challenge-tracker/submissions/d96beca1-ed2e-4632-b8e8-2bcbe3b5a3b2 |
+
+```text
+Incrementing buildNumber from 38 to 39.
+Build ID    :  63174e35-7bef-4b72-8aa0-d44026b582be
+Build number:  39
+✔ Scheduled iOS submission
+```
