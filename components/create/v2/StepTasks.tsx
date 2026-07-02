@@ -22,7 +22,11 @@ import {
   Trash2,
 } from "lucide-react-native";
 
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import {
+  DS_COLORS_V2,
+  DS_RADIUS_V2,
+  DS_SPACING_V2,
+} from "@/lib/design-system";
 import type {
   WizardCategory,
   WizardDifficulty,
@@ -256,7 +260,7 @@ export function StepTasks({
                 ]}
               >
                 <View style={styles.packIconWrap}>
-                  {packIcon(p.id, DS_DAYLIGHT.color.accent)}
+                  {packIcon(p.id, DS_COLORS_V2.brand.primary)}
                 </View>
                 <View style={styles.packBody}>
                   <Text style={styles.packTitle}>{p.name}</Text>
@@ -279,7 +283,7 @@ export function StepTasks({
             >
               <Plus
                 size={22}
-                color={DS_DAYLIGHT.color.accent}
+                color={DS_COLORS_V2.brand.primary}
                 strokeWidth={2}
               />
               <Text style={styles.emptyAddText}>Add your first task</Text>
@@ -306,7 +310,7 @@ export function StepTasks({
                   >
                     <Trash2
                       size={14}
-                      color={DS_DAYLIGHT.color.inkMuted2}
+                      color={DS_COLORS_V2.text.tertiary}
                       strokeWidth={2}
                     />
                   </Pressable>
@@ -320,7 +324,7 @@ export function StepTasks({
               >
                 <Plus
                   size={14}
-                  color={DS_DAYLIGHT.color.accent}
+                  color={DS_COLORS_V2.brand.primary}
                   strokeWidth={2}
                 />
                 <Text style={styles.addAnotherText}>Add another task</Text>
@@ -335,7 +339,7 @@ export function StepTasks({
           <View style={styles.previewHeader}>
             <Camera
               size={12}
-              color={DS_DAYLIGHT.color.inkMuted}
+              color={DS_COLORS_V2.text.tertiary}
               strokeWidth={2}
             />
             <Text style={styles.previewTitle}>{`${pack.name} · ${pack.tasks.length} tasks`}</Text>
@@ -352,168 +356,167 @@ export function StepTasks({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, paddingTop: 8 },
+  wrap: { gap: DS_SPACING_V2.sm, paddingTop: DS_SPACING_V2.xs },
   h1: {
     fontSize: 23,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.4,
   },
   sub: {
-    fontSize: DS_DAYLIGHT.size.eyebrow,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 14,
+    color: DS_COLORS_V2.text.tertiary,
     marginTop: -2,
   },
 
   tabs: {
     flexDirection: "row",
-    padding: 3,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.segmentTrack,
-    marginVertical: 4,
+    padding: DS_SPACING_V2.xxs,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
+    marginVertical: DS_SPACING_V2.xxs,
   },
   tab: {
     flex: 1,
-    paddingVertical: 9,
+    paddingVertical: DS_SPACING_V2.sm,
     alignItems: "center",
-    borderRadius: DS_DAYLIGHT.radius.chip,
+    borderRadius: DS_RADIUS_V2.lg,
   },
-  tabSelected: { backgroundColor: DS_DAYLIGHT.color.accentTint },
+  tabSelected: { backgroundColor: DS_COLORS_V2.brand.primarySoft },
   tabText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.tertiary,
   },
   tabTextSelected: {
-    color: DS_DAYLIGHT.color.accent,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_COLORS_V2.brand.primary,
+    fontWeight: "500",
   },
 
-  packsList: { gap: 9, marginTop: 4 },
+  packsList: { gap: DS_SPACING_V2.sm, marginTop: DS_SPACING_V2.xxs },
   packRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 12,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    gap: DS_SPACING_V2.sm,
+    padding: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
   packRowSelected: {
-    borderColor: DS_DAYLIGHT.color.accent,
+    borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   packIconWrap: {
     width: 42,
     height: 42,
-    borderRadius: DS_DAYLIGHT.radius.field,
+    borderRadius: DS_RADIUS_V2.lg,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   packBody: { flex: 1, gap: 2 },
   packTitle: {
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
   },
   packSub: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 13,
+    color: DS_COLORS_V2.text.tertiary,
   },
-  customWrap: { gap: 9, marginTop: 4 },
+  customWrap: { gap: DS_SPACING_V2.sm, marginTop: DS_SPACING_V2.xxs },
   emptyAdd: {
-    paddingVertical: 28,
-    paddingHorizontal: 16,
+    paddingVertical: DS_SPACING_V2.xl,
+    paddingHorizontal: DS_SPACING_V2.md,
     alignItems: "center",
-    gap: 8,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    gap: DS_SPACING_V2.xs,
+    borderRadius: DS_RADIUS_V2.lg,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: DS_DAYLIGHT.color.accent,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderColor: DS_COLORS_V2.brand.primary,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   emptyAddText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.accent,
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS_V2.brand.primary,
   },
 
-  taskList: { gap: 9 },
+  taskList: { gap: DS_SPACING_V2.sm },
   taskRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    padding: 14,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    gap: DS_SPACING_V2.sm,
+    padding: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
-  taskRowLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
+  taskRowLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: DS_SPACING_V2.xs },
   taskTypeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: DS_DAYLIGHT.radius.chip,
-    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    paddingHorizontal: DS_SPACING_V2.xs,
+    paddingVertical: DS_SPACING_V2.xxs,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
   },
   taskTypeBadgeText: {
-    fontSize: 10,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
+    fontSize: 11,
+    fontWeight: "500",
     letterSpacing: 0.5,
-    color: DS_DAYLIGHT.color.inkMuted,
+    color: DS_COLORS_V2.text.tertiary,
     textTransform: "uppercase",
   },
   taskName: {
     flex: 1,
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
   },
   addAnother: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    paddingVertical: 13,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
+    gap: DS_SPACING_V2.xs,
+    paddingVertical: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    borderColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
   },
   addAnotherText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.accent,
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS_V2.brand.primary,
   },
 
   previewCard: {
-    marginTop: 8,
-    padding: 14,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
-    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
-    gap: 6,
+    marginTop: DS_SPACING_V2.xs,
+    padding: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    gap: DS_SPACING_V2.xs,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
   previewHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: DS_SPACING_V2.xs,
   },
   previewTitle: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
+    fontSize: 13,
+    fontWeight: "500",
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    color: DS_DAYLIGHT.color.inkMuted,
+    color: DS_COLORS_V2.text.tertiary,
   },
   previewTask: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 13,
+    color: DS_COLORS_V2.text.secondary,
   },
 });
-

@@ -16,7 +16,11 @@ import {
   Zap,
 } from "lucide-react-native";
 
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import {
+  DS_COLORS_V2,
+  DS_RADIUS_V2,
+  DS_SPACING_V2,
+} from "@/lib/design-system";
 
 export type WizardDifficulty = "standard" | "hard";
 export type WizardPhotoProof = "off" | "optional" | "required";
@@ -68,16 +72,16 @@ export function StepRules({
               size={18}
               color={
                 difficulty === "standard"
-                  ? DS_DAYLIGHT.color.accent
-                  : DS_DAYLIGHT.color.inkSecondary
+                  ? DS_COLORS_V2.brand.primary
+                  : DS_COLORS_V2.text.secondary
               }
               strokeWidth={2}
             />
           }
           iconBg={
             difficulty === "standard"
-              ? DS_DAYLIGHT.color.accentTint
-              : DS_DAYLIGHT.color.fieldNeutral
+              ? DS_COLORS_V2.brand.primarySoft
+              : DS_COLORS_V2.surface.cardSubtle
           }
           title="Standard"
           subtitle="Recommended for first challenge"
@@ -91,16 +95,16 @@ export function StepRules({
               size={18}
               color={
                 difficulty === "hard"
-                  ? DS_DAYLIGHT.color.accent
-                  : DS_DAYLIGHT.color.inkSecondary
+                  ? DS_COLORS_V2.brand.primary
+                  : DS_COLORS_V2.text.secondary
               }
               strokeWidth={2}
             />
           }
           iconBg={
             difficulty === "hard"
-              ? DS_DAYLIGHT.color.accentTint
-              : DS_DAYLIGHT.color.fieldNeutral
+              ? DS_COLORS_V2.brand.primarySoft
+              : DS_COLORS_V2.surface.cardSubtle
           }
           title="Hard mode"
           subtitle="75 Hard style — no exceptions"
@@ -141,7 +145,7 @@ export function StepRules({
       <View style={styles.statChip}>
         <TrendingUp
           size={12}
-          color={DS_DAYLIGHT.color.accent}
+          color={DS_COLORS_V2.brand.primary}
           strokeWidth={2}
         />
         <Text style={styles.statChipText}>
@@ -168,8 +172,8 @@ export function StepRules({
               {c.icon({
                 size: 16,
                 color: selected
-                  ? DS_DAYLIGHT.color.accent
-                  : DS_DAYLIGHT.color.inkSecondary,
+                  ? DS_COLORS_V2.brand.primary
+                  : DS_COLORS_V2.text.secondary,
                 strokeWidth: 2,
               })}
               <Text
@@ -233,132 +237,131 @@ function DifficultyCard({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, paddingTop: 8 },
+  wrap: { gap: DS_SPACING_V2.sm, paddingTop: DS_SPACING_V2.xs },
   h1: {
     fontSize: 23,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.4,
   },
   sub: {
-    fontSize: DS_DAYLIGHT.size.eyebrow,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 14,
+    color: DS_COLORS_V2.text.tertiary,
     marginTop: -2,
   },
 
-  diffStack: { gap: 10, marginTop: 4 },
+  diffStack: { gap: DS_SPACING_V2.sm, marginTop: DS_SPACING_V2.xxs },
   diffCard: {
-    padding: 14,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    padding: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    gap: 8,
+    borderColor: DS_COLORS_V2.surface.divider,
+    gap: DS_SPACING_V2.xs,
   },
   diffCardSelected: {
-    borderColor: DS_DAYLIGHT.color.accent,
+    borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
-  diffHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  diffHeader: { flexDirection: "row", alignItems: "center", gap: DS_SPACING_V2.sm },
   diffIconWrap: {
     width: 34,
     height: 34,
-    borderRadius: DS_DAYLIGHT.radius.field,
+    borderRadius: DS_RADIUS_V2.lg,
     alignItems: "center",
     justifyContent: "center",
   },
   diffHeaderBody: { flex: 1, gap: 2 },
   diffTitle: {
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
   },
   diffSubtitle: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 13,
+    color: DS_COLORS_V2.text.tertiary,
   },
   diffDescription: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 13,
+    color: DS_COLORS_V2.text.secondary,
     lineHeight: 18,
   },
 
   sectionLabel: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
-    marginTop: 8,
+    fontSize: 15,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
+    marginTop: DS_SPACING_V2.xs,
   },
   pillRow: {
     flexDirection: "row",
-    padding: 3,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.segmentTrack,
+    padding: DS_SPACING_V2.xxs,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
   },
   pill: {
     flex: 1,
-    paddingVertical: 9,
+    paddingVertical: DS_SPACING_V2.sm,
     alignItems: "center",
-    borderRadius: DS_DAYLIGHT.radius.chip,
+    borderRadius: DS_RADIUS_V2.lg,
   },
-  pillSelected: { backgroundColor: DS_DAYLIGHT.color.accentTint },
+  pillSelected: { backgroundColor: DS_COLORS_V2.brand.primarySoft },
   pillText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.tertiary,
   },
   pillTextSelected: {
-    color: DS_DAYLIGHT.color.accent,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_COLORS_V2.brand.primary,
+    fontWeight: "500",
   },
 
   statChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: DS_DAYLIGHT.radius.pill,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    gap: DS_SPACING_V2.xs,
+    paddingHorizontal: DS_SPACING_V2.sm,
+    paddingVertical: DS_SPACING_V2.xs,
+    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
     alignSelf: "flex-start",
   },
   statChipText: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.accent,
+    fontSize: 13,
+    fontWeight: "500",
+    color: DS_COLORS_V2.brand.primary,
   },
 
   catGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 9,
+    gap: DS_SPACING_V2.sm,
   },
   catChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    gap: DS_SPACING_V2.xs,
+    paddingHorizontal: DS_SPACING_V2.sm,
+    paddingVertical: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
     minWidth: "47%",
   },
   catChipSelected: {
-    borderColor: DS_DAYLIGHT.color.accent,
+    borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   catText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.secondary,
   },
   catTextSelected: {
-    color: DS_DAYLIGHT.color.accent,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_COLORS_V2.brand.primary,
+    fontWeight: "500",
   },
 });
-
