@@ -14,7 +14,11 @@ import {
 } from "react-native";
 import { Lightbulb, User, Users } from "lucide-react-native";
 
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import {
+  DS_COLORS_V2,
+  DS_RADIUS_V2,
+  DS_SPACING_V2,
+} from "@/lib/design-system";
 
 export type WizardWho = "solo" | "group";
 
@@ -67,7 +71,7 @@ export function StepBasics({
           value={title}
           onChangeText={(t) => onChangeTitle(t.slice(0, TITLE_MAX))}
           placeholder="e.g. Read 30 min before phone"
-          placeholderTextColor={DS_DAYLIGHT.color.placeholder}
+          placeholderTextColor={DS_COLORS_V2.text.tertiary}
           maxLength={TITLE_MAX}
           style={styles.input}
         />
@@ -132,7 +136,7 @@ export function StepBasics({
               }
             }}
             placeholder="Custom"
-            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
+            placeholderTextColor={DS_COLORS_V2.text.tertiary}
             keyboardType="number-pad"
             style={styles.durationCustomInput}
           />
@@ -152,8 +156,8 @@ export function StepBasics({
             size={18}
             color={
               who === "solo"
-                ? DS_DAYLIGHT.color.accent
-                : DS_DAYLIGHT.color.inkSecondary
+                ? DS_COLORS_V2.brand.primary
+                : DS_COLORS_V2.text.secondary
             }
             strokeWidth={2}
           />
@@ -173,8 +177,8 @@ export function StepBasics({
             size={18}
             color={
               who === "group"
-                ? DS_DAYLIGHT.color.accent
-                : DS_DAYLIGHT.color.inkSecondary
+                ? DS_COLORS_V2.brand.primary
+                : DS_COLORS_V2.text.secondary
             }
             strokeWidth={2}
           />
@@ -188,7 +192,7 @@ export function StepBasics({
       <View style={styles.hintCard}>
         <Lightbulb
           size={14}
-          color={DS_DAYLIGHT.color.accent}
+          color={DS_COLORS_V2.brand.primary}
           strokeWidth={2}
         />
         <Text style={styles.hintText}>
@@ -200,145 +204,144 @@ export function StepBasics({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, paddingTop: 8 },
+  wrap: { gap: DS_SPACING_V2.sm, paddingTop: DS_SPACING_V2.xs },
   h1: {
     fontSize: 23,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.4,
   },
   sub: {
-    fontSize: DS_DAYLIGHT.size.eyebrow,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 14,
+    color: DS_COLORS_V2.text.tertiary,
     marginTop: -2,
   },
   inputCard: {
-    backgroundColor: DS_DAYLIGHT.color.card,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    padding: 14,
+    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: DS_RADIUS_V2.lg,
+    padding: DS_SPACING_V2.sm,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    gap: 8,
-    marginTop: 4,
+    borderColor: DS_COLORS_V2.surface.divider,
+    gap: DS_SPACING_V2.xs,
+    marginTop: DS_SPACING_V2.xxs,
   },
   inputCardFocused: {
-    borderColor: DS_DAYLIGHT.color.accent,
+    borderColor: DS_COLORS_V2.brand.primary,
   },
   input: {
-    fontSize: DS_DAYLIGHT.size.title,
-    color: DS_DAYLIGHT.color.ink,
-    paddingVertical: 4,
+    fontSize: 17,
+    color: DS_COLORS_V2.text.primary,
+    paddingVertical: DS_SPACING_V2.xxs,
   },
   inputFootRow: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   inputFootText: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 13,
+    color: DS_COLORS_V2.text.tertiary,
   },
-  inputFootOk: { color: DS_DAYLIGHT.color.accent },
+  inputFootOk: { color: DS_COLORS_V2.brand.primary },
   exampleText: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 13,
+    color: DS_COLORS_V2.text.tertiary,
     marginTop: -2,
   },
 
   sectionLabel: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
-    marginTop: 12,
+    fontSize: 15,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
+    marginTop: DS_SPACING_V2.sm,
   },
   durationGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 9,
+    gap: DS_SPACING_V2.sm,
   },
   durationChip: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: DS_DAYLIGHT.radius.chip,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    paddingHorizontal: DS_SPACING_V2.md,
+    paddingVertical: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
   durationChipRecommended: {},
   durationChipSelected: {
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
-    borderColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    borderColor: DS_COLORS_V2.brand.primary,
   },
   durationText: {
     fontSize: 14,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
   },
   durationTextSelected: {
-    color: DS_DAYLIGHT.color.accent,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_COLORS_V2.brand.primary,
+    fontWeight: "500",
   },
   durationCustomCell: {
     minWidth: 100,
     flexShrink: 0,
   },
   durationCustomInput: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: DS_DAYLIGHT.radius.chip,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    paddingHorizontal: DS_SPACING_V2.md,
+    paddingVertical: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
     fontSize: 14,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.ink,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.primary,
     minWidth: 100,
   },
 
-  whoRow: { flexDirection: "row", gap: 10 },
+  whoRow: { flexDirection: "row", gap: DS_SPACING_V2.sm },
   whoCard: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    padding: 14,
-    borderRadius: DS_DAYLIGHT.radius.cardMd,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    gap: DS_SPACING_V2.sm,
+    padding: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
   whoCardSelected: {
-    borderColor: DS_DAYLIGHT.color.accent,
+    borderColor: DS_COLORS_V2.brand.primary,
     borderWidth: 1.5,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   whoBody: { gap: 2 },
   whoTitle: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 15,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
   },
   whoSub: {
-    fontSize: 10,
-    fontWeight: DS_DAYLIGHT.weight.medium,
+    fontSize: 11,
+    fontWeight: "500",
     letterSpacing: 0.5,
-    color: DS_DAYLIGHT.color.inkMuted,
+    color: DS_COLORS_V2.text.tertiary,
     textTransform: "uppercase",
   },
 
   hintCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    padding: 12,
-    borderRadius: DS_DAYLIGHT.radius.cardMd,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
-    marginTop: 4,
+    gap: DS_SPACING_V2.xs,
+    padding: DS_SPACING_V2.sm,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    marginTop: DS_SPACING_V2.xxs,
   },
   hintText: {
     flex: 1,
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.accent,
+    fontSize: 13,
+    fontWeight: "500",
+    color: DS_COLORS_V2.brand.primary,
   },
 });
-
