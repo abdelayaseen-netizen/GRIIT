@@ -104,12 +104,60 @@
 
 ## Phase 2 — Restyle
 
-(pending)
+| Commit | Files |
+|--------|-------|
+| `ea45b2b` | `components/create/CreateWizardV2.tsx` — shell, progress, footer CTA, review modal |
+| `5bc879b` | `components/create/v2/StepBasics.tsx` |
+| `2c2784f` | `components/create/v2/StepTasks.tsx`, `StepRules.tsx` |
+
+**Token migration:** `DS_DAYLIGHT` → `DS_COLORS_V2` + `DS_SPACING_V2` + `DS_RADIUS_V2`  
+**Selected states:** `brand.primarySoft` bg + `brand.primary` text/border (solo/group, duration, packs, pills, categories)  
+**Primary CTA:** `brand.primary` + `brand.primaryText`  
+**Step indicator:** `text.secondary` (`CreateWizardV2.tsx:522-527`)  
+**Progress accents:** `brand.primary` (`CreateWizardV2.tsx:536`)  
+**fontWeight:** all `'400'` / `'500'` only
 
 ## Phase 3 — Verify
 
-(pending)
+### `npx tsc --noEmit`
+
+```
+exit: 0
+(no output — 0 errors)
+```
+
+### Full test suite
+
+```
+Test Files  16 passed (16)
+     Tests  91 passed (91)
+  Duration  815ms
+```
+
+### Grep-proof purge (scoped files)
+
+```bash
+# raw hex
+rg '#[0-9A-Fa-f]{3,8}' components/create/CreateWizardV2.tsx components/create/v2/
+→ (no matches)
+
+# v1 DS_COLORS
+rg 'DS_COLORS\.' components/create/CreateWizardV2.tsx components/create/v2/
+→ (no matches)
+
+# DS_DAYLIGHT (legacy interim token set)
+rg 'DS_DAYLIGHT' components/create/CreateWizardV2.tsx components/create/v2/
+→ (no matches)
+
+# fontWeight 600+
+rg "fontWeight:\s*['\"]?[6-9]" components/create/CreateWizardV2.tsx components/create/v2/
+→ (no matches)
+
+# raw rgba in scoped StyleSheets
+rg 'rgba\(' components/create/CreateWizardV2.tsx components/create/v2/
+→ (no matches)
+```
 
 ## Phase 4 — PR + EAS build
 
-(pending)
+(pending — build ID + URL below after queue)
