@@ -14,6 +14,7 @@ import { Bell } from 'lucide-react-native';
 import { DS_DAYLIGHT } from '@/lib/design-system';
 import { StreakHeroV4, type StreakHeroV4Props } from './StreakHeroV4';
 import { StatGrid, type StatGridVariant } from './StatGrid';
+import { Avatar } from '@/components/Avatar';
 import type { FeedScope } from '@/store/feedToggleStore';
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
@@ -56,9 +57,7 @@ function greetingFor(state: HeroState, firstName: string, now: Date): string {
     case 'atRisk':
       return `Last chance${name}`;
     case 'secured':
-      // Spec carve-out: literal celebration emoji (Duolingo-style) is the
-      // single emoji exception in the home greeting copy.
-      return `Day secured 🎯${name}`;
+      return `Day secured${name}`;
     default:
       return `${timeOfDayGreeting(now)}${name}`;
   }
@@ -72,6 +71,11 @@ type HeroState = 'day0' | 'default' | 'atRisk' | 'secured';
 
 export type HomeHeaderV2Props = {
   firstName: string;
+  /** Avatar URL for the current user — shown beside greeting. */
+  avatarUrl?: string | null;
+  /** User ID for avatar fallback color derivation. */
+  userId?: string;
+  onPressAvatar?: () => void;
   hero: StreakHeroV4Props;
   heroState: HeroState;
   /** Current local date — passed in so callers can mock for tests. */
@@ -125,6 +129,25 @@ export function HomeHeaderV2(props: HomeHeaderV2Props) {
     <View style={styles.root}>
       {/* Greeting bar */}
       <View style={styles.greetRow}>
+        {props.onPressAvatar ? (
+          <Pressable
+            onPress={props.onPressAvatar}
+            accessibilityRole="button"
+            accessibilityLabel="View your profile"
+            hitSlop={HIT_SLOP}
+            style={({ pressed }) => [
+              styles.avatarBtn,
+              pressed ? styles.avatarBtnPressed : null,
+            ]}
+          >
+            <Avatar
+              url={props.avatarUrl ?? null}
+              name={props.firstName}
+              userId={props.userId ?? props.firstName}
+              size={36}
+            />
+          </Pressable>
+        ) : null}
         <View style={styles.greetTextCol}>
           <Text style={styles.dateText}>{dateText}</Text>
           <Text style={styles.greetingText} numberOfLines={1}>
@@ -262,6 +285,13 @@ const styles = StyleSheet.create({
     color: DS_DAYLIGHT.color.ink,
     letterSpacing: -0.5,
     marginTop: 2,
+  },
+  avatarBtn: {
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  avatarBtnPressed: {
+    opacity: 0.85,
   },
   bellBtn: {
     width: 44,

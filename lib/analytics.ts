@@ -56,6 +56,7 @@ type AnalyticsEvent =
   | { name: "challenge_abandoned"; challenge_id?: string; day?: number; day_number?: number }
   | { name: "challenge_created"; challenge_id?: string; duration_days?: number; is_hard_mode?: boolean }
   | { name: "feed_posted"; challenge_id?: string; has_photo?: boolean }
+  | { name: "proof_posted"; challenge_id?: string; task_type?: string; has_photo?: boolean }
   | { name: "discover_challenge_tapped"; challenge_id?: string }
   | { name: "share_completed"; content_type?: string }
   | { name: "notification_opened"; reminder_type: ReminderType; time_to_open_ms: number }

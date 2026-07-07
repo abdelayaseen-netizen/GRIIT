@@ -14,6 +14,7 @@
  */
 import React, { useCallback, useState } from "react";
 import {
+  Pressable,
   View,
   Text,
   StyleSheet,
@@ -22,9 +23,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { ROUTES } from "@/lib/routes";
 import { DS_DAYLIGHT } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
@@ -40,7 +43,10 @@ import {
 import { ForYouHero } from "@/components/discover/ForYouHero";
 import { DiscoverForYouGrid } from "@/components/discover/DiscoverForYouGrid";
 
+const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
+
 function DiscoverScreenInner() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<DiscoverCategory>("for_you");
 
@@ -72,6 +78,11 @@ function DiscoverScreenInner() {
     trackEvent("discover_category_chip_tapped", { category: next });
   }, []);
 
+  const handleBuildYourOwn = useCallback(() => {
+    trackEvent("challenge_created");
+    router.push(ROUTES.CREATE_WIZARD as never);
+  }, [router]);
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.header}>
@@ -97,6 +108,26 @@ function DiscoverScreenInner() {
           loading={featuredQuery.isPending}
         />
         <DiscoverForYouGrid selectedCategory={selectedCategory} />
+
+        {/* Build your own CTA — routes to existing create wizard entry (not internals) */}
+        <View style={styles.buildOwnSection}>
+          <Text style={styles.buildOwnTitle}>Have your own idea?</Text>
+          <Text style={styles.buildOwnSub}>
+            Create a custom challenge and invite others to join.
+          </Text>
+          <Pressable
+            onPress={handleBuildYourOwn}
+            hitSlop={HIT_SLOP}
+            accessibilityRole="button"
+            accessibilityLabel="Build your own challenge"
+            style={({ pressed }) => [
+              styles.buildOwnCta,
+              pressed ? styles.buildOwnCtaPressed : null,
+            ]}
+          >
+            <Text style={styles.buildOwnCtaText}>Build your own</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -129,5 +160,44 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 115,
+  },
+  buildOwnSection: {
+    marginHorizontal: DS_DAYLIGHT.space.screenH,
+    marginTop: 24,
+    marginBottom: 16,
+    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_DAYLIGHT.radius.card,
+    borderWidth: 1,
+    borderColor: DS_DAYLIGHT.color.cardBorder,
+    padding: DS_DAYLIGHT.space.cardPad,
+    gap: 8,
+  },
+  buildOwnTitle: {
+    fontSize: DS_DAYLIGHT.size.cardTitle,
+    fontWeight: DS_DAYLIGHT.weight.semibold,
+    color: DS_DAYLIGHT.color.ink,
+    letterSpacing: -0.2,
+  },
+  buildOwnSub: {
+    fontSize: DS_DAYLIGHT.size.body,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkSecondary,
+    lineHeight: 22,
+  },
+  buildOwnCta: {
+    height: 48,
+    borderRadius: DS_DAYLIGHT.radius.button,
+    backgroundColor: DS_DAYLIGHT.color.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  buildOwnCtaPressed: {
+    opacity: 0.82,
+  },
+  buildOwnCtaText: {
+    fontSize: DS_DAYLIGHT.size.title,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_DAYLIGHT.color.white,
   },
 });

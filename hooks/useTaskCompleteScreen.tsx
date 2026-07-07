@@ -513,6 +513,15 @@ export function TaskCompleteScreenInner() {
           : undefined
       );
       setSubmitted(true);
+      try {
+        trackEvent("proof_posted", {
+          challenge_id: challengeIdForFeed || undefined,
+          task_type: taskTypeRaw,
+          has_photo: !!(photoUrl ?? photoUri),
+        });
+      } catch {
+        /* non-fatal */
+      }
       if (Platform.OS !== "web") void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void clearActiveTaskNotification();
       clearActiveSession();

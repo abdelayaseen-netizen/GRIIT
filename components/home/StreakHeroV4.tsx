@@ -402,6 +402,17 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
               onPress={props.onPressSeeFeed ?? props.onPressPrimaryCTA}
             />
           </View>
+
+          {/* "Come back tomorrow" — always inert on secured state */}
+          <View
+            style={styles.comeBackRow}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            <Text style={styles.comeBackText}>
+              Come back tomorrow to keep the streak.
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -738,5 +749,16 @@ const styles = StyleSheet.create({
     fontSize: DS_DAYLIGHT.size.title,
     fontWeight: DS_DAYLIGHT.weight.semibold,
     color: DS_DAYLIGHT.color.ink,
+  },
+
+  // ── "Come back tomorrow" — inert, no onPress ──
+  comeBackRow: {
+    marginTop: 14,
+    alignItems: 'center',
+  },
+  comeBackText: {
+    fontSize: DS_DAYLIGHT.size.meta,
+    fontWeight: DS_DAYLIGHT.weight.regular,
+    color: DS_DAYLIGHT.color.inkMuted2,
   },
 });

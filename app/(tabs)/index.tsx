@@ -37,6 +37,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
+import { JeopardyModal } from "@/components/home/JeopardyModal";
+import { StreakMomentOverlay } from "@/components/home/StreakMomentOverlay";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -97,6 +99,8 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile } = useApp();
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
+  const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
+  const [showStreakMoment, setShowStreakMoment] = React.useState(false);
 
   const feedScope = useFeedToggle((s) => s.scope);
   const setFeedScope = useFeedToggle((s) => s.setScope);
@@ -293,6 +297,23 @@ export default function HomeScreen() {
     void scheduleStreakReminder(streak);
   }, [isGuest, user?.id, streak]);
 
+  // Jeopardy modal — show once per calendar day when streak is at risk.
+  React.useEffect(() => {
+    if (isGuest || !user?.id) return;
+    if (homeState !== 'streak_at_risk') return;
+    const todayKey = getTodayDateKey();
+    const storageKey = `griit_jeopardy_${todayKey}`;
+    AsyncStorage.getItem(storageKey).then((shown) => {
+      if (shown) return;
+      void AsyncStorage.setItem(storageKey, 'true');
+      setShowJeopardyModal(true);
+    }).catch(() => {
+      // non-fatal — show the modal anyway
+      setShowJeopardyModal(true);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- homeState covers all inputs
+  }, [isGuest, user?.id, homeState]);
+
   useFocusEffect(
     useCallback(() => {
       if (isGuest || !user?.id) return;
@@ -317,6 +338,25 @@ export default function HomeScreen() {
     }, [isGuest, user?.id, stats?.activeStreak, showCelebration]),
   );
 
+  // Streak moment (S12) — fires once after returning to Home when today is
+  // fully secured (all tasks complete). Uses AsyncStorage to show only once
+  // per calendar day so repeated focus events don't re-show it.
+  useFocusEffect(
+    useCallback(() => {
+      if (isGuest || !user?.id) return;
+      if (heroMetrics.tasksRemaining !== 0 || heroMetrics.totalTasksToday === 0) return;
+      const todayKey = getTodayDateKey();
+      const key = `griit_streak_moment_${todayKey}`;
+      let cancelled = false;
+      AsyncStorage.getItem(key).then((shown) => {
+        if (shown || cancelled) return;
+        void AsyncStorage.setItem(key, 'true');
+        setShowStreakMoment(true);
+      }).catch(() => { /* non-fatal */ });
+      return () => { cancelled = true; };
+    }, [isGuest, user?.id, heroMetrics.tasksRemaining, heroMetrics.totalTasksToday]),
+  );
+
   const refresh = useCallback(async () => {
     await Promise.all([homeQuery.refetch(), refetchAll()]);
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
@@ -335,16 +375,19 @@ export default function HomeScreen() {
 
   const onPressPrimaryCTA = useCallback(() => {
     if (heroTasks.length === 0) {
+      track({ name: 'discover_challenge_tapped' });
       router.push(ROUTES.TABS_DISCOVER as never);
       return;
     }
     if (heroMetrics.tasksRemaining > 0) {
       const next = heroTasks.find((t) => !t.done);
-      if (next) onPressTask(next);
+      if (next) {
+        track({ name: 'task_completed' });
+        onPressTask(next);
+      }
       return;
     }
-    // tasksRemaining === 0 → already on home; no-op (could scroll to feed in
-    // a follow-up).
+    // tasksRemaining === 0 and on home — no-op; "Come back tomorrow" is shown.
   }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router]);
 
   const onPressFreeze = useCallback(() => {
@@ -372,6 +415,10 @@ export default function HomeScreen() {
     }
   }, [streak, profile?.username]);
 
+  const onPressAvatar = useCallback(() => {
+    router.push(ROUTES.TABS_PROFILE as never);
+  }, [router]);
+
   const onPressBell = useCallback(() => {
     router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
   }, [router]);
@@ -379,6 +426,34 @@ export default function HomeScreen() {
   const onPressBadgeStat = useCallback(() => {
     router.push(`${ROUTES.TABS_PROFILE}?tab=badges` as never);
   }, [router]);
+
+  // Jeopardy modal handlers
+  const onJeopardyFinish = useCallback(() => {
+    setShowJeopardyModal(false);
+    // Navigate to the first incomplete task
+    const next = heroTasks.find((t) => !t.done);
+    if (next) onPressTask(next);
+    else router.push(ROUTES.TABS_DISCOVER as never);
+  }, [heroTasks, onPressTask, router]);
+
+  const onJeopardyFreeze = useCallback(() => {
+    setShowJeopardyModal(false);
+    setShowFreezeModal(true);
+  }, []);
+
+  const onJeopardyDismiss = useCallback(() => {
+    setShowJeopardyModal(false);
+  }, []);
+
+  // Streak moment handlers
+  const onStreakMomentKeepGoing = useCallback(() => {
+    setShowStreakMoment(false);
+    router.push(ROUTES.TABS_DISCOVER as never);
+  }, [router]);
+
+  const onStreakMomentDismiss = useCallback(() => {
+    setShowStreakMoment(false);
+  }, []);
 
   const onPressFreezesStat = useCallback(() => {
     setShowFreezeModal(true);
@@ -461,6 +536,9 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <HomeHeaderV2
               firstName={firstName}
+              avatarUrl={(profile as { avatar_url?: string | null } | null)?.avatar_url ?? null}
+              userId={user?.id}
+              onPressAvatar={onPressAvatar}
               hero={heroProps}
               heroState={heroState}
               onPressBell={onPressBell}
@@ -483,6 +561,22 @@ export default function HomeScreen() {
           freezesRemaining={profile?.streak_freezes_remaining ?? 1}
           onUseFreeze={() => setShowFreezeModal(false)}
           onLetReset={() => setShowFreezeModal(false)}
+        />
+        <JeopardyModal
+          visible={showJeopardyModal}
+          streak={streak}
+          minutesRemaining={heroMetrics.minutesRemaining}
+          freezesAvailable={freezeStatusQuery.data?.remaining ?? 0}
+          onPressFinish={onJeopardyFinish}
+          onPressFreeze={onJeopardyFreeze}
+          onDismiss={onJeopardyDismiss}
+        />
+        <StreakMomentOverlay
+          visible={showStreakMoment}
+          streak={streak}
+          username={profile?.username ?? undefined}
+          onKeepGoing={onStreakMomentKeepGoing}
+          onDismiss={onStreakMomentDismiss}
         />
       </SafeAreaView>
     </ErrorBoundary>

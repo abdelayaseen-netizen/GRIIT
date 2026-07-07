@@ -37,6 +37,23 @@ export const FLAGS = {
    * When false, app/onboarding/index.tsx renders the existing OnboardingFlow.
    */
   ONBOARDING_V2: false,
+  /**
+   * Daylight v3: gates the Home "secured" transition on real server-side
+   * verification confirmation. Default false — completeTask() still calls the
+   * real server, but the celebration shows immediately on success rather than
+   * waiting for an explicit verification ack. Set true when server returns a
+   * verified=true field from checkins.complete.
+   * See BLOCKERS.md B1.
+   */
+  REAL_VERIFICATION: false,
+  /**
+   * Daylight v3: gates the streak-freeze action on server-enforced session
+   * confirmation. Default false — useFreeze mutation is called and succeeds or
+   * errors; no deceptive local success. Set true when server enforces the freeze
+   * within the at-risk session window.
+   * See BLOCKERS.md B2.
+   */
+  FREEZE_SERVER_ENFORCED: false,
 } as const;
 
 // ============================================
