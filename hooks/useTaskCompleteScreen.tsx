@@ -11,7 +11,7 @@ import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useApp } from "@/contexts/AppContext";
 import { haversineDistance } from "@/lib/geo";
-import { DS_COLORS, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_SPACING, GRIIT_COLORS } from "@/lib/design-system";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { trpcMutate } from "@/lib/trpc";
@@ -536,10 +536,10 @@ export function TaskCompleteScreenInner() {
 
       if (Math.random() < 0.3) {
         const rewards = [
-          { label: "2x BONUS — double points!", color: DS_COLORS.CELEB_BONUS_AMBER, bg: DS_COLORS.CELEB_BONUS_AMBER_BG },
-          { label: "Streak shield earned", color: DS_COLORS.CELEB_BONUS_GREEN, bg: DS_COLORS.CELEB_BONUS_GREEN_BG },
-          { label: "Discipline badge progress +1", color: DS_COLORS.CELEB_BONUS_PURPLE, bg: DS_COLORS.CELEB_BONUS_PURPLE_BG },
-          { label: "Bonus: +3 extra points", color: DS_COLORS.CELEB_BONUS_AMBER, bg: DS_COLORS.CELEB_BONUS_AMBER_BG },
+          { label: "2x BONUS — double points!", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
+          { label: "Streak shield earned", color: DS_COLORS_V2.semantic.success, bg: DS_COLORS_V2.semantic.successSoft },
+          { label: "Discipline badge progress +1", color: DS_COLORS_V2.difficulty.hard.fg, bg: DS_COLORS_V2.difficulty.hard.bg },
+          { label: "Bonus: +3 extra points", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
         ];
         setVariableReward(rewards[Math.floor(Math.random() * rewards.length)] ?? null);
       } else {
@@ -1078,7 +1078,7 @@ export function TaskCompleteScreenInner() {
   if (!taskId.trim() || !activeChallengeId.trim()) {
     if (!paramsReady) {
       return (
-        <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS_V2.surface.canvas }]} edges={["bottom"]}>
           <Stack.Screen options={{ title: "Loading…", headerBackVisible: true }} />
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={GRIIT_COLORS.primary} accessibilityLabel="Loading task" />
@@ -1087,7 +1087,7 @@ export function TaskCompleteScreenInner() {
       );
     }
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.BG_PAGE }]} edges={["bottom"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS_V2.surface.canvas }]} edges={["bottom"]}>
         <Stack.Screen options={{ title: "Task", headerBackVisible: true }} />
         <View style={{ padding: DS_SPACING.xl }}>
           <Text style={styles.screenTitle}>Couldn&apos;t open this task</Text>
