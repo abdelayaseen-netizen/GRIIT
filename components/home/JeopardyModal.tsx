@@ -24,7 +24,7 @@ import {
   View,
 } from 'react-native';
 import { X, Clock, Snowflake } from 'lucide-react-native';
-import { DS_DAYLIGHT } from '@/lib/design-system';
+import { DS_COLORS_V2, DS_SPACING_V2 } from '@/lib/design-system';
 import { trackEvent } from '@/lib/analytics';
 import { FLAGS } from '@/lib/feature-flags';
 
@@ -89,7 +89,7 @@ export function JeopardyModal({
             <View style={styles.iconWrap}>
               <Clock
                 size={22}
-                color={DS_DAYLIGHT.color.accent}
+                color={DS_COLORS_V2.brand.primary}
                 strokeWidth={2}
               />
             </View>
@@ -105,7 +105,7 @@ export function JeopardyModal({
             >
               <X
                 size={20}
-                color={DS_DAYLIGHT.color.inkMuted}
+                color={DS_COLORS_V2.text.tertiary}
                 strokeWidth={2}
               />
             </Pressable>
@@ -165,8 +165,8 @@ export function JeopardyModal({
                 size={16}
                 color={
                   freezeDisabled || !FLAGS.FREEZE_SERVER_ENFORCED
-                    ? DS_DAYLIGHT.color.inkMuted3
-                    : DS_DAYLIGHT.color.accent
+                    ? DS_COLORS_V2.text.tertiary
+                    : DS_COLORS_V2.brand.primary
                 }
                 strokeWidth={2}
               />
@@ -197,10 +197,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: DS_DAYLIGHT.color.card,
-    borderTopLeftRadius: DS_DAYLIGHT.radius.sheet,
-    borderTopRightRadius: DS_DAYLIGHT.radius.sheet,
-    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    backgroundColor: DS_COLORS_V2.surface.card,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: DS_SPACING_V2.lg,
     paddingTop: 24,
     paddingBottom: 36,
     gap: 0,
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -225,22 +225,22 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
   },
   body: {
     gap: 8,
     marginBottom: 24,
   },
   title: {
-    fontSize: DS_DAYLIGHT.size.cardTitle,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 20,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.3,
   },
   sub: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 15,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.secondary,
     lineHeight: 22,
   },
   streakRow: {
@@ -250,18 +250,18 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   streakLabel: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 15,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.tertiary,
   },
   streakValue: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 15,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
   },
   divider: {
     height: 1,
-    backgroundColor: DS_DAYLIGHT.color.divider,
+    backgroundColor: DS_COLORS_V2.surface.divider,
     marginBottom: 20,
   },
   ctaStack: {
@@ -269,38 +269,38 @@ const styles = StyleSheet.create({
   },
   primaryCta: {
     height: 52,
-    borderRadius: DS_DAYLIGHT.radius.button,
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    borderRadius: 15,
+    backgroundColor: DS_COLORS_V2.brand.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryCtaText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.white,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.brand.primaryText,
   },
   freezeCta: {
     height: 52,
-    borderRadius: DS_DAYLIGHT.radius.button,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    borderColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   freezeCtaDisabled: {
-    borderColor: DS_DAYLIGHT.color.divider,
+    borderColor: DS_COLORS_V2.surface.divider,
     backgroundColor: 'transparent',
   },
   freezeCtaText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
   },
   freezeCtaTextDisabled: {
-    color: DS_DAYLIGHT.color.inkMuted3,
+    color: DS_COLORS_V2.text.tertiary,
   },
   pressed: {
     opacity: 0.75,

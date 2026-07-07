@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { X } from 'lucide-react-native';
-import { DS_DAYLIGHT } from '@/lib/design-system';
+import { DS_COLORS_V2, DS_SPACING_V2 } from '@/lib/design-system';
 import { track } from '@/lib/analytics';
 import { StreakFlame } from './StreakFlame';
 
@@ -85,7 +85,7 @@ export function StreakMomentOverlay({
               pressed ? styles.pressed : null,
             ]}
           >
-            <X size={18} color={DS_DAYLIGHT.color.darkMuted} strokeWidth={2} />
+            <X size={18} color={DS_COLORS_V2.text.onDarkSecondary} strokeWidth={2} />
           </Pressable>
 
           {/* Flame */}
@@ -145,12 +145,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.82)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingHorizontal: DS_SPACING_V2.lg,
   },
   card: {
     width: '100%',
-    backgroundColor: DS_DAYLIGHT.color.darkHeroCard,
-    borderRadius: DS_DAYLIGHT.radius.card,
+    backgroundColor: DS_COLORS_V2.surface.heroDarkWarm,
+    borderRadius: 22,
     padding: 28,
     alignItems: 'center',
     gap: 6,
@@ -171,29 +171,29 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   streakNumber: {
-    fontSize: DS_DAYLIGHT.size.streakMomentNumber,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.darkText,
+    fontSize: 76,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.onDark,
     letterSpacing: -2,
     lineHeight: 76,
   },
   streakUnit: {
-    fontSize: DS_DAYLIGHT.size.eyebrow,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.darkMuted,
+    fontSize: 14,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.onDarkSecondary,
     marginTop: -4,
     marginBottom: 12,
   },
   headline: {
-    fontSize: DS_DAYLIGHT.size.cardTitle,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.darkText,
+    fontSize: 20,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.onDark,
     letterSpacing: -0.3,
   },
   sub: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.darkBody,
+    fontSize: 15,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.onDarkSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 8,
@@ -205,27 +205,27 @@ const styles = StyleSheet.create({
   },
   shareCta: {
     height: 52,
-    borderRadius: DS_DAYLIGHT.radius.button,
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    borderRadius: 15,
+    backgroundColor: DS_COLORS_V2.brand.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   shareCtaText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.white,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.brand.primaryText,
   },
   keepGoingCta: {
     height: 52,
-    borderRadius: DS_DAYLIGHT.radius.button,
+    borderRadius: 15,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   keepGoingCtaText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.darkBody,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.onDarkSecondary,
   },
   pressed: {
     opacity: 0.75,

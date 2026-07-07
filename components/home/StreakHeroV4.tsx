@@ -25,7 +25,7 @@ import {
   Clock,
   Snowflake,
 } from 'lucide-react-native';
-import { DS_DAYLIGHT } from '@/lib/design-system';
+import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ function flameStateFor(
 function CountdownBanner({ minutesRemaining }: { minutesRemaining: number }) {
   return (
     <View style={styles.countdownBanner} accessibilityRole="alert">
-      <Clock size={16} color={DS_DAYLIGHT.color.accent} strokeWidth={2} />
+      <Clock size={16} color={DS_COLORS_V2.brand.primary} strokeWidth={2} />
       <Text style={styles.countdownText}>
         Streak ends in {minutesRemaining} minutes
       </Text>
@@ -151,7 +151,7 @@ function TaskRow({
         ]}
       >
         {task.done ? (
-          <Check size={13} color={DS_DAYLIGHT.color.white} strokeWidth={3} />
+          <Check size={13} color={DS_COLORS_V2.brand.primaryText} strokeWidth={3} />
         ) : null}
       </View>
       <Text style={styles.taskName} numberOfLines={1}>
@@ -208,22 +208,22 @@ function HeaderBlock({
   switch (state) {
     case 'day0':
       label = 'Current streak';
-      labelColor = DS_DAYLIGHT.color.inkMuted;
+      labelColor = DS_COLORS_V2.text.tertiary;
       caption = 'Post today to reach day 1.';
       break;
     case 'atRisk':
       label = 'Current streak';
-      labelColor = DS_DAYLIGHT.color.accent;
+      labelColor = DS_COLORS_V2.brand.primary;
       caption = "Don't break the chain.";
       break;
     case 'secured':
       label = 'Streak secured';
-      labelColor = DS_DAYLIGHT.color.accent;
+      labelColor = DS_COLORS_V2.brand.primary;
       caption = '+1 day stronger.';
       break;
     default: {
       label = 'Current streak';
-      labelColor = DS_DAYLIGHT.color.inkMuted;
+      labelColor = DS_COLORS_V2.text.tertiary;
       const days = Math.max(0, nextBadgeDaysAway);
       caption =
         days <= 0
@@ -272,7 +272,7 @@ function PrimaryCTA({
       style={({ pressed }) => [styles.cta, pressed ? styles.rowPressed : null]}
     >
       {withIcon ? (
-        <Camera size={18} color={DS_DAYLIGHT.color.white} strokeWidth={2} />
+        <Camera size={18} color={DS_COLORS_V2.brand.primaryText} strokeWidth={2} />
       ) : null}
       <Text style={styles.ctaText}>{label}</Text>
     </Pressable>
@@ -308,7 +308,7 @@ function FreezeButton({
       <Snowflake
         size={16}
         color={
-          disabled ? DS_DAYLIGHT.color.inkMuted3 : DS_DAYLIGHT.color.accent
+          disabled ? DS_COLORS_V2.text.tertiary : DS_COLORS_V2.brand.primary
         }
         strokeWidth={2}
       />
@@ -519,13 +519,13 @@ const styles = StyleSheet.create({
     gap: 13,
     paddingHorizontal: 18,
     paddingVertical: 16,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderRadius: DS_RADIUS_V2.xl,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   countdownText: {
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 16,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
     flex: 1,
   },
 
@@ -534,8 +534,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   label: {
-    fontSize: DS_DAYLIGHT.size.eyebrow,
-    fontWeight: DS_DAYLIGHT.weight.regular,
+    fontSize: 14,
+    fontWeight: '400',
   },
   numberRow: {
     flexDirection: 'row',
@@ -544,35 +544,35 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   streakNumber: {
-    fontSize: DS_DAYLIGHT.size.streakNumber,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 64,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -1.5,
     lineHeight: 68,
   },
   daysWord: {
     fontSize: 18,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.tertiary,
     marginBottom: 12,
   },
   flameWrap: {
     marginBottom: 12,
   },
   caption: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 13,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.tertiary,
     marginTop: 6,
   },
 
   // ── White "Today's proof" card ──
   proofCard: {
-    backgroundColor: DS_DAYLIGHT.color.card,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    borderRadius: DS_DAYLIGHT.radius.card,
-    padding: DS_DAYLIGHT.space.cardPad,
+    borderColor: DS_COLORS_V2.surface.divider,
+    borderRadius: 22,
+    padding: 20,
   },
   proofHeader: {
     flexDirection: 'row',
@@ -585,27 +585,27 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   proofTitle: {
-    fontSize: DS_DAYLIGHT.size.cardTitle,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 20,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.2,
   },
   proofSubtitle: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 13.5,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.tertiary,
     marginTop: 3,
   },
   countPill: {
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
-    borderRadius: DS_DAYLIGHT.radius.pill,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    borderRadius: 20,
     paddingHorizontal: 13,
     paddingVertical: 7,
   },
   countPillText: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.accent,
+    fontSize: 13,
+    fontWeight: '500',
+    color: DS_COLORS_V2.brand.primary,
   },
 
   // ── Task rows ──
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: DS_DAYLIGHT.color.divider,
+    backgroundColor: DS_COLORS_V2.surface.divider,
   },
   taskRow: {
     flexDirection: 'row',
@@ -634,26 +634,26 @@ const styles = StyleSheet.create({
   },
   taskCheckPending: {
     borderWidth: 2,
-    borderColor: DS_DAYLIGHT.color.dashedBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
     backgroundColor: 'transparent',
   },
   taskCheckDone: {
-    backgroundColor: DS_DAYLIGHT.color.ink,
+    backgroundColor: DS_COLORS_V2.text.primary,
   },
   taskName: {
     flex: 1,
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 17,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.primary,
   },
   taskMeta: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 13,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.tertiary,
   },
   emptyTasks: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 13,
+    color: DS_COLORS_V2.text.tertiary,
     marginTop: 12,
     paddingVertical: 6,
   },
@@ -673,10 +673,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   badgeSegmentFilled: {
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    backgroundColor: DS_COLORS_V2.brand.primary,
   },
   badgeSegmentEmpty: {
-    backgroundColor: DS_DAYLIGHT.color.pillNeutral,
+    backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
   },
   badgeLabelRow: {
     flexDirection: 'row',
@@ -684,9 +684,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   badgeDayLabel: {
-    fontSize: DS_DAYLIGHT.size.dayLetter,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 11,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.tertiary,
     flex: 1,
     textAlign: 'center',
   },
@@ -700,17 +700,17 @@ const styles = StyleSheet.create({
   cta: {
     flex: 1,
     height: 52,
-    borderRadius: DS_DAYLIGHT.radius.button,
+    borderRadius: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    backgroundColor: DS_COLORS_V2.brand.primary,
   },
   ctaText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.white,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.brand.primaryText,
   },
   freezeBtn: {
     flexDirection: 'row',
@@ -719,36 +719,36 @@ const styles = StyleSheet.create({
     gap: 6,
     height: 52,
     paddingHorizontal: 18,
-    borderRadius: DS_DAYLIGHT.radius.button,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    borderColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
   },
   freezeBtnDisabled: {
     backgroundColor: 'transparent',
   },
   freezeBtnText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
   },
   freezeBtnTextDisabled: {
-    color: DS_DAYLIGHT.color.inkMuted3,
+    color: DS_COLORS_V2.text.tertiary,
   },
   ghostCta: {
     flex: 1,
     height: 52,
-    borderRadius: DS_DAYLIGHT.radius.button,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    borderColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_COLORS_V2.surface.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ghostCtaText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
   },
 
   // ── "Come back tomorrow" — inert, no onPress ──
@@ -757,8 +757,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   comeBackText: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 13,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.tertiary,
   },
 });
