@@ -28,7 +28,7 @@ import { useRouter } from "expo-router";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
@@ -95,7 +95,7 @@ function DiscoverScreenInner() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={DS_DAYLIGHT.color.accent}
+            tintColor={DS_COLORS_V2.brand.primary}
           />
         }
       >
@@ -144,50 +144,49 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: DS_DAYLIGHT.color.canvas,
+    backgroundColor: DS_COLORS_V2.surface.canvas,
   },
   header: {
-    paddingHorizontal: DS_DAYLIGHT.space.screenH,
-    paddingTop: DS_DAYLIGHT.space.rowGapV,
-    paddingBottom: DS_DAYLIGHT.space.rowGapV,
+    paddingHorizontal: DS_SPACING_V2.lg,
+    paddingTop: DS_SPACING_V2.sm,
+    paddingBottom: DS_SPACING_V2.sm,
   },
   title: {
-    fontFamily: DS_DAYLIGHT.fontFamily,
-    fontSize: DS_DAYLIGHT.size.screenTitle,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 32,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.6,
   },
   scrollContent: {
     paddingBottom: 115,
   },
   buildOwnSection: {
-    marginHorizontal: DS_DAYLIGHT.space.screenH,
+    marginHorizontal: DS_SPACING_V2.lg,
     marginTop: 24,
     marginBottom: 16,
-    backgroundColor: DS_DAYLIGHT.color.card,
-    borderRadius: DS_DAYLIGHT.radius.card,
+    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    padding: DS_DAYLIGHT.space.cardPad,
+    borderColor: DS_COLORS_V2.surface.divider,
+    padding: 20,
     gap: 8,
   },
   buildOwnTitle: {
-    fontSize: DS_DAYLIGHT.size.cardTitle,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 20,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.2,
   },
   buildOwnSub: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 15,
+    fontWeight: '400',
+    color: DS_COLORS_V2.text.secondary,
     lineHeight: 22,
   },
   buildOwnCta: {
     height: 48,
-    borderRadius: DS_DAYLIGHT.radius.button,
-    backgroundColor: DS_DAYLIGHT.color.ink,
+    borderRadius: 15,
+    backgroundColor: DS_COLORS_V2.text.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
@@ -196,8 +195,8 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   buildOwnCtaText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.medium,
-    color: DS_DAYLIGHT.color.white,
+    fontSize: 17,
+    fontWeight: '500',
+    color: DS_COLORS_V2.brand.primaryText,
   },
 });

@@ -26,7 +26,7 @@ import {
   deriveStreakHeroV4State,
   type StreakHeroV4Task,
 } from "@/components/home/StreakHeroV4";
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
@@ -584,21 +584,21 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: DS_DAYLIGHT.color.canvas },
+  container: { flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas },
   guestWrap: {
-    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingHorizontal: DS_SPACING_V2.lg,
     paddingTop: 32,
     gap: 12,
   },
   guestTitle: {
-    fontSize: DS_DAYLIGHT.size.screenTitle,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 32,
+    fontWeight: '500',
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: 1,
   },
   guestBody: {
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 16,
+    color: DS_COLORS_V2.text.secondary,
     lineHeight: 24,
   },
 });
