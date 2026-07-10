@@ -30,6 +30,7 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { formatSecondsToMMSS } from "@/lib/formatTime";
 import { DS_COLORS } from "@/lib/design-system";
+import { FLAGS } from "@/lib/feature-flags";
 import { RunMode } from "@/types";
 import { styles } from "./run-styles";
 import Celebration from "@/components/Celebration";
@@ -59,7 +60,7 @@ interface GpsPoint {
 
 type TreadmillStep = "timer" | "proof" | "distance";
 
-export default function RunTaskScreen() {
+function RunTaskScreenInner() {
   const router = useRouter();
   const safeBack = React.useCallback(() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never)), [router]);
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
@@ -1028,3 +1029,31 @@ export default function RunTaskScreen() {
   );
 }
 
+/** Legacy-screen gate. FLAGS.LEGACY_RUN_SCREEN = false → redirect. See BLOCKERS.md B-02. */
+function RunTaskScreenBlocked() {
+  const router = useRouter();
+  return (
+    <ErrorBoundary>
+      <SafeAreaView style={{ flex: 1, backgroundColor: DS_COLORS.background }} edges={["bottom"] as const}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 16 }}>
+          <Text style={{ fontSize: 17, fontWeight: "600", color: DS_COLORS.textPrimary, textAlign: "center" }}>
+            Task screen updated
+          </Text>
+          <Text style={{ fontSize: 14, color: DS_COLORS.textSecondary, textAlign: "center" }}>
+            Open your challenge to start this task.
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
+            style={{ width: "100%", paddingVertical: 14, borderRadius: 10, backgroundColor: DS_COLORS.accent, alignItems: "center" }}
+          >
+            <Text style={{ color: DS_COLORS.white, fontWeight: "600" }}>Go back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </ErrorBoundary>
+  );
+}
+
+export default FLAGS.LEGACY_RUN_SCREEN ? RunTaskScreenInner : RunTaskScreenBlocked;

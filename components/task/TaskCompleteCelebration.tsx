@@ -14,9 +14,10 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import { Camera, Image as GalleryIcon, Share2 } from "lucide-react-native";
+import { Camera, Flame, Image as GalleryIcon, Share2 } from "lucide-react-native";
+import { FLAGS } from "@/lib/feature-flags";
 import ViewShot from "react-native-view-shot";
-import { DS_COLORS, DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { shareToInstagramStory } from "@/lib/share";
 import { trackEvent } from "@/lib/analytics";
@@ -43,6 +44,10 @@ type ShareCardPropsBundle = {
 
 export interface TaskCompleteCelebrationProps extends ShareCardPropsBundle {
   taskName: string;
+  /** Task type raw string — used for per-type secured line. */
+  taskTypeRaw?: string;
+  /** Current streak count after securing — shown as "{n} day streak" chip. */
+  streakCount?: number;
   isHardMode: boolean;
   variableReward: { label: string; color: string; bg: string } | null;
   postedInline: boolean;
@@ -74,7 +79,9 @@ export interface TaskCompleteCelebrationProps extends ShareCardPropsBundle {
 
 export function TaskCompleteCelebration({
   taskName,
-  isHardMode,
+  taskTypeRaw,
+  streakCount,
+  isHardMode: _isHardMode,
   variableReward,
   postedInline,
   postCaption,
@@ -108,21 +115,35 @@ export function TaskCompleteCelebration({
   completeShareProps,
   minimalShareProps,
 }: TaskCompleteCelebrationProps) {
-  const celebPoints = isHardMode ? 8 : 5;
+  // Per-type secured line (storyboard: "Photo proof secured.", "Journal entry secured.", etc.)
+  const securedLine = (() => {
+    switch (taskTypeRaw) {
+      case "photo":   return "Photo proof secured.";
+      case "timer":   return "Session time secured.";
+      case "run":     return "Run entry secured.";
+      case "workout": return "Workout secured.";
+      case "journal": return "Journal entry secured.";
+      case "counter":
+      case "water":   return "Daily target secured.";
+      case "reading": return "Reading log secured.";
+      case "checkin": return "Location check-in secured.";
+      default:        return null;
+    }
+  })();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_DAYLIGHT.color.canvas }]} edges={["bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS_V2.surface.canvas }]} edges={["bottom"]}>
       <Stack.Screen
         options={{
-          title: "New proof",
+          title: "Secured",
           headerBackVisible: true,
           headerShadowVisible: false,
-          headerStyle: { backgroundColor: DS_DAYLIGHT.color.canvas },
-          headerTintColor: DS_DAYLIGHT.color.ink,
+          headerStyle: { backgroundColor: DS_COLORS_V2.surface.canvas },
+          headerTintColor: DS_COLORS_V2.text.primary,
           headerTitleStyle: {
-            fontSize: DS_DAYLIGHT.size.title,
-            fontWeight: DS_DAYLIGHT.weight.semibold,
-            color: DS_DAYLIGHT.color.ink,
+            fontSize: 17,
+            fontWeight: "600",
+            color: DS_COLORS_V2.text.primary,
           },
         }}
       />
@@ -137,11 +158,26 @@ export function TaskCompleteCelebration({
           bounces={false}
         >
           <Text style={d.title}>Secured.</Text>
-          <Text style={d.subtitle}>
-            +{celebPoints} points · {taskName}
-          </Text>
+          {securedLine ? (
+            <Text style={d.securedLine}>{securedLine}</Text>
+          ) : null}
+          {taskName ? (
+            <Text style={d.subtitle}>{taskName}</Text>
+          ) : null}
+          {typeof streakCount === "number" && streakCount > 0 ? (
+            <View style={d.streakChip}>
+              <Flame
+                size={13}
+                color={DS_COLORS_V2.brand.primary}
+                strokeWidth={2}
+              />
+              <Text style={d.streakChipText}>
+                {streakCount} {streakCount === 1 ? "day" : "days"}
+              </Text>
+            </View>
+          ) : null}
 
-          {variableReward ? (
+          {FLAGS.COMPLETION_REWARDS && variableReward ? (
             <View style={d.rewardPill}>
               <Text style={d.rewardText}>{variableReward.label}</Text>
             </View>
@@ -158,7 +194,7 @@ export function TaskCompleteCelebration({
                     accessibilityLabel="Proof photo"
                   />
                   <LinearGradient
-                    colors={["transparent", DS_DAYLIGHT.color.photoGradientSoft]}
+                    colors={["transparent", "rgba(0,0,0,0.55)"]}
                     style={d.photoGradient}
                     pointerEvents="none"
                   />
@@ -185,7 +221,7 @@ export function TaskCompleteCelebration({
                     accessibilityRole="button"
                     accessibilityLabel="Take a photo"
                   >
-                    <Camera size={17} color={DS_DAYLIGHT.color.white} strokeWidth={2} />
+                    <Camera size={17} color={DS_COLORS_V2.text.onDark} strokeWidth={2} />
                     <Text style={d.photoPrimaryText}>Take a photo</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -195,13 +231,13 @@ export function TaskCompleteCelebration({
                     accessibilityRole="button"
                     accessibilityLabel="Choose from library"
                   >
-                    <GalleryIcon size={17} color={DS_DAYLIGHT.color.inkSecondary} strokeWidth={2} />
+                    <GalleryIcon size={17} color={DS_COLORS_V2.text.secondary} strokeWidth={2} />
                     <Text style={d.photoSecondaryText}>Choose from library</Text>
                   </TouchableOpacity>
                 </View>
               )}
               {photoUploading ? (
-                <ActivityIndicator size="small" color={DS_DAYLIGHT.color.accent} style={{ marginTop: 8 }} />
+                <ActivityIndicator size="small" color={DS_COLORS_V2.brand.primary} style={{ marginTop: 8 }} />
               ) : null}
             </View>
           )}
@@ -209,7 +245,7 @@ export function TaskCompleteCelebration({
           <TextInput
             style={d.captionInput}
             placeholder="Say something about today…"
-            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
+            placeholderTextColor={DS_COLORS_V2.text.tertiary}
             value={postCaption}
             onChangeText={setPostCaption}
             maxLength={120}
@@ -218,7 +254,7 @@ export function TaskCompleteCelebration({
           <Text
             style={[
               d.captionCount,
-              { color: postCaption.length === 120 ? DS_DAYLIGHT.color.accent : DS_DAYLIGHT.color.inkMuted2 },
+              { color: postCaption.length === 120 ? DS_COLORS_V2.brand.primary : DS_COLORS_V2.text.secondary },
             ]}
             accessibilityLiveRegion="polite"
           >
@@ -236,7 +272,7 @@ export function TaskCompleteCelebration({
             accessibilityLabel="Share to GRIIT feed"
           >
             {shareBusy ? (
-              <ActivityIndicator color={DS_DAYLIGHT.color.white} />
+              <ActivityIndicator color={DS_COLORS_V2.brand.primaryText} />
             ) : (
               <Text style={d.shareProofText}>Share proof</Text>
             )}
@@ -250,7 +286,7 @@ export function TaskCompleteCelebration({
               accessibilityRole="button"
               accessibilityLabel="Share a GRIIT card"
             >
-              <Share2 size={20} color={DS_DAYLIGHT.color.inkSecondary} />
+              <Share2 size={20} color={DS_COLORS_V2.text.secondary} />
               <Text style={d.secondaryBtnText}>Share card</Text>
             </TouchableOpacity>
           ) : null}
@@ -282,7 +318,7 @@ export function TaskCompleteCelebration({
             accessibilityRole="button"
             accessibilityLabel="Done"
           >
-            <Text style={d.doneBtnText}>Skip — go home</Text>
+            <Text style={d.doneBtnText}>Done</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -367,35 +403,57 @@ export function TaskCompleteCelebration({
 
 const d = StyleSheet.create({
   wrap: {
-    paddingHorizontal: DS_DAYLIGHT.space.screenH,
+    paddingHorizontal: DS_SPACING_V2.md,
     paddingTop: 8,
     paddingBottom: 40,
     alignItems: "stretch",
   },
   title: {
-    fontSize: DS_DAYLIGHT.size.greeting,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: 27,
+    fontWeight: "600",
+    color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.5,
+  },
+  securedLine: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: "500",
+    color: DS_COLORS_V2.brand.primary,
   },
   subtitle: {
     marginTop: 4,
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 13.5,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
+  },
+  streakChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    alignSelf: "flex-start",
+    marginTop: DS_SPACING_V2.xs,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+  },
+  streakChipText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: DS_COLORS_V2.brand.primary,
   },
   rewardPill: {
     alignSelf: "flex-start",
     marginTop: 12,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: DS_DAYLIGHT.radius.pill,
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
   },
   rewardText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.accent,
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: DS_COLORS_V2.brand.primary,
   },
   photoSection: {
     marginTop: 18,
@@ -403,9 +461,9 @@ const d = StyleSheet.create({
   photoPreview: {
     width: "100%",
     aspectRatio: 4 / 5,
-    borderRadius: DS_DAYLIGHT.radius.cardMd,
+    borderRadius: DS_RADIUS_V2.lg,
     overflow: "hidden",
-    backgroundColor: DS_DAYLIGHT.color.photoPlaceholder,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
   },
   photoImage: {
     width: "100%",
@@ -422,9 +480,9 @@ const d = StyleSheet.create({
     position: "absolute",
     left: 20,
     bottom: 18,
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.textOnPhoto,
+    fontSize: 17,
+    fontWeight: "600",
+    color: DS_COLORS_V2.text.onDark,
   },
   photoChangeBadge: {
     position: "absolute",
@@ -432,15 +490,15 @@ const d = StyleSheet.create({
     right: 13,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: DS_DAYLIGHT.radius.pill,
-    backgroundColor: DS_DAYLIGHT.color.glassChipOnPhotoBg,
+    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: "rgba(255,255,255,0.18)",
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.glassChipOnPhotoBorder,
+    borderColor: "rgba(255,255,255,0.3)",
   },
   photoChangeBadgeText: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.textOnPhoto,
+    fontSize: 12.5,
+    fontWeight: "600",
+    color: DS_COLORS_V2.text.onDark,
   },
   photoPickerRow: {
     flexDirection: "row",
@@ -449,103 +507,103 @@ const d = StyleSheet.create({
   photoPrimaryBtn: {
     flex: 1,
     height: 46,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.ink,
+    borderRadius: DS_RADIUS_V2.md,
+    backgroundColor: DS_COLORS_V2.text.primary,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
   photoPrimaryText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.white,
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: DS_COLORS_V2.text.onDark,
   },
   photoSecondaryBtn: {
     flex: 1,
     height: 46,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_RADIUS_V2.md,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: DS_DAYLIGHT.color.dashedBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
   photoSecondaryText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: DS_COLORS_V2.text.secondary,
   },
   captionInput: {
     marginTop: 18,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_RADIUS_V2.md,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.ink,
+    borderColor: DS_COLORS_V2.surface.divider,
+    fontSize: 16,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.primary,
   },
   captionCount: {
     alignSelf: "flex-end",
     marginTop: 6,
-    fontSize: DS_DAYLIGHT.size.metaSm,
+    fontSize: 12.5,
   },
   postedOk: {
     marginTop: 12,
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.accent,
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: DS_COLORS_V2.brand.primary,
     textAlign: "center",
   },
   postedErr: {
     marginTop: 12,
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_COLORS.danger,
+    fontSize: 13.5,
+    fontWeight: "400",
+    color: DS_COLORS_V2.semantic.danger,
     textAlign: "center",
   },
   shareProofBtn: {
     marginTop: 20,
     height: 56,
-    borderRadius: DS_DAYLIGHT.radius.buttonLg,
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    borderRadius: DS_RADIUS_V2.lg,
+    backgroundColor: DS_COLORS_V2.brand.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   shareProofText: {
-    fontSize: DS_DAYLIGHT.size.title,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.white,
+    fontSize: 17,
+    fontWeight: "600",
+    color: DS_COLORS_V2.brand.primaryText,
   },
   helperText: {
     marginTop: 13,
     textAlign: "center",
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: 13,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
   },
   secondaryBtn: {
     marginTop: 12,
     height: 50,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_RADIUS_V2.md,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_COLORS_V2.surface.divider,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
   secondaryBtnText: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontSize: 15,
+    fontWeight: "600",
+    color: DS_COLORS_V2.text.secondary,
   },
   doneBtn: {
     marginTop: 16,
@@ -553,8 +611,8 @@ const d = StyleSheet.create({
     paddingVertical: 8,
   },
   doneBtnText: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted,
+    fontSize: 15,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
   },
 });

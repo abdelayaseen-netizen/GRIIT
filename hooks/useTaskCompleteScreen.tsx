@@ -45,6 +45,14 @@ import { TaskWorkoutBody } from "@/components/task/bodies/TaskWorkoutBody";
 import { TaskJournalBody } from "@/components/task/bodies/TaskJournalBody";
 import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/TaskCounterBody";
 import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
+import { TaskReadyCard } from "@/components/task/bodies/TaskReadyCard";
+import {
+  VerifyingOverlay,
+  buildVerifyingRows,
+  getTypeSuccessLine,
+} from "@/components/task/VerifyingOverlay";
+import * as ImagePicker from "expo-image-picker";
+import { FLAGS } from "@/lib/feature-flags";
 import {
   firstString,
   parseConfig,
@@ -54,6 +62,7 @@ import {
   goBackOrHome,
   type TaskCompleteConfig,
 } from "@/lib/task-helpers";
+
 
 export function TaskCompleteScreenInner() {
   const router = useRouter();
@@ -112,9 +121,22 @@ export function TaskCompleteScreenInner() {
   const [postedInline, setPostedInline] = useState(false);
   const manualSubmitScheduled = useRef(false);
   const clockedInAtRef = useRef<string | null>(null);
+  /** Timestamp (ms) when the submit mutation started — used for 600 ms Verifying floor. */
+  const verifyStartMsRef = useRef<number>(0);
+  /** Human-readable time label captured at submit-press (e.g. "07:42 AM"). */
+  const [submitTimeLabel, setSubmitTimeLabel] = useState<string>("");
+  /** Streak count returned by the server after task completion — shown on Secured screen. */
+  const [completedStreakCount, setCompletedStreakCount] = useState<number | undefined>(undefined);
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
   const [timeWindowFailed, setTimeWindowFailed] = useState(false);
   const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
+  // Arming state — true once the user taps Start (simple/manual start armed immediately).
+  // Phase 2 adds the full ReadyCard + permission-arming logic.
+  const [isArmed, setIsArmed] = useState<boolean>(
+    FLAGS.TASK_START_ARMING
+      ? taskTypeRaw === "simple" || taskTypeRaw === "manual"
+      : true
+  );
   // V2 body-component local state (counter / water / reading + timer sound)
   const [counterValue, setCounterValue] = useState<number>(0);
   const [bookTitle, setBookTitle] = useState<string>("");
@@ -165,12 +187,16 @@ export function TaskCompleteScreenInner() {
     setHardGatesPassed(!isHardVerificationTask);
     setTimeWindowFailed(false);
     setGatesLocation(null);
+    // Reset arming state for the new task
+    if (FLAGS.TASK_START_ARMING) {
+      setIsArmed(taskTypeRaw === "simple" || taskTypeRaw === "manual");
+    }
     if (isHardVerificationTask) {
       clockedInAtRef.current = new Date().toISOString();
     } else {
       clockedInAtRef.current = null;
     }
-  }, [taskId, isHardVerificationTask, params.taskConfig]);
+  }, [taskId, isHardVerificationTask, params.taskConfig, taskTypeRaw]);
 
   const onHardGatesResolved = useCallback((ok: boolean, loc?: { lat: number; lng: number }) => {
     setHardGatesPassed(ok);
@@ -216,12 +242,14 @@ export function TaskCompleteScreenInner() {
     setPhotoCapturedAt(null);
   }, [photoCapture]);
 
-  const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer } =
+  const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer, resetTimer } =
     useTaskTimer({
       requiredSeconds,
       isCountdown,
       isHardMode,
-      autoStart: showWorkoutTimer,
+      // Timer auto-starts only after the user taps Start now (isArmed).
+      // For non-TASK_START_ARMING builds, keep the legacy autoStart behaviour.
+      autoStart: FLAGS.TASK_START_ARMING ? showWorkoutTimer && isArmed : showWorkoutTimer,
     });
 
   const wasTimerRunningRef = useRef(false);
@@ -445,6 +473,43 @@ export function TaskCompleteScreenInner() {
     counterOk,
   ]);
 
+  // Full arm handler: requests permissions relevant to the task type, then sets isArmed.
+  const handleArm = useCallback(async () => {
+    // Camera permission — photo tasks and any task that requires photo proof.
+    if (
+      taskTypeRaw === "photo" ||
+      (config.require_photo && taskTypeRaw !== "checkin")
+    ) {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        showError("Allow camera access to take proof photos.");
+        // Still arm — the shutter tap will prompt again if denied.
+      }
+    }
+
+    // Location permission — checkin and location-gated tasks.
+    // Note: checkin is currently gated off (FLAGS.LOCATION_CHECKIN_ENABLED = false).
+    // setUserLocation is still in the suppression block (see BLOCKERS.md B-01).
+    if (config.require_location || taskTypeRaw === "checkin") {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        showError("Allow location access to verify your position.");
+      } else {
+        // Kick off a location read so the gate has a reading by the time the user submits.
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).then(
+          (loc) => {
+            // setUserLocation is suppressed (BLOCKERS.md B-01); log for now.
+            void loc;
+          }
+        ).catch((err) => {
+          captureError(err, "TaskCompleteArmLocation");
+        });
+      }
+    }
+
+    setIsArmed(true);
+  }, [taskTypeRaw, config.require_photo, config.require_location, showError]);
+
   const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
     if (!activeChallengeId || !taskId) {
       if (Platform.OS !== "web") {
@@ -462,6 +527,13 @@ export function TaskCompleteScreenInner() {
       }
       return;
     }
+    // Record start time for the Verifying overlay 600 ms legibility floor.
+    verifyStartMsRef.current = Date.now();
+    const nowLabel = new Date().toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    setSubmitTimeLabel(nowLabel);
     setIsSubmitting(true);
     try {
       let noteTextOut: string | undefined;
@@ -507,11 +579,22 @@ export function TaskCompleteScreenInner() {
         task_mode: taskMode,
       });
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
+      // Capture server-returned streak count for the Secured screen chip.
+      const resultStreakCount = (completionResult as { newStreakCount?: number } | null)?.newStreakCount;
+      if (typeof resultStreakCount === "number") {
+        setCompletedStreakCount(resultStreakCount);
+      }
       setCompletionIdForShare(
         completionResult && typeof completionResult === "object" && "completionId" in completionResult
           ? (completionResult as { completionId?: string }).completionId
           : undefined
       );
+      // Enforce 600 ms minimum for Verifying overlay legibility.
+      const elapsed = Date.now() - verifyStartMsRef.current;
+      const MIN_VERIFY_MS = 600;
+      if (elapsed < MIN_VERIFY_MS) {
+        await new Promise<void>((res) => setTimeout(res, MIN_VERIFY_MS - elapsed));
+      }
       setSubmitted(true);
       try {
         trackEvent("proof_posted", {
@@ -527,14 +610,15 @@ export function TaskCompleteScreenInner() {
       clearActiveSession();
 
       const celebTitle = taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
-      const celebPoints = taskMode === "minimum" ? 0 : isHardMode ? 8 : 5;
       showCelebration({
         title: celebTitle,
-        subtitle: `+${celebPoints} points`,
+        subtitle: FLAGS.COMPLETION_REWARDS
+          ? `+${taskMode === "minimum" ? 0 : isHardMode ? 8 : 5} points`
+          : "",
         type: "goal",
       });
 
-      if (Math.random() < 0.3) {
+      if (FLAGS.COMPLETION_REWARDS && Math.random() < 0.3) {
         const rewards = [
           { label: "2x BONUS — double points!", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
           { label: "Streak shield earned", color: DS_COLORS_V2.semantic.success, bg: DS_COLORS_V2.semantic.successSoft },
@@ -694,6 +778,17 @@ export function TaskCompleteScreenInner() {
   }, [counterVariant]);
 
   const renderBody = useCallback(() => {
+    // Ready state: show TaskReadyCard until the user taps Start.
+    if (FLAGS.TASK_START_ARMING && !isArmed) {
+      return (
+        <TaskReadyCard
+          taskTypeRaw={taskTypeRaw}
+          config={config}
+          counterGoal={isCounterFamily ? counterGoal : undefined}
+          minWords={taskTypeRaw === "journal" ? minWords : undefined}
+        />
+      );
+    }
     switch (taskTypeRaw) {
       case "photo":
         return (
@@ -725,9 +820,7 @@ export function TaskCompleteScreenInner() {
             isRunning={isTimerRunning}
             isComplete={timerOk}
             onTogglePlay={toggleTimer}
-            onReset={() => {
-              if (isTimerRunning) toggleTimer();
-            }}
+            onReset={resetTimer}
           />
         );
       case "run":
@@ -745,6 +838,7 @@ export function TaskCompleteScreenInner() {
             goalMinutes={minDurMinutes > 0 ? minDurMinutes : undefined}
             isRunning={isTimerRunning}
             hasGps={false}
+            onTogglePlay={isRunTimed ? toggleTimer : undefined}
             manualInput={{
               distance: runDistance,
               onChangeDistance: setRunDistance,
@@ -775,6 +869,7 @@ export function TaskCompleteScreenInner() {
             prompt={journalPrompt}
             wordCount={wordCount}
             minWords={minWords}
+            showTagChips={FLAGS.JOURNAL_TAGS}
           />
         );
       case "counter":
@@ -819,7 +914,12 @@ export function TaskCompleteScreenInner() {
         return <TaskSimpleBody value={{ done: false }} taskName={taskName} />;
     }
   }, [
+    isArmed,
     taskTypeRaw,
+    config,
+    isCounterFamily,
+    counterGoal,
+    minWords,
     photoCaption,
     photoUri,
     photoUploading,
@@ -834,10 +934,13 @@ export function TaskCompleteScreenInner() {
     isTimerRunning,
     timerOk,
     toggleTimer,
+    resetTimer,
     runDistance,
     runDuration,
     setRunDistance,
     setRunDuration,
+    isRunTimed,
+    toggleTimer,
     timerSeconds,
     minDurMinutes,
     workoutKind,
@@ -887,7 +990,24 @@ export function TaskCompleteScreenInner() {
     hardGatesPassed,
   ]);
 
-  // Build the "other tasks today" list — incomplete tasks for the same
+  // Verifying overlay rows (honest-cut: only gates evaluated for this task type).
+  const verifyingRows = useMemo(
+    () =>
+      buildVerifyingRows({
+        hasTimeWindow: !!(config.schedule_window_start && config.schedule_window_end),
+        submitTimeLabel,
+        hasCameraOnly: !!config.require_camera_only,
+        hasLocation: !!config.require_location,
+      }),
+    [
+      config.schedule_window_start,
+      config.schedule_window_end,
+      config.require_camera_only,
+      config.require_location,
+      submitTimeLabel,
+    ]
+  );
+  const typeSuccessLine = getTypeSuccessLine(taskTypeRaw);
   // active challenge, excluding the missed task itself.
   const otherTasksToday = useMemo(() => {
     const tasks =
@@ -992,30 +1112,56 @@ export function TaskCompleteScreenInner() {
 
   // Primary CTA state-driven label.
   const primaryCta = useMemo(() => {
+    // ── Ready state: shown before user taps Start ───────────────────────────
+    if (FLAGS.TASK_START_ARMING && !isArmed) {
+      let readyLabel = "Start";
+      if (taskTypeRaw === "journal") readyLabel = "Start writing";
+      else if (taskTypeRaw === "timer") readyLabel = "Start now";
+      return {
+        label: readyLabel,
+        onPress: () => void handleArm(),
+        disabled: false,
+        disabledReason: undefined,
+        loading: false,
+      };
+    }
+
+    // ── Do-state: storyboard CTA label table ─────────────────────────────────
     let label = "Mark complete";
     let disabledReason: string | undefined;
     if (taskTypeRaw === "manual" || taskTypeRaw === "simple") {
-      label = "Yes — I did it";
+      label = "Mark done";
     } else if (taskTypeRaw === "photo") {
       label = "Submit proof";
       if (!photoOk) disabledReason = "Take photo to submit";
     } else if (taskTypeRaw === "timer") {
-      label = timerOk ? "Complete" : "Finish early";
-      if (!timerOk && isHardMode) disabledReason = "Stay on screen until done";
+      if (timerOk && needsPhotoProof && !photoOk) {
+        label = "I'm done — capture";
+        disabledReason = "Take photo to complete";
+      } else if (timerOk) {
+        label = "Complete";
+      } else {
+        label = "Finish early";
+        if (isHardMode) disabledReason = "Stay on screen until done";
+      }
     } else if (taskTypeRaw === "run") {
-      label = runFormOk ? "End run & save" : "End early";
+      label = "Continue";
       if (!runFormOk) disabledReason = "Add distance & time";
     } else if (taskTypeRaw === "workout") {
-      label = "Finish workout";
+      label = "Finish session";
       if (!workoutOk) disabledReason = `Need at least ${Math.max(1, minDurMinutes)} min`;
     } else if (taskTypeRaw === "journal") {
-      label = "Save entry";
-      if (!journalOk) disabledReason = `Need ${Math.max(0, minWords - wordCount)} more word${minWords - wordCount === 1 ? "" : "s"}`;
+      // "Start writing" is the only CTA — arms when unarmed (handled above); saves when gate met.
+      label = "Start writing";
+      if (!journalOk) {
+        const gap = Math.max(0, minWords - wordCount);
+        if (gap > 0) disabledReason = `${gap} more word${gap === 1 ? "" : "s"} to go`;
+      }
     } else if (isCounterFamily) {
       label = "Mark today complete";
       if (!counterOk) disabledReason = `${Math.max(0, counterGoal - counterValue)} more to go`;
     } else if (taskTypeRaw === "checkin") {
-      label = "I'm here — check in";
+      label = "Confirm check-in";
       if (!locationOk) {
         const meters = distance != null ? `${Math.round(distance)} m away` : "Locating…";
         disabledReason = `Get closer to check in (${meters})`;
@@ -1029,7 +1175,10 @@ export function TaskCompleteScreenInner() {
       loading: isSubmitting,
     };
   }, [
+    isArmed,
+    handleArm,
     taskTypeRaw,
+    needsPhotoProof,
     photoOk,
     timerOk,
     isHardMode,
@@ -1109,6 +1258,8 @@ export function TaskCompleteScreenInner() {
     return (
       <TaskCompleteCelebration
         taskName={taskName}
+        taskTypeRaw={taskTypeRaw}
+        streakCount={completedStreakCount}
         isHardMode={isHardMode}
         variableReward={variableReward}
         postedInline={postedInline}
@@ -1157,12 +1308,25 @@ export function TaskCompleteScreenInner() {
         verificationGates={shellGates}
         onBack={() => goBackOrHome(router)}
         primaryCta={primaryCta}
+        secondaryCta={
+          (taskTypeRaw === "simple" || taskTypeRaw === "manual") && isArmed
+            ? {
+                label: "Not yet",
+                onPress: () => goBackOrHome(router),
+              }
+            : undefined
+        }
         missedState={shellMissedState}
         inlineError={error || null}
         onDismissInlineError={clearError}
       >
         {renderBody()}
       </TaskShell>
+      <VerifyingOverlay
+        visible={isSubmitting}
+        rows={verifyingRows}
+        typeSuccessLine={typeSuccessLine}
+      />
       <ConfirmDialog
         visible={minimumConfirmVisible}
         title="Mark minimum day?"
