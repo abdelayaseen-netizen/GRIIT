@@ -150,7 +150,7 @@ export function TaskCounterBody({
               color={DS_COLORS_V2.brand.primaryText}
               strokeWidth={2}
             />
-            <Text style={styles.addBtnText}>{`Add 1 ${unitSingular}`}</Text>
+            <Text style={styles.addBtnText}>{`Add a ${unitSingular}`}</Text>
           </Pressable>
         </View>
 

@@ -54,6 +54,42 @@ export const FLAGS = {
    * See BLOCKERS.md B2.
    */
   FREEZE_SERVER_ENFORCED: false,
+  /**
+   * When false, app/task/run.tsx (legacy GPS/treadmill screen) shows a redirect.
+   * Keep false until device-verified parity with task/complete.tsx is confirmed and
+   * old push-notification deep-links are rotated. See BLOCKERS.md B-02.
+   */
+  LEGACY_RUN_SCREEN: false,
+  /**
+   * When false, app/task/checkin.tsx (legacy location-session screen) shows a redirect.
+   * Keep false — setUserLocation gate is broken in the unified screen (see BLOCKERS.md B-01).
+   */
+  LEGACY_CHECKIN_SCREEN: false,
+  /**
+   * Journal tag chips (Mood / Wins / Photo). Not yet functional — gate until implemented.
+   * See BLOCKERS.md B-04.
+   */
+  JOURNAL_TAGS: false,
+  /**
+   * SHIP_TASK_FLOW: universal Start arming step for every task type (photo, run, workout,
+   * journal, counter/reading/water, timer). Simple/manual skip arming.
+   * Gated to false during Phase 2 implementation; flip to true when ReadyCard ships.
+   */
+  TASK_START_ARMING: true,
+  /**
+   * Workout structured mode (sets-and-reps form). The "Add exercise" tile in
+   * TaskWorkoutBody has no onPress when mode="structured". Parent always passes
+   * mode="simple" so this is dormant. Gate here for Phase 5 audit transparency.
+   */
+  WORKOUT_STRUCTURED: false,
+  /**
+   * Hardcoded completion rewards: points subtitle (`+N points`) and the random
+   * variable-reward chip ("2x BONUS", "Streak shield earned", etc.).
+   * The storyboard specifies streak-only — no points are shown. These mechanics
+   * may become real server-driven rewards later. Keep false until the backend
+   * returns real values. See CLEANUP_LOG.md item 1.
+   */
+  COMPLETION_REWARDS: false,
 } as const;
 
 // ============================================

@@ -136,7 +136,7 @@ export function TaskShell({
         </Pressable>
         <View style={styles.topBarCenter}>
           <Text style={styles.topBarTopline} numberOfLines={1}>
-            {`DAY ${dayNumber} · ${challengeName.toUpperCase()}`}
+            {`Day ${dayNumber} · ${challengeName.toUpperCase()}`}
           </Text>
           <Text style={styles.topBarTitle} numberOfLines={1}>
             {taskName}

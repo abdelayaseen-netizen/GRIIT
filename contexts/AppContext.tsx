@@ -9,7 +9,7 @@ import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
 import { AnalyticsBootstrap } from '@/components/AnalyticsBootstrap';
 import { setSubscriptionState } from '@/lib/premium';
-import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener } from '@/lib/subscription';
+import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener, ENTITLEMENT_ID } from '@/lib/subscription';
 import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
 import { setSentryUser, captureError } from '@/lib/sentry';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
@@ -405,7 +405,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshPremiumStatus = useCallback(async () => {
     const info = await getCustomerInfo();
     if (info) {
-      const ent = info.entitlements?.active?.['premium'];
+      const ent = info.entitlements?.active?.[ENTITLEMENT_ID];
       const premium = ent != null;
       setSubscriptionState(premium ? 'premium' : 'free', ent?.expirationDate ?? null);
       setIsPremium(premium);

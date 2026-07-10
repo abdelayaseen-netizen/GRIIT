@@ -19,6 +19,7 @@ import {
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
+import { FLAGS } from "@/lib/feature-flags";
 
 type TaskJournalValue = { text: string };
 
@@ -28,6 +29,8 @@ export type TaskJournalBodyProps = {
   prompt: string;
   wordCount: number;
   minWords: number;
+  /** Show tag chips (Mood / Wins / Photo). Controlled by FLAGS.JOURNAL_TAGS. */
+  showTagChips?: boolean;
 };
 
 export function TaskJournalBody({
@@ -36,6 +39,7 @@ export function TaskJournalBody({
   prompt,
   wordCount,
   minWords,
+  showTagChips = false,
 }: TaskJournalBodyProps) {
   const reachedMin = minWords === 0 || wordCount >= minWords;
 
@@ -81,36 +85,40 @@ export function TaskJournalBody({
             </Text>
           )}
           <View style={styles.tagsRow}>
-            <PlaceholderChip
-              icon={
-                <SmilePlus
-                  size={11}
-                  color={DS_COLORS_V2.text.secondary}
-                  strokeWidth={2}
+            {(showTagChips || FLAGS.JOURNAL_TAGS) ? (
+              <>
+                <PlaceholderChip
+                  icon={
+                    <SmilePlus
+                      size={11}
+                      color={DS_COLORS_V2.text.secondary}
+                      strokeWidth={2}
+                    />
+                  }
+                  label="Mood"
                 />
-              }
-              label="Mood"
-            />
-            <PlaceholderChip
-              icon={
-                <Tag
-                  size={11}
-                  color={DS_COLORS_V2.text.secondary}
-                  strokeWidth={2}
+                <PlaceholderChip
+                  icon={
+                    <Tag
+                      size={11}
+                      color={DS_COLORS_V2.text.secondary}
+                      strokeWidth={2}
+                    />
+                  }
+                  label="Wins"
                 />
-              }
-              label="Wins"
-            />
-            <PlaceholderChip
-              icon={
-                <Camera
-                  size={11}
-                  color={DS_COLORS_V2.text.secondary}
-                  strokeWidth={2}
+                <PlaceholderChip
+                  icon={
+                    <Camera
+                      size={11}
+                      color={DS_COLORS_V2.text.secondary}
+                      strokeWidth={2}
+                    />
+                  }
+                  label="Photo"
                 />
-              }
-              label="Photo"
-            />
+              </>
+            ) : null}
           </View>
         </View>
       </View>
