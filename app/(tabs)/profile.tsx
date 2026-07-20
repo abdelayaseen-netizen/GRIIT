@@ -788,31 +788,32 @@ const styles = StyleSheet.create({
 
   tabBar: {
     flexDirection: "row",
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.md,
-    padding: 4,
+    alignItems: "center",
+    gap: 8,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: DS_RADIUS_V2.sm,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   tabBtnActive: {
-    backgroundColor: DS_COLORS_V2.surface.canvas,
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    borderColor: DS_COLORS_V2.brand.primary,
   },
   tabTxt: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "400",
     color: DS_COLORS_V2.text.secondary,
   },
   tabTxtActive: {
     fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    color: DS_COLORS_V2.brand.primary,
   },
 
   tabBody: {
@@ -828,7 +829,8 @@ const styles = StyleSheet.create({
     gap: DS_SPACING_V2.md,
     backgroundColor: DS_COLORS_V2.surface.card,
     borderRadius: DS_RADIUS_V2.md,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: DS_COLORS_V2.surface.divider,
   },
@@ -856,12 +858,12 @@ const styles = StyleSheet.create({
   },
   activeRowTitle: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "500",
     color: DS_COLORS_V2.text.primary,
   },
   activeRowDay: {
-    fontSize: 11,
+    fontSize: 13,
     color: DS_COLORS_V2.text.secondary,
   },
   activeRowProgressTrack: {

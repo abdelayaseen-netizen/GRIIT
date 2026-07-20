@@ -76,8 +76,8 @@ function CountColumn({
       accessibilityLabel={accessibilityLabel}
       hitSlop={8}
       style={({ pressed }) => [
-        styles.countColumn,
-        pressed ? styles.countColumnPressed : null,
+        styles.countItem,
+        pressed ? styles.countItemPressed : null,
       ]}
     >
       <Text style={styles.countValue}>{value}</Text>
@@ -116,7 +116,7 @@ export const ProfileHeader = React.memo(function ProfileHeader({
         <StreakRingAvatar
           url={avatarUrl ?? null}
           name={friendlyName}
-          size={84}
+          size={64}
           streak={currentStreak}
           showCameraBadge={showCameraBadge}
           onPress={mode === 'self' ? onPressAvatar : undefined}
@@ -144,7 +144,7 @@ export const ProfileHeader = React.memo(function ProfileHeader({
               accessibilityLabel={`Following ${followingCount} accounts, view list`}
             />
             <CountColumn
-              label="Completed"
+              label="Done"
               value={completedChallenges}
               onPress={onPressCompleted}
               accessibilityLabel={`${completedChallenges} completed challenges, view list`}
@@ -171,7 +171,7 @@ export const ProfileHeader = React.memo(function ProfileHeader({
               pressed ? styles.actionPressed : null,
             ]}
           >
-            <Pencil size={14} color={DS_COLORS_V2.text.onDark} strokeWidth={2} />
+            <Pencil size={16} color={DS_COLORS_V2.text.onDark} strokeWidth={2} />
             <Text style={styles.actionTextDark}>Edit profile</Text>
           </Pressable>
           <Pressable
@@ -185,7 +185,7 @@ export const ProfileHeader = React.memo(function ProfileHeader({
             ]}
           >
             <UserPlus
-              size={14}
+              size={16}
               color={DS_COLORS_V2.text.primary}
               strokeWidth={2}
             />
@@ -293,12 +293,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: DS_SPACING_V2.md,
-    marginBottom: DS_SPACING_V2.md,
+    marginBottom: 12,
   },
   rightCol: {
     flex: 1,
     minWidth: 0,
-    gap: 8,
+    gap: 6,
   },
   displayName: {
     fontSize: 20,
@@ -308,29 +308,27 @@ const styles = StyleSheet.create({
   },
   countRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: DS_SPACING_V2.md,
+    alignItems: 'center',
+    flexWrap: 'nowrap',
+    gap: 12,
   },
-  countColumn: {
-    alignItems: 'flex-start',
-    minWidth: 56,
+  countItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  countColumnPressed: {
+  countItemPressed: {
     opacity: 0.7,
   },
   countValue: {
-    fontSize: 17,
+    fontSize: 13,
     fontWeight: '500',
     color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.2,
   },
   countLabel: {
-    fontSize: 9,
-    fontWeight: '500',
-    letterSpacing: 0.4,
+    fontSize: 13,
+    fontWeight: '400',
     color: DS_COLORS_V2.text.secondary,
-    textTransform: 'uppercase',
-    marginTop: 2,
   },
   bioCard: {
     backgroundColor: DS_COLORS_V2.surface.card,
@@ -355,8 +353,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
-    borderRadius: DS_RADIUS_V2.md,
+    height: 38,
+    borderRadius: DS_RADIUS_V2.full,
   },
   actionBtnDark: {
     backgroundColor: DS_COLORS_V2.surface.heroNeutral,
@@ -370,12 +368,12 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   actionTextDark: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
     color: DS_COLORS_V2.text.onDark,
   },
   actionTextLight: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
     color: DS_COLORS_V2.text.primary,
   },
