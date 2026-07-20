@@ -78,7 +78,10 @@ export function TaskCompleteScreenInner() {
     durationDays?: string;
   }>();
   const queryClient = useQueryClient();
-  const { activeChallenge, completeTask, challenge, stats, computeProgress, todayCheckins } = useApp();
+  const { activeChallenge, completeTask, secureDay, challenge, stats, computeProgress, todayCheckins } = useApp();
+  /** Always call the latest secureDay — submit closure would otherwise hold a pre-completion canSecureDay=false instance. */
+  const secureDayRef = useRef(secureDay);
+  secureDayRef.current = secureDay;
   const showCelebration = useCelebrationStore((s) => s.show);
   const setActiveSession = useActiveSessionStore((s) => s.setActiveSession);
   const clearActiveSession = useActiveSessionStore((s) => s.clearActiveSession);
@@ -589,6 +592,36 @@ export function TaskCompleteScreenInner() {
           ? (completionResult as { completionId?: string }).completionId
           : undefined
       );
+
+      // Same progress source as AppContext canSecureDay: required tasks + completed check-ins.
+      // Include this taskId so the condition reflects post-completion state (closure todayCheckins is pre-submit).
+      const requiredTasks =
+        (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
+          (t) => (t.config?.required ?? true) === true
+        ) || [];
+      const completedTaskIds = new Set(
+        todayCheckins
+          .filter((c) => c.status === "completed")
+          .map((c) => c.task_id)
+          .filter((id): id is string => typeof id === "string")
+      );
+      completedTaskIds.add(taskId);
+      const verifiedCount = requiredTasks.filter((t) => completedTaskIds.has(t.id)).length;
+      const totalRequired = requiredTasks.length;
+      const progress = totalRequired > 0 ? (verifiedCount / totalRequired) * 100 : 0;
+      const dayNowSecured = progress === 100 && totalRequired > 0;
+      if (dayNowSecured) {
+        try {
+          const secureResult = await secureDayRef.current();
+          const securedStreak = secureResult?.newStreakCount;
+          if (typeof securedStreak === "number") {
+            setCompletedStreakCount(securedStreak);
+          }
+        } catch (secureErr: unknown) {
+          // Non-fatal: completion UI must still reach the Secured screen.
+          captureError(secureErr, "TaskCompleteSecureDay");
+        }
+      }
       // Enforce 600 ms minimum for Verifying overlay legibility.
       const elapsed = Date.now() - verifyStartMsRef.current;
       const MIN_VERIFY_MS = 600;
@@ -640,6 +673,8 @@ export function TaskCompleteScreenInner() {
     taskId,
     canSubmit,
     completeTask,
+    challenge,
+    todayCheckins,
     taskTypeRaw,
     journalText,
     timerSeconds,
