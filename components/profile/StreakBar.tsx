@@ -110,7 +110,8 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     backgroundColor: DS_COLORS_V2.surface.heroNeutral,
     borderRadius: DS_RADIUS_V2.lg,
-    padding: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     marginBottom: 14,
   },
   divider: {
@@ -130,10 +131,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   columnLabel: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '500',
     letterSpacing: 0.5,
     color: DS_COLORS_V2.text.onDarkSecondary,
+    textTransform: 'uppercase',
   },
   valueRow: {
     flexDirection: 'row',
@@ -141,23 +143,23 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   number: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '500',
     color: DS_COLORS_V2.text.onDark,
     letterSpacing: -0.6,
-    lineHeight: 30,
+    lineHeight: 26,
   },
   numberHighlight: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '500',
     color: DS_COLORS_V2.brand.primaryOnDark,
     letterSpacing: -0.6,
-    lineHeight: 30,
+    lineHeight: 26,
   },
   unit: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '400',
     color: DS_COLORS_V2.text.onDarkSecondary,
-    paddingBottom: 4,
+    paddingBottom: 2,
   },
 });
