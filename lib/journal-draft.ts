@@ -1,11 +1,15 @@
 /**
  * Local journal draft persistence (task-states-v2 Write).
- * Date key uses the task schedule timezone (same source as window eval).
+ * Date key uses resolveCheckInTimeZone (schedule_timezone → profile → UTC) —
+ * same resolver as checkins.complete / saveProgress.
  * Orphaned yesterday keys are left in AsyncStorage — no GC; they linger until
  * overwritten on a future same-day write or cleared after successful submit.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getTodayDateKey } from "@/lib/date-utils";
+import {
+  getTodayDateKey,
+  resolveCheckInTimeZone,
+} from "@/lib/date-utils";
 
 export function journalDraftStorageKey(opts: {
   activeChallengeId: string;
@@ -16,11 +20,15 @@ export function journalDraftStorageKey(opts: {
 }
 
 /**
- * Calendar day for draft scoping — task schedule timezone, same as window eval.
- * Falls back to UTC when timezone missing (matches getTodayDateKey / window default).
+ * Calendar day for draft scoping — shared check-in TZ resolver.
  */
-export function journalDraftDateKey(timeZone?: string | null): string {
-  return getTodayDateKey(timeZone);
+export function journalDraftDateKey(
+  scheduleTimezone?: string | null,
+  profileTimezone?: string | null
+): string {
+  return getTodayDateKey(
+    resolveCheckInTimeZone(scheduleTimezone, profileTimezone)
+  );
 }
 
 export async function loadJournalDraft(key: string): Promise<string | null> {

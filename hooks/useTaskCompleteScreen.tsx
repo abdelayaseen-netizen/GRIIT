@@ -104,7 +104,18 @@ export function TaskCompleteScreenInner() {
     durationDays?: string;
   }>();
   const queryClient = useQueryClient();
-  const { activeChallenge, completeTask, secureDay, challenge, stats, computeProgress, todayCheckins } = useApp();
+  const {
+    activeChallenge,
+    completeTask,
+    secureDay,
+    challenge,
+    stats,
+    computeProgress,
+    todayCheckins,
+    profile,
+  } = useApp();
+  const profileTimezone =
+    (profile as { timezone?: string | null } | null)?.timezone ?? null;
   /** Always call the latest secureDay — submit closure would otherwise hold a pre-completion canSecureDay=false instance. */
   const secureDayRef = useRef(secureDay);
   secureDayRef.current = secureDay;
@@ -408,7 +419,8 @@ export function TaskCompleteScreenInner() {
         ? {
             activeChallengeId,
             taskId,
-            timeZone: config.schedule_timezone,
+            scheduleTimezone: config.schedule_timezone,
+            profileTimezone,
           }
         : null,
   });
