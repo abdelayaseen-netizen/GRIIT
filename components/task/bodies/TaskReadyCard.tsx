@@ -9,6 +9,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Clock, Camera, Lock, BookOpen, Droplets, MapPin } from "lucide-react-native";
 import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import type { TaskCompleteConfig } from "@/lib/task-helpers";
+import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Storyboard hint text (one line per task type)
@@ -127,9 +128,9 @@ export function TaskReadyCard({
     });
   }
 
-  // Location chip — checkin.
+  // Location chip — checkin / location-gated. Default radius 200 (never 50).
   if (config.require_location) {
-    const radiusM = config.location_radius_meters ?? 50;
+    const radiusM = resolveCheckinRadiusMeters(config.location_radius_meters);
     const locName = config.location_name ?? "saved spot";
     chips.push({
       icon: <MapPin size={13} color={DS_COLORS_V2.text.secondary} strokeWidth={2} />,
