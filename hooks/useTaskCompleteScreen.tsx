@@ -33,6 +33,7 @@ import { startLiveActivity, type LiveActivityPayload, endLiveActivity } from "@/
 import { ROUTES } from "@/lib/routes";
 import { useActiveSessionStore } from "@/store/activeSessionStore";
 import { useJournalInput } from "@/hooks/useJournalInput";
+import { useCounterProgress } from "@/hooks/useCounterProgress";
 import { useTaskCompleteShareCardProps } from "@/hooks/useTaskCompleteShareCardProps";
 import { TaskCompleteCelebration } from "@/components/task/TaskCompleteCelebration";
 import { SecuredScreen } from "@/components/task/SecuredScreen";
@@ -66,6 +67,7 @@ import { decideReadyStart } from "@/lib/ready-start";
 import { formatRunSecuredMeta } from "@/lib/run-log";
 import { formatWorkoutSecuredMeta } from "@/lib/workout-log";
 import { formatJournalSecuredMeta } from "@/lib/journal-log";
+import { formatCounterSecuredMeta } from "@/lib/counter-log";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
@@ -176,10 +178,7 @@ export function TaskCompleteScreenInner() {
       ? taskTypeRaw === "simple" || taskTypeRaw === "manual"
       : true
   );
-  // V2 body-component local state (counter / water / reading + timer sound)
-  const [counterValue, setCounterValue] = useState<number>(0);
-  const [bookTitle, setBookTitle] = useState<string>("");
-  const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
+  // V2 body-component local state (timer sound; counter count via useCounterProgress)
   const [timerSound, setTimerSound] = useState<TimerSound>("silent");
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [completionMeta, setCompletionMeta] = useState<{
@@ -487,6 +486,30 @@ export function TaskCompleteScreenInner() {
     }
     return taskTypeRaw === "water" ? 8 : taskTypeRaw === "reading" ? 10 : 1;
   }, [config, taskTypeRaw]);
+  // Hydration: server pending value wins (file:line cited in consolidated report).
+  const counterHydratedValue = useMemo(() => {
+    if (!isCounterFamily || !taskId) return 0;
+    const row = todayCheckins.find(
+      (c) =>
+        c.task_id === taskId &&
+        (c.status === "pending" || c.status === "completed")
+    ) as { value?: number | null; status?: string } | undefined;
+    if (!row || typeof row.value !== "number" || !Number.isFinite(row.value)) {
+      return 0;
+    }
+    return Math.max(0, Math.round(row.value));
+  }, [isCounterFamily, taskId, todayCheckins]);
+  const {
+    count: counterValue,
+    setCountOptimistic: setCounterValue,
+    notSavedYet: counterNotSavedYet,
+    flush: flushCounterProgress,
+  } = useCounterProgress({
+    activeChallengeId,
+    taskId,
+    enabled: isCounterFamily && !!activeChallengeId && !!taskId,
+    initialValue: counterHydratedValue,
+  });
   const counterOk = !isCounterFamily || counterValue >= counterGoal;
 
   const canSubmit = useMemo(() => {
@@ -604,8 +627,13 @@ export function TaskCompleteScreenInner() {
     const isRunSubmit = taskTypeRaw === "run";
     const isWorkoutSubmit = taskTypeRaw === "workout";
     const isJournalSubmit = taskTypeRaw === "journal";
+    const isCounterSubmit = isCounterFamily;
     const usesServerVerifying =
-      isPhotoSubmit || isRunSubmit || isWorkoutSubmit || isJournalSubmit;
+      isPhotoSubmit ||
+      isRunSubmit ||
+      isWorkoutSubmit ||
+      isJournalSubmit ||
+      isCounterSubmit;
     if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
@@ -613,6 +641,13 @@ export function TaskCompleteScreenInner() {
     }
     setIsSubmitting(true);
     try {
+      if (isCounterFamily) {
+        try {
+          await flushCounterProgress();
+        } catch {
+          /* non-fatal — complete still sends absolute value */
+        }
+      }
       const workoutDurationMin = isWorkoutSubmit
         ? showWorkoutTimer
           ? Math.floor(timerSeconds / 60)
@@ -754,7 +789,7 @@ export function TaskCompleteScreenInner() {
           captureError(secureErr, "TaskCompleteSecureDay");
         }
       }
-      // Photo/Run/Workout/Journal: no fake floor — duration is the request; brief settle so server rows can paint.
+      // Photo/Run/Workout/Journal/Counter: no fake floor — brief settle so server rows can paint.
       // Other types: keep 600 ms VerifyingOverlay legibility floor.
       if (usesServerVerifying) {
         setIsSubmitting(false);
@@ -800,8 +835,14 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      // Photo/Run/Workout/Journal use SecuredScreen — skip celebration overlay + variable-reward chip.
-      if (!isPhotoSubmit && !isRunSubmit && !isWorkoutSubmit && !isJournalSubmit) {
+      // Photo/Run/Workout/Journal/Counter use SecuredScreen — skip celebration overlay + variable-reward chip.
+      if (
+        !isPhotoSubmit &&
+        !isRunSubmit &&
+        !isWorkoutSubmit &&
+        !isJournalSubmit &&
+        !isCounterSubmit
+      ) {
         const celebTitle =
           taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
         showCelebration({
@@ -889,6 +930,8 @@ export function TaskCompleteScreenInner() {
     isCounterFamily,
     counterValue,
     clearJournalDraft,
+    flushCounterProgress,
+    isCounterFamily,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -1283,14 +1326,8 @@ export function TaskCompleteScreenInner() {
         return (
           <TaskCounterBody
             variant={counterVariant}
-            value={{
-              count: counterValue,
-              bookTitle,
-              remindersEnabled,
-            }}
+            value={{ count: counterValue }}
             onChangeCount={setCounterValue}
-            onChangeBookTitle={setBookTitle}
-            onToggleReminders={setRemindersEnabled}
             onAddPagePhoto={
               counterVariant === "reading"
                 ? () => {
@@ -1301,6 +1338,8 @@ export function TaskCompleteScreenInner() {
             goal={counterGoal}
             unitSingular={counterUnits.singular}
             unitPlural={counterUnits.plural}
+            notSavedYet={counterNotSavedYet}
+            photoUri={photoUri}
           />
         );
       case "checkin":
@@ -1368,8 +1407,6 @@ export function TaskCompleteScreenInner() {
     counterValue,
     counterGoal,
     counterUnits,
-    bookTitle,
-    remindersEnabled,
     locationOk,
     distance,
     userLocation,
@@ -1749,7 +1786,8 @@ export function TaskCompleteScreenInner() {
       taskTypeRaw === "photo" ||
       taskTypeRaw === "run" ||
       taskTypeRaw === "workout" ||
-      taskTypeRaw === "journal"
+      taskTypeRaw === "journal" ||
+      isCounterFamily
     ) {
       const securedDayNumber = Math.max(
         1,
@@ -1769,7 +1807,13 @@ export function TaskCompleteScreenInner() {
               )
             : taskTypeRaw === "journal"
               ? formatJournalSecuredMeta(wordCount)
-              : "Verified in the window";
+              : isCounterFamily
+                ? formatCounterSecuredMeta(
+                    counterValue,
+                    counterGoal,
+                    counterUnits.plural
+                  )
+                : "Verified in the window";
       return (
         <>
           <Stack.Screen options={{ headerShown: false }} />

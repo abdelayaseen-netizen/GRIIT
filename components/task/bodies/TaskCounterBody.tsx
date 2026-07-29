@@ -1,217 +1,126 @@
 /**
- * Counter body — generic counter, water, or reading.
- *
- * Variant mapping:
- *   - counter:  big-number + ± buttons + progress bar.
- *   - water:    cup grid + ± + reminders toggle.
- *   - reading:  book title input + page counter + quick-add chips + photo row.
+ * Counter · Count body — big n/target, segment row, + Add a {unit}.
+ * Water/plain: no camera. Reading: optional page photo with Reading-only banner path.
  */
 import React from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { Bell, Camera, Check, Minus, Plus } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Check, Plus } from "lucide-react-native";
 
 import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
+import { CameraOnlyBanner } from "@/components/task/CameraOnlyBanner";
 
 export type CounterVariant = "counter" | "water" | "reading";
 
 type TaskCounterValue = {
   count: number;
-  bookTitle?: string;
-  remindersEnabled?: boolean;
 };
 
 export type TaskCounterBodyProps = {
   variant: CounterVariant;
   value: TaskCounterValue;
   onChangeCount: (next: number) => void;
-  onChangeBookTitle?: (v: string) => void;
-  onToggleReminders?: (v: boolean) => void;
   onAddPagePhoto?: () => void;
   goal: number;
   unitSingular: string;
   unitPlural: string;
+  /** Quiet inline when last saveProgress failed. */
+  notSavedYet?: boolean;
+  photoUri?: string | null;
 };
-
-const QUICK_ADD: readonly number[] = [5, 10, 25] as const;
 
 export function TaskCounterBody({
   variant,
   value,
   onChangeCount,
-  onChangeBookTitle,
-  onToggleReminders,
   onAddPagePhoto,
   goal,
   unitSingular,
   unitPlural,
+  notSavedYet = false,
+  photoUri = null,
 }: TaskCounterBodyProps) {
-  const remaining = Math.max(0, goal - value.count);
-  const progressFrac = goal > 0 ? Math.min(1, value.count / goal) : 0;
+  const target = Math.max(1, goal);
+  const segments = Math.min(target, 24);
 
   return (
     <View style={styles.wrap}>
-      {variant === "reading" ? (
-        <View style={styles.bookCard}>
-          <Text style={styles.label}>WHAT ARE YOU READING?</Text>
-          <TextInput
-            accessibilityLabel="Book title"
-            value={value.bookTitle ?? ""}
-            onChangeText={onChangeBookTitle ?? (() => undefined)}
-            placeholder="Book title"
-            placeholderTextColor={DS_COLORS_V2.text.tertiary}
-            style={styles.bookInput}
-          />
-        </View>
-      ) : null}
-
       <View style={styles.hero}>
-        <Text style={styles.heroTopline}>DAILY TARGET</Text>
-        <View style={styles.heroNumberRow}>
-          <Text style={styles.heroNumber}>{value.count}</Text>
-          <Text style={styles.heroDenom}>{`/ ${goal}`}</Text>
+        <View style={styles.numberRow}>
+          <Text style={styles.count}>{value.count}</Text>
+          <Text style={styles.denom}>{`/ ${target}`}</Text>
         </View>
-        <Text style={styles.heroSub}>
-          {remaining > 0
-            ? `${remaining} ${remaining === 1 ? unitSingular : unitPlural} to go`
-            : "Goal reached — nice work."}
+        <Text style={styles.unitLabel}>
+          {value.count === 1 ? unitSingular : unitPlural} today
         </Text>
 
-        {variant === "water" ? (
-          <View style={styles.cupsRow}>
-            {Array.from({ length: goal }).map((_, idx) => {
-              const filled = idx < value.count;
-              return (
-                <View
-                  key={idx}
-                  accessibilityRole="image"
-                  accessibilityLabel={`Cup ${idx + 1} ${filled ? "filled" : "empty"}`}
-                  style={[
-                    styles.cupSlot,
-                    filled ? styles.cupFilled : styles.cupEmpty,
-                  ]}
-                >
-                  {filled ? (
-                    <Check
-                      size={11}
-                      color={DS_COLORS_V2.brand.primaryText}
-                      strokeWidth={2.5}
-                    />
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
-        ) : (
-          <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${Math.round(progressFrac * 100)}%` },
-              ]}
-            />
-          </View>
-        )}
-
-        <View style={styles.controlsRow}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Subtract one ${unitSingular}`}
-            onPress={() => onChangeCount(Math.max(0, value.count - 1))}
-            style={({ pressed }) => [
-              styles.minusBtn,
-              pressed ? styles.pressed : null,
-            ]}
-            hitSlop={6}
-          >
-            <Minus size={18} color={DS_COLORS_V2.text.onDark} strokeWidth={2} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Add one ${unitSingular}`}
-            onPress={() => onChangeCount(value.count + 1)}
-            style={({ pressed }) => [
-              styles.addBtn,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Plus
-              size={16}
-              color={DS_COLORS_V2.brand.primaryText}
-              strokeWidth={2}
-            />
-            <Text style={styles.addBtnText}>{`Add a ${unitSingular}`}</Text>
-          </Pressable>
-        </View>
-
-        {variant === "reading" ? (
-          <View style={styles.quickRow}>
-            {QUICK_ADD.map((n) => (
-              <Pressable
-                key={n}
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${n} pages`}
-                onPress={() => onChangeCount(value.count + n)}
-                style={({ pressed }) => [
-                  styles.quickChip,
-                  pressed ? styles.pressed : null,
+        <View style={styles.segments}>
+          {Array.from({ length: segments }).map((_, idx) => {
+            const filled = idx < value.count;
+            return (
+              <View
+                key={idx}
+                accessibilityRole="image"
+                accessibilityLabel={`${unitSingular} ${idx + 1} ${filled ? "filled" : "empty"}`}
+                style={[
+                  styles.segment,
+                  filled ? styles.segmentFilled : styles.segmentEmpty,
                 ]}
               >
-                <Text style={styles.quickChipText}>{`+${n}`}</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-      </View>
-
-      {variant === "water" ? (
-        <View style={styles.remindersCard}>
-          <Bell
-            size={16}
-            color={DS_COLORS_V2.text.primary}
-            strokeWidth={2}
-          />
-          <Text style={styles.remindersText}>Hourly reminders</Text>
-          <Switch
-            accessibilityLabel="Toggle hourly reminders"
-            value={!!value.remindersEnabled}
-            onValueChange={onToggleReminders ?? (() => undefined)}
-            trackColor={{
-              false: DS_COLORS_V2.surface.divider,
-              true: DS_COLORS_V2.brand.primary,
-            }}
-            thumbColor={DS_COLORS_V2.surface.card}
-          />
+                {filled ? (
+                  <Check
+                    size={10}
+                    color={DS_COLORS_V2.brand.primaryText}
+                    strokeWidth={2.5}
+                  />
+                ) : null}
+              </View>
+            );
+          })}
         </View>
-      ) : null}
 
-      {variant === "reading" && onAddPagePhoto ? (
+        {notSavedYet ? (
+          <Text style={styles.notSaved} accessibilityLiveRegion="polite">
+            not saved yet
+          </Text>
+        ) : null}
+
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Add page photo (optional)"
-          onPress={onAddPagePhoto}
+          accessibilityLabel={`Add a ${unitSingular}`}
+          onPress={() => onChangeCount(value.count + 1)}
           style={({ pressed }) => [
-            styles.photoRow,
+            styles.addBtn,
             pressed ? styles.pressed : null,
           ]}
         >
-          <Camera
-            size={16}
-            color={DS_COLORS_V2.text.primary}
-            strokeWidth={2}
-          />
-          <Text style={styles.photoRowText}>Add a page photo (optional)</Text>
+          <Plus size={16} color={DS_COLORS_V2.brand.primaryText} strokeWidth={2} />
+          <Text style={styles.addBtnText}>{`+ Add a ${unitSingular}`}</Text>
         </Pressable>
+      </View>
+
+      {variant === "reading" && onAddPagePhoto ? (
+        <View style={styles.photoBlock}>
+          <CameraOnlyBanner variant="reading" />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add page photo (optional)"
+            onPress={onAddPagePhoto}
+            style={({ pressed }) => [
+              styles.pagePlaceholder,
+              pressed ? styles.pressed : null,
+            ]}
+          >
+            {photoUri ? (
+              <Text style={styles.pagePlaceholderText}>Page photo attached</Text>
+            ) : (
+              <Text style={styles.pagePlaceholderText}>[ page ]</Text>
+            )}
+          </Pressable>
+        </View>
       ) : null}
     </View>
   );
@@ -219,114 +128,68 @@ export function TaskCounterBody({
 
 const styles = StyleSheet.create({
   wrap: { gap: DS_SPACING_V2.md },
-  label: {
-    fontSize: 9,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.secondary,
-  },
-  bookCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.md,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    gap: 8,
-  },
-  bookInput: {
-    fontSize: 14,
-    color: DS_COLORS_V2.text.primary,
-    paddingVertical: 6,
-  },
-
   hero: {
-    backgroundColor: DS_COLORS_V2.surface.heroDark,
+    backgroundColor: DS_COLORS_V2.surface.card,
     borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.md,
-    gap: 14,
+    padding: DS_SPACING_V2.lg,
+    gap: DS_SPACING_V2.md,
     alignItems: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
-  heroTopline: {
-    fontSize: 9,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.streak.securedYellow,
-    alignSelf: "flex-start",
-  },
-  heroNumberRow: {
+  numberRow: {
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 6,
   },
-  heroNumber: {
+  count: {
     fontSize: 64,
     fontWeight: "500",
-    color: DS_COLORS_V2.brand.primaryOnDark,
+    color: DS_COLORS_V2.text.primary,
     fontVariant: ["tabular-nums"],
     letterSpacing: -2,
     lineHeight: 64,
   },
-  heroDenom: {
+  denom: {
     fontSize: 24,
     fontWeight: "500",
-    color: DS_COLORS_V2.text.onDarkSecondary,
+    color: DS_COLORS_V2.text.secondary,
     paddingBottom: 6,
   },
-  heroSub: {
-    fontSize: 12,
-    color: DS_COLORS_V2.text.onDarkSecondary,
+  unitLabel: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
   },
-
-  progressTrack: {
-    width: "100%",
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface10,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: DS_COLORS_V2.brand.primaryOnDark,
-  },
-
-  cupsRow: {
+  segments: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
     justifyContent: "center",
-    paddingHorizontal: 10,
+    alignSelf: "stretch",
   },
-  cupSlot: {
+  segment: {
     width: 28,
     height: 36,
     borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
   },
-  cupFilled: {
-    backgroundColor: DS_COLORS_V2.brand.primaryOnDark,
+  segmentFilled: {
+    backgroundColor: DS_COLORS_V2.brand.primary,
   },
-  cupEmpty: {
+  segmentEmpty: {
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: DS_COLORS_V2.overlay.onDarkBorder25,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
-
-  controlsRow: {
-    width: "100%",
-    flexDirection: "row",
-    gap: 10,
-  },
-  minusBtn: {
-    width: 54,
-    height: 54,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface10,
+  notSaved: {
+    fontSize: 12,
+    fontWeight: "400",
+    color: DS_COLORS_V2.semantic.warning,
   },
   addBtn: {
-    flex: 1,
+    alignSelf: "stretch",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -336,59 +199,25 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS_V2.brand.primary,
   },
   addBtnText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "500",
     color: DS_COLORS_V2.brand.primaryText,
   },
-  pressed: { opacity: 0.85 },
-
-  quickRow: { flexDirection: "row", gap: 8, alignSelf: "stretch" },
-  quickChip: {
-    flex: 1,
-    paddingVertical: 9,
-    alignItems: "center",
+  pressed: { opacity: 0.9 },
+  photoBlock: { gap: DS_SPACING_V2.sm },
+  pagePlaceholder: {
+    minHeight: 120,
     borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface10,
-  },
-  quickChipText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.onDark,
-  },
-
-  remindersCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
     borderColor: DS_COLORS_V2.surface.divider,
-  },
-  remindersText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-  },
-
-  photoRow: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    justifyContent: "center",
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
   },
-  photoRowText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+  pagePlaceholderText: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
   },
 });
-
