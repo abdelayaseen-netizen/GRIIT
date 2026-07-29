@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   evaluateScheduleWindow,
   formatScheduleWindowRange,
+  formatPillClock,
 } from "./schedule-window";
 
 /** Build a Date whose wall-clock in UTC is the given HH:mm. */
@@ -109,5 +110,23 @@ describe("formatScheduleWindowRange", () => {
   it("returns null when incomplete", () => {
     expect(formatScheduleWindowRange("07:00", null)).toBeNull();
     expect(formatScheduleWindowRange(undefined, "08:00")).toBeNull();
+  });
+});
+
+describe("formatPillClock", () => {
+  it("zero-pads HH:MM in UTC", () => {
+    expect(formatPillClock(utcAt(7, 42), "UTC")).toBe("07:42");
+    expect(formatPillClock(utcAt(0, 5), "UTC")).toBe("00:05");
+  });
+
+  it("builds Capture pill label with window qualifier", () => {
+    const now = utcAt(7, 42);
+    expect(evaluateScheduleWindow({
+      start: "07:00",
+      end: "08:00",
+      timeZone: "UTC",
+      now,
+    }).status).toBe("in_window");
+    expect(`${formatPillClock(now, "UTC")} · in window`).toBe("07:42 · in window");
   });
 });

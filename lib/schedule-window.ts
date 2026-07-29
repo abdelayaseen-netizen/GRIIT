@@ -87,3 +87,22 @@ export function formatScheduleWindowRange(
   if (!s || !e) return null;
   return `${s} – ${e}`;
 }
+
+/** Format wall-clock as HH:MM (zero-padded, 24h) for Capture in-window pill. */
+export function formatPillClock(now: Date, timeZone?: string | null): string {
+  const tz =
+    (typeof timeZone === "string" && timeZone.trim()) ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    "UTC";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: tz,
+  }).formatToParts(now);
+  // Some ICU builds emit "24" for midnight under hour12:false — normalize to 00.
+  let h = parts.find((p) => p.type === "hour")?.value ?? "00";
+  if (h === "24") h = "00";
+  const m = parts.find((p) => p.type === "minute")?.value ?? "00";
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+}
