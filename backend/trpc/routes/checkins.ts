@@ -43,6 +43,11 @@ import {
   type WorkoutLogFacts,
   type WorkoutVerification,
 } from "../../lib/workout-verification";
+import {
+  buildJournalVerification,
+  type JournalLogFacts,
+  type JournalVerification,
+} from "../../lib/journal-verification";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -201,6 +206,8 @@ export const checkinsRouter = createTRPCRouter({
       const isWorkoutProof =
         taskType === "workout" ||
         (typeof input.workout_kind === "string" && input.workout_kind.length > 0);
+      // Journal only — do not treat DB "manual" (photo/simple) as journal proof.
+      const isJournalProof = taskType === "journal";
 
       const sharedDurationMin =
         input.duration_min ??
@@ -264,6 +271,33 @@ export const checkinsRouter = createTRPCRouter({
                 : null,
             photoPresent: !!photoUrl,
             proofPayload: input.proof_payload_json ?? null,
+          });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            cause: { verification },
+          });
+        }
+      } else if (!isMinimumDay && isJournalProof) {
+        if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
+          const rejectNote = (input.noteText ?? "").trim();
+          const rejectWords = rejectNote
+            ? rejectNote.split(/\s+/).filter(Boolean).length
+            : 0;
+          const rejectFloor =
+            typeof input.floor_min === "number" && input.floor_min > 0
+              ? input.floor_min
+              : input.floor_min === null
+                ? null
+                : minWords > 0
+                  ? minWords
+                  : null;
+          const verification = buildJournalVerification({
+            window: windowEval,
+            journalLog: {
+              word_count: rejectWords,
+              floor_min: rejectFloor,
+            },
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -394,9 +428,28 @@ export const checkinsRouter = createTRPCRouter({
             }
           : null;
 
+      const journalNote = (input.noteText ?? "").trim();
+      const journalWordCount = journalNote
+        ? journalNote.split(/\s+/).filter(Boolean).length
+        : 0;
+      const journalFloorMin: number | null =
+        typeof input.floor_min === "number" && input.floor_min > 0
+          ? input.floor_min
+          : input.floor_min === null
+            ? null
+            : minWords > 0
+              ? minWords
+              : null;
+      const journalLogFacts: JournalLogFacts | null = isJournalProof
+        ? {
+            word_count: journalWordCount,
+            floor_min: journalFloorMin,
+          }
+        : null;
+
       const verificationGates: Record<string, unknown> = {};
       if (
-        (isPhotoProof || isRunProof || isWorkoutProof) &&
+        (isPhotoProof || isRunProof || isWorkoutProof || isJournalProof) &&
         !isMinimumDay &&
         windowEval.hasWindow
       ) {
@@ -407,7 +460,7 @@ export const checkinsRouter = createTRPCRouter({
           window: `${config.schedule_window_start}-${config.schedule_window_end}`,
         };
       } else if (!isMinimumDay && config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
-        // Non-photo/run/workout: preserve prior hard-mode time_gate shape.
+        // Non-photo/run/workout/journal: preserve prior hard-mode time_gate shape.
         verificationGates.time_gate = {
           status: "passed",
           clocked_in_at: input.clocked_in_at ?? new Date().toISOString(),
@@ -427,6 +480,12 @@ export const checkinsRouter = createTRPCRouter({
           duration_min: workoutLogFacts.duration_min,
           floor_min: workoutLogFacts.floor_min,
           entry_mode: workoutLogFacts.entry_mode,
+        };
+      }
+      if (!isMinimumDay && journalLogFacts) {
+        verificationGates.journal_log = {
+          word_count: journalLogFacts.word_count,
+          floor_min: journalLogFacts.floor_min,
         };
       }
       if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
@@ -457,7 +516,13 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       let photoVerification: PhotoVerification | undefined;
-      if (!isMinimumDay && isPhotoProof && !isRunProof && !isWorkoutProof) {
+      if (
+        !isMinimumDay &&
+        isPhotoProof &&
+        !isRunProof &&
+        !isWorkoutProof &&
+        !isJournalProof
+      ) {
         photoVerification = buildPhotoVerification({
           window: windowEval,
           photoPresent: !!photoUrl,
@@ -482,6 +547,14 @@ export const checkinsRouter = createTRPCRouter({
           workoutLog: workoutLogFacts,
           photoPresent: !!photoUrl,
           proofPayload: input.proof_payload_json ?? null,
+        });
+      }
+
+      let journalVerification: JournalVerification | undefined;
+      if (!isMinimumDay && isJournalProof) {
+        journalVerification = buildJournalVerification({
+          window: windowEval,
+          journalLog: journalLogFacts,
         });
       }
 
@@ -613,6 +686,7 @@ export const checkinsRouter = createTRPCRouter({
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
+        ...(journalVerification ? { verification: journalVerification } : {}),
       };
     }),
 
