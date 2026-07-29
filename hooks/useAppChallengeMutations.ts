@@ -84,6 +84,7 @@ export function useAppChallengeMutations({
       timer_seconds_on_screen?: number;
       clocked_in_at?: string;
       task_mode?: "full" | "minimum";
+      proof_payload_json?: { capturedAt: string; captured_in_app: boolean };
     }): Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(

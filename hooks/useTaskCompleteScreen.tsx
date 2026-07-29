@@ -47,7 +47,9 @@ import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
 import { TaskReadyCard } from "@/components/task/bodies/TaskReadyCard";
 import { TaskPhotoReadyBody } from "@/components/task/bodies/TaskPhotoReadyBody";
 import { TaskPhotoCaptureBody } from "@/components/task/bodies/TaskPhotoCaptureBody";
+import { TaskPhotoCaptionBody } from "@/components/task/bodies/TaskPhotoCaptionBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
+import { clampPhotoCaption } from "@/lib/photo-caption";
 import {
   VerifyingOverlay,
   buildVerifyingRows,
@@ -120,8 +122,7 @@ export function TaskCompleteScreenInner() {
   const [workoutDuration, setWorkoutDuration] = useState("");
   const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Gym");
   const [workoutNotes, setWorkoutNotes] = useState("");
-  // Caption UI returns in Step 10 (Photo · Caption). Kept for submit noteText path.
-  const [photoCaption] = useState("");
+  const [photoCaption, setPhotoCaption] = useState("");
   const [postCaption, setPostCaption] = useState("");
   const [shareBusy, setShareBusy] = useState(false);
   const [postedInline, setPostedInline] = useState(false);
@@ -244,9 +245,6 @@ export function TaskCompleteScreenInner() {
   const clearPhoto = useCallback(() => {
     photoCapture.clearPhoto();
   }, [photoCapture]);
-  // Local proof groundwork for Step 11 — shutter ISO + captured_in_app from usePhotoCapture.
-  void captureMeta;
-
   const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer, resetTimer } =
     useTaskTimer({
       requiredSeconds,
@@ -579,6 +577,13 @@ export function TaskCompleteScreenInner() {
         timer_seconds_on_screen: isHardMode ? onScreenSecondsRef.current : undefined,
         clocked_in_at: isHardVerificationTask ? (clockedInAtRef.current ?? new Date().toISOString()) : undefined,
         task_mode: taskMode,
+        proof_payload_json:
+          taskTypeRaw === "photo" && captureMeta
+            ? {
+                capturedAt: captureMeta.capturedAt,
+                captured_in_app: captureMeta.captured_in_app,
+              }
+            : undefined,
       });
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
       // Capture server-returned streak count for the Secured screen chip.
@@ -696,6 +701,7 @@ export function TaskCompleteScreenInner() {
     workoutKind,
     workoutNotes,
     photoCaption,
+    captureMeta,
     onScreenSecondsRef,
     clearActiveSession,
     isChallengeHardMode,
@@ -814,7 +820,9 @@ export function TaskCompleteScreenInner() {
   const isPhotoReady =
     FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "photo";
   const isPhotoCapture =
-    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo";
+    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo" && !photoUri;
+  const isPhotoCaption =
+    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo" && !!photoUri;
 
   const renderBody = useCallback(() => {
     // Ready state: Photo uses task-states-v2 GatesCard; other types keep TaskReadyCard.
@@ -833,15 +841,28 @@ export function TaskCompleteScreenInner() {
     }
     switch (taskTypeRaw) {
       case "photo":
+        if (!photoUri) {
+          return (
+            <TaskPhotoCaptureBody
+              config={config}
+              photoUri={photoUri}
+              photoUploading={photoUploading}
+              onTakePhoto={() => {
+                void handleTakePhoto();
+              }}
+              onClearPhoto={clearPhoto}
+            />
+          );
+        }
         return (
-          <TaskPhotoCaptureBody
-            config={config}
+          <TaskPhotoCaptionBody
             photoUri={photoUri}
-            photoUploading={photoUploading}
-            onTakePhoto={() => {
-              void handleTakePhoto();
+            caption={photoCaption}
+            onChangeCaption={(t) => setPhotoCaption(clampPhotoCaption(t))}
+            onRetake={() => {
+              clearPhoto();
+              setPhotoCaption("");
             }}
-            onClearPhoto={clearPhoto}
           />
         );
       case "timer":
@@ -961,6 +982,7 @@ export function TaskCompleteScreenInner() {
     minWords,
     photoUri,
     photoUploading,
+    photoCaption,
     handleTakePhoto,
     clearPhoto,
     config,
@@ -1342,10 +1364,16 @@ export function TaskCompleteScreenInner() {
         dayNumber={headerCurrentDay}
         taskName={taskName}
         hardMode={isHardVerificationTask}
-        // Photo Ready/Capture own gates/banner UI — suppress shell hard-mode card.
-        verificationGates={isPhotoReady || isPhotoCapture ? undefined : shellGates}
-        toplineMeta={isPhotoReady || isPhotoCapture ? PHOTO_READY_SUBTYPE : undefined}
-        hideHeaderTaskName={isPhotoReady || isPhotoCapture}
+        // Photo Ready/Capture/Caption own chrome — suppress shell hard-mode card.
+        verificationGates={
+          isPhotoReady || isPhotoCapture || isPhotoCaption ? undefined : shellGates
+        }
+        toplineMeta={
+          isPhotoReady || isPhotoCapture || isPhotoCaption
+            ? PHOTO_READY_SUBTYPE
+            : undefined
+        }
+        hideHeaderTaskName={isPhotoReady || isPhotoCapture || isPhotoCaption}
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
         primaryCta={primaryCta}
