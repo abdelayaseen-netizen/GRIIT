@@ -103,6 +103,10 @@ export type TaskShellProps = {
   toplineMeta?: string;
   /** When true, hide the header task name (body owns the large title). */
   hideHeaderTaskName?: boolean;
+  /**
+   * Surface variant. Default `light` (byte-identical). Photo · Capture passes `dark`.
+   */
+  variant?: "light" | "dark";
 };
 
 export function TaskShell({
@@ -121,6 +125,7 @@ export function TaskShell({
   onDismissInlineError,
   toplineMeta,
   hideHeaderTaskName = false,
+  variant = "light",
 }: TaskShellProps) {
   const hasGates =
     !!verificationGates &&
@@ -129,29 +134,35 @@ export function TaskShell({
       !!verificationGates.requireLocation);
 
   const toplineSuffix = toplineMeta ?? challengeName.toUpperCase();
+  const isDark = variant === "dark";
+  const chromeColor = isDark ? DS_COLORS_V2.text.onDark : DS_COLORS_V2.text.primary;
+  const chromeMuted = isDark ? DS_COLORS_V2.text.onDarkSecondary : DS_COLORS_V2.text.secondary;
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <SafeAreaView
+      edges={["top", "bottom"]}
+      style={[styles.safe, isDark ? styles.safeDark : null]}
+    >
       <View style={styles.topBar}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Go back"
           hitSlop={8}
           onPress={onBack}
-          style={styles.iconBtn}
+          style={[styles.iconBtn, isDark ? styles.iconBtnDark : null]}
         >
           <ChevronLeft
             size={20}
-            color={DS_COLORS_V2.text.primary}
+            color={chromeColor}
             strokeWidth={2}
           />
         </Pressable>
         <View style={styles.topBarCenter}>
-          <Text style={styles.topBarTopline} numberOfLines={1}>
+          <Text style={[styles.topBarTopline, { color: chromeMuted }]} numberOfLines={1}>
             {`Day ${dayNumber} · ${toplineSuffix}`}
           </Text>
           {hideHeaderTaskName ? null : (
-            <Text style={styles.topBarTitle} numberOfLines={1}>
+            <Text style={[styles.topBarTitle, { color: chromeColor }]} numberOfLines={1}>
               {taskName}
             </Text>
           )}
@@ -453,6 +464,7 @@ function MissedStateCtas({ state }: { state: TaskShellMissedState }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas },
+  safeDark: { backgroundColor: DS_COLORS_V2.surface.heroDark },
 
   topBar: {
     flexDirection: "row",
@@ -471,6 +483,10 @@ const styles = StyleSheet.create({
     backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,
     borderColor: DS_COLORS_V2.surface.divider,
+  },
+  iconBtnDark: {
+    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface10,
+    borderColor: DS_COLORS_V2.overlay.onDarkBorder08,
   },
   iconBtnSpacer: { width: 32, height: 32 },
   topBarCenter: { flex: 1, alignItems: "center", gap: 2 },

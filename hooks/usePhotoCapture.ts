@@ -2,6 +2,12 @@ import { useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { captureError } from "@/lib/sentry";
+import {
+  createCameraCaptureMeta,
+  createLibraryCaptureMeta,
+  isLibraryBlocked,
+  type PhotoCaptureMeta,
+} from "@/lib/photo-capture-meta";
 
 interface UsePhotoCaptureOptions {
   requireCameraOnly: boolean;
@@ -12,6 +18,8 @@ interface UsePhotoCaptureReturn {
   photoUri: string | null;
   photoUrl: string | null;
   photoUploading: boolean;
+  /** Local proof meta — shutter time + captured_in_app. Null until a capture succeeds. */
+  captureMeta: PhotoCaptureMeta | null;
   handleTakePhoto: () => Promise<void>;
   handlePickImage: () => Promise<void>;
   clearPhoto: () => void;
@@ -21,9 +29,14 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [captureMeta, setCaptureMeta] = useState<PhotoCaptureMeta | null>(null);
 
-  const upload = useCallback(async (asset: ImagePicker.ImagePickerAsset) => {
+  const upload = useCallback(async (
+    asset: ImagePicker.ImagePickerAsset,
+    meta: PhotoCaptureMeta
+  ) => {
     setPhotoUri(asset.uri);
+    setCaptureMeta(meta);
     setPhotoUploading(true);
     try {
       const contentType = asset.uri.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
@@ -31,6 +44,7 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
       if ("error" in result) {
         onError(result.error);
         setPhotoUri(null);
+        setCaptureMeta(null);
       } else {
         setPhotoUrl(result.url);
       }
@@ -39,6 +53,7 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
       const detail = err instanceof Error ? err.message : String(err);
       onError(`Upload failed: ${detail.slice(0, 140)}`);
       setPhotoUri(null);
+      setCaptureMeta(null);
     } finally {
       setPhotoUploading(false);
     }
@@ -57,7 +72,9 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
         onError("Camera returned no image data. Try again.");
         return;
       }
-      await upload(result.assets[0]);
+      // Record shutter time + in-app flag at successful camera return (before upload).
+      const meta = createCameraCaptureMeta();
+      await upload(result.assets[0], meta);
     } catch (err) {
       captureError(err, "PhotoCaptureTakePhoto");
       const detail = err instanceof Error ? err.message : String(err);
@@ -66,7 +83,7 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
   }, [onError, upload]);
 
   const handlePickImage = useCallback(async () => {
-    if (requireCameraOnly) {
+    if (isLibraryBlocked(requireCameraOnly)) {
       onError("This task requires a live camera photo. Use Take photo.");
       return;
     }
@@ -82,13 +99,15 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
       mediaTypes: ["images"],
     });
     if (result.canceled || !result.assets[0]) return;
-    await upload(result.assets[0]);
+    const meta = createLibraryCaptureMeta();
+    await upload(result.assets[0], meta);
   }, [requireCameraOnly, onError, upload]);
 
   const clearPhoto = useCallback(() => {
     setPhotoUri(null);
     setPhotoUrl(null);
+    setCaptureMeta(null);
   }, []);
 
-  return { photoUri, photoUrl, photoUploading, handleTakePhoto, handlePickImage, clearPhoto };
+  return { photoUri, photoUrl, photoUploading, captureMeta, handleTakePhoto, handlePickImage, clearPhoto };
 }

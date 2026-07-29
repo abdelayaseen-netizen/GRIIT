@@ -38,7 +38,6 @@ import { TaskCompleteCelebration } from "@/components/task/TaskCompleteCelebrati
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { TaskShell, type TaskShellGates, type TaskShellMissedState } from "@/components/task/TaskShell";
 import { TaskSimpleBody } from "@/components/task/bodies/TaskSimpleBody";
-import { TaskPhotoBody } from "@/components/task/bodies/TaskPhotoBody";
 import { TaskTimerBody, type TimerSound } from "@/components/task/bodies/TaskTimerBody";
 import { TaskRunBody } from "@/components/task/bodies/TaskRunBody";
 import { TaskWorkoutBody } from "@/components/task/bodies/TaskWorkoutBody";
@@ -47,6 +46,7 @@ import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/T
 import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
 import { TaskReadyCard } from "@/components/task/bodies/TaskReadyCard";
 import { TaskPhotoReadyBody } from "@/components/task/bodies/TaskPhotoReadyBody";
+import { TaskPhotoCaptureBody } from "@/components/task/bodies/TaskPhotoCaptureBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import {
   VerifyingOverlay,
@@ -120,7 +120,8 @@ export function TaskCompleteScreenInner() {
   const [workoutDuration, setWorkoutDuration] = useState("");
   const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Gym");
   const [workoutNotes, setWorkoutNotes] = useState("");
-  const [photoCaption, setPhotoCaption] = useState("");
+  // Caption UI returns in Step 10 (Photo · Caption). Kept for submit noteText path.
+  const [photoCaption] = useState("");
   const [postCaption, setPostCaption] = useState("");
   const [shareBusy, setShareBusy] = useState(false);
   const [postedInline, setPostedInline] = useState(false);
@@ -147,7 +148,6 @@ export function TaskCompleteScreenInner() {
   const [bookTitle, setBookTitle] = useState<string>("");
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
   const [timerSound, setTimerSound] = useState<TimerSound>("silent");
-  const [photoCapturedAt, setPhotoCapturedAt] = useState<string | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [completionMeta, setCompletionMeta] = useState<{
     taskId: string;
@@ -229,23 +229,23 @@ export function TaskCompleteScreenInner() {
     ((taskTypeRaw === "workout" && effectiveRunOrWorkout === "workout") ||
       (taskTypeRaw === "run" && effectiveRunOrWorkout === "workout"));
 
+  // Photo task type is always camera-only in this flow (library unreachable).
   const photoCapture = usePhotoCapture({
-    requireCameraOnly: config.require_camera_only === true,
+    requireCameraOnly: config.require_camera_only === true || taskTypeRaw === "photo",
     onError: showError,
   });
-  const { photoUri, photoUrl, photoUploading } = photoCapture;
+  const { photoUri, photoUrl, photoUploading, captureMeta } = photoCapture;
   const handleTakePhoto = useCallback(async () => {
     await photoCapture.handleTakePhoto();
-    setPhotoCapturedAt(new Date().toISOString());
   }, [photoCapture]);
   const handlePickImage = useCallback(async () => {
     await photoCapture.handlePickImage();
-    setPhotoCapturedAt(new Date().toISOString());
   }, [photoCapture]);
   const clearPhoto = useCallback(() => {
     photoCapture.clearPhoto();
-    setPhotoCapturedAt(null);
   }, [photoCapture]);
+  // Local proof groundwork for Step 11 — shutter ISO + captured_in_app from usePhotoCapture.
+  void captureMeta;
 
   const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer, resetTimer } =
     useTaskTimer({
@@ -813,6 +813,8 @@ export function TaskCompleteScreenInner() {
 
   const isPhotoReady =
     FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "photo";
+  const isPhotoCapture =
+    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo";
 
   const renderBody = useCallback(() => {
     // Ready state: Photo uses task-states-v2 GatesCard; other types keep TaskReadyCard.
@@ -832,17 +834,14 @@ export function TaskCompleteScreenInner() {
     switch (taskTypeRaw) {
       case "photo":
         return (
-          <TaskPhotoBody
-            value={{ caption: photoCaption }}
-            onChangeCaption={setPhotoCaption}
+          <TaskPhotoCaptureBody
+            config={config}
             photoUri={photoUri}
             photoUploading={photoUploading}
-            capturedAt={photoCapturedAt ?? undefined}
             onTakePhoto={() => {
               void handleTakePhoto();
             }}
             onClearPhoto={clearPhoto}
-            cameraOnly={config.require_camera_only === true}
           />
         );
       case "timer":
@@ -960,10 +959,8 @@ export function TaskCompleteScreenInner() {
     isCounterFamily,
     counterGoal,
     minWords,
-    photoCaption,
     photoUri,
     photoUploading,
-    photoCapturedAt,
     handleTakePhoto,
     clearPhoto,
     config,
@@ -1345,10 +1342,11 @@ export function TaskCompleteScreenInner() {
         dayNumber={headerCurrentDay}
         taskName={taskName}
         hardMode={isHardVerificationTask}
-        // Photo · Ready owns GatesCard in the body — suppress shell hard-mode card to avoid duplication.
-        verificationGates={isPhotoReady ? undefined : shellGates}
-        toplineMeta={isPhotoReady ? PHOTO_READY_SUBTYPE : undefined}
-        hideHeaderTaskName={isPhotoReady}
+        // Photo Ready/Capture own gates/banner UI — suppress shell hard-mode card.
+        verificationGates={isPhotoReady || isPhotoCapture ? undefined : shellGates}
+        toplineMeta={isPhotoReady || isPhotoCapture ? PHOTO_READY_SUBTYPE : undefined}
+        hideHeaderTaskName={isPhotoReady || isPhotoCapture}
+        variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
         primaryCta={primaryCta}
         secondaryCta={
