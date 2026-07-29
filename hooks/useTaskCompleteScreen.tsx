@@ -79,11 +79,6 @@ import {
 } from "@/lib/simple-log";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
-  VerifyingOverlay,
-  buildVerifyingRows,
-  getTypeSuccessLine,
-} from "@/components/task/VerifyingOverlay";
-import {
   VerifyingProof,
   type VerifyingProofRow,
 } from "@/components/task/VerifyingProof";
@@ -157,7 +152,7 @@ export function TaskCompleteScreenInner() {
   /** Check-in permission deny — quiet CTA + helper; no Alert. */
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  /** Photo/Run · Verifying — server rows only; other types keep VerifyingOverlay. */
+  /** Photo/Run/Workout/Journal/Counter/Check-in · Verifying — server rows only. */
   const [showPhotoVerifying, setShowPhotoVerifying] = useState(false);
   const [photoVerifyRows, setPhotoVerifyRows] = useState<VerifyingProofRow[]>([]);
   const [photoVerifyError, setPhotoVerifyError] = useState<string | null>(null);
@@ -185,10 +180,8 @@ export function TaskCompleteScreenInner() {
   const [postedInline, setPostedInline] = useState(false);
   const manualSubmitScheduled = useRef(false);
   const clockedInAtRef = useRef<string | null>(null);
-  /** Timestamp (ms) when the submit mutation started — used for 600 ms Verifying floor. */
+  /** Timestamp (ms) when the submit mutation started — used for settle floors. */
   const verifyStartMsRef = useRef<number>(0);
-  /** Human-readable time label captured at submit-press (e.g. "07:42 AM"). */
-  const [submitTimeLabel, setSubmitTimeLabel] = useState<string>("");
   /** Streak count returned by the server after task completion — shown on Secured screen. */
   const [completedStreakCount, setCompletedStreakCount] = useState<number | undefined>(undefined);
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
@@ -660,13 +653,8 @@ export function TaskCompleteScreenInner() {
       }
       return;
     }
-    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo/run/workout/journal).
+    // Record start time for brief submit settle (timer) / verifying settle (gated types).
     verifyStartMsRef.current = Date.now();
-    const nowLabel = new Date().toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    setSubmitTimeLabel(nowLabel);
     const isPhotoSubmit = taskTypeRaw === "photo";
     const isRunSubmit = taskTypeRaw === "run";
     const isWorkoutSubmit = taskTypeRaw === "workout";
@@ -681,7 +669,7 @@ export function TaskCompleteScreenInner() {
       isJournalSubmit ||
       isCounterSubmit ||
       isCheckinSubmit;
-    // Simple: never open VerifyingProof / VerifyingOverlay — self-report lands on Secured.
+    // Simple: never open VerifyingProof — self-report lands on Secured.
     if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
@@ -837,9 +825,9 @@ export function TaskCompleteScreenInner() {
           captureError(secureErr, "TaskCompleteSecureDay");
         }
       }
-      // Photo/Run/Workout/Journal/Counter: no fake floor — brief settle so server rows can paint.
-      // Simple: no verifying floor at all — land on Secured immediately.
-      // Other types: keep 600 ms VerifyingOverlay legibility floor.
+      // Photo/Run/Workout/Journal/Counter/Check-in: brief settle so server rows can paint.
+      // Simple: no verifying floor — land on Secured immediately.
+      // Timer (legacy): short submit settle without a fake verifying overlay.
       if (usesServerVerifying) {
         setIsSubmitting(false);
         const rowCount =
@@ -858,9 +846,9 @@ export function TaskCompleteScreenInner() {
         }
       } else if (!isSimpleSubmit) {
         const elapsed = Date.now() - verifyStartMsRef.current;
-        const MIN_VERIFY_MS = 600;
-        if (elapsed < MIN_VERIFY_MS) {
-          await new Promise<void>((res) => setTimeout(res, MIN_VERIFY_MS - elapsed));
+        const MIN_SUBMIT_MS = 400;
+        if (elapsed < MIN_SUBMIT_MS) {
+          await new Promise<void>((res) => setTimeout(res, MIN_SUBMIT_MS - elapsed));
         }
       }
       setSubmitted(true);
@@ -1520,24 +1508,6 @@ export function TaskCompleteScreenInner() {
     hardGatesPassed,
   ]);
 
-  // Verifying overlay rows (honest-cut: only gates evaluated for this task type).
-  const verifyingRows = useMemo(
-    () =>
-      buildVerifyingRows({
-        hasTimeWindow: !!(config.schedule_window_start && config.schedule_window_end),
-        submitTimeLabel,
-        hasCameraOnly: !!config.require_camera_only,
-        hasLocation: !!config.require_location,
-      }),
-    [
-      config.schedule_window_start,
-      config.schedule_window_end,
-      config.require_camera_only,
-      config.require_location,
-      submitTimeLabel,
-    ]
-  );
-  const typeSuccessLine = getTypeSuccessLine(taskTypeRaw);
   // active challenge, excluding the missed task itself.
   const otherTasksToday = useMemo(() => {
     const tasks =
@@ -2045,20 +2015,6 @@ export function TaskCompleteScreenInner() {
       >
         {renderBody()}
       </TaskShell>
-      <VerifyingOverlay
-        visible={
-          isSubmitting &&
-          !isSimpleAsk &&
-          taskTypeRaw !== "photo" &&
-          taskTypeRaw !== "run" &&
-          taskTypeRaw !== "workout" &&
-          taskTypeRaw !== "journal" &&
-          taskTypeRaw !== "checkin" &&
-          !isCounterFamily
-        }
-        rows={verifyingRows}
-        typeSuccessLine={typeSuccessLine}
-      />
       <ConfirmDialog
         visible={minimumConfirmVisible}
         title="Mark minimum day?"

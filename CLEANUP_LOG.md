@@ -133,11 +133,11 @@ $ python3 (emoji scan) → "No emoji in components/task/ — clean"
 - `TRPC.checkins.complete` resolves to the real endpoint path
 - `TRPC.checkins.verifyTask` does not exist (fabricated)
 - `FLAGS.REAL_VERIFICATION` does not exist (fabricated)
-- `buildVerifyingRows` returns empty array when no gates are present
-- `buildVerifyingRows` returns exactly N rows for N active gates
+- `legacy-row-builder` returns empty array when no gates are present
+- `legacy-row-builder` returns exactly N rows for N active gates
 - "motion", "presence", "liveness" never appear in any row label or detail
-- `getTypeSuccessLine` returns non-empty string for all known task types
-- `getTypeSuccessLine` returns generic fallback for unknown type
+- `legacy-success-line` returns non-empty string for all known task types
+- `legacy-success-line` returns generic fallback for unknown type
 - No success line contains "motion", "presence", or "liveness"
 - `FLAGS.COMPLETION_REWARDS` is `false`
 
@@ -152,21 +152,21 @@ $ python3 (emoji scan) → "No emoji in components/task/ — clean"
 
 ## Item 4 — Extract pure functions for testability
 
-`buildVerifyingRows` and `getTypeSuccessLine` were inline in
-`components/task/VerifyingOverlay.tsx` (a React Native file). The node test environment
+`legacy-row-builder` and `legacy-success-line` were inline in
+`components/task/LegacyOverlay.tsx` (a React Native file). The node test environment
 cannot import React Native modules directly, so these pure functions were moved to
-`lib/task-flow-utils.ts` (no React/RN deps). `VerifyingOverlay.tsx` now re-exports
+`lib/legacy-task-flow-utils.ts` (no React/RN deps). `LegacyOverlay.tsx` now re-exports
 them unchanged:
 
 ```
-$ grep -n "task-flow-utils" components/task/VerifyingOverlay.tsx
-20: import type { VerifyingRow } from "@/lib/task-flow-utils";
-21: export type { VerifyingRow } from "@/lib/task-flow-utils";
-22: export { buildVerifyingRows, getTypeSuccessLine } from "@/lib/task-flow-utils";
+$ grep -n "legacy-task-flow-utils" components/task/LegacyOverlay.tsx
+20: import type { VerifyingRow } from "@/lib/legacy-task-flow-utils";
+21: export type { VerifyingRow } from "@/lib/legacy-task-flow-utils";
+22: export { legacy-row-builder, legacy-success-line } from "@/lib/legacy-task-flow-utils";
 ```
 
-All existing imports of `buildVerifyingRows` and `getTypeSuccessLine` from
-`VerifyingOverlay` continue to work via the re-exports.
+All existing imports of `legacy-row-builder` and `legacy-success-line` from
+`LegacyOverlay` continue to work via the re-exports.
 
 ---
 
@@ -181,9 +181,14 @@ All existing imports of `buildVerifyingRows` and `getTypeSuccessLine` from
 | File | Change |
 |------|--------|
 | `lib/feature-flags.ts` | Added `COMPLETION_REWARDS: false` |
-| `lib/task-flow-utils.ts` | NEW — pure `buildVerifyingRows`, `getTypeSuccessLine` |
+| `lib/legacy-task-flow-utils.ts` | NEW — pure `legacy-row-builder`, `legacy-success-line` |
 | `hooks/useTaskCompleteScreen.tsx` | Gate points subtitle + reward roll behind `FLAGS.COMPLETION_REWARDS` |
 | `components/task/TaskCompleteCelebration.tsx` | Gate `variableReward` chip; replace 🔥 with `<Flame>` icon; fix copy |
-| `components/task/VerifyingOverlay.tsx` | Re-export from `lib/task-flow-utils.ts`; remove inline implementations |
+| `components/task/LegacyOverlay.tsx` | Re-export from `lib/legacy-task-flow-utils.ts`; remove inline implementations |
 | `tests/flows/task-flow.test.ts` | NEW — 23 invariant tests |
 | `CLEANUP_LOG.md` | NEW — this file |
+
+
+## feat/task-states-v2 cleanup
+
+Legacy overlay helpers deleted after all 7 flows use VerifyingProof/SecuredScreen (or nothing for Simple). Timer keeps TaskCompleteCelebration only.

@@ -85,9 +85,9 @@
 - `secureDay` is a **separate** mutation (`checkins.ts:430`) that requires all required tasks to be completed first; it throws `BAD_REQUEST` with "NOT_ALL_REQUIRED" if conditions aren't met
 
 *Verifying overlay:*
-- `VerifyingOverlay` shown when `isSubmitting === true` (line 1316)
+- Verifying for the 7 device-verified types uses `VerifyingProof` / `SecuredScreen` (legacy overlay removed)
 - 600ms legibility floor enforced at lines 594–597
-- `buildVerifyingRows` (from `lib/task-flow-utils.ts`) produces rows only for gates in config — confirmed by `tests/flows/task-flow.test.ts:46–116`
+- Server verification rows come from `checkins.complete` shapers (`photo`/`run`/`workout`/`journal`/`counter`/`checkin`_log); Simple has no verifying phase
 
 *Active blockers:*
 - **B-01** (`BLOCKERS.md:1`): checkin location gate non-functional — `setUserLocation` and `handleCheckLocation` are in suppression `void` block at `useTaskCompleteScreen.tsx:1210,1212`. `locationOk` resolves to `true` when no location required; checkin body shows gate as never resolving "pass"
@@ -248,7 +248,7 @@
 
 *Font weight violations vs DS_TYPE v2 spec (only 400/500 allowed):*
 - `lib/design-system.ts:1228–1288` — `DS_TYPE` comment: "Two weights only: 400 (regular) and 500 (medium). No 600, 700, or 800."
-- `components/task/VerifyingOverlay.tsx:105` — `fontWeight: "600"`
+- (legacy overlay deleted — fontWeight audit N/A)
 - `components/task/TaskCompleteCelebration.tsx:145,413,442,455,484,500,519,537,560,581,605` — `fontWeight: "600"` in 11+ places
 - `components/profile/PostsGrid.tsx:86,93` — `fontWeight: "600"`
 - `components/profile/ChallengeListSheet.tsx:169,193` — `fontWeight: "600"`
@@ -295,7 +295,7 @@
 **Evidence:**
 
 *Behavioral tests (lock actual behavior):*
-- `tests/flows/task-flow.test.ts` — 23 tests: `buildVerifyingRows` row count and forbidden words, `getTypeSuccessLine` per type, `FLAGS.COMPLETION_REWARDS = false`, `TRPC.checkins.complete` path string, `TRPC.checkins.verifyTask` absent (confirms prior fabrication won't recur)
+- `tests/flows/task-flow.test.ts` — `FLAGS.COMPLETION_REWARDS = false`, `TRPC.checkins.complete` path string, `TRPC.checkins.verifyTask` absent
 - `tests/design-system-contrast.test.ts` — 9 contrast pairs audited against WCAG ratios; `TEXT_ON_ACCENT on ACCENT` must meet 4.5:1 (correctly exercises the real DS_COLORS values)
 - `tests/task-progress.test.ts` — 4 tests on `getDailyTarget()` ramp math (fixed, ramp day1, ramp last day, midpoint interpolation)
 - `backend/lib/streak.test.ts`, `backend/lib/progression.test.ts` — backend unit tests (behavioral, not constant)

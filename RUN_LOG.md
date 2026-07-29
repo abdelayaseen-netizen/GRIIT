@@ -680,13 +680,13 @@ Phase 1 committed. Proceeding to Phase 2.
 | # | File | Change |
 |---|------|--------|
 | 1 | `components/task/bodies/TaskReadyCard.tsx` | NEW — gate-info chips (time window, camera-only, word min, tap target, location) + per-type hint text |
-| 2 | `components/task/VerifyingOverlay.tsx` | NEW — full-screen Modal overlay; `buildVerifyingRows()` helper (honest-cut: only evaluated gates); `getTypeSuccessLine()` per-type; 600 ms floor enforced in parent |
-| 3 | `hooks/useTaskCompleteScreen.tsx` | Full `handleArm` (camera + location permission requests); `autoStart: showWorkoutTimer && isArmed` (timer waits for Start); `verifyStartMsRef` + 600 ms `await` delay before `setSubmitted(true)`; `submitTimeLabel` state; `verifyingRows` + `typeSuccessLine` useMemo; `renderBody` returns `<TaskReadyCard>` when `!isArmed`; `<VerifyingOverlay visible={isSubmitting}>` in return JSX; `expo-image-picker` import |
+| 2 | `components/task/(legacy-overlay-removed)` | NEW — full-screen Modal overlay; `legacy-row-builder()` helper (honest-cut: only evaluated gates); `legacy-success-line()` per-type; 600 ms floor enforced in parent |
+| 3 | `hooks/useTaskCompleteScreen.tsx` | Full `handleArm` (camera + location permission requests); `autoStart: showWorkoutTimer && isArmed` (timer waits for Start); `verifyStartMsRef` + 600 ms `await` delay before `setSubmitted(true)`; `submitTimeLabel` state; `verifyingRows` + `typeSuccessLine` useMemo; `renderBody` returns `<TaskReadyCard>` when `!isArmed`; `(legacy overlay removed)` in return JSX; `expo-image-picker` import |
 
-### Honest-cut evidence (VerifyingOverlay rows)
+### Honest-cut evidence (legacy overlay rows — removed)
 ```
-components/task/VerifyingOverlay.tsx: rows only populated when hasTimeWindow, hasCameraOnly, or hasLocation
-hooks/useTaskCompleteScreen.tsx: buildVerifyingRows({ hasTimeWindow: !!(schedule_window_start && schedule_window_end), hasCameraOnly: !!require_camera_only, hasLocation: !!require_location })
+components/task/(legacy-overlay-removed): rows only populated when hasTimeWindow, hasCameraOnly, or hasLocation
+hooks/useTaskCompleteScreen.tsx: legacy-row-builder({ hasTimeWindow: !!(schedule_window_start && schedule_window_end), hasCameraOnly: !!require_camera_only, hasLocation: !!require_location })
 ```
 
 ### TSC result
@@ -798,7 +798,7 @@ Phase 5 complete. Committing.
 | Hash | Phase | Summary |
 |------|-------|---------|
 | `5906251` | Phase 1 | CTA labels, `isArmed`, Day casing, FLAGS, legacy gates |
-| `0cd417b` | Phase 2 | Shared shell: ReadyCard, VerifyingOverlay, `handleArm`, autoStart |
+| `0cd417b` | Phase 2 | Shared shell: ReadyCard, (legacy overlay later removed), `handleArm`, autoStart |
 | `82329cc` | Phase 3 | Per-type bodies: timer reset, run toggle, storyboard copy |
 | `14e4bab` | Phase 4 | Secured screen: streak chip, per-type line, Done, DS_COLORS_V2 |
 | `62807c4` | Phase 5 | Button audit: 34/34 wired, 0 no-ops, audit doc |
