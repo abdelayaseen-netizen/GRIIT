@@ -12,7 +12,7 @@
 export const FLAGS = {
   IS_BETA: true,
   /** When false, location check-in task shows "Coming soon" on the unified complete screen. */
-  LOCATION_CHECKIN_ENABLED: false,
+  LOCATION_CHECKIN_ENABLED: true,
   PREMIUM_ENABLED: true,
   PREMIUM_CHALLENGE_PACKS: true,
   PREMIUM_ANALYTICS: true,
