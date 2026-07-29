@@ -70,6 +70,7 @@ import { formatRunSecuredMeta } from "@/lib/run-log";
 import { formatWorkoutSecuredMeta } from "@/lib/workout-log";
 import { formatJournalSecuredMeta } from "@/lib/journal-log";
 import { formatCounterSecuredMeta } from "@/lib/counter-log";
+import { formatCheckinSecuredMeta } from "@/lib/checkin-log";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
@@ -663,12 +664,14 @@ export function TaskCompleteScreenInner() {
     const isWorkoutSubmit = taskTypeRaw === "workout";
     const isJournalSubmit = taskTypeRaw === "journal";
     const isCounterSubmit = isCounterFamily;
+    const isCheckinSubmit = taskTypeRaw === "checkin";
     const usesServerVerifying =
       isPhotoSubmit ||
       isRunSubmit ||
       isWorkoutSubmit ||
       isJournalSubmit ||
-      isCounterSubmit;
+      isCounterSubmit ||
+      isCheckinSubmit;
     if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
@@ -870,13 +873,14 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      // Photo/Run/Workout/Journal/Counter use SecuredScreen — skip celebration overlay + variable-reward chip.
+      // Photo/Run/Workout/Journal/Counter/Check-in use SecuredScreen — skip celebration overlay + variable-reward chip.
       if (
         !isPhotoSubmit &&
         !isRunSubmit &&
         !isWorkoutSubmit &&
         !isJournalSubmit &&
-        !isCounterSubmit
+        !isCounterSubmit &&
+        !isCheckinSubmit
       ) {
         const celebTitle =
           taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
@@ -1855,7 +1859,8 @@ export function TaskCompleteScreenInner() {
       taskTypeRaw === "run" ||
       taskTypeRaw === "workout" ||
       taskTypeRaw === "journal" ||
-      isCounterFamily
+      isCounterFamily ||
+      taskTypeRaw === "checkin"
     ) {
       const securedDayNumber = Math.max(
         1,
@@ -1881,7 +1886,9 @@ export function TaskCompleteScreenInner() {
                     counterGoal,
                     counterUnits.plural
                   )
-                : "Verified in the window";
+                : taskTypeRaw === "checkin"
+                  ? formatCheckinSecuredMeta()
+                  : "Verified in the window";
       return (
         <>
           <Stack.Screen options={{ headerShown: false }} />
