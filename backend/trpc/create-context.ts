@@ -54,6 +54,18 @@ export type Context = Awaited<ReturnType<typeof createContext>>;
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
+  errorFormatter({ shape, error }) {
+    const cause = error.cause as { verification?: unknown } | null | undefined;
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        ...(cause && typeof cause === "object" && cause.verification
+          ? { verification: cause.verification }
+          : {}),
+      },
+    };
+  },
 });
 
 function logStructured(payload: {

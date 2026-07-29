@@ -28,6 +28,11 @@ import {
   evaluateTaskLocation,
 } from "../../lib/checkin-complete-gates";
 import { photoProofPayloadSchema } from "../../lib/proof-payload";
+import {
+  buildPhotoVerification,
+  evaluateScheduleWindowServer,
+  type PhotoVerification,
+} from "../../lib/photo-verification";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -151,10 +156,6 @@ export const checkinsRouter = createTRPCRouter({
       const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
       const config = cfg as TaskConfig;
 
-      if (!isMinimumDay) {
-        assertHardModeScheduleWindow(config);
-      }
-
       const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
       const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
       const taskType = task?.task_type ?? "manual";
@@ -172,6 +173,38 @@ export const checkinsRouter = createTRPCRouter({
       );
       const requirePhoto = !isMinimumDay && (task?.require_photo === true || needsProof);
       const photoUrl = (input.photo_url ?? input.proofUrl)?.trim() || null;
+      // DB maps UI "photo" → task_type "manual"; detect photo proof via flags/payload.
+      const isPhotoProof =
+        requirePhoto ||
+        !!input.proof_payload_json ||
+        cfg.require_photo_proof === true ||
+        taskType === "photo";
+
+      const serverNow = new Date();
+      const windowEval = evaluateScheduleWindowServer({
+        start: config.schedule_window_start,
+        end: config.schedule_window_end,
+        timeZone: config.schedule_timezone || "UTC",
+        now: serverNow,
+      });
+
+      if (!isMinimumDay && isPhotoProof) {
+        if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
+          const verification = buildPhotoVerification({
+            window: windowEval,
+            photoPresent: !!photoUrl,
+            proofPayload: input.proof_payload_json ?? null,
+          });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            cause: { verification },
+          });
+        }
+      } else if (!isMinimumDay) {
+        assertHardModeScheduleWindow(config);
+      }
+
       if (requirePhoto && !photoUrl) throw new TRPCError({ code: "BAD_REQUEST", message: "This task requires a photo. Please take a photo to verify completion." });
 
       if (!isMinimumDay) {
@@ -257,7 +290,15 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       const verificationGates: Record<string, unknown> = {};
-      if (!isMinimumDay && config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
+      if (isPhotoProof && !isMinimumDay && windowEval.hasWindow) {
+        verificationGates.time_gate = {
+          status: windowEval.passed ? "passed" : "failed",
+          checked_at: serverNow.toISOString(),
+          checked_at_hhmm: windowEval.checkedAtHHMM,
+          window: `${config.schedule_window_start}-${config.schedule_window_end}`,
+        };
+      } else if (!isMinimumDay && config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
+        // Non-photo: preserve prior hard-mode time_gate shape.
         verificationGates.time_gate = {
           status: "passed",
           clocked_in_at: input.clocked_in_at ?? new Date().toISOString(),
@@ -277,11 +318,27 @@ export const checkinsRouter = createTRPCRouter({
           location_name: task?.location_name ?? cfg.location_name ?? "the required location",
         };
       }
-      if (!isMinimumDay && cfg.hard_mode && cfg.require_camera_only && photoUrl) {
+      if (isPhotoProof && !isMinimumDay && photoUrl) {
+        verificationGates.photo_gate = {
+          status: "passed",
+          camera_only: cfg.require_camera_only === true,
+          captured_in_app: input.proof_payload_json?.captured_in_app ?? null,
+          capturedAt: input.proof_payload_json?.capturedAt ?? null,
+        };
+      } else if (!isMinimumDay && cfg.hard_mode && cfg.require_camera_only && photoUrl) {
         verificationGates.photo_gate = { status: "passed", camera_only: true };
       }
       if (!isMinimumDay && cfg.hard_mode && cfg.require_strava) {
         verificationGates.strava_gate = { status: "pending" };
+      }
+
+      let photoVerification: PhotoVerification | undefined;
+      if (!isMinimumDay && isPhotoProof) {
+        photoVerification = buildPhotoVerification({
+          window: windowEval,
+          photoPresent: !!photoUrl,
+          proofPayload: input.proof_payload_json ?? null,
+        });
       }
 
       const proofUrl = photoUrl || input.proofUrl?.trim() || null;
@@ -305,7 +362,7 @@ export const checkinsRouter = createTRPCRouter({
         .from("check_ins")
         .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
         .select(
-          "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at"
+          "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, verification_gates, created_at"
         )
         .single();
       if (error) {
@@ -398,7 +455,12 @@ export const checkinsRouter = createTRPCRouter({
       const completedRequired = completedCheckins?.filter((c) => requiredTasks.some((rt) => rt.id === c.task_id)) || [];
       const progress = requiredTasks.length > 0 ? (completedRequired.length / requiredTasks.length) * 100 : 0;
       await ctx.supabase.from("active_challenges").update({ progress_percent: progress }).eq("id", input.activeChallengeId);
-      return { ...(data ?? {}), isMinimumDay };
+      return {
+        ...(data ?? {}),
+        isMinimumDay,
+        verification_gates: (data as { verification_gates?: unknown } | null)?.verification_gates ?? verificationGates,
+        ...(photoVerification ? { verification: photoVerification } : {}),
+      };
     }),
 
   getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
