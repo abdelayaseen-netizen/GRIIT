@@ -55,6 +55,11 @@ import {
   type CounterLogFacts,
   type CounterVerification,
 } from "../../lib/counter-verification";
+import {
+  buildCheckinVerification,
+  type CheckinLogFacts,
+  type CheckinVerification,
+} from "../../lib/checkin-verification";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -224,6 +229,7 @@ export const checkinsRouter = createTRPCRouter({
         taskType === "counter" ||
         taskType === "water" ||
         taskType === "reading";
+      const isCheckinProof = taskType === "checkin";
 
       const sharedDurationMin =
         input.duration_min ??
@@ -323,6 +329,18 @@ export const checkinsRouter = createTRPCRouter({
         }
       } else if (!isMinimumDay && isCounterProof) {
         // All-day counters — never apply schedule-window hard reject.
+      } else if (!isMinimumDay && isCheckinProof) {
+        if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
+          const verification = buildCheckinVerification({
+            window: windowEval,
+            checkinLog: null,
+          });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            cause: { verification },
+          });
+        }
       } else if (!isMinimumDay && isPhotoProof) {
         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
           const verification = buildPhotoVerification({
@@ -356,8 +374,20 @@ export const checkinsRouter = createTRPCRouter({
         }
       }
 
-      const { locationDistanceM, hardModeLocationGate } = evaluateTaskLocation(task, cfg, input);
-      const requireLocation = !isMinimumDay && (task?.require_location === true || cfg.require_location === true);
+      const { locationDistanceM, hardModeLocationGate } = evaluateTaskLocation(
+        isCheckinProof
+          ? { ...task, require_location: true }
+          : task,
+        isCheckinProof
+          ? { ...cfg, require_location: true }
+          : cfg,
+        input
+      );
+      const requireLocation =
+        !isMinimumDay &&
+        (isCheckinProof ||
+          task?.require_location === true ||
+          cfg.require_location === true);
 
       const timerHardMode = task?.timer_hard_mode === true || cfg.strict_timer_mode === true || cfg.timer_hard_mode === true;
       const minDurationMinutes =
@@ -542,6 +572,24 @@ export const checkinsRouter = createTRPCRouter({
           timezone: checkInTz,
         };
       }
+      const checkinLogFacts: CheckinLogFacts | null =
+        isCheckinProof &&
+        typeof locationDistanceM === "number" &&
+        locationDistanceM >= 0
+          ? {
+              arrived_hhmm: windowEval.checkedAtHHMM,
+              distance_meters: Math.round(locationDistanceM),
+              location_name:
+                task?.location_name ?? cfg.location_name ?? null,
+            }
+          : null;
+      if (!isMinimumDay && checkinLogFacts) {
+        verificationGates.checkin_log = {
+          arrived_hhmm: checkinLogFacts.arrived_hhmm,
+          distance_meters: checkinLogFacts.distance_meters,
+          location_name: checkinLogFacts.location_name,
+        };
+      }
       if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
         verificationGates.location_gate = {
           status: "passed",
@@ -576,7 +624,8 @@ export const checkinsRouter = createTRPCRouter({
         !isRunProof &&
         !isWorkoutProof &&
         !isJournalProof &&
-        !isCounterProof
+        !isCounterProof &&
+        !isCheckinProof
       ) {
         photoVerification = buildPhotoVerification({
           window: windowEval,
@@ -617,6 +666,14 @@ export const checkinsRouter = createTRPCRouter({
       if (!isMinimumDay && isCounterProof) {
         counterVerification = buildCounterVerification({
           counterLog: counterLogFacts,
+        });
+      }
+
+      let checkinVerification: CheckinVerification | undefined;
+      if (!isMinimumDay && isCheckinProof) {
+        checkinVerification = buildCheckinVerification({
+          window: windowEval,
+          checkinLog: checkinLogFacts,
         });
       }
 
@@ -750,6 +807,7 @@ export const checkinsRouter = createTRPCRouter({
         ...(workoutVerification ? { verification: workoutVerification } : {}),
         ...(journalVerification ? { verification: journalVerification } : {}),
         ...(counterVerification ? { verification: counterVerification } : {}),
+        ...(checkinVerification ? { verification: checkinVerification } : {}),
       };
     }),
 
