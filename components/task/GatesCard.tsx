@@ -5,7 +5,7 @@
  * `evaluateScheduleWindow` — never a prop default. Gate rows render only
  * what the parent passes (honest cut: only configured gates appear).
  */
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import {
   DS_COLORS_V2,
@@ -13,6 +13,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
+import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 
 export type GatesCardGate = {
   key: string;
@@ -28,7 +29,10 @@ export type GatesCardProps = {
   scheduleTimezone?: string | null;
   /** Only gates that apply for this task type/config. */
   gates: GatesCardGate[];
-  /** Injectable clock for tests. Defaults to live Date + 30s tick. */
+  /**
+   * Injectable clock. When provided (Photo · Ready parent), chip + Start CTA
+   * share one tick — no second interval. When omitted, uses the shared 30s hook.
+   */
   now?: Date;
 };
 
@@ -39,16 +43,10 @@ export function GatesCard({
   gates,
   now: nowProp,
 }: GatesCardProps) {
-  const [tickNow, setTickNow] = useState(() => nowProp ?? new Date());
-
-  useEffect(() => {
-    if (nowProp) {
-      setTickNow(nowProp);
-      return;
-    }
-    const id = setInterval(() => setTickNow(new Date()), 30_000);
-    return () => clearInterval(id);
-  }, [nowProp]);
+  const tickNow = useScheduleWindowNow({
+    enabled: nowProp == null,
+    now: nowProp,
+  });
 
   const evaluation = evaluateScheduleWindow({
     start: scheduleWindowStart,

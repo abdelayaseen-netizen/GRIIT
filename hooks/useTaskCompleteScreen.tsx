@@ -51,6 +51,9 @@ import { TaskPhotoCaptureBody } from "@/components/task/bodies/TaskPhotoCaptureB
 import { TaskPhotoCaptionBody } from "@/components/task/bodies/TaskPhotoCaptionBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
+import { evaluateScheduleWindow } from "@/lib/schedule-window";
+import { decidePhotoReadyStart } from "@/lib/photo-ready-start";
+import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
   buildVerifyingRows,
@@ -898,11 +901,39 @@ export function TaskCompleteScreenInner() {
   const isPhotoCaption =
     FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo" && !!photoUri;
 
+  // One 30s tick shared by GatesCard chip + Start CTA while Photo · Ready is mounted.
+  const photoReadyScheduleNow = useScheduleWindowNow({ enabled: isPhotoReady });
+  const photoReadyStart = useMemo(() => {
+    if (!isPhotoReady) return { canStart: true as const };
+    const evaluation = evaluateScheduleWindow({
+      start: config.schedule_window_start,
+      end: config.schedule_window_end,
+      timeZone: config.schedule_timezone,
+      now: photoReadyScheduleNow,
+    });
+    return decidePhotoReadyStart({
+      status: evaluation.status,
+      windowStart: config.schedule_window_start,
+    });
+  }, [
+    isPhotoReady,
+    config.schedule_window_start,
+    config.schedule_window_end,
+    config.schedule_timezone,
+    photoReadyScheduleNow,
+  ]);
+
   const renderBody = useCallback(() => {
     // Ready state: Photo uses task-states-v2 GatesCard; other types keep TaskReadyCard.
     if (FLAGS.TASK_START_ARMING && !isArmed) {
       if (taskTypeRaw === "photo") {
-        return <TaskPhotoReadyBody config={config} taskTitle={taskName} />;
+        return (
+          <TaskPhotoReadyBody
+            config={config}
+            taskTitle={taskName}
+            scheduleNow={photoReadyScheduleNow}
+          />
+        );
       }
       return (
         <TaskReadyCard
@@ -1057,6 +1088,7 @@ export function TaskCompleteScreenInner() {
     photoUri,
     photoUploading,
     photoCaption,
+    photoReadyScheduleNow,
     handleTakePhoto,
     clearPhoto,
     config,
@@ -1250,6 +1282,16 @@ export function TaskCompleteScreenInner() {
       let readyLabel = "Start";
       if (taskTypeRaw === "journal") readyLabel = "Start writing";
       else if (taskTypeRaw === "timer") readyLabel = "Start now";
+      // Photo only: disable Start out of window — CTA shows "Opens at {HH:MM}".
+      if (taskTypeRaw === "photo") {
+        return {
+          label: readyLabel,
+          onPress: () => void handleArm(),
+          disabled: !photoReadyStart.canStart,
+          disabledReason: photoReadyStart.disabledReason,
+          loading: false,
+        };
+      }
       return {
         label: readyLabel,
         onPress: () => void handleArm(),
@@ -1311,6 +1353,7 @@ export function TaskCompleteScreenInner() {
     isArmed,
     handleArm,
     taskTypeRaw,
+    photoReadyStart,
     needsPhotoProof,
     photoOk,
     timerOk,

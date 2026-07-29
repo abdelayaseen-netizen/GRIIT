@@ -17,11 +17,17 @@ export type TaskPhotoReadyBodyProps = {
   config: TaskCompleteConfig;
   /** Large task title under the shell header. */
   taskTitle: string;
+  /**
+   * Shared schedule clock from the Ready screen (same tick as Start CTA).
+   * When omitted, GatesCard owns its own 30s tick.
+   */
+  scheduleNow?: Date;
 };
 
 export function TaskPhotoReadyBody({
   config,
   taskTitle,
+  scheduleNow,
 }: TaskPhotoReadyBodyProps) {
   const gates: GatesCardGate[] = useMemo(() => {
     return buildPhotoReadyGates(config).map((g) => {
@@ -43,6 +49,7 @@ export function TaskPhotoReadyBody({
         scheduleWindowEnd={config.schedule_window_end}
         scheduleTimezone={config.schedule_timezone}
         gates={gates}
+        now={scheduleNow}
       />
       <Text style={styles.helper}>{PHOTO_READY_HELPER}</Text>
     </View>
