@@ -24,6 +24,21 @@ export function getTodayDateKey(timezone?: string | null): string {
   }
 }
 
+/**
+ * Same resolution as backend `resolveCheckInTimeZone`:
+ * task schedule_timezone if set, else profile, else UTC.
+ */
+export function resolveCheckInTimeZone(
+  scheduleTimezone?: string | null,
+  profileTimezone?: string | null
+): string {
+  const taskTz = scheduleTimezone?.trim();
+  if (taskTz) return taskTz;
+  const profileTz = profileTimezone?.trim();
+  if (profileTz) return profileTz;
+  return "UTC";
+}
+
 /** ISO date string for yesterday (YYYY-MM-DD) in the given timezone. */
 export function getYesterdayDateKey(timezone?: string | null): string {
   const today = getTodayDateKey(timezone);

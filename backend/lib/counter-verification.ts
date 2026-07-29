@@ -17,6 +17,9 @@ export type CounterLogFacts = {
   count: number;
   target: number;
   unit_plural: string;
+  /** Midnight calendar for "Counted before midnight reset" — same TZ as date_key. */
+  timezone?: string;
+  date_key?: string;
 };
 
 export const COUNTED_BEFORE_MIDNIGHT_LABEL =

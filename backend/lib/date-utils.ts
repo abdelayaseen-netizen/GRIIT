@@ -35,6 +35,22 @@ export function getTodayDateKey(timezone?: string | null): string {
   }
 }
 
+/**
+ * Single TZ resolution for check_ins date_key + counter midnight copy:
+ * task schedule_timezone if set, else profile timezone, else UTC.
+ * Used by saveProgress, complete, and counter_log facts — never diverge.
+ */
+export function resolveCheckInTimeZone(
+  scheduleTimezone?: string | null,
+  profileTimezone?: string | null
+): string {
+  const taskTz = scheduleTimezone?.trim();
+  if (taskTz) return taskTz;
+  const profileTz = profileTimezone?.trim();
+  if (profileTz) return profileTz;
+  return "UTC";
+}
+
 export function getYesterdayDateKey(timezone?: string | null): string {
   return addCalendarDaysToDateKey(getTodayDateKey(timezone), -1);
 }

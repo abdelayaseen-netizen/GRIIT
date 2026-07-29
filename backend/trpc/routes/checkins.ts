@@ -7,6 +7,7 @@ import {
   getTodayDateKey,
   getYesterdayDateKey,
   getProfileTimeZoneForUser,
+  resolveCheckInTimeZone,
   dateKeyFromIsoInTimeZone,
   calendarDayIndexInclusive,
 } from "../../lib/date-utils";
@@ -102,8 +103,34 @@ export const checkinsRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
-      const dateKey = getTodayDateKey(tz);
+      const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+
+      // Load task before date_key so schedule_timezone can win over profile (shared with saveProgress).
+      const { data: taskRow, error: taskFetchError } = await ctx.supabase
+        .from("challenge_tasks")
+        .select(
+          "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes"
+        )
+        .eq("id", input.taskId)
+        .single();
+
+      if (taskFetchError) {
+        const { logger } = await import("../../lib/logger");
+        logger.error({ error: taskFetchError, userId: ctx.userId, taskId: input.taskId }, "[checkins.complete] task fetch");
+        const code = (taskFetchError as PgError).code;
+        if (code === "PGRST116") throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load task." });
+      }
+      if (!taskRow) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
+
+      const task = taskRow as TaskRowWithVerification;
+      const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
+      const config = cfg as TaskConfig;
+      const checkInTz = resolveCheckInTimeZone(config.schedule_timezone, profileTz);
+      const dateKey = getTodayDateKey(checkInTz);
+      // Alias for legacy locals in this mutation that still say `tz`.
+      const tz = checkInTz;
+
       const { data: acStartRow } = await ctx.supabase
         .from("active_challenges")
         .select("start_at")
@@ -162,27 +189,6 @@ export const checkinsRouter = createTRPCRouter({
           message: `Take a moment between tasks. You completed another task ${secondsAgo} second${secondsAgo === 1 ? "" : "s"} ago.`,
         });
       }
-
-      const { data: taskRow, error: taskFetchError } = await ctx.supabase
-        .from("challenge_tasks")
-        .select(
-          "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes"
-        )
-        .eq("id", input.taskId)
-        .single();
-
-      if (taskFetchError) {
-        const { logger } = await import("../../lib/logger");
-        logger.error({ error: taskFetchError, userId: ctx.userId, taskId: input.taskId }, "[checkins.complete] task fetch");
-        const code = (taskFetchError as PgError).code;
-        if (code === "PGRST116") throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load task." });
-      }
-      if (!taskRow) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
-
-      const task = taskRow as TaskRowWithVerification;
-      const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
-      const config = cfg as TaskConfig;
 
       const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
       const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
@@ -522,6 +528,8 @@ export const checkinsRouter = createTRPCRouter({
               count: input.value,
               target: counterTarget,
               unit_plural: counterUnitPlural,
+              timezone: checkInTz,
+              date_key: dateKey,
             }
           : null;
       if (!isMinimumDay && counterLogFacts) {
@@ -529,6 +537,9 @@ export const checkinsRouter = createTRPCRouter({
           count: counterLogFacts.count,
           target: counterLogFacts.target,
           unit_plural: counterLogFacts.unit_plural,
+          // Same midnight calendar as date_key / saveProgress (for verifying copy honesty).
+          date_key: dateKey,
+          timezone: checkInTz,
         };
       }
       if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
@@ -763,9 +774,26 @@ export const checkinsRouter = createTRPCRouter({
         input.activeChallengeId,
         ctx.userId
       );
-      // Same day key as complete / getTodayCheckins so hydrate + submit hit one row.
-      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
-      const dateKey = getTodayDateKey(tz);
+      const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const { data: taskRow, error: taskErr } = await ctx.supabase
+        .from("challenge_tasks")
+        .select("id, config")
+        .eq("id", input.taskId)
+        .maybeSingle();
+      if (taskErr) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to load task.",
+        });
+      }
+      if (!taskRow) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
+      }
+      const taskCfg = ((taskRow as { config?: ChallengeTaskConfig } | null)?.config ??
+        {}) as ChallengeTaskConfig;
+      // Same resolver as checkins.complete — schedule_timezone wins, else profile.
+      const checkInTz = resolveCheckInTimeZone(taskCfg.schedule_timezone, profileTz);
+      const dateKey = getTodayDateKey(checkInTz);
 
       const { data: existing, error: existingErr } = await ctx.supabase
         .from("check_ins")
@@ -849,9 +877,40 @@ export const checkinsRouter = createTRPCRouter({
 
   getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
     await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-    const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
-    const dateKey = getTodayDateKey(tz);
-    const { data, error } = await ctx.supabase.from("check_ins").select("id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).limit(100);
+    const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+    // Union today's date_keys across profile TZ and each task's schedule_timezone
+    // so counter hydrate finds the same row saveProgress/complete wrote.
+    const dateKeys = new Set<string>([getTodayDateKey(profileTz)]);
+    const { data: acRow } = await ctx.supabase
+      .from("active_challenges")
+      .select("challenge_id")
+      .eq("id", input.activeChallengeId)
+      .maybeSingle();
+    const challengeId = (acRow as { challenge_id?: string } | null)?.challenge_id;
+    if (challengeId) {
+      const { data: tasks } = await ctx.supabase
+        .from("challenge_tasks")
+        .select("config")
+        .eq("challenge_id", challengeId)
+        .limit(200);
+      for (const t of tasks ?? []) {
+        const cfg = ((t as { config?: ChallengeTaskConfig }).config ??
+          {}) as ChallengeTaskConfig;
+        dateKeys.add(
+          getTodayDateKey(
+            resolveCheckInTimeZone(cfg.schedule_timezone, profileTz)
+          )
+        );
+      }
+    }
+    const { data, error } = await ctx.supabase
+      .from("check_ins")
+      .select(
+        "id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at"
+      )
+      .eq("active_challenge_id", input.activeChallengeId)
+      .in("date_key", [...dateKeys])
+      .limit(100);
     requireNoError(error, "Failed to load check-ins.");
     return data ?? [];
   }),
