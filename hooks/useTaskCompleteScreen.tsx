@@ -78,7 +78,6 @@ import { FLAGS } from "@/lib/feature-flags";
 import {
   firstString,
   parseConfig,
-  getDailyPrompt,
   inferRunOrWorkout,
   WORKOUT_KINDS,
   goBackOrHome,
@@ -392,11 +391,21 @@ export function TaskCompleteScreenInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- timerSeconds intentionally excluded; we derive elapsed from startedAtMs instead to avoid re-subscribing every second
   }, [showWorkoutTimer, requiredSeconds, isTimerRunning, taskId, taskName, isCountdown, activeChallengeId, updateTimerRunning]);
 
-  const { journalText, handleJournalChange, wordCount, journalOk } = useJournalInput({
-    minWords: config.min_words ?? 0,
-    onError: showError,
-  });
   const minWords = config.min_words ?? 0;
+  const {
+    journalText,
+    handleJournalChange,
+    wordCount,
+    journalOk,
+    clearDraft: clearJournalDraft,
+  } = useJournalInput({
+    minWords,
+    onError: showError,
+    draftScope:
+      taskTypeRaw === "journal" && activeChallengeId && taskId
+        ? { activeChallengeId, taskId }
+        : null,
+  });
 
   const handleCheckLocation = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -413,10 +422,11 @@ export function TaskCompleteScreenInner() {
     }
   }, [showError]);
 
-  const journalPrompt = useMemo(
-    () => getDailyPrompt(taskId, (config as TaskCompleteConfig).journal_prompt),
-    [taskId, config]
-  );
+  // Real config only — never fabricate a daily prompt for the Write card.
+  const journalPrompt =
+    typeof (config as TaskCompleteConfig).journal_prompt === "string"
+      ? (config as TaskCompleteConfig).journal_prompt!.trim()
+      : "";
   const needsPhotoProof = config.require_photo === true || taskTypeRaw === "photo";
   /** Submit only after upload returns a URL (not just local uri). */
   const photoOk = !needsPhotoProof || !!photoUrl;
@@ -749,6 +759,13 @@ export function TaskCompleteScreenInner() {
         }
       }
       setSubmitted(true);
+      if (taskTypeRaw === "journal") {
+        try {
+          await clearJournalDraft();
+        } catch {
+          /* non-fatal */
+        }
+      }
       try {
         trackEvent("proof_posted", {
           challenge_id: challengeIdForFeed || undefined,
@@ -850,6 +867,7 @@ export function TaskCompleteScreenInner() {
     isChallengeHardMode,
     isCounterFamily,
     counterValue,
+    clearJournalDraft,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -986,6 +1004,8 @@ export function TaskCompleteScreenInner() {
     workoutPhase === "capture";
   const isJournalReady =
     FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "journal";
+  const isJournalWrite =
+    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "journal";
   const workoutHasFloor = taskTypeRaw === "workout" && minDurMinutes > 0;
   const workoutSessionOk = workoutHasFloor
     ? timerOk
@@ -1207,7 +1227,6 @@ export function TaskCompleteScreenInner() {
             prompt={journalPrompt}
             wordCount={wordCount}
             minWords={minWords}
-            showTagChips={FLAGS.JOURNAL_TAGS}
           />
         );
       case "counter":
@@ -1552,8 +1571,7 @@ export function TaskCompleteScreenInner() {
       label = photoUri ? "Submit proof" : "Skip photo";
       if (photoUploading) disabledReason = "Uploading…";
     } else if (taskTypeRaw === "journal") {
-      // "Start writing" is the only CTA — arms when unarmed (handled above); saves when gate met.
-      label = "Start writing";
+      label = "Save entry";
       if (!journalOk) {
         const gap = Math.max(0, minWords - wordCount);
         if (gap > 0) disabledReason = `${gap} more word${gap === 1 ? "" : "s"} to go`;
@@ -1780,7 +1798,8 @@ export function TaskCompleteScreenInner() {
           isWorkoutReady ||
           isWorkoutSession ||
           isWorkoutCapture ||
-          isJournalReady
+          isJournalReady ||
+          isJournalWrite
             ? undefined
             : shellGates
         }
@@ -1791,7 +1810,7 @@ export function TaskCompleteScreenInner() {
               ? runReadySubtype
               : isWorkoutReady || isWorkoutSession || isWorkoutCapture
                 ? workoutReadySubtype
-                : isJournalReady
+                : isJournalReady || isJournalWrite
                   ? journalReadySubtype
                   : undefined
         }
@@ -1805,7 +1824,8 @@ export function TaskCompleteScreenInner() {
           isWorkoutReady ||
           isWorkoutSession ||
           isWorkoutCapture ||
-          isJournalReady
+          isJournalReady ||
+          isJournalWrite
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}

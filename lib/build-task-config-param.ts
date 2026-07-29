@@ -16,7 +16,12 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
         cfg.require_photo_proof === true,
       min_duration_minutes: t.min_duration_minutes ?? t.duration_minutes,
       scheduled_time: typeof t.scheduled_time === "string" ? t.scheduled_time : undefined,
-      min_words: t.min_words,
+      min_words:
+        typeof t.min_words === "number"
+          ? t.min_words
+          : typeof cfg.min_words === "number"
+            ? cfg.min_words
+            : undefined,
       timer_direction: t.timer_direction,
       timer_hard_mode: t.timer_hard_mode ?? t.strict_timer_mode,
       require_heart_rate: t.require_heart_rate,
@@ -26,7 +31,13 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
       location_latitude: t.location_latitude ?? cfg.location_latitude,
       location_longitude: t.location_longitude ?? cfg.location_longitude,
       location_radius_meters: t.location_radius_meters ?? cfg.location_radius_meters,
-      journal_prompt: typeof t.journal_prompt === "string" ? t.journal_prompt : undefined,
+      // Prefer flattened field; fall back to challenge_tasks.config.journal_prompt.
+      journal_prompt:
+        typeof t.journal_prompt === "string" && t.journal_prompt.trim()
+          ? t.journal_prompt
+          : typeof cfg.journal_prompt === "string" && cfg.journal_prompt.trim()
+            ? cfg.journal_prompt
+            : undefined,
       hard_mode: cfg.hard_mode === true,
       schedule_window_start: typeof cfg.schedule_window_start === "string" ? cfg.schedule_window_start : undefined,
       schedule_window_end: typeof cfg.schedule_window_end === "string" ? cfg.schedule_window_end : undefined,

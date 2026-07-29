@@ -1,36 +1,25 @@
 /**
- * Journal body — daily prompt + auto-saved indicator + word counter.
- *
- * Parent owns the `useJournalInput` state; this component just receives
- * the controlled text + counter values.
+ * Journal · Write body — TONIGHT'S PROMPT (when configured) + editor + Saved footer.
+ * No camera / image-picker. Prompt card omitted when prompt is empty (no fabrication).
  */
 import React from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { Camera, SmilePlus, Tag } from "lucide-react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 
 import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
-import { FLAGS } from "@/lib/feature-flags";
 
 type TaskJournalValue = { text: string };
 
 export type TaskJournalBodyProps = {
   value: TaskJournalValue;
   onChangeText: (text: string) => void;
+  /** Real config.journal_prompt only — empty means hide the prompt card. */
   prompt: string;
   wordCount: number;
   minWords: number;
-  /** Show tag chips (Mood / Wins / Photo). Controlled by FLAGS.JOURNAL_TAGS. */
-  showTagChips?: boolean;
 };
 
 export function TaskJournalBody({
@@ -39,23 +28,26 @@ export function TaskJournalBody({
   prompt,
   wordCount,
   minWords,
-  showTagChips = false,
 }: TaskJournalBodyProps) {
-  const reachedMin = minWords === 0 || wordCount >= minWords;
+  const promptText = prompt.trim();
+  const floor = minWords > 0 ? minWords : 0;
+  const progress =
+    floor > 0 ? Math.min(1, wordCount / floor) : wordCount > 0 ? 1 : 0;
+  const footerLabel =
+    floor > 0
+      ? `Saved · ${wordCount} / ${floor} words`
+      : `Saved · ${wordCount} word${wordCount === 1 ? "" : "s"}`;
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.label}>TODAY&apos;S PROMPT</Text>
-          <Text style={styles.savedHint}>Auto-saved</Text>
+      {promptText ? (
+        <View style={styles.promptCard}>
+          <Text style={styles.promptLabel}>TONIGHT&apos;S PROMPT</Text>
+          <Text style={styles.promptText}>{promptText}</Text>
         </View>
-        <View style={styles.promptChip}>
-          <Text style={styles.promptText}>{prompt}</Text>
-        </View>
-      </View>
+      ) : null}
 
-      <View style={styles.card}>
+      <View style={styles.editorCard}>
         <TextInput
           accessibilityLabel="Journal entry"
           value={value.text}
@@ -66,163 +58,88 @@ export function TaskJournalBody({
           style={styles.textInput}
           textAlignVertical="top"
         />
-        <View style={styles.divider} />
-        <View style={styles.counterRow}>
-          {minWords > 0 ? (
-            <Text
-              style={[
-                styles.counterText,
-                reachedMin ? styles.counterOk : styles.counterShort,
-              ]}
+        <View style={styles.footer}>
+          <Text style={styles.footerLabel}>{footerLabel}</Text>
+          {floor > 0 ? (
+            <View
+              style={styles.progressTrack}
+              accessibilityRole="progressbar"
+              accessibilityValue={{
+                min: 0,
+                max: floor,
+                now: Math.min(wordCount, floor),
+              }}
             >
-              {reachedMin
-                ? `${wordCount} / ${minWords} ✓`
-                : `${wordCount} / ${minWords} words`}
-            </Text>
-          ) : (
-            <Text style={[styles.counterText, styles.counterOk]}>
-              {`${wordCount} word${wordCount === 1 ? "" : "s"}`}
-            </Text>
-          )}
-          <View style={styles.tagsRow}>
-            {(showTagChips || FLAGS.JOURNAL_TAGS) ? (
-              <>
-                <PlaceholderChip
-                  icon={
-                    <SmilePlus
-                      size={11}
-                      color={DS_COLORS_V2.text.secondary}
-                      strokeWidth={2}
-                    />
-                  }
-                  label="Mood"
-                />
-                <PlaceholderChip
-                  icon={
-                    <Tag
-                      size={11}
-                      color={DS_COLORS_V2.text.secondary}
-                      strokeWidth={2}
-                    />
-                  }
-                  label="Wins"
-                />
-                <PlaceholderChip
-                  icon={
-                    <Camera
-                      size={11}
-                      color={DS_COLORS_V2.text.secondary}
-                      strokeWidth={2}
-                    />
-                  }
-                  label="Photo"
-                />
-              </>
-            ) : null}
-          </View>
+              <View
+                style={[styles.progressFill, { width: `${progress * 100}%` }]}
+              />
+            </View>
+          ) : null}
         </View>
       </View>
     </View>
   );
 }
 
-function PlaceholderChip({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Add ${label.toLowerCase()} (coming soon)`}
-      onPress={() => undefined}
-      style={({ pressed }) => [styles.chip, pressed ? styles.pressed : null]}
-    >
-      {icon}
-      <Text style={styles.chipText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   wrap: { gap: DS_SPACING_V2.md },
-  card: {
+  promptCard: {
     backgroundColor: DS_COLORS_V2.surface.card,
     borderRadius: DS_RADIUS_V2.md,
-    padding: 12,
-    borderWidth: 1,
+    padding: DS_SPACING_V2.md,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: DS_COLORS_V2.surface.divider,
-    gap: 10,
+    gap: DS_SPACING_V2.sm,
   },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  label: {
-    fontSize: 9,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.secondary,
-  },
-  savedHint: {
+  promptLabel: {
     fontSize: 10,
     fontWeight: "500",
-    color: DS_COLORS_V2.semantic.success,
-  },
-  promptChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-    borderRadius: DS_RADIUS_V2.sm,
+    letterSpacing: 0.6,
+    color: DS_COLORS_V2.text.secondary,
   },
   promptText: {
-    fontSize: 13,
+    fontSize: 15,
+    fontWeight: "400",
     color: DS_COLORS_V2.text.primary,
-    lineHeight: 18,
+    lineHeight: 22,
   },
-
+  editorCard: {
+    backgroundColor: DS_COLORS_V2.surface.card,
+    borderRadius: DS_RADIUS_V2.md,
+    padding: DS_SPACING_V2.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_COLORS_V2.surface.divider,
+    gap: DS_SPACING_V2.sm,
+    minHeight: 220,
+  },
   textInput: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: "400",
     color: DS_COLORS_V2.text.primary,
     minHeight: 160,
-    lineHeight: 20,
+    lineHeight: 24,
+    flexGrow: 1,
   },
-  divider: {
-    height: 1,
-    backgroundColor: DS_COLORS_V2.surface.divider,
+  footer: {
+    gap: DS_SPACING_V2.xs,
+    paddingTop: DS_SPACING_V2.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DS_COLORS_V2.surface.divider,
   },
-  counterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  counterText: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  counterShort: { color: DS_COLORS_V2.semantic.danger },
-  counterOk: { color: DS_COLORS_V2.semantic.success },
-  tagsRow: { flexDirection: "row", gap: 6 },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-  },
-  chipText: {
-    fontSize: 10,
+  footerLabel: {
+    fontSize: 12,
     fontWeight: "500",
     color: DS_COLORS_V2.text.secondary,
   },
-  pressed: { opacity: 0.85 },
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 2,
+    backgroundColor: DS_COLORS_V2.brand.primary,
+  },
 });
-
