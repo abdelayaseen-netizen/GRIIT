@@ -46,6 +46,8 @@ import { TaskJournalBody } from "@/components/task/bodies/TaskJournalBody";
 import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/TaskCounterBody";
 import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
 import { TaskReadyCard } from "@/components/task/bodies/TaskReadyCard";
+import { TaskPhotoReadyBody } from "@/components/task/bodies/TaskPhotoReadyBody";
+import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import {
   VerifyingOverlay,
   buildVerifyingRows,
@@ -809,9 +811,15 @@ export function TaskCompleteScreenInner() {
     return { singular: "unit", plural: "units" };
   }, [counterVariant]);
 
+  const isPhotoReady =
+    FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "photo";
+
   const renderBody = useCallback(() => {
-    // Ready state: show TaskReadyCard until the user taps Start.
+    // Ready state: Photo uses task-states-v2 GatesCard; other types keep TaskReadyCard.
     if (FLAGS.TASK_START_ARMING && !isArmed) {
+      if (taskTypeRaw === "photo") {
+        return <TaskPhotoReadyBody config={config} taskTitle={taskName} />;
+      }
       return (
         <TaskReadyCard
           taskTypeRaw={taskTypeRaw}
@@ -1337,7 +1345,10 @@ export function TaskCompleteScreenInner() {
         dayNumber={headerCurrentDay}
         taskName={taskName}
         hardMode={isHardVerificationTask}
-        verificationGates={shellGates}
+        // Photo · Ready owns GatesCard in the body — suppress shell hard-mode card to avoid duplication.
+        verificationGates={isPhotoReady ? undefined : shellGates}
+        toplineMeta={isPhotoReady ? PHOTO_READY_SUBTYPE : undefined}
+        hideHeaderTaskName={isPhotoReady}
         onBack={() => goBackOrHome(router)}
         primaryCta={primaryCta}
         secondaryCta={

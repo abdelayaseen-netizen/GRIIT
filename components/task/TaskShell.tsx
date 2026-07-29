@@ -95,6 +95,14 @@ export type TaskShellProps = {
   /** Inline error text (banner above CTA). Optional. */
   inlineError?: string | null;
   onDismissInlineError?: () => void;
+  /**
+   * Optional topline suffix after "Day {n} · ".
+   * When omitted, keeps legacy `${challengeName.toUpperCase()}` (byte-identical).
+   * Photo · Ready passes "Photo proof".
+   */
+  toplineMeta?: string;
+  /** When true, hide the header task name (body owns the large title). */
+  hideHeaderTaskName?: boolean;
 };
 
 export function TaskShell({
@@ -111,12 +119,16 @@ export function TaskShell({
   missedState,
   inlineError,
   onDismissInlineError,
+  toplineMeta,
+  hideHeaderTaskName = false,
 }: TaskShellProps) {
   const hasGates =
     !!verificationGates &&
     (!!verificationGates.timeWindow ||
       !!verificationGates.cameraOnly ||
       !!verificationGates.requireLocation);
+
+  const toplineSuffix = toplineMeta ?? challengeName.toUpperCase();
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
@@ -136,11 +148,13 @@ export function TaskShell({
         </Pressable>
         <View style={styles.topBarCenter}>
           <Text style={styles.topBarTopline} numberOfLines={1}>
-            {`Day ${dayNumber} · ${challengeName.toUpperCase()}`}
+            {`Day ${dayNumber} · ${toplineSuffix}`}
           </Text>
-          <Text style={styles.topBarTitle} numberOfLines={1}>
-            {taskName}
-          </Text>
+          {hideHeaderTaskName ? null : (
+            <Text style={styles.topBarTitle} numberOfLines={1}>
+              {taskName}
+            </Text>
+          )}
         </View>
         <View style={styles.iconBtnSpacer} />
       </View>
