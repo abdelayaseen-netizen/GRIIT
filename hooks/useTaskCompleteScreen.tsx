@@ -63,6 +63,7 @@ import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { decideReadyStart } from "@/lib/ready-start";
 import { formatRunSecuredMeta } from "@/lib/run-log";
 import { formatWorkoutSecuredMeta } from "@/lib/workout-log";
+import { formatJournalSecuredMeta } from "@/lib/journal-log";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
@@ -403,7 +404,11 @@ export function TaskCompleteScreenInner() {
     onError: showError,
     draftScope:
       taskTypeRaw === "journal" && activeChallengeId && taskId
-        ? { activeChallengeId, taskId }
+        ? {
+            activeChallengeId,
+            taskId,
+            timeZone: config.schedule_timezone,
+          }
         : null,
   });
 
@@ -578,7 +583,7 @@ export function TaskCompleteScreenInner() {
       }
       return;
     }
-    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo/run/workout).
+    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo/run/workout/journal).
     verifyStartMsRef.current = Date.now();
     const nowLabel = new Date().toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -588,7 +593,9 @@ export function TaskCompleteScreenInner() {
     const isPhotoSubmit = taskTypeRaw === "photo";
     const isRunSubmit = taskTypeRaw === "run";
     const isWorkoutSubmit = taskTypeRaw === "workout";
-    const usesServerVerifying = isPhotoSubmit || isRunSubmit || isWorkoutSubmit;
+    const isJournalSubmit = taskTypeRaw === "journal";
+    const usesServerVerifying =
+      isPhotoSubmit || isRunSubmit || isWorkoutSubmit || isJournalSubmit;
     if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
@@ -673,7 +680,11 @@ export function TaskCompleteScreenInner() {
           ? minDurMinutes > 0
             ? minDurMinutes
             : null
-          : undefined,
+          : isJournalSubmit
+            ? minWords > 0
+              ? minWords
+              : null
+            : undefined,
       });
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
       // Capture server-returned streak count for the Secured screen chip.
@@ -733,7 +744,7 @@ export function TaskCompleteScreenInner() {
           captureError(secureErr, "TaskCompleteSecureDay");
         }
       }
-      // Photo/Run/Workout: no fake floor — duration is the request; brief settle so server rows can paint.
+      // Photo/Run/Workout/Journal: no fake floor — duration is the request; brief settle so server rows can paint.
       // Other types: keep 600 ms VerifyingOverlay legibility floor.
       if (usesServerVerifying) {
         setIsSubmitting(false);
@@ -779,8 +790,8 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      // Photo/Run/Workout use SecuredScreen — skip celebration overlay + variable-reward chip.
-      if (!isPhotoSubmit && !isRunSubmit && !isWorkoutSubmit) {
+      // Photo/Run/Workout/Journal use SecuredScreen — skip celebration overlay + variable-reward chip.
+      if (!isPhotoSubmit && !isRunSubmit && !isWorkoutSubmit && !isJournalSubmit) {
         const celebTitle =
           taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
         showCelebration({
@@ -1700,7 +1711,8 @@ export function TaskCompleteScreenInner() {
     if (
       taskTypeRaw === "photo" ||
       taskTypeRaw === "run" ||
-      taskTypeRaw === "workout"
+      taskTypeRaw === "workout" ||
+      taskTypeRaw === "journal"
     ) {
       const securedDayNumber = Math.max(
         1,
@@ -1718,7 +1730,9 @@ export function TaskCompleteScreenInner() {
                 workoutKind,
                 Number.isFinite(workoutSecuredMin) ? workoutSecuredMin : 0
               )
-            : "Verified in the window";
+            : taskTypeRaw === "journal"
+              ? formatJournalSecuredMeta(wordCount)
+              : "Verified in the window";
       return (
         <>
           <Stack.Screen options={{ headerShown: false }} />

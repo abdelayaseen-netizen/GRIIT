@@ -14,6 +14,8 @@ interface UseJournalInputOptions {
   draftScope?: {
     activeChallengeId: string;
     taskId: string;
+    /** Task schedule timezone — same source as window eval. */
+    timeZone?: string | null;
   } | null;
 }
 
@@ -45,9 +47,13 @@ export function useJournalInput({
     return journalDraftStorageKey({
       activeChallengeId: draftScope.activeChallengeId,
       taskId: draftScope.taskId,
-      dateKey: journalDraftDateKey(),
+      dateKey: journalDraftDateKey(draftScope.timeZone),
     });
-  }, [draftScope?.activeChallengeId, draftScope?.taskId]);
+  }, [
+    draftScope?.activeChallengeId,
+    draftScope?.taskId,
+    draftScope?.timeZone,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
