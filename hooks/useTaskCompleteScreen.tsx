@@ -50,6 +50,7 @@ import { TaskPhotoCaptureBody } from "@/components/task/bodies/TaskPhotoCaptureB
 import { TaskPhotoCaptionBody } from "@/components/task/bodies/TaskPhotoCaptionBody";
 import { TaskRunReadyBody } from "@/components/task/bodies/TaskRunReadyBody";
 import { TaskRunLogBody } from "@/components/task/bodies/TaskRunLogBody";
+import { TaskRunCaptureBody } from "@/components/task/bodies/TaskRunCaptureBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
@@ -135,6 +136,8 @@ export function TaskCompleteScreenInner() {
   const [runDuration, setRunDuration] = useState("");
   /** Run log entry path — "timer" once in-app timer is used; else "hand". */
   const [runEntryMode, setRunEntryMode] = useState<"hand" | "timer">("hand");
+  /** Run middle phase after Start: Log → optional Capture. */
+  const [runPhase, setRunPhase] = useState<"log" | "capture">("log");
   const [workoutDuration, setWorkoutDuration] = useState("");
   const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Gym");
   const [workoutNotes, setWorkoutNotes] = useState("");
@@ -523,6 +526,7 @@ export function TaskCompleteScreenInner() {
       }
     }
 
+    if (taskTypeRaw === "run") setRunPhase("log");
     setIsArmed(true);
   }, [taskTypeRaw, config.require_photo, config.require_location, showError]);
 
@@ -600,7 +604,7 @@ export function TaskCompleteScreenInner() {
         clocked_in_at: isHardVerificationTask ? (clockedInAtRef.current ?? new Date().toISOString()) : undefined,
         task_mode: taskMode,
         proof_payload_json:
-          taskTypeRaw === "photo" && captureMeta
+          (taskTypeRaw === "photo" || taskTypeRaw === "run") && captureMeta
             ? {
                 capturedAt: captureMeta.capturedAt,
                 captured_in_app: captureMeta.captured_in_app,
@@ -907,7 +911,9 @@ export function TaskCompleteScreenInner() {
   const isRunReady =
     FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "run";
   const isRunLog =
-    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "run";
+    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "run" && runPhase === "log";
+  const isRunCapture =
+    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "run" && runPhase === "capture";
   const runReadySubtype = resolveRunReadySubtype(config);
 
   const handleRunToggleTimer = useCallback(() => {
@@ -1021,6 +1027,19 @@ export function TaskCompleteScreenInner() {
           />
         );
       case "run":
+        if (runPhase === "capture") {
+          return (
+            <TaskRunCaptureBody
+              config={config}
+              photoUri={photoUri}
+              photoUploading={photoUploading}
+              onTakePhoto={() => {
+                void handleTakePhoto();
+              }}
+              onClearPhoto={clearPhoto}
+            />
+          );
+        }
         return (
           <TaskRunLogBody
             distance={runDistance}
@@ -1118,6 +1137,7 @@ export function TaskCompleteScreenInner() {
     readyScheduleNow,
     handleTakePhoto,
     clearPhoto,
+    runPhase,
     config,
     timerSound,
     timerDisplay,
@@ -1347,8 +1367,20 @@ export function TaskCompleteScreenInner() {
         if (isHardMode) disabledReason = "Stay on screen until done";
       }
     } else if (taskTypeRaw === "run") {
-      label = "Continue";
-      if (!runFormOk) disabledReason = "Add distance & time";
+      if (runPhase === "log") {
+        return {
+          label: "Continue",
+          onPress: () => {
+            if (runFormOk) setRunPhase("capture");
+          },
+          disabled: !runFormOk,
+          disabledReason: runFormOk ? undefined : "Add distance & time",
+          loading: false,
+        };
+      }
+      // Capture (optional): submit with or without photo.
+      label = photoUri ? "Submit proof" : "Skip photo";
+      if (photoUploading) disabledReason = "Uploading…";
     } else if (taskTypeRaw === "workout") {
       label = "Finish session";
       if (!workoutOk) disabledReason = `Need at least ${Math.max(1, minDurMinutes)} min`;
@@ -1372,7 +1404,10 @@ export function TaskCompleteScreenInner() {
     return {
       label,
       onPress: () => void handleSubmit(),
-      disabled: !canSubmit,
+      disabled:
+        taskTypeRaw === "run" && runPhase === "capture"
+          ? photoUploading || !runFormOk
+          : !canSubmit,
       disabledReason,
       loading: isSubmitting,
     };
@@ -1383,9 +1418,12 @@ export function TaskCompleteScreenInner() {
     readyStart,
     needsPhotoProof,
     photoOk,
+    photoUri,
+    photoUploading,
     timerOk,
     isHardMode,
     runFormOk,
+    runPhase,
     workoutOk,
     minDurMinutes,
     journalOk,
@@ -1546,14 +1584,19 @@ export function TaskCompleteScreenInner() {
         hardMode={isHardVerificationTask}
         // Photo Ready/Capture/Caption own chrome — suppress shell hard-mode card.
         verificationGates={
-          isPhotoReady || isPhotoCapture || isPhotoCaption || isRunReady || isRunLog
+          isPhotoReady ||
+          isPhotoCapture ||
+          isPhotoCaption ||
+          isRunReady ||
+          isRunLog ||
+          isRunCapture
             ? undefined
             : shellGates
         }
         toplineMeta={
           isPhotoReady || isPhotoCapture || isPhotoCaption
             ? PHOTO_READY_SUBTYPE
-            : isRunReady || isRunLog
+            : isRunReady || isRunLog || isRunCapture
               ? runReadySubtype
               : undefined
         }
@@ -1562,7 +1605,8 @@ export function TaskCompleteScreenInner() {
           isPhotoCapture ||
           isPhotoCaption ||
           isRunReady ||
-          isRunLog
+          isRunLog ||
+          isRunCapture
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
