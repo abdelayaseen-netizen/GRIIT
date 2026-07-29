@@ -56,6 +56,7 @@ import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { decideReadyStart } from "@/lib/ready-start";
+import { formatRunSecuredMeta } from "@/lib/run-log";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
@@ -715,8 +716,8 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      // Photo uses SecuredScreen — skip celebration overlay + variable-reward chip.
-      if (!isPhotoSubmit) {
+      // Photo/Run use SecuredScreen — skip celebration overlay + variable-reward chip.
+      if (!isPhotoSubmit && !isRunSubmit) {
         const celebTitle =
           taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
         showCelebration({
@@ -1517,12 +1518,16 @@ export function TaskCompleteScreenInner() {
   }
 
   if (submitted) {
-    if (taskTypeRaw === "photo") {
+    if (taskTypeRaw === "photo" || taskTypeRaw === "run") {
       const securedDayNumber = Math.max(
         1,
         (activeChallenge as { current_day?: number } | null)?.current_day ??
           headerCurrentDay
       );
+      const securedMeta =
+        taskTypeRaw === "run"
+          ? formatRunSecuredMeta(runKm, runMin)
+          : "Verified in the window";
       return (
         <>
           <Stack.Screen options={{ headerShown: false }} />
@@ -1533,7 +1538,7 @@ export function TaskCompleteScreenInner() {
             <SecuredScreen
               dayNumber={securedDayNumber}
               title={taskName}
-              meta="Verified in the window"
+              meta={securedMeta}
               streakCount={completedStreakCount}
               onDone={() => goBackOrHome(router)}
             />
