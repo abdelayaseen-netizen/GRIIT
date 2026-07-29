@@ -40,7 +40,6 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { TaskShell, type TaskShellGates, type TaskShellMissedState } from "@/components/task/TaskShell";
 import { TaskSimpleBody } from "@/components/task/bodies/TaskSimpleBody";
 import { TaskTimerBody, type TimerSound } from "@/components/task/bodies/TaskTimerBody";
-import { TaskWorkoutBody } from "@/components/task/bodies/TaskWorkoutBody";
 import { TaskJournalBody } from "@/components/task/bodies/TaskJournalBody";
 import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/TaskCounterBody";
 import { TaskCheckinBody } from "@/components/task/bodies/TaskCheckinBody";
@@ -52,6 +51,7 @@ import { TaskRunReadyBody } from "@/components/task/bodies/TaskRunReadyBody";
 import { TaskRunLogBody } from "@/components/task/bodies/TaskRunLogBody";
 import { TaskRunCaptureBody } from "@/components/task/bodies/TaskRunCaptureBody";
 import { TaskWorkoutReadyBody } from "@/components/task/bodies/TaskWorkoutReadyBody";
+import { TaskWorkoutSessionBody } from "@/components/task/bodies/TaskWorkoutSessionBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { resolveWorkoutReadySubtype } from "@/lib/workout-ready-gates";
@@ -142,8 +142,12 @@ export function TaskCompleteScreenInner() {
   /** Run middle phase after Start: Log → optional Capture. */
   const [runPhase, setRunPhase] = useState<"log" | "capture">("log");
   const [workoutDuration, setWorkoutDuration] = useState("");
-  const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Gym");
+  const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Strength");
   const [workoutNotes, setWorkoutNotes] = useState("");
+  /** Workout middle phase: Session → optional Capture. */
+  const [workoutPhase, setWorkoutPhase] = useState<"session" | "capture">("session");
+  /** Floored workouts use timer; no-floor uses typed duration. */
+  const [workoutEntryMode, setWorkoutEntryMode] = useState<"hand" | "timer">("hand");
   const [photoCaption, setPhotoCaption] = useState("");
   const [postCaption, setPostCaption] = useState("");
   const [shareBusy, setShareBusy] = useState(false);
@@ -530,8 +534,18 @@ export function TaskCompleteScreenInner() {
     }
 
     if (taskTypeRaw === "run") setRunPhase("log");
+    if (taskTypeRaw === "workout") {
+      setWorkoutPhase("session");
+      setWorkoutEntryMode(minDurMinutes > 0 ? "timer" : "hand");
+    }
     setIsArmed(true);
-  }, [taskTypeRaw, config.require_photo, config.require_location, showError]);
+  }, [
+    taskTypeRaw,
+    config.require_photo,
+    config.require_location,
+    showError,
+    minDurMinutes,
+  ]);
 
   const handleSubmit = useCallback(async (taskMode: "full" | "minimum" = "full") => {
     if (!activeChallengeId || !taskId) {
@@ -928,6 +942,18 @@ export function TaskCompleteScreenInner() {
     FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "run" && runPhase === "capture";
   const isWorkoutReady =
     FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "workout";
+  const isWorkoutSession =
+    FLAGS.TASK_START_ARMING &&
+    isArmed &&
+    taskTypeRaw === "workout" &&
+    workoutPhase === "session";
+  const workoutHasFloor = taskTypeRaw === "workout" && minDurMinutes > 0;
+  const workoutSessionOk = workoutHasFloor
+    ? timerOk
+    : !Number.isNaN(workoutMinParsed) && workoutMinParsed >= 1;
+  const workoutRemainingMin = workoutHasFloor
+    ? Math.max(0, Math.ceil((requiredSeconds - timerSeconds) / 60))
+    : 0;
   const runReadySubtype = resolveRunReadySubtype(config);
   const workoutReadySubtype = resolveWorkoutReadySubtype(config);
 
@@ -941,6 +967,12 @@ export function TaskCompleteScreenInner() {
     if (taskTypeRaw !== "run" || runEntryMode !== "timer") return;
     setRunDuration(String(Math.max(0, Math.floor(timerSeconds / 60))));
   }, [taskTypeRaw, runEntryMode, timerSeconds]);
+
+  // Floored workout: duration tracks the live timer (entry_mode timer).
+  useEffect(() => {
+    if (taskTypeRaw !== "workout" || !workoutHasFloor) return;
+    setWorkoutDuration(String(Math.max(0, Math.floor(timerSeconds / 60))));
+  }, [taskTypeRaw, workoutHasFloor, timerSeconds]);
 
   // One 30s tick shared by GatesCard chip + Start CTA while Photo/Run/Workout · Ready is mounted.
   const readyScheduleNow = useScheduleWindowNow({
@@ -1088,16 +1120,20 @@ export function TaskCompleteScreenInner() {
         );
       case "workout":
         return (
-          <TaskWorkoutBody
-            mode="simple"
+          <TaskWorkoutSessionBody
+            kinds={WORKOUT_KINDS}
             kind={workoutKind}
             onChangeKind={setWorkoutKind}
+            hasFloor={workoutHasFloor}
+            floorMinutes={minDurMinutes}
+            timerDisplay={timerDisplay}
             durationMinutes={workoutDuration}
-            onChangeDurationMinutes={setWorkoutDuration}
+            onChangeDurationMinutes={(v) => {
+              setWorkoutEntryMode("hand");
+              setWorkoutDuration(v);
+            }}
             notes={workoutNotes}
             onChangeNotes={setWorkoutNotes}
-            kinds={WORKOUT_KINDS}
-            minMinutes={minDurMinutes}
           />
         );
       case "journal":
@@ -1167,6 +1203,10 @@ export function TaskCompleteScreenInner() {
     clearPhoto,
     runPhase,
     minDurMinutes,
+    workoutHasFloor,
+    workoutKind,
+    workoutDuration,
+    workoutNotes,
     config,
     timerSound,
     timerDisplay,
@@ -1415,8 +1455,35 @@ export function TaskCompleteScreenInner() {
       label = photoUri ? "Submit proof" : "Skip photo";
       if (photoUploading) disabledReason = "Uploading…";
     } else if (taskTypeRaw === "workout") {
+      if (workoutPhase === "session") {
+        if (workoutHasFloor && !timerOk) {
+          return {
+            label: "Finish session",
+            onPress: () => undefined,
+            disabled: true,
+            disabledReason: `${workoutRemainingMin} min to go`,
+            loading: false,
+          };
+        }
+        if (!workoutHasFloor && !workoutSessionOk) {
+          return {
+            label: "Finish session",
+            onPress: () => undefined,
+            disabled: true,
+            disabledReason: "Add duration",
+            loading: false,
+          };
+        }
+        return {
+          label: "Finish session",
+          onPress: () => setWorkoutPhase("capture"),
+          disabled: false,
+          disabledReason: undefined,
+          loading: false,
+        };
+      }
+      // Capture phase wired in Step 20 — interim submit until then.
       label = "Finish session";
-      if (!workoutOk) disabledReason = `Need at least ${Math.max(1, minDurMinutes)} min`;
     } else if (taskTypeRaw === "journal") {
       // "Start writing" is the only CTA — arms when unarmed (handled above); saves when gate met.
       label = "Start writing";
@@ -1457,8 +1524,10 @@ export function TaskCompleteScreenInner() {
     isHardMode,
     runFormOk,
     runPhase,
-    workoutOk,
-    minDurMinutes,
+    workoutPhase,
+    workoutHasFloor,
+    workoutSessionOk,
+    workoutRemainingMin,
     journalOk,
     minWords,
     wordCount,
@@ -1474,6 +1543,7 @@ export function TaskCompleteScreenInner() {
   ]);
 
   // Suppress unused warnings for legacy state retained for future migration.
+  void workoutEntryMode; // persisted on submit in Step 21
   void error;
   void clearError;
   void hardVerificationConfig;
@@ -1627,7 +1697,8 @@ export function TaskCompleteScreenInner() {
           isRunReady ||
           isRunLog ||
           isRunCapture ||
-          isWorkoutReady
+          isWorkoutReady ||
+          isWorkoutSession
             ? undefined
             : shellGates
         }
@@ -1636,7 +1707,7 @@ export function TaskCompleteScreenInner() {
             ? PHOTO_READY_SUBTYPE
             : isRunReady || isRunLog || isRunCapture
               ? runReadySubtype
-              : isWorkoutReady
+              : isWorkoutReady || isWorkoutSession
                 ? workoutReadySubtype
                 : undefined
         }
@@ -1647,7 +1718,8 @@ export function TaskCompleteScreenInner() {
           isRunReady ||
           isRunLog ||
           isRunCapture ||
-          isWorkoutReady
+          isWorkoutReady ||
+          isWorkoutSession
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}

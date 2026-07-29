@@ -86,7 +86,14 @@ export function inferRunOrWorkout(taskType: string, taskName: string): "run" | "
   return "workout";
 }
 
-export const WORKOUT_KINDS = ["Gym", "HIIT", "Yoga", "Calisthenics", "Other"] as const;
+export const WORKOUT_KINDS = [
+  "Strength",
+  "Gym",
+  "HIIT",
+  "Yoga",
+  "Calisthenics",
+  "Other",
+] as const;
 
 type RouterLike = {
   canGoBack: () => boolean;
