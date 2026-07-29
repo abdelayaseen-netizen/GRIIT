@@ -71,6 +71,12 @@ import { formatWorkoutSecuredMeta } from "@/lib/workout-log";
 import { formatJournalSecuredMeta } from "@/lib/journal-log";
 import { formatCounterSecuredMeta } from "@/lib/counter-log";
 import { formatCheckinSecuredMeta } from "@/lib/checkin-log";
+import {
+  formatSimpleSecuredMeta,
+  SIMPLE_ASK_CTA,
+  SIMPLE_ASK_NOT_YET,
+  SIMPLE_READY_SUBTYPE,
+} from "@/lib/simple-log";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
@@ -494,6 +500,8 @@ export function TaskCompleteScreenInner() {
     !config.require_photo &&
     !config.require_heart_rate &&
     !config.require_location;
+  /** Simple/manual self-report Ask — no Ready arming, no verifying fiction. */
+  const isSimpleAsk = isPureManual;
 
   // Counter / water / reading — extract goal from config (with sensible fallbacks).
   const isCounterFamily = taskTypeRaw === "counter" || taskTypeRaw === "water" || taskTypeRaw === "reading";
@@ -665,6 +673,7 @@ export function TaskCompleteScreenInner() {
     const isJournalSubmit = taskTypeRaw === "journal";
     const isCounterSubmit = isCounterFamily;
     const isCheckinSubmit = taskTypeRaw === "checkin";
+    const isSimpleSubmit = isSimpleAsk;
     const usesServerVerifying =
       isPhotoSubmit ||
       isRunSubmit ||
@@ -672,6 +681,7 @@ export function TaskCompleteScreenInner() {
       isJournalSubmit ||
       isCounterSubmit ||
       isCheckinSubmit;
+    // Simple: never open VerifyingProof / VerifyingOverlay — self-report lands on Secured.
     if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
@@ -828,6 +838,7 @@ export function TaskCompleteScreenInner() {
         }
       }
       // Photo/Run/Workout/Journal/Counter: no fake floor — brief settle so server rows can paint.
+      // Simple: no verifying floor at all — land on Secured immediately.
       // Other types: keep 600 ms VerifyingOverlay legibility floor.
       if (usesServerVerifying) {
         setIsSubmitting(false);
@@ -845,7 +856,7 @@ export function TaskCompleteScreenInner() {
         if (settleMs > 0) {
           await new Promise<void>((res) => setTimeout(res, settleMs));
         }
-      } else {
+      } else if (!isSimpleSubmit) {
         const elapsed = Date.now() - verifyStartMsRef.current;
         const MIN_VERIFY_MS = 600;
         if (elapsed < MIN_VERIFY_MS) {
@@ -873,14 +884,15 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      // Photo/Run/Workout/Journal/Counter/Check-in use SecuredScreen — skip celebration overlay + variable-reward chip.
+      // Photo/Run/Workout/Journal/Counter/Check-in/Simple use SecuredScreen — skip celebration overlay + variable-reward chip.
       if (
         !isPhotoSubmit &&
         !isRunSubmit &&
         !isWorkoutSubmit &&
         !isJournalSubmit &&
         !isCounterSubmit &&
-        !isCheckinSubmit
+        !isCheckinSubmit &&
+        !isSimpleSubmit
       ) {
         const celebTitle =
           taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
@@ -970,7 +982,7 @@ export function TaskCompleteScreenInner() {
     counterValue,
     clearJournalDraft,
     flushCounterProgress,
-    isCounterFamily,
+    isSimpleAsk,
   ]);
 
   const runManualComplete = useCallback(() => {
@@ -1421,7 +1433,7 @@ export function TaskCompleteScreenInner() {
       case "manual":
       case "simple":
       default:
-        return <TaskSimpleBody value={{ done: false }} taskName={taskName} />;
+        return <TaskSimpleBody taskName={taskName} />;
     }
   }, [
     isArmed,
@@ -1664,7 +1676,7 @@ export function TaskCompleteScreenInner() {
     let label = "Mark complete";
     let disabledReason: string | undefined;
     if (taskTypeRaw === "manual" || taskTypeRaw === "simple") {
-      label = "Mark done";
+      label = SIMPLE_ASK_CTA;
     } else if (taskTypeRaw === "photo") {
       label = "Submit proof";
       if (!photoOk) disabledReason = "Take photo to submit";
@@ -1860,7 +1872,8 @@ export function TaskCompleteScreenInner() {
       taskTypeRaw === "workout" ||
       taskTypeRaw === "journal" ||
       isCounterFamily ||
-      taskTypeRaw === "checkin"
+      taskTypeRaw === "checkin" ||
+      isSimpleAsk
     ) {
       const securedDayNumber = Math.max(
         1,
@@ -1888,7 +1901,9 @@ export function TaskCompleteScreenInner() {
                   )
                 : taskTypeRaw === "checkin"
                   ? formatCheckinSecuredMeta()
-                  : "Verified in the window";
+                  : isSimpleAsk
+                    ? formatSimpleSecuredMeta()
+                    : "Verified in the window";
       return (
         <>
           <Stack.Screen options={{ headerShown: false }} />
@@ -1973,7 +1988,8 @@ export function TaskCompleteScreenInner() {
           isCounterReady ||
           isCounterCount ||
           isCheckinReady ||
-          isCheckinConfirm
+          isCheckinConfirm ||
+          isSimpleAsk
             ? undefined
             : shellGates
         }
@@ -1990,7 +2006,9 @@ export function TaskCompleteScreenInner() {
                     ? counterReadySubtype
                     : isCheckinReady || isCheckinConfirm
                       ? checkinReadySubtype
-                      : undefined
+                      : isSimpleAsk
+                        ? SIMPLE_READY_SUBTYPE
+                        : undefined
         }
         hideHeaderTaskName={
           isPhotoReady ||
@@ -2007,15 +2025,16 @@ export function TaskCompleteScreenInner() {
           isCounterReady ||
           isCounterCount ||
           isCheckinReady ||
-          isCheckinConfirm
+          isCheckinConfirm ||
+          isSimpleAsk
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
         primaryCta={primaryCta}
         secondaryCta={
-          (taskTypeRaw === "simple" || taskTypeRaw === "manual") && isArmed
+          isSimpleAsk
             ? {
-                label: "Not yet",
+                label: SIMPLE_ASK_NOT_YET,
                 onPress: () => goBackOrHome(router),
               }
             : undefined
@@ -2027,7 +2046,16 @@ export function TaskCompleteScreenInner() {
         {renderBody()}
       </TaskShell>
       <VerifyingOverlay
-        visible={isSubmitting && taskTypeRaw !== "photo" && taskTypeRaw !== "run"}
+        visible={
+          isSubmitting &&
+          !isSimpleAsk &&
+          taskTypeRaw !== "photo" &&
+          taskTypeRaw !== "run" &&
+          taskTypeRaw !== "workout" &&
+          taskTypeRaw !== "journal" &&
+          taskTypeRaw !== "checkin" &&
+          !isCounterFamily
+        }
         rows={verifyingRows}
         typeSuccessLine={typeSuccessLine}
       />
