@@ -66,9 +66,8 @@ export const FLAGS = {
    */
   TASK_START_ARMING: true,
   /**
-   * Workout structured mode (sets-and-reps form). The "Add exercise" tile in
-   * TaskWorkoutBody has no onPress when mode="structured". Parent always passes
-   * mode="simple" so this is dormant. Gate here for Phase 5 audit transparency.
+   * Workout structured mode (sets-and-reps form). Dormant — Session body is
+   * simple entry only. Gate here for Phase 5 audit transparency.
    */
   WORKOUT_STRUCTURED: false,
   /**
