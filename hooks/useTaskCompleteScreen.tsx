@@ -60,6 +60,7 @@ import { clampPhotoCaption } from "@/lib/photo-caption";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { decideReadyStart } from "@/lib/ready-start";
 import { formatRunSecuredMeta } from "@/lib/run-log";
+import { formatWorkoutSecuredMeta } from "@/lib/workout-log";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
@@ -759,8 +760,8 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      // Photo/Run use SecuredScreen — skip celebration overlay + variable-reward chip.
-      if (!isPhotoSubmit && !isRunSubmit) {
+      // Photo/Run/Workout use SecuredScreen — skip celebration overlay + variable-reward chip.
+      if (!isPhotoSubmit && !isRunSubmit && !isWorkoutSubmit) {
         const celebTitle =
           taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
         showCelebration({
@@ -1661,16 +1662,28 @@ export function TaskCompleteScreenInner() {
   }
 
   if (submitted) {
-    if (taskTypeRaw === "photo" || taskTypeRaw === "run") {
+    if (
+      taskTypeRaw === "photo" ||
+      taskTypeRaw === "run" ||
+      taskTypeRaw === "workout"
+    ) {
       const securedDayNumber = Math.max(
         1,
         (activeChallenge as { current_day?: number } | null)?.current_day ??
           headerCurrentDay
       );
+      const workoutSecuredMin = showWorkoutTimer
+        ? Math.floor(timerSeconds / 60)
+        : workoutMinParsed;
       const securedMeta =
         taskTypeRaw === "run"
           ? formatRunSecuredMeta(runKm, runMin)
-          : "Verified in the window";
+          : taskTypeRaw === "workout"
+            ? formatWorkoutSecuredMeta(
+                workoutKind,
+                Number.isFinite(workoutSecuredMin) ? workoutSecuredMin : 0
+              )
+            : "Verified in the window";
       return (
         <>
           <Stack.Screen options={{ headerShown: false }} />
