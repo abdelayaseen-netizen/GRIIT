@@ -54,10 +54,12 @@ import { TaskWorkoutReadyBody } from "@/components/task/bodies/TaskWorkoutReadyB
 import { TaskWorkoutSessionBody } from "@/components/task/bodies/TaskWorkoutSessionBody";
 import { TaskWorkoutCaptureBody } from "@/components/task/bodies/TaskWorkoutCaptureBody";
 import { TaskJournalReadyBody } from "@/components/task/bodies/TaskJournalReadyBody";
+import { TaskCounterReadyBody } from "@/components/task/bodies/TaskCounterReadyBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { resolveWorkoutReadySubtype } from "@/lib/workout-ready-gates";
 import { resolveJournalReadySubtype } from "@/lib/journal-ready-gates";
+import { resolveCounterReadySubtype } from "@/lib/counter-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { decideReadyStart } from "@/lib/ready-start";
@@ -470,11 +472,19 @@ export function TaskCompleteScreenInner() {
   // Counter / water / reading — extract goal from config (with sensible fallbacks).
   const isCounterFamily = taskTypeRaw === "counter" || taskTypeRaw === "water" || taskTypeRaw === "reading";
   const counterGoal = useMemo<number>(() => {
-    const c = config as Partial<{ daily_target: number; goal: number; cup_count: number; pages: number }>;
-    if (typeof c.daily_target === "number" && c.daily_target > 0) return c.daily_target;
-    if (typeof c.goal === "number" && c.goal > 0) return c.goal;
-    if (taskTypeRaw === "water" && typeof c.cup_count === "number" && c.cup_count > 0) return c.cup_count;
-    if (taskTypeRaw === "reading" && typeof c.pages === "number" && c.pages > 0) return c.pages;
+    const c = config;
+    const candidates = [
+      c.daily_target,
+      c.goal,
+      c.target_value,
+      c.target_count,
+      c.target_pages,
+      c.cup_count,
+      c.pages,
+    ];
+    for (const n of candidates) {
+      if (typeof n === "number" && n > 0) return n;
+    }
     return taskTypeRaw === "water" ? 8 : taskTypeRaw === "reading" ? 10 : 1;
   }, [config, taskTypeRaw]);
   const counterOk = !isCounterFamily || counterValue >= counterGoal;
@@ -1017,6 +1027,10 @@ export function TaskCompleteScreenInner() {
     FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "journal";
   const isJournalWrite =
     FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "journal";
+  const isCounterReady =
+    FLAGS.TASK_START_ARMING && !isArmed && isCounterFamily;
+  const isCounterCount =
+    FLAGS.TASK_START_ARMING && isArmed && isCounterFamily;
   const workoutHasFloor = taskTypeRaw === "workout" && minDurMinutes > 0;
   const workoutSessionOk = workoutHasFloor
     ? timerOk
@@ -1027,6 +1041,14 @@ export function TaskCompleteScreenInner() {
   const runReadySubtype = resolveRunReadySubtype(config);
   const workoutReadySubtype = resolveWorkoutReadySubtype(config);
   const journalReadySubtype = resolveJournalReadySubtype(config);
+  const counterReadySubtype = resolveCounterReadySubtype(
+    config,
+    taskTypeRaw === "water"
+      ? "water"
+      : taskTypeRaw === "reading"
+        ? "reading"
+        : "counter"
+  );
 
   const handleRunToggleTimer = useCallback(() => {
     setRunEntryMode("timer");
@@ -1115,11 +1137,26 @@ export function TaskCompleteScreenInner() {
           />
         );
       }
+      if (isCounterFamily) {
+        return (
+          <TaskCounterReadyBody
+            config={config}
+            taskTitle={taskName}
+            target={counterGoal}
+            variant={
+              taskTypeRaw === "water"
+                ? "water"
+                : taskTypeRaw === "reading"
+                  ? "reading"
+                  : "counter"
+            }
+          />
+        );
+      }
       return (
         <TaskReadyCard
           taskTypeRaw={taskTypeRaw}
           config={config}
-          counterGoal={isCounterFamily ? counterGoal : undefined}
         />
       );
     }
@@ -1813,7 +1850,9 @@ export function TaskCompleteScreenInner() {
           isWorkoutSession ||
           isWorkoutCapture ||
           isJournalReady ||
-          isJournalWrite
+          isJournalWrite ||
+          isCounterReady ||
+          isCounterCount
             ? undefined
             : shellGates
         }
@@ -1826,7 +1865,9 @@ export function TaskCompleteScreenInner() {
                 ? workoutReadySubtype
                 : isJournalReady || isJournalWrite
                   ? journalReadySubtype
-                  : undefined
+                  : isCounterReady || isCounterCount
+                    ? counterReadySubtype
+                    : undefined
         }
         hideHeaderTaskName={
           isPhotoReady ||
@@ -1839,7 +1880,9 @@ export function TaskCompleteScreenInner() {
           isWorkoutSession ||
           isWorkoutCapture ||
           isJournalReady ||
-          isJournalWrite
+          isJournalWrite ||
+          isCounterReady ||
+          isCounterCount
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}

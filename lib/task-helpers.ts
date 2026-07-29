@@ -52,6 +52,14 @@ export type TaskCompleteConfig = {
   label?: string;
   /** Additive — forwarded from challenge_tasks.config.unit_label when present. */
   unit_label?: string;
+  /** Counter/water/reading target fields (additive). */
+  daily_target?: number;
+  goal?: number;
+  target_value?: number;
+  target_count?: number;
+  target_pages?: number;
+  cup_count?: number;
+  pages?: number;
 };
 
 export function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {

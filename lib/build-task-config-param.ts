@@ -46,6 +46,49 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
       require_strava: cfg.require_strava === true,
       // Additive only — optional Ready subtype source for run (and others).
       unit_label: typeof cfg.unit_label === "string" ? cfg.unit_label : undefined,
+      // Counter/water/reading targets — prefer flattened, fall back to config.
+      daily_target:
+        typeof t.daily_target === "number"
+          ? t.daily_target
+          : typeof cfg.daily_target === "number"
+            ? cfg.daily_target
+            : undefined,
+      goal:
+        typeof t.goal === "number"
+          ? t.goal
+          : typeof cfg.goal === "number"
+            ? cfg.goal
+            : undefined,
+      target_value:
+        typeof t.target_value === "number"
+          ? t.target_value
+          : typeof cfg.target_value === "number"
+            ? cfg.target_value
+            : undefined,
+      target_count:
+        typeof t.target_count === "number"
+          ? t.target_count
+          : typeof cfg.target_count === "number"
+            ? cfg.target_count
+            : undefined,
+      target_pages:
+        typeof t.target_pages === "number"
+          ? t.target_pages
+          : typeof cfg.target_pages === "number"
+            ? cfg.target_pages
+            : undefined,
+      cup_count:
+        typeof t.cup_count === "number"
+          ? t.cup_count
+          : typeof cfg.cup_count === "number"
+            ? cfg.cup_count
+            : undefined,
+      pages:
+        typeof t.pages === "number"
+          ? t.pages
+          : typeof cfg.pages === "number"
+            ? cfg.pages
+            : undefined,
     });
   } catch (err) {
     captureError(err, "BuildTaskConfigParam");
