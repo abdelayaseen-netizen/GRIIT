@@ -85,6 +85,9 @@ export function useAppChallengeMutations({
       clocked_in_at?: string;
       task_mode?: "full" | "minimum";
       proof_payload_json?: { capturedAt: string; captured_in_app: boolean };
+      distance_km?: number;
+      duration_min?: number;
+      entry_mode?: "hand" | "timer";
     }): Promise<{
       firstTaskOfDay?: boolean;
       completionId?: string;

@@ -123,7 +123,7 @@ export function TaskCompleteScreenInner() {
   const [heartRateManual, setHeartRateManual] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  /** Photo · Verifying — server rows only; other types keep VerifyingOverlay. */
+  /** Photo/Run · Verifying — server rows only; other types keep VerifyingOverlay. */
   const [showPhotoVerifying, setShowPhotoVerifying] = useState(false);
   const [photoVerifyRows, setPhotoVerifyRows] = useState<VerifyingProofRow[]>([]);
   const [photoVerifyError, setPhotoVerifyError] = useState<string | null>(null);
@@ -547,7 +547,7 @@ export function TaskCompleteScreenInner() {
       }
       return;
     }
-    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo).
+    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo/run).
     verifyStartMsRef.current = Date.now();
     const nowLabel = new Date().toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -555,7 +555,9 @@ export function TaskCompleteScreenInner() {
     });
     setSubmitTimeLabel(nowLabel);
     const isPhotoSubmit = taskTypeRaw === "photo";
-    if (isPhotoSubmit) {
+    const isRunSubmit = taskTypeRaw === "run";
+    const usesServerVerifying = isPhotoSubmit || isRunSubmit;
+    if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
       setPhotoVerifyError(null);
@@ -569,7 +571,7 @@ export function TaskCompleteScreenInner() {
         if (workoutKind) parts.push(workoutKind);
         if (workoutNotes.trim()) parts.push(workoutNotes.trim());
         noteTextOut = parts.join(" · ");
-      } else if (taskTypeRaw === "run" && showRunEntry) {
+      } else if (taskTypeRaw === "run") {
         noteTextOut = `Run: ${runDistance.trim()} km in ${runDuration.trim()} min`;
       } else if (taskTypeRaw === "journal") {
         noteTextOut = journalText.trim();
@@ -610,6 +612,11 @@ export function TaskCompleteScreenInner() {
                 captured_in_app: captureMeta.captured_in_app,
               }
             : undefined,
+        distance_km:
+          isRunSubmit && Number.isFinite(runKm) && runKm > 0 ? runKm : undefined,
+        duration_min:
+          isRunSubmit && Number.isFinite(runMin) && runMin > 0 ? runMin : undefined,
+        entry_mode: isRunSubmit ? runEntryMode : undefined,
       });
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
       // Capture server-returned streak count for the Secured screen chip.
@@ -623,7 +630,7 @@ export function TaskCompleteScreenInner() {
           : undefined
       );
 
-      if (isPhotoSubmit) {
+      if (usesServerVerifying) {
         const serverRows =
           completionResult &&
           typeof completionResult === "object" &&
@@ -669,9 +676,9 @@ export function TaskCompleteScreenInner() {
           captureError(secureErr, "TaskCompleteSecureDay");
         }
       }
-      // Photo: no fake floor — duration is the request; brief settle so server rows can paint.
+      // Photo/Run: no fake floor — duration is the request; brief settle so server rows can paint.
       // Other types: keep 600 ms VerifyingOverlay legibility floor.
-      if (isPhotoSubmit) {
+      if (usesServerVerifying) {
         setIsSubmitting(false);
         const rowCount =
           completionResult &&
@@ -736,7 +743,7 @@ export function TaskCompleteScreenInner() {
       captureError(err, "TaskCompleteCompleteTask");
       const message =
         err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      if (isPhotoSubmit) {
+      if (usesServerVerifying) {
         const verification = (
           err as {
             data?: { verification?: { rows: { label: string; verified: boolean }[] } };
@@ -776,7 +783,9 @@ export function TaskCompleteScreenInner() {
     showError,
     runDistance,
     runDuration,
+    runKm,
     runMin,
+    runEntryMode,
     isRunTimed,
     showCelebration,
     showWorkoutEntry,
@@ -1626,7 +1635,7 @@ export function TaskCompleteScreenInner() {
         {renderBody()}
       </TaskShell>
       <VerifyingOverlay
-        visible={isSubmitting && taskTypeRaw !== "photo"}
+        visible={isSubmitting && taskTypeRaw !== "photo" && taskTypeRaw !== "run"}
         rows={verifyingRows}
         typeSuccessLine={typeSuccessLine}
       />
