@@ -60,6 +60,7 @@ import {
   type CheckinLogFacts,
   type CheckinVerification,
 } from "../../lib/checkin-verification";
+import { buildSimpleLogFacts } from "../../lib/simple-verification";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -230,6 +231,15 @@ export const checkinsRouter = createTRPCRouter({
         taskType === "water" ||
         taskType === "reading";
       const isCheckinProof = taskType === "checkin";
+      // DB maps UI "simple" → task_type "manual"; exclude photo-proof manuals.
+      const isSimpleProof =
+        (taskType === "simple" || taskType === "manual") &&
+        !isPhotoProof &&
+        !isRunProof &&
+        !isWorkoutProof &&
+        !isJournalProof &&
+        !isCounterProof &&
+        !isCheckinProof;
 
       const sharedDurationMin =
         input.duration_min ??
@@ -341,6 +351,8 @@ export const checkinsRouter = createTRPCRouter({
             cause: { verification },
           });
         }
+      } else if (!isMinimumDay && isSimpleProof) {
+        // Self-report — no schedule-window gate; honesty is the product.
       } else if (!isMinimumDay && isPhotoProof) {
         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
           const verification = buildPhotoVerification({
@@ -507,7 +519,13 @@ export const checkinsRouter = createTRPCRouter({
           checked_at_hhmm: windowEval.checkedAtHHMM,
           window: `${config.schedule_window_start}-${config.schedule_window_end}`,
         };
-      } else if (!isMinimumDay && config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
+      } else if (
+        !isMinimumDay &&
+        !isSimpleProof &&
+        config.hard_mode &&
+        config.schedule_window_start &&
+        config.schedule_window_end
+      ) {
         // Non-photo/run/workout/journal: preserve prior hard-mode time_gate shape.
         verificationGates.time_gate = {
           status: "passed",
@@ -590,6 +608,9 @@ export const checkinsRouter = createTRPCRouter({
           location_name: checkinLogFacts.location_name,
         };
       }
+      if (!isMinimumDay && isSimpleProof) {
+        verificationGates.simple_log = buildSimpleLogFacts();
+      }
       if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
         verificationGates.location_gate = {
           status: "passed",
@@ -625,7 +646,8 @@ export const checkinsRouter = createTRPCRouter({
         !isWorkoutProof &&
         !isJournalProof &&
         !isCounterProof &&
-        !isCheckinProof
+        !isCheckinProof &&
+        !isSimpleProof
       ) {
         photoVerification = buildPhotoVerification({
           window: windowEval,
