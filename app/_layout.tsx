@@ -395,26 +395,10 @@ function RootLayoutNav() {
       <Stack.Screen name="post/[id]" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="discover/category/[slug]" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen 
-        name="task/run" 
-        options={{ 
-          headerShown: true,
-          title: "Run Task",
-          presentation: "card"
-        }} 
-      />
-      <Stack.Screen 
         name="task/complete" 
         options={{ 
           headerShown: true,
           title: "Complete Task",
-          presentation: "card"
-        }} 
-      />
-      <Stack.Screen 
-        name="task/checkin" 
-        options={{ 
-          headerShown: true,
-          title: "Location Check-in",
           presentation: "card"
         }} 
       />
@@ -478,11 +462,8 @@ function RootLayout() {
         }
         if (data?.type === "active_task_timer" && typeof data.route === "string") {
           const r = data.route;
-          // Allow any in-app task or challenge surface through. The legacy
-          // /task/run and /task/checkin screens are kept for back-compat,
-          // but unified timer tasks (prayer, etc.) route to
-          // /challenge/active/{id} — which the previous guard rejected,
-          // dumping users into the orphaned legacy run screen.
+          // Allow in-app task (/task/complete) and challenge surfaces through.
+          // Unified timer tasks (prayer, etc.) deep-link to /challenge/active/{id}.
           const isAllowed =
             r.startsWith("/task/") ||
             r.startsWith("/challenge/") ||

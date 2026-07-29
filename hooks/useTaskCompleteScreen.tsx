@@ -318,8 +318,6 @@ export function TaskCompleteScreenInner() {
 
   // Lock-screen timer notification — starts when a timer task begins,
   // updates every 30s, and clears on unmount / pause / submit.
-  // Mirrors the pattern in app/task/checkin.tsx (startSession) so timer
-  // tasks going through the unified screen get the same lock-screen widget.
   useEffect(() => {
     // Only timer-based tasks get the lock screen widget.
     if (showWorkoutTimer && requiredSeconds > 0) {
@@ -332,8 +330,7 @@ export function TaskCompleteScreenInner() {
     if (!isTimerRunning) {
       return;
     }
-    // Build payload — route deep-links back to this task via the active-challenge screen,
-    // since nothing pushes to TASK_CHECKIN/TASK_RUN anymore.
+    // Build payload — deep-link back to this task via the active-challenge screen.
     const notifPayload: ActiveTaskTimerPayload = {
       taskId,
       taskTitle: taskName,

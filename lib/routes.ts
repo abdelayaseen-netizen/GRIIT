@@ -38,8 +38,6 @@ export const ROUTES = {
   POST_ID: (id: string) => `/post/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
   TASK_COMPLETE: "/task/complete",
-  TASK_CHECKIN: "/task/checkin",
-  TASK_RUN: "/task/run",
   CHALLENGE_COMPLETE: "/challenge/complete",
   PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",

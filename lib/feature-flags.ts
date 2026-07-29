@@ -11,7 +11,7 @@
 
 export const FLAGS = {
   IS_BETA: true,
-  /** When false, location check-in task shows "Coming soon" and does not navigate to task/checkin. */
+  /** When false, location check-in task shows "Coming soon" on the unified complete screen. */
   LOCATION_CHECKIN_ENABLED: false,
   PREMIUM_ENABLED: true,
   PREMIUM_CHALLENGE_PACKS: true,
@@ -54,17 +54,6 @@ export const FLAGS = {
    * See BLOCKERS.md B2.
    */
   FREEZE_SERVER_ENFORCED: false,
-  /**
-   * When false, app/task/run.tsx (legacy GPS/treadmill screen) shows a redirect.
-   * Keep false until device-verified parity with task/complete.tsx is confirmed and
-   * old push-notification deep-links are rotated. See BLOCKERS.md B-02.
-   */
-  LEGACY_RUN_SCREEN: false,
-  /**
-   * When false, app/task/checkin.tsx (legacy location-session screen) shows a redirect.
-   * Keep false — setUserLocation gate is broken in the unified screen (see BLOCKERS.md B-01).
-   */
-  LEGACY_CHECKIN_SCREEN: false,
   /**
    * Journal tag chips (Mood / Wins / Photo). Not yet functional — gate until implemented.
    * See BLOCKERS.md B-04.
