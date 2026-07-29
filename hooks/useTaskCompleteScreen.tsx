@@ -52,6 +52,7 @@ import { TaskRunLogBody } from "@/components/task/bodies/TaskRunLogBody";
 import { TaskRunCaptureBody } from "@/components/task/bodies/TaskRunCaptureBody";
 import { TaskWorkoutReadyBody } from "@/components/task/bodies/TaskWorkoutReadyBody";
 import { TaskWorkoutSessionBody } from "@/components/task/bodies/TaskWorkoutSessionBody";
+import { TaskWorkoutCaptureBody } from "@/components/task/bodies/TaskWorkoutCaptureBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { resolveWorkoutReadySubtype } from "@/lib/workout-ready-gates";
@@ -623,7 +624,10 @@ export function TaskCompleteScreenInner() {
         clocked_in_at: isHardVerificationTask ? (clockedInAtRef.current ?? new Date().toISOString()) : undefined,
         task_mode: taskMode,
         proof_payload_json:
-          (taskTypeRaw === "photo" || taskTypeRaw === "run") && captureMeta
+          (taskTypeRaw === "photo" ||
+            taskTypeRaw === "run" ||
+            taskTypeRaw === "workout") &&
+          captureMeta
             ? {
                 capturedAt: captureMeta.capturedAt,
                 captured_in_app: captureMeta.captured_in_app,
@@ -947,6 +951,11 @@ export function TaskCompleteScreenInner() {
     isArmed &&
     taskTypeRaw === "workout" &&
     workoutPhase === "session";
+  const isWorkoutCapture =
+    FLAGS.TASK_START_ARMING &&
+    isArmed &&
+    taskTypeRaw === "workout" &&
+    workoutPhase === "capture";
   const workoutHasFloor = taskTypeRaw === "workout" && minDurMinutes > 0;
   const workoutSessionOk = workoutHasFloor
     ? timerOk
@@ -1119,6 +1128,19 @@ export function TaskCompleteScreenInner() {
           />
         );
       case "workout":
+        if (workoutPhase === "capture") {
+          return (
+            <TaskWorkoutCaptureBody
+              config={config}
+              photoUri={photoUri}
+              photoUploading={photoUploading}
+              onTakePhoto={() => {
+                void handleTakePhoto();
+              }}
+              onClearPhoto={clearPhoto}
+            />
+          );
+        }
         return (
           <TaskWorkoutSessionBody
             kinds={WORKOUT_KINDS}
@@ -1204,6 +1226,7 @@ export function TaskCompleteScreenInner() {
     runPhase,
     minDurMinutes,
     workoutHasFloor,
+    workoutPhase,
     workoutKind,
     workoutDuration,
     workoutNotes,
@@ -1482,8 +1505,9 @@ export function TaskCompleteScreenInner() {
           loading: false,
         };
       }
-      // Capture phase wired in Step 20 — interim submit until then.
-      label = "Finish session";
+      // Capture (optional): submit with or without photo.
+      label = photoUri ? "Submit proof" : "Skip photo";
+      if (photoUploading) disabledReason = "Uploading…";
     } else if (taskTypeRaw === "journal") {
       // "Start writing" is the only CTA — arms when unarmed (handled above); saves when gate met.
       label = "Start writing";
@@ -1507,7 +1531,9 @@ export function TaskCompleteScreenInner() {
       disabled:
         taskTypeRaw === "run" && runPhase === "capture"
           ? photoUploading || !runFormOk
-          : !canSubmit,
+          : taskTypeRaw === "workout" && workoutPhase === "capture"
+            ? photoUploading || !workoutSessionOk
+            : !canSubmit,
       disabledReason,
       loading: isSubmitting,
     };
@@ -1698,7 +1724,8 @@ export function TaskCompleteScreenInner() {
           isRunLog ||
           isRunCapture ||
           isWorkoutReady ||
-          isWorkoutSession
+          isWorkoutSession ||
+          isWorkoutCapture
             ? undefined
             : shellGates
         }
@@ -1707,7 +1734,7 @@ export function TaskCompleteScreenInner() {
             ? PHOTO_READY_SUBTYPE
             : isRunReady || isRunLog || isRunCapture
               ? runReadySubtype
-              : isWorkoutReady || isWorkoutSession
+              : isWorkoutReady || isWorkoutSession || isWorkoutCapture
                 ? workoutReadySubtype
                 : undefined
         }
@@ -1719,7 +1746,8 @@ export function TaskCompleteScreenInner() {
           isRunLog ||
           isRunCapture ||
           isWorkoutReady ||
-          isWorkoutSession
+          isWorkoutSession ||
+          isWorkoutCapture
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
