@@ -40,7 +40,6 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { TaskShell, type TaskShellGates, type TaskShellMissedState } from "@/components/task/TaskShell";
 import { TaskSimpleBody } from "@/components/task/bodies/TaskSimpleBody";
 import { TaskTimerBody, type TimerSound } from "@/components/task/bodies/TaskTimerBody";
-import { TaskRunBody } from "@/components/task/bodies/TaskRunBody";
 import { TaskWorkoutBody } from "@/components/task/bodies/TaskWorkoutBody";
 import { TaskJournalBody } from "@/components/task/bodies/TaskJournalBody";
 import { TaskCounterBody, type CounterVariant } from "@/components/task/bodies/TaskCounterBody";
@@ -50,6 +49,7 @@ import { TaskPhotoReadyBody } from "@/components/task/bodies/TaskPhotoReadyBody"
 import { TaskPhotoCaptureBody } from "@/components/task/bodies/TaskPhotoCaptureBody";
 import { TaskPhotoCaptionBody } from "@/components/task/bodies/TaskPhotoCaptionBody";
 import { TaskRunReadyBody } from "@/components/task/bodies/TaskRunReadyBody";
+import { TaskRunLogBody } from "@/components/task/bodies/TaskRunLogBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
@@ -131,8 +131,10 @@ export function TaskCompleteScreenInner() {
   const manualScale = useRef(new Animated.Value(1)).current;
   const runDistanceKm = useRef("0.0");
   const runDurationMin = useRef("0");
-  const [runDistance, setRunDistance] = useState("0.0");
-  const [runDuration, setRunDuration] = useState("0");
+  const [runDistance, setRunDistance] = useState("");
+  const [runDuration, setRunDuration] = useState("");
+  /** Run log entry path — "timer" once in-app timer is used; else "hand". */
+  const [runEntryMode, setRunEntryMode] = useState<"hand" | "timer">("hand");
   const [workoutDuration, setWorkoutDuration] = useState("");
   const [workoutKind, setWorkoutKind] = useState<string>(WORKOUT_KINDS[0] ?? "Gym");
   const [workoutNotes, setWorkoutNotes] = useState("");
@@ -904,7 +906,20 @@ export function TaskCompleteScreenInner() {
     FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo" && !!photoUri;
   const isRunReady =
     FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "run";
+  const isRunLog =
+    FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "run";
   const runReadySubtype = resolveRunReadySubtype(config);
+
+  const handleRunToggleTimer = useCallback(() => {
+    setRunEntryMode("timer");
+    toggleTimer();
+  }, [toggleTimer]);
+
+  // Keep duration field in sync when logging via in-app timer.
+  useEffect(() => {
+    if (taskTypeRaw !== "run" || runEntryMode !== "timer") return;
+    setRunDuration(String(Math.max(0, Math.floor(timerSeconds / 60))));
+  }, [taskTypeRaw, runEntryMode, timerSeconds]);
 
   // One 30s tick shared by GatesCard chip + Start CTA while Photo/Run · Ready is mounted.
   const readyScheduleNow = useScheduleWindowNow({
@@ -1007,26 +1022,21 @@ export function TaskCompleteScreenInner() {
         );
       case "run":
         return (
-          <TaskRunBody
-            value={{
-              distanceKm: parseFloat(runDistance.replace(",", ".")) || 0,
-              elapsedSeconds: timerSeconds,
+          <TaskRunLogBody
+            distance={runDistance}
+            onChangeDistance={(v) => {
+              setRunEntryMode((m) => (m === "timer" ? m : "hand"));
+              setRunDistance(v);
             }}
-            goalKm={
-              typeof (config as { goal_km?: number }).goal_km === "number"
-                ? (config as { goal_km?: number }).goal_km
-                : undefined
-            }
-            goalMinutes={minDurMinutes > 0 ? minDurMinutes : undefined}
-            isRunning={isTimerRunning}
-            hasGps={false}
-            onTogglePlay={isRunTimed ? toggleTimer : undefined}
-            manualInput={{
-              distance: runDistance,
-              onChangeDistance: setRunDistance,
-              duration: runDuration,
-              onChangeDuration: setRunDuration,
+            duration={runDuration}
+            onChangeDuration={(v) => {
+              setRunEntryMode("hand");
+              setRunDuration(v);
             }}
+            showTimer
+            isTimerRunning={isTimerRunning}
+            timerDisplay={timerDisplay}
+            onToggleTimer={handleRunToggleTimer}
           />
         );
       case "workout":
@@ -1122,7 +1132,7 @@ export function TaskCompleteScreenInner() {
     setRunDistance,
     setRunDuration,
     isRunTimed,
-    toggleTimer,
+    handleRunToggleTimer,
     timerSeconds,
     minDurMinutes,
     workoutKind,
@@ -1536,19 +1546,23 @@ export function TaskCompleteScreenInner() {
         hardMode={isHardVerificationTask}
         // Photo Ready/Capture/Caption own chrome — suppress shell hard-mode card.
         verificationGates={
-          isPhotoReady || isPhotoCapture || isPhotoCaption || isRunReady
+          isPhotoReady || isPhotoCapture || isPhotoCaption || isRunReady || isRunLog
             ? undefined
             : shellGates
         }
         toplineMeta={
           isPhotoReady || isPhotoCapture || isPhotoCaption
             ? PHOTO_READY_SUBTYPE
-            : isRunReady
+            : isRunReady || isRunLog
               ? runReadySubtype
               : undefined
         }
         hideHeaderTaskName={
-          isPhotoReady || isPhotoCapture || isPhotoCaption || isRunReady
+          isPhotoReady ||
+          isPhotoCapture ||
+          isPhotoCaption ||
+          isRunReady ||
+          isRunLog
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
