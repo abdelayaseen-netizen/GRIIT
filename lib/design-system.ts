@@ -1216,6 +1216,16 @@ export const DS_COLORS_V2 = {
     gatePendingFg: '#888888',
     gatePassBg: '#EBF5EE',
     gatePassFg: '#3D7A5A',
+
+    // ── task-states-v2 ──────────────────────────────────────────────────────
+    // Live "● In window" / green-check rows on dark Capture + Verifying surfaces.
+    // Lighter than `semantic.success` (#0F6E56) so the dot stays readable on
+    // `surface.heroDark` / `surface.canvasDark`. Spec mock greens map here —
+    // do not inline a fourth green.
+    inWindowOnDark: '#5BA88A',
+    // Soft orange glow behind the Secured check circle (brand.primary @ 30%).
+    // Spec mock shades #C44A01 / #A03C02 map to brand.primary / brand.primaryHover.
+    securedGlow: 'rgba(220, 84, 1, 0.30)',
   },
 } as const;
 
