@@ -47,6 +47,11 @@ export type TaskCompleteConfig = {
   schedule_timezone?: string;
   require_camera_only?: boolean;
   require_strava?: boolean;
+  /** Optional Ready topline subtype (run etc.). */
+  subtype?: string;
+  label?: string;
+  /** Additive — forwarded from challenge_tasks.config.unit_label when present. */
+  unit_label?: string;
 };
 
 export function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {

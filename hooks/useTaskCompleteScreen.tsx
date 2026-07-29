@@ -49,10 +49,12 @@ import { TaskReadyCard } from "@/components/task/bodies/TaskReadyCard";
 import { TaskPhotoReadyBody } from "@/components/task/bodies/TaskPhotoReadyBody";
 import { TaskPhotoCaptureBody } from "@/components/task/bodies/TaskPhotoCaptureBody";
 import { TaskPhotoCaptionBody } from "@/components/task/bodies/TaskPhotoCaptionBody";
+import { TaskRunReadyBody } from "@/components/task/bodies/TaskRunReadyBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
+import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
-import { decidePhotoReadyStart } from "@/lib/photo-ready-start";
+import { decideReadyStart } from "@/lib/ready-start";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingOverlay,
@@ -900,38 +902,53 @@ export function TaskCompleteScreenInner() {
     FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo" && !photoUri;
   const isPhotoCaption =
     FLAGS.TASK_START_ARMING && isArmed && taskTypeRaw === "photo" && !!photoUri;
+  const isRunReady =
+    FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "run";
+  const runReadySubtype = resolveRunReadySubtype(config);
 
-  // One 30s tick shared by GatesCard chip + Start CTA while Photo · Ready is mounted.
-  const photoReadyScheduleNow = useScheduleWindowNow({ enabled: isPhotoReady });
-  const photoReadyStart = useMemo(() => {
-    if (!isPhotoReady) return { canStart: true as const };
+  // One 30s tick shared by GatesCard chip + Start CTA while Photo/Run · Ready is mounted.
+  const readyScheduleNow = useScheduleWindowNow({
+    enabled: isPhotoReady || isRunReady,
+  });
+  const readyStart = useMemo(() => {
+    if (!isPhotoReady && !isRunReady) return { canStart: true as const };
     const evaluation = evaluateScheduleWindow({
       start: config.schedule_window_start,
       end: config.schedule_window_end,
       timeZone: config.schedule_timezone,
-      now: photoReadyScheduleNow,
+      now: readyScheduleNow,
     });
-    return decidePhotoReadyStart({
+    return decideReadyStart({
       status: evaluation.status,
       windowStart: config.schedule_window_start,
     });
   }, [
     isPhotoReady,
+    isRunReady,
     config.schedule_window_start,
     config.schedule_window_end,
     config.schedule_timezone,
-    photoReadyScheduleNow,
+    readyScheduleNow,
   ]);
 
   const renderBody = useCallback(() => {
-    // Ready state: Photo uses task-states-v2 GatesCard; other types keep TaskReadyCard.
+    // Ready state: Photo/Run use task-states-v2 GatesCard; other types keep TaskReadyCard.
     if (FLAGS.TASK_START_ARMING && !isArmed) {
       if (taskTypeRaw === "photo") {
         return (
           <TaskPhotoReadyBody
             config={config}
             taskTitle={taskName}
-            scheduleNow={photoReadyScheduleNow}
+            scheduleNow={readyScheduleNow}
+          />
+        );
+      }
+      if (taskTypeRaw === "run") {
+        return (
+          <TaskRunReadyBody
+            config={config}
+            taskTitle={taskName}
+            scheduleNow={readyScheduleNow}
           />
         );
       }
@@ -1088,7 +1105,7 @@ export function TaskCompleteScreenInner() {
     photoUri,
     photoUploading,
     photoCaption,
-    photoReadyScheduleNow,
+    readyScheduleNow,
     handleTakePhoto,
     clearPhoto,
     config,
@@ -1282,13 +1299,13 @@ export function TaskCompleteScreenInner() {
       let readyLabel = "Start";
       if (taskTypeRaw === "journal") readyLabel = "Start writing";
       else if (taskTypeRaw === "timer") readyLabel = "Start now";
-      // Photo only: disable Start out of window — CTA shows "Opens at {HH:MM}".
-      if (taskTypeRaw === "photo") {
+      // Photo / Run: disable Start out of window — CTA shows "Opens at {HH:MM}".
+      if (taskTypeRaw === "photo" || taskTypeRaw === "run") {
         return {
           label: readyLabel,
           onPress: () => void handleArm(),
-          disabled: !photoReadyStart.canStart,
-          disabledReason: photoReadyStart.disabledReason,
+          disabled: !readyStart.canStart,
+          disabledReason: readyStart.disabledReason,
           loading: false,
         };
       }
@@ -1353,7 +1370,7 @@ export function TaskCompleteScreenInner() {
     isArmed,
     handleArm,
     taskTypeRaw,
-    photoReadyStart,
+    readyStart,
     needsPhotoProof,
     photoOk,
     timerOk,
@@ -1519,14 +1536,20 @@ export function TaskCompleteScreenInner() {
         hardMode={isHardVerificationTask}
         // Photo Ready/Capture/Caption own chrome — suppress shell hard-mode card.
         verificationGates={
-          isPhotoReady || isPhotoCapture || isPhotoCaption ? undefined : shellGates
+          isPhotoReady || isPhotoCapture || isPhotoCaption || isRunReady
+            ? undefined
+            : shellGates
         }
         toplineMeta={
           isPhotoReady || isPhotoCapture || isPhotoCaption
             ? PHOTO_READY_SUBTYPE
-            : undefined
+            : isRunReady
+              ? runReadySubtype
+              : undefined
         }
-        hideHeaderTaskName={isPhotoReady || isPhotoCapture || isPhotoCaption}
+        hideHeaderTaskName={
+          isPhotoReady || isPhotoCapture || isPhotoCaption || isRunReady
+        }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
         primaryCta={primaryCta}

@@ -33,6 +33,8 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
       schedule_timezone: typeof cfg.schedule_timezone === "string" ? cfg.schedule_timezone : undefined,
       require_camera_only: cfg.require_camera_only === true,
       require_strava: cfg.require_strava === true,
+      // Additive only — optional Ready subtype source for run (and others).
+      unit_label: typeof cfg.unit_label === "string" ? cfg.unit_label : undefined,
     });
   } catch (err) {
     captureError(err, "BuildTaskConfigParam");
