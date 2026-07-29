@@ -53,9 +53,11 @@ import { TaskRunCaptureBody } from "@/components/task/bodies/TaskRunCaptureBody"
 import { TaskWorkoutReadyBody } from "@/components/task/bodies/TaskWorkoutReadyBody";
 import { TaskWorkoutSessionBody } from "@/components/task/bodies/TaskWorkoutSessionBody";
 import { TaskWorkoutCaptureBody } from "@/components/task/bodies/TaskWorkoutCaptureBody";
+import { TaskJournalReadyBody } from "@/components/task/bodies/TaskJournalReadyBody";
 import { PHOTO_READY_SUBTYPE } from "@/lib/photo-ready-gates";
 import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { resolveWorkoutReadySubtype } from "@/lib/workout-ready-gates";
+import { resolveJournalReadySubtype } from "@/lib/journal-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { decideReadyStart } from "@/lib/ready-start";
@@ -982,6 +984,8 @@ export function TaskCompleteScreenInner() {
     isArmed &&
     taskTypeRaw === "workout" &&
     workoutPhase === "capture";
+  const isJournalReady =
+    FLAGS.TASK_START_ARMING && !isArmed && taskTypeRaw === "journal";
   const workoutHasFloor = taskTypeRaw === "workout" && minDurMinutes > 0;
   const workoutSessionOk = workoutHasFloor
     ? timerOk
@@ -991,6 +995,7 @@ export function TaskCompleteScreenInner() {
     : 0;
   const runReadySubtype = resolveRunReadySubtype(config);
   const workoutReadySubtype = resolveWorkoutReadySubtype(config);
+  const journalReadySubtype = resolveJournalReadySubtype(config);
 
   const handleRunToggleTimer = useCallback(() => {
     setRunEntryMode("timer");
@@ -1009,12 +1014,12 @@ export function TaskCompleteScreenInner() {
     setWorkoutDuration(String(Math.max(0, Math.floor(timerSeconds / 60))));
   }, [taskTypeRaw, workoutHasFloor, timerSeconds]);
 
-  // One 30s tick shared by GatesCard chip + Start CTA while Photo/Run/Workout · Ready is mounted.
+  // One 30s tick shared by GatesCard chip + Start CTA while Photo/Run/Workout/Journal · Ready is mounted.
   const readyScheduleNow = useScheduleWindowNow({
-    enabled: isPhotoReady || isRunReady || isWorkoutReady,
+    enabled: isPhotoReady || isRunReady || isWorkoutReady || isJournalReady,
   });
   const readyStart = useMemo(() => {
-    if (!isPhotoReady && !isRunReady && !isWorkoutReady) {
+    if (!isPhotoReady && !isRunReady && !isWorkoutReady && !isJournalReady) {
       return { canStart: true as const };
     }
     const evaluation = evaluateScheduleWindow({
@@ -1031,6 +1036,7 @@ export function TaskCompleteScreenInner() {
     isPhotoReady,
     isRunReady,
     isWorkoutReady,
+    isJournalReady,
     config.schedule_window_start,
     config.schedule_window_end,
     config.schedule_timezone,
@@ -1038,7 +1044,7 @@ export function TaskCompleteScreenInner() {
   ]);
 
   const renderBody = useCallback(() => {
-    // Ready state: Photo/Run/Workout use GatesCard; other types keep TaskReadyCard.
+    // Ready state: Photo/Run/Workout/Journal use GatesCard; other types keep TaskReadyCard.
     if (FLAGS.TASK_START_ARMING && !isArmed) {
       if (taskTypeRaw === "photo") {
         return (
@@ -1068,12 +1074,21 @@ export function TaskCompleteScreenInner() {
           />
         );
       }
+      if (taskTypeRaw === "journal") {
+        return (
+          <TaskJournalReadyBody
+            config={config}
+            taskTitle={taskName}
+            minWords={minWords}
+            scheduleNow={readyScheduleNow}
+          />
+        );
+      }
       return (
         <TaskReadyCard
           taskTypeRaw={taskTypeRaw}
           config={config}
           counterGoal={isCounterFamily ? counterGoal : undefined}
-          minWords={taskTypeRaw === "journal" ? minWords : undefined}
         />
       );
     }
@@ -1256,6 +1271,7 @@ export function TaskCompleteScreenInner() {
     workoutKind,
     workoutDuration,
     workoutNotes,
+    minWords,
     config,
     timerSound,
     timerDisplay,
@@ -1447,11 +1463,12 @@ export function TaskCompleteScreenInner() {
       let readyLabel = "Start";
       if (taskTypeRaw === "journal") readyLabel = "Start writing";
       else if (taskTypeRaw === "timer") readyLabel = "Start now";
-      // Photo / Run / Workout: disable Start out of window — CTA shows "Opens at {HH:MM}".
+      // Photo / Run / Workout / Journal: disable Start out of window — CTA shows "Opens at {HH:MM}".
       if (
         taskTypeRaw === "photo" ||
         taskTypeRaw === "run" ||
-        taskTypeRaw === "workout"
+        taskTypeRaw === "workout" ||
+        taskTypeRaw === "journal"
       ) {
         return {
           label: readyLabel,
@@ -1762,7 +1779,8 @@ export function TaskCompleteScreenInner() {
           isRunCapture ||
           isWorkoutReady ||
           isWorkoutSession ||
-          isWorkoutCapture
+          isWorkoutCapture ||
+          isJournalReady
             ? undefined
             : shellGates
         }
@@ -1773,7 +1791,9 @@ export function TaskCompleteScreenInner() {
               ? runReadySubtype
               : isWorkoutReady || isWorkoutSession || isWorkoutCapture
                 ? workoutReadySubtype
-                : undefined
+                : isJournalReady
+                  ? journalReadySubtype
+                  : undefined
         }
         hideHeaderTaskName={
           isPhotoReady ||
@@ -1784,7 +1804,8 @@ export function TaskCompleteScreenInner() {
           isRunCapture ||
           isWorkoutReady ||
           isWorkoutSession ||
-          isWorkoutCapture
+          isWorkoutCapture ||
+          isJournalReady
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
