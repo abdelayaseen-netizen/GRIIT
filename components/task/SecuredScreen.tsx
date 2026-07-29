@@ -2,8 +2,7 @@
  * SecuredScreen — light-bg success phase for task-states-v2.
  *
  * Streak count is read from `useApp().stats.activeStreak` (real stats query),
- * never accepted as a hard-coded prop literal. Step 7 replaces the inline
- * streak chip with `<StreakPill />`.
+ * never accepted as a hard-coded prop literal. Rendered via `<StreakPill />`.
  */
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
@@ -14,6 +13,7 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
+import { StreakPill } from "@/components/task/StreakPill";
 
 export type SecuredScreenProps = {
   /** Challenge day number — rendered as "Day {n} secured". */
@@ -63,14 +63,8 @@ export function SecuredScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.meta}>{meta}</Text>
 
-        {/* Inline streak chip — replaced by <StreakPill /> in Step 7. */}
-        <View style={styles.streakChip} accessibilityLabel={`${streakCount} day streak`}>
-          <Flame
-            size={14}
-            color={DS_COLORS_V2.brand.primary}
-            strokeWidth={2}
-          />
-          <Text style={styles.streakText}>{`${streakCount} day streak`}</Text>
+        <View style={styles.streakWrap}>
+          <StreakPill streakCount={streakCount} />
         </View>
       </View>
 
@@ -145,20 +139,8 @@ const styles = StyleSheet.create({
     color: DS_COLORS_V2.text.secondary,
     textAlign: "center",
   },
-  streakChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  streakWrap: {
     marginTop: DS_SPACING_V2.md,
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingVertical: DS_SPACING_V2.xs,
-    borderRadius: DS_RADIUS_V2.full,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-  },
-  streakText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
   },
   doneCta: {
     backgroundColor: DS_COLORS_V2.brand.primary,
