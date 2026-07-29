@@ -27,6 +27,7 @@ import {
   assertHardModeCameraOnly,
   evaluateTaskLocation,
 } from "../../lib/checkin-complete-gates";
+import { photoProofPayloadSchema } from "../../lib/proof-payload";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -62,6 +63,8 @@ export const checkinsRouter = createTRPCRouter({
         timer_seconds_on_screen: z.number().int().min(0).optional(),
         clocked_in_at: z.string().datetime().optional(),
         task_mode: z.enum(["full", "minimum"]).default("full"),
+        /** Camera capture meta for photo proofs — strict shape; Strava uses its own writer. */
+        proof_payload_json: photoProofPayloadSchema.optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -295,6 +298,7 @@ export const checkinsRouter = createTRPCRouter({
       if (input.location_longitude != null) payload.location_longitude = input.location_longitude;
       if (input.timer_seconds_on_screen != null) payload.timer_seconds_on_screen = input.timer_seconds_on_screen;
       if (input.clocked_in_at != null) payload.clocked_in_at = input.clocked_in_at;
+      if (input.proof_payload_json != null) payload.proof_payload_json = input.proof_payload_json;
       if (Object.keys(verificationGates).length > 0) payload.verification_gates = verificationGates;
 
       const { data, error } = await ctx.supabase
