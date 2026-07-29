@@ -85,7 +85,11 @@ export function useAppChallengeMutations({
       clocked_in_at?: string;
       task_mode?: "full" | "minimum";
       proof_payload_json?: { capturedAt: string; captured_in_app: boolean };
-    }): Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void> => {
+    }): Promise<{
+      firstTaskOfDay?: boolean;
+      completionId?: string;
+      verification?: { rows: { key: string; label: string; verified: boolean }[] };
+    } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
           (t) => (t.config?.required ?? true) === true
@@ -108,7 +112,10 @@ export function useAppChallengeMutations({
       };
       setTodayCheckins((prev) => [...prev, optimisticCheckin]);
 
-      return trpcMutate<{ id?: string }>(TRPC.checkins.complete, params)
+      return trpcMutate<{
+        id?: string;
+        verification?: { rows: { key: string; label: string; verified: boolean }[] };
+      }>(TRPC.checkins.complete, params)
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
           const challengeIdForRetention = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
@@ -202,14 +209,25 @@ export function useAppChallengeMutations({
               /* non-fatal */
             }
           }
-          return { firstTaskOfDay, completionId: data?.id };
+          return {
+            firstTaskOfDay,
+            completionId: data?.id,
+            verification: data?.verification,
+          };
         })
         .catch((err: unknown) => {
           setTodayCheckins(previousCheckins);
           const msg =
             err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
           captureError(err, "AppContextCompleteTask");
-          throw new Error(msg);
+          const verification = (
+            err as { data?: { verification?: { rows: { key: string; label: string; verified: boolean }[] } } }
+          )?.data?.verification;
+          const next = new Error(msg) as Error & {
+            data?: { verification?: { rows: { key: string; label: string; verified: boolean }[] } };
+          };
+          if (verification) next.data = { verification };
+          throw next;
         });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setTodayCheckins is a stable setState dispatch

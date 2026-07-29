@@ -55,6 +55,10 @@ import {
   buildVerifyingRows,
   getTypeSuccessLine,
 } from "@/components/task/VerifyingOverlay";
+import {
+  VerifyingProof,
+  type VerifyingProofRow,
+} from "@/components/task/VerifyingProof";
 import * as ImagePicker from "expo-image-picker";
 import { FLAGS } from "@/lib/feature-flags";
 import {
@@ -112,6 +116,10 @@ export function TaskCompleteScreenInner() {
   const [heartRateManual, setHeartRateManual] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** Photo · Verifying — server rows only; other types keep VerifyingOverlay. */
+  const [showPhotoVerifying, setShowPhotoVerifying] = useState(false);
+  const [photoVerifyRows, setPhotoVerifyRows] = useState<VerifyingProofRow[]>([]);
+  const [photoVerifyError, setPhotoVerifyError] = useState<string | null>(null);
   const [minimumConfirmVisible, setMinimumConfirmVisible] = useState(false);
   const [paramsReady, setParamsReady] = useState(false);
   const manualScale = useRef(new Animated.Value(1)).current;
@@ -527,13 +535,19 @@ export function TaskCompleteScreenInner() {
       }
       return;
     }
-    // Record start time for the Verifying overlay 600 ms legibility floor.
+    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo).
     verifyStartMsRef.current = Date.now();
     const nowLabel = new Date().toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
     });
     setSubmitTimeLabel(nowLabel);
+    const isPhotoSubmit = taskTypeRaw === "photo";
+    if (isPhotoSubmit) {
+      setShowPhotoVerifying(true);
+      setPhotoVerifyRows([]);
+      setPhotoVerifyError(null);
+    }
     setIsSubmitting(true);
     try {
       let noteTextOut: string | undefined;
@@ -597,6 +611,23 @@ export function TaskCompleteScreenInner() {
           : undefined
       );
 
+      if (isPhotoSubmit) {
+        const serverRows =
+          completionResult &&
+          typeof completionResult === "object" &&
+          "verification" in completionResult
+            ? (completionResult as {
+                verification?: { rows: { label: string; verified: boolean }[] };
+              }).verification?.rows
+            : undefined;
+        setPhotoVerifyRows(
+          (serverRows ?? []).map((r) => ({
+            label: r.label,
+            verified: r.verified,
+          }))
+        );
+      }
+
       // Same progress source as AppContext canSecureDay: required tasks + completed check-ins.
       // Include this taskId so the condition reflects post-completion state (closure todayCheckins is pre-submit).
       const requiredTasks =
@@ -626,11 +657,30 @@ export function TaskCompleteScreenInner() {
           captureError(secureErr, "TaskCompleteSecureDay");
         }
       }
-      // Enforce 600 ms minimum for Verifying overlay legibility.
-      const elapsed = Date.now() - verifyStartMsRef.current;
-      const MIN_VERIFY_MS = 600;
-      if (elapsed < MIN_VERIFY_MS) {
-        await new Promise<void>((res) => setTimeout(res, MIN_VERIFY_MS - elapsed));
+      // Photo: no fake floor — duration is the request; brief settle so server rows can paint.
+      // Other types: keep 600 ms VerifyingOverlay legibility floor.
+      if (isPhotoSubmit) {
+        setIsSubmitting(false);
+        const rowCount =
+          completionResult &&
+          typeof completionResult === "object" &&
+          "verification" in completionResult
+            ? (
+                completionResult as {
+                  verification?: { rows: unknown[] };
+                }
+              ).verification?.rows?.length ?? 0
+            : 0;
+        const settleMs = rowCount > 0 ? 280 + (rowCount - 1) * 80 + 80 : 0;
+        if (settleMs > 0) {
+          await new Promise<void>((res) => setTimeout(res, settleMs));
+        }
+      } else {
+        const elapsed = Date.now() - verifyStartMsRef.current;
+        const MIN_VERIFY_MS = 600;
+        if (elapsed < MIN_VERIFY_MS) {
+          await new Promise<void>((res) => setTimeout(res, MIN_VERIFY_MS - elapsed));
+        }
       }
       setSubmitted(true);
       try {
@@ -668,7 +718,26 @@ export function TaskCompleteScreenInner() {
       }
     } catch (err: unknown) {
       captureError(err, "TaskCompleteCompleteTask");
-      showError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      const message =
+        err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      if (isPhotoSubmit) {
+        const verification = (
+          err as {
+            data?: { verification?: { rows: { label: string; verified: boolean }[] } };
+          }
+        )?.data?.verification;
+        if (verification?.rows?.length) {
+          setPhotoVerifyRows(
+            verification.rows.map((r) => ({
+              label: r.label,
+              verified: r.verified,
+            }))
+          );
+        }
+        setPhotoVerifyError(message);
+      } else {
+        showError(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -1313,6 +1382,18 @@ export function TaskCompleteScreenInner() {
     );
   }
 
+  if (showPhotoVerifying && !submitted) {
+    return (
+      <View style={{ flex: 1, backgroundColor: DS_COLORS_V2.surface.heroDark }}>
+        <VerifyingProof
+          rows={photoVerifyRows}
+          error={photoVerifyError}
+          loading={isSubmitting}
+        />
+      </View>
+    );
+  }
+
   if (submitted) {
     return (
       <TaskCompleteCelebration
@@ -1392,7 +1473,7 @@ export function TaskCompleteScreenInner() {
         {renderBody()}
       </TaskShell>
       <VerifyingOverlay
-        visible={isSubmitting}
+        visible={isSubmitting && taskTypeRaw !== "photo"}
         rows={verifyingRows}
         typeSuccessLine={typeSuccessLine}
       />

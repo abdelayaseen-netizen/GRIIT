@@ -80,17 +80,20 @@ export async function trpcMutate<T = unknown>(
       notifySessionExpired();
     }
     let errorMessage = `tRPC mutation failed: ${path} (${response.status})`;
-    let errorCode: string | undefined;
+    let errorData: Record<string, unknown> | undefined;
     try {
       const parsed = JSON.parse(responseText);
       if (parsed?.error?.message) errorMessage = parsed.error.message;
       else if (parsed?.error?.json?.message) errorMessage = parsed.error.json.message;
-      errorCode = parsed?.error?.data?.code ?? parsed?.error?.code;
+      const rawData = parsed?.error?.data ?? parsed?.error?.json?.data;
+      if (rawData && typeof rawData === "object") {
+        errorData = rawData as Record<string, unknown>;
+      }
     } catch {
       // JSON parse failure means non-JSON response; fall through to default handling
     }
-    const err = new Error(errorMessage) as Error & { data?: { code?: string } };
-    if (errorCode) err.data = { code: errorCode };
+    const err = new Error(errorMessage) as Error & { data?: Record<string, unknown> };
+    if (errorData) err.data = errorData;
     throw err;
   }
 

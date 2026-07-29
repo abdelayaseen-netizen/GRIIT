@@ -41,7 +41,11 @@ type AppContextValue = {
     clocked_in_at?: string;
     task_mode?: "full" | "minimum";
     proof_payload_json?: { capturedAt: string; captured_in_app: boolean };
-  }) => Promise<{ firstTaskOfDay?: boolean; completionId?: string } | void>;
+  }) => Promise<{
+    firstTaskOfDay?: boolean;
+    completionId?: string;
+    verification?: { rows: { key: string; label: string; verified: boolean }[] };
+  } | void>;
   secureDay: () => Promise<{
     newStreakCount: number;
     lastStandEarned?: boolean;
