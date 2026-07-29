@@ -1,8 +1,9 @@
 /**
  * SecuredScreen — light-bg success phase for task-states-v2.
  *
- * Streak count is read from `useApp().stats.activeStreak` (real stats query),
- * never accepted as a hard-coded prop literal. Rendered via `<StreakPill />`.
+ * Streak prefers the post-secure server value when the parent passes
+ * `streakCount`; otherwise falls back to `useApp().stats.activeStreak`.
+ * Never hard-code a literal count at the call site.
  */
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
@@ -22,6 +23,11 @@ export type SecuredScreenProps = {
   title: string;
   /** Meta line, e.g. "Verified in the window" / "5.2 km · 32 min". */
   meta: string;
+  /**
+   * Post-secure streak from secureDay(). When omitted, uses live
+   * `stats.activeStreak` (may briefly lag until fetchStats lands).
+   */
+  streakCount?: number;
   /** Optional Done CTA — wired by the complete-screen shell. */
   onDone?: () => void;
   doneLabel?: string;
@@ -31,12 +37,17 @@ export function SecuredScreen({
   dayNumber,
   title,
   meta,
+  streakCount: streakCountProp,
   onDone,
   doneLabel = "Done",
 }: SecuredScreenProps) {
   const { stats } = useApp();
   const streakCount =
-    typeof stats?.activeStreak === "number" ? stats.activeStreak : 0;
+    typeof streakCountProp === "number"
+      ? streakCountProp
+      : typeof stats?.activeStreak === "number"
+        ? stats.activeStreak
+        : 0;
 
   return (
     <View style={styles.root}>

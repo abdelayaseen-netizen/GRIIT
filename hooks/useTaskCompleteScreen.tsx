@@ -35,6 +35,7 @@ import { useActiveSessionStore } from "@/store/activeSessionStore";
 import { useJournalInput } from "@/hooks/useJournalInput";
 import { useTaskCompleteShareCardProps } from "@/hooks/useTaskCompleteShareCardProps";
 import { TaskCompleteCelebration } from "@/components/task/TaskCompleteCelebration";
+import { SecuredScreen } from "@/components/task/SecuredScreen";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { TaskShell, type TaskShellGates, type TaskShellMissedState } from "@/components/task/TaskShell";
 import { TaskSimpleBody } from "@/components/task/bodies/TaskSimpleBody";
@@ -696,25 +697,29 @@ export function TaskCompleteScreenInner() {
       void clearActiveTaskNotification();
       clearActiveSession();
 
-      const celebTitle = taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
-      showCelebration({
-        title: celebTitle,
-        subtitle: FLAGS.COMPLETION_REWARDS
-          ? `+${taskMode === "minimum" ? 0 : isHardMode ? 8 : 5} points`
-          : "",
-        type: "goal",
-      });
+      // Photo uses SecuredScreen — skip celebration overlay + variable-reward chip.
+      if (!isPhotoSubmit) {
+        const celebTitle =
+          taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
+        showCelebration({
+          title: celebTitle,
+          subtitle: FLAGS.COMPLETION_REWARDS
+            ? `+${taskMode === "minimum" ? 0 : isHardMode ? 8 : 5} points`
+            : "",
+          type: "goal",
+        });
 
-      if (FLAGS.COMPLETION_REWARDS && Math.random() < 0.3) {
-        const rewards = [
-          { label: "2x BONUS — double points!", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
-          { label: "Streak shield earned", color: DS_COLORS_V2.semantic.success, bg: DS_COLORS_V2.semantic.successSoft },
-          { label: "Discipline badge progress +1", color: DS_COLORS_V2.difficulty.hard.fg, bg: DS_COLORS_V2.difficulty.hard.bg },
-          { label: "Bonus: +3 extra points", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
-        ];
-        setVariableReward(rewards[Math.floor(Math.random() * rewards.length)] ?? null);
-      } else {
-        setVariableReward(null);
+        if (FLAGS.COMPLETION_REWARDS && Math.random() < 0.3) {
+          const rewards = [
+            { label: "2x BONUS — double points!", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
+            { label: "Streak shield earned", color: DS_COLORS_V2.semantic.success, bg: DS_COLORS_V2.semantic.successSoft },
+            { label: "Discipline badge progress +1", color: DS_COLORS_V2.difficulty.hard.fg, bg: DS_COLORS_V2.difficulty.hard.bg },
+            { label: "Bonus: +3 extra points", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
+          ];
+          setVariableReward(rewards[Math.floor(Math.random() * rewards.length)] ?? null);
+        } else {
+          setVariableReward(null);
+        }
       }
     } catch (err: unknown) {
       captureError(err, "TaskCompleteCompleteTask");
@@ -1395,6 +1400,30 @@ export function TaskCompleteScreenInner() {
   }
 
   if (submitted) {
+    if (taskTypeRaw === "photo") {
+      const securedDayNumber = Math.max(
+        1,
+        (activeChallenge as { current_day?: number } | null)?.current_day ??
+          headerCurrentDay
+      );
+      return (
+        <>
+          <Stack.Screen options={{ headerShown: false }} />
+          <SafeAreaView
+            style={{ flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas }}
+            edges={["top", "bottom"]}
+          >
+            <SecuredScreen
+              dayNumber={securedDayNumber}
+              title={taskName}
+              meta="Verified in the window"
+              streakCount={completedStreakCount}
+              onDone={() => goBackOrHome(router)}
+            />
+          </SafeAreaView>
+        </>
+      );
+    }
     return (
       <TaskCompleteCelebration
         taskName={taskName}
