@@ -48,6 +48,12 @@ import {
   type JournalLogFacts,
   type JournalVerification,
 } from "../../lib/journal-verification";
+import { decideCounterProgressWrite } from "../../lib/counter-progress";
+import {
+  buildCounterVerification,
+  type CounterLogFacts,
+  type CounterVerification,
+} from "../../lib/counter-verification";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -208,6 +214,10 @@ export const checkinsRouter = createTRPCRouter({
         (typeof input.workout_kind === "string" && input.workout_kind.length > 0);
       // Journal only — do not treat DB "manual" (photo/simple) as journal proof.
       const isJournalProof = taskType === "journal";
+      const isCounterProof =
+        taskType === "counter" ||
+        taskType === "water" ||
+        taskType === "reading";
 
       const sharedDurationMin =
         input.duration_min ??
@@ -305,6 +315,8 @@ export const checkinsRouter = createTRPCRouter({
             cause: { verification },
           });
         }
+      } else if (!isMinimumDay && isCounterProof) {
+        // All-day counters — never apply schedule-window hard reject.
       } else if (!isMinimumDay && isPhotoProof) {
         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
           const verification = buildPhotoVerification({
@@ -488,6 +500,37 @@ export const checkinsRouter = createTRPCRouter({
           floor_min: journalLogFacts.floor_min,
         };
       }
+      const counterTarget =
+        dailyTargets.targetValue ??
+        (typeof cfg.target_value === "number" ? cfg.target_value : null) ??
+        (typeof cfg.target_count === "number" ? cfg.target_count : null) ??
+        (typeof cfg.target_pages === "number" ? cfg.target_pages : null) ??
+        0;
+      const counterUnitPlural =
+        taskType === "water"
+          ? "cups"
+          : taskType === "reading"
+            ? "pages"
+            : typeof cfg.unit_label === "string" && cfg.unit_label.trim()
+              ? cfg.unit_label.trim()
+              : "units";
+      const counterLogFacts: CounterLogFacts | null =
+        isCounterProof &&
+        typeof input.value === "number" &&
+        counterTarget > 0
+          ? {
+              count: input.value,
+              target: counterTarget,
+              unit_plural: counterUnitPlural,
+            }
+          : null;
+      if (!isMinimumDay && counterLogFacts) {
+        verificationGates.counter_log = {
+          count: counterLogFacts.count,
+          target: counterLogFacts.target,
+          unit_plural: counterLogFacts.unit_plural,
+        };
+      }
       if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
         verificationGates.location_gate = {
           status: "passed",
@@ -521,7 +564,8 @@ export const checkinsRouter = createTRPCRouter({
         isPhotoProof &&
         !isRunProof &&
         !isWorkoutProof &&
-        !isJournalProof
+        !isJournalProof &&
+        !isCounterProof
       ) {
         photoVerification = buildPhotoVerification({
           window: windowEval,
@@ -555,6 +599,13 @@ export const checkinsRouter = createTRPCRouter({
         journalVerification = buildJournalVerification({
           window: windowEval,
           journalLog: journalLogFacts,
+        });
+      }
+
+      let counterVerification: CounterVerification | undefined;
+      if (!isMinimumDay && isCounterProof) {
+        counterVerification = buildCounterVerification({
+          counterLog: counterLogFacts,
         });
       }
 
@@ -687,6 +738,112 @@ export const checkinsRouter = createTRPCRouter({
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
         ...(journalVerification ? { verification: journalVerification } : {}),
+        ...(counterVerification ? { verification: counterVerification } : {}),
+      };
+    }),
+
+  /**
+   * Partial counter progress — pending row + value only. Does not complete.
+   * Stale-write guard: incoming < stored → no-op. Completed → BAD_REQUEST.
+   */
+  saveProgress: protectedProcedure
+    .input(
+      z.object({
+        activeChallengeId: z.string().uuid(),
+        taskId: z.string().uuid(),
+        value: z.number().nonnegative(),
+        noteText: z.string().max(2000).optional(),
+        /** Reading page photo URL only — never proof_payload_json. */
+        proofUrl: z.string().max(2000).optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      await assertActiveChallengeOwnership(
+        ctx.supabase,
+        input.activeChallengeId,
+        ctx.userId
+      );
+      // Same day key as complete / getTodayCheckins so hydrate + submit hit one row.
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const dateKey = getTodayDateKey(tz);
+
+      const { data: existing, error: existingErr } = await ctx.supabase
+        .from("check_ins")
+        .select("id, status, value")
+        .eq("active_challenge_id", input.activeChallengeId)
+        .eq("task_id", input.taskId)
+        .eq("date_key", dateKey)
+        .maybeSingle();
+      if (existingErr) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to load progress.",
+        });
+      }
+
+      const row = existing as {
+        id?: string;
+        status?: string;
+        value?: number | null;
+      } | null;
+      const decision = decideCounterProgressWrite({
+        existingStatus: row?.status,
+        existingValue: row?.value,
+        incomingValue: input.value,
+      });
+
+      if (decision.action === "reject_completed") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This task is already completed for today.",
+        });
+      }
+
+      if (decision.action === "noop_stale") {
+        return {
+          id: row?.id ?? null,
+          value: decision.storedValue,
+          status: "pending" as const,
+          date_key: dateKey,
+          stale: true as const,
+        };
+      }
+
+      const payload: Record<string, unknown> = {
+        user_id: ctx.userId,
+        active_challenge_id: input.activeChallengeId,
+        task_id: input.taskId,
+        date_key: dateKey,
+        status: "pending",
+        value: decision.nextValue,
+      };
+      if (input.noteText != null) payload.note_text = input.noteText;
+      if (input.proofUrl != null) {
+        payload.proof_url = input.proofUrl;
+        payload.photo_url = input.proofUrl;
+      }
+
+      const { data, error } = await ctx.supabase
+        .from("check_ins")
+        .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
+        .select("id, value, status, date_key")
+        .single();
+      if (error) {
+        logger.error(
+          { supabaseError: error, payload },
+          "[checkins.saveProgress] upsert FAILED"
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to save progress.",
+        });
+      }
+      return {
+        id: (data as { id?: string } | null)?.id ?? null,
+        value: decision.nextValue,
+        status: "pending" as const,
+        date_key: dateKey,
+        stale: false as const,
       };
     }),
 
