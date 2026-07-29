@@ -88,6 +88,8 @@ export function useAppChallengeMutations({
       distance_km?: number;
       duration_min?: number;
       entry_mode?: "hand" | "timer";
+      workout_kind?: string;
+      floor_min?: number | null;
     }): Promise<{
       firstTaskOfDay?: boolean;
       completionId?: string;

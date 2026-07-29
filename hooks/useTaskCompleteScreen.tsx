@@ -565,7 +565,7 @@ export function TaskCompleteScreenInner() {
       }
       return;
     }
-    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo/run).
+    // Record start time for the Verifying overlay 600 ms legibility floor (non-photo/run/workout).
     verifyStartMsRef.current = Date.now();
     const nowLabel = new Date().toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -574,7 +574,8 @@ export function TaskCompleteScreenInner() {
     setSubmitTimeLabel(nowLabel);
     const isPhotoSubmit = taskTypeRaw === "photo";
     const isRunSubmit = taskTypeRaw === "run";
-    const usesServerVerifying = isPhotoSubmit || isRunSubmit;
+    const isWorkoutSubmit = taskTypeRaw === "workout";
+    const usesServerVerifying = isPhotoSubmit || isRunSubmit || isWorkoutSubmit;
     if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
@@ -582,10 +583,14 @@ export function TaskCompleteScreenInner() {
     }
     setIsSubmitting(true);
     try {
+      const workoutDurationMin = isWorkoutSubmit
+        ? showWorkoutTimer
+          ? Math.floor(timerSeconds / 60)
+          : parseInt(workoutDuration.trim(), 10)
+        : NaN;
       let noteTextOut: string | undefined;
-      if (showWorkoutEntry) {
-        const wm = parseInt(workoutDuration.trim(), 10);
-        const parts = [`Workout: ${wm} min`];
+      if (isWorkoutSubmit && Number.isFinite(workoutDurationMin) && workoutDurationMin >= 1) {
+        const parts = [`Workout: ${workoutDurationMin} min`];
         if (workoutKind) parts.push(workoutKind);
         if (workoutNotes.trim()) parts.push(workoutNotes.trim());
         noteTextOut = parts.join(" · ");
@@ -597,9 +602,9 @@ export function TaskCompleteScreenInner() {
         noteTextOut = photoCaption.trim();
       }
       let valueOut: number | undefined;
-      if (showWorkoutEntry) {
-        valueOut = parseInt(workoutDuration.trim(), 10);
-      } else if (taskTypeRaw === "timer" || (taskTypeRaw === "workout" && showWorkoutTimer)) {
+      if (isWorkoutSubmit && Number.isFinite(workoutDurationMin) && workoutDurationMin >= 1) {
+        valueOut = workoutDurationMin;
+      } else if (taskTypeRaw === "timer") {
         valueOut = Math.floor(timerSeconds / 60);
       } else if (taskTypeRaw === "run") {
         valueOut = isRunTimed && isHardMode ? Math.floor(timerSeconds / 60) : runMin;
@@ -635,9 +640,27 @@ export function TaskCompleteScreenInner() {
             : undefined,
         distance_km:
           isRunSubmit && Number.isFinite(runKm) && runKm > 0 ? runKm : undefined,
-        duration_min:
-          isRunSubmit && Number.isFinite(runMin) && runMin > 0 ? runMin : undefined,
-        entry_mode: isRunSubmit ? runEntryMode : undefined,
+        duration_min: isRunSubmit
+          ? Number.isFinite(runMin) && runMin > 0
+            ? runMin
+            : undefined
+          : isWorkoutSubmit &&
+              Number.isFinite(workoutDurationMin) &&
+              workoutDurationMin >= 1
+            ? workoutDurationMin
+            : undefined,
+        entry_mode: isRunSubmit
+          ? runEntryMode
+          : isWorkoutSubmit
+            ? workoutEntryMode
+            : undefined,
+        workout_kind:
+          isWorkoutSubmit && workoutKind.trim() ? workoutKind.trim() : undefined,
+        floor_min: isWorkoutSubmit
+          ? minDurMinutes > 0
+            ? minDurMinutes
+            : null
+          : undefined,
       });
       setCompletionMeta({ taskId, details: noteTextOut?.trim() ?? "", timeLabel });
       // Capture server-returned streak count for the Secured screen chip.
@@ -697,7 +720,7 @@ export function TaskCompleteScreenInner() {
           captureError(secureErr, "TaskCompleteSecureDay");
         }
       }
-      // Photo/Run: no fake floor — duration is the request; brief settle so server rows can paint.
+      // Photo/Run/Workout: no fake floor — duration is the request; brief settle so server rows can paint.
       // Other types: keep 600 ms VerifyingOverlay legibility floor.
       if (usesServerVerifying) {
         setIsSubmitting(false);
@@ -815,6 +838,8 @@ export function TaskCompleteScreenInner() {
     workoutDuration,
     workoutKind,
     workoutNotes,
+    workoutEntryMode,
+    minDurMinutes,
     photoCaption,
     captureMeta,
     onScreenSecondsRef,
@@ -1569,7 +1594,6 @@ export function TaskCompleteScreenInner() {
   ]);
 
   // Suppress unused warnings for legacy state retained for future migration.
-  void workoutEntryMode; // persisted on submit in Step 21
   void error;
   void clearError;
   void hardVerificationConfig;
