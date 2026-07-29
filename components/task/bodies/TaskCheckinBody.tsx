@@ -1,18 +1,20 @@
 /**
- * Check-in body — geofence map placeholder + location row + range pill.
- *
- * Parent owns the GPS state (current user location, distance from target).
+ * Check-in Confirm — geofence map + range status. No dwell / stay UI (standing cut).
+ * Parent owns GPS state (user location, distance, permission).
  */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
-import { Check, Clock, MapPin, X } from "lucide-react-native";
+import { Check, MapPin, X } from "lucide-react-native";
 
 import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
+
+export const CHECKIN_PERMISSION_HELPER =
+  "Location access is needed to confirm you're at the saved spot." as const;
 
 type TaskCheckinValue = {
   /** True when user is within the geofence radius. */
@@ -27,9 +29,9 @@ export type TaskCheckinBodyProps = {
   distanceMeters?: number;
   /** Reported GPS accuracy in meters. */
   accuracyMeters?: number;
-  /** When > 0, renders the "Required stay" card. */
-  requiredStayMinutes: number;
   hasGps: boolean;
+  /** Permission denied — quiet helper, no Alert. */
+  permissionDenied?: boolean;
 };
 
 export function TaskCheckinBody({
@@ -38,13 +40,15 @@ export function TaskCheckinBody({
   locationAddress,
   distanceMeters,
   accuracyMeters,
-  requiredStayMinutes,
   hasGps,
+  permissionDenied = false,
 }: TaskCheckinBodyProps) {
   const distanceLabel =
     typeof distanceMeters === "number"
-      ? `You're ${Math.round(distanceMeters)} m from saved location`
-      : "Locating…";
+      ? `${Math.round(distanceMeters)} m from your saved location`
+      : permissionDenied
+        ? "Waiting for location access"
+        : "Locating…";
   const accuracyLabel =
     typeof accuracyMeters === "number"
       ? ` · accuracy ±${Math.round(accuracyMeters)} m`
@@ -52,6 +56,8 @@ export function TaskCheckinBody({
 
   return (
     <View style={styles.wrap}>
+      <Text style={styles.heading}>Checking range</Text>
+
       <View style={styles.mapCard}>
         <View style={styles.mapInner}>
           <Svg width="100%" height="100%" viewBox="0 0 200 100" preserveAspectRatio="none">
@@ -93,6 +99,9 @@ export function TaskCheckinBody({
         </View>
 
         <View style={styles.locationRow}>
+          <View style={styles.pinWrap}>
+            <MapPin size={16} color={DS_COLORS_V2.brand.primary} strokeWidth={2} />
+          </View>
           <View style={styles.locationInfo}>
             <Text style={styles.locationName} numberOfLines={1}>
               {locationName}
@@ -140,21 +149,8 @@ export function TaskCheckinBody({
         </Text>
       </View>
 
-      {requiredStayMinutes > 0 ? (
-        <View style={styles.stayCard}>
-          <Clock
-            size={16}
-            color={DS_COLORS_V2.text.primary}
-            strokeWidth={2}
-          />
-          <View style={styles.stayBody}>
-            <Text style={styles.stayTitle}>
-              {`At least ${requiredStayMinutes} minutes`}
-            </Text>
-            <Text style={styles.stayMeta}>Starts on check-in</Text>
-          </View>
-          <MapPin size={14} color={DS_COLORS_V2.brand.primary} strokeWidth={2} />
-        </View>
+      {permissionDenied ? (
+        <Text style={styles.permissionHelper}>{CHECKIN_PERMISSION_HELPER}</Text>
       ) : null}
     </View>
   );
@@ -162,6 +158,12 @@ export function TaskCheckinBody({
 
 const styles = StyleSheet.create({
   wrap: { gap: DS_SPACING_V2.md },
+  heading: {
+    fontSize: 22,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
+    letterSpacing: -0.3,
+  },
   mapCard: {
     backgroundColor: DS_COLORS_V2.surface.card,
     borderRadius: DS_RADIUS_V2.lg,
@@ -181,40 +183,51 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    backgroundColor: DS_COLORS_V2.surface.card,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.overlay.chipOnPhoto70,
+    borderRadius: DS_RADIUS_V2.full,
+    borderWidth: 1,
+    borderColor: DS_COLORS_V2.surface.divider,
   },
   gpsDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: DS_COLORS_V2.semantic.danger,
+    backgroundColor: DS_COLORS_V2.semantic.success,
   },
   gpsText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.onDark,
+    color: DS_COLORS_V2.text.secondary,
+    letterSpacing: 0.4,
   },
-
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    gap: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_SPACING_V2.md,
+    paddingTop: DS_SPACING_V2.md,
   },
-  locationInfo: { flex: 1, gap: 2 },
+  pinWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+  },
+  locationInfo: { flex: 1, minWidth: 0 },
   locationName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "500",
     color: DS_COLORS_V2.text.primary,
   },
   locationAddress: {
-    fontSize: 11,
+    fontSize: 12,
+    fontWeight: "400",
     color: DS_COLORS_V2.text.secondary,
+    marginTop: 2,
   },
   rangePill: {
     flexDirection: "row",
@@ -223,50 +236,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: DS_RADIUS_V2.full,
-    borderWidth: 1,
   },
   rangePillIn: {
     backgroundColor: DS_COLORS_V2.semantic.successSoft,
-    borderColor: DS_COLORS_V2.semantic.success,
   },
   rangePillOut: {
     backgroundColor: DS_COLORS_V2.semantic.dangerSoft,
-    borderColor: DS_COLORS_V2.semantic.danger,
   },
   rangePillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "500",
   },
   rangePillTextIn: { color: DS_COLORS_V2.semantic.success },
   rangePillTextOut: { color: DS_COLORS_V2.semantic.danger },
-
   metaLine: {
-    paddingHorizontal: 12,
-    paddingBottom: 10,
-    fontSize: 10,
-    color: DS_COLORS_V2.text.secondary,
-  },
-
-  stayCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.md,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-  },
-  stayBody: { flex: 1, gap: 2 },
-  stayTitle: {
     fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
+    paddingHorizontal: DS_SPACING_V2.md,
+    paddingBottom: DS_SPACING_V2.md,
+    paddingTop: DS_SPACING_V2.sm,
   },
-  stayMeta: {
-    fontSize: 11,
-    color: DS_COLORS_V2.brand.primary,
+  permissionHelper: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
+    lineHeight: 18,
   },
 });
-

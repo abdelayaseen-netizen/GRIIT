@@ -62,7 +62,7 @@ import { resolveRunReadySubtype } from "@/lib/run-ready-gates";
 import { resolveWorkoutReadySubtype } from "@/lib/workout-ready-gates";
 import { resolveJournalReadySubtype } from "@/lib/journal-ready-gates";
 import { resolveCounterReadySubtype } from "@/lib/counter-ready-gates";
-import { resolveCheckinReadySubtype } from "@/lib/checkin-ready-gates";
+import { resolveCheckinReadySubtype, resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { decideReadyStart } from "@/lib/ready-start";
@@ -146,6 +146,9 @@ export function TaskCompleteScreenInner() {
   const [heartRateData, setHeartRateData] = useState<{ avg: number; peak: number } | null>(null);
   const [heartRateManual, setHeartRateManual] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationAccuracyM, setLocationAccuracyM] = useState<number | undefined>(undefined);
+  /** Check-in permission deny — quiet CTA + helper; no Alert. */
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   /** Photo/Run · Verifying — server rows only; other types keep VerifyingOverlay. */
   const [showPhotoVerifying, setShowPhotoVerifying] = useState(false);
@@ -430,17 +433,24 @@ export function TaskCompleteScreenInner() {
   const handleCheckLocation = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      showError("Allow location access to verify you are at the required location.");
+      setLocationPermissionDenied(true);
+      if (taskTypeRaw !== "checkin") {
+        showError("Allow location access to verify you are at the required location.");
+      }
       return;
     }
+    setLocationPermissionDenied(false);
     try {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+      if (typeof loc.coords.accuracy === "number") {
+        setLocationAccuracyM(loc.coords.accuracy);
+      }
     } catch (err) {
       captureError(err, "TaskCompleteGetCurrentPosition");
       showError("Could not get your location. Please try again.");
     }
-  }, [showError]);
+  }, [showError, taskTypeRaw]);
 
   // Real config only — never fabricate a daily prompt for the Write card.
   const journalPrompt =
@@ -452,12 +462,14 @@ export function TaskCompleteScreenInner() {
   const photoOk = !needsPhotoProof || !!photoUrl;
   const threshold = config.heart_rate_threshold ?? 100;
   const heartRateOk = !config.require_heart_rate || (heartRateData !== null && heartRateData.avg >= threshold);
+  const needsLocation =
+    config.require_location === true || taskTypeRaw === "checkin";
   const distance = useMemo(() => {
     if (!userLocation || config.location_latitude == null || config.location_longitude == null) return null;
     return haversineDistance(config.location_latitude, config.location_longitude, userLocation.lat, userLocation.lng);
   }, [userLocation, config.location_latitude, config.location_longitude]);
-  const radius = config.location_radius_meters ?? 200;
-  const locationOk = !config.require_location || (distance !== null && distance <= radius);
+  const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
+  const locationOk = !needsLocation || (distance !== null && distance <= radius);
 
   const runKm = parseFloat(runDistance.replace(",", "."));
   const runMin = parseInt(runDuration.trim(), 10);
@@ -535,7 +547,7 @@ export function TaskCompleteScreenInner() {
     }
     if (needsPhotoProof && !photoOk) return false;
     if (config.require_heart_rate && !heartRateOk) return false;
-    if (config.require_location && !locationOk) return false;
+    if (needsLocation && (!locationOk || locationPermissionDenied)) return false;
     if (showRunEntry && !runFormOk) return false;
     if (showWorkoutEntry && !workoutOk) return false;
     if (isCounterFamily && !counterOk) return false;
@@ -556,7 +568,8 @@ export function TaskCompleteScreenInner() {
     locationOk,
     needsPhotoProof,
     config.require_heart_rate,
-    config.require_location,
+    needsLocation,
+    locationPermissionDenied,
     runFormOk,
     showRunEntry,
     showWorkoutEntry,
@@ -579,23 +592,31 @@ export function TaskCompleteScreenInner() {
       }
     }
 
-    // Location permission — checkin and location-gated tasks.
-    // Note: checkin is currently gated off (FLAGS.LOCATION_CHECKIN_ENABLED = false).
-    // setUserLocation is still in the suppression block (see BLOCKERS.md B-01).
-    if (config.require_location || taskTypeRaw === "checkin") {
+    // Location permission — checkin and location-gated tasks (B-01: write GPS into state).
+    if (needsLocation) {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        showError("Allow location access to verify your position.");
+        setLocationPermissionDenied(true);
+        // Check-in: quiet CTA + helper only — no Alert / no error banner.
+        if (taskTypeRaw !== "checkin") {
+          showError("Allow location access to verify your position.");
+        }
       } else {
-        // Kick off a location read so the gate has a reading by the time the user submits.
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).then(
-          (loc) => {
-            // setUserLocation is suppressed (BLOCKERS.md B-01); log for now.
-            void loc;
+        setLocationPermissionDenied(false);
+        try {
+          const loc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          setUserLocation({
+            lat: loc.coords.latitude,
+            lng: loc.coords.longitude,
+          });
+          if (typeof loc.coords.accuracy === "number") {
+            setLocationAccuracyM(loc.coords.accuracy);
           }
-        ).catch((err) => {
+        } catch (err) {
           captureError(err, "TaskCompleteArmLocation");
-        });
+        }
       }
     }
 
@@ -608,7 +629,7 @@ export function TaskCompleteScreenInner() {
   }, [
     taskTypeRaw,
     config.require_photo,
-    config.require_location,
+    needsLocation,
     showError,
     minDurMinutes,
   ]);
@@ -1388,8 +1409,9 @@ export function TaskCompleteScreenInner() {
             value={{ inRange: locationOk }}
             locationName={config.location_name ?? "Saved location"}
             distanceMeters={distance ?? undefined}
-            requiredStayMinutes={(config as { required_stay_minutes?: number }).required_stay_minutes ?? 0}
+            accuracyMeters={locationAccuracyM}
             hasGps={!!userLocation}
+            permissionDenied={locationPermissionDenied}
           />
         );
       case "manual":
@@ -1450,6 +1472,8 @@ export function TaskCompleteScreenInner() {
     locationOk,
     distance,
     userLocation,
+    locationAccuracyM,
+    locationPermissionDenied,
     taskName,
   ]);
 
@@ -1707,8 +1731,11 @@ export function TaskCompleteScreenInner() {
       if (!counterOk) disabledReason = `${Math.max(0, counterGoal - counterValue)} more to go`;
     } else if (taskTypeRaw === "checkin") {
       label = "Confirm check-in";
-      if (!locationOk) {
-        const meters = distance != null ? `${Math.round(distance)} m away` : "Locating…";
+      if (locationPermissionDenied) {
+        disabledReason = "Allow location to check in";
+      } else if (!locationOk) {
+        const meters =
+          distance != null ? `${Math.round(distance)} m away` : "Locating…";
         disabledReason = `Get closer to check in (${meters})`;
       }
     }
@@ -1749,6 +1776,7 @@ export function TaskCompleteScreenInner() {
     counterGoal,
     counterValue,
     locationOk,
+    locationPermissionDenied,
     distance,
     canSubmit,
     isSubmitting,
@@ -1772,7 +1800,6 @@ export function TaskCompleteScreenInner() {
   void setHeartRateManual;
   void threshold;
   void heartRateOk;
-  void setUserLocation;
   void radius;
   void handleCheckLocation;
   void handlePickImage;
