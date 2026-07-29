@@ -38,6 +38,11 @@ import {
   type RunLogFacts,
   type RunVerification,
 } from "../../lib/run-verification";
+import {
+  buildWorkoutVerification,
+  type WorkoutLogFacts,
+  type WorkoutVerification,
+} from "../../lib/workout-verification";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -79,6 +84,9 @@ export const checkinsRouter = createTRPCRouter({
         distance_km: z.number().positive().optional(),
         duration_min: z.number().positive().optional(),
         entry_mode: z.enum(["hand", "timer"]).optional(),
+        /** Workout log facts — stored in verification_gates.workout_log only. */
+        workout_kind: z.string().min(1).max(64).optional(),
+        floor_min: z.number().nonnegative().nullable().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -188,23 +196,23 @@ export const checkinsRouter = createTRPCRouter({
         !!input.proof_payload_json ||
         cfg.require_photo_proof === true ||
         taskType === "photo";
-      const isRunProof =
-        taskType === "run" ||
-        input.distance_km != null ||
-        input.duration_min != null ||
-        input.entry_mode != null;
+      // Run vs workout: duration_min/entry_mode are shared inputs — gate by type / distance / kind.
+      const isRunProof = taskType === "run" || input.distance_km != null;
+      const isWorkoutProof =
+        taskType === "workout" ||
+        (typeof input.workout_kind === "string" && input.workout_kind.length > 0);
 
-      const runDurationMin =
+      const sharedDurationMin =
         input.duration_min ??
         (typeof input.value === "number" ? input.value : undefined);
       const runLogFacts: RunLogFacts | null =
         isRunProof &&
         typeof input.distance_km === "number" &&
-        typeof runDurationMin === "number" &&
+        typeof sharedDurationMin === "number" &&
         (input.entry_mode === "hand" || input.entry_mode === "timer")
           ? {
               distance_km: input.distance_km,
-              duration_min: runDurationMin,
+              duration_min: sharedDurationMin,
               entry_mode: input.entry_mode,
             }
           : null;
@@ -222,6 +230,38 @@ export const checkinsRouter = createTRPCRouter({
           const verification = buildRunVerification({
             window: windowEval,
             runLog: runLogFacts,
+            photoPresent: !!photoUrl,
+            proofPayload: input.proof_payload_json ?? null,
+          });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            cause: { verification },
+          });
+        }
+      } else if (!isMinimumDay && isWorkoutProof) {
+        if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
+          // Floor falls back from config after minDurationMinutes is resolved — reject
+          // uses client floor_min when provided; otherwise null (session row may omit).
+          const rejectFloor =
+            typeof input.floor_min === "number"
+              ? input.floor_min
+              : input.floor_min === null
+                ? null
+                : null;
+          const verification = buildWorkoutVerification({
+            window: windowEval,
+            workoutLog:
+              typeof input.workout_kind === "string" &&
+              typeof sharedDurationMin === "number" &&
+              (input.entry_mode === "hand" || input.entry_mode === "timer")
+                ? {
+                    kind: input.workout_kind,
+                    duration_min: sharedDurationMin,
+                    floor_min: rejectFloor,
+                    entry_mode: input.entry_mode,
+                  }
+                : null,
             photoPresent: !!photoUrl,
             proofPayload: input.proof_payload_json ?? null,
           });
@@ -332,8 +372,34 @@ export const checkinsRouter = createTRPCRouter({
         });
       }
 
+      const workoutFloorMin: number | null =
+        typeof input.floor_min === "number" && input.floor_min > 0
+          ? input.floor_min
+          : input.floor_min === null
+            ? null
+            : typeof minDurationMinutes === "number" && minDurationMinutes > 0
+              ? minDurationMinutes
+              : null;
+      const workoutLogFacts: WorkoutLogFacts | null =
+        isWorkoutProof &&
+        typeof input.workout_kind === "string" &&
+        input.workout_kind.length > 0 &&
+        typeof sharedDurationMin === "number" &&
+        (input.entry_mode === "hand" || input.entry_mode === "timer")
+          ? {
+              kind: input.workout_kind,
+              duration_min: sharedDurationMin,
+              floor_min: workoutFloorMin,
+              entry_mode: input.entry_mode,
+            }
+          : null;
+
       const verificationGates: Record<string, unknown> = {};
-      if ((isPhotoProof || isRunProof) && !isMinimumDay && windowEval.hasWindow) {
+      if (
+        (isPhotoProof || isRunProof || isWorkoutProof) &&
+        !isMinimumDay &&
+        windowEval.hasWindow
+      ) {
         verificationGates.time_gate = {
           status: windowEval.passed ? "passed" : "failed",
           checked_at: serverNow.toISOString(),
@@ -341,7 +407,7 @@ export const checkinsRouter = createTRPCRouter({
           window: `${config.schedule_window_start}-${config.schedule_window_end}`,
         };
       } else if (!isMinimumDay && config.hard_mode && config.schedule_window_start && config.schedule_window_end) {
-        // Non-photo/run: preserve prior hard-mode time_gate shape.
+        // Non-photo/run/workout: preserve prior hard-mode time_gate shape.
         verificationGates.time_gate = {
           status: "passed",
           clocked_in_at: input.clocked_in_at ?? new Date().toISOString(),
@@ -353,6 +419,14 @@ export const checkinsRouter = createTRPCRouter({
           distance_km: runLogFacts.distance_km,
           duration_min: runLogFacts.duration_min,
           entry_mode: runLogFacts.entry_mode,
+        };
+      }
+      if (!isMinimumDay && workoutLogFacts) {
+        verificationGates.workout_log = {
+          kind: workoutLogFacts.kind,
+          duration_min: workoutLogFacts.duration_min,
+          floor_min: workoutLogFacts.floor_min,
+          entry_mode: workoutLogFacts.entry_mode,
         };
       }
       if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
@@ -383,7 +457,7 @@ export const checkinsRouter = createTRPCRouter({
       }
 
       let photoVerification: PhotoVerification | undefined;
-      if (!isMinimumDay && isPhotoProof && !isRunProof) {
+      if (!isMinimumDay && isPhotoProof && !isRunProof && !isWorkoutProof) {
         photoVerification = buildPhotoVerification({
           window: windowEval,
           photoPresent: !!photoUrl,
@@ -401,6 +475,16 @@ export const checkinsRouter = createTRPCRouter({
         });
       }
 
+      let workoutVerification: WorkoutVerification | undefined;
+      if (!isMinimumDay && isWorkoutProof) {
+        workoutVerification = buildWorkoutVerification({
+          window: windowEval,
+          workoutLog: workoutLogFacts,
+          photoPresent: !!photoUrl,
+          proofPayload: input.proof_payload_json ?? null,
+        });
+      }
+
       const proofUrl = photoUrl || input.proofUrl?.trim() || null;
       // Explicit status — DB default is 'pending'; complete always writes 'completed'.
       const payload: Record<string, unknown> = { user_id: ctx.userId, active_challenge_id: input.activeChallengeId, task_id: input.taskId, date_key: dateKey, status: "completed" };
@@ -408,8 +492,8 @@ export const checkinsRouter = createTRPCRouter({
       const valueOut =
         input.value != null
           ? input.value
-          : typeof runDurationMin === "number"
-            ? runDurationMin
+          : typeof sharedDurationMin === "number"
+            ? sharedDurationMin
             : undefined;
       if (valueOut != null) payload.value = valueOut;
       if (input.noteText != null) payload.note_text = input.noteText;
@@ -528,6 +612,7 @@ export const checkinsRouter = createTRPCRouter({
         verification_gates: (data as { verification_gates?: unknown } | null)?.verification_gates ?? verificationGates,
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
+        ...(workoutVerification ? { verification: workoutVerification } : {}),
       };
     }),
 
