@@ -386,20 +386,46 @@ export const checkinsRouter = createTRPCRouter({
         }
       }
 
+      // Location gate only when a verifiable target exists (both coords numeric).
+      const resolvedLat =
+        typeof task?.location_latitude === "number"
+          ? task.location_latitude
+          : typeof cfg.location_latitude === "number"
+            ? cfg.location_latitude
+            : undefined;
+      const resolvedLng =
+        typeof task?.location_longitude === "number"
+          ? task.location_longitude
+          : typeof cfg.location_longitude === "number"
+            ? cfg.location_longitude
+            : undefined;
+      const hasLocationTarget =
+        typeof resolvedLat === "number" && typeof resolvedLng === "number";
+      const locationFlagSet =
+        task?.require_location === true || cfg.require_location === true;
+      // Misconfigured: flag without coords — warn once per completion, do not block.
+      // logger has no dedupe; single call site = once per complete invocation.
+      if (locationFlagSet && !hasLocationTarget) {
+        logger.warn(
+          { taskId: input.taskId, userId: ctx.userId },
+          "[checkins.complete] require_location true without location_latitude/longitude"
+        );
+      }
       const { locationDistanceM, hardModeLocationGate } = evaluateTaskLocation(
-        isCheckinProof
-          ? { ...task, require_location: true }
-          : task,
-        isCheckinProof
+        hasLocationTarget
+          ? {
+              ...task,
+              require_location: true,
+              location_latitude: resolvedLat,
+              location_longitude: resolvedLng,
+            }
+          : { ...task, require_location: false },
+        hasLocationTarget
           ? { ...cfg, require_location: true }
-          : cfg,
+          : { ...cfg, require_location: false },
         input
       );
-      const requireLocation =
-        !isMinimumDay &&
-        (isCheckinProof ||
-          task?.require_location === true ||
-          cfg.require_location === true);
+      const requireLocation = !isMinimumDay && hasLocationTarget;
 
       const timerHardMode = task?.timer_hard_mode === true || cfg.strict_timer_mode === true || cfg.timer_hard_mode === true;
       const minDurationMinutes =
