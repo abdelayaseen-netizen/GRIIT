@@ -411,21 +411,32 @@ export const checkinsRouter = createTRPCRouter({
           "[checkins.complete] require_location true without location_latitude/longitude"
         );
       }
+      // Checkin: gate only on coords. Non-checkin: pass task/cfg unchanged (flag behaviour).
       const { locationDistanceM, hardModeLocationGate } = evaluateTaskLocation(
-        hasLocationTarget
-          ? {
-              ...task,
-              require_location: true,
-              location_latitude: resolvedLat,
-              location_longitude: resolvedLng,
-            }
-          : { ...task, require_location: false },
-        hasLocationTarget
-          ? { ...cfg, require_location: true }
-          : { ...cfg, require_location: false },
+        isCheckinProof
+          ? hasLocationTarget
+            ? {
+                ...task,
+                require_location: true,
+                location_latitude: resolvedLat,
+                location_longitude: resolvedLng,
+              }
+            : { ...task, require_location: false }
+          : task,
+        isCheckinProof
+          ? hasLocationTarget
+            ? { ...cfg, require_location: true }
+            : { ...cfg, require_location: false }
+          : cfg,
         input
       );
-      const requireLocation = !isMinimumDay && hasLocationTarget;
+      const requireLocation =
+        !isMinimumDay &&
+        (isCheckinProof
+          ? hasLocationTarget
+          : hasLocationTarget ||
+            task?.require_location === true ||
+            cfg.require_location === true);
 
       const timerHardMode = task?.timer_hard_mode === true || cfg.strict_timer_mode === true || cfg.timer_hard_mode === true;
       const minDurationMinutes =
