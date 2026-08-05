@@ -462,8 +462,20 @@ export function TaskCompleteScreenInner() {
   const photoOk = !needsPhotoProof || !!photoUrl;
   const threshold = config.heart_rate_threshold ?? 100;
   const heartRateOk = !config.require_heart_rate || (heartRateData !== null && heartRateData.avg >= threshold);
-  const needsLocation =
-    config.require_location === true || taskTypeRaw === "checkin";
+  /** Location gate only when a verifiable target exists (both coords numeric). */
+  const hasLocationTarget =
+    typeof config.location_latitude === "number" &&
+    typeof config.location_longitude === "number";
+  const needsLocation = hasLocationTarget;
+  // Misconfigured: flag set without coords — warn, do not block (no-target path).
+  useEffect(() => {
+    if (config.require_location === true && !hasLocationTarget) {
+      captureError(
+        new Error("require_location true without location_latitude/longitude"),
+        { context: "TaskCompleteLocationConfig", taskId }
+      );
+    }
+  }, [config.require_location, hasLocationTarget, taskId]);
   const distance = useMemo(() => {
     if (!userLocation || config.location_latitude == null || config.location_longitude == null) return null;
     return haversineDistance(config.location_latitude, config.location_longitude, userLocation.lat, userLocation.lng);
