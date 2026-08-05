@@ -1886,7 +1886,7 @@ export function TaskCompleteScreenInner() {
                     counterUnits.plural
                   )
                 : taskTypeRaw === "checkin"
-                  ? formatCheckinSecuredMeta()
+                  ? formatCheckinSecuredMeta(hasLocationTarget)
                   : isSimpleAsk
                     ? formatSimpleSecuredMeta()
                     : "Verified in the window";

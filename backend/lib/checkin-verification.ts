@@ -35,8 +35,8 @@ export function formatOnLocationLabel(distanceMeters: number): string {
 }
 
 /** Secured meta — standing cut (no dwell minutes). */
-export function formatCheckinSecuredMeta(): string {
-  return "On location";
+export function formatCheckinSecuredMeta(hasLocationTarget = true): string {
+  return hasLocationTarget ? "On location" : "Checked in";
 }
 
 export function buildCheckinVerification(opts: {
