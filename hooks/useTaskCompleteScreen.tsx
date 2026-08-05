@@ -151,6 +151,8 @@ export function TaskCompleteScreenInner() {
   const [locationAccuracyM, setLocationAccuracyM] = useState<number | undefined>(undefined);
   /** Check-in permission deny — quiet CTA + helper; no Alert. */
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
+  /** At most one misconfig warn per taskId (avoid Sentry spam). */
+  const locationConfigWarnTaskIdRef = useRef<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   /** Photo/Run/Workout/Journal/Counter/Check-in · Verifying — server rows only. */
   const [showPhotoVerifying, setShowPhotoVerifying] = useState(false);
@@ -467,9 +469,11 @@ export function TaskCompleteScreenInner() {
     typeof config.location_latitude === "number" &&
     typeof config.location_longitude === "number";
   const needsLocation = hasLocationTarget;
-  // Misconfigured: flag set without coords — warn, do not block (no-target path).
+  // Misconfigured: flag set without coords — warn once per taskId, do not block.
   useEffect(() => {
     if (config.require_location === true && !hasLocationTarget) {
+      if (locationConfigWarnTaskIdRef.current === taskId) return;
+      locationConfigWarnTaskIdRef.current = taskId;
       captureError(
         new Error("require_location true without location_latitude/longitude"),
         { context: "TaskCompleteLocationConfig", taskId }
