@@ -3,9 +3,10 @@ import * as ImagePicker from "expo-image-picker";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { captureError } from "@/lib/sentry";
 import {
-  createCameraCaptureMeta,
+  bindInAppCameraCapture,
   createLibraryCaptureMeta,
   isLibraryBlocked,
+  type PhotoCaptureAsset,
   type PhotoCaptureMeta,
 } from "@/lib/photo-capture-meta";
 
@@ -20,9 +21,22 @@ interface UsePhotoCaptureReturn {
   photoUploading: boolean;
   /** Local proof meta — shutter time + captured_in_app. Null until a capture succeeds. */
   captureMeta: PhotoCaptureMeta | null;
+  /** System camera sheet — run / workout / counter / celebration. */
   handleTakePhoto: () => Promise<void>;
+  /**
+   * In-app CameraView (photo proof). Same contract as handleTakePhoto:
+   * bindInAppCameraCapture → photoUri + captureMeta + upload.
+   */
+  acceptInAppCameraCapture: (asset: PhotoCaptureAsset, now?: Date) => Promise<void>;
   handlePickImage: () => Promise<void>;
   clearPhoto: () => void;
+}
+
+function contentTypeForUri(uri: string): "image/jpeg" | "image/png" | "image/webp" {
+  const lower = uri.toLowerCase();
+  if (lower.includes(".png")) return "image/png";
+  if (lower.includes(".webp")) return "image/webp";
+  return "image/jpeg";
 }
 
 export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureOptions): UsePhotoCaptureReturn {
@@ -32,15 +46,17 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
   const [captureMeta, setCaptureMeta] = useState<PhotoCaptureMeta | null>(null);
 
   const upload = useCallback(async (
-    asset: ImagePicker.ImagePickerAsset,
+    asset: PhotoCaptureAsset,
     meta: PhotoCaptureMeta
   ) => {
     setPhotoUri(asset.uri);
     setCaptureMeta(meta);
     setPhotoUploading(true);
     try {
-      const contentType = asset.uri.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
-      const result = await uploadProofImageFromBase64(asset.base64 ?? "", contentType);
+      const result = await uploadProofImageFromBase64(
+        asset.base64,
+        contentTypeForUri(asset.uri)
+      );
       if ("error" in result) {
         onError(result.error);
         setPhotoUri(null);
@@ -59,6 +75,19 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
     }
   }, [onError]);
 
+  /** Shared ingest for launchCameraAsync and CameraView. */
+  const acceptInAppCameraCapture = useCallback(
+    async (asset: PhotoCaptureAsset, now: Date = new Date()) => {
+      if (!asset.base64 || asset.base64.length === 0) {
+        onError("Camera returned no image data. Try again.");
+        return;
+      }
+      const bound = bindInAppCameraCapture(asset, now);
+      await upload(bound.asset, bound.meta);
+    },
+    [onError, upload]
+  );
+
   const handleTakePhoto = useCallback(async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -66,21 +95,23 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
         onError("Allow camera access to submit photo proof.");
         return;
       }
-      const result = await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, base64: true });
+      const result = await ImagePicker.launchCameraAsync({
+        quality: 0.7,
+        allowsEditing: true,
+        base64: true,
+      });
       if (result.canceled || !result.assets[0]) return;
-      if (!result.assets[0].base64 || result.assets[0].base64.length === 0) {
-        onError("Camera returned no image data. Try again.");
-        return;
-      }
-      // Record shutter time + in-app flag at successful camera return (before upload).
-      const meta = createCameraCaptureMeta();
-      await upload(result.assets[0], meta);
+      const asset = result.assets[0];
+      await acceptInAppCameraCapture({
+        uri: asset.uri,
+        base64: asset.base64 ?? "",
+      });
     } catch (err) {
       captureError(err, "PhotoCaptureTakePhoto");
       const detail = err instanceof Error ? err.message : String(err);
       onError(`Camera failed: ${detail.slice(0, 140)}`);
     }
-  }, [onError, upload]);
+  }, [onError, acceptInAppCameraCapture]);
 
   const handlePickImage = useCallback(async () => {
     if (isLibraryBlocked(requireCameraOnly)) {
@@ -99,8 +130,13 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
       mediaTypes: ["images"],
     });
     if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    if (!asset.base64 || asset.base64.length === 0) {
+      onError("Gallery returned no image data. Try again.");
+      return;
+    }
     const meta = createLibraryCaptureMeta();
-    await upload(result.assets[0], meta);
+    await upload({ uri: asset.uri, base64: asset.base64 }, meta);
   }, [requireCameraOnly, onError, upload]);
 
   const clearPhoto = useCallback(() => {
@@ -109,5 +145,14 @@ export function usePhotoCapture({ requireCameraOnly, onError }: UsePhotoCaptureO
     setCaptureMeta(null);
   }, []);
 
-  return { photoUri, photoUrl, photoUploading, captureMeta, handleTakePhoto, handlePickImage, clearPhoto };
+  return {
+    photoUri,
+    photoUrl,
+    photoUploading,
+    captureMeta,
+    handleTakePhoto,
+    acceptInAppCameraCapture,
+    handlePickImage,
+    clearPhoto,
+  };
 }

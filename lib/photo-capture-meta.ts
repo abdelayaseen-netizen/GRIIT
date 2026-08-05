@@ -10,6 +10,15 @@ export type PhotoCaptureMeta = {
   captured_in_app: boolean;
 };
 
+/**
+ * Local frame bytes shared by launchCameraAsync and CameraView.
+ * Both mechanisms must satisfy this shape before upload.
+ */
+export type PhotoCaptureAsset = {
+  uri: string;
+  base64: string;
+};
+
 export function createCameraCaptureMeta(now: Date = new Date()): PhotoCaptureMeta {
   return {
     capturedAt: now.toISOString(),
@@ -21,6 +30,20 @@ export function createLibraryCaptureMeta(now: Date = new Date()): PhotoCaptureMe
   return {
     capturedAt: now.toISOString(),
     captured_in_app: false,
+  };
+}
+
+/**
+ * Single contract for in-app camera provenance.
+ * launchCameraAsync and CameraView both call this — never invent meta in either path.
+ */
+export function bindInAppCameraCapture(
+  asset: PhotoCaptureAsset,
+  now: Date = new Date()
+): { asset: PhotoCaptureAsset; meta: PhotoCaptureMeta } {
+  return {
+    asset,
+    meta: createCameraCaptureMeta(now),
   };
 }
 
