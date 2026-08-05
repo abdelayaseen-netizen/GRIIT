@@ -284,7 +284,8 @@ export function TaskCompleteScreenInner() {
     requireCameraOnly: config.require_camera_only === true || taskTypeRaw === "photo",
     onError: showError,
   });
-  const { photoUri, photoUrl, photoUploading, captureMeta } = photoCapture;
+  const { photoUri, photoUrl, photoUploading, captureMeta, acceptInAppCameraCapture } =
+    photoCapture;
   const handleTakePhoto = useCallback(async () => {
     await photoCapture.handleTakePhoto();
   }, [photoCapture]);
@@ -294,6 +295,16 @@ export function TaskCompleteScreenInner() {
   const clearPhoto = useCallback(() => {
     photoCapture.clearPhoto();
   }, [photoCapture]);
+  const handlePhotoCaptureAsset = useCallback(
+    (asset: { uri: string; base64: string }) => {
+      void acceptInAppCameraCapture(asset);
+    },
+    [acceptInAppCameraCapture]
+  );
+  const handlePhotoCaptureDismiss = useCallback(() => {
+    clearPhoto();
+    setIsArmed(false);
+  }, [clearPhoto]);
   const { timerSeconds, isTimerRunning, onScreenSecondsRef, timerDisplay, progressFrac, timerOk, hardModeOk, toggleTimer, resetTimer } =
     useTaskTimer({
       requiredSeconds,
@@ -1292,10 +1303,9 @@ export function TaskCompleteScreenInner() {
               config={config}
               photoUri={photoUri}
               photoUploading={photoUploading}
-              onTakePhoto={() => {
-                void handleTakePhoto();
-              }}
+              onCaptureAsset={handlePhotoCaptureAsset}
               onClearPhoto={clearPhoto}
+              onDismiss={handlePhotoCaptureDismiss}
             />
           );
         }
@@ -1451,6 +1461,8 @@ export function TaskCompleteScreenInner() {
     photoCaption,
     readyScheduleNow,
     handleTakePhoto,
+    handlePhotoCaptureAsset,
+    handlePhotoCaptureDismiss,
     clearPhoto,
     runPhase,
     minDurMinutes,
@@ -2016,7 +2028,7 @@ export function TaskCompleteScreenInner() {
         }
         variant={isPhotoCapture ? "dark" : "light"}
         onBack={() => goBackOrHome(router)}
-        primaryCta={primaryCta}
+        primaryCta={isPhotoCapture ? undefined : primaryCta}
         secondaryCta={
           isSimpleAsk
             ? {

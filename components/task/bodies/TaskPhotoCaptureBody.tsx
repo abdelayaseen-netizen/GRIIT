@@ -1,17 +1,20 @@
 /**
- * Photo · Capture body — dark viewfinder for task-states-v2.
+ * Photo · Capture body — live CameraView viewfinder for task-states-v2.
  * CameraOnlyBanner + corner brackets + white shutter + InWindowStatusPill.
- * No library picker. Caption is Step 10.
+ * No library picker. Caption is a separate body.
  */
-import React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { Image } from "expo-image";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { X } from "lucide-react-native";
 import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
@@ -22,13 +25,18 @@ import {
   InWindowStatusPill,
 } from "@/components/task/CameraOnlyBanner";
 import type { TaskCompleteConfig } from "@/lib/task-helpers";
+import type { PhotoCaptureAsset } from "@/lib/photo-capture-meta";
+import { captureError } from "@/lib/sentry";
 
 export type TaskPhotoCaptureBodyProps = {
   config: TaskCompleteConfig;
   photoUri: string | null;
   photoUploading: boolean;
-  onTakePhoto: () => void;
+  /** Ingest via usePhotoCapture.acceptInAppCameraCapture — same contract as picker. */
+  onCaptureAsset: (asset: PhotoCaptureAsset) => void;
   onClearPhoto: () => void;
+  /** Dismiss with no frame — exit capture. */
+  onDismiss: () => void;
 };
 
 function CornerBrackets() {
@@ -37,16 +45,12 @@ function CornerBrackets() {
   const color = DS_COLORS_V2.text.onDark;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {/* top-left */}
       <View style={[styles.bracketH, { top: 16, left: 16, width: arm, backgroundColor: color, height: thickness }]} />
       <View style={[styles.bracketV, { top: 16, left: 16, height: arm, backgroundColor: color, width: thickness }]} />
-      {/* top-right */}
       <View style={[styles.bracketH, { top: 16, right: 16, width: arm, backgroundColor: color, height: thickness }]} />
       <View style={[styles.bracketV, { top: 16, right: 16, height: arm, backgroundColor: color, width: thickness }]} />
-      {/* bottom-left */}
       <View style={[styles.bracketH, { bottom: 16, left: 16, width: arm, backgroundColor: color, height: thickness }]} />
       <View style={[styles.bracketV, { bottom: 16, left: 16, height: arm, backgroundColor: color, width: thickness }]} />
-      {/* bottom-right */}
       <View style={[styles.bracketH, { bottom: 16, right: 16, width: arm, backgroundColor: color, height: thickness }]} />
       <View style={[styles.bracketV, { bottom: 16, right: 16, height: arm, backgroundColor: color, width: thickness }]} />
     </View>
@@ -57,14 +61,79 @@ export function TaskPhotoCaptureBody({
   config,
   photoUri,
   photoUploading,
-  onTakePhoto,
+  onCaptureAsset,
   onClearPhoto,
+  onDismiss,
 }: TaskPhotoCaptureBodyProps) {
   const hasPhoto = !!photoUri;
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraReady, setCameraReady] = useState(false);
+  const [shutterBusy, setShutterBusy] = useState(false);
+  /** Last CameraView frame size — reported for Phase 4 dependency; no crop changes here. */
+  const [lastCaptureSize, setLastCaptureSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      void requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  const handleShutter = useCallback(async () => {
+    if (!cameraRef.current || !cameraReady || shutterBusy || photoUploading) return;
+    setShutterBusy(true);
+    try {
+      const picture = await cameraRef.current.takePictureAsync({
+        quality: 0.7,
+        base64: true,
+      });
+      if (!picture?.uri || !picture.base64) {
+        return;
+      }
+      setLastCaptureSize({ width: picture.width, height: picture.height });
+      if (__DEV__) {
+        // Device verification data for caption 4:5 work — do not change crop here.
+        console.log("[TaskPhotoCaptureBody] CameraView capture size", {
+          width: picture.width,
+          height: picture.height,
+          aspect: picture.height > 0 ? picture.width / picture.height : null,
+        });
+      }
+      onCaptureAsset({ uri: picture.uri, base64: picture.base64 });
+    } catch (err) {
+      captureError(err, "TaskPhotoCaptureBodyShutter");
+    } finally {
+      setShutterBusy(false);
+    }
+  }, [cameraReady, shutterBusy, photoUploading, onCaptureAsset]);
+
+  const openSettings = useCallback(() => {
+    void Linking.openSettings();
+  }, []);
+
+  const permissionDenied =
+    permission != null && !permission.granted && !permission.canAskAgain;
+  const permissionUndetermined =
+    permission == null ||
+    (!permission.granted && permission.canAskAgain);
 
   return (
     <View style={styles.root}>
-      <CameraOnlyBanner variant="camera" />
+      <View style={styles.topRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close camera"
+          onPress={onDismiss}
+          style={({ pressed }) => [styles.dismissBtn, pressed ? styles.pressed : null]}
+        >
+          <X size={20} color={DS_COLORS_V2.text.onDark} strokeWidth={2} />
+        </Pressable>
+        <CameraOnlyBanner variant="camera" />
+        <View style={styles.dismissBtnSpacer} />
+      </View>
 
       <View style={styles.viewfinder}>
         {hasPhoto ? (
@@ -74,16 +143,66 @@ export function TaskPhotoCaptureBody({
             contentFit="cover"
             transition={120}
           />
+        ) : permissionDenied ? (
+          <View style={styles.permissionPane}>
+            <Text style={styles.permissionTitle}>Camera access needed</Text>
+            <Text style={styles.permissionBody}>
+              Photo proof requires the camera. Enable access in Settings to continue.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open Settings"
+              onPress={openSettings}
+              style={({ pressed }) => [
+                styles.settingsBtn,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              <Text style={styles.settingsBtnText}>Open Settings</Text>
+            </Pressable>
+          </View>
+        ) : permissionUndetermined && !permission?.granted ? (
+          <View style={styles.permissionPane}>
+            <Text style={styles.permissionTitle}>Allow camera access</Text>
+            <Text style={styles.permissionBody}>
+              We need the camera to take proof photos in-app.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Allow camera"
+              onPress={() => void requestPermission()}
+              style={({ pressed }) => [
+                styles.settingsBtn,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              <Text style={styles.settingsBtnText}>Allow camera</Text>
+            </Pressable>
+          </View>
         ) : (
-          <View style={styles.viewfinderEmpty} />
+          <CameraView
+            ref={cameraRef}
+            style={styles.photo}
+            facing="back"
+            mode="picture"
+            onCameraReady={() => setCameraReady(true)}
+            onMountError={(e) => {
+              captureError(
+                new Error(e.message ?? "Camera mount failed"),
+                "TaskPhotoCaptureBodyMount"
+              );
+            }}
+          />
         )}
 
         <CornerBrackets />
 
-        {photoUploading ? (
+        {photoUploading || shutterBusy ? (
           <View style={styles.uploadingOverlay}>
             <ActivityIndicator color={DS_COLORS_V2.text.onDark} />
-            <Text style={styles.uploadingText}>Uploading…</Text>
+            <Text style={styles.uploadingText}>
+              {shutterBusy ? "Capturing…" : "Uploading…"}
+            </Text>
           </View>
         ) : null}
 
@@ -111,12 +230,12 @@ export function TaskPhotoCaptureBody({
           )}
         </View>
 
-        {!hasPhoto ? (
+        {!hasPhoto && permission?.granted ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Shutter"
-            onPress={onTakePhoto}
-            disabled={photoUploading}
+            onPress={() => void handleShutter()}
+            disabled={photoUploading || shutterBusy || !cameraReady}
             style={({ pressed }) => [
               styles.shutterOuter,
               pressed ? styles.pressed : null,
@@ -126,6 +245,15 @@ export function TaskPhotoCaptureBody({
           </Pressable>
         ) : null}
       </View>
+
+      {__DEV__ && lastCaptureSize ? (
+        <Text style={styles.devSize}>
+          Capture {lastCaptureSize.width}×{lastCaptureSize.height}
+          {lastCaptureSize.height > 0
+            ? ` · ${(lastCaptureSize.width / lastCaptureSize.height).toFixed(3)}`
+            : ""}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -135,6 +263,20 @@ const styles = StyleSheet.create({
     gap: DS_SPACING_V2.md,
     flex: 1,
   },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  dismissBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: DS_COLORS_V2.overlay.onDarkSurface10,
+  },
+  dismissBtnSpacer: { width: 40, height: 40 },
   viewfinder: {
     width: "100%",
     aspectRatio: 3 / 4,
@@ -146,7 +288,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   photo: { ...StyleSheet.absoluteFillObject },
-  viewfinderEmpty: { ...StyleSheet.absoluteFillObject },
   bracketH: { position: "absolute" },
   bracketV: { position: "absolute" },
   uploadingOverlay: {
@@ -200,6 +341,47 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     color: DS_COLORS_V2.text.onDark,
+  },
+  permissionPane: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: DS_SPACING_V2.lg,
+    gap: DS_SPACING_V2.sm,
+    backgroundColor: DS_COLORS_V2.surface.canvasDark,
+  },
+  permissionTitle: {
+    fontSize: 17,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.onDark,
+    textAlign: "center",
+  },
+  permissionBody: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.onDark,
+    opacity: 0.8,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  settingsBtn: {
+    marginTop: DS_SPACING_V2.sm,
+    paddingHorizontal: DS_SPACING_V2.md,
+    paddingVertical: 10,
+    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: DS_COLORS_V2.brand.primary,
+  },
+  settingsBtnText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.onDark,
+  },
+  devSize: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.onDark,
+    opacity: 0.7,
+    textAlign: "center",
   },
   pressed: { opacity: 0.85 },
 });
