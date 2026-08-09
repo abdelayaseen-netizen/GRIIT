@@ -12,6 +12,7 @@ import {
   calendarDayIndexInclusive,
 } from "../../lib/date-utils";
 import { getDailyTargetForChallengeTask } from "../../../lib/task-progress";
+import { NOT_ALL_REQUIRED_MESSAGE } from "../../../lib/day-secure-ui";
 import type { PgError } from "../../types/db";
 import {
   type ChallengeTaskConfig,
@@ -1137,7 +1138,7 @@ export const checkinsRouter = createTRPCRouter({
 
     const code = (rpcError as { code?: string })?.code;
     const msg = (rpcError as { message?: string })?.message ?? "";
-    if (msg.includes("NOT_ALL_REQUIRED")) throw new TRPCError({ code: "BAD_REQUEST", message: "Not all required tasks completed." });
+    if (msg.includes("NOT_ALL_REQUIRED")) throw new TRPCError({ code: "BAD_REQUEST", message: NOT_ALL_REQUIRED_MESSAGE });
     if (rpcError) {
       logger.error(
         {
