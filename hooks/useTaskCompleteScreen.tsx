@@ -77,6 +77,11 @@ import {
   SIMPLE_ASK_NOT_YET,
   SIMPLE_READY_SUBTYPE,
 } from "@/lib/simple-log";
+import {
+  buildIncompleteRequired,
+  isNotAllRequiredError,
+  type DaySecureUi,
+} from "@/lib/day-secure-ui";
 import { useScheduleWindowNow } from "@/hooks/useScheduleWindowNow";
 import {
   VerifyingProof,
@@ -184,8 +189,11 @@ export function TaskCompleteScreenInner() {
   const clockedInAtRef = useRef<string | null>(null);
   /** Timestamp (ms) when the submit mutation started — used for settle floors. */
   const verifyStartMsRef = useRef<number>(0);
-  /** Streak count returned by the server after task completion — shown on Secured screen. */
+  /** Streak count for legacy TaskCompleteCelebration only — set only when day secure succeeds. */
   const [completedStreakCount, setCompletedStreakCount] = useState<number | undefined>(undefined);
+  /** Day-secure outcome for SecuredScreen — never invent a streak on failure. */
+  const [daySecureUi, setDaySecureUi] = useState<DaySecureUi>({ kind: "not_attempted" });
+  const [secureDayRetrying, setSecureDayRetrying] = useState(false);
   const [hardGatesPassed, setHardGatesPassed] = useState(true);
   const [timeWindowFailed, setTimeWindowFailed] = useState(false);
   const [gatesLocation, setGatesLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -815,9 +823,11 @@ export function TaskCompleteScreenInner() {
       // Same progress source as AppContext canSecureDay: required tasks + completed check-ins.
       // Include this taskId so the condition reflects post-completion state (closure todayCheckins is pre-submit).
       const requiredTasks =
-        (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
-          (t) => (t.config?.required ?? true) === true
-        ) || [];
+        (
+          challenge?.challenge_tasks as
+            | { id: string; title?: string | null; config?: { required?: boolean } }[]
+            | undefined
+        )?.filter((t) => (t.config?.required ?? true) === true) || [];
       const completedTaskIds = new Set(
         todayCheckins
           .filter((c) => c.status === "completed")
@@ -835,11 +845,25 @@ export function TaskCompleteScreenInner() {
           const securedStreak = secureResult?.newStreakCount;
           if (typeof securedStreak === "number") {
             setCompletedStreakCount(securedStreak);
+            setDaySecureUi({ kind: "secured", streakCount: securedStreak });
+          } else {
+            // Soft-skip (!canSecureDay) — treat as incomplete, not transport failure.
+            setDaySecureUi(
+              buildIncompleteRequired({ requiredTasks, completedTaskIds })
+            );
           }
         } catch (secureErr: unknown) {
-          // Non-fatal: completion UI must still reach the Secured screen.
           captureError(secureErr, "TaskCompleteSecureDay");
+          if (isNotAllRequiredError(secureErr)) {
+            setDaySecureUi(
+              buildIncompleteRequired({ requiredTasks, completedTaskIds })
+            );
+          } else {
+            setDaySecureUi({ kind: "secure_failed" });
+          }
         }
+      } else {
+        setDaySecureUi({ kind: "not_attempted" });
       }
       // Photo/Run/Workout/Journal/Counter/Check-in: brief settle so server rows can paint.
       // Simple: no verifying floor — land on Secured immediately.
@@ -988,6 +1012,56 @@ export function TaskCompleteScreenInner() {
     flushCounterProgress,
     isSimpleAsk,
   ]);
+
+  const handleRetrySecureDay = useCallback(async () => {
+    if (secureDayRetrying) return;
+    setSecureDayRetrying(true);
+    try {
+      const secureResult = await secureDayRef.current();
+      const securedStreak = secureResult?.newStreakCount;
+      if (typeof securedStreak === "number") {
+        setCompletedStreakCount(securedStreak);
+        setDaySecureUi({ kind: "secured", streakCount: securedStreak });
+        return;
+      }
+      const requiredTasks =
+        (
+          challenge?.challenge_tasks as
+            | { id: string; title?: string | null; config?: { required?: boolean } }[]
+            | undefined
+        )?.filter((t) => (t.config?.required ?? true) === true) || [];
+      const completedTaskIds = new Set(
+        todayCheckins
+          .filter((c) => c.status === "completed")
+          .map((c) => c.task_id)
+          .filter((id): id is string => typeof id === "string")
+      );
+      completedTaskIds.add(taskId);
+      setDaySecureUi(buildIncompleteRequired({ requiredTasks, completedTaskIds }));
+    } catch (secureErr: unknown) {
+      captureError(secureErr, "TaskCompleteSecureDayRetry");
+      if (isNotAllRequiredError(secureErr)) {
+        const requiredTasks =
+          (
+            challenge?.challenge_tasks as
+              | { id: string; title?: string | null; config?: { required?: boolean } }[]
+              | undefined
+          )?.filter((t) => (t.config?.required ?? true) === true) || [];
+        const completedTaskIds = new Set(
+          todayCheckins
+            .filter((c) => c.status === "completed")
+            .map((c) => c.task_id)
+            .filter((id): id is string => typeof id === "string")
+        );
+        completedTaskIds.add(taskId);
+        setDaySecureUi(buildIncompleteRequired({ requiredTasks, completedTaskIds }));
+      } else {
+        setDaySecureUi({ kind: "secure_failed" });
+      }
+    } finally {
+      setSecureDayRetrying(false);
+    }
+  }, [secureDayRetrying, challenge, todayCheckins, taskId]);
 
   const runManualComplete = useCallback(() => {
     if (manualSubmitScheduled.current || isSubmitting) return;
@@ -1890,6 +1964,39 @@ export function TaskCompleteScreenInner() {
                   : isSimpleAsk
                     ? formatSimpleSecuredMeta()
                     : "Verified in the window";
+      const daySecureProp =
+        daySecureUi.kind === "secured"
+          ? {
+              kind: "secured" as const,
+              dayNumber: securedDayNumber,
+              streakCount: daySecureUi.streakCount,
+              onDone: () => goBackOrHome(router),
+            }
+          : daySecureUi.kind === "incomplete_required"
+            ? {
+                kind: "incomplete_required" as const,
+                done: daySecureUi.done,
+                total: daySecureUi.total,
+                remainingTitles: daySecureUi.remainingTitles,
+                onContinue: () => {
+                  if (activeChallengeId) {
+                    router.replace(ROUTES.CHALLENGE_ACTIVE(activeChallengeId) as never);
+                  } else {
+                    goBackOrHome(router);
+                  }
+                },
+              }
+            : daySecureUi.kind === "secure_failed"
+              ? {
+                  kind: "secure_failed" as const,
+                  onRetry: () => void handleRetrySecureDay(),
+                  retrying: secureDayRetrying,
+                  onDone: () => goBackOrHome(router),
+                }
+              : {
+                  kind: "not_attempted" as const,
+                  onDone: () => goBackOrHome(router),
+                };
       return (
         <>
           <Stack.Screen options={{ headerShown: false }} />
@@ -1898,11 +2005,9 @@ export function TaskCompleteScreenInner() {
             edges={["top", "bottom"]}
           >
             <SecuredScreen
-              dayNumber={securedDayNumber}
               title={taskName}
               meta={securedMeta}
-              streakCount={completedStreakCount}
-              onDone={() => goBackOrHome(router)}
+              daySecure={daySecureProp}
             />
           </SafeAreaView>
         </>

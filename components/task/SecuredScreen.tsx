@@ -1,53 +1,66 @@
 /**
- * SecuredScreen — light-bg success phase for task-states-v2.
+ * SecuredScreen — task-complete success phase for task-states-v2.
  *
- * Streak prefers the post-secure server value when the parent passes
- * `streakCount`; otherwise falls back to `useApp().stats.activeStreak`.
- * Never hard-code a literal count at the call site.
+ * Day secure is a separate write. Streak renders only when that write
+ * succeeded with an explicit count — never stats fallback, never 0.
  */
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Check, Flame } from "lucide-react-native";
 import {
   DS_COLORS_V2,
   DS_RADIUS_V2,
   DS_SPACING_V2,
 } from "@/lib/design-system";
-import { useApp } from "@/contexts/AppContext";
 import { StreakPill } from "@/components/task/StreakPill";
+import { formatIncompleteProgress } from "@/lib/day-secure-ui";
+
+export type SecuredScreenDaySecure =
+  | {
+      kind: "secured";
+      dayNumber: number;
+      streakCount: number;
+      onDone: () => void;
+    }
+  /** Task done; day secure not attempted (more required tasks remain). */
+  | {
+      kind: "not_attempted";
+      onDone: () => void;
+    }
+  | {
+      kind: "incomplete_required";
+      done: number;
+      total: number;
+      remainingTitles: string[];
+      onContinue: () => void;
+    }
+  | {
+      kind: "secure_failed";
+      onRetry: () => void;
+      retrying?: boolean;
+      onDone: () => void;
+    };
 
 export type SecuredScreenProps = {
-  /** Challenge day number — rendered as "Day {n} secured". */
-  dayNumber: number;
   /** Task title. */
   title: string;
   /** Meta line, e.g. "Verified in the window" / "5.2 km · 32 min". */
   meta: string;
-  /**
-   * Post-secure streak from secureDay(). When omitted, uses live
-   * `stats.activeStreak` (may briefly lag until fetchStats lands).
-   */
-  streakCount?: number;
-  /** Optional Done CTA — wired by the complete-screen shell. */
-  onDone?: () => void;
-  doneLabel?: string;
+  /** Day-secure outcome — drives headline, streak, and CTAs. */
+  daySecure: SecuredScreenDaySecure;
 };
 
-export function SecuredScreen({
-  dayNumber,
-  title,
-  meta,
-  streakCount: streakCountProp,
-  onDone,
-  doneLabel = "Done",
-}: SecuredScreenProps) {
-  const { stats } = useApp();
-  const streakCount =
-    typeof streakCountProp === "number"
-      ? streakCountProp
-      : typeof stats?.activeStreak === "number"
-        ? stats.activeStreak
-        : 0;
+export function SecuredScreen({ title, meta, daySecure }: SecuredScreenProps) {
+  const isDaySecured = daySecure.kind === "secured";
+  const statusLabel = isDaySecured
+    ? `Day ${daySecure.dayNumber} secured`
+    : "Task secured";
+  const dayLine =
+    daySecure.kind === "incomplete_required"
+      ? `Day not secured · ${formatIncompleteProgress(daySecure.done, daySecure.total)}`
+      : daySecure.kind === "secure_failed"
+        ? "Day not secured · Couldn’t sync. Try again."
+        : null;
 
   return (
     <View style={styles.root}>
@@ -68,27 +81,81 @@ export function SecuredScreen({
             color={DS_COLORS_V2.brand.primary}
             strokeWidth={2}
           />
-          <Text style={styles.securedLabel}>{`Day ${dayNumber} secured`}</Text>
+          <Text style={styles.securedLabel}>{statusLabel}</Text>
         </View>
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.meta}>{meta}</Text>
 
-        <View style={styles.streakWrap}>
-          <StreakPill streakCount={streakCount} />
-        </View>
+        {dayLine ? <Text style={styles.dayLine}>{dayLine}</Text> : null}
+
+        {daySecure.kind === "incomplete_required" &&
+        daySecure.remainingTitles.length > 0 ? (
+          <View style={styles.remainingBlock}>
+            {daySecure.remainingTitles.map((t, i) => (
+              <Text key={`${t}-${i}`} style={styles.remainingItem}>
+                · {t}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+
+        {isDaySecured ? (
+          <View style={styles.streakWrap}>
+            <StreakPill streakCount={daySecure.streakCount} />
+          </View>
+        ) : null}
       </View>
 
-      {onDone ? (
-        <Pressable
-          style={styles.doneCta}
-          onPress={onDone}
-          accessibilityRole="button"
-          accessibilityLabel={doneLabel}
-        >
-          <Text style={styles.doneCtaText}>{doneLabel}</Text>
-        </Pressable>
-      ) : null}
+      <View style={styles.ctaStack}>
+        {daySecure.kind === "secured" || daySecure.kind === "not_attempted" ? (
+          <Pressable
+            style={styles.doneCta}
+            onPress={daySecure.onDone}
+            accessibilityRole="button"
+            accessibilityLabel="Done"
+          >
+            <Text style={styles.doneCtaText}>Done</Text>
+          </Pressable>
+        ) : null}
+
+        {daySecure.kind === "incomplete_required" ? (
+          <Pressable
+            style={styles.doneCta}
+            onPress={daySecure.onContinue}
+            accessibilityRole="button"
+            accessibilityLabel="Continue remaining tasks"
+          >
+            <Text style={styles.doneCtaText}>Continue remaining tasks</Text>
+          </Pressable>
+        ) : null}
+
+        {daySecure.kind === "secure_failed" ? (
+          <>
+            <Pressable
+              style={[styles.doneCta, daySecure.retrying ? styles.ctaDisabled : null]}
+              onPress={daySecure.onRetry}
+              disabled={!!daySecure.retrying}
+              accessibilityRole="button"
+              accessibilityLabel="Retry securing day"
+            >
+              {daySecure.retrying ? (
+                <ActivityIndicator color={DS_COLORS_V2.brand.primaryText} />
+              ) : (
+                <Text style={styles.doneCtaText}>Retry</Text>
+              )}
+            </Pressable>
+            <Pressable
+              style={styles.secondaryCta}
+              onPress={daySecure.onDone}
+              accessibilityRole="button"
+              accessibilityLabel="Done"
+            >
+              <Text style={styles.secondaryCtaText}>Done</Text>
+            </Pressable>
+          </>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -115,7 +182,6 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 0 },
     elevation: 8,
-    // Soft fill behind the circle using the securedGlow token.
     backgroundColor: DS_COLORS_V2.proof.securedGlow,
     padding: 12,
   },
@@ -150,18 +216,53 @@ const styles = StyleSheet.create({
     color: DS_COLORS_V2.text.secondary,
     textAlign: "center",
   },
+  dayLine: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.primary,
+    textAlign: "center",
+    marginTop: DS_SPACING_V2.xs,
+  },
+  remainingBlock: {
+    marginTop: DS_SPACING_V2.sm,
+    alignItems: "flex-start",
+    alignSelf: "center",
+    gap: 4,
+  },
+  remainingItem: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: DS_COLORS_V2.text.secondary,
+  },
   streakWrap: {
     marginTop: DS_SPACING_V2.md,
+  },
+  ctaStack: {
+    gap: DS_SPACING_V2.sm,
   },
   doneCta: {
     backgroundColor: DS_COLORS_V2.brand.primary,
     borderRadius: DS_RADIUS_V2.md,
     paddingVertical: 16,
     alignItems: "center",
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  ctaDisabled: {
+    opacity: 0.7,
   },
   doneCtaText: {
     fontSize: 17,
     fontWeight: "500",
     color: DS_COLORS_V2.brand.primaryText,
+  },
+  secondaryCta: {
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  secondaryCtaText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: DS_COLORS_V2.text.secondary,
   },
 });
