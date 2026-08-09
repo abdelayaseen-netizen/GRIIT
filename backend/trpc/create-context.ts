@@ -10,12 +10,10 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
 function createUserSupabase(accessToken: string) {
+  // accessToken is what fetchWithAuth uses for Authorization on REST/RPC.
+  // global.headers alone was not delivered; auth.uid() stayed null in secure_day.
   return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
+    accessToken: async () => accessToken,
   });
 }
 
