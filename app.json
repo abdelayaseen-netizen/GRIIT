@@ -18,6 +18,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.griit.challenge-tracker",
       "appleTeamId": "WZT43QXHZB",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
         "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
