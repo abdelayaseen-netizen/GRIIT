@@ -213,7 +213,7 @@ INSERT INTO challenges (id, title, description, short_hook, theme_color, rules_t
   ('c-21-noexcuse',   '21 Day No Excuses',      'Complete 3 non-negotiable tasks daily: workout, journal, and a cold shower. No skipping.',                  'Zero excuses for 21 days straight.',           '#EF4444', 'All 3 tasks required daily. Miss one = day not secured.',            'days', 21,  'extreme', 'discipline',  'public', 'published', true, 'system', 643),
   ('c-14-walk',       '14 Day Walk & Reflect',  'Walk at least 20 minutes and write a short reflection every day for 14 days.',                              'Move your body. Clear your mind.',             '#8B5CF6', 'Walk 20 min (GPS). Write 50-word reflection.',                       'days', 14,  'easy',    'mental',      'public', 'published', true, 'system', 512);
 
--- Tasks for 75 Day Hard
+-- Tasks for GRIIT 75
 INSERT INTO challenge_tasks (challenge_id, title, type, required, duration_minutes) VALUES
   ('c-75-hard', 'Run 1 mile', 'run', true, NULL),
   ('c-75-hard', 'Journal entry (120 words)', 'journal', true, NULL);
