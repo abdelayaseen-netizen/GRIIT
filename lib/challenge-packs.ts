@@ -166,9 +166,9 @@ export const CHALLENGE_PACKS: ChallengePackDef[] = [
   },
   {
     id: "75hard",
-    name: "75 Hard Classic",
+    name: "Iron 75",
     emoji: "🔥",
-    description: "The original. 5 strict tasks.",
+    description: "Five strict tasks. Seventy-five days.",
     taskCount: 5,
     tasks: [
       {

@@ -107,7 +107,7 @@ export function StepRules({
               : DS_COLORS_V2.surface.cardSubtle
           }
           title="Hard mode"
-          subtitle="75 Hard style — no exceptions"
+          subtitle="Strict mode — no exceptions"
           description="No freezes. Miss a day, restart from day 1."
           selected={difficulty === "hard"}
           onPress={() => onChangeDifficulty("hard")}

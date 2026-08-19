@@ -25,7 +25,7 @@ INSERT INTO public.challenges (
   participants_count,
   metadata
 ) VALUES
-  ('a1000001-4000-4000-8000-000000000001', NULL, '75 Day Hard', '75 days. No excuses. Most people quit.', 75, 'multi_day', 'PUBLIC', 'extreme', 'Fitness', 'published', true, 0, '{"short_hook": "75 days. No excuses.", "theme_color": "#E8613C"}'::jsonb),
+  ('a1000001-4000-4000-8000-000000000001', NULL, 'GRIIT 75', '75 days. No excuses. Most people quit.', 75, 'multi_day', 'PUBLIC', 'extreme', 'Fitness', 'published', true, 0, '{"short_hook": "75 days. No excuses.", "theme_color": "#E8613C"}'::jsonb),
   ('a1000001-4000-4000-8000-000000000002', NULL, '30 Day Mindful', '30 days to build a calmer mind.', 30, 'multi_day', 'PUBLIC', 'medium', 'Mind', 'published', true, 0, '{"short_hook": "Build a calmer mind.", "theme_color": "#8B5CF6"}'::jsonb),
   ('a1000001-4000-4000-8000-000000000003', NULL, 'Morning Warrior', 'Win the morning. Win the day.', 21, 'multi_day', 'PUBLIC', 'medium', 'Discipline', 'published', true, 0, '{"short_hook": "Win the morning.", "theme_color": "#F59E0B"}'::jsonb),
   ('a1000001-4000-4000-8000-000000000004', NULL, 'Read 30 Pages', 'Feed your mind daily.', 21, 'multi_day', 'PUBLIC', 'medium', 'Mind', 'published', true, 0, '{"short_hook": "Feed your mind daily.", "theme_color": "#10B981"}'::jsonb),

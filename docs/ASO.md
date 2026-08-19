@@ -26,7 +26,7 @@ Priority bucket - high volume, high relevance:
 - discipline,habits,streak,challenge,accountability,routine,goals,fitness,motivation,self,improve,daily
 
 Secondary bucket - competitor-overlap, lower volume:
-- habit,tracker,75hard,morning,routine,journal,checkin,grit,build,strong,mental,toughness
+- habit,tracker,morning,routine,journal,checkin,grit,build,strong,mental,toughness
 
 Avoid: trademarked names, "Duolingo", "Strava" (will be rejected)
 

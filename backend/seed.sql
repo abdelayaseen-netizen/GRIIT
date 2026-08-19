@@ -202,7 +202,7 @@ CREATE POLICY "Challenge tasks insertable by authenticated" ON challenge_tasks F
 -- =============================================
 
 INSERT INTO challenges (id, title, description, short_hook, theme_color, rules_text, duration_type, duration_days, difficulty, category, visibility, status, is_featured, created_by, participants_count) VALUES
-  ('c-75-hard',       '75 Day Hard',           'The ultimate discipline challenge. Complete daily tasks without exception for 75 days.',                   '75 days. No excuses. Most people quit.',       '#E87D4F', 'No excuses. No cheating. No days off.',                              'days', 75,  'extreme', 'fitness',     'public', 'published', true, 'system', 2847),
+  ('c-75-hard',       'GRIIT 75',           'The ultimate discipline challenge. Complete daily tasks without exception for 75 days.',                   '75 days. No excuses. Most people quit.',       '#E87D4F', 'No excuses. No cheating. No days off.',                              'days', 75,  'extreme', 'fitness',     'public', 'published', true, 'system', 2847),
   ('c-30-mindful',    '30 Day Mindful',        'Build a meditation and journaling practice over 30 days.',                                                 '30 days to build a calmer mind.',              '#6B8E7B', 'Be present. Build consistency. Transform your mind.',               'days', 30,  'medium',  'mind',        'public', 'published', true, 'system', 1523),
   ('c-21-morning',    'Morning Warrior',        'Wake up at 5 AM and complete a morning routine for 21 days.',                                              'Win the morning. Win the day.',                '#FFB347', 'Win the morning, win the day.',                                      'days', 21,  'hard',    'discipline',  'public', 'published', true, 'system', 892),
   ('c-14-gratitude',  'Daily Gratitude',        'Write three things you are grateful for every day for 14 days.',                                           'Gratitude changes everything.',                '#9B8EC5', 'Gratitude changes everything.',                                      'days', 14,  'easy',    'mind',        'public', 'published', true, 'system', 456),
@@ -213,7 +213,7 @@ INSERT INTO challenges (id, title, description, short_hook, theme_color, rules_t
   ('c-21-noexcuse',   '21 Day No Excuses',      'Complete 3 non-negotiable tasks daily: workout, journal, and a cold shower. No skipping.',                  'Zero excuses for 21 days straight.',           '#EF4444', 'All 3 tasks required daily. Miss one = day not secured.',            'days', 21,  'extreme', 'discipline',  'public', 'published', true, 'system', 643),
   ('c-14-walk',       '14 Day Walk & Reflect',  'Walk at least 20 minutes and write a short reflection every day for 14 days.',                              'Move your body. Clear your mind.',             '#8B5CF6', 'Walk 20 min (GPS). Write 50-word reflection.',                       'days', 14,  'easy',    'mental',      'public', 'published', true, 'system', 512);
 
--- Tasks for 75 Day Hard
+-- Tasks for GRIIT 75
 INSERT INTO challenge_tasks (challenge_id, title, type, required, duration_minutes) VALUES
   ('c-75-hard', 'Run 1 mile', 'run', true, NULL),
   ('c-75-hard', 'Journal entry (120 words)', 'journal', true, NULL);

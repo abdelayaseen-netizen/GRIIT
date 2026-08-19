@@ -48,7 +48,7 @@ export function StepBasics({
       <Animated.View style={[styles.shakeWrap, { transform: [{ translateX: shake }] }]}>
         <TextInput
           style={[styles.input, nameError && styles.inputErr]}
-          placeholder="e.g. 75 Day Hard, Iron Mind..."
+          placeholder="e.g. GRIIT 75, Iron Mind..."
           placeholderTextColor={DS_COLORS.TEXT_MUTED}
           value={title}
           accessibilityLabel="Challenge name"

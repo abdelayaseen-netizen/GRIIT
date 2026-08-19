@@ -123,7 +123,7 @@ export default function HomeScreen() {
     enabled: !isGuest && !!user?.id,
     staleTime: 5 * 60 * 1000,
     queryFn: () =>
-      trpcQuery(TRPC.profiles.getFollowCounts) as Promise<FollowCounts>,
+      trpcQuery(TRPC.profiles.getFollowCounts, { userId: user!.id }) as Promise<FollowCounts>,
   });
 
   React.useEffect(() => {
