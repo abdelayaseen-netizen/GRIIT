@@ -74,8 +74,8 @@ export type WizardPack = {
 const PACKS: readonly WizardPack[] = [
   {
     id: "75-hard",
-    name: "75 Hard Classic",
-    subtitle: "5 strict tasks · original framework",
+    name: "Iron 75",
+    subtitle: "5 strict tasks · zero exceptions",
     category: "discipline",
     durationDays: 75,
     difficulty: "hard",
