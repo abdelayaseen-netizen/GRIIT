@@ -57,6 +57,18 @@ export const profilesStatsProcedures = {
       const freezesRows = freezesResult?.error ? { data: [] } : freezesResult;
       const lastStandUsesRows = lastStandUsesResult?.error ? { data: [] } : lastStandUsesResult;
 
+      if (streakData.error) {
+        logger.error(
+          { error: streakData.error, userId: ctx.userId },
+          "[profiles.getStats] streaks read failed",
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to load streak.",
+        });
+      }
+      const streakRow = streakData.data ?? null;
+
       const streakFreezePerMonth = 1;
       let usedCount = profileRow?.data?.streak_freeze_used_count ?? 0;
       let resetAt = profileRow?.data?.streak_freeze_reset_at ? new Date(profileRow.data.streak_freeze_reset_at) : new Date();
@@ -76,7 +88,7 @@ export const profilesStatsProcedures = {
       const frozenDateKeys = new Set((freezesRows?.data ?? []).map((r: { date_key: string }) => r.date_key));
       const lastStandUsedDateKeys = new Set((lastStandUsesRows?.data ?? []).map((r: { date_key: string }) => r.date_key));
 
-      const lastCompletedDateKey = streakData.data?.last_completed_date_key ?? null;
+      const lastCompletedDateKey = streakRow?.last_completed_date_key ?? null;
       const tzRaw = profileRow?.data as { timezone?: string | null; reminder_timezone?: string | null } | null;
       const tz = tzRaw?.timezone?.trim() || tzRaw?.reminder_timezone?.trim() || "UTC";
       const todayKey = getTodayDateKey(tz);
@@ -91,7 +103,7 @@ export const profilesStatsProcedures = {
         ).length;
       }
 
-      let lastStandsAvailable = Math.min(2, Math.max(0, (streakData.data as StreakRow | null)?.last_stands_available ?? 0));
+      let lastStandsAvailable = Math.min(2, Math.max(0, (streakRow as StreakRow | null)?.last_stands_available ?? 0));
       let lastStandUsedThisSession = false;
       let streakLostNoLastStand = false;
       let lastStandRequiresPremium = false;
@@ -112,7 +124,7 @@ export const profilesStatsProcedures = {
           const inserted = !insertErr;
           if (inserted) {
             const newAvailable = lastStandsAvailable - 1;
-            const newUsedTotal = ((streakData.data as StreakRow | null)?.last_stands_used_total ?? 0) + 1;
+            const newUsedTotal = ((streakRow as StreakRow | null)?.last_stands_used_total ?? 0) + 1;
             await ctx.supabase
               .from('streaks')
               .update({
@@ -140,7 +152,7 @@ export const profilesStatsProcedures = {
         }
         }
       } else if (effectiveMissedDays >= 1 && lastStandsAvailable === 0) {
-        const activeStreakBefore = streakData.data?.active_streak_count ?? 0;
+        const activeStreakBefore = streakRow?.active_streak_count ?? 0;
         if (activeStreakBefore > 0) {
           await ctx.supabase
             .from('streaks')
@@ -150,8 +162,13 @@ export const profilesStatsProcedures = {
         }
       }
 
-      const activeStreak = streakLostNoLastStand ? 0 : (streakData.data?.active_streak_count ?? 0);
-      const canUseFreeze = effectiveMissedDays === 1 && activeStreak > 0 && freezesRemaining > 0;
+      // Missing row (RLS / no streak yet) must not collapse to a real zero.
+      const activeStreak = streakLostNoLastStand
+        ? 0
+        : streakRow == null
+          ? null
+          : (streakRow.active_streak_count ?? 0);
+      const canUseFreeze = effectiveMissedDays === 1 && (activeStreak ?? 0) > 0 && freezesRemaining > 0;
 
       const totalDaysSecured = profileRow?.data?.total_days_secured ?? 0;
       const tier = profileRow?.data?.tier ?? getTierForDays(totalDaysSecured);
@@ -159,15 +176,11 @@ export const profilesStatsProcedures = {
       const nextTierName = getNextTierName(totalDaysSecured);
       const preferredSecureTime = profileRow?.data?.preferred_secure_time ?? "20:00";
 
-      logger.info(
-        `[debug/stats-payload] userId=${ctx.userId} activeStreak=${activeStreak || 0} raw=${JSON.stringify(streakData.data)} err=${JSON.stringify(streakData.error)} lastKey=${lastCompletedDateKey} todayKey=${todayKey} tz=${tz} effectiveMissedDays=${effectiveMissedDays} streakLostNoLastStand=${streakLostNoLastStand}`,
-      );
-
       return {
         activeChallenges: activeChallenges.data?.length || 0,
         completedChallenges: completedChallenges.data?.length || 0,
-        activeStreak: activeStreak || 0,
-        longestStreak: streakData.data?.longest_streak_count || 0,
+        activeStreak,
+        longestStreak: streakRow?.longest_streak_count || 0,
         lastCompletedDateKey: lastCompletedDateKey,
         streakFreezeUsedCount: usedCount,
         streakFreezeResetAt: resetAt.toISOString(),

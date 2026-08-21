@@ -226,19 +226,7 @@ export default function HomeScreen() {
 
   const resolvedStats = statsQuery.data ?? stats;
   const statsReady = statsQuery.isSuccess || stats != null;
-  const streak = statsReady ? (resolvedStats?.activeStreak ?? 0) : null;
-
-  React.useEffect(() => {
-    const rawActiveStreak = statsQuery.data?.activeStreak;
-    console.log(
-      `[debug/stats-payload] home getStats status=${statsQuery.status} isSuccess=${statsQuery.isSuccess} dataDefined=${statsQuery.data !== undefined} rawActiveStreak=${rawActiveStreak} rawActiveStreakTypeof=${typeof rawActiveStreak} resolvedStreak=${streak}`,
-    );
-  }, [
-    statsQuery.data,
-    statsQuery.status,
-    statsQuery.isSuccess,
-    streak,
-  ]);
+  const streak = statsReady ? (resolvedStats?.activeStreak ?? null) : null;
   const lastStreak = statsReady
     ? ((resolvedStats as { lastStreak?: number } | null)?.lastStreak ?? 0)
     : 0;
