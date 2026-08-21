@@ -18,6 +18,9 @@ Go to: https://expo.dev → your project → Secrets
 ### Optional but recommended:
 - [ ] EXPO_PUBLIC_POSTHOG_API_KEY  (analytics)
 
+### OTA runtime (`runtimeVersion` policy `appVersion`)
+With `runtimeVersion` policy `appVersion`, any native change — SDK bump, new native module, changed plugin config — requires bumping `version` in `app.json`, or OTA will push JS to a binary with mismatched native code. Remote `autoIncrement` only bumps `ios.buildNumber` / `android.versionCode`, not that version.
+
 ## Build commands:
 # Test on simulator:
 eas build --platform ios --profile development

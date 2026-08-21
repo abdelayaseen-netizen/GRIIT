@@ -26,7 +26,6 @@
   ],
   "ignoreDependencies": [
     "expo-router",
-    "expo-updates",
     "expo-status-bar",
     "babel-plugin-transform-remove-console",
     "@babel/core",
