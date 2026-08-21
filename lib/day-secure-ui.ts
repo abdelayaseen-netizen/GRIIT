@@ -5,7 +5,7 @@
 
 export type DaySecureUi =
   | { kind: "not_attempted" }
-  | { kind: "secured"; streakCount: number }
+  | { kind: "secured"; streakCount: number; dayNumber: number }
   | {
       kind: "incomplete_required";
       done: number;

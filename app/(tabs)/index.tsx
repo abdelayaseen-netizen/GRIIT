@@ -31,13 +31,13 @@ import { profilePrimaryName } from "@/lib/profile-display";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
-import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
+import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
-import { challengeDayNumber } from "@/lib/challenge-day";
+import { challengeDisplayDay } from "@/lib/challenge-day";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { StreakMomentOverlay } from "@/components/home/StreakMomentOverlay";
 
@@ -212,13 +212,21 @@ export default function HomeScreen() {
     [homeQuery.data?.securedDateKeys],
   );
 
-  /** Challenge day for streak-moment copy — same source as SecuredScreen (current_day). */
+  const todaySecured = useMemo(() => {
+    const tz = (profile as { timezone?: string | null })?.timezone;
+    return securedDateKeys.includes(getTodayDateKey(tz));
+  }, [securedDateKeys, profile]);
+
+  /**
+   * Challenge day for streak-moment copy — same helper as proof card:
+   * todaySecured ? current_day − 1 : current_day (floor 1).
+   */
   const momentChallengeDay = useMemo(() => {
     const fromTasks = heroTasks.find((t) => t.done)?.currentDay ?? heroTasks[0]?.currentDay;
-    if (fromTasks != null) return challengeDayNumber(fromTasks);
+    if (fromTasks != null) return challengeDisplayDay(fromTasks, todaySecured);
     const ac = homeQuery.data?.activeList?.[0];
-    return challengeDayNumber(ac?.current_day);
-  }, [heroTasks, homeQuery.data?.activeList]);
+    return challengeDisplayDay(ac?.current_day, todaySecured);
+  }, [heroTasks, homeQuery.data?.activeList, todaySecured]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -243,11 +251,6 @@ export default function HomeScreen() {
     [streak, heroMetrics.tasksRemaining, heroMetrics.minutesRemaining],
   );
 
-  const todaySecured = useMemo(() => {
-    const tz = (profile as { timezone?: string | null })?.timezone;
-    return securedDateKeys.includes(getTodayDateKey(tz));
-  }, [securedDateKeys, profile]);
-
   const heroState = useMemo(
     () =>
       deriveStreakHeroV4State({
@@ -270,24 +273,29 @@ export default function HomeScreen() {
 
   const showCelebration = useCelebrationStore((s) => s.show);
 
-  // Week strip — count of secured days in the current ISO week (Mon-Sun).
-  const weekSecured = useMemo(() => {
-    const now = new Date();
-    const dow = now.getDay();
-    const daysFromMonday = (dow + 6) % 7;
-    const monday = new Date(now);
-    monday.setHours(0, 0, 0, 0);
-    monday.setDate(monday.getDate() - daysFromMonday);
+  // Week strip — Mon→Sun date keys in profile timezone; fill by membership in
+  // securedDateKeys (not by count). Prior memo used device-local midnight.
+  const weekDateKeys = useMemo(() => {
+    const tz = (profile as { timezone?: string | null })?.timezone;
+    return getCurrentWeekDateKeys(tz);
+  }, [profile]);
+
+  const weekSecuredByIndex = useMemo(() => {
     const set = new Set(securedDateKeys);
-    let count = 0;
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      if (set.has(key)) count++;
-    }
-    return count;
-  }, [securedDateKeys]);
+    return weekDateKeys.map((key) => set.has(key));
+  }, [weekDateKeys, securedDateKeys]);
+
+  const weekSecured = useMemo(
+    () => weekSecuredByIndex.filter(Boolean).length,
+    [weekSecuredByIndex],
+  );
+
+  const todayWeekIndex = useMemo(() => {
+    const tz = (profile as { timezone?: string | null })?.timezone;
+    const todayKey = getTodayDateKey(tz);
+    const idx = weekDateKeys.indexOf(todayKey);
+    return idx >= 0 ? idx : 0;
+  }, [weekDateKeys, profile]);
 
   const nextBadge = useMemo(() => deriveNextBadge(streak), [streak]);
 
@@ -574,6 +582,8 @@ export default function HomeScreen() {
               onPressBell={onPressBell}
               weekSecured={weekSecured}
               weekTotal={7}
+              weekSecuredByIndex={weekSecuredByIndex}
+              todayWeekIndex={todayWeekIndex}
               freezesAvailable={freezeStatusQuery.data?.remaining ?? 0}
               freezesMaxPerWeek={FREEZE_MAX_PER_WEEK}
               nextBadgeName={nextBadge.name}

@@ -841,12 +841,22 @@ export function TaskCompleteScreenInner() {
       const progress = totalRequired > 0 ? (verifiedCount / totalRequired) * 100 : 0;
       const dayNowSecured = progress === 100 && totalRequired > 0;
       if (dayNowSecured) {
+        // Capture before secureDay — RPC increments current_day; void
+        // fetchActiveChallenge may or may not have landed by render time.
+        const dayNumberBeforeSecure = challengeDayNumber(
+          (activeChallenge as { current_day?: number } | null)?.current_day ??
+            headerCurrentDay
+        );
         try {
           const secureResult = await secureDayRef.current();
           const securedStreak = secureResult?.newStreakCount;
           if (typeof securedStreak === "number") {
             setCompletedStreakCount(securedStreak);
-            setDaySecureUi({ kind: "secured", streakCount: securedStreak });
+            setDaySecureUi({
+              kind: "secured",
+              streakCount: securedStreak,
+              dayNumber: dayNumberBeforeSecure,
+            });
           } else {
             // Soft-skip (!canSecureDay) — treat as incomplete, not transport failure.
             setDaySecureUi(
@@ -1012,17 +1022,28 @@ export function TaskCompleteScreenInner() {
     clearJournalDraft,
     flushCounterProgress,
     isSimpleAsk,
+    activeChallenge,
+    headerCurrentDay,
   ]);
 
   const handleRetrySecureDay = useCallback(async () => {
     if (secureDayRetrying) return;
     setSecureDayRetrying(true);
+    // Capture before secureDay — same model as primary submit path.
+    const dayNumberBeforeSecure = challengeDayNumber(
+      (activeChallenge as { current_day?: number } | null)?.current_day ??
+        headerCurrentDay
+    );
     try {
       const secureResult = await secureDayRef.current();
       const securedStreak = secureResult?.newStreakCount;
       if (typeof securedStreak === "number") {
         setCompletedStreakCount(securedStreak);
-        setDaySecureUi({ kind: "secured", streakCount: securedStreak });
+        setDaySecureUi({
+          kind: "secured",
+          streakCount: securedStreak,
+          dayNumber: dayNumberBeforeSecure,
+        });
         return;
       }
       const requiredTasks =
@@ -1062,7 +1083,7 @@ export function TaskCompleteScreenInner() {
     } finally {
       setSecureDayRetrying(false);
     }
-  }, [secureDayRetrying, challenge, todayCheckins, taskId]);
+  }, [secureDayRetrying, challenge, todayCheckins, taskId, activeChallenge, headerCurrentDay]);
 
   const runManualComplete = useCallback(() => {
     if (manualSubmitScheduled.current || isSubmitting) return;
@@ -1933,10 +1954,6 @@ export function TaskCompleteScreenInner() {
       taskTypeRaw === "checkin" ||
       isSimpleAsk
     ) {
-      const securedDayNumber = challengeDayNumber(
-        (activeChallenge as { current_day?: number } | null)?.current_day ??
-          headerCurrentDay
-      );
       const workoutSecuredMin = showWorkoutTimer
         ? Math.floor(timerSeconds / 60)
         : workoutMinParsed;
@@ -1965,7 +1982,7 @@ export function TaskCompleteScreenInner() {
         daySecureUi.kind === "secured"
           ? {
               kind: "secured" as const,
-              dayNumber: securedDayNumber,
+              dayNumber: daySecureUi.dayNumber,
               streakCount: daySecureUi.streakCount,
               onDone: () => goBackOrHome(router),
             }

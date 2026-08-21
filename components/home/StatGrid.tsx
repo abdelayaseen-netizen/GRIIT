@@ -24,8 +24,16 @@ import { DS_DAYLIGHT } from '@/lib/design-system';
 export type StatGridVariant = 'default' | 'day0' | 'atRisk' | 'secured';
 
 export type StatGridProps = {
+  /** Count of secured days this week — for copy. Derive from weekSecuredByIndex. */
   weekSecured: number;
   weekTotal: number;
+  /**
+   * Length-7 flags (Mon→Sun): true when that cell's date key is in securedDateKeys.
+   * Fill condition — do not use weekSecured count as an index threshold.
+   */
+  weekSecuredByIndex: boolean[];
+  /** Monday-first index of today in the profile-timezone week (0–6). */
+  todayWeekIndex: number;
   freezesAvailable: number;
   freezesMaxPerWeek: number;
   nextBadgeName: string;
@@ -43,7 +51,7 @@ const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 // Monday-first single-letter weekday labels.
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
 
-/** Today's index in a Monday-first week (Mon = 0 … Sun = 6). */
+/** Today's index in a Monday-first week (Mon = 0 … Sun = 6). Device-local — prefer todayWeekIndex prop. */
 function mondayFirstIndex(d: Date): number {
   return (d.getDay() + 6) % 7;
 }
@@ -55,15 +63,20 @@ function mondayFirstIndex(d: Date): number {
 type DayKind = 'completed' | 'today' | 'future';
 
 function WeekStrip({
-  weekSecured,
+  weekSecuredByIndex,
   weekTotal,
+  todayWeekIndex,
   variant,
 }: {
-  weekSecured: number;
+  weekSecuredByIndex: boolean[];
   weekTotal: number;
+  todayWeekIndex: number;
   variant: StatGridVariant;
 }) {
-  const todayIndex = mondayFirstIndex(new Date());
+  const todayIndex =
+    todayWeekIndex >= 0 && todayWeekIndex < 7
+      ? todayWeekIndex
+      : mondayFirstIndex(new Date());
   const total = Math.min(7, Math.max(1, weekTotal));
 
   const cells = [] as React.ReactElement[];
@@ -71,7 +84,7 @@ function WeekStrip({
     let kind: DayKind;
     if (i === todayIndex) {
       kind = 'today';
-    } else if (variant !== 'day0' && i < weekSecured) {
+    } else if (variant !== 'day0' && weekSecuredByIndex[i] === true) {
       kind = 'completed';
     } else {
       kind = 'future';
@@ -107,6 +120,8 @@ export function StatGrid(props: StatGridProps) {
   const {
     weekSecured,
     weekTotal,
+    weekSecuredByIndex,
+    todayWeekIndex,
     freezesAvailable,
     nextBadgeName,
     nextBadgeProgress,
@@ -131,8 +146,9 @@ export function StatGrid(props: StatGridProps) {
 
   const strip = (
     <WeekStrip
-      weekSecured={weekSecured}
+      weekSecuredByIndex={weekSecuredByIndex}
       weekTotal={weekTotal}
+      todayWeekIndex={todayWeekIndex}
       variant={variant}
     />
   );
