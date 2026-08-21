@@ -197,7 +197,7 @@ export function HomeHeaderV2(props: HomeHeaderV2Props) {
           freezesMaxPerWeek={props.freezesMaxPerWeek}
           nextBadgeName={props.nextBadgeName}
           nextBadgeProgress={props.nextBadgeProgress}
-          streak={props.hero.streak}
+          streak={props.hero.streak ?? 0}
           variant={statGridVariant}
           onPressWeek={props.onPressWeekStat}
           onPressFreezes={props.onPressFreezesStat}

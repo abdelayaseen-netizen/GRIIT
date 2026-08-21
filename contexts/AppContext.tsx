@@ -153,6 +153,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const data = await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
       setStats(data);
     } catch (err) {
+      // Best-effort on mount only. A failure leaves stats null forever here;
+      // home owns the authoritative getStats fetch (app/(tabs)/index.tsx).
       captureError(err, "AppContext.fetchStats");
     }
   }, [user]);

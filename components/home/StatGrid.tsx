@@ -9,6 +9,7 @@
  *
  * Variants reflect home state — they only swap copy + bar colors, never the
  * geometry, so the strip never shifts height between renders.
+ * Today's cell can be both today and completed (filled ink + accent border).
  */
 import React from 'react';
 import {
@@ -60,7 +61,7 @@ function mondayFirstIndex(d: Date): number {
 // Week strip
 // ──────────────────────────────────────────────────────────────────────────
 
-type DayKind = 'completed' | 'today' | 'future';
+type DayKind = 'completed' | 'today' | 'todayCompleted' | 'future';
 
 function WeekStrip({
   weekSecuredByIndex,
@@ -83,7 +84,9 @@ function WeekStrip({
   for (let i = 0; i < total; i++) {
     let kind: DayKind;
     if (i === todayIndex) {
-      kind = 'today';
+      // Today can also be secured — don't let the today check hide a fill.
+      kind =
+        weekSecuredByIndex[i] === true ? 'todayCompleted' : 'today';
     } else if (variant !== 'day0' && weekSecuredByIndex[i] === true) {
       kind = 'completed';
     } else {
@@ -93,14 +96,18 @@ function WeekStrip({
     const barStyle =
       kind === 'completed'
         ? styles.dayBarDone
-        : kind === 'today'
-          ? styles.dayBarToday
-          : styles.dayBarFuture;
+        : kind === 'todayCompleted'
+          ? styles.dayBarTodayDone
+          : kind === 'today'
+            ? styles.dayBarToday
+            : styles.dayBarFuture;
+
+    const isToday = kind === 'today' || kind === 'todayCompleted';
 
     cells.push(
       <View key={i} style={styles.dayCol}>
         <Text
-          style={kind === 'today' ? styles.dayLetterToday : styles.dayLetter}
+          style={isToday ? styles.dayLetterToday : styles.dayLetter}
         >
           {DAY_LETTERS[i]}
         </Text>
@@ -198,7 +205,7 @@ export function StatGrid(props: StatGridProps) {
           accessibilityRole="button"
           accessibilityLabel={
             variant === 'atRisk'
-              ? `Streak at risk, ${streak} days at stake`
+              ? `Streak at risk, ${streak} ${streak === 1 ? 'day' : 'days'} at stake`
               : `Next badge ${badgeName}, ${Math.round(nextBadgeProgress * 100)} percent complete`
           }
           hitSlop={HIT_SLOP}
@@ -268,6 +275,11 @@ const styles = StyleSheet.create({
   },
   dayBarToday: {
     backgroundColor: DS_DAYLIGHT.color.accentTint,
+    borderWidth: 2,
+    borderColor: DS_DAYLIGHT.color.accent,
+  },
+  dayBarTodayDone: {
+    backgroundColor: DS_DAYLIGHT.color.ink,
     borderWidth: 2,
     borderColor: DS_DAYLIGHT.color.accent,
   },

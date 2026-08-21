@@ -51,7 +51,8 @@ export type StreakHeroV4Task = {
 export type StreakHeroV4State = 'day0' | 'default' | 'atRisk' | 'secured';
 
 export type StreakHeroV4Props = {
-  streak: number;
+  /** Null when getStats has not loaded — do not treat as a real zero. */
+  streak: number | null;
   lastStreak: number;
   minutesRemaining: number;
   tasksRemaining: number;
@@ -94,7 +95,7 @@ export function deriveStreakHeroV4State(
   ) {
     return 'secured';
   }
-  if (p.streak >= 1 && p.minutesRemaining < 60 && p.tasksRemaining > 0) {
+  if (p.streak != null && p.streak >= 1 && p.minutesRemaining < 60 && p.tasksRemaining > 0) {
     return 'atRisk';
   }
   if (p.streak === 0) return 'day0';
@@ -208,52 +209,70 @@ function HeaderBlock({
   nextBadgeDaysAway,
 }: {
   state: StreakHeroV4State;
-  streak: number;
+  streak: number | null;
   nextBadgeName: string;
   nextBadgeDaysAway: number;
 }) {
-  const flameState = flameStateFor(state, streak);
+  const flameState = flameStateFor(state, streak ?? 0);
 
   let label: string;
   let labelColor: string;
   let caption: string;
 
-  switch (state) {
-    case 'day0':
-      label = 'Current streak';
-      labelColor = DS_COLORS_V2.text.tertiary;
-      caption = 'Post today to reach day 1.';
-      break;
-    case 'atRisk':
-      label = 'Current streak';
-      labelColor = DS_COLORS_V2.brand.primary;
-      caption = "Don't break the chain.";
-      break;
-    case 'secured':
-      label = 'Streak secured';
-      labelColor = DS_COLORS_V2.brand.primary;
-      caption = '+1 day stronger.';
-      break;
-    default: {
-      label = 'Current streak';
-      labelColor = DS_COLORS_V2.text.tertiary;
-      const days = Math.max(0, nextBadgeDaysAway);
-      caption =
-        days <= 0
-          ? `${nextBadgeName} unlocked`
-          : `${days} more to your ${nextBadgeName} badge`;
-      break;
+  if (streak == null) {
+    label = 'Current streak';
+    labelColor = DS_COLORS_V2.text.tertiary;
+    caption = 'Updating streak.';
+  } else {
+    switch (state) {
+      case 'day0':
+        label = 'Current streak';
+        labelColor = DS_COLORS_V2.text.tertiary;
+        caption = 'Post today to reach day 1.';
+        break;
+      case 'atRisk':
+        label = 'Current streak';
+        labelColor = DS_COLORS_V2.brand.primary;
+        caption = "Don't break the chain.";
+        break;
+      case 'secured':
+        label = 'Streak secured';
+        labelColor = DS_COLORS_V2.brand.primary;
+        caption = '+1 day stronger.';
+        break;
+      default: {
+        label = 'Current streak';
+        labelColor = DS_COLORS_V2.text.tertiary;
+        const days = Math.max(0, nextBadgeDaysAway);
+        caption =
+          days <= 0
+            ? `${nextBadgeName} unlocked`
+            : `${days} more to your ${nextBadgeName} badge`;
+        break;
+      }
     }
   }
 
   return (
     <View style={styles.headerBlock}>
       <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
-      <View style={styles.numberRow}>
-        <Text style={styles.streakNumber}>{streak.toLocaleString()}</Text>
-        <Text style={styles.daysWord}>days</Text>
+      <View
+        style={styles.numberRow}
+        accessibilityRole="text"
+        accessibilityLabel={
+          streak == null
+            ? 'Streak updating'
+            : `${streak} ${streak === 1 ? 'day' : 'days'}`
+        }
+      >
+        <Text style={styles.streakNumber}>
+          {streak == null ? '—' : streak.toLocaleString()}
+        </Text>
+        {streak != null ? (
+          <Text style={styles.daysWord}>{streak === 1 ? 'day' : 'days'}</Text>
+        ) : null}
         <View style={styles.flameWrap}>
-          <StreakFlame streak={streak} state={flameState} size={22} />
+          <StreakFlame streak={streak ?? 0} state={flameState} size={22} />
         </View>
       </View>
       <Text style={styles.caption} numberOfLines={2}>
@@ -373,7 +392,7 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
   if (state === 'secured') {
     const segmentsTotal = 5;
     // Fill from actual streak — do not use `n % 5 || 5` (that treats 0 as 5).
-    const filled = Math.min(segmentsTotal, Math.max(0, props.streak));
+    const filled = Math.min(segmentsTotal, Math.max(0, props.streak ?? 0));
     return (
       <View style={styles.root}>
         <HeaderBlock
@@ -434,7 +453,7 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
     state === 'day0'
       ? 'Post your first proof'
       : state === 'atRisk'
-        ? `Secure Day ${props.streak + 1}`
+        ? `Secure Day ${(props.streak ?? 0) + 1}`
         : "Post today's proof";
 
   const subtitle =
