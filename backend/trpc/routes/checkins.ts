@@ -1140,15 +1140,17 @@ export const checkinsRouter = createTRPCRouter({
     const msg = (rpcError as { message?: string })?.message ?? "";
     if (msg.includes("NOT_ALL_REQUIRED")) throw new TRPCError({ code: "BAD_REQUEST", message: NOT_ALL_REQUIRED_MESSAGE });
     if (rpcError) {
+      const details = (rpcError as { details?: string }).details;
+      const hint = (rpcError as { hint?: string }).hint;
       logger.error(
         {
           userId: ctx.userId,
           activeChallengeId: input.activeChallengeId,
-          rpcErrorCode: (rpcError as { code?: string }).code,
-          rpcErrorMsg: (rpcError as { message?: string }).message,
-          rpcErrorDetails: (rpcError as { details?: string }).details,
-          rpcErrorHint: (rpcError as { hint?: string }).hint,
-          isMissingFunction: (rpcError as { code?: string }).code === "42883",
+          rpcErrorCode: code,
+          rpcErrorMsg: msg,
+          rpcErrorDetails: details,
+          rpcErrorHint: hint,
+          isMissingFunction: code === "42883",
         },
         "[checkins.secureDay] RPC failed — refusing to run unsafe TS fallback. If code=42883, the secure_day migration is not applied to this database."
       );
