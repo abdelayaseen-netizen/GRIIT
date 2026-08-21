@@ -19,7 +19,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import type { TodayCheckinForUser } from "@/types";
+import type { StatsFromApi, TodayCheckinForUser } from "@/types";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeHeaderV2 } from "@/components/home/HomeHeaderV2";
 import {
@@ -127,6 +127,25 @@ export default function HomeScreen() {
       trpcQuery(TRPC.profiles.getFollowCounts) as Promise<FollowCounts>,
   });
 
+  // Home-owned getStats: AppContext fetchStats swallows errors and never retries,
+  // so a failed mount leaves stats null (and "0 days") forever. This query
+  // refetches on focus / window focus / pull-to-refresh and exposes isSuccess
+  // so a missing fetch is not rendered as a real zero.
+  const statsQuery = useQuery({
+    queryKey: ["profiles", "getStats", user?.id ?? ""],
+    enabled: !isGuest && !!user?.id,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    queryFn: async (): Promise<StatsFromApi> => {
+      try {
+        return await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
+      } catch (err) {
+        captureError(err, "HomeGetStats");
+        throw err;
+      }
+    },
+  });
+
   React.useEffect(() => {
     const followingCount = followCountsQuery.data?.following ?? 0;
     initFeedToggle(followingCount);
@@ -205,8 +224,12 @@ export default function HomeScreen() {
     return flat;
   }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
 
-  const streak = stats?.activeStreak ?? 0;
-  const lastStreak = (stats as { lastStreak?: number } | null)?.lastStreak ?? 0;
+  const resolvedStats = statsQuery.data ?? stats;
+  const statsReady = statsQuery.isSuccess || stats != null;
+  const streak = statsReady ? (resolvedStats?.activeStreak ?? 0) : null;
+  const lastStreak = statsReady
+    ? ((resolvedStats as { lastStreak?: number } | null)?.lastStreak ?? 0)
+    : 0;
   const securedDateKeys = useMemo(
     () => homeQuery.data?.securedDateKeys ?? [],
     [homeQuery.data?.securedDateKeys],
@@ -244,7 +267,7 @@ export default function HomeScreen() {
   const homeState = useMemo(
     () =>
       computeHomeState({
-        streak,
+        streak: streak ?? 0,
         tasksRemaining: heroMetrics.tasksRemaining,
         minutesToMidnight: heroMetrics.minutesRemaining,
       }),
@@ -266,6 +289,7 @@ export default function HomeScreen() {
   const lastHomeStateFiredRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (!FLAGS.PR3_HOME_STATE_ANALYTICS) return;
+    if (streak == null) return;
     if (lastHomeStateFiredRef.current === homeState) return;
     lastHomeStateFiredRef.current = homeState;
     track({ name: "home_state_viewed", state: homeState, streak });
@@ -297,11 +321,14 @@ export default function HomeScreen() {
     return idx >= 0 ? idx : 0;
   }, [weekDateKeys, profile]);
 
-  const nextBadge = useMemo(() => deriveNextBadge(streak), [streak]);
+  const nextBadge = useMemo(
+    () => deriveNextBadge(streak ?? 0),
+    [streak],
+  );
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
-    if (!profile || streak <= 0) return;
+    if (!profile || streak == null || streak <= 0) return;
     const keys = [...(homeQuery.data?.securedDateKeys ?? [])].sort();
     if (keys.length === 0) return;
     const lastKey = keys[keys.length - 1]!;
@@ -317,6 +344,7 @@ export default function HomeScreen() {
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
+    if (streak == null) return;
     void scheduleStreakReminder(streak);
   }, [isGuest, user?.id, streak]);
 
@@ -340,10 +368,17 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isGuest || !user?.id) return;
+      void statsQuery.refetch();
+    }, [isGuest, user?.id, statsQuery.refetch]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isGuest || !user?.id) return;
       let cancelled = false;
       const run = async () => {
-        const n = stats?.activeStreak ?? 0;
-        if (!STREAK_MILESTONES.some((m) => m === n)) return;
+        const n = streak;
+        if (n == null || !STREAK_MILESTONES.some((m) => m === n)) return;
         const key = `griit_milestone_${n}`;
         const shown = await AsyncStorage.getItem(key);
         if (cancelled || shown) return;
@@ -358,7 +393,7 @@ export default function HomeScreen() {
       return () => {
         cancelled = true;
       };
-    }, [isGuest, user?.id, stats?.activeStreak, showCelebration]),
+    }, [isGuest, user?.id, streak, showCelebration]),
   );
 
   // Streak moment (S12) — fires once after returning to Home when today is
@@ -373,7 +408,7 @@ export default function HomeScreen() {
       const tz = (profile as { timezone?: string | null })?.timezone;
       const todayKey = getTodayDateKey(tz);
       if (!securedDateKeys.includes(todayKey)) return;
-      if (streak < 1) return;
+      if (streak == null || streak < 1) return;
       const key = `griit_streak_moment_${todayKey}`;
       let cancelled = false;
       AsyncStorage.getItem(key).then((shown) => {
@@ -394,9 +429,9 @@ export default function HomeScreen() {
   );
 
   const refresh = useCallback(async () => {
-    await Promise.all([homeQuery.refetch(), refetchAll()]);
+    await Promise.all([homeQuery.refetch(), statsQuery.refetch(), refetchAll()]);
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-  }, [homeQuery, refetchAll, queryClient]);
+  }, [homeQuery, statsQuery, refetchAll, queryClient]);
 
   // ────────────── handlers ──────────────
 
@@ -431,6 +466,7 @@ export default function HomeScreen() {
   }, []);
 
   const onPressShare = useCallback(async () => {
+    if (streak == null) return;
     try {
       const username = profile?.username ?? "";
       const url = username ? `https://griit.app/u/${username}` : undefined;
@@ -597,14 +633,14 @@ export default function HomeScreen() {
         />
         <StreakFreezeModal
           visible={showFreezeModal}
-          streakCount={streak}
+          streakCount={streak ?? 0}
           freezesRemaining={profile?.streak_freezes_remaining ?? 1}
           onUseFreeze={() => setShowFreezeModal(false)}
           onLetReset={() => setShowFreezeModal(false)}
         />
         <JeopardyModal
           visible={showJeopardyModal}
-          streak={streak}
+          streak={streak ?? 0}
           minutesRemaining={heroMetrics.minutesRemaining}
           freezesAvailable={freezeStatusQuery.data?.remaining ?? 0}
           onPressFinish={onJeopardyFinish}
@@ -613,7 +649,7 @@ export default function HomeScreen() {
         />
         <StreakMomentOverlay
           visible={showStreakMoment}
-          streak={streak}
+          streak={streak ?? 0}
           dayNumber={momentChallengeDay}
           username={profile?.username ?? undefined}
           onKeepGoing={onStreakMomentKeepGoing}
