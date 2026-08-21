@@ -23,13 +23,20 @@ import {
 import { X } from 'lucide-react-native';
 import { DS_COLORS_V2, DS_SPACING_V2 } from '@/lib/design-system';
 import { track } from '@/lib/analytics';
+import { challengeDayNumber } from '@/lib/challenge-day';
 import { StreakFlame } from './StreakFlame';
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 
 export type StreakMomentOverlayProps = {
   visible: boolean;
+  /** Live streak count (may be 0 — do not invent). */
   streak: number;
+  /**
+   * Challenge day from active_challenges.current_day (via challengeDayNumber).
+   * Not a streak — used only for "Day N is yours…" copy.
+   */
+  dayNumber: number;
   username?: string;
   /** Called after "Keep going" — parent should navigate to Discover. */
   onKeepGoing: () => void;
@@ -39,15 +46,17 @@ export type StreakMomentOverlayProps = {
 export function StreakMomentOverlay({
   visible,
   streak,
+  dayNumber,
   username,
   onKeepGoing,
   onDismiss,
 }: StreakMomentOverlayProps) {
+  const day = challengeDayNumber(dayNumber);
   const handleShare = useCallback(async () => {
     try {
       const url = username ? `https://griit.app/u/${username}` : undefined;
       await Share.share({
-        message: `Day ${streak} secured on GRIIT. Discipline builds.`,
+        message: `Day ${day} secured on GRIIT. Discipline builds.`,
         ...(url ? { url } : {}),
       });
       try {
@@ -58,7 +67,7 @@ export function StreakMomentOverlay({
     } catch {
       /* user cancelled — no-op */
     }
-  }, [streak, username]);
+  }, [day, streak, username]);
 
   return (
     <Modal
@@ -101,10 +110,10 @@ export function StreakMomentOverlay({
           <Text style={styles.streakNumber}>{streak.toLocaleString()}</Text>
           <Text style={styles.streakUnit}>day streak</Text>
 
-          {/* Copy */}
+          {/* Copy — day from challenge current_day, not streak */}
           <Text style={styles.headline}>Secured.</Text>
           <Text style={styles.sub}>
-            {`Day ${streak} is yours. Show up tomorrow for Day ${streak + 1}.`}
+            {`Day ${day} is yours. Show up tomorrow for Day ${day + 1}.`}
           </Text>
 
           {/* CTAs */}

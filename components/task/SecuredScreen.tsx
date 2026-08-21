@@ -54,7 +54,7 @@ export function SecuredScreen({ title, meta, daySecure }: SecuredScreenProps) {
   const isDaySecured = daySecure.kind === "secured";
   const statusLabel = isDaySecured
     ? `Day ${daySecure.dayNumber} secured`
-    : "Task secured";
+    : "Task done";
   const dayLine =
     daySecure.kind === "incomplete_required"
       ? `Day not secured · ${formatIncompleteProgress(daySecure.done, daySecure.total)}`
