@@ -230,14 +230,9 @@ export default function HomeScreen() {
 
   React.useEffect(() => {
     const rawActiveStreak = statsQuery.data?.activeStreak;
-    console.log("[debug/stats-payload] home getStats", {
-      status: statsQuery.status,
-      isSuccess: statsQuery.isSuccess,
-      dataDefined: statsQuery.data !== undefined,
-      rawActiveStreak,
-      rawActiveStreakTypeof: typeof rawActiveStreak,
-      resolvedStreak: streak,
-    });
+    console.log(
+      `[debug/stats-payload] home getStats status=${statsQuery.status} isSuccess=${statsQuery.isSuccess} dataDefined=${statsQuery.data !== undefined} rawActiveStreak=${rawActiveStreak} rawActiveStreakTypeof=${typeof rawActiveStreak} resolvedStreak=${streak}`,
+    );
   }, [
     statsQuery.data,
     statsQuery.status,

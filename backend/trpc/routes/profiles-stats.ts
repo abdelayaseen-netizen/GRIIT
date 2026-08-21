@@ -160,18 +160,7 @@ export const profilesStatsProcedures = {
       const preferredSecureTime = profileRow?.data?.preferred_secure_time ?? "20:00";
 
       logger.info(
-        {
-          userId: ctx.userId,
-          streakDataError: streakData.error ?? null,
-          streakData: streakData.data ?? null,
-          lastCompletedDateKey,
-          todayKey,
-          tz,
-          effectiveMissedDays,
-          streakLostNoLastStand,
-          activeStreak: activeStreak || 0,
-        },
-        "[debug/stats-payload] profiles.getStats",
+        `[debug/stats-payload] userId=${ctx.userId} activeStreak=${activeStreak || 0} raw=${JSON.stringify(streakData.data)} err=${JSON.stringify(streakData.error)} lastKey=${lastCompletedDateKey} todayKey=${todayKey} tz=${tz} effectiveMissedDays=${effectiveMissedDays} streakLostNoLastStand=${streakLostNoLastStand}`,
       );
 
       return {
