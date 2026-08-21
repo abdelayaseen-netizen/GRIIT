@@ -158,7 +158,7 @@ export function useAppChallengeMutations({
               track({
                 name: "minimum_day_completed",
                 challenge_id: challengeIdForRetention,
-                streak_count: activeStreak,
+                streak_count: activeStreak ?? undefined,
                 day_number: currentDay,
               });
             } catch {

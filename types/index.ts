@@ -183,7 +183,8 @@ export interface StatsFromApi {
   lastStandRequiresPremium?: boolean;
   lastCompletedDateKey?: string | null;
   longestStreak?: number;
-  activeStreak?: number;
+  /** Null when no streaks row was readable (distinct from a real zero). */
+  activeStreak?: number | null;
   completedChallenges?: number;
   activeChallenges?: number;
 }

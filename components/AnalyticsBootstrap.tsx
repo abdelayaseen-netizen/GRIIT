@@ -7,7 +7,7 @@ export function AnalyticsBootstrap() {
   const { stats, isPremium } = useApp();
   useEffect(() => {
     try {
-      track({ name: "app_opened", streak_count: stats?.activeStreak, isPremium });
+      track({ name: "app_opened", streak_count: stats?.activeStreak ?? undefined, isPremium });
     } catch {
       /* non-fatal */
     }
