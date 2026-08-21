@@ -159,6 +159,21 @@ export const profilesStatsProcedures = {
       const nextTierName = getNextTierName(totalDaysSecured);
       const preferredSecureTime = profileRow?.data?.preferred_secure_time ?? "20:00";
 
+      logger.info(
+        {
+          userId: ctx.userId,
+          streakDataError: streakData.error ?? null,
+          streakData: streakData.data ?? null,
+          lastCompletedDateKey,
+          todayKey,
+          tz,
+          effectiveMissedDays,
+          streakLostNoLastStand,
+          activeStreak: activeStreak || 0,
+        },
+        "[debug/stats-payload] profiles.getStats",
+      );
+
       return {
         activeChallenges: activeChallenges.data?.length || 0,
         completedChallenges: completedChallenges.data?.length || 0,
