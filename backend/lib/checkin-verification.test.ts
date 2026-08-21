@@ -18,9 +18,9 @@ describe("formatArrivedWindowLabel", () => {
 });
 
 describe("formatOnLocationLabel", () => {
-  it("locks On location distance copy — no stayed language", () => {
-    expect(formatOnLocationLabel(30)).toBe("On location · 30 m away");
-    expect(formatOnLocationLabel(0.4)).toBe("On location · 0 m away");
+  it("locks Distance · N m copy — no On location / stayed language", () => {
+    expect(formatOnLocationLabel(30)).toBe("Distance · 30 m");
+    expect(formatOnLocationLabel(0.4)).toBe("Distance · 0 m");
   });
 });
 
@@ -43,7 +43,7 @@ describe("buildCheckinVerification", () => {
     });
     expect(v.rows.map((r) => r.label)).toEqual([
       "Arrived 06:22 — inside the window",
-      "On location · 30 m away",
+      "Distance · 30 m",
     ]);
     expect(v.rows.map((r) => r.role)).toEqual(["check", "record"]);
     expect(v.rows.every((r) => r.verified)).toBe(true);
@@ -55,7 +55,7 @@ describe("buildCheckinVerification", () => {
       checkinLog: { arrived_hhmm: "12:00", distance_meters: 12 },
     });
     expect(v.rows).toHaveLength(1);
-    expect(v.rows[0]?.label).toBe("On location · 12 m away");
+    expect(v.rows[0]?.label).toBe("Distance · 12 m");
     expect(v.rows[0]?.role).toBe("record");
   });
 });

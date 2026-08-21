@@ -68,7 +68,7 @@ describe("buildRunVerification", () => {
       },
       {
         key: "camera_in_app",
-        label: "Shot in-app, not from the library",
+        label: "Marked as captured in-app",
         verified: true,
         role: "record",
       },
@@ -234,7 +234,7 @@ describe("bd95024 run-path lock (run client inputs)", () => {
           },
           {
             key: "camera_in_app",
-            label: "Shot in-app, not from the library",
+            label: "Marked as captured in-app",
             verified: true,
             role: "record",
           },

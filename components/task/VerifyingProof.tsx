@@ -1,9 +1,8 @@
 /**
  * VerifyingProof — dark full-bleed verifying phase for task-states-v2.
  *
- * Rows take `{ label, verified }` from the server response (Step 11+).
+ * Checks: pass/fail icon. Records: fact statement, no checkmark, no "Passed".
  * A row animates in only when `verified` is true or false — never while pending.
- * Failed checks render as inline failure (not a fake green check).
  */
 import React, { useEffect, useRef } from "react";
 import {
@@ -39,10 +38,12 @@ export type VerifyingProofProps = {
 function VerifyingRowItem({
   label,
   verified,
+  role,
   index,
 }: {
   label: string;
   verified: boolean;
+  role?: VerifyingProofRow["role"];
   index: number;
 }) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -67,41 +68,52 @@ function VerifyingRowItem({
     ]).start();
   }, [opacity, translateY, index]);
 
+  const isRecord = role === "record";
   const passed = verified === true;
+  // Records are facts — no pass/fail. Missing role keeps check treatment.
+  const a11yLabel = isRecord
+    ? label
+    : `${label}. ${passed ? "Passed" : "Failed"}`;
 
   return (
     <Animated.View
       style={[styles.row, { opacity, transform: [{ translateY }] }]}
-      accessibilityLabel={`${label}. ${passed ? "Passed" : "Failed"}`}
+      accessibilityLabel={a11yLabel}
     >
-      <View
-        style={[
-          styles.rowIcon,
-          {
-            backgroundColor: passed
-              ? DS_COLORS_V2.proof.gatePassBg
-              : DS_COLORS_V2.proof.gateFailBg,
-          },
-        ]}
-      >
-        {passed ? (
-          <Check
-            size={14}
-            color={DS_COLORS_V2.proof.inWindowOnDark}
-            strokeWidth={2}
-          />
-        ) : (
-          <X
-            size={14}
-            color={DS_COLORS_V2.semantic.danger}
-            strokeWidth={2}
-          />
-        )}
-      </View>
+      {isRecord ? (
+        <View style={styles.rowIcon}>
+          <View style={styles.recordDot} />
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.rowIcon,
+            {
+              backgroundColor: passed
+                ? DS_COLORS_V2.proof.gatePassBg
+                : DS_COLORS_V2.proof.gateFailBg,
+            },
+          ]}
+        >
+          {passed ? (
+            <Check
+              size={14}
+              color={DS_COLORS_V2.proof.inWindowOnDark}
+              strokeWidth={2}
+            />
+          ) : (
+            <X
+              size={14}
+              color={DS_COLORS_V2.semantic.danger}
+              strokeWidth={2}
+            />
+          )}
+        </View>
+      )}
       <Text
         style={[
           styles.rowLabel,
-          !passed ? styles.rowLabelFail : null,
+          !isRecord && !passed ? styles.rowLabelFail : null,
         ]}
       >
         {label}
@@ -139,6 +151,7 @@ export function VerifyingProof({
                 key={`${row.label}-${i}`}
                 label={row.label}
                 verified={row.verified === true}
+                role={row.role}
                 index={i}
               />
             ))}
@@ -192,6 +205,12 @@ const styles = StyleSheet.create({
     borderRadius: DS_RADIUS_V2.full,
     alignItems: "center",
     justifyContent: "center",
+  },
+  recordDot: {
+    width: 6,
+    height: 6,
+    borderRadius: DS_RADIUS_V2.full,
+    backgroundColor: DS_COLORS_V2.text.onDarkSecondary,
   },
   rowLabel: {
     flex: 1,

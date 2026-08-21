@@ -19,10 +19,10 @@ describe("formatSavedWindowLabel", () => {
 });
 
 describe("formatJournalWordLabel", () => {
-  it("floor branch uses over-a-floor copy", () => {
+  it("floor branch names the floor without claiming it was met", () => {
     const log: JournalLogFacts = { word_count: 220, floor_min: 150 };
     expect(formatJournalWordLabel(log)).toBe(
-      "220 words over a 150 word floor"
+      "220 words · 150 word floor"
     );
   });
 
@@ -57,7 +57,7 @@ describe("buildJournalVerification", () => {
       },
       {
         key: "word_count",
-        label: "220 words over a 150 word floor",
+        label: "220 words · 150 word floor",
         verified: true,
         role: "record",
       },

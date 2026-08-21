@@ -27,7 +27,7 @@ export function formatSavedWindowLabel(hhmm: string, inside: boolean): string {
 
 /**
  * Word-count row copy:
- * - floor > 0 → "{n} words over a {floor} word floor"
+ * - floor > 0 → "{n} words · {floor} word floor" (names the floor; does not claim it was met)
  * - no floor → "{n} words"
  */
 export function formatJournalWordLabel(log: JournalLogFacts): string {
@@ -37,7 +37,7 @@ export function formatJournalWordLabel(log: JournalLogFacts): string {
       ? Math.round(log.floor_min)
       : null;
   if (floor != null) {
-    return `${n} words over a ${floor} word floor`;
+    return `${n} words · ${floor} word floor`;
   }
   return `${n} words`;
 }

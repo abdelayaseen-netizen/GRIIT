@@ -81,6 +81,9 @@ export function formatTakenWindowLabel(hhmm: string, inside: boolean): string {
     : `Taken ${hhmm} — outside the window`;
 }
 
+/** Record copy — client claimed in-app capture; server did not confirm source. */
+export const CAMERA_IN_APP_RECORD_LABEL = "Marked as captured in-app" as const;
+
 /**
  * Build photo verifying rows from server-evaluated facts.
  * - Time row only when a window was configured/evaluated.
@@ -109,7 +112,7 @@ export function buildPhotoVerification(opts: {
   if (opts.proofPayload?.captured_in_app === true && opts.photoPresent) {
     rows.push({
       key: "camera_in_app",
-      label: "Shot in-app, not from the library",
+      label: CAMERA_IN_APP_RECORD_LABEL,
       verified: true,
       role: "record",
     });

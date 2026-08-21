@@ -88,6 +88,7 @@ import {
   VerifyingProof,
   type VerifyingProofRow,
 } from "@/components/task/VerifyingProof";
+import { mapServerVerificationRows, type ServerVerificationRow } from "@/lib/verifying-proof";
 import * as ImagePicker from "expo-image-picker";
 import { FLAGS } from "@/lib/feature-flags";
 import {
@@ -810,15 +811,10 @@ export function TaskCompleteScreenInner() {
           typeof completionResult === "object" &&
           "verification" in completionResult
             ? (completionResult as {
-                verification?: { rows: { label: string; verified: boolean }[] };
+                verification?: { rows: ServerVerificationRow[] };
               }).verification?.rows
             : undefined;
-        setPhotoVerifyRows(
-          (serverRows ?? []).map((r) => ({
-            label: r.label,
-            verified: r.verified,
-          }))
-        );
+        setPhotoVerifyRows(mapServerVerificationRows(serverRows));
       }
 
       // Same progress source as AppContext canSecureDay: required tasks + completed check-ins.
@@ -962,16 +958,11 @@ export function TaskCompleteScreenInner() {
       if (usesServerVerifying) {
         const verification = (
           err as {
-            data?: { verification?: { rows: { label: string; verified: boolean }[] } };
+            data?: { verification?: { rows: ServerVerificationRow[] } };
           }
         )?.data?.verification;
         if (verification?.rows?.length) {
-          setPhotoVerifyRows(
-            verification.rows.map((r) => ({
-              label: r.label,
-              verified: r.verified,
-            }))
-          );
+          setPhotoVerifyRows(mapServerVerificationRows(verification.rows));
         }
         setPhotoVerifyError(message);
       } else {

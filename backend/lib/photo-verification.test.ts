@@ -74,7 +74,7 @@ describe("buildPhotoVerification", () => {
       },
       {
         key: "camera_in_app",
-        label: "Shot in-app, not from the library",
+        label: "Marked as captured in-app",
         verified: true,
         role: "record",
       },

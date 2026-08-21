@@ -4,7 +4,10 @@
  * Run facts persist in verification_gates.run_log (not proof_payload_json).
  */
 
-import type { ScheduleWindowEval } from "./photo-verification";
+import {
+  CAMERA_IN_APP_RECORD_LABEL,
+  type ScheduleWindowEval,
+} from "./photo-verification";
 import type { VerificationRow } from "./verification-row";
 
 export type RunEntryMode = "hand" | "timer";
@@ -94,7 +97,7 @@ export function buildRunVerification(opts: {
   if (opts.proofPayload?.captured_in_app === true && opts.photoPresent) {
     rows.push({
       key: "camera_in_app",
-      label: "Shot in-app, not from the library",
+      label: CAMERA_IN_APP_RECORD_LABEL,
       verified: true,
       role: "record",
     });

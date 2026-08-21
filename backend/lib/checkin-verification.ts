@@ -28,7 +28,7 @@ export function formatArrivedWindowLabel(hhmm: string, inside: boolean): string 
 
 export function formatOnLocationLabel(distanceMeters: number): string {
   const n = Math.max(0, Math.round(distanceMeters));
-  return `On location · ${n} m away`;
+  return `Distance · ${n} m`;
 }
 
 /** Secured meta — standing cut (no dwell minutes). */

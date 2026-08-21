@@ -13,6 +13,7 @@ import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInf
 import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
 import { setSentryUser, captureError } from '@/lib/sentry';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
+import type { ServerVerificationRow } from '@/lib/verifying-proof';
 
 type AppContextValue = {
   profile: ProfileFromApi | null;
@@ -49,7 +50,7 @@ type AppContextValue = {
   }) => Promise<{
     firstTaskOfDay?: boolean;
     completionId?: string;
-    verification?: { rows: { key: string; label: string; verified: boolean }[] };
+    verification?: { rows: ServerVerificationRow[] };
   } | void>;
   secureDay: () => Promise<{
     newStreakCount: number;
