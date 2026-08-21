@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { Check, MoreHorizontal } from "lucide-react-native";
 import { DS_DAYLIGHT } from "@/lib/design-system";
 import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
+import { ROUTES } from "@/lib/routes";
 import type { LiveFeedPost } from "./feedTypes";
 import { FLAGS } from "@/lib/feature-flags";
 
@@ -20,6 +22,7 @@ type Props = {
 };
 
 function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
+  const router = useRouter();
   const displayUser = post.displayName || post.username || "Member";
   const dayLabelPrefix =
     FLAGS.PR3_FEED_DEDUPE && post.currentDay > 0
@@ -31,6 +34,8 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
       ? `${post.challengeName} · ${post.taskName}`
       : post.challengeName;
   const timeAgo = relativeTime(post.createdAt);
+  const challengeId = post.challengeId?.trim() || null;
+  const canOpenChallenge = Boolean(challengeId);
 
   const completedToday =
     isSameDay(post.createdAt) &&
@@ -39,6 +44,17 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
       post.verified);
 
   const showStreakBadge = !completedToday && post.streakCount >= 7;
+
+  const handleChallengePress = useCallback(() => {
+    if (!challengeId) return;
+    router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
+  }, [challengeId, router]);
+
+  const challengeSubtitle = (
+    <Text style={styles.subtitle} numberOfLines={1}>
+      {challengeTask}
+    </Text>
+  );
 
   return (
     <View style={styles.header}>
@@ -71,20 +87,29 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
         ) : null}
       </Pressable>
 
-      <Pressable
-        onPress={onProfilePress}
-        style={styles.headerMid}
-        accessibilityRole="button"
-        accessibilityLabel={`View profile for ${displayUser}`}
-      >
-        <Text style={styles.username} numberOfLines={1}>
-          {displayUser}
-          <Text style={styles.usernameTime}>{`  ·  ${timeAgo}`}</Text>
-        </Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
-          {challengeTask}
-        </Text>
-      </Pressable>
+      <View style={styles.headerMid}>
+        <Pressable
+          onPress={onProfilePress}
+          accessibilityRole="button"
+          accessibilityLabel={`View profile for ${displayUser}`}
+        >
+          <Text style={styles.username} numberOfLines={1}>
+            {displayUser}
+            <Text style={styles.usernameTime}>{`  ·  ${timeAgo}`}</Text>
+          </Text>
+        </Pressable>
+        {canOpenChallenge ? (
+          <Pressable
+            onPress={handleChallengePress}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${post.challengeName} challenge`}
+          >
+            {challengeSubtitle}
+          </Pressable>
+        ) : (
+          challengeSubtitle
+        )}
+      </View>
 
       <Pressable
         onPress={onMenuPress}
