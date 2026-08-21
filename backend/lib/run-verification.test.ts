@@ -58,16 +58,19 @@ describe("buildRunVerification", () => {
         key: "time_window",
         label: "Logged 07:12 — inside the window",
         verified: true,
+        role: "check",
       },
       {
         key: "run_entry",
         label: "Entered by hand · 5.2 km in 32 min",
         verified: true,
+        role: "record",
       },
       {
         key: "camera_in_app",
         label: "Shot in-app, not from the library",
         verified: true,
+        role: "record",
       },
     ]);
   });
@@ -84,6 +87,7 @@ describe("buildRunVerification", () => {
         key: "run_entry",
         label: "Timed in-app · 3 km in 20 min",
         verified: true,
+        role: "record",
       },
     ]);
   });
@@ -111,6 +115,7 @@ describe("buildRunVerification", () => {
       key: "time_window",
       label: "Logged 09:15 — outside the window",
       verified: false,
+      role: "check",
     });
   });
 });
@@ -219,16 +224,19 @@ describe("bd95024 run-path lock (run client inputs)", () => {
             key: "time_window",
             label: "Logged 07:12 — inside the window",
             verified: true,
+            role: "check",
           },
           {
             key: "run_entry",
             label: "Entered by hand · 5.2 km in 32 min",
             verified: true,
+            role: "record",
           },
           {
             key: "camera_in_app",
             label: "Shot in-app, not from the library",
             verified: true,
+            role: "record",
           },
         ],
       },
@@ -249,6 +257,7 @@ describe("bd95024 run-path lock (run client inputs)", () => {
             key: "run_entry",
             label: "Timed in-app · 3 km in 20 min",
             verified: true,
+            role: "record",
           },
         ],
       },
@@ -269,11 +278,13 @@ describe("bd95024 run-path lock (run client inputs)", () => {
             key: "time_window",
             label: "Logged 07:12 — inside the window",
             verified: true,
+            role: "check",
           },
           {
             key: "run_entry",
             label: "Entered by hand · 5.2 km in 32 min",
             verified: true,
+            role: "record",
           },
         ],
       },
@@ -294,11 +305,13 @@ describe("bd95024 run-path lock (run client inputs)", () => {
             key: "time_window",
             label: "Logged 09:15 — outside the window",
             verified: false,
+            role: "check",
           },
           {
             key: "run_entry",
             label: "Entered by hand · 5.2 km in 32 min",
             verified: true,
+            role: "record",
           },
         ],
       },

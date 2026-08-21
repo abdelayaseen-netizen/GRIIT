@@ -45,6 +45,7 @@ describe("buildCheckinVerification", () => {
       "Arrived 06:22 — inside the window",
       "On location · 30 m away",
     ]);
+    expect(v.rows.map((r) => r.role)).toEqual(["check", "record"]);
     expect(v.rows.every((r) => r.verified)).toBe(true);
   });
 
@@ -55,5 +56,6 @@ describe("buildCheckinVerification", () => {
     });
     expect(v.rows).toHaveLength(1);
     expect(v.rows[0]?.label).toBe("On location · 12 m away");
+    expect(v.rows[0]?.role).toBe("record");
   });
 });

@@ -3,11 +3,9 @@
  * Rows are facts the server actually evaluated — never client fiction.
  */
 
-export type PhotoVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+import type { VerificationRow } from "./verification-row";
+
+export type PhotoVerificationRow = VerificationRow;
 
 export type PhotoVerification = {
   rows: PhotoVerificationRow[];
@@ -103,15 +101,17 @@ export function buildPhotoVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
-  // Spec: only render when captured_in_app is present and true — never invent.
+  // Client-claimed in-app capture — no server signal validates it. Record, not a check.
   if (opts.proofPayload?.captured_in_app === true && opts.photoPresent) {
     rows.push({
       key: "camera_in_app",
       label: "Shot in-app, not from the library",
       verified: true,
+      role: "record",
     });
   }
 

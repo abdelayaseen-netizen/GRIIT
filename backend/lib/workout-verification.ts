@@ -5,14 +5,11 @@
  */
 
 import type { ScheduleWindowEval } from "./photo-verification";
+import type { VerificationRow } from "./verification-row";
 
 export type WorkoutEntryMode = "hand" | "timer";
 
-export type WorkoutVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+export type WorkoutVerificationRow = VerificationRow;
 
 export type WorkoutVerification = {
   rows: WorkoutVerificationRow[];
@@ -73,6 +70,7 @@ export function buildWorkoutVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
@@ -87,6 +85,7 @@ export function buildWorkoutVerification(opts: {
       key: "workout_session",
       label: formatWorkoutSessionLabel(opts.workoutLog),
       verified: true,
+      role: "record",
     });
   }
 
@@ -95,6 +94,7 @@ export function buildWorkoutVerification(opts: {
       key: "camera_in_app",
       label: "Shot in-app, not from the library",
       verified: true,
+      role: "record",
     });
   }
 

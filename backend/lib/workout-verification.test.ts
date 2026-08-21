@@ -84,16 +84,19 @@ describe("buildWorkoutVerification", () => {
         key: "time_window",
         label: "Finished 06:40 — inside the window",
         verified: true,
+        role: "check",
       },
       {
         key: "workout_session",
         label: "Strength · 24 min over a 20 min floor",
         verified: true,
+        role: "record",
       },
       {
         key: "camera_in_app",
         label: "Shot in-app, not from the library",
         verified: true,
+        role: "record",
       },
     ]);
     // entry_mode always present on persisted facts shape
@@ -117,6 +120,7 @@ describe("buildWorkoutVerification", () => {
         key: "workout_session",
         label: "Gym · 40 min",
         verified: true,
+        role: "record",
       },
     ]);
     expect(log.entry_mode).toBe("hand");

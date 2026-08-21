@@ -5,12 +5,9 @@
  */
 
 import type { ScheduleWindowEval } from "./photo-verification";
+import type { VerificationRow } from "./verification-row";
 
-export type JournalVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+export type JournalVerificationRow = VerificationRow;
 
 export type JournalVerification = {
   rows: JournalVerificationRow[];
@@ -64,6 +61,7 @@ export function buildJournalVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
@@ -76,6 +74,7 @@ export function buildJournalVerification(opts: {
       key: "word_count",
       label: formatJournalWordLabel(opts.journalLog),
       verified: true,
+      role: "record",
     });
   }
 

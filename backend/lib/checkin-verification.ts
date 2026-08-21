@@ -5,12 +5,9 @@
  */
 
 import type { ScheduleWindowEval } from "./photo-verification";
+import type { VerificationRow } from "./verification-row";
 
-export type CheckinVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+export type CheckinVerificationRow = VerificationRow;
 
 export type CheckinVerification = {
   rows: CheckinVerificationRow[];
@@ -53,6 +50,7 @@ export function buildCheckinVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
@@ -65,6 +63,7 @@ export function buildCheckinVerification(opts: {
       key: "location",
       label: formatOnLocationLabel(opts.checkinLog.distance_meters),
       verified: true,
+      role: "record",
     });
   }
 

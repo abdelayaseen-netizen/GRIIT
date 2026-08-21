@@ -53,11 +53,13 @@ describe("buildJournalVerification", () => {
         key: "time_window",
         label: "Saved 21:18 — inside the window",
         verified: true,
+        role: "check",
       },
       {
         key: "word_count",
         label: "220 words over a 150 word floor",
         verified: true,
+        role: "record",
       },
     ]);
     expect(verification.rows.some((r) => r.key === "camera_in_app")).toBe(
@@ -75,6 +77,7 @@ describe("buildJournalVerification", () => {
         key: "word_count",
         label: "40 words",
         verified: true,
+        role: "record",
       },
     ]);
   });
