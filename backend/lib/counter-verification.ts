@@ -3,11 +3,9 @@
  * Facts persist in verification_gates.counter_log.
  */
 
-export type CounterVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+import type { VerificationRow } from "./verification-row";
+
+export type CounterVerificationRow = VerificationRow;
 
 export type CounterVerification = {
   rows: CounterVerificationRow[];
@@ -21,9 +19,6 @@ export type CounterLogFacts = {
   timezone?: string;
   date_key?: string;
 };
-
-export const COUNTED_BEFORE_MIDNIGHT_LABEL =
-  "Counted before midnight reset" as const;
 
 export function formatCounterTargetMetLabel(log: CounterLogFacts): string {
   const n = Math.max(0, Math.round(log.count));
@@ -42,13 +37,7 @@ export function formatCounterSecuredMeta(log: CounterLogFacts): string {
 export function buildCounterVerification(opts: {
   counterLog?: CounterLogFacts | null;
 }): CounterVerification {
-  const rows: CounterVerificationRow[] = [
-    {
-      key: "midnight",
-      label: COUNTED_BEFORE_MIDNIGHT_LABEL,
-      verified: true,
-    },
-  ];
+  const rows: CounterVerificationRow[] = [];
 
   if (
     opts.counterLog &&
@@ -60,6 +49,7 @@ export function buildCounterVerification(opts: {
       key: "target",
       label: formatCounterTargetMetLabel(opts.counterLog),
       verified: opts.counterLog.count >= opts.counterLog.target,
+      role: "check",
     });
   }
 

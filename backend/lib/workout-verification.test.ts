@@ -19,7 +19,7 @@ describe("formatFinishedWindowLabel", () => {
 });
 
 describe("formatWorkoutSessionLabel", () => {
-  it("floor + timer uses over-a-floor copy", () => {
+  it("floor + timer names the floor without claiming it was met", () => {
     const log: WorkoutLogFacts = {
       kind: "Strength",
       duration_min: 24,
@@ -27,7 +27,7 @@ describe("formatWorkoutSessionLabel", () => {
       entry_mode: "timer",
     };
     expect(formatWorkoutSessionLabel(log)).toBe(
-      "Strength · 24 min over a 20 min floor"
+      "Strength · 24 min · 20 min floor"
     );
     expect(log.entry_mode).toBe("timer");
   });
@@ -84,16 +84,19 @@ describe("buildWorkoutVerification", () => {
         key: "time_window",
         label: "Finished 06:40 — inside the window",
         verified: true,
+        role: "check",
       },
       {
         key: "workout_session",
-        label: "Strength · 24 min over a 20 min floor",
+        label: "Strength · 24 min · 20 min floor",
         verified: true,
+        role: "record",
       },
       {
         key: "camera_in_app",
-        label: "Shot in-app, not from the library",
+        label: "Marked as captured in-app",
         verified: true,
+        role: "record",
       },
     ]);
     // entry_mode always present on persisted facts shape
@@ -117,6 +120,7 @@ describe("buildWorkoutVerification", () => {
         key: "workout_session",
         label: "Gym · 40 min",
         verified: true,
+        role: "record",
       },
     ]);
     expect(log.entry_mode).toBe("hand");

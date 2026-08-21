@@ -15,6 +15,7 @@ import {
 } from "@/lib/notifications";
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
+import type { ServerVerificationRow } from "@/lib/verifying-proof";
 import { showGoalCelebration } from "@/store/celebrationStore";
 import { useProofSharePromptStore } from "@/store/proofSharePromptStore";
 import type {
@@ -93,7 +94,7 @@ export function useAppChallengeMutations({
     }): Promise<{
       firstTaskOfDay?: boolean;
       completionId?: string;
-      verification?: { rows: { key: string; label: string; verified: boolean }[] };
+      verification?: { rows: ServerVerificationRow[] };
     } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
@@ -119,7 +120,7 @@ export function useAppChallengeMutations({
 
       return trpcMutate<{
         id?: string;
-        verification?: { rows: { key: string; label: string; verified: boolean }[] };
+        verification?: { rows: ServerVerificationRow[] };
       }>(TRPC.checkins.complete, params)
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
@@ -226,10 +227,10 @@ export function useAppChallengeMutations({
             err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
           captureError(err, "AppContextCompleteTask");
           const verification = (
-            err as { data?: { verification?: { rows: { key: string; label: string; verified: boolean }[] } } }
+            err as { data?: { verification?: { rows: ServerVerificationRow[] } } }
           )?.data?.verification;
           const next = new Error(msg) as Error & {
-            data?: { verification?: { rows: { key: string; label: string; verified: boolean }[] } };
+            data?: { verification?: { rows: ServerVerificationRow[] } };
           };
           if (verification) next.data = { verification };
           throw next;

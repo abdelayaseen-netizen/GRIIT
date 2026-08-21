@@ -70,11 +70,13 @@ describe("buildPhotoVerification", () => {
         key: "time_window",
         label: "Taken 07:42 — inside the window",
         verified: true,
+        role: "check",
       },
       {
         key: "camera_in_app",
-        label: "Shot in-app, not from the library",
+        label: "Marked as captured in-app",
         verified: true,
+        role: "record",
       },
     ]);
   });
@@ -113,6 +115,7 @@ describe("buildPhotoVerification", () => {
       key: "time_window",
       label: "Taken 09:15 — outside the window",
       verified: false,
+      role: "check",
     });
   });
 });

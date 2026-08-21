@@ -3,11 +3,9 @@
  * Rows are facts the server actually evaluated — never client fiction.
  */
 
-export type PhotoVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+import type { VerificationRow } from "./verification-row";
+
+export type PhotoVerificationRow = VerificationRow;
 
 export type PhotoVerification = {
   rows: PhotoVerificationRow[];
@@ -83,6 +81,9 @@ export function formatTakenWindowLabel(hhmm: string, inside: boolean): string {
     : `Taken ${hhmm} — outside the window`;
 }
 
+/** Record copy — client claimed in-app capture; server did not confirm source. */
+export const CAMERA_IN_APP_RECORD_LABEL = "Marked as captured in-app" as const;
+
 /**
  * Build photo verifying rows from server-evaluated facts.
  * - Time row only when a window was configured/evaluated.
@@ -103,15 +104,17 @@ export function buildPhotoVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
-  // Spec: only render when captured_in_app is present and true — never invent.
+  // Client-claimed in-app capture — no server signal validates it. Record, not a check.
   if (opts.proofPayload?.captured_in_app === true && opts.photoPresent) {
     rows.push({
       key: "camera_in_app",
-      label: "Shot in-app, not from the library",
+      label: CAMERA_IN_APP_RECORD_LABEL,
       verified: true,
+      role: "record",
     });
   }
 

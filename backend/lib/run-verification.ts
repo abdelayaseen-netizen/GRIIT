@@ -4,15 +4,15 @@
  * Run facts persist in verification_gates.run_log (not proof_payload_json).
  */
 
-import type { ScheduleWindowEval } from "./photo-verification";
+import {
+  CAMERA_IN_APP_RECORD_LABEL,
+  type ScheduleWindowEval,
+} from "./photo-verification";
+import type { VerificationRow } from "./verification-row";
 
 export type RunEntryMode = "hand" | "timer";
 
-export type RunVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+export type RunVerificationRow = VerificationRow;
 
 export type RunVerification = {
   rows: RunVerificationRow[];
@@ -72,6 +72,7 @@ export function buildRunVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
@@ -89,14 +90,16 @@ export function buildRunVerification(opts: {
         opts.runLog.duration_min
       ),
       verified: true,
+      role: "record",
     });
   }
 
   if (opts.proofPayload?.captured_in_app === true && opts.photoPresent) {
     rows.push({
       key: "camera_in_app",
-      label: "Shot in-app, not from the library",
+      label: CAMERA_IN_APP_RECORD_LABEL,
       verified: true,
+      role: "record",
     });
   }
 

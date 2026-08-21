@@ -4,15 +4,15 @@
  * entry_mode is always stored even when the short copy doesn't cite it.
  */
 
-import type { ScheduleWindowEval } from "./photo-verification";
+import {
+  CAMERA_IN_APP_RECORD_LABEL,
+  type ScheduleWindowEval,
+} from "./photo-verification";
+import type { VerificationRow } from "./verification-row";
 
 export type WorkoutEntryMode = "hand" | "timer";
 
-export type WorkoutVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+export type WorkoutVerificationRow = VerificationRow;
 
 export type WorkoutVerification = {
   rows: WorkoutVerificationRow[];
@@ -34,7 +34,7 @@ export function formatFinishedWindowLabel(hhmm: string, inside: boolean): string
 
 /**
  * Session row copy:
- * - floor + timer → "{Kind} · {actual} min over a {floor} min floor"
+ * - floor + timer → "{Kind} · {actual} min · {floor} min floor"
  * - no floor + typed → "{Kind} · {actual} min"
  */
 export function formatWorkoutSessionLabel(log: WorkoutLogFacts): string {
@@ -46,7 +46,7 @@ export function formatWorkoutSessionLabel(log: WorkoutLogFacts): string {
       : null;
 
   if (floor != null && log.entry_mode === "timer") {
-    return `${kind} · ${actual} min over a ${floor} min floor`;
+    return `${kind} · ${actual} min · ${floor} min floor`;
   }
   return `${kind} · ${actual} min`;
 }
@@ -73,6 +73,7 @@ export function buildWorkoutVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
@@ -87,14 +88,16 @@ export function buildWorkoutVerification(opts: {
       key: "workout_session",
       label: formatWorkoutSessionLabel(opts.workoutLog),
       verified: true,
+      role: "record",
     });
   }
 
   if (opts.proofPayload?.captured_in_app === true && opts.photoPresent) {
     rows.push({
       key: "camera_in_app",
-      label: "Shot in-app, not from the library",
+      label: CAMERA_IN_APP_RECORD_LABEL,
       verified: true,
+      role: "record",
     });
   }
 

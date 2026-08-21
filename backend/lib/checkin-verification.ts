@@ -5,12 +5,9 @@
  */
 
 import type { ScheduleWindowEval } from "./photo-verification";
+import type { VerificationRow } from "./verification-row";
 
-export type CheckinVerificationRow = {
-  key: string;
-  label: string;
-  verified: boolean;
-};
+export type CheckinVerificationRow = VerificationRow;
 
 export type CheckinVerification = {
   rows: CheckinVerificationRow[];
@@ -31,7 +28,7 @@ export function formatArrivedWindowLabel(hhmm: string, inside: boolean): string 
 
 export function formatOnLocationLabel(distanceMeters: number): string {
   const n = Math.max(0, Math.round(distanceMeters));
-  return `On location · ${n} m away`;
+  return `Distance · ${n} m`;
 }
 
 /** Secured meta — standing cut (no dwell minutes). */
@@ -53,6 +50,7 @@ export function buildCheckinVerification(opts: {
         opts.window.passed
       ),
       verified: opts.window.passed,
+      role: "check",
     });
   }
 
@@ -65,6 +63,7 @@ export function buildCheckinVerification(opts: {
       key: "location",
       label: formatOnLocationLabel(opts.checkinLog.distance_meters),
       verified: true,
+      role: "record",
     });
   }
 
