@@ -61,6 +61,28 @@ function addCalendarDaysToDateKey(dateKey: string, deltaDays: number): string {
   return dt.toISOString().slice(0, 10);
 }
 
+/**
+ * Monday-first index (Mon=0 … Sun=6) for a civil YYYY-MM-DD date key.
+ * Weekday of a calendar date is timezone-independent once the key is known.
+ */
+export function mondayFirstIndexForDateKey(dateKey: string): number {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  if (y === undefined || m === undefined || d === undefined) return 0;
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // Sun=0
+  return (dow + 6) % 7;
+}
+
+/**
+ * Seven YYYY-MM-DD keys (Mon→Sun) for the week containing today in `timezone`.
+ * Aligns week boundaries with getSecuredDateKeys / getTodayDateKey (profile tz → UTC).
+ */
+export function getCurrentWeekDateKeys(timezone?: string | null): string[] {
+  const todayKey = getTodayDateKey(timezone);
+  const daysFromMonday = mondayFirstIndexForDateKey(todayKey);
+  const mondayKey = addCalendarDaysToDateKey(todayKey, -daysFromMonday);
+  return Array.from({ length: 7 }, (_, i) => addCalendarDaysToDateKey(mondayKey, i));
+}
+
 /** Count how many of the last 7 calendar days (in `timezone`) appear in `securedDateKeys`. */
 export function countSecuredLast7Days(securedDateKeys: string[], timezone?: string | null): number {
   const todayKey = getTodayDateKey(timezone);
