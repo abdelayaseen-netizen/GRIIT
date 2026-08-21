@@ -37,7 +37,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
-import { challengeDayJustSecured } from "@/lib/challenge-day";
+import { challengeDisplayDay } from "@/lib/challenge-day";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { StreakMomentOverlay } from "@/components/home/StreakMomentOverlay";
 
@@ -212,18 +212,21 @@ export default function HomeScreen() {
     [homeQuery.data?.securedDateKeys],
   );
 
+  const todaySecured = useMemo(() => {
+    const tz = (profile as { timezone?: string | null })?.timezone;
+    return securedDateKeys.includes(getTodayDateKey(tz));
+  }, [securedDateKeys, profile]);
+
   /**
-   * Challenge day for streak-moment copy — day just secured.
-   * Streak moment only opens when today is in securedDateKeys; by then
-   * current_day has been incremented, so use challengeDayJustSecured
-   * (same model as pre-secure capture on the completion screen).
+   * Challenge day for streak-moment copy — same helper as proof card:
+   * todaySecured ? current_day − 1 : current_day (floor 1).
    */
   const momentChallengeDay = useMemo(() => {
     const fromTasks = heroTasks.find((t) => t.done)?.currentDay ?? heroTasks[0]?.currentDay;
-    if (fromTasks != null) return challengeDayJustSecured(fromTasks);
+    if (fromTasks != null) return challengeDisplayDay(fromTasks, todaySecured);
     const ac = homeQuery.data?.activeList?.[0];
-    return challengeDayJustSecured(ac?.current_day);
-  }, [heroTasks, homeQuery.data?.activeList]);
+    return challengeDisplayDay(ac?.current_day, todaySecured);
+  }, [heroTasks, homeQuery.data?.activeList, todaySecured]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -247,11 +250,6 @@ export default function HomeScreen() {
       }),
     [streak, heroMetrics.tasksRemaining, heroMetrics.minutesRemaining],
   );
-
-  const todaySecured = useMemo(() => {
-    const tz = (profile as { timezone?: string | null })?.timezone;
-    return securedDateKeys.includes(getTodayDateKey(tz));
-  }, [securedDateKeys, profile]);
 
   const heroState = useMemo(
     () =>

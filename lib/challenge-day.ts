@@ -4,9 +4,11 @@
  * Format: "Day 1" — lowercase Day, no zero-padding, floor at 1.
  *
  * secure_day increments current_day by 1 after securing day N, so
- * post-secure current_day is N+1. For "Day N secured" copy, capture
- * current_day BEFORE secure_day, or use challengeDayJustSecured when
- * you only have the post-increment value and know today was secured.
+ * post-secure current_day is N+1 while today remains the day that was
+ * just secured. Gate display with todaySecured (today ∈ securedDateKeys).
+ *
+ * Completion-screen labels should capture current_day BEFORE secureDay
+ * instead of using this helper on a raced post-secure read.
  */
 
 export function challengeDayNumber(currentDay: number | null | undefined): number {
@@ -15,11 +17,16 @@ export function challengeDayNumber(currentDay: number | null | undefined): numbe
 }
 
 /**
- * Day just secured, given post-secure current_day (already +1).
- * Use only when today is known secured in the same payload as this current_day.
+ * Display day for home / proof surfaces.
+ * todaySecured from securedDateKeys (server truth):
+ *   secured today → current_day − 1 (the day just secured)
+ *   otherwise     → current_day (the day in progress)
+ * Floors at 1.
  */
-export function challengeDayJustSecured(
-  currentDayAfterSecure: number | null | undefined,
+export function challengeDisplayDay(
+  currentDay: number | null | undefined,
+  todaySecured: boolean,
 ): number {
-  return challengeDayNumber(challengeDayNumber(currentDayAfterSecure) - 1);
+  const n = challengeDayNumber(currentDay);
+  return todaySecured ? challengeDayNumber(n - 1) : n;
 }

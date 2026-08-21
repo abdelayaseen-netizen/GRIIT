@@ -33,8 +33,8 @@ export type StreakMomentOverlayProps = {
   /** Live streak count (may be 0 — do not invent). */
   streak: number;
   /**
-   * Challenge day from active_challenges.current_day (via challengeDayNumber).
-   * Not a streak — used only for "Day N is yours…" copy.
+   * Challenge day from active_challenges via challengeDisplayDay
+   * (todaySecured-gated) — not streak.
    */
   dayNumber: number;
   username?: string;

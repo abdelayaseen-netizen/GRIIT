@@ -26,6 +26,7 @@ import {
   Snowflake,
 } from 'lucide-react-native';
 import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
+import { challengeDisplayDay } from '@/lib/challenge-day';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -438,7 +439,7 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
 
   const subtitle =
     props.tasks.length > 0 && props.tasks[0]
-      ? `${props.tasks[0].challengeName} · Day ${props.tasks[0].currentDay}`
+      ? `${props.tasks[0].challengeName} · Day ${challengeDisplayDay(props.tasks[0].currentDay, props.todaySecured)}`
       : undefined;
 
   const visibleTasks = props.tasks.slice(0, 4);
