@@ -18,6 +18,7 @@ import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useQueryClient } from "@tanstack/react-query";
 import { trackEvent } from "@/lib/analytics";
+import { challengeDayNumber } from "@/lib/challenge-day";
 import type { TaskHardVerificationConfig } from "@/lib/task-hard-verification";
 import ViewShot from "react-native-view-shot";
 import { styles } from "@/components/task/task-complete-styles";
@@ -1672,10 +1673,7 @@ export function TaskCompleteScreenInner() {
         config.schedule_window_end
           ? `Window closed at ${config.schedule_window_end}`
           : "Window closed",
-      currentStreak:
-        ((stats as { currentStreak?: number; current_streak?: number } | null)?.currentStreak ??
-          (stats as { current_streak?: number } | null)?.current_streak ??
-          0),
+      currentStreak: (stats as { activeStreak?: number } | null)?.activeStreak ?? 0,
       otherTasks: otherTasksToday,
       nextWindow: config.schedule_window_start ? `Tomorrow at ${config.schedule_window_start}` : undefined,
       onSetAlarm: () => {
@@ -1935,8 +1933,7 @@ export function TaskCompleteScreenInner() {
       taskTypeRaw === "checkin" ||
       isSimpleAsk
     ) {
-      const securedDayNumber = Math.max(
-        1,
+      const securedDayNumber = challengeDayNumber(
         (activeChallenge as { current_day?: number } | null)?.current_day ??
           headerCurrentDay
       );

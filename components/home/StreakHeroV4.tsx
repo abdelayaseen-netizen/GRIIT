@@ -5,7 +5,7 @@
  *   day0       streak === 0           "Current streak" · 0 · "Post today to reach day 1."
  *   default    streak >= 1, mid-day   "Current streak" · N · next-badge caption
  *   atRisk     streak >= 1, < 60min   "Current streak" + countdown banner
- *   secured    all tasks done today   "Streak secured" + badge progress + dual CTA
+ *   secured    all tasks done + today in day_secures   "Streak secured" + badge progress + dual CTA
  *
  * Daylight language: the "owned" streak is a calm stat that sits directly on the
  * canvas (big ink number + days + small accent flame). Today's tasks live inside
@@ -55,6 +55,8 @@ export type StreakHeroV4Props = {
   minutesRemaining: number;
   tasksRemaining: number;
   totalTasksToday: number;
+  /** True when today's date_key is in securedDateKeys (server day_secures). */
+  todaySecured: boolean;
   freezesAvailable: number;
   freezeUsedToday: boolean;
   nextBadgeName: string;
@@ -77,10 +79,20 @@ const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 export function deriveStreakHeroV4State(
   p: Pick<
     StreakHeroV4Props,
-    'streak' | 'tasksRemaining' | 'totalTasksToday' | 'minutesRemaining'
+    | 'streak'
+    | 'tasksRemaining'
+    | 'totalTasksToday'
+    | 'minutesRemaining'
+    | 'todaySecured'
   >,
 ): StreakHeroV4State {
-  if (p.tasksRemaining === 0 && p.totalTasksToday > 0) return 'secured';
+  if (
+    p.todaySecured &&
+    p.tasksRemaining === 0 &&
+    p.totalTasksToday > 0
+  ) {
+    return 'secured';
+  }
   if (p.streak >= 1 && p.minutesRemaining < 60 && p.tasksRemaining > 0) {
     return 'atRisk';
   }
@@ -359,10 +371,8 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
   // Secured state — badge progress + dual CTA inside the white proof card.
   if (state === 'secured') {
     const segmentsTotal = 5;
-    const filled = Math.min(
-      segmentsTotal,
-      props.streak % segmentsTotal || segmentsTotal,
-    );
+    // Fill from actual streak — do not use `n % 5 || 5` (that treats 0 as 5).
+    const filled = Math.min(segmentsTotal, Math.max(0, props.streak));
     return (
       <View style={styles.root}>
         <HeaderBlock

@@ -37,6 +37,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
+import { challengeDayNumber } from "@/lib/challenge-day";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { StreakMomentOverlay } from "@/components/home/StreakMomentOverlay";
 
@@ -211,6 +212,14 @@ export default function HomeScreen() {
     [homeQuery.data?.securedDateKeys],
   );
 
+  /** Challenge day for streak-moment copy — same source as SecuredScreen (current_day). */
+  const momentChallengeDay = useMemo(() => {
+    const fromTasks = heroTasks.find((t) => t.done)?.currentDay ?? heroTasks[0]?.currentDay;
+    if (fromTasks != null) return challengeDayNumber(fromTasks);
+    const ac = homeQuery.data?.activeList?.[0];
+    return challengeDayNumber(ac?.current_day);
+  }, [heroTasks, homeQuery.data?.activeList]);
+
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
     const tasksDoneToday = heroTasks.filter((t) => t.done).length;
@@ -234,6 +243,11 @@ export default function HomeScreen() {
     [streak, heroMetrics.tasksRemaining, heroMetrics.minutesRemaining],
   );
 
+  const todaySecured = useMemo(() => {
+    const tz = (profile as { timezone?: string | null })?.timezone;
+    return securedDateKeys.includes(getTodayDateKey(tz));
+  }, [securedDateKeys, profile]);
+
   const heroState = useMemo(
     () =>
       deriveStreakHeroV4State({
@@ -241,8 +255,9 @@ export default function HomeScreen() {
         tasksRemaining: heroMetrics.tasksRemaining,
         totalTasksToday: heroMetrics.totalTasksToday,
         minutesRemaining: heroMetrics.minutesRemaining,
+        todaySecured,
       }),
-    [streak, heroMetrics],
+    [streak, heroMetrics, todaySecured],
   );
 
   const lastHomeStateFiredRef = React.useRef<string | null>(null);
@@ -339,22 +354,35 @@ export default function HomeScreen() {
   );
 
   // Streak moment (S12) — fires once after returning to Home when today is
-  // fully secured (all tasks complete). Uses AsyncStorage to show only once
-  // per calendar day so repeated focus events don't re-show it.
+  // fully secured server-side (today in securedDateKeys) and all tasks done.
+  // Do not open on tasksRemaining===0 alone — that races ahead of secure_day / stats.
+  // If today is secured but streak is still 0, stats are stale — bail before
+  // writing the AsyncStorage key so the moment can still fire once stats land.
   useFocusEffect(
     useCallback(() => {
       if (isGuest || !user?.id) return;
       if (heroMetrics.tasksRemaining !== 0 || heroMetrics.totalTasksToday === 0) return;
-      const todayKey = getTodayDateKey();
+      const tz = (profile as { timezone?: string | null })?.timezone;
+      const todayKey = getTodayDateKey(tz);
+      if (!securedDateKeys.includes(todayKey)) return;
+      if (streak < 1) return;
       const key = `griit_streak_moment_${todayKey}`;
       let cancelled = false;
       AsyncStorage.getItem(key).then((shown) => {
-        if (shown || cancelled) return;
+        if (shown || cancelled || streak < 1) return;
         void AsyncStorage.setItem(key, 'true');
         setShowStreakMoment(true);
       }).catch(() => { /* non-fatal */ });
       return () => { cancelled = true; };
-    }, [isGuest, user?.id, heroMetrics.tasksRemaining, heroMetrics.totalTasksToday]),
+    }, [
+      isGuest,
+      user?.id,
+      heroMetrics.tasksRemaining,
+      heroMetrics.totalTasksToday,
+      securedDateKeys,
+      profile,
+      streak,
+    ]),
   );
 
   const refresh = useCallback(async () => {
@@ -475,6 +503,7 @@ export default function HomeScreen() {
       minutesRemaining: heroMetrics.minutesRemaining,
       tasksRemaining: heroMetrics.tasksRemaining,
       totalTasksToday: heroMetrics.totalTasksToday,
+      todaySecured,
       freezesAvailable: freezeStatusQuery.data?.remaining ?? 0,
       freezeUsedToday: false,
       nextBadgeName: nextBadge.name,
@@ -489,6 +518,7 @@ export default function HomeScreen() {
       streak,
       lastStreak,
       heroMetrics,
+      todaySecured,
       freezeStatusQuery.data?.remaining,
       nextBadge,
       heroTasks,
@@ -574,6 +604,7 @@ export default function HomeScreen() {
         <StreakMomentOverlay
           visible={showStreakMoment}
           streak={streak}
+          dayNumber={momentChallengeDay}
           username={profile?.username ?? undefined}
           onKeepGoing={onStreakMomentKeepGoing}
           onDismiss={onStreakMomentDismiss}

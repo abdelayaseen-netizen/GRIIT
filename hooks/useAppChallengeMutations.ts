@@ -304,7 +304,7 @@ export function useAppChallengeMutations({
         });
       }
       void fetchActiveChallenge();
-      void fetchStats();
+      await fetchStats();
       const streakN = result?.newStreakCount;
       if (typeof streakN === "number" && [7, 14, 30, 75].includes(streakN)) {
         trackEvent("streak_milestone", { days: streakN });
