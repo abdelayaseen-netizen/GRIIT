@@ -66,6 +66,10 @@ import { resolveCounterReadySubtype } from "@/lib/counter-ready-gates";
 import { resolveCheckinReadySubtype, resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
 import { clampPhotoCaption } from "@/lib/photo-caption";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
+import {
+  resolveConfigCounterTarget,
+  taskHasRealVerificationGates,
+} from "@/lib/real-verification-gates";
 import { decideReadyStart } from "@/lib/ready-start";
 import { formatRunSecuredMeta } from "@/lib/run-log";
 import { formatWorkoutSecuredMeta } from "@/lib/workout-log";
@@ -523,6 +527,16 @@ export function TaskCompleteScreenInner() {
 
   // Counter / water / reading — extract goal from config (with sensible fallbacks).
   const isCounterFamily = taskTypeRaw === "counter" || taskTypeRaw === "water" || taskTypeRaw === "reading";
+  /** Overlay only when this instance has a real check — not by task type. */
+  const hasRealVerificationGates = taskHasRealVerificationGates({
+    schedule_window_start: config.schedule_window_start,
+    schedule_window_end: config.schedule_window_end,
+    require_camera_only: config.require_camera_only,
+    location_latitude: config.location_latitude,
+    location_longitude: config.location_longitude,
+    min_words: minWords,
+    counter_target: isCounterFamily ? resolveConfigCounterTarget(config) : 0,
+  });
   const counterGoal = useMemo<number>(() => {
     const c = config;
     const candidates = [
@@ -687,14 +701,16 @@ export function TaskCompleteScreenInner() {
     const isCounterSubmit = isCounterFamily;
     const isCheckinSubmit = taskTypeRaw === "checkin";
     const isSimpleSubmit = isSimpleAsk;
-    const usesServerVerifying =
+    const isGatedProofType =
       isPhotoSubmit ||
       isRunSubmit ||
       isWorkoutSubmit ||
       isJournalSubmit ||
       isCounterSubmit ||
       isCheckinSubmit;
+    // Instance-based: overlay only when this task has a real gate.
     // Simple: never open VerifyingProof — self-report lands on Secured.
+    const usesServerVerifying = isGatedProofType && hasRealVerificationGates;
     if (usesServerVerifying) {
       setShowPhotoVerifying(true);
       setPhotoVerifyRows([]);
@@ -876,8 +892,8 @@ export function TaskCompleteScreenInner() {
       } else {
         setDaySecureUi({ kind: "not_attempted" });
       }
-      // Photo/Run/Workout/Journal/Counter/Check-in: brief settle so server rows can paint.
-      // Simple: no verifying floor — land on Secured immediately.
+      // Gated types with real checks: brief settle so server rows can paint.
+      // Zero-gate gated types and Simple: no verifying floor — land on Secured immediately.
       // Timer (legacy): short submit settle without a fake verifying overlay.
       if (usesServerVerifying) {
         setIsSubmitting(false);
@@ -895,7 +911,7 @@ export function TaskCompleteScreenInner() {
         if (settleMs > 0) {
           await new Promise<void>((res) => setTimeout(res, settleMs));
         }
-      } else if (!isSimpleSubmit) {
+      } else if (!isSimpleSubmit && !isGatedProofType) {
         const elapsed = Date.now() - verifyStartMsRef.current;
         const MIN_SUBMIT_MS = 400;
         if (elapsed < MIN_SUBMIT_MS) {
@@ -1018,6 +1034,7 @@ export function TaskCompleteScreenInner() {
     clearActiveSession,
     isChallengeHardMode,
     isCounterFamily,
+    hasRealVerificationGates,
     counterValue,
     clearJournalDraft,
     flushCounterProgress,
