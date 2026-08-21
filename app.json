@@ -3,6 +3,12 @@
     "name": "GRIIT",
     "slug": "griit-challenge-tracker",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7399b54a-e0d6-47b9-80f4-862d585fb1ca"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "griit",
