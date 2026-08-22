@@ -13,6 +13,11 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
 import { Apple, Mail } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
+import {
+  isAnonymousUser,
+  upgradeAnonymousWithApple,
+  upgradeAnonymousWithEmail,
+} from "@/lib/anon-auth";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
@@ -21,11 +26,10 @@ import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { DarkButton, GhostButton, PrimaryButton } from "../ui";
 
 /**
- * Auth wiring harvested from existing screens (do not reinvent):
- *   - Apple via signInWithIdToken + email via signUp/signInWithPassword fallback
- *     (from components/onboarding/screens/SignUpScreen.tsx).
- *   - Google via supabase.auth.signInWithOAuth({ provider: "google" })
- *     (from app/auth/login.tsx handleGoogle).
+ * Auth wiring:
+ *   - Anonymous session already present → linkIdentity (Apple) / updateUser (email)
+ *     so Day 1 uid is preserved. Never signInWithIdToken on that path.
+ *   - No anon session → legacy signInWithIdToken / signUp (cold signup).
  * Apple-first. Google OAuth completes asynchronously via the global auth
  * listener (no synchronous session), so it does not call onAuthSuccess here —
  * matching login.tsx, which relies on the root auth/redirect flow.
@@ -65,6 +69,41 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
         setError("Apple Sign-In did not return a token.");
         return;
       }
+
+      const displayNameFromApple = credential.fullName
+        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(" ").trim()
+        : "";
+      setProfileSetupHints({
+        displayNameFromApple: displayNameFromApple || undefined,
+        email: credential.email ?? undefined,
+      });
+
+      const { data: sessionSnap } = await supabase.auth.getSession();
+      const sessionUser = sessionSnap.session?.user ?? null;
+
+      if (isAnonymousUser(sessionUser)) {
+        const upgraded = await upgradeAnonymousWithApple({
+          identityToken: credential.identityToken,
+        });
+        if (upgraded.kind === "identity_taken") {
+          setError(upgraded.message ?? "Apple ID already linked to another account.");
+          return;
+        }
+        if (upgraded.kind === "no_anon_session") {
+          setError(upgraded.message ?? "Guest session was lost.");
+          return;
+        }
+        if (upgraded.kind !== "ok" || !upgraded.user?.id) {
+          setError(upgraded.message ?? "Could not link Apple ID.");
+          return;
+        }
+        track({ name: "signup_completed", method: "apple" });
+        track({ name: "account_created", method: "apple" });
+        onAuthSuccess(upgraded.user.id);
+        return;
+      }
+
+      // Cold signup (no anon Day 1 to preserve) — mint a permanent user.
       const { data, error: idError } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
@@ -73,21 +112,14 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
         setError(idError.message);
         return;
       }
-      const user = data?.user;
-      if (!user?.id) {
+      const next = data?.user;
+      if (!next?.id) {
         setError("Sign in failed. Please try again.");
         return;
       }
-      const displayNameFromApple = credential.fullName
-        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(" ").trim()
-        : "";
-      setProfileSetupHints({
-        displayNameFromApple: displayNameFromApple || undefined,
-        email: credential.email ?? undefined,
-      });
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
-      onAuthSuccess(user.id);
+      onAuthSuccess(next.id);
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
@@ -126,6 +158,33 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
     setLoading(true);
     setError("");
     try {
+      const { data: sessionSnap } = await supabase.auth.getSession();
+      const sessionUser = sessionSnap.session?.user ?? null;
+
+      if (isAnonymousUser(sessionUser)) {
+        const upgraded = await upgradeAnonymousWithEmail({
+          email: email.trim(),
+          password,
+        });
+        if (upgraded.kind === "identity_taken") {
+          setError(upgraded.message ?? "Email already registered.");
+          return;
+        }
+        if (upgraded.kind === "no_anon_session") {
+          setError(upgraded.message ?? "Guest session was lost.");
+          return;
+        }
+        if (upgraded.kind !== "ok" || !upgraded.user?.id) {
+          setError(upgraded.message ?? "Could not attach email.");
+          return;
+        }
+        setProfileSetupHints({ email: email.trim() });
+        track({ name: "signup_completed", method: "email" });
+        track({ name: "account_created", method: "email" });
+        onAuthSuccess(upgraded.user.id);
+        return;
+      }
+
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -155,12 +214,12 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
         setError(signUpError.message);
         return;
       }
-      const sessionUser = signUpData.session?.user ?? signUpData.user;
-      if (sessionUser) {
+      const createdUser = signUpData.session?.user ?? signUpData.user;
+      if (createdUser) {
         setProfileSetupHints({ email: email.trim() });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
-        onAuthSuccess(sessionUser.id);
+        onAuthSuccess(createdUser.id);
         return;
       }
       setError("Sign up succeeded but could not create session. Try again.");

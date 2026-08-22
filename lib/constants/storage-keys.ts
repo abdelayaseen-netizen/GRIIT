@@ -17,4 +17,9 @@ export const STORAGE_KEYS = {
   REVIEW_LAST_ASKED: 'griit_review_last_asked',
   /** Set after first successful challenge join — gates push permission timing. */
   HAS_JOINED_CHALLENGE: 'griit_has_joined_challenge',
+  /**
+   * Anonymous auth.uid() while browsing/joining before upgrade.
+   * Used to detect a lost session honestly (no fabricated streak).
+   */
+  ANON_USER_ID: 'griit_anon_user_id',
 } as const;
