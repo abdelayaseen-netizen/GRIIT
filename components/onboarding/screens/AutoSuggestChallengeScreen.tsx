@@ -15,6 +15,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
+import { ensureAnonymousSession } from "@/lib/anon-auth";
 
 interface AutoSuggestChallengeScreenProps {
   onJoinComplete: () => void;
@@ -123,6 +124,11 @@ export default function AutoSuggestChallengeScreen({
     setJoiningId(challengeId);
     setError("");
     try {
+      const anon = await ensureAnonymousSession();
+      if (anon.kind !== "ok") {
+        setError(anon.message ?? "Could not start a guest session.");
+        return;
+      }
       await trpcMutate(TRPC.challenges.join, { challengeId });
       track({ name: "onboarding_challenge_joined", challenge_id: challengeId });
       await setOnboardingCompleteAndContinue(onJoinComplete);

@@ -47,7 +47,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProStatus } from "@/hooks/useProStatus";
 import { canJoinChallenge } from "@/lib/premium";
 import { FLAGS } from "@/lib/feature-flags";
-import { useAuthGate } from "@/contexts/AuthGateContext";
+import { ensureAnonymousSession } from "@/lib/anon-auth";
 import TeamMemberList, { type TeamMemberForList } from "@/components/challenge/TeamMemberList";
 import SharedGoalProgress from "@/components/challenge/SharedGoalProgress";
 import { track, trackEvent } from "@/lib/analytics";
@@ -521,7 +521,6 @@ export default function ChallengeDetailScreen() {
   const ref = typeof p.ref === "string" ? p.ref : Array.isArray(p.ref) ? p.ref[0] : undefined;
   const router = useRouter();
   const { user } = useAuth();
-  const { showGate } = useAuthGate();
   const { activeChallenge, todayCheckins, refetchTodayCheckins, refetchAll } = useApp();
   const { isPro } = useProStatus();
   const myActiveListQuery = useQuery({
@@ -721,6 +720,23 @@ export default function ChallengeDetailScreen() {
     setCommitmentUnderstood(false);
     setShowCommitmentModal(true);
   }, [challenge, id]);
+
+  /** Guest → lazy anon session, then same commitment modal as signed-in join. */
+  const handleJoinPress = useCallback(async () => {
+    if (user) {
+      handleJoin();
+      return;
+    }
+    if (!id) return;
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const anon = await ensureAnonymousSession();
+    if (anon.kind !== "ok") {
+      showError(anon.message ?? "Could not start a guest session.");
+      return;
+    }
+    await setPendingChallengeId(id);
+    handleJoin();
+  }, [user, id, handleJoin, showError]);
 
   const handleCommitmentConfirm = useCallback(async () => {
     if (!id || commitmentJoining) return;
@@ -1409,7 +1425,7 @@ export default function ChallengeDetailScreen() {
             {!isJoined && (
               <TouchableOpacity
                 style={s.commitCtaInFlow}
-                onPress={user ? () => handleJoin() : async () => { if (id) await setPendingChallengeId(id); showGate("join"); }}
+                onPress={handleJoinPress}
                 onPressIn={handleCtaPressIn}
                 onPressOut={handleCtaPressOut}
                 disabled={joinDisabled}
