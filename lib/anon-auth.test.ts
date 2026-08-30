@@ -209,4 +209,98 @@ describe("upgradeAnonymousWithEmail", () => {
     expect(updateUser).toHaveBeenCalledWith({ email: "a@b.com", password: "secret1" });
     expect(res.user?.id).toBe("anon-uid-1");
   });
+
+  /**
+   * Identity gap — typo: no format/existence check before updateUser.
+   * A free but wrong address (e.g. gmial.com) attaches to the anon uid.
+   * Day 1 stays on that uid; it is not merged into any prior account.
+   */
+  it("typo / unused email: updateUser succeeds on same anon uid (no pre-check)", async () => {
+    const typoEmail = "bob@gmial.com";
+    const upgraded = {
+      ...anonUser,
+      is_anonymous: false,
+      email: typoEmail,
+    };
+    getSession
+      .mockResolvedValueOnce({
+        data: { session: { user: anonUser, access_token: "t" } },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { session: { user: upgraded, access_token: "t2" } },
+        error: null,
+      });
+    updateUser.mockResolvedValue({ data: { user: upgraded }, error: null });
+
+    const res = await upgradeAnonymousWithEmail({ email: typoEmail, password: "secret1" });
+
+    expect(res.kind).toBe("ok");
+    expect(res.user?.id).toBe("anon-uid-1");
+    expect(res.user?.email).toBe(typoEmail);
+    expect(updateUser).toHaveBeenCalledWith({ email: typoEmail, password: "secret1" });
+    expect(linkIdentity).not.toHaveBeenCalled();
+    expect(removeItem).toHaveBeenCalled();
+  });
+
+  it("typo / malformed: no client regex — still calls updateUser with trimmed input", async () => {
+    getSession.mockResolvedValue({
+      data: { session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    updateUser.mockResolvedValue({
+      data: { user: null },
+      error: {
+        message: "Unable to validate email address: invalid format",
+        name: "AuthApiError",
+        status: 400,
+      },
+    });
+
+    const res = await upgradeAnonymousWithEmail({
+      email: "  not-an-email  ",
+      password: "secret1",
+    });
+
+    expect(updateUser).toHaveBeenCalledWith({ email: "not-an-email", password: "secret1" });
+    expect(res.kind).toBe("provider_error");
+    expect(res.previousAnonUserId).toBe("anon-uid-1");
+    expect(removeItem).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Identity gap — existing email: GoTrue rejects; we surface identity_taken.
+   * No merge into the other account; anon session (and Day 1) stay on anon-uid-1.
+   */
+  it("existing email: returns identity_taken, does not merge, keeps anon uid", async () => {
+    getSession.mockResolvedValue({
+      data: { session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    updateUser.mockResolvedValue({
+      data: { user: null },
+      error: {
+        message: "A user with this email address has already been registered",
+        name: "AuthApiError",
+        status: 422,
+      },
+    });
+
+    const res = await upgradeAnonymousWithEmail({
+      email: "taken@example.com",
+      password: "secret1",
+    });
+
+    expect(res.kind).toBe("identity_taken");
+    expect(res.message).toMatch(/already registered/i);
+    expect(res.message).toMatch(/cannot be merged/i);
+    expect(res.user).toBeNull();
+    expect(res.previousAnonUserId).toBe("anon-uid-1");
+    expect(updateUser).toHaveBeenCalledWith({
+      email: "taken@example.com",
+      password: "secret1",
+    });
+    expect(linkIdentity).not.toHaveBeenCalled();
+    expect(removeItem).not.toHaveBeenCalled();
+  });
 });
