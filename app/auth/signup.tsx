@@ -24,6 +24,7 @@ import { GRIITWordmark } from "@/components/ui";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import FormInput from "@/components/shared/FormInput";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import * as Haptics from "expo-haptics";
@@ -178,6 +179,7 @@ function SignupScreenInner() {
         return;
       }
 
+      const deviceTz = getDeviceIanaTimeZone();
       const { error: profileError } = await supabase
         .from("profiles")
         .upsert(
@@ -187,6 +189,7 @@ function SignupScreenInner() {
             display_name: displayName.trim(),
             updated_at: new Date().toISOString(),
             onboarding_completed: true,
+            timezone: deviceTz,
           },
           { onConflict: "user_id" }
         );

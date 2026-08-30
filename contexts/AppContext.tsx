@@ -12,6 +12,7 @@ import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener, ENTITLEMENT_ID } from '@/lib/subscription';
 import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
 import { setSentryUser, captureError } from '@/lib/sentry';
+import { getDeviceIanaTimeZone } from '@/lib/iana-timezone';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 import type { ServerVerificationRow } from '@/lib/verifying-proof';
 
@@ -114,6 +115,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [todayCheckins, setTodayCheckins] = useState<TodayCheckinForUser[]>([]);
   const [isPremium, setIsPremium] = useState(false);
   const prevPremiumForAnalytics = useRef<boolean | null>(null);
+  /** Prevents repeated self-heal updates for the same device zone in one session. */
+  const timezoneHealForDeviceRef = useRef<string | null>(null);
 
   const [hardTimeout, setHardTimeout] = useState(false);
 
@@ -191,6 +194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSubscriptionState(null, null);
       clearSubscription();
       resetAnalytics();
+      timezoneHealForDeviceRef.current = null;
       return;
     }
     void Promise.allSettled([fetchProfile(), fetchStats(), fetchActiveChallenge()]).then((results) => {
@@ -271,6 +275,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       trpcMutate(TRPC.profiles.create, {
         username: fallbackUsername,
         display_name: fallbackName,
+        timezone: getDeviceIanaTimeZone(),
       }).then(() => {
         fetchProfile();
         fetchStats();
@@ -341,7 +346,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       tier,
     });
     setSentryUser(user.id, user.email ?? undefined);
-  }, [user?.id, user?.email, profile, fallbackProfile, profileFetched, isPremium, stats]);
+
+    const deviceTz = getDeviceIanaTimeZone();
+    const profileTzRaw = (p as { timezone?: string | null }).timezone;
+    const profileTz =
+      typeof profileTzRaw === "string" ? profileTzRaw.trim() : "";
+    const needsHeal = !profileTz || profileTz !== deviceTz;
+    if (needsHeal && timezoneHealForDeviceRef.current !== deviceTz) {
+      timezoneHealForDeviceRef.current = deviceTz;
+      void trpcMutate(TRPC.profiles.update, { timezone: deviceTz })
+        .then(() => {
+          void fetchProfile();
+        })
+        .catch((err: unknown) => {
+          captureError(err, "TimezoneSelfHeal");
+          timezoneHealForDeviceRef.current = null;
+        });
+    }
+  }, [user?.id, user?.email, profile, fallbackProfile, profileFetched, isPremium, stats, fetchProfile]);
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
 

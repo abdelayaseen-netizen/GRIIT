@@ -16,6 +16,7 @@ import { sanitizeSearchQuery } from "../../lib/sanitize-search";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { profilesSocialProcedures } from "./profiles-social";
 import { profilesStatsProcedures } from "./profiles-stats";
+import { resolveIanaTimeZone } from "../../lib/iana-timezone";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -49,8 +50,10 @@ export const profilesRouter = createTRPCRouter({
       bio: z.string().max(500).optional(),
       avatar_url: z.string().max(2000).optional(),
       cover_url: z.string().max(2000).optional(),
+      timezone: z.string().max(64).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const timezone = resolveIanaTimeZone(input.timezone, "UTC");
       const { data, error } = await ctx.supabase
         .from('profiles')
         .upsert({
@@ -61,6 +64,7 @@ export const profilesRouter = createTRPCRouter({
           avatar_url: input.avatar_url,
           cover_url: input.cover_url,
           onboarding_completed: false,
+          timezone,
         }, { onConflict: 'user_id' })
         .select(
           "user_id, username, display_name, bio, avatar_url, cover_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, onboarding_completed, timezone"
@@ -316,6 +320,9 @@ export const profilesRouter = createTRPCRouter({
         if (input[key] !== undefined) {
           updatePayload[key] = input[key];
         }
+      }
+      if (typeof updatePayload.timezone === "string") {
+        updatePayload.timezone = resolveIanaTimeZone(updatePayload.timezone, "UTC");
       }
       if (Object.keys(updatePayload).length === 0) {
         const { data } = await ctx.supabase

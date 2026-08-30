@@ -20,6 +20,7 @@ import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 import { captureError } from "@/lib/sentry";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { useOnboardingStore, type IntensityLevel } from "@/store/onboardingStore";
 
 function normalizeUsername(raw: string): string {
@@ -117,6 +118,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
           d = "User";
         }
 
+        const deviceTz = getDeviceIanaTimeZone();
         const { error: upErr } = await supabase.from("profiles").upsert(
           {
             user_id: userId,
@@ -127,6 +129,7 @@ export default function ProfileSetup({ userId, onComplete }: ProfileSetupProps) 
             onboarding_answers: { selected_goals: selectedGoals },
             onboarding_intensity: mapIntensity(intensityLevel),
             onboarding_completed: false,
+            timezone: deviceTz,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }

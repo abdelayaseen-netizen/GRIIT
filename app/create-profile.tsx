@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { getCalendars } from "expo-localization";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trackEvent } from "@/lib/analytics";
 import FormInput from "@/components/shared/FormInput";
@@ -116,7 +116,7 @@ function CreateProfileScreenInner() {
     setFormError("");
 
     try {
-      const deviceTz = getCalendars()[0]?.timeZone ?? "UTC";
+      const deviceTz = getDeviceIanaTimeZone();
       const { error } = await supabase.from("profiles").upsert(
         {
           user_id: userId,
