@@ -17,6 +17,7 @@ export const TRPC = {
     updatePushToken: 'profiles.updatePushToken',
     validateSubscription: 'profiles.validateSubscription',
     getStats: 'profiles.getStats',
+    reconcileStreak: 'profiles.reconcileStreak',
     getCompletedChallenges: 'profiles.getCompletedChallenges',
     getSecuredDateKeys: 'profiles.getSecuredDateKeys',
     setWeeklyGoal: 'profiles.setWeeklyGoal',

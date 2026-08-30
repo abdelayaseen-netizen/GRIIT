@@ -47,7 +47,7 @@ describe("Last Stand", () => {
     expect(newAvailableAfterUse(1)).toBe(0);
   });
 
-  it("miss day with 0 Last Stands → cannot use (streak resets in getStats)", () => {
+  it("miss day with 0 Last Stands → cannot use (streak resets in reconcileStreak)", () => {
     expect(newAvailableAfterUse(0)).toBe(0);
   });
 

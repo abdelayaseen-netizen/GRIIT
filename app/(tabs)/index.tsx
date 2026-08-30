@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { fetchStatsWithReconcile } from "@/lib/fetch-stats-with-reconcile";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
@@ -138,7 +139,7 @@ export default function HomeScreen() {
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<StatsFromApi> => {
       try {
-        return await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
+        return await fetchStatsWithReconcile();
       } catch (err) {
         captureError(err, "HomeGetStats");
         throw err;
