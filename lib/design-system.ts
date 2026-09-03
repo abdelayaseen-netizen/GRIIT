@@ -1052,6 +1052,13 @@ export const DS_COLORS_V2 = {
     // Used by DailyBonusV2 progress-bar track and timer icon container.
     cardChipNeutral: '#F1EFE8',
 
+    // Onboarding v4 structural surfaces (handoff hex, nearest-use names).
+    sunken: '#EFEBE2',          // Reassurance / receipt panels
+    borderWarm: '#E7E2D8',      // Default control border
+    borderStrong: '#DED9CE',    // Auth button borders
+    borderDashed: '#D5D0C5',    // Share-link dashed border
+    track: '#E2DDD2',           // Empty progress segment, blocked CTA
+
     // Dividers
     divider: '#E8E4DC',
     dividerDark: '#2A2A2A',
@@ -1077,6 +1084,7 @@ export const DS_COLORS_V2 = {
     secondary: '#5F5E5A',
     secondaryDark: '#A8A6A0',
     tertiary: '#8A8A8A',
+    mutedWarm: '#8A867E',       // Onboarding v4 meta / step label
     tertiaryDark: '#737272',
 
     // On always-dark surfaces (don't invert)
@@ -1311,7 +1319,9 @@ export const DS_SPACING_V2 = {
   sm: 12,
   md: 16,
   lg: 24,
+  gutter: 28,   // Onboarding v4 page gutter (multiple of 4)
   xl: 32,
+  ctaBottom: 32, // Handoff 34, snapped to nearest 4px token
   '2xl': 48,
 } as const;
 
@@ -1323,7 +1333,9 @@ export const DS_RADIUS_V2 = {
   sm: 6,    // Pills, badges, small chips
   md: 10,   // Buttons, list rows, small cards
   lg: 14,   // Default cards, post cards
+  button: 16, // Onboarding v4 CTA / auth buttons
   xl: 18,   // Hero surfaces, feature cards, modal sheets
+  hero: 24, // Onboarding v4 proof / Day 1 dark cards
   full: 9999, // Avatars, circular buttons, tab pills
 } as const;
 
