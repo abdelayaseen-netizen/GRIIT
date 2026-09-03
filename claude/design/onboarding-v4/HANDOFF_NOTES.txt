@@ -1,0 +1,10 @@
+# Handoff notes
+
+This folder was exported from a design tool. It contains:
+
+- README.md ............ the full implementation spec (start here)
+- GRIIT Onboarding v4.dc.html ... current design, interactive
+- GRIIT Onboarding v3.dc.html ... prior iteration, for diffing
+- support.js ........... runtime the two HTML files load
+
+Open either HTML file directly in a browser to click through the flow.

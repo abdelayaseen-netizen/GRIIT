@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
-import { Kicker, PrimaryButton, ProgressBar, TextLink } from "../ui";
+import { Kicker, PrimaryButton, TextLink } from "../ui";
 
 function Avatar({ label, size = 38, ring = false }: { label: string; size?: number; ring?: boolean }) {
   return (
@@ -26,7 +26,6 @@ export default function WhyCircleScreen({
 }) {
   return (
     <View style={styles.content}>
-      <ProgressBar done={2} style={styles.pbar} />
       <View style={styles.head}>
         <Kicker>Why GRIIT</Kicker>
         <Text style={styles.h1}>Your circle{"\n"}is watching.</Text>
@@ -71,11 +70,10 @@ export default function WhyCircleScreen({
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 24 },
-  pbar: { marginTop: 6 },
-  head: { marginTop: 22 },
-  h1: { fontSize: 32, fontWeight: "800", lineHeight: 34, letterSpacing: -0.64, color: OBV2_COLOR.ink, marginTop: 12 },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 23, color: OBV2_COLOR.ink2, marginTop: 14 },
+  content: { flex: 1, paddingHorizontal: 28 },
+  head: { marginTop: 6 },
+  h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink, marginTop: 12 },
+  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 14 },
   card: {
     marginTop: 26,
     backgroundColor: OBV2_COLOR.card,

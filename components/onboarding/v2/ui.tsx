@@ -5,6 +5,12 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
+import {
+  ONBOARDING_V2_PROGRESS_SEGMENTS,
+  v2ProgressLabel,
+  v2SegmentFilled,
+  type OnboardingV2Step,
+} from "@/lib/onboarding-v2-routing";
 import { OBV2_COLOR, OBV2_RADIUS } from "./theme";
 
 type ButtonProps = {
@@ -108,6 +114,22 @@ export function BackButton({ onPress }: { onPress: () => void }) {
   );
 }
 
+/** Shared nav: 44pt back + seven progress segments. Hidden by the flow on welcome. */
+export function FlowChrome({ step, onBack }: { step: OnboardingV2Step; onBack: () => void }) {
+  const label = v2ProgressLabel(step);
+  return (
+    <View style={styles.chrome}>
+      <BackButton onPress={onBack} />
+      <View style={styles.segs} accessibilityRole="progressbar" accessibilityLabel={label}>
+        {Array.from({ length: ONBOARDING_V2_PROGRESS_SEGMENTS }, (_, i) => (
+          <View key={i} style={[styles.seg, v2SegmentFilled(step, i + 1) && styles.segOn]} />
+        ))}
+      </View>
+      <Text style={styles.stepLabel}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   btn: {
     flexDirection: "row",
@@ -117,34 +139,52 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: OBV2_RADIUS.button,
     paddingVertical: 17,
-    minHeight: 56,
+    minHeight: 60,
   },
   btnPrimary: { backgroundColor: OBV2_COLOR.orange },
   btnDark: { backgroundColor: OBV2_COLOR.blackBtn },
   btnGhost: { backgroundColor: "transparent", borderWidth: 1.5, borderColor: OBV2_COLOR.hair },
   btnDisabled: { opacity: 0.5 },
-  btnText: { fontSize: 17, fontWeight: "600", letterSpacing: -0.2 },
+  btnText: { fontSize: 18, fontWeight: "500", letterSpacing: 0 },
   btnTextOnFill: { color: OBV2_COLOR.onDark },
   btnTextInk: { color: OBV2_COLOR.ink },
   textLinkWrap: { width: "100%", paddingVertical: 14, alignItems: "center" },
-  textLink: { fontSize: 15, fontWeight: "600", color: OBV2_COLOR.ink2, textAlign: "center" },
+  textLink: { fontSize: 15, fontWeight: "500", color: OBV2_COLOR.ink2, textAlign: "center" },
   textLinkEmphasis: { color: OBV2_COLOR.orangeInk },
   pbar: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6 },
   pSeg: { height: 5, borderRadius: 3, backgroundColor: OBV2_COLOR.progressEmpty, flex: 1 },
   pSegDone: { backgroundColor: OBV2_COLOR.orange },
   kicker: {
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 1.4,
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 1.6,
     textTransform: "uppercase",
     color: OBV2_COLOR.orangeInk,
   },
   backBtn: {
+    width: 44,
+    height: 44,
     minWidth: 44,
     minHeight: 44,
     justifyContent: "center",
-    alignItems: "flex-start",
-    paddingHorizontal: 24,
-    paddingTop: 4,
+    alignItems: "center",
+  },
+  chrome: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    height: 48,
+    paddingHorizontal: 20,
+  },
+  segs: { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, paddingRight: 20 },
+  seg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: OBV2_COLOR.progressEmpty },
+  segOn: { backgroundColor: OBV2_COLOR.orange },
+  stepLabel: {
+    minWidth: 46,
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.3,
+    color: OBV2_COLOR.mutedWarm,
+    textAlign: "right",
   },
 });

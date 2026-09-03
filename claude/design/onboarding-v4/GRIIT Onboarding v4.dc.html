@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #E7E5E0; font-family: Archivo, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #D2540A; }
+  a:hover { color: #A83F04; }
+  @keyframes griitFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes griitPop { 0% { transform: scale(.94); opacity: 0; } 60% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; background: #E7E5E0;">
+  <div style="width: 390px; height: 844px; border: 12px solid #0A0A0A; border-radius: 56px; background: #F5F2EC; position: relative; overflow: hidden; box-shadow: 0 40px 80px -20px rgba(0,0,0,.35);">
+
+    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 116px; height: 32px; background: #0A0A0A; border-radius: 20px; z-index: 20;"></div>
+
+    <div style="height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-size: 15px; font-weight: 700; color: #0A0A0A; letter-spacing: -.2px;">
+      <span>9:41</span>
+      <span style="display: flex; align-items: center; gap: 6px;">
+        <span style="display: flex; gap: 3px;">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #0A0A0A;"></span>
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #0A0A0A;"></span>
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #0A0A0A;"></span>
+        </span>
+        <span>Wi-Fi</span>
+      </span>
+    </div>
+
+    <sc-if value="{{ isWelcome }}" hint-placeholder-val="{{ true }}">
+      <div style="height: 790px; display: flex; flex-direction: column; padding: 0 28px 34px;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; text-align: center;">
+          <div style="display: flex; gap: 10px; align-items: flex-end;">
+            <span style="display: block; width: 24px; height: 24px; background: #D2540A; border-radius: 4px;"></span>
+            <span style="display: block; width: 24px; height: 24px; background: #D2540A; border-radius: 4px;"></span>
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: -12px;">
+            <span style="display: block; width: 24px; height: 112px; background: #D2540A; border-radius: 4px;"></span>
+            <span style="display: block; width: 24px; height: 112px; background: #D2540A; border-radius: 4px;"></span>
+          </div>
+          <div style="font-size: 15px; font-weight: 800; letter-spacing: 6px; color: #0A0A0A; margin-top: 2px;">GRIIT</div>
+          <h1 style="margin: 8px 0 0; font-size: 46px; line-height: .95; font-weight: 800; letter-spacing: -1.8px; color: #0A0A0A;">Discipline,<br />witnessed.</h1>
+          <p style="margin: 0; font-size: 17px; line-height: 1.45; color: #6B6862; max-width: 290px; text-wrap: pretty;">The habit app that makes you prove it. Real verification, your circle watching.</p>
+          <div style="display: flex; gap: 18px; margin-top: 4px; font-size: 12px; font-weight: 700; color: #8A867E; letter-spacing: 1.2px;">
+            <span>PHOTO</span>
+            <span style="color: #D5D1C8;">·</span>
+            <span>GPS</span>
+            <span style="color: #D5D1C8;">·</span>
+            <span>TIMER</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <button onClick="{{ next }}" style="width: 100%; height: 60px; border: none; border-radius: 16px; background: #D2540A; color: #FFF; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer;" style-hover="background: #BC4907">Get started</button>
+          <button onClick="{{ openSignIn }}" style="width: 100%; height: 52px; border: none; background: none; color: #4A4741; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;" style-hover="color: #0A0A0A">I already have an account</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSignIn }}" hint-placeholder-val="{{ false }}">
+      <div style="height: 790px; display: flex; flex-direction: column; padding: 0 28px 34px;">
+        <div style="height: 48px; margin-left: -8px; display: flex; align-items: center;">
+          <button onClick="{{ closeSignIn }}" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 12px; padding: 0;" style-hover="background: #EAE6DE">
+            <span style="display: block; width: 11px; height: 11px; border-left: 2.5px solid #0A0A0A; border-bottom: 2.5px solid #0A0A0A; transform: rotate(45deg);"></span>
+          </button>
+        </div>
+        <div style="padding-top: 8px;">
+          <h2 style="margin: 0; font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: -1.4px; color: #0A0A0A;">Welcome back.</h2>
+          <p style="margin: 14px 0 0; font-size: 16px; line-height: 1.5; color: #6B6862; text-wrap: pretty;">Your streak, your circle and your challenges are exactly where you left them.</p>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px;">
+          <button onClick="{{ signInDone }}" style="width: 100%; height: 58px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFF; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;" style-hover="background: #232220">Sign in with Apple</button>
+          <button onClick="{{ signInDone }}" style="width: 100%; height: 58px; border: 2px solid #DED9CE; border-radius: 16px; background: #FFF; color: #0A0A0A; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;" style-hover="border-color: #0A0A0A">Continue with Google</button>
+          <button onClick="{{ signInDone }}" style="width: 100%; height: 58px; border: 2px solid #DED9CE; border-radius: 16px; background: none; color: #0A0A0A; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;" style-hover="border-color: #0A0A0A">Continue with email</button>
+          <button onClick="{{ signInDone }}" style="align-self: center; margin-top: 6px; border: none; background: none; padding: 8px; font-family: inherit; font-size: 14px; font-weight: 600; color: #6B6862; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;" style-hover="color: #0A0A0A">Trouble signing in?</button>
+        </div>
+        <button onClick="{{ closeSignIn }}" style="width: 100%; height: 52px; border: none; background: none; color: #6B6862; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="color: #0A0A0A">I'm new here — create an account</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isFlow }}" hint-placeholder-val="{{ false }}">
+      <div style="height: 790px; display: flex; flex-direction: column;">
+
+        <div style="padding: 0 20px; display: flex; align-items: center; gap: 10px; height: 48px;">
+          <button onClick="{{ back }}" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 12px; padding: 0;" style-hover="background: #EAE6DE">
+            <span style="display: block; width: 11px; height: 11px; border-left: 2.5px solid #0A0A0A; border-bottom: 2.5px solid #0A0A0A; transform: rotate(45deg);"></span>
+          </button>
+          <div style="flex: 1; display: flex; gap: 4px; padding-right: 20px;">
+            <sc-for list="{{ segs }}" as="seg" hint-placeholder-count="8">
+              <span style="flex: 1; height: 4px; border-radius: 2px; background: {{ seg.bg }}; transition: background .35s ease;"></span>
+            </sc-for>
+          </div>
+          <span style="font-size: 12px; font-weight: 700; color: #8A867E; letter-spacing: .3px; min-width: 46px; text-align: right;">{{ stepLabel }}</span>
+        </div>
+
+        <div style="flex: 1; overflow: hidden;">
+          <div key="{{ step }}" style="height: 100%; display: flex; flex-direction: column; padding: 6px 28px 0; animation: griitFade .3s ease both;">
+
+            <sc-if value="{{ eyebrow }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 12px; font-weight: 700; letter-spacing: 1.6px; color: #D2540A; margin-bottom: 10px;">{{ eyebrow }}</div>
+            </sc-if>
+            <h2 style="margin: 0; font-size: 36px; line-height: 1.02; font-weight: 800; letter-spacing: -1.3px; color: #0A0A0A; text-wrap: balance;">{{ title }}</h2>
+            <p style="margin: 12px 0 0; font-size: 16px; line-height: 1.5; color: #6B6862; text-wrap: pretty;">{{ subtitle }}</p>
+
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 16px 0;">
+
+              <sc-if value="{{ isGoals }}" hint-placeholder-val="{{ false }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <sc-for list="{{ goals }}" as="g" hint-placeholder-count="6">
+                    <button onClick="{{ g.toggle }}" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; height: 112px; padding: 14px; border-radius: 18px; cursor: pointer; text-align: left; font-family: inherit; background: {{ g.bg }}; border: 2px solid {{ g.border }}; color: {{ g.color }}; transition: all .18s ease;">
+                      <span style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 7px; background: {{ g.dot }};">
+                        <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: {{ g.dotInner }};"></span>
+                      </span>
+                      <span style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-size: 15px; font-weight: 700; line-height: 1.15;">{{ g.label }}</span>
+                        <span style="font-size: 12px; font-weight: 500; line-height: 1.25; color: {{ g.exampleColor }};">{{ g.example }}</span>
+                      </span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isProof }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="border-radius: 24px; overflow: hidden; background: #0A0A0A; position: relative; box-shadow: 0 24px 40px -22px rgba(0,0,0,.45);">
+                    <div style="height: 206px; background-image: repeating-linear-gradient(135deg, #1C1B19 0 10px, #232220 10px 20px); display: flex; align-items: center; justify-content: center;">
+                      <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; letter-spacing: 1px; color: #6B6862; text-transform: uppercase;">verification photo</span>
+                    </div>
+                    <div style="position: absolute; top: 14px; right: 14px; display: flex; align-items: center; gap: 6px; background: #D2540A; padding: 7px 12px; border-radius: 999px;">
+                      <span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #FFF;"></span>
+                      <span style="font-size: 12px; font-weight: 700; color: #FFF; letter-spacing: .3px;">DAY 12</span>
+                    </div>
+                    <div style="padding: 15px 18px 17px; display: flex; align-items: center; justify-content: space-between;">
+                      <span style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-size: 17px; font-weight: 700; color: #FFF;">Morning run</span>
+                        <span style="font-size: 13px; color: #A8A49C;">4.1 mi · 7:14am · Sector 7</span>
+                      </span>
+                      <span style="display: flex; align-items: center; gap: 7px; background: rgba(210,84,10,.16); padding: 8px 12px; border-radius: 999px;">
+                        <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #D2540A;"></span>
+                        <span style="font-size: 12px; font-weight: 700; color: #E8834A; letter-spacing: .4px;">VERIFIED</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <sc-for list="{{ proofTypes }}" as="p" hint-placeholder-count="3">
+                      <span style="flex: 1; background: #FFF; border: 2px solid #E7E2D8; border-radius: 16px; padding: 12px 10px; display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-size: 12px; font-weight: 700; letter-spacing: .8px; color: #0A0A0A;">{{ p.kind }}</span>
+                        <span style="font-size: 11px; line-height: 1.3; color: #8A867E;">{{ p.use }}</span>
+                      </span>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isCircle }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="background: #FFF; border-radius: 22px; padding: 18px; box-shadow: 0 12px 28px -18px rgba(0,0,0,.28);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span style="width: 42px; height: 42px; border-radius: 50%; background: #E4DFD5; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #6B6862;">MH</span>
+                      <span style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: 16px; font-weight: 700; color: #0A0A0A;">Marcus Hale</span>
+                        <span style="font-size: 13px; color: #8A867E;">Day 12 · Morning routine</span>
+                      </span>
+                    </div>
+                    <p style="margin: 14px 0 0; font-size: 15px; line-height: 1.45; color: #2A2822;">Cold start, but it's done. Twelve straight.</p>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 14px;">
+                      <span style="display: flex;">
+                        <span style="width: 26px; height: 26px; border-radius: 50%; background: #E4DFD5; border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #6B6862;">K</span>
+                        <span style="width: 26px; height: 26px; border-radius: 50%; background: #DDD7CB; border: 2px solid #FFF; margin-left: -8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #6B6862;">D</span>
+                        <span style="width: 26px; height: 26px; border-radius: 50%; background: #D4CDBF; border: 2px solid #FFF; margin-left: -8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #6B6862;">J</span>
+                      </span>
+                      <span style="font-size: 13px; color: #6B6862;">Respected by <strong style="color: #0A0A0A;">Kyle</strong> and 13 others</span>
+                    </div>
+                  </div>
+                  <div style="background: #EFEBE2; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 13px; font-weight: 700; letter-spacing: .3px; color: #0A0A0A;">You choose who sees it</span>
+                    <span style="font-size: 13px; line-height: 1.4; color: #6B6862;">Invite up to 8 people. Nothing is public, ever.</span>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isMode }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3">
+                    <button onClick="{{ m.pick }}" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px 16px; border-radius: 18px; cursor: pointer; text-align: left; font-family: inherit; background: {{ m.bg }}; border: 2px solid {{ m.border }}; transition: all .18s ease;">
+                      <span style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                          <span style="font-size: 16px; font-weight: 700; color: #0A0A0A;">{{ m.name }}</span>
+                          <sc-if value="{{ m.tag }}" hint-placeholder-val="{{ false }}">
+                            <span style="font-size: 10px; font-weight: 700; letter-spacing: .7px; color: #6B6862; background: #EFEBE2; padding: 3px 7px; border-radius: 6px;">{{ m.tag }}</span>
+                          </sc-if>
+                        </span>
+                        <span style="font-size: 13px; line-height: 1.4; color: #6B6862;">{{ m.desc }}</span>
+                        <span style="font-size: 11px; font-weight: 700; letter-spacing: .6px; color: {{ m.freezeColor }};">{{ m.freeze }}</span>
+                      </span>
+                      <span style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid {{ m.radio }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                        <span style="display: block; width: 9px; height: 9px; border-radius: 50%; background: {{ m.radioInner }};"></span>
+                      </span>
+                    </button>
+                  </sc-for>
+                  <p style="margin: 0; font-size: 12px; line-height: 1.4; color: #8A867E;">Change this on any challenge, any time.</p>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isChallenge }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <sc-for list="{{ challenges }}" as="c" hint-placeholder-count="3">
+                    <button onClick="{{ c.pick }}" style="display: flex; align-items: center; gap: 13px; padding: 14px; border-radius: 18px; cursor: pointer; text-align: left; font-family: inherit; background: {{ c.bg }}; border: 2px solid {{ c.border }}; box-shadow: {{ c.shadow }}; transition: all .18s ease;">
+                      <span style="width: 50px; height: 50px; border-radius: 13px; background-image: repeating-linear-gradient(135deg, #EDE8DF 0 6px, #E3DDD2 6px 12px); flex-shrink: 0;"></span>
+                      <span style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 16px; font-weight: 700; color: #0A0A0A;">{{ c.name }}</span>
+                        <span style="font-size: 12px; color: #8A867E;">{{ c.detail }}</span>
+                        <span style="font-size: 11px; font-weight: 700; letter-spacing: .4px; color: #D2540A;">{{ c.reason }}</span>
+                      </span>
+                      <span style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid {{ c.radio }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="display: block; width: 9px; height: 9px; border-radius: 50%; background: {{ c.radioInner }};"></span>
+                      </span>
+                    </button>
+                  </sc-for>
+                  <button onClick="{{ noop }}" style="align-self: flex-start; border: none; background: none; padding: 4px 0; font-family: inherit; font-size: 13px; font-weight: 700; color: #6B6862; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;" style-hover="color: #0A0A0A">Browse all 40 challenges</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isReminder }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <div style="background: #FFF; border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 12px 28px -18px rgba(0,0,0,.28);">
+                    <span style="width: 40px; height: 40px; border-radius: 11px; background: #0A0A0A; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <span style="display: flex; gap: 3px;">
+                        <span style="display: block; width: 4px; height: 14px; background: #D2540A; border-radius: 1px;"></span>
+                        <span style="display: block; width: 4px; height: 14px; background: #D2540A; border-radius: 1px;"></span>
+                      </span>
+                    </span>
+                    <span style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+                      <span style="font-size: 14px; font-weight: 700; color: #0A0A0A;">GRIIT</span>
+                      <span style="font-size: 13px; color: #4A4741; line-height: 1.35;">{{ previewCopy }}</span>
+                    </span>
+                    <span style="font-size: 12px; color: #8A867E; align-self: flex-start;">{{ previewTime }}</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <span style="font-size: 12px; font-weight: 700; letter-spacing: .8px; color: #0A0A0A;">SEND IT AT</span>
+                    <sc-if value="{{ presetsOpen }}" hint-placeholder-val="{{ true }}">
+                      <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 7px;">
+                          <sc-for list="{{ times }}" as="t" hint-placeholder-count="4">
+                            <button onClick="{{ t.pick }}" style="flex: 1; height: 60px; border-radius: 15px; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ t.bg }}; border: 2px solid {{ t.border }}; color: {{ t.color }}; transition: all .18s ease;">
+                              <span style="font-size: 15px; font-weight: 700;">{{ t.time }}</span>
+                              <span style="font-size: 10px; font-weight: 700; letter-spacing: .5px; opacity: .65;">{{ t.label }}</span>
+                            </button>
+                          </sc-for>
+                        </div>
+                        <sc-if value="{{ isCustom }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ openCustom }}" style="width: 100%; height: 48px; border-radius: 15px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #0A0A0A; border: 2px solid #0A0A0A; color: #FFF; transition: all .18s ease;">
+                            <span style="font-size: 11px; font-weight: 700; letter-spacing: .7px; color: #8A867E;">CUSTOM</span>
+                            <span style="font-size: 15px; font-weight: 700;">{{ customText }}</span>
+                          </button>
+                        </sc-if>
+                        <button onClick="{{ openCustom }}" style="align-self: flex-start; border: none; background: none; padding: 2px 0; font-family: inherit; font-size: 13px; font-weight: 700; color: #6B6862; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;" style-hover="color: #0A0A0A">Pick a custom time</button>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ customOpen }}" hint-placeholder-val="{{ false }}">
+                      <div style="display: flex; flex-direction: column; gap: 12px; background: #FFF; border: 2px solid #E7E2D8; border-radius: 20px; padding: 14px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                          <span style="font-size: 26px; font-weight: 800; letter-spacing: -.8px; color: #0A0A0A;">{{ draftText }}</span>
+                          <div style="display: flex; gap: 6px;">
+                            <sc-for list="{{ meridiems }}" as="m" hint-placeholder-count="2">
+                              <button onClick="{{ m.pick }}" style="width: 46px; height: 34px; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; background: {{ m.bg }}; border: 2px solid {{ m.border }}; color: {{ m.color }}; transition: all .18s ease;">{{ m.label }}</button>
+                            </sc-for>
+                          </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                          <span style="font-size: 10px; font-weight: 700; letter-spacing: .7px; color: #8A867E;">HOUR</span>
+                          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px;">
+                            <sc-for list="{{ hours }}" as="h" hint-placeholder-count="12">
+                              <button onClick="{{ h.pick }}" style="height: 34px; border-radius: 9px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; background: {{ h.bg }}; border: 2px solid {{ h.border }}; color: {{ h.color }}; transition: all .18s ease;">{{ h.n }}</button>
+                            </sc-for>
+                          </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                          <span style="font-size: 10px; font-weight: 700; letter-spacing: .7px; color: #8A867E;">MINUTES</span>
+                          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+                            <sc-for list="{{ minutes }}" as="mm" hint-placeholder-count="4">
+                              <button onClick="{{ mm.pick }}" style="height: 34px; border-radius: 9px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; background: {{ mm.bg }}; border: 2px solid {{ mm.border }}; color: {{ mm.color }}; transition: all .18s ease;">:{{ mm.n }}</button>
+                            </sc-for>
+                          </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 2px;">
+                          <button onClick="{{ cancelCustom }}" style="flex: 1; height: 44px; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 700; background: none; border: 2px solid #DED9CE; color: #4A4741;" style-hover="border-color: #0A0A0A; color: #0A0A0A">Back to presets</button>
+                          <button onClick="{{ saveCustom }}" style="flex: 1; height: 44px; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 700; background: #0A0A0A; border: none; color: #FFF;" style-hover="background: #232220">Use {{ draftText }}</button>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isAccount }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <button onClick="{{ next }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFF; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;" style-hover="background: #232220">Sign in with Apple</button>
+                  <button onClick="{{ next }}" style="width: 100%; height: 56px; border: 2px solid #DED9CE; border-radius: 16px; background: #FFF; color: #0A0A0A; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;" style-hover="border-color: #0A0A0A">Continue with Google</button>
+                  <button onClick="{{ next }}" style="width: 100%; height: 56px; border: 2px solid #DED9CE; border-radius: 16px; background: none; color: #0A0A0A; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;" style-hover="border-color: #0A0A0A">Continue with email</button>
+                  <div style="margin-top: 6px; background: #EFEBE2; border-radius: 18px; padding: 15px 16px; display: flex; flex-direction: column; gap: 7px;">
+                    <span style="font-size: 12px; font-weight: 700; letter-spacing: .6px; color: #0A0A0A;">SAVED AND WAITING FOR YOU</span>
+                    <sc-for list="{{ savedItems }}" as="s" hint-placeholder-count="3">
+                      <span style="display: flex; align-items: center; gap: 9px; font-size: 13px; color: #4A4741;">
+                        <span style="display: block; width: 5px; height: 5px; border-radius: 50%; background: #D2540A;"></span>
+                        <span>{{ s }}</span>
+                      </span>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isInvite }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="3">
+                    <div style="display: flex; align-items: center; gap: 12px; background: #FFF; border: 2px solid {{ c.border }}; border-radius: 18px; padding: 12px 14px; transition: all .18s ease;">
+                      <span style="width: 40px; height: 40px; border-radius: 50%; background: #E4DFD5; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #6B6862; flex-shrink: 0;">{{ c.initials }}</span>
+                      <span style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: 15px; font-weight: 700; color: #0A0A0A;">{{ c.name }}</span>
+                        <span style="font-size: 12px; color: #8A867E;">{{ c.note }}</span>
+                      </span>
+                      <button onClick="{{ c.toggle }}" style="height: 36px; padding: 0 16px; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; background: {{ c.btnBg }}; border: 2px solid {{ c.btnBorder }}; color: {{ c.btnColor }}; transition: all .18s ease;">{{ c.btnLabel }}</button>
+                    </div>
+                  </sc-for>
+                  <button onClick="{{ noop }}" style="width: 100%; height: 52px; margin-top: 4px; border: 2px dashed #D5D0C5; border-radius: 16px; background: none; font-family: inherit; font-size: 14px; font-weight: 700; color: #4A4741; cursor: pointer;" style-hover="border-color: #0A0A0A; color: #0A0A0A">Share an invite link instead</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isDayOne }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="border-radius: 24px; background: #0A0A0A; padding: 20px; animation: griitPop .45s ease both;">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                      <span style="font-size: 12px; font-weight: 700; letter-spacing: 1.4px; color: #D2540A;">DAY 1 OF {{ chosenLength }}</span>
+                      <span style="font-size: 12px; font-weight: 700; letter-spacing: .4px; color: #8A867E;">{{ modeName }}</span>
+                    </div>
+                    <div style="font-size: 27px; font-weight: 800; letter-spacing: -.8px; color: #FFF; margin-top: 7px;">{{ chosenName }}</div>
+                    <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 16px;">
+                      <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="3">
+                        <span style="display: flex; align-items: center; gap: 11px;">
+                          <span style="width: 21px; height: 21px; border-radius: 7px; border: 2px solid #3A3833; flex-shrink: 0;"></span>
+                          <span style="flex: 1; font-size: 14px; font-weight: 600; color: #EFEBE2;">{{ t.name }}</span>
+                          <span style="font-size: 10px; font-weight: 700; letter-spacing: .6px; color: #8A867E;">{{ t.proof }}</span>
+                        </span>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 9px;">
+                    <div style="flex: 1; background: #FFF; border-radius: 16px; padding: 13px 14px; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="font-size: 10px; font-weight: 700; letter-spacing: .7px; color: #8A867E;">REMINDER</span>
+                      <span style="font-size: 15px; font-weight: 700; color: #0A0A0A;">{{ reminderLabel }}</span>
+                    </div>
+                    <div style="flex: 1; background: #FFF; border-radius: 16px; padding: 13px 14px; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="font-size: 10px; font-weight: 700; letter-spacing: .7px; color: #8A867E;">CIRCLE</span>
+                      <span style="font-size: 15px; font-weight: 700; color: #0A0A0A;">{{ circleLabel }}</span>
+                    </div>
+                    <div style="flex: 1; background: #FFF; border-radius: 16px; padding: 13px 14px; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="font-size: 10px; font-weight: 700; letter-spacing: .7px; color: #8A867E;">STARTS</span>
+                      <span style="font-size: 15px; font-weight: 700; color: #0A0A0A;">Tomorrow</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 0 28px 34px; display: flex; flex-direction: column; gap: 2px;">
+          <button onClick="{{ primary }}" disabled="{{ blocked }}" style="width: 100%; height: 60px; border: none; border-radius: 16px; background: {{ ctaBg }}; color: {{ ctaColor }}; font-family: inherit; font-size: 18px; font-weight: 700; cursor: {{ ctaCursor }}; transition: background .2s ease;">{{ ctaLabel }}</button>
+          <sc-if value="{{ secondaryLabel }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ next }}" style="width: 100%; height: 44px; border: none; background: none; color: #6B6862; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="color: #0A0A0A">{{ secondaryLabel }}</button>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:470,&quot;height&quot;:940}}">
+const GOALS = [
+  { id: 'physical', label: 'Physical toughness', example: 'Lifting, running, no missed sessions' },
+  { id: 'mental', label: 'Mental discipline', example: 'Meditation, journaling, focus blocks' },
+  { id: 'habits', label: 'Daily habits', example: 'Wake times, water, tidy space' },
+  { id: 'reading', label: 'Reading & learning', example: 'Pages a day, a course, a language' },
+  { id: 'cold', label: 'Cold exposure', example: 'Cold showers, plunges, breathwork' },
+  { id: 'sleep', label: 'Sleep & recovery', example: 'Phone down, lights out, rest days' }
+];
+
+const CHALLENGES = [
+  { id: 'reset', name: 'The 30 Reset', detail: '30 days · 3 tasks · daily', length: '30', tags: ['habits', 'mental'], tasks: [
+    { name: 'Morning routine before 8am', proof: 'PHOTO' },
+    { name: 'Read 10 pages', proof: 'PHOTO' },
+    { name: '20 min walk outside', proof: 'GPS' } ] },
+  { id: 'mind', name: 'Clear Head', detail: '21 days · 3 tasks · daily', length: '21', tags: ['mental', 'sleep'], tasks: [
+    { name: '10 min meditation', proof: 'TIMER' },
+    { name: 'Journal one page', proof: 'PHOTO' },
+    { name: 'Phone down by 10pm', proof: 'TIMER' } ] },
+  { id: '75', name: '75 Hard', detail: '75 days · 5 tasks · daily', length: '75', tags: ['physical', 'cold'], tasks: [
+    { name: 'Two 45 min workouts', proof: 'TIMER' },
+    { name: 'Progress photo', proof: 'PHOTO' },
+    { name: 'Gallon of water', proof: 'PHOTO' } ] },
+  { id: 'plunge', name: 'Cold Plunge Ladder', detail: '14 days · 2 tasks · daily', length: '14', tags: ['cold', 'physical'], tasks: [
+    { name: 'Cold exposure, building daily', proof: 'TIMER' },
+    { name: 'Breathwork after', proof: 'TIMER' },
+    { name: 'Log how it felt', proof: 'PHOTO' } ] },
+  { id: 'pages', name: '10 Pages a Day', detail: '30 days · 2 tasks · daily', length: '30', tags: ['reading', 'habits'], tasks: [
+    { name: 'Read 10 pages', proof: 'PHOTO' },
+    { name: 'One line of notes', proof: 'PHOTO' },
+    { name: 'Same time each day', proof: 'TIMER' } ] },
+  { id: 'rest', name: 'Lights Out', detail: '21 days · 2 tasks · nightly', length: '21', tags: ['sleep', 'habits'], tasks: [
+    { name: 'In bed by 10:30pm', proof: 'TIMER' },
+    { name: 'No screens after 10pm', proof: 'TIMER' },
+    { name: 'Morning light walk', proof: 'GPS' } ] }
+];
+
+const CONTACTS = [
+  { id: 'kyle', name: 'Kyle Ndiaye', initials: 'KN', note: 'Already on GRIIT · Day 34' },
+  { id: 'dana', name: 'Dana Whitfield', initials: 'DW', note: 'Already on GRIIT · Day 8' },
+  { id: 'jonah', name: 'Jonah Reyes', initials: 'JR', note: 'From your contacts' }
+];
+
+const SCREENS = ['welcome', 'goals', 'proof', 'circle', 'mode', 'challenge', 'reminder', 'account', 'invite', 'dayone'];
+
+const TIMES = [
+  { id: 'am6', time: '6:00', label: 'AM' },
+  { id: 'am8', time: '8:00', label: 'AM' },
+  { id: 'pm12', time: '12:00', label: 'PM' },
+  { id: 'pm7', time: '7:00', label: 'PM' }
+];
+
+const COPY = {
+  goals: { title: 'What are you building?', subtitle: 'Pick two or three. It changes which challenges we put in front of you.', cta: 'Continue' },
+  proof: { eyebrow: 'HOW GRIIT WORKS', title: 'Streaks are easy to fake.', subtitle: "Every other app takes your word for it. GRIIT doesn't. The day doesn't count until it's verified.", cta: 'Continue' },
+  circle: { eyebrow: 'HOW GRIIT WORKS', title: 'Your circle is watching.', subtitle: "Show up for the people who'll notice when you don't. Every proof posts to your circle — that's the accountability.", cta: 'Continue' },
+  mode: { title: 'How hard do you want it?', subtitle: 'This only sets what happens on a day you miss.', cta: 'Continue' },
+  challenge: { title: 'Start here', subtitle: 'One tap and Day 1 begins tomorrow morning.', cta: 'Join challenge', secondary: 'Set this up later' },
+  reminder: { title: "We'll nudge you.\nNever nag.", subtitle: "One reminder a day, at a time you pick. Turn it off whenever — that's the deal.", cta: 'Turn on reminders', secondary: 'No reminders for now' },
+  account: { title: 'Save your progress', subtitle: 'So your streak and your circle follow you to any device.', cta: null },
+  invite: { title: 'Bring three people', subtitle: 'Members with a circle of three or more are far likelier to finish. Invite the ones who will actually say something.', cta: 'Continue', secondary: "I'll build my circle later" },
+  dayone: { title: "You're in.", subtitle: 'Tomorrow is Day 1. Here is exactly what it looks like.', cta: 'Start Day 1' }
+};
+
+const REASONS = {
+  physical: 'Matches physical toughness',
+  mental: 'Matches mental discipline',
+  habits: 'Matches daily habits',
+  reading: 'Matches reading & learning',
+  cold: 'Matches cold exposure',
+  sleep: 'Matches sleep & recovery'
+};
+
+class Component extends DCLogic {
+  state = { step: 0, goals: ['mental', 'habits'], mode: 'standard', challenge: null, time: 'am6', reminders: false, invited: [], signin: false,
+    customOpen: false, custom: null, draftH: 6, draftM: '30', draftMer: 'AM' };
+
+  go = (n) => this.setState({ step: Math.max(0, Math.min(SCREENS.length - 1, n)) });
+
+  matched() {
+    const g = this.state.goals;
+    const score = (c) => c.tags.filter((t) => g.includes(t)).length;
+    return CHALLENGES.slice().sort((a, b) => score(b) - score(a)).slice(0, 3);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const name = SCREENS[s.step];
+    const copy = COPY[name] || {};
+    const next = () => this.go(s.step + 1);
+    const chosen = CHALLENGES.find((c) => c.id === s.challenge) || null;
+    const preset = TIMES.find((x) => x.id === s.time) || TIMES[0];
+    const isCustom = s.time === 'custom' && !!s.custom;
+    const customText = s.custom ? s.custom.h + ':' + s.custom.m + ' ' + s.custom.mer : '';
+    const draftText = s.draftH + ':' + s.draftM + ' ' + s.draftMer;
+    const timeText = isCustom ? customText : preset.time + ' ' + preset.label;
+    const timeShort = isCustom ? s.custom.h + (s.custom.m === '00' ? '' : ':' + s.custom.m) + s.custom.mer.toLowerCase()
+      : preset.time.replace(':00', '') + preset.label.toLowerCase();
+    const t = preset;
+    const blocked = (name === 'goals' && s.goals.length === 0) || (name === 'challenge' && !s.challenge);
+
+    return {
+      step: s.step,
+      noop: () => {},
+      isWelcome: name === 'welcome' && !s.signin,
+      isSignIn: s.signin,
+      isFlow: name !== 'welcome' && !s.signin,
+      isGoals: name === 'goals',
+      isProof: name === 'proof',
+      isCircle: name === 'circle',
+      isMode: name === 'mode',
+      isChallenge: name === 'challenge',
+      isReminder: name === 'reminder',
+      isAccount: name === 'account',
+      isInvite: name === 'invite',
+      isDayOne: name === 'dayone',
+      next,
+      back: () => this.go(s.step - 1),
+      openSignIn: () => this.setState({ signin: true }),
+      closeSignIn: () => this.setState({ signin: false }),
+      signInDone: () => this.setState({ signin: false, step: SCREENS.length - 1 }),
+      primary: blocked ? () => {} : (name === 'reminder' ? () => { this.setState({ reminders: true }); next(); } : next),
+      blocked,
+      ctaBg: blocked ? '#E2DDD2' : '#D2540A',
+      ctaColor: blocked ? '#A8A49C' : '#FFFFFF',
+      ctaCursor: blocked ? 'not-allowed' : 'pointer',
+      ctaLabel: name === 'goals' && s.goals.length === 0 ? 'Pick at least one' : (copy.cta || 'Continue'),
+      secondaryLabel: copy.secondary || null,
+      eyebrow: copy.eyebrow || null,
+      title: copy.title || '',
+      subtitle: copy.subtitle || '',
+      stepLabel: name === 'dayone' ? 'Done' : 'Step ' + s.step + '/8',
+      segs: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ bg: s.step >= i ? '#D2540A' : '#E2DDD2' })),
+
+      goals: GOALS.map((g) => {
+        const on = s.goals.includes(g.id);
+        return {
+          label: g.label, example: g.example,
+          bg: on ? '#D2540A' : '#FFFFFF',
+          border: on ? '#D2540A' : '#E7E2D8',
+          color: on ? '#FFFFFF' : '#0A0A0A',
+          exampleColor: on ? 'rgba(255,255,255,.75)' : '#8A867E',
+          dot: on ? 'rgba(255,255,255,.22)' : '#F1EDE4',
+          dotInner: on ? '#FFFFFF' : '#CFC9BC',
+          toggle: () => this.setState((p) => ({ goals: p.goals.includes(g.id) ? p.goals.filter((x) => x !== g.id) : p.goals.concat(g.id) }))
+        };
+      }),
+
+      proofTypes: [
+        { kind: 'PHOTO', use: 'Show the work' },
+        { kind: 'GPS', use: 'Prove you went' },
+        { kind: 'TIMER', use: 'Prove the time' }
+      ],
+
+      modes: [
+        { id: 'standard', name: 'Standard', tag: 'RECOMMENDED TO START', desc: 'Miss a day, spend a freeze to keep the streak.', freeze: '2 FREEZES A MONTH', warm: false },
+        { id: 'committed', name: 'Committed', tag: null, desc: 'One freeze, then a miss costs you the streak.', freeze: '1 FREEZE A MONTH', warm: false },
+        { id: 'hard', name: 'Hard mode', tag: null, desc: 'Miss a day and the streak resets to zero.', freeze: 'NO SAFETY NET', warm: true }
+      ].map((m) => {
+        const on = s.mode === m.id;
+        return {
+          name: m.name, tag: m.tag, desc: m.desc, freeze: m.freeze,
+          freezeColor: m.warm ? '#D2540A' : '#8A867E',
+          bg: on ? '#FFFFFF' : 'transparent',
+          border: on ? '#D2540A' : '#E7E2D8',
+          radio: on ? '#D2540A' : '#CFC9BC',
+          radioInner: on ? '#D2540A' : 'transparent',
+          pick: () => this.setState({ mode: m.id })
+        };
+      }),
+
+      challenges: this.matched().map((c) => {
+        const on = s.challenge === c.id;
+        const hit = c.tags.filter((x) => s.goals.includes(x));
+        return {
+          name: c.name, detail: c.detail,
+          reason: hit.length ? REASONS[hit[0]] : 'Popular first challenge',
+          bg: '#FFFFFF',
+          border: on ? '#D2540A' : '#E7E2D8',
+          shadow: on ? '0 14px 28px -18px rgba(210,84,10,.55)' : 'none',
+          radio: on ? '#D2540A' : '#CFC9BC',
+          radioInner: on ? '#D2540A' : 'transparent',
+          pick: () => this.setState({ challenge: c.id })
+        };
+      }),
+
+      times: TIMES.map((x) => {
+        const on = s.time === x.id;
+        return {
+          time: x.time, label: x.label,
+          bg: on ? '#0A0A0A' : '#FFFFFF',
+          border: on ? '#0A0A0A' : '#E7E2D8',
+          color: on ? '#FFFFFF' : '#0A0A0A',
+          pick: () => this.setState({ time: x.id })
+        };
+      }),
+      presetsOpen: !s.customOpen,
+      customOpen: s.customOpen,
+      isCustom,
+      customText,
+      draftText,
+      openCustom: () => this.setState((p) => ({
+        customOpen: true,
+        draftH: p.custom ? p.custom.h : p.draftH,
+        draftM: p.custom ? p.custom.m : p.draftM,
+        draftMer: p.custom ? p.custom.mer : p.draftMer
+      })),
+      cancelCustom: () => this.setState({ customOpen: false }),
+      saveCustom: () => this.setState((p) => ({ customOpen: false, time: 'custom', custom: { h: p.draftH, m: p.draftM, mer: p.draftMer } })),
+      hours: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => {
+        const on = s.draftH === n;
+        return {
+          n: n,
+          bg: on ? '#D2540A' : '#FFFFFF',
+          border: on ? '#D2540A' : '#E7E2D8',
+          color: on ? '#FFFFFF' : '#0A0A0A',
+          pick: () => this.setState({ draftH: n })
+        };
+      }),
+      minutes: ['00', '15', '30', '45'].map((n) => {
+        const on = s.draftM === n;
+        return {
+          n: n,
+          bg: on ? '#D2540A' : '#FFFFFF',
+          border: on ? '#D2540A' : '#E7E2D8',
+          color: on ? '#FFFFFF' : '#0A0A0A',
+          pick: () => this.setState({ draftM: n })
+        };
+      }),
+      meridiems: ['AM', 'PM'].map((label) => {
+        const on = s.draftMer === label;
+        return {
+          label: label,
+          bg: on ? '#0A0A0A' : '#FFFFFF',
+          border: on ? '#0A0A0A' : '#E7E2D8',
+          color: on ? '#FFFFFF' : '#0A0A0A',
+          pick: () => this.setState({ draftMer: label })
+        };
+      }),
+      previewTime: timeShort,
+      previewCopy: (chosen ? chosen.name : 'Day 1') + " isn't logged yet. " + ((chosen || CHALLENGES[0]).tasks.length) + ' tasks left.',
+
+      savedItems: [
+        (chosen ? chosen.name : 'Your challenge') + ' · ' + (s.mode === 'hard' ? 'Hard mode' : s.mode === 'committed' ? 'Committed' : 'Standard'),
+        s.reminders ? 'Reminder at ' + timeText : 'Reminders off',
+        s.goals.length + ' goals selected'
+      ],
+
+      contacts: CONTACTS.map((c) => {
+        const on = s.invited.includes(c.id);
+        return {
+          name: c.name, initials: c.initials, note: c.note,
+          border: on ? '#D2540A' : '#E7E2D8',
+          btnBg: on ? '#D2540A' : 'transparent',
+          btnBorder: on ? '#D2540A' : '#DED9CE',
+          btnColor: on ? '#FFFFFF' : '#0A0A0A',
+          btnLabel: on ? 'Invited' : 'Invite',
+          toggle: () => this.setState((p) => ({ invited: p.invited.includes(c.id) ? p.invited.filter((x) => x !== c.id) : p.invited.concat(c.id) }))
+        };
+      }),
+
+      chosenName: chosen ? chosen.name : 'The 30 Reset',
+      chosenLength: chosen ? chosen.length : '30',
+      modeName: s.mode === 'hard' ? 'Hard mode' : s.mode === 'committed' ? 'Committed' : 'Standard',
+      tasks: (chosen || CHALLENGES[0]).tasks,
+      reminderLabel: s.reminders ? timeText : 'Off',
+      circleLabel: s.invited.length ? s.invited.length + ' invited' : 'Just you'
+    };
+  }
+}
+</script>
+</body>
+</html>

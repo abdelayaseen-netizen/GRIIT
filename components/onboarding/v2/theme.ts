@@ -26,17 +26,21 @@ export const OBV2_COLOR = {
   /** Peach tint (selected chips, banners, icon wells). */
   peach: DS_COLORS_V2.brand.primarySoft,
   /** Hairline dividers / unselected borders. */
-  hair: DS_COLORS_V2.surface.divider,
+  hair: DS_COLORS_V2.surface.borderWarm,
+  sunken: DS_COLORS_V2.surface.sunken,
+  borderStrong: DS_COLORS_V2.surface.borderStrong,
+  borderDashed: DS_COLORS_V2.surface.borderDashed,
+  mutedWarm: DS_COLORS_V2.text.mutedWarm,
   /** Near-black button (Apple / dark CTA). */
   blackBtn: DS_COLORS_V2.surface.heroDark,
   onDark: DS_COLORS_V2.text.onDark,
   white: DS_COLORS_V2.surface.card,
   /** Neutral chip / segmented track. */
-  track: DS_COLORS_V2.surface.cardChipNeutral,
+  track: DS_COLORS_V2.surface.track,
   /** Avatar placeholder neutral. */
   avatar: DS_COLORS_V2.surface.divider,
   /** Progress-bar empty segment. */
-  progressEmpty: DS_COLORS_V2.surface.divider,
+  progressEmpty: DS_COLORS_V2.surface.track,
   /** Dark photo placeholder surface (proof / featured cards). */
   photoDark: DS_COLORS_V2.surface.heroDark,
   /** Translucent chip backdrop on a photo. */
@@ -47,11 +51,12 @@ export const OBV2_COLOR = {
 } as const;
 
 export const OBV2_RADIUS = {
-  card: DS_RADIUS_V2.xl,   // 18 — mockup 22, mapped to nearest token
-  button: DS_RADIUS_V2.lg, // 14 — mockup 16
-  sel: DS_RADIUS_V2.xl,    // 18
-  chip: DS_RADIUS_V2.full, // pill
-  icon: DS_RADIUS_V2.md,   // 10
+  card: DS_RADIUS_V2.xl,      // 18
+  button: DS_RADIUS_V2.button, // 16 — v4 CTA
+  sel: DS_RADIUS_V2.xl,       // 18
+  hero: DS_RADIUS_V2.hero,    // 24
+  chip: DS_RADIUS_V2.full,    // pill
+  icon: DS_RADIUS_V2.md,      // 10
 } as const;
 
 export const OBV2_SPACE = DS_SPACING_V2;

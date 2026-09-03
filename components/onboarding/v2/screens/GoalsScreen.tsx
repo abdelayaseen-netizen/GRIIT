@@ -4,7 +4,7 @@ import { GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { track } from "@/lib/analytics";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
-import { PrimaryButton, ProgressBar } from "../ui";
+import { PrimaryButton } from "../ui";
 
 export default function GoalsScreen({ onContinue }: { onContinue: () => void }) {
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
@@ -17,7 +17,6 @@ export default function GoalsScreen({ onContinue }: { onContinue: () => void }) 
 
   return (
     <View style={styles.content}>
-      <ProgressBar done={3} style={styles.pbar} />
       <View style={styles.head}>
         <Text style={styles.h1}>What are you{"\n"}building?</Text>
         <Text style={styles.sub}>Pick a few. We&apos;ll line up the right challenges for you.</Text>
@@ -51,11 +50,10 @@ export default function GoalsScreen({ onContinue }: { onContinue: () => void }) 
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 24 },
-  pbar: { marginTop: 6 },
-  head: { marginTop: 24 },
-  h1: { fontSize: 32, fontWeight: "800", lineHeight: 34, letterSpacing: -0.64, color: OBV2_COLOR.ink },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 23, color: OBV2_COLOR.ink2, marginTop: 12 },
+  content: { flex: 1, paddingHorizontal: 28 },
+  head: { marginTop: 6 },
+  h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink },
+  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 24 },
   chip: {
     flexDirection: "row",
