@@ -7,6 +7,8 @@ import {
   suggestChallengesForGoals,
   type SuggestableChallenge,
 } from "@/lib/onboarding-v2-suggest";
+import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
+import { captureError } from "@/lib/sentry";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { PrimaryButton, TextLink } from "../ui";
 
@@ -23,6 +25,8 @@ export default function FirstChallengeScreen({
   const [suggestions, setSuggestions] = useState<SuggestableChallenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [pickedId, setPickedId] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -45,6 +49,25 @@ export default function FirstChallengeScreen({
   const featured = suggestions[0];
   const rest = suggestions.slice(1);
   const joinId = pickedId ?? featured?.id ?? null;
+
+  const handleJoin = async () => {
+    if (!joinId || joining) return;
+    setError("");
+    setJoining(true);
+    try {
+      const result = await joinFirstChallenge(joinId);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      onJoin(joinId);
+    } catch (e) {
+      captureError(e, "OnboardingV2Join");
+      setError(e instanceof Error ? e.message : "Could not join. Try again.");
+    } finally {
+      setJoining(false);
+    }
+  };
 
   return (
     <View style={styles.content}>
@@ -100,12 +123,13 @@ export default function FirstChallengeScreen({
       )}
 
       <View style={styles.footer}>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
         <PrimaryButton
-          label="Join"
+          label={joining ? "Joining…" : "Join"}
           onPress={() => {
-            if (joinId) onJoin(joinId);
+            void handleJoin();
           }}
-          disabled={!joinId}
+          disabled={!joinId || joining}
         />
         <TextLink label="Skip for now" onPress={onSkip} />
         <TextLink label="Browse all" onPress={onBrowse} />
@@ -143,5 +167,6 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: "500", color: OBV2_COLOR.ink },
   cardMeta: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.ink2, marginTop: 4 },
   empty: { fontSize: 15, fontWeight: "400", color: OBV2_COLOR.ink2, lineHeight: 22 },
+  error: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.orangeInk, textAlign: "center" },
   footer: { paddingTop: 14, paddingBottom: 26, gap: 8 },
 });
