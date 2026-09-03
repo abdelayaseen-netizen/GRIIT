@@ -23,7 +23,7 @@ type ButtonProps = {
 export function PrimaryButton({ label, onPress, disabled, icon }: ButtonProps) {
   return (
     <Pressable
-      style={[styles.btn, styles.btnPrimary, disabled && styles.btnDisabled]}
+      style={[styles.btn, styles.btnPrimary, disabled && styles.btnDisabledPrimary]}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -31,15 +31,54 @@ export function PrimaryButton({ label, onPress, disabled, icon }: ButtonProps) {
       accessibilityState={{ disabled: !!disabled }}
     >
       {icon}
-      <Text style={[styles.btnText, styles.btnTextOnFill]}>{label}</Text>
+      <Text style={[styles.btnText, styles.btnTextOnFill, disabled && styles.btnTextDisabled]}>
+        {label}
+      </Text>
     </Pressable>
+  );
+}
+
+/** Geometric ii mark — notification icon and welcome. Never an emoji. */
+export function LogoMark({ size = "icon" }: { size?: "icon" | "hero" }) {
+  const icon = size === "icon";
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-end",
+        gap: icon ? 3 : 10,
+      }}
+      accessibilityLabel="GRIIT"
+    >
+      {[0, 1].map((i) => (
+        <View key={i} style={{ alignItems: "center" }}>
+          <View
+            style={{
+              width: icon ? 4 : 24,
+              height: icon ? 4 : 24,
+              borderRadius: icon ? 1 : 4,
+              backgroundColor: OBV2_COLOR.orange,
+              marginBottom: icon ? 2 : -12,
+            }}
+          />
+          <View
+            style={{
+              width: icon ? 4 : 24,
+              height: icon ? 14 : 112,
+              borderRadius: icon ? 1 : 4,
+              backgroundColor: OBV2_COLOR.orange,
+            }}
+          />
+        </View>
+      ))}
+    </View>
   );
 }
 
 export function DarkButton({ label, onPress, disabled, icon }: ButtonProps) {
   return (
     <Pressable
-      style={[styles.btn, styles.btnDark, disabled && styles.btnDisabled]}
+      style={[styles.btn, styles.btnDark, disabled && styles.btnDisabledFaint]}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -54,7 +93,7 @@ export function DarkButton({ label, onPress, disabled, icon }: ButtonProps) {
 export function GhostButton({ label, onPress, disabled, icon }: ButtonProps) {
   return (
     <Pressable
-      style={[styles.btn, styles.btnGhost, disabled && styles.btnDisabled]}
+      style={[styles.btn, styles.btnGhost, disabled && styles.btnDisabledFaint]}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -144,7 +183,9 @@ const styles = StyleSheet.create({
   btnPrimary: { backgroundColor: OBV2_COLOR.orange },
   btnDark: { backgroundColor: OBV2_COLOR.blackBtn },
   btnGhost: { backgroundColor: "transparent", borderWidth: 1.5, borderColor: OBV2_COLOR.hair },
-  btnDisabled: { opacity: 0.5 },
+  btnDisabledPrimary: { backgroundColor: OBV2_COLOR.track, opacity: 1 },
+  btnDisabledFaint: { opacity: 0.5 },
+  btnTextDisabled: { color: OBV2_COLOR.ink3 },
   btnText: { fontSize: 18, fontWeight: "500", letterSpacing: 0 },
   btnTextOnFill: { color: OBV2_COLOR.onDark },
   btnTextInk: { color: OBV2_COLOR.ink },

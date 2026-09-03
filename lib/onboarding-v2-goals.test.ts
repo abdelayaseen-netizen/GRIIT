@@ -13,6 +13,28 @@ describe("parseGoalsFromAnswers", () => {
     expect(parseGoalsFromAnswers({})).toEqual([]);
     expect(parseGoalsFromAnswers({ goals: "physical_toughness" })).toEqual([]);
   });
+
+  it("keeps all six known ids including sleep_recovery (no cap of 3)", () => {
+    expect(
+      parseGoalsFromAnswers({
+        goals: [
+          "physical_toughness",
+          "mental_discipline",
+          "daily_habits",
+          "reading_learning",
+          "cold_exposure",
+          "sleep_recovery",
+        ],
+      })
+    ).toEqual([
+      "physical_toughness",
+      "mental_discipline",
+      "daily_habits",
+      "reading_learning",
+      "cold_exposure",
+      "sleep_recovery",
+    ]);
+  });
 });
 
 describe("mergeGoalsIntoAnswers", () => {

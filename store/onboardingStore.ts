@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { OnboardingV2Step } from "@/lib/onboarding-v2-routing";
+import type { ReminderCustom, ReminderPresetId } from "@/lib/onboarding-v2-reminders";
 
 export type OnboardingIntensity = "foundation" | "push" | "maximum" | null;
 
@@ -10,7 +11,8 @@ export type OnboardingGoal =
   | 'mental_discipline'
   | 'daily_habits'
   | 'reading_learning'
-  | 'cold_exposure';
+  | 'cold_exposure'
+  | 'sleep_recovery';
 
 export type IntensityLevel = 'beginner' | 'intermediate' | 'extreme';
 
@@ -38,6 +40,9 @@ export interface OnboardingState {
   socialStyle: string | null;
   trainingTime: string | null;
   selectedChallengeId: string | null;
+  selectedChallengeTitle: string | null;
+  selectedChallengeTaskCount: number;
+  selectedChallengeDurationDays: number | null;
   username: string | null;
   isComplete: boolean;
   currentStep: number;
@@ -49,6 +54,10 @@ export interface OnboardingState {
   commitment: OnboardingCommitment;
   /** OnboardingFlowV2 (screen 06) — whether the reminders primer has been shown/answered. */
   notificationsAsked: boolean;
+  /** v2 reminder step — persisted so back navigation and Day 1 stay lossless. */
+  reminderPreset: ReminderPresetId;
+  reminderCustom: ReminderCustom | null;
+  remindersEnabled: boolean;
   /** OnboardingFlowV2 step key. Separate from old-flow `currentStep`. */
   v2Step: OnboardingV2Step;
   /** Ephemeral hints for ProfileSetup (email prefix, Apple full name); not persisted. */
@@ -62,6 +71,12 @@ export interface OnboardingState {
   setSocialStyle: (v: string) => void;
   setTrainingTime: (v: string) => void;
   setSelectedChallenge: (v: string | null) => void;
+  setSelectedChallengeMeta: (meta: {
+    id: string | null;
+    title?: string | null;
+    taskCount?: number;
+    durationDays?: number | null;
+  }) => void;
   setUsername: (v: string | null) => void;
   completeOnboarding: () => void;
   setCurrentStep: (step: number) => void;
@@ -73,6 +88,9 @@ export interface OnboardingState {
   setIntensityLevel: (level: IntensityLevel) => void;
   setCommitment: (commitment: OnboardingCommitment) => void;
   setNotificationsAsked: (asked: boolean) => void;
+  setReminderPreset: (preset: ReminderPresetId) => void;
+  setReminderCustom: (custom: ReminderCustom | null) => void;
+  setRemindersEnabled: (enabled: boolean) => void;
   setV2Step: (step: OnboardingV2Step) => void;
   setProfileSetupHints: (hints: ProfileSetupHints | null) => void;
   reset: () => void;
@@ -87,6 +105,9 @@ const initialState = {
   socialStyle: null as string | null,
   trainingTime: null as string | null,
   selectedChallengeId: null as string | null,
+  selectedChallengeTitle: null as string | null,
+  selectedChallengeTaskCount: 0,
+  selectedChallengeDurationDays: null as number | null,
   username: null as string | null,
   isComplete: false,
   currentStep: 0,
@@ -96,6 +117,9 @@ const initialState = {
   intensityLevel: null as IntensityLevel | null,
   commitment: null as OnboardingCommitment,
   notificationsAsked: false,
+  reminderPreset: "am6" as ReminderPresetId,
+  reminderCustom: null as ReminderCustom | null,
+  remindersEnabled: false,
   v2Step: "welcome" as OnboardingV2Step,
   profileSetupHints: null as ProfileSetupHints | null,
 };
@@ -116,6 +140,13 @@ export const useOnboardingStore = create<OnboardingState>()(
       setSocialStyle: (v) => set({ socialStyle: v }),
       setTrainingTime: (v) => set({ trainingTime: v }),
       setSelectedChallenge: (v) => set({ selectedChallengeId: v }),
+      setSelectedChallengeMeta: (meta) =>
+        set({
+          selectedChallengeId: meta.id,
+          selectedChallengeTitle: meta.title ?? null,
+          selectedChallengeTaskCount: meta.taskCount ?? 0,
+          selectedChallengeDurationDays: meta.durationDays ?? null,
+        }),
       setUsername: (v) => set({ username: v }),
       completeOnboarding: () => set({ isComplete: true, hasCompletedOnboarding: true }),
       setCurrentStep: (step) => set({ currentStep: step }),
@@ -130,10 +161,13 @@ export const useOnboardingStore = create<OnboardingState>()(
         if (s.selectedGoals.length >= 3) return s;
         return { selectedGoals: [...s.selectedGoals, goal] };
       }),
-      setSelectedGoals: (goals) => set({ selectedGoals: goals.slice(0, 3) }),
+      setSelectedGoals: (goals) => set({ selectedGoals: goals }),
       setIntensityLevel: (level) => set({ intensityLevel: level }),
       setCommitment: (commitment) => set({ commitment }),
       setNotificationsAsked: (asked) => set({ notificationsAsked: asked }),
+      setReminderPreset: (preset) => set({ reminderPreset: preset }),
+      setReminderCustom: (custom) => set({ reminderCustom: custom }),
+      setRemindersEnabled: (enabled) => set({ remindersEnabled: enabled }),
       setV2Step: (step) => set({ v2Step: step }),
       setProfileSetupHints: (hints) => set({ profileSetupHints: hints }),
       reset: () => set(initialState),
@@ -150,6 +184,9 @@ export const useOnboardingStore = create<OnboardingState>()(
         socialStyle: state.socialStyle,
         trainingTime: state.trainingTime,
         selectedChallengeId: state.selectedChallengeId,
+        selectedChallengeTitle: state.selectedChallengeTitle,
+        selectedChallengeTaskCount: state.selectedChallengeTaskCount,
+        selectedChallengeDurationDays: state.selectedChallengeDurationDays,
         username: state.username,
         isComplete: state.isComplete,
         currentStep: state.currentStep,
@@ -159,6 +196,9 @@ export const useOnboardingStore = create<OnboardingState>()(
         intensityLevel: state.intensityLevel,
         commitment: state.commitment,
         notificationsAsked: state.notificationsAsked,
+        reminderPreset: state.reminderPreset,
+        reminderCustom: state.reminderCustom,
+        remindersEnabled: state.remindersEnabled,
         v2Step: state.v2Step,
         // profileSetupHints intentionally omitted from persist
       }),

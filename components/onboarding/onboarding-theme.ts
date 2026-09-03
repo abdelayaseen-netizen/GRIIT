@@ -114,4 +114,10 @@ export const GOAL_OPTIONS = [
     title: "Cold exposure",
     subtitle: "Embrace the discomfort",
   },
+  {
+    id: "sleep_recovery" as const,
+    emoji: "🌙",
+    title: "Sleep & recovery",
+    subtitle: "Phone down, lights out, rest days",
+  },
 ] as const;
