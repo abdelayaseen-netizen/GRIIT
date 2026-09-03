@@ -27,6 +27,8 @@ import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { FLAGS } from "@/lib/feature-flags";
+import { resolveOnboardingLaunch, sessionKindFromUser } from "@/lib/onboarding-v2-routing";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
 import {
@@ -94,10 +96,17 @@ function AuthRedirector() {
   const [hasProfile, setHasProfile] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
+  const [localCompleted, setLocalCompleted] = useState<boolean | null>(null);
   const coldStartTrackedRef = useRef(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEYS.HAS_LAUNCHED).then((v) => setHasLaunched(v === "true"));
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
+      .then((v) => setLocalCompleted(v === "true"))
+      .catch(() => setLocalCompleted(false));
   }, []);
 
   const checkProfile = useCallback(async (userId: string, retry = 0) => {
@@ -139,7 +148,13 @@ function AuthRedirector() {
       } else {
         const hasValidProfile = !!result && typeof result.username === "string" && result.username.trim().length > 0;
         setHasProfile(hasValidProfile);
-        setOnboardingCompleted(hasValidProfile && result?.onboarding_completed === true);
+        // v2: DB flag is enough (anon profiles have a generated username, but
+        // a missing username must not hide a true onboarding_completed).
+        setOnboardingCompleted(
+          FLAGS.ONBOARDING_V2
+            ? result?.onboarding_completed === true
+            : hasValidProfile && result?.onboarding_completed === true
+        );
         setProfileCreatedAt(result?.created_at ?? null);
       }
       done();
@@ -217,6 +232,7 @@ function AuthRedirector() {
   }, [router, setSessionExpiredMessage]);
 
   useEffect(() => {
+    if (FLAGS.ONBOARDING_V2) return;
     if (loading || hasLaunched === null) return;
     if (user) {
       return;
@@ -235,6 +251,47 @@ function AuthRedirector() {
   }, [user, loading, segments, hasLaunched, router]);
 
   useEffect(() => {
+    if (!FLAGS.ONBOARDING_V2) return;
+    if (loading || hasLaunched === null || localCompleted === null) return;
+    if (user && !profileChecked) return;
+
+    const first = typeof segments[0] === "string" ? segments[0] : "";
+    const inOnboarding = first === SEGMENTS.ONBOARDING;
+    const inAuth = first === SEGMENTS.AUTH;
+    const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
+
+    const dest = resolveOnboardingLaunch({
+      sessionKind: sessionKindFromUser(user),
+      localCompleted,
+      storeCompleted: onboardingCompleteFromStore,
+      dbCompleted: user ? onboardingCompleted : null,
+      inOnboarding,
+    });
+
+    if (dest === "home") {
+      if (inOnboarding || inAuth || onCreateProfile) {
+        router.replace(ROUTES.TABS as never);
+      }
+      return;
+    }
+
+    if (!inOnboarding && !inAuth) {
+      router.replace(ROUTES.ONBOARDING as never);
+    }
+  }, [
+    user,
+    loading,
+    segments,
+    hasLaunched,
+    localCompleted,
+    profileChecked,
+    onboardingCompleted,
+    onboardingCompleteFromStore,
+    router,
+  ]);
+
+  useEffect(() => {
+    if (FLAGS.ONBOARDING_V2) return;
     if (loading || !profileChecked || !user) return;
 
     const first = typeof segments[0] === "string" ? segments[0] : "";
@@ -301,7 +358,12 @@ function AuthRedirector() {
     }
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, onboardingCompleteFromStore, router]);
 
-  if (loading || (user && !profileChecked) || (!user && hasLaunched === null)) {
+  if (
+    loading ||
+    (user && !profileChecked) ||
+    (!user && hasLaunched === null) ||
+    (FLAGS.ONBOARDING_V2 && localCompleted === null)
+  ) {
     return <AuthRedirectorLoading />;
   }
 

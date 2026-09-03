@@ -4,6 +4,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { ChevronLeft } from "lucide-react-native";
 import { OBV2_COLOR, OBV2_RADIUS } from "./theme";
 
 type ButtonProps = {
@@ -93,6 +94,20 @@ export function Kicker({ children }: { children: string }) {
   return <Text style={styles.kicker}>{children}</Text>;
 }
 
+export function BackButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Go back"
+      hitSlop={8}
+      style={styles.backBtn}
+    >
+      <ChevronLeft size={24} color={OBV2_COLOR.ink} strokeWidth={2} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   btn: {
     flexDirection: "row",
@@ -123,5 +138,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     textTransform: "uppercase",
     color: OBV2_COLOR.orangeInk,
+  },
+  backBtn: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingHorizontal: 24,
+    paddingTop: 4,
   },
 });

@@ -27,11 +27,13 @@ function TaskRow({
 }
 
 export default function FirstChallengeScreen({
-  onStart,
-  onBuildOwn,
+  onJoin,
+  onSkip,
+  onBrowse,
 }: {
-  onStart: () => void;
-  onBuildOwn: () => void;
+  onJoin: () => void;
+  onSkip: () => void;
+  onBrowse: () => void;
 }) {
   return (
     <View style={styles.content}>
@@ -72,8 +74,9 @@ export default function FirstChallengeScreen({
 
       <View style={styles.grow} />
       <View style={styles.footer}>
-        <PrimaryButton label="Start challenge" onPress={onStart} />
-        <TextLink label="Build my own instead" onPress={onBuildOwn} />
+        <PrimaryButton label="Join" onPress={onJoin} />
+        <TextLink label="Skip for now" onPress={onSkip} />
+        <TextLink label="Browse all" onPress={onBrowse} />
       </View>
     </View>
   );
