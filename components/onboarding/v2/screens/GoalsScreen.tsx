@@ -6,10 +6,6 @@ import { track } from "@/lib/analytics";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { PrimaryButton, ProgressBar } from "../ui";
 
-// TODO(onboarding-v2): goals→pack mapping pending. selectedGoals is persisted to
-// the store only and is NOT yet wired to challenge recommendations / the featured
-// first challenge. Map the 5 OnboardingGoal values to challenge packs once that
-// backend mapping is defined.
 export default function GoalsScreen({ onContinue }: { onContinue: () => void }) {
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const toggleGoal = useOnboardingStore((s) => s.toggleGoal);

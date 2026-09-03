@@ -23,7 +23,7 @@ import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
-import { DarkButton, GhostButton, PrimaryButton } from "../ui";
+import { DarkButton, GhostButton, PrimaryButton, TextLink } from "../ui";
 
 /**
  * Auth wiring:
@@ -34,7 +34,13 @@ import { DarkButton, GhostButton, PrimaryButton } from "../ui";
  * listener (no synchronous session), so it does not call onAuthSuccess here —
  * matching login.tsx, which relies on the root auth/redirect flow.
  */
-export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userId: string) => void }) {
+export default function AccountScreen({
+  onAuthSuccess,
+  onSkip,
+}: {
+  onAuthSuccess: (userId: string) => void;
+  onSkip: () => void;
+}) {
   const router = useRouter();
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
   const [appleAvailable, setAppleAvailable] = useState(false);
@@ -302,6 +308,7 @@ export default function AccountScreen({ onAuthSuccess }: { onAuthSuccess: (userI
         </View>
 
         <View style={styles.grow} />
+        <TextLink label="Skip" onPress={onSkip} />
         <Text style={styles.terms}>
           By continuing you agree to GRIIT&apos;s{" "}
           <Text style={styles.termsLink} onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>

@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
-import { Kicker, PrimaryButton, ProgressBar } from "../ui";
+import { Kicker, PrimaryButton, ProgressBar, TextLink } from "../ui";
 
 function Avatar({ label, size = 38, ring = false }: { label: string; size?: number; ring?: boolean }) {
   return (
@@ -17,7 +17,13 @@ function Avatar({ label, size = 38, ring = false }: { label: string; size?: numb
   );
 }
 
-export default function WhyCircleScreen({ onContinue }: { onContinue: () => void }) {
+export default function WhyCircleScreen({
+  onContinue,
+  onSkip,
+}: {
+  onContinue: () => void;
+  onSkip: () => void;
+}) {
   return (
     <View style={styles.content}>
       <ProgressBar done={2} style={styles.pbar} />
@@ -58,6 +64,7 @@ export default function WhyCircleScreen({ onContinue }: { onContinue: () => void
       <View style={styles.grow} />
       <View style={styles.footer}>
         <PrimaryButton label="Continue" onPress={onContinue} />
+        <TextLink label="Skip" onPress={onSkip} />
       </View>
     </View>
   );
@@ -94,5 +101,5 @@ const styles = StyleSheet.create({
   respectText: { fontSize: 13, color: OBV2_COLOR.ink2, flex: 1 },
   respectName: { color: OBV2_COLOR.ink, fontWeight: "700" },
   grow: { flex: 1 },
-  footer: { paddingTop: 14, paddingBottom: 26 },
+  footer: { paddingTop: 14, paddingBottom: 26, gap: 8 },
 });

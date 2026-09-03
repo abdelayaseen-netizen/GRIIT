@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { OnboardingV2Step } from "@/lib/onboarding-v2-routing";
 
 export type OnboardingIntensity = "foundation" | "push" | "maximum" | null;
 
@@ -48,6 +49,8 @@ export interface OnboardingState {
   commitment: OnboardingCommitment;
   /** OnboardingFlowV2 (screen 06) — whether the reminders primer has been shown/answered. */
   notificationsAsked: boolean;
+  /** OnboardingFlowV2 step key. Separate from old-flow `currentStep`. */
+  v2Step: OnboardingV2Step;
   /** Ephemeral hints for ProfileSetup (email prefix, Apple full name); not persisted. */
   profileSetupHints: ProfileSetupHints | null;
   setMotivation: (v: string) => void;
@@ -66,9 +69,11 @@ export interface OnboardingState {
   nextStep: () => void;
   prevStep: () => void;
   toggleGoal: (goal: OnboardingGoal) => void;
+  setSelectedGoals: (goals: OnboardingGoal[]) => void;
   setIntensityLevel: (level: IntensityLevel) => void;
   setCommitment: (commitment: OnboardingCommitment) => void;
   setNotificationsAsked: (asked: boolean) => void;
+  setV2Step: (step: OnboardingV2Step) => void;
   setProfileSetupHints: (hints: ProfileSetupHints | null) => void;
   reset: () => void;
 }
@@ -91,6 +96,7 @@ const initialState = {
   intensityLevel: null as IntensityLevel | null,
   commitment: null as OnboardingCommitment,
   notificationsAsked: false,
+  v2Step: "welcome" as OnboardingV2Step,
   profileSetupHints: null as ProfileSetupHints | null,
 };
 
@@ -124,9 +130,11 @@ export const useOnboardingStore = create<OnboardingState>()(
         if (s.selectedGoals.length >= 3) return s;
         return { selectedGoals: [...s.selectedGoals, goal] };
       }),
+      setSelectedGoals: (goals) => set({ selectedGoals: goals.slice(0, 3) }),
       setIntensityLevel: (level) => set({ intensityLevel: level }),
       setCommitment: (commitment) => set({ commitment }),
       setNotificationsAsked: (asked) => set({ notificationsAsked: asked }),
+      setV2Step: (step) => set({ v2Step: step }),
       setProfileSetupHints: (hints) => set({ profileSetupHints: hints }),
       reset: () => set(initialState),
     }),
@@ -151,6 +159,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         intensityLevel: state.intensityLevel,
         commitment: state.commitment,
         notificationsAsked: state.notificationsAsked,
+        v2Step: state.v2Step,
         // profileSetupHints intentionally omitted from persist
       }),
     }

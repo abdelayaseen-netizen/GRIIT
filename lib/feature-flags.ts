@@ -33,10 +33,11 @@ export const FLAGS = {
    */
   RUN_GOAL_CONFIG: false,
   /**
-   * New 9-screen onboarding (OnboardingFlowV2). Off until verified on device.
-   * When false, app/onboarding/index.tsx renders the existing OnboardingFlow.
+   * New 9-screen onboarding (OnboardingFlowV2). Committed default is off.
+   * Preview builds can enable without flipping the committed value:
+   * EXPO_PUBLIC_ONBOARDING_V2=true.
    */
-  ONBOARDING_V2: false,
+  ONBOARDING_V2: process.env.EXPO_PUBLIC_ONBOARDING_V2 === "true",
   /**
    * Daylight v3: gates the Home "secured" transition on real server-side
    * verification confirmation. Default false — completeTask() still calls the

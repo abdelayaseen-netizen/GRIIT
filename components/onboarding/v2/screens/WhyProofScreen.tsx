@@ -2,9 +2,15 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Flame } from "lucide-react-native";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
-import { Kicker, PrimaryButton, ProgressBar } from "../ui";
+import { Kicker, PrimaryButton, ProgressBar, TextLink } from "../ui";
 
-export default function WhyProofScreen({ onContinue }: { onContinue: () => void }) {
+export default function WhyProofScreen({
+  onContinue,
+  onSkip,
+}: {
+  onContinue: () => void;
+  onSkip: () => void;
+}) {
   return (
     <View style={styles.content}>
       <ProgressBar done={1} style={styles.pbar} />
@@ -31,6 +37,7 @@ export default function WhyProofScreen({ onContinue }: { onContinue: () => void 
       <View style={styles.grow} />
       <View style={styles.footer}>
         <PrimaryButton label="Continue" onPress={onContinue} />
+        <TextLink label="Skip" onPress={onSkip} />
       </View>
     </View>
   );
@@ -66,5 +73,5 @@ const styles = StyleSheet.create({
   proofTitle: { color: OBV2_COLOR.onPhoto, fontSize: 17, fontWeight: "800" },
   proofSub: { color: OBV2_COLOR.onPhotoDim, fontSize: 13, marginTop: 2 },
   grow: { flex: 1 },
-  footer: { paddingTop: 14, paddingBottom: 26 },
+  footer: { paddingTop: 14, paddingBottom: 26, gap: 8 },
 });
