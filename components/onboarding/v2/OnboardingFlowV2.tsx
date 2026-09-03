@@ -32,6 +32,7 @@ import AccountScreen from "./screens/AccountScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import { completeOnboardingV2 } from "./completeOnboarding";
+import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 
 function useOnboardingHydrated(): boolean {
   const [hydrated, setHydrated] = useState(() => useOnboardingStore.persist.hasHydrated());
@@ -50,10 +51,14 @@ export default function OnboardingFlowV2() {
   const rawStep = useOnboardingStore((s) => s.v2Step);
   const setV2Step = useOnboardingStore((s) => s.setV2Step);
   const storeCompleted = useOnboardingStore((s) => s.isComplete || s.hasCompletedOnboarding);
+  const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
+  const setSelectedGoals = useOnboardingStore((s) => s.setSelectedGoals);
+  const setSelectedChallenge = useOnboardingStore((s) => s.setSelectedChallenge);
   const step = resolveV2Step(rawStep);
   const [localCompleted, setLocalCompleted] = useState(false);
   const [localReady, setLocalReady] = useState(false);
   const [dbCompleted, setDbCompleted] = useState<boolean | null>(null);
+  const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [sentHome, setSentHome] = useState(false);
 
   useEffect(() => {
@@ -68,21 +73,31 @@ export default function OnboardingFlowV2() {
   useEffect(() => {
     if (!user) {
       setDbCompleted(null);
+      setDbFetchFailed(false);
       return;
     }
     let cancelled = false;
     void (async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("onboarding_completed")
           .eq("user_id", user.id)
           .maybeSingle();
         if (cancelled) return;
+        if (error) {
+          setDbCompleted(null);
+          setDbFetchFailed(true);
+          return;
+        }
         const flag = (data as { onboarding_completed?: boolean } | null)?.onboarding_completed;
         setDbCompleted(typeof flag === "boolean" ? flag : false);
+        setDbFetchFailed(false);
       } catch {
-        if (!cancelled) setDbCompleted(false);
+        if (!cancelled) {
+          setDbCompleted(null);
+          setDbFetchFailed(true);
+        }
       }
     })();
     return () => {
@@ -90,21 +105,41 @@ export default function OnboardingFlowV2() {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      if (selectedGoals.length > 0) {
+        await writeOnboardingGoals(user.id, selectedGoals);
+        return;
+      }
+      const remote = await readOnboardingGoals(user.id);
+      if (cancelled || remote.length === 0) return;
+      if (useOnboardingStore.getState().selectedGoals.length === 0) {
+        setSelectedGoals(remote);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, selectedGoals, setSelectedGoals]);
+
   const completed = resolveOnboardingCompleted({
     sessionKind: sessionKindFromUser(user),
     localCompleted,
     storeCompleted,
     dbCompleted: user ? dbCompleted : null,
+    dbFetchFailed: user ? dbFetchFailed : false,
   });
 
   useEffect(() => {
     if (!hydrated || sentHome) return;
     const sessionKind = sessionKindFromUser(user);
-    if (sessionKind === "real" && dbCompleted === null) return;
+    if (sessionKind === "real" && dbCompleted === null && !dbFetchFailed) return;
     if (!completed) return;
     setSentHome(true);
     router.replace(ROUTES.TABS as never);
-  }, [hydrated, completed, user, dbCompleted, sentHome, router]);
+  }, [hydrated, completed, user, dbCompleted, dbFetchFailed, sentHome, router]);
 
   useEffect(() => {
     if (rawStep !== step) setV2Step(step);
@@ -169,7 +204,16 @@ export default function OnboardingFlowV2() {
       case "commitment":
         return <CommitmentScreen onContinue={goNext} />;
       case "first_challenge":
-        return <FirstChallengeScreen onJoin={goNext} onSkip={goNext} onBrowse={handleBrowseAll} />;
+        return (
+          <FirstChallengeScreen
+            onJoin={(challengeId) => {
+              setSelectedChallenge(challengeId);
+              goNext();
+            }}
+            onSkip={goNext}
+            onBrowse={handleBrowseAll}
+          />
+        );
       case "reminders":
         return <RemindersScreen onContinue={goNext} />;
       case "account":
@@ -180,7 +224,7 @@ export default function OnboardingFlowV2() {
   };
 
   const sessionKind = sessionKindFromUser(user);
-  const waitingOnDb = sessionKind === "real" && dbCompleted === null;
+  const waitingOnDb = sessionKind === "real" && dbCompleted === null && !dbFetchFailed;
   if (!hydrated || !localReady || waitingOnDb || completed) {
     return <SafeAreaView style={styles.safeArea} />;
   }

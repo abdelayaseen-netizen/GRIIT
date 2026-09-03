@@ -95,6 +95,7 @@ function AuthRedirector() {
   const [profileChecked, setProfileChecked] = useState<boolean>(false);
   const [hasProfile, setHasProfile] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
   const [localCompleted, setLocalCompleted] = useState<boolean | null>(null);
   const coldStartTrackedRef = useRef(false);
@@ -112,9 +113,10 @@ function AuthRedirector() {
   const checkProfile = useCallback(async (userId: string, retry = 0) => {
     const maxRetries = 1;
     const done = () => setProfileChecked(true);
+    const timedOut = { timedOut: true as const };
     try {
-      const timeoutPromise = new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), PROFILE_CHECK_TIMEOUT_MS)
+      const timeoutPromise = new Promise<typeof timedOut>((resolve) =>
+        setTimeout(() => resolve(timedOut), PROFILE_CHECK_TIMEOUT_MS)
       );
 
       const profilePromise = supabase
@@ -132,7 +134,14 @@ function AuthRedirector() {
 
       let result = await Promise.race([profilePromise, timeoutPromise]);
 
-      if (result === null && retry < maxRetries) {
+      if (result && typeof result === "object" && "timedOut" in result && retry < maxRetries) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_id, username, onboarding_completed, created_at")
+          .eq("user_id", userId)
+          .single();
+        result = data;
+      } else if (result === null && retry < maxRetries) {
         const { data } = await supabase
           .from("profiles")
           .select("user_id, username, onboarding_completed, created_at")
@@ -141,13 +150,25 @@ function AuthRedirector() {
         result = data;
       }
 
-      if (result === null) {
+      if (result && typeof result === "object" && "timedOut" in result) {
+        setHasProfile(false);
+        setProfileCreatedAt(null);
+        if (FLAGS.ONBOARDING_V2) {
+          setOnboardingCompleted(null);
+          setDbFetchFailed(true);
+        } else {
+          setOnboardingCompleted(false);
+          setDbFetchFailed(false);
+        }
+      } else if (result === null) {
         setHasProfile(false);
         setOnboardingCompleted(false);
+        setDbFetchFailed(false);
         setProfileCreatedAt(null);
       } else {
         const hasValidProfile = !!result && typeof result.username === "string" && result.username.trim().length > 0;
         setHasProfile(hasValidProfile);
+        setDbFetchFailed(false);
         // v2: DB flag is enough (anon profiles have a generated username, but
         // a missing username must not hide a true onboarding_completed).
         setOnboardingCompleted(
@@ -166,8 +187,14 @@ function AuthRedirector() {
         return;
       }
       setHasProfile(false);
-      setOnboardingCompleted(false);
       setProfileCreatedAt(null);
+      if (FLAGS.ONBOARDING_V2) {
+        setOnboardingCompleted(null);
+        setDbFetchFailed(true);
+      } else {
+        setOnboardingCompleted(false);
+        setDbFetchFailed(false);
+      }
       done();
     }
   }, []);
@@ -180,6 +207,7 @@ function AuthRedirector() {
       setProfileChecked(true);
       setHasProfile(false);
       setOnboardingCompleted(null);
+      setDbFetchFailed(false);
       setProfileCreatedAt(null);
     }
   }, [user, loading, checkProfile]);
@@ -265,6 +293,7 @@ function AuthRedirector() {
       localCompleted,
       storeCompleted: onboardingCompleteFromStore,
       dbCompleted: user ? onboardingCompleted : null,
+      dbFetchFailed: user ? dbFetchFailed : false,
       inOnboarding,
     });
 
@@ -286,6 +315,7 @@ function AuthRedirector() {
     localCompleted,
     profileChecked,
     onboardingCompleted,
+    dbFetchFailed,
     onboardingCompleteFromStore,
     router,
   ]);

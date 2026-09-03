@@ -69,6 +69,7 @@ export interface OnboardingState {
   nextStep: () => void;
   prevStep: () => void;
   toggleGoal: (goal: OnboardingGoal) => void;
+  setSelectedGoals: (goals: OnboardingGoal[]) => void;
   setIntensityLevel: (level: IntensityLevel) => void;
   setCommitment: (commitment: OnboardingCommitment) => void;
   setNotificationsAsked: (asked: boolean) => void;
@@ -129,6 +130,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         if (s.selectedGoals.length >= 3) return s;
         return { selectedGoals: [...s.selectedGoals, goal] };
       }),
+      setSelectedGoals: (goals) => set({ selectedGoals: goals.slice(0, 3) }),
       setIntensityLevel: (level) => set({ intensityLevel: level }),
       setCommitment: (commitment) => set({ commitment }),
       setNotificationsAsked: (asked) => set({ notificationsAsked: asked }),

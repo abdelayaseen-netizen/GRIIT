@@ -70,13 +70,34 @@ describe("resolveOnboardingCompleted", () => {
     ).toBe(true);
   });
 
-  it("real session: db not loaded is not completed", () => {
+  it("real session: db not loaded yet is not completed (overlay stays up)", () => {
     expect(
       resolveOnboardingCompleted({
         sessionKind: "real",
         localCompleted: true,
         storeCompleted: true,
         dbCompleted: null,
+      })
+    ).toBe(false);
+  });
+
+  it("real session: db fetch error falls back to local || store", () => {
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "real",
+        localCompleted: true,
+        storeCompleted: false,
+        dbCompleted: null,
+        dbFetchFailed: true,
+      })
+    ).toBe(true);
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "real",
+        localCompleted: false,
+        storeCompleted: false,
+        dbCompleted: null,
+        dbFetchFailed: true,
       })
     ).toBe(false);
   });
@@ -134,6 +155,19 @@ describe("resolveOnboardingLaunch", () => {
         localCompleted: false,
         storeCompleted: false,
         dbCompleted: true,
+        inOnboarding: true,
+      })
+    ).toBe("home");
+  });
+
+  it("real session, dbCompleted null after error, localCompleted true → home", () => {
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "real",
+        localCompleted: true,
+        storeCompleted: false,
+        dbCompleted: null,
+        dbFetchFailed: true,
         inOnboarding: true,
       })
     ).toBe("home");

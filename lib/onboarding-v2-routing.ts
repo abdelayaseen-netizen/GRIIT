@@ -45,6 +45,8 @@ export function sessionKindFromUser(user: { is_anonymous?: boolean } | null | un
  *
  * Real accounts: DB is authoritative once loaded (non-null). A stale local
  * flag from a previous guest on the same device must not skip a new account.
+ * `dbCompleted === null` while loading is not completed (caller keeps overlay).
+ * `dbCompleted === null` after a fetch error falls back to local || store.
  * Guest / no session: local OR store OR db.
  */
 export function resolveOnboardingCompleted(input: {
@@ -52,10 +54,12 @@ export function resolveOnboardingCompleted(input: {
   localCompleted: boolean;
   storeCompleted: boolean;
   dbCompleted: boolean | null;
+  dbFetchFailed?: boolean;
 }): boolean {
-  const { sessionKind, localCompleted, storeCompleted, dbCompleted } = input;
+  const { sessionKind, localCompleted, storeCompleted, dbCompleted, dbFetchFailed } = input;
   if (sessionKind === "real") {
     if (dbCompleted !== null) return dbCompleted;
+    if (dbFetchFailed) return localCompleted || storeCompleted;
     return false;
   }
   return localCompleted || storeCompleted || dbCompleted === true;
@@ -66,6 +70,7 @@ export function resolveOnboardingLaunch(input: {
   localCompleted: boolean;
   storeCompleted: boolean;
   dbCompleted: boolean | null;
+  dbFetchFailed?: boolean;
   inOnboarding: boolean;
 }): OnboardingLaunchDestination {
   if (resolveOnboardingCompleted(input)) return "home";
