@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isJoinableChallengeId, suggestChallengesForGoals } from "@/lib/onboarding-v2-suggest";
+import {
+  isJoinableChallengeId,
+  matchReasonForChallenge,
+  suggestChallengesForGoals,
+} from "@/lib/onboarding-v2-suggest";
 
 const CATALOG = [
   {
@@ -67,5 +71,20 @@ describe("suggestChallengesForGoals", () => {
         [{ id: "fallback-cold-7", title: "7-Day Cold Shower", category: "Discipline" }]
       )
     ).toEqual([]);
+  });
+
+  it("re-ranks when goals change and writes a match-reason line", () => {
+    const physical = suggestChallengesForGoals(["physical_toughness"], CATALOG);
+    const sleep = suggestChallengesForGoals(["sleep_recovery"], CATALOG);
+    expect(matchReasonForChallenge(physical[0]!, ["physical_toughness"])).toBe(
+      "Matches physical toughness"
+    );
+    expect(sleep[0]?.id).toBe("b2000001-4000-4000-8000-000000000006");
+    expect(matchReasonForChallenge(sleep[0]!, ["sleep_recovery"])).toBe(
+      "Matches sleep & recovery"
+    );
+    expect(matchReasonForChallenge(CATALOG[1]!, ["physical_toughness"])).toBe(
+      "Popular first challenge"
+    );
   });
 });

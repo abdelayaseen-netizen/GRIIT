@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import {
+  challengeDetailLine,
+  matchReasonForChallenge,
   suggestChallengesForGoals,
   type SuggestableChallenge,
 } from "@/lib/onboarding-v2-suggest";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { captureError } from "@/lib/sentry";
-import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
+import { OBV2_COLOR } from "../theme";
 import { PrimaryButton, TextLink } from "../ui";
 
 export default function FirstChallengeScreen({
@@ -22,9 +24,11 @@ export default function FirstChallengeScreen({
   onBrowse: () => void;
 }) {
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
+  const selectedChallengeId = useOnboardingStore((s) => s.selectedChallengeId);
+  const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
   const [suggestions, setSuggestions] = useState<SuggestableChallenge[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [pickedId, setPickedId] = useState<string | null>(selectedChallengeId);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState("");
 
@@ -46,21 +50,34 @@ export default function FirstChallengeScreen({
     };
   }, [selectedGoals]);
 
-  const featured = suggestions[0];
-  const rest = suggestions.slice(1);
-  const joinId = pickedId ?? featured?.id ?? null;
+  useEffect(() => {
+    if (pickedId && !suggestions.some((c) => c.id === pickedId)) {
+      setPickedId(null);
+    }
+  }, [suggestions, pickedId]);
+
+  const pick = (c: SuggestableChallenge) => {
+    setPickedId(c.id);
+    setError("");
+    setSelectedChallengeMeta({
+      id: c.id,
+      title: c.title ?? null,
+      taskCount: Array.isArray(c.tasks) ? c.tasks.length : 0,
+      durationDays: c.duration_days ?? null,
+    });
+  };
 
   const handleJoin = async () => {
-    if (!joinId || joining) return;
+    if (!pickedId || joining) return;
     setError("");
     setJoining(true);
     try {
-      const result = await joinFirstChallenge(joinId);
+      const result = await joinFirstChallenge(pickedId);
       if (!result.ok) {
         setError(result.message);
         return;
       }
-      onJoin(joinId);
+      onJoin(pickedId);
     } catch (e) {
       captureError(e, "OnboardingV2Join");
       setError(e instanceof Error ? e.message : "Could not join. Try again.");
@@ -72,8 +89,8 @@ export default function FirstChallengeScreen({
   return (
     <View style={styles.content}>
       <View style={styles.head}>
-        <Text style={styles.h1}>Pick your first{"\n"}challenge</Text>
-        <Text style={styles.sub}>Tuned to your goals. One tap and you&apos;re in.</Text>
+        <Text style={styles.h1}>Start here</Text>
+        <Text style={styles.sub}>One tap and Day 1 begins tomorrow morning.</Text>
       </View>
 
       {loading ? (
@@ -81,92 +98,114 @@ export default function FirstChallengeScreen({
           <ActivityIndicator color={OBV2_COLOR.orange} />
         </View>
       ) : (
-        <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-          {featured ? (
-            <Pressable
-              onPress={() => setPickedId(featured.id)}
-              style={[styles.featured, pickedId === featured.id || !pickedId ? styles.featuredOn : null]}
-              accessibilityRole="button"
-              accessibilityLabel={featured.title ?? "Suggested challenge"}
-              accessibilityState={{ selected: pickedId === featured.id || !pickedId }}
-            >
-              <Text style={styles.featuredTitle}>{featured.title ?? "Challenge"}</Text>
-              <Text style={styles.featuredMeta}>
-                {[
-                  featured.duration_days != null ? `${featured.duration_days} days` : null,
-                  Array.isArray(featured.tasks) ? `${featured.tasks.length} tasks` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || featured.category || "Starter"}
-              </Text>
-            </Pressable>
+        <View style={styles.body}>
+          {suggestions.length === 0 ? (
+            <Text style={styles.empty}>No starter challenges right now. Browse all or set this up later.</Text>
           ) : (
-            <Text style={styles.empty}>No starter challenges right now. Browse all or skip.</Text>
+            suggestions.map((c) => {
+              const on = pickedId === c.id;
+              return (
+                <Pressable
+                  key={c.id}
+                  onPress={() => pick(c)}
+                  style={[styles.card, on && styles.cardOn]}
+                  accessibilityRole="radio"
+                  accessibilityLabel={c.title ?? "Suggested challenge"}
+                  accessibilityState={{ selected: on }}
+                >
+                  <View style={styles.thumb} />
+                  <View style={styles.cardText}>
+                    <Text style={styles.cardTitle}>{c.title ?? "Challenge"}</Text>
+                    <Text style={styles.cardMeta}>{challengeDetailLine(c)}</Text>
+                    <Text style={styles.match}>{matchReasonForChallenge(c, selectedGoals)}</Text>
+                  </View>
+                  <View style={[styles.radio, on && styles.radioOn]}>
+                    {on ? <View style={styles.radioDot} /> : null}
+                  </View>
+                </Pressable>
+              );
+            })
           )}
-          {rest.map((c) => {
-            const on = pickedId === c.id;
-            return (
-              <Pressable
-                key={c.id}
-                onPress={() => setPickedId(c.id)}
-                style={[styles.card, on && styles.cardOn]}
-                accessibilityRole="button"
-                accessibilityLabel={c.title ?? "Suggested challenge"}
-                accessibilityState={{ selected: on }}
-              >
-                <Text style={styles.cardTitle}>{c.title ?? "Challenge"}</Text>
-                <Text style={styles.cardMeta}>{c.category ?? "Starter"}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+          <Pressable
+            onPress={onBrowse}
+            accessibilityRole="link"
+            accessibilityLabel="Browse all challenges"
+            style={styles.browseWrap}
+          >
+            <Text style={styles.browse}>Browse all challenges</Text>
+          </Pressable>
+        </View>
       )}
 
       <View style={styles.footer}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <PrimaryButton
-          label={joining ? "Joining…" : "Join"}
+          label={joining ? "Joining…" : "Join challenge"}
           onPress={() => {
             void handleJoin();
           }}
-          disabled={!joinId || joining}
+          disabled={!pickedId || joining}
         />
-        <TextLink label="Skip for now" onPress={onSkip} />
-        <TextLink label="Browse all" onPress={onBrowse} />
+        <TextLink label="Set this up later" onPress={onSkip} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 24 },
-  head: { marginTop: 32 },
-  h1: { fontSize: 32, fontWeight: "500", lineHeight: 34, letterSpacing: -0.64, color: OBV2_COLOR.ink },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 23, color: OBV2_COLOR.ink2, marginTop: 12 },
+  content: { flex: 1, paddingHorizontal: 28 },
+  head: { marginTop: 6 },
+  h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink },
+  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  list: { flex: 1, marginTop: 18 },
-  listContent: { gap: 10, paddingBottom: 12 },
-  featured: {
-    minHeight: 120,
-    borderRadius: OBV2_RADIUS.sel,
-    backgroundColor: OBV2_COLOR.photoDark,
-    padding: 18,
-    justifyContent: "flex-end",
-  },
-  featuredOn: { borderWidth: 2, borderColor: OBV2_COLOR.orange },
-  featuredTitle: { fontSize: 22, fontWeight: "500", color: OBV2_COLOR.onPhoto },
-  featuredMeta: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.onPhotoDim, marginTop: 3 },
+  body: { flex: 1, justifyContent: "center", paddingVertical: 16, gap: 10 },
   card: {
+    padding: 14,
+    borderRadius: 18,
     backgroundColor: OBV2_COLOR.card,
-    borderRadius: OBV2_RADIUS.card,
-    padding: 16,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: OBV2_COLOR.hair,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 13,
   },
-  cardOn: { borderColor: OBV2_COLOR.orange },
+  cardOn: {
+    borderColor: OBV2_COLOR.orange,
+    shadowColor: OBV2_COLOR.orange,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  thumb: {
+    width: 50,
+    height: 50,
+    borderRadius: 13,
+    backgroundColor: OBV2_COLOR.sunken,
+  },
+  cardText: { flex: 1, gap: 4 },
   cardTitle: { fontSize: 16, fontWeight: "500", color: OBV2_COLOR.ink },
-  cardMeta: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.ink2, marginTop: 4 },
+  cardMeta: { fontSize: 12, fontWeight: "400", color: OBV2_COLOR.mutedWarm },
+  match: { fontSize: 11, fontWeight: "500", letterSpacing: 0.4, color: OBV2_COLOR.orangeInk },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: OBV2_COLOR.mutedWarm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  radioOn: { borderColor: OBV2_COLOR.orange },
+  radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: OBV2_COLOR.orange },
+  browseWrap: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" },
+  browse: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: OBV2_COLOR.ink2,
+    textDecorationLine: "underline",
+  },
   empty: { fontSize: 15, fontWeight: "400", color: OBV2_COLOR.ink2, lineHeight: 22 },
   error: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.orangeInk, textAlign: "center" },
-  footer: { paddingTop: 14, paddingBottom: 26, gap: 8 },
+  footer: { paddingTop: 14, paddingBottom: 32, gap: 2 },
 });

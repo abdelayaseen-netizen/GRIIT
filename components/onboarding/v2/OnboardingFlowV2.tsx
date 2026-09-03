@@ -1,5 +1,9 @@
 /**
- * OnboardingFlowV2 — spec nine-screen flow.
+ * OnboardingFlowV2 — v4 order without the mode screen.
+ *
+ * TODO(mode): per-enrollment difficulty needs an `active_challenges.mode`
+ * column (standard | committed | hard) before the handoff Mode screen can
+ * return. Do not route to CommitmentScreen. Store field stays unused.
  *
  * Rendered by app/onboarding/index.tsx ONLY when FLAGS.ONBOARDING_V2 is true.
  * Runs alongside (never replaces) the existing components/onboarding/OnboardingFlow.
@@ -21,16 +25,17 @@ import {
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
 import { OBV2_COLOR } from "./theme";
-import { BackButton } from "./ui";
+import { FlowChrome, StepFade } from "./ui";
 import WelcomeScreen from "./screens/WelcomeScreen";
+import SignInScreen from "./screens/SignInScreen";
 import WhyProofScreen from "./screens/WhyProofScreen";
 import WhyCircleScreen from "./screens/WhyCircleScreen";
 import GoalsScreen from "./screens/GoalsScreen";
-import CommitmentScreen from "./screens/CommitmentScreen";
 import RemindersScreen from "./screens/RemindersScreen";
 import AccountScreen from "./screens/AccountScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
-import ProfileScreen from "./screens/ProfileScreen";
+import InviteScreen from "./screens/InviteScreen";
+import DayOneScreen from "./screens/DayOneScreen";
 import { completeOnboardingV2 } from "./completeOnboarding";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 
@@ -60,6 +65,7 @@ export default function OnboardingFlowV2() {
   const [dbCompleted, setDbCompleted] = useState<boolean | null>(null);
   const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [sentHome, setSentHome] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
 
   useEffect(() => {
     void AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
@@ -166,16 +172,24 @@ export default function OnboardingFlowV2() {
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (signInOpen) {
+        setSignInOpen(false);
+        return true;
+      }
       if (step === "welcome") return false;
       goBack();
       return true;
     });
     return () => sub.remove();
-  }, [step, goBack]);
+  }, [step, goBack, signInOpen]);
 
   const goToLogin = useCallback(() => {
-    router.push(ROUTES.AUTH_LOGIN as never);
-  }, [router]);
+    setSignInOpen(true);
+  }, []);
+
+  const handleSignInSuccess = useCallback(() => {
+    setSignInOpen(false);
+  }, []);
 
   const handleAccountSuccess = useCallback(() => {
     goNext();
@@ -186,7 +200,7 @@ export default function OnboardingFlowV2() {
     router.replace(ROUTES.TABS_DISCOVER as never);
   }, [router]);
 
-  const handleProfileContinue = useCallback(async () => {
+  const handleDayOneStart = useCallback(async () => {
     await completeOnboardingV2();
     router.replace(ROUTES.TABS as never);
   }, [router]);
@@ -194,16 +208,17 @@ export default function OnboardingFlowV2() {
   const renderScreen = () => {
     switch (step) {
       case "welcome":
+        if (signInOpen) {
+          return <SignInScreen onBack={() => setSignInOpen(false)} onSuccess={handleSignInSuccess} />;
+        }
         return <WelcomeScreen onGetStarted={goNext} onHaveAccount={goToLogin} />;
       case "goals":
         return <GoalsScreen onContinue={goNext} />;
-      case "why_proof":
+      case "proof":
         return <WhyProofScreen onContinue={goNext} onSkip={goNext} />;
-      case "why_circle":
+      case "circle":
         return <WhyCircleScreen onContinue={goNext} onSkip={goNext} />;
-      case "commitment":
-        return <CommitmentScreen onContinue={goNext} />;
-      case "first_challenge":
+      case "challenge":
         return (
           <FirstChallengeScreen
             onJoin={(challengeId) => {
@@ -214,12 +229,14 @@ export default function OnboardingFlowV2() {
             onBrowse={handleBrowseAll}
           />
         );
-      case "reminders":
+      case "reminder":
         return <RemindersScreen onContinue={goNext} />;
       case "account":
         return <AccountScreen onAuthSuccess={handleAccountSuccess} onSkip={goNext} />;
-      case "profile":
-        return <ProfileScreen onContinue={handleProfileContinue} />;
+      case "invite":
+        return <InviteScreen onContinue={goNext} onSkip={goNext} />;
+      case "dayone":
+        return <DayOneScreen onStart={handleDayOneStart} />;
     }
   };
 
@@ -231,8 +248,8 @@ export default function OnboardingFlowV2() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {step !== "welcome" ? <BackButton onPress={goBack} /> : null}
-      {renderScreen()}
+      {step !== "welcome" && !signInOpen ? <FlowChrome step={step} onBack={goBack} /> : null}
+      <StepFade stepKey={signInOpen ? "signin" : step}>{renderScreen()}</StepFade>
     </SafeAreaView>
   );
 }

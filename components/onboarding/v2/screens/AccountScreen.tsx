@@ -22,6 +22,11 @@ import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import {
+  receiptChallengeLine,
+  receiptGoalsLine,
+  receiptReminderLine,
+} from "@/lib/onboarding-v2-dayone";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { DarkButton, GhostButton, PrimaryButton, TextLink } from "../ui";
 
@@ -30,9 +35,7 @@ import { DarkButton, GhostButton, PrimaryButton, TextLink } from "../ui";
  *   - Anonymous session already present → linkIdentity (Apple) / updateUser (email)
  *     so Day 1 uid is preserved. Never signInWithIdToken on that path.
  *   - No anon session → legacy signInWithIdToken / signUp (cold signup).
- * Apple-first. Google OAuth completes asynchronously via the global auth
- * listener (no synchronous session), so it does not call onAuthSuccess here —
- * matching login.tsx, which relies on the root auth/redirect flow.
+ * Apple + email only. Google is not offered.
  */
 export default function AccountScreen({
   onAuthSuccess,
@@ -43,6 +46,11 @@ export default function AccountScreen({
 }) {
   const router = useRouter();
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
+  const challengeTitle = useOnboardingStore((s) => s.selectedChallengeTitle);
+  const remindersEnabled = useOnboardingStore((s) => s.remindersEnabled);
+  const reminderPreset = useOnboardingStore((s) => s.reminderPreset);
+  const reminderCustom = useOnboardingStore((s) => s.reminderCustom);
+  const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [emailMode, setEmailMode] = useState(false);
   const [email, setEmail] = useState("");
@@ -109,7 +117,6 @@ export default function AccountScreen({
         return;
       }
 
-      // Cold signup (no anon Day 1 to preserve) — mint a permanent user.
       const { data, error: idError } = await supabase.auth.signInWithIdToken({
         provider: "apple",
         token: credential.identityToken,
@@ -136,21 +143,6 @@ export default function AccountScreen({
       setLoading(false);
     }
   }, [appleAvailable, onAuthSuccess, setProfileSetupHints]);
-
-  const handleGoogle = useCallback(async () => {
-    setError("");
-    try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google" });
-      if (oauthError) {
-        setError(oauthError.message);
-        return;
-      }
-      track({ name: "account_created", method: "google" });
-    } catch (e) {
-      captureError(e, "OnboardingV2Google");
-      setError(e instanceof Error ? e.message : "Sign in failed.");
-    }
-  }, []);
 
   const handleEmail = useCallback(async () => {
     if (!email.trim() || !password.trim()) {
@@ -236,6 +228,12 @@ export default function AccountScreen({
     }
   }, [email, password, onAuthSuccess, setProfileSetupHints]);
 
+  const receipt = [
+    receiptChallengeLine(challengeTitle),
+    receiptReminderLine(remindersEnabled, reminderPreset ?? "am6", reminderCustom ?? null),
+    receiptGoalsLine(selectedGoals.length),
+  ];
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -244,71 +242,80 @@ export default function AccountScreen({
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
-          <Text style={styles.h1}>Create your{"\n"}account</Text>
-          <Text style={styles.sub}>So your streaks and circle follow you everywhere.</Text>
+          <Text style={styles.h1}>Save your progress</Text>
+          <Text style={styles.sub}>So your streak and your circle follow you to any device.</Text>
         </View>
 
-        <View style={styles.buttons}>
-          {Platform.OS === "ios" && appleAvailable ? (
-            <DarkButton
-              label="Sign in with Apple"
-              onPress={handleApple}
-              disabled={loading}
-              icon={<Apple size={19} color={OBV2_COLOR.onDark} fill={OBV2_COLOR.onDark} />}
-            />
-          ) : null}
-
-          <GhostButton label="Continue with Google" onPress={handleGoogle} disabled={loading} />
-
-          {!emailMode ? (
-            <GhostButton
-              label="Continue with email"
-              onPress={() => setEmailMode(true)}
-              disabled={loading}
-              icon={<Mail size={18} color={OBV2_COLOR.ink} strokeWidth={2} />}
-            />
-          ) : (
-            <View style={styles.emailForm}>
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={OBV2_COLOR.ink3}
-                value={email}
-                onChangeText={(t) => {
-                  setEmail(t);
-                  setError("");
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                accessibilityLabel="Email address"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password (min 6 characters)"
-                placeholderTextColor={OBV2_COLOR.ink3}
-                value={password}
-                onChangeText={(t) => {
-                  setPassword(t);
-                  setError("");
-                }}
-                secureTextEntry
-                accessibilityLabel="Password"
-              />
-              <PrimaryButton
-                label={loading ? "" : "Create account"}
-                onPress={handleEmail}
+        <View style={styles.body}>
+          <View style={styles.buttons}>
+            {Platform.OS === "ios" && appleAvailable ? (
+              <DarkButton
+                label="Sign in with Apple"
+                onPress={handleApple}
                 disabled={loading}
-                icon={loading ? <ActivityIndicator color={OBV2_COLOR.onDark} /> : undefined}
+                icon={<Apple size={19} color={OBV2_COLOR.onDark} fill={OBV2_COLOR.onDark} />}
               />
-            </View>
-          )}
+            ) : null}
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+            {!emailMode ? (
+              <GhostButton
+                label="Continue with email"
+                onPress={() => setEmailMode(true)}
+                disabled={loading}
+                icon={<Mail size={18} color={OBV2_COLOR.ink} strokeWidth={2} />}
+              />
+            ) : (
+              <View style={styles.emailForm}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor={OBV2_COLOR.ink3}
+                  value={email}
+                  onChangeText={(t) => {
+                    setEmail(t);
+                    setError("");
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  accessibilityLabel="Email address"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password (min 6 characters)"
+                  placeholderTextColor={OBV2_COLOR.ink3}
+                  value={password}
+                  onChangeText={(t) => {
+                    setPassword(t);
+                    setError("");
+                  }}
+                  secureTextEntry
+                  accessibilityLabel="Password"
+                />
+                <PrimaryButton
+                  label={loading ? "" : "Create account"}
+                  onPress={handleEmail}
+                  disabled={loading}
+                  icon={loading ? <ActivityIndicator color={OBV2_COLOR.onDark} /> : undefined}
+                />
+              </View>
+            )}
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+          </View>
+
+          <View style={styles.receipt}>
+            <Text style={styles.receiptHead}>SAVED AND WAITING FOR YOU</Text>
+            {receipt.map((line) => (
+              <View key={line} style={styles.receiptRow}>
+                <View style={styles.receiptDot} />
+                <Text style={styles.receiptLine}>{line}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
-        <View style={styles.grow} />
-        <TextLink label="Skip" onPress={onSkip} />
+        <TextLink label="Skip — I'll risk losing my progress" onPress={onSkip} />
         <Text style={styles.terms}>
           By continuing you agree to GRIIT&apos;s{" "}
           <Text style={styles.termsLink} onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
@@ -327,24 +334,43 @@ export default function AccountScreen({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 36, paddingBottom: 24 },
-  head: { marginBottom: 30 },
-  h1: { fontSize: 32, fontWeight: "800", lineHeight: 34, letterSpacing: -0.64, color: OBV2_COLOR.ink },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 23, color: OBV2_COLOR.ink2, marginTop: 12 },
-  buttons: { gap: 12 },
+  content: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 6, paddingBottom: 24 },
+  head: { marginBottom: 16 },
+  h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink },
+  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
+  body: { flexGrow: 1, justifyContent: "center", paddingVertical: 16, gap: 16 },
+  buttons: { gap: 10 },
   emailForm: { gap: 12 },
   input: {
-    height: 54,
+    minHeight: 56,
     backgroundColor: OBV2_COLOR.card,
     borderRadius: OBV2_RADIUS.button,
     paddingHorizontal: 16,
     fontSize: 15,
     color: OBV2_COLOR.ink,
-    borderWidth: 1.5,
-    borderColor: OBV2_COLOR.hair,
+    borderWidth: 2,
+    borderColor: OBV2_COLOR.borderStrong,
   },
   error: { fontSize: 13, color: OBV2_COLOR.orangeInk, textAlign: "center", marginTop: 4 },
-  grow: { flex: 1, minHeight: 24 },
-  terms: { fontSize: 13, color: OBV2_COLOR.ink3, textAlign: "center", lineHeight: 20, paddingHorizontal: 14, paddingBottom: 22 },
+  receipt: {
+    marginTop: 6,
+    backgroundColor: OBV2_COLOR.sunken,
+    borderRadius: 18,
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    gap: 7,
+  },
+  receiptHead: { fontSize: 12, fontWeight: "500", letterSpacing: 0.6, color: OBV2_COLOR.ink },
+  receiptRow: { flexDirection: "row", alignItems: "center", gap: 9 },
+  receiptDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: OBV2_COLOR.orange },
+  receiptLine: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.ink2, flex: 1 },
+  terms: {
+    fontSize: 13,
+    color: OBV2_COLOR.ink3,
+    textAlign: "center",
+    lineHeight: 20,
+    paddingHorizontal: 14,
+    paddingBottom: 8,
+  },
   termsLink: { color: OBV2_COLOR.ink2, textDecorationLine: "underline" },
 });

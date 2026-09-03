@@ -50,6 +50,7 @@ function timeOfDayGreeting(d: Date): string {
 }
 
 function greetingFor(state: HeroState, firstName: string, now: Date): string {
+  // Empty firstName (profilePrimaryName last fallback) renders "Welcome" with no name.
   const name = firstName ? `, ${firstName}` : '';
   switch (state) {
     case 'day0':

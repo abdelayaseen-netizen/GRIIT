@@ -6,16 +6,19 @@
 export const ONBOARDING_V2_ORDER = [
   "welcome",
   "goals",
-  "why_proof",
-  "why_circle",
-  "commitment",
-  "first_challenge",
-  "reminders",
+  "proof",
+  "circle",
+  "challenge",
+  "reminder",
   "account",
-  "profile",
+  "invite",
+  "dayone",
 ] as const;
 
 export type OnboardingV2Step = (typeof ONBOARDING_V2_ORDER)[number];
+
+/** Tracked steps after welcome. Day 1 fills all and labels "Done". */
+export const ONBOARDING_V2_PROGRESS_SEGMENTS = 7;
 
 export type SessionKind = "none" | "guest" | "real";
 
@@ -23,15 +26,36 @@ export type OnboardingLaunchDestination = "home" | "resume" | "welcome";
 
 const ORDER_SET = new Set<string>(ONBOARDING_V2_ORDER);
 
-/** Stale keys from the paywall-in-flow era land on FirstChallenge. */
+/** Stale Chunk A keys + paywall-era keys resume on the renamed step. */
 const STEP_ALIASES: Record<string, OnboardingV2Step> = {
-  paywall: "first_challenge",
+  why_proof: "proof",
+  why_circle: "circle",
+  commitment: "challenge",
+  first_challenge: "challenge",
+  reminders: "reminder",
+  profile: "dayone",
+  paywall: "challenge",
 };
 
 export function resolveV2Step(raw: string | null | undefined): OnboardingV2Step {
   if (raw && ORDER_SET.has(raw)) return raw as OnboardingV2Step;
-  if (raw && raw in STEP_ALIASES) return STEP_ALIASES[raw] ?? "first_challenge";
-  return "first_challenge";
+  if (raw && raw in STEP_ALIASES) return STEP_ALIASES[raw] ?? "challenge";
+  return "challenge";
+}
+
+export function v2StepIndex(step: OnboardingV2Step): number {
+  return ONBOARDING_V2_ORDER.indexOf(step);
+}
+
+/** Segment i (1..7) is filled when the current step index is >= i. */
+export function v2SegmentFilled(step: OnboardingV2Step, segment: number): boolean {
+  return v2StepIndex(step) >= segment;
+}
+
+export function v2ProgressLabel(step: OnboardingV2Step): string {
+  if (step === "welcome") return "";
+  if (step === "dayone") return "Done";
+  return `Step ${v2StepIndex(step)}/${ONBOARDING_V2_PROGRESS_SEGMENTS}`;
 }
 
 export function sessionKindFromUser(user: { is_anonymous?: boolean } | null | undefined): SessionKind {

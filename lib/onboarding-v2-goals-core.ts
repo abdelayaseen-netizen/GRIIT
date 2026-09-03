@@ -6,6 +6,7 @@ const GOAL_IDS = new Set<OnboardingGoal>([
   "daily_habits",
   "reading_learning",
   "cold_exposure",
+  "sleep_recovery",
 ]);
 
 export function parseGoalsFromAnswers(answers: unknown): OnboardingGoal[] {
@@ -18,7 +19,6 @@ export function parseGoalsFromAnswers(answers: unknown): OnboardingGoal[] {
       const goal = item as OnboardingGoal;
       if (!out.includes(goal)) out.push(goal);
     }
-    if (out.length >= 3) break;
   }
   return out;
 }

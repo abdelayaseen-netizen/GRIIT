@@ -65,11 +65,14 @@ function useSessionExpired() {
 
 function PushRegistrationBootstrap() {
   const { user } = useAuth();
+  const storeCompleted = useOnboardingStore((s) => s.isComplete || s.hasCompletedOnboarding);
   useEffect(() => {
     if (Platform.OS === "web" || !user) return;
+    // v2: the reminder step is the only permission prompt in the flow.
+    if (FLAGS.ONBOARDING_V2 && !storeCompleted) return;
     void requestNotificationPermissionAfterFirstJoin();
     void requestNotificationPermissions();
-  }, [user]);
+  }, [user, storeCompleted]);
   return null;
 }
 

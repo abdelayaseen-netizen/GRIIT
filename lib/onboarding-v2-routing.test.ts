@@ -1,43 +1,73 @@
 import { describe, expect, it } from "vitest";
 import {
   ONBOARDING_V2_ORDER,
+  ONBOARDING_V2_PROGRESS_SEGMENTS,
   resolveOnboardingCompleted,
   resolveOnboardingLaunch,
   resolveV2Step,
   sessionKindFromUser,
+  v2ProgressLabel,
+  v2SegmentFilled,
 } from "@/lib/onboarding-v2-routing";
 
 describe("ONBOARDING_V2_ORDER", () => {
-  it("is the spec's nine screens in locked order", () => {
+  it("is the v4 list without mode", () => {
     expect(ONBOARDING_V2_ORDER).toEqual([
       "welcome",
       "goals",
-      "why_proof",
-      "why_circle",
-      "commitment",
-      "first_challenge",
-      "reminders",
+      "proof",
+      "circle",
+      "challenge",
+      "reminder",
       "account",
-      "profile",
+      "invite",
+      "dayone",
     ]);
   });
 
-  it("does not include paywall", () => {
+  it("does not include paywall, mode, or commitment", () => {
     expect(ONBOARDING_V2_ORDER.includes("paywall" as (typeof ONBOARDING_V2_ORDER)[number])).toBe(false);
+    expect(ONBOARDING_V2_ORDER.includes("mode" as (typeof ONBOARDING_V2_ORDER)[number])).toBe(false);
+    expect(ONBOARDING_V2_ORDER.includes("commitment" as (typeof ONBOARDING_V2_ORDER)[number])).toBe(false);
+  });
+
+  it("has seven progress segments", () => {
+    expect(ONBOARDING_V2_PROGRESS_SEGMENTS).toBe(7);
   });
 });
 
 describe("resolveV2Step", () => {
   it("returns a known key unchanged", () => {
     expect(resolveV2Step("goals")).toBe("goals");
-    expect(resolveV2Step("profile")).toBe("profile");
+    expect(resolveV2Step("dayone")).toBe("dayone");
   });
 
-  it("maps stale paywall and unknown keys to first_challenge", () => {
-    expect(resolveV2Step("paywall")).toBe("first_challenge");
-    expect(resolveV2Step("nope")).toBe("first_challenge");
-    expect(resolveV2Step(null)).toBe("first_challenge");
-    expect(resolveV2Step(undefined)).toBe("first_challenge");
+  it("maps stale Chunk A keys and unknown keys to the renamed step", () => {
+    expect(resolveV2Step("why_proof")).toBe("proof");
+    expect(resolveV2Step("why_circle")).toBe("circle");
+    expect(resolveV2Step("commitment")).toBe("challenge");
+    expect(resolveV2Step("first_challenge")).toBe("challenge");
+    expect(resolveV2Step("reminders")).toBe("reminder");
+    expect(resolveV2Step("profile")).toBe("dayone");
+    expect(resolveV2Step("paywall")).toBe("challenge");
+    expect(resolveV2Step("nope")).toBe("challenge");
+    expect(resolveV2Step(null)).toBe("challenge");
+    expect(resolveV2Step(undefined)).toBe("challenge");
+  });
+});
+
+describe("v2 progress chrome", () => {
+  it("fills segment i when step index >= i; Day 1 fills all and reads Done", () => {
+    expect(v2SegmentFilled("welcome", 1)).toBe(false);
+    expect(v2SegmentFilled("goals", 1)).toBe(true);
+    expect(v2SegmentFilled("goals", 2)).toBe(false);
+    expect(v2SegmentFilled("invite", 7)).toBe(true);
+    expect(v2SegmentFilled("dayone", 1)).toBe(true);
+    expect(v2SegmentFilled("dayone", 7)).toBe(true);
+    expect(v2ProgressLabel("welcome")).toBe("");
+    expect(v2ProgressLabel("goals")).toBe("Step 1/7");
+    expect(v2ProgressLabel("invite")).toBe("Step 7/7");
+    expect(v2ProgressLabel("dayone")).toBe("Done");
   });
 });
 
