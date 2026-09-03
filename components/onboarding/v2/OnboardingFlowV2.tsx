@@ -25,7 +25,7 @@ import {
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
 import { OBV2_COLOR } from "./theme";
-import { FlowChrome } from "./ui";
+import { FlowChrome, StepFade } from "./ui";
 import WelcomeScreen from "./screens/WelcomeScreen";
 import SignInScreen from "./screens/SignInScreen";
 import WhyProofScreen from "./screens/WhyProofScreen";
@@ -249,7 +249,7 @@ export default function OnboardingFlowV2() {
   return (
     <SafeAreaView style={styles.safeArea}>
       {step !== "welcome" && !signInOpen ? <FlowChrome step={step} onBack={goBack} /> : null}
-      {renderScreen()}
+      <StepFade stepKey={signInOpen ? "signin" : step}>{renderScreen()}</StepFade>
     </SafeAreaView>
   );
 }

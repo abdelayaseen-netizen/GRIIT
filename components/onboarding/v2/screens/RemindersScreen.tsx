@@ -324,8 +324,8 @@ const styles = StyleSheet.create({
   merRow: { flexDirection: "row", gap: 6 },
   merBtn: {
     width: 46,
-    height: 34,
-    minHeight: 34,
+    height: 44,
+    minHeight: 44,
     borderRadius: 10,
     borderWidth: 2,
     borderColor: OBV2_COLOR.hair,

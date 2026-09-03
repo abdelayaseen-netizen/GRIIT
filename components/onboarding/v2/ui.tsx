@@ -3,7 +3,7 @@
  * token map (DS_COLORS_V2 under the hood) — no raw hex.
  */
 import React from "react";
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
 import {
   ONBOARDING_V2_PROGRESS_SEGMENTS,
@@ -23,7 +23,12 @@ type ButtonProps = {
 export function PrimaryButton({ label, onPress, disabled, icon }: ButtonProps) {
   return (
     <Pressable
-      style={[styles.btn, styles.btnPrimary, disabled && styles.btnDisabledPrimary]}
+      style={({ pressed }) => [
+        styles.btn,
+        styles.btnPrimary,
+        disabled && styles.btnDisabledPrimary,
+        pressed && !disabled && styles.btnPrimaryPressed,
+      ]}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -78,7 +83,12 @@ export function LogoMark({ size = "icon" }: { size?: "icon" | "hero" }) {
 export function DarkButton({ label, onPress, disabled, icon }: ButtonProps) {
   return (
     <Pressable
-      style={[styles.btn, styles.btnDark, disabled && styles.btnDisabledFaint]}
+      style={({ pressed }) => [
+        styles.btn,
+        styles.btnDark,
+        disabled && styles.btnDisabledFaint,
+        pressed && !disabled && styles.btnDarkPressed,
+      ]}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -93,7 +103,12 @@ export function DarkButton({ label, onPress, disabled, icon }: ButtonProps) {
 export function GhostButton({ label, onPress, disabled, icon }: ButtonProps) {
   return (
     <Pressable
-      style={[styles.btn, styles.btnGhost, disabled && styles.btnDisabledFaint]}
+      style={({ pressed }) => [
+        styles.btn,
+        styles.btnGhost,
+        disabled && styles.btnDisabledFaint,
+        pressed && !disabled && styles.btnGhostPressed,
+      ]}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -115,7 +130,13 @@ export function TextLink({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" hitSlop={8} style={styles.textLinkWrap}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={8}
+      style={({ pressed }) => [styles.textLinkWrap, pressed && styles.textLinkPressed]}
+    >
       <Text style={styles.textLink}>
         {label}
         {emphasis ? <Text style={styles.textLinkEmphasis}> {emphasis}</Text> : null}
@@ -146,10 +167,27 @@ export function BackButton({ onPress }: { onPress: () => void }) {
       accessibilityRole="button"
       accessibilityLabel="Go back"
       hitSlop={8}
-      style={styles.backBtn}
+      style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
     >
       <ChevronLeft size={24} color={OBV2_COLOR.ink} strokeWidth={2} />
     </Pressable>
+  );
+}
+
+/** 300ms rise+fade, keyed on step so back/forward remounts the motion. */
+export function StepFade({ stepKey, children }: { stepKey: string; children: React.ReactNode }) {
+  const opacity = React.useRef(new Animated.Value(0)).current;
+  const translateY = React.useRef(new Animated.Value(10)).current;
+  React.useEffect(() => {
+    opacity.setValue(0);
+    translateY.setValue(10);
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, [stepKey, opacity, translateY]);
+  return (
+    <Animated.View style={{ flex: 1, opacity, transform: [{ translateY }] }}>{children}</Animated.View>
   );
 }
 
@@ -181,15 +219,19 @@ const styles = StyleSheet.create({
     minHeight: 60,
   },
   btnPrimary: { backgroundColor: OBV2_COLOR.orange },
+  btnPrimaryPressed: { backgroundColor: OBV2_COLOR.orangeHover },
   btnDark: { backgroundColor: OBV2_COLOR.blackBtn },
-  btnGhost: { backgroundColor: "transparent", borderWidth: 1.5, borderColor: OBV2_COLOR.hair },
+  btnDarkPressed: { opacity: 0.88 },
+  btnGhost: { backgroundColor: "transparent", borderWidth: 2, borderColor: OBV2_COLOR.borderStrong },
+  btnGhostPressed: { borderColor: OBV2_COLOR.ink },
   btnDisabledPrimary: { backgroundColor: OBV2_COLOR.track, opacity: 1 },
   btnDisabledFaint: { opacity: 0.5 },
   btnTextDisabled: { color: OBV2_COLOR.ink3 },
   btnText: { fontSize: 18, fontWeight: "500", letterSpacing: 0 },
   btnTextOnFill: { color: OBV2_COLOR.onDark },
   btnTextInk: { color: OBV2_COLOR.ink },
-  textLinkWrap: { width: "100%", paddingVertical: 14, alignItems: "center" },
+  textLinkWrap: { width: "100%", minHeight: 44, paddingVertical: 14, alignItems: "center", justifyContent: "center" },
+  textLinkPressed: { opacity: 0.7 },
   textLink: { fontSize: 15, fontWeight: "500", color: OBV2_COLOR.ink2, textAlign: "center" },
   textLinkEmphasis: { color: OBV2_COLOR.orangeInk },
   pbar: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6 },
@@ -209,7 +251,9 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 12,
   },
+  backBtnPressed: { backgroundColor: OBV2_COLOR.sunken },
   chrome: {
     flexDirection: "row",
     alignItems: "center",
