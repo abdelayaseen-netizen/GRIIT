@@ -11,6 +11,10 @@ import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError } from "@/lib/sentry";
+import { writeDeviceTimezone } from "@/lib/write-device-timezone";
+
+/** Shared by identity-taken copy so AccountScreen can make this phrase a link. */
+export const SIGN_IN_WITH_THAT_ACCOUNT = "Sign in with that account";
 
 export type AnonAuthKind =
   | "ok"
@@ -93,13 +97,30 @@ export async function clearRememberedAnonUserId(): Promise<void> {
 }
 
 /**
+ * One in-flight mint. Concurrent callers (exitOnboardingV2 + join, or a
+ * double-tap) must not both pass getSession()===null and call
+ * signInAnonymously — that created user_3d42b39e (NULL tz) and
+ * user_39dc1993 373ms later on the #54 browse-all run.
+ */
+let ensureAnonymousInflight: Promise<AnonAuthResult> | null = null;
+
+/**
  * Ensure there is a session that can write (join / secure).
  * - Existing permanent or anon session → return it.
  * - No session → signInAnonymously (lazy; call only at write boundaries).
+ * Concurrent callers share one promise and one signInAnonymously.
  *
  * Does NOT run on app launch.
  */
 export async function ensureAnonymousSession(): Promise<AnonAuthResult> {
+  if (ensureAnonymousInflight) return ensureAnonymousInflight;
+  ensureAnonymousInflight = ensureAnonymousSessionOnce().finally(() => {
+    ensureAnonymousInflight = null;
+  });
+  return ensureAnonymousInflight;
+}
+
+async function ensureAnonymousSessionOnce(): Promise<AnonAuthResult> {
   const previousAnonUserId = await readRememberedAnonUserId();
   try {
     const { data: existing, error: sessionError } = await supabase.auth.getSession();
@@ -162,6 +183,7 @@ export async function ensureAnonymousSession(): Promise<AnonAuthResult> {
       };
     }
     await rememberAnonUserId(user.id);
+    await writeDeviceTimezone();
     return {
       kind: "ok",
       user,
@@ -175,7 +197,7 @@ export async function ensureAnonymousSession(): Promise<AnonAuthResult> {
         kind: "offline",
         user: null,
         session: null,
-          message: "You're offline. Connect and try again.",
+        message: "You're offline. Connect and try again.",
         previousAnonUserId,
       };
     }
@@ -246,7 +268,7 @@ export async function upgradeAnonymousWithApple(params: {
           user: null,
           session: null,
           message:
-            "This Apple ID is already linked to another GRIIT account. Sign in with that account — Day 1 on this guest session cannot be merged.",
+            `This Apple ID is already linked to another GRIIT account. ${SIGN_IN_WITH_THAT_ACCOUNT} — Day 1 on this guest session cannot be merged.`,
           previousAnonUserId: user.id,
         };
       }
@@ -287,6 +309,7 @@ export async function upgradeAnonymousWithApple(params: {
     }
 
     await clearRememberedAnonUserId();
+    await writeDeviceTimezone();
     return {
       kind: "ok",
       user: nextUser,
@@ -300,7 +323,7 @@ export async function upgradeAnonymousWithApple(params: {
         kind: "offline",
         user: null,
         session: null,
-          message: "You're offline. Connect and try again.",
+        message: "You're offline. Connect and try again.",
         previousAnonUserId,
       };
     }
@@ -371,7 +394,7 @@ export async function upgradeAnonymousWithEmail(params: {
           user: null,
           session: null,
           message:
-            "That email is already registered. Sign in with that account — Day 1 on this guest session cannot be merged.",
+            `That email is already registered. ${SIGN_IN_WITH_THAT_ACCOUNT} — Day 1 on this guest session cannot be merged.`,
           previousAnonUserId: user.id,
         };
       }
@@ -411,6 +434,7 @@ export async function upgradeAnonymousWithEmail(params: {
 
     const { data: refreshed } = await supabase.auth.getSession();
     await clearRememberedAnonUserId();
+    await writeDeviceTimezone();
     return {
       kind: "ok",
       user: nextUser,
@@ -443,4 +467,7 @@ export async function upgradeAnonymousWithEmail(params: {
 export const __anonAuthTestUtils = {
   isIdentityTakenError,
   isOfflineError,
+  resetEnsureAnonymousInflight: () => {
+    ensureAnonymousInflight = null;
+  },
 };

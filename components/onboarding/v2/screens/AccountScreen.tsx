@@ -15,9 +15,11 @@ import { Apple, Mail } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import {
   isAnonymousUser,
+  SIGN_IN_WITH_THAT_ACCOUNT,
   upgradeAnonymousWithApple,
   upgradeAnonymousWithEmail,
 } from "@/lib/anon-auth";
+import { writeDeviceTimezone } from "@/lib/write-device-timezone";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
@@ -40,9 +42,11 @@ import { DarkButton, GhostButton, PrimaryButton, TextLink } from "../ui";
 export default function AccountScreen({
   onAuthSuccess,
   onSkip,
+  onSignInWithAccount,
 }: {
   onAuthSuccess: (userId: string) => void;
   onSkip: () => void;
+  onSignInWithAccount: (email?: string) => void;
 }) {
   const router = useRouter();
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
@@ -57,6 +61,7 @@ export default function AccountScreen({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [identityTaken, setIdentityTaken] = useState(false);
 
   useEffect(() => {
     if (Platform.OS === "ios") {
@@ -71,6 +76,7 @@ export default function AccountScreen({
       return;
     }
     setError("");
+    setIdentityTaken(false);
     setLoading(true);
     try {
       const credential = await AppleAuthentication.signInAsync({
@@ -100,6 +106,7 @@ export default function AccountScreen({
           identityToken: credential.identityToken,
         });
         if (upgraded.kind === "identity_taken") {
+          setIdentityTaken(true);
           setError(upgraded.message ?? "Apple ID already linked to another account.");
           return;
         }
@@ -130,6 +137,7 @@ export default function AccountScreen({
         setError("Sign in failed. Please try again.");
         return;
       }
+      await writeDeviceTimezone();
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
       onAuthSuccess(next.id);
@@ -155,6 +163,7 @@ export default function AccountScreen({
     }
     setLoading(true);
     setError("");
+    setIdentityTaken(false);
     try {
       const { data: sessionSnap } = await supabase.auth.getSession();
       const sessionUser = sessionSnap.session?.user ?? null;
@@ -165,6 +174,7 @@ export default function AccountScreen({
           password,
         });
         if (upgraded.kind === "identity_taken") {
+          setIdentityTaken(true);
           setError(upgraded.message ?? "Email already registered.");
           return;
         }
@@ -202,6 +212,7 @@ export default function AccountScreen({
             return;
           }
           if (signInData.session?.user) {
+            await writeDeviceTimezone();
             setProfileSetupHints({ email: email.trim() });
             track({ name: "signup_completed", method: "email" });
             track({ name: "account_created", method: "email" });
@@ -214,6 +225,7 @@ export default function AccountScreen({
       }
       const createdUser = signUpData.session?.user ?? signUpData.user;
       if (createdUser) {
+        await writeDeviceTimezone();
         setProfileSetupHints({ email: email.trim() });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
@@ -274,6 +286,7 @@ export default function AccountScreen({
                   onChangeText={(t) => {
                     setEmail(t);
                     setError("");
+                    setIdentityTaken(false);
                   }}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -288,6 +301,7 @@ export default function AccountScreen({
                   onChangeText={(t) => {
                     setPassword(t);
                     setError("");
+                    setIdentityTaken(false);
                   }}
                   secureTextEntry
                   accessibilityLabel="Password"
@@ -301,7 +315,24 @@ export default function AccountScreen({
               </View>
             )}
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? (
+              identityTaken ? (
+                <Text style={styles.error}>
+                  {error.includes("email") ? "That email is already registered. " : "This Apple ID is already linked to another GRIIT account. "}
+                  <Text
+                    style={styles.errorLink}
+                    onPress={() => onSignInWithAccount(email.trim() || undefined)}
+                    accessibilityRole="link"
+                    accessibilityLabel={SIGN_IN_WITH_THAT_ACCOUNT}
+                  >
+                    {SIGN_IN_WITH_THAT_ACCOUNT}
+                  </Text>
+                  {" — Day 1 on this guest session cannot be merged."}
+                </Text>
+              ) : (
+                <Text style={styles.error}>{error}</Text>
+              )
+            ) : null}
           </View>
 
           <View style={styles.receipt}>
@@ -352,6 +383,7 @@ const styles = StyleSheet.create({
     borderColor: OBV2_COLOR.borderStrong,
   },
   error: { fontSize: 13, color: OBV2_COLOR.orangeInk, textAlign: "center", marginTop: 4 },
+  errorLink: { fontSize: 13, color: OBV2_COLOR.orangeInk, textDecorationLine: "underline", fontWeight: "500" },
   receipt: {
     marginTop: 6,
     backgroundColor: OBV2_COLOR.sunken,

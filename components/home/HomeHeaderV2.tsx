@@ -81,6 +81,8 @@ export type HomeHeaderV2Props = {
   heroState: HeroState;
   /** Current local date — passed in so callers can mock for tests. */
   now?: Date;
+  /** IANA zone for the weekday eyebrow. Device getDay() is UTC on some builds. */
+  timeZone?: string;
   notificationCount?: number;
   onPressBell: () => void;
 
@@ -112,10 +114,13 @@ export function HomeHeaderV2(props: HomeHeaderV2Props) {
   const greetingText = greetingFor(props.heroState, props.firstName, now);
   // Daylight greeting eyebrow is a calm single weekday; atRisk keeps the time
   // so the "last chance" framing still reads urgent.
+  const weekday = props.timeZone
+    ? new Intl.DateTimeFormat('en-US', { timeZone: props.timeZone, weekday: 'long' }).format(now)
+    : WEEKDAYS[now.getDay()];
   const dateText =
     props.heroState === 'atRisk'
-      ? `${WEEKDAYS[now.getDay()]} · ${formatTime(now)}`
-      : WEEKDAYS[now.getDay()];
+      ? `${weekday} · ${formatTime(now)}`
+      : weekday;
 
   const dotColor = DS_COLORS_V2.brand.primary;
 

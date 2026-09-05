@@ -37,6 +37,7 @@ import WhyCircleScreen from "./screens/WhyCircleScreen";
 import GoalsScreen from "./screens/GoalsScreen";
 import RemindersScreen from "./screens/RemindersScreen";
 import AccountScreen from "./screens/AccountScreen";
+import AccountNameScreen from "./screens/AccountNameScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
 import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
 import InviteScreen from "./screens/InviteScreen";
@@ -71,7 +72,9 @@ export default function OnboardingFlowV2() {
   const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [sentHome, setSentHome] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [accountNameOpen, setAccountNameOpen] = useState(false);
 
   useEffect(() => {
     void AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
@@ -162,6 +165,10 @@ export default function OnboardingFlowV2() {
   }, [step, browseOpen]);
 
   useEffect(() => {
+    if (step !== "account" && accountNameOpen) setAccountNameOpen(false);
+  }, [step, accountNameOpen]);
+
+  useEffect(() => {
     if (!hydrated || !localReady || completed) return;
     track({ name: "onboarding_started" });
   }, [hydrated, localReady, completed]);
@@ -186,6 +193,10 @@ export default function OnboardingFlowV2() {
         setSignInOpen(false);
         return true;
       }
+      if (accountNameOpen) {
+        setAccountNameOpen(false);
+        return true;
+      }
       if (browseOpen) {
         const next = applyBrowseBack(useOnboardingStore.getState().selectedChallengeId);
         setBrowseOpen(next.phase === "open");
@@ -196,19 +207,21 @@ export default function OnboardingFlowV2() {
       return true;
     });
     return () => sub.remove();
-  }, [step, goBack, signInOpen, browseOpen]);
+  }, [step, goBack, signInOpen, browseOpen, accountNameOpen]);
 
-  const goToLogin = useCallback(() => {
+  const goToLogin = useCallback((prefill?: string) => {
+    setSignInPrefill(prefill);
     setSignInOpen(true);
   }, []);
 
   const handleSignInSuccess = useCallback(() => {
     setSignInOpen(false);
+    setSignInPrefill(undefined);
   }, []);
 
   const handleAccountSuccess = useCallback(() => {
-    goNext();
-  }, [goNext]);
+    setAccountNameOpen(true);
+  }, []);
 
   const handleBrowseAll = useCallback(() => {
     setBrowseOpen(true);
@@ -241,12 +254,21 @@ export default function OnboardingFlowV2() {
   }, [router]);
 
   const renderScreen = () => {
+    if (signInOpen) {
+      return (
+        <SignInScreen
+          initialEmail={signInPrefill}
+          onBack={() => {
+            setSignInOpen(false);
+            setSignInPrefill(undefined);
+          }}
+          onSuccess={handleSignInSuccess}
+        />
+      );
+    }
     switch (step) {
       case "welcome":
-        if (signInOpen) {
-          return <SignInScreen onBack={() => setSignInOpen(false)} onSuccess={handleSignInSuccess} />;
-        }
-        return <WelcomeScreen onGetStarted={goNext} onHaveAccount={goToLogin} />;
+        return <WelcomeScreen onGetStarted={goNext} onHaveAccount={() => goToLogin()} />;
       case "goals":
         return <GoalsScreen onContinue={goNext} />;
       case "proof":
@@ -270,7 +292,16 @@ export default function OnboardingFlowV2() {
       case "reminder":
         return <RemindersScreen onContinue={goNext} />;
       case "account":
-        return <AccountScreen onAuthSuccess={handleAccountSuccess} onSkip={goNext} />;
+        if (accountNameOpen) {
+          return <AccountNameScreen onContinue={goNext} onSkip={goNext} />;
+        }
+        return (
+          <AccountScreen
+            onAuthSuccess={handleAccountSuccess}
+            onSkip={goNext}
+            onSignInWithAccount={goToLogin}
+          />
+        );
       case "invite":
         return <InviteScreen onContinue={goNext} onSkip={goNext} />;
       case "dayone":
@@ -287,9 +318,22 @@ export default function OnboardingFlowV2() {
   return (
     <SafeAreaView style={styles.safeArea}>
       {step !== "welcome" && !signInOpen ? (
-        <FlowChrome step={step} onBack={browseOpen ? handleBrowseBack : goBack} />
+        <FlowChrome
+          step={step}
+          onBack={
+            accountNameOpen
+              ? () => setAccountNameOpen(false)
+              : browseOpen
+                ? handleBrowseBack
+                : goBack
+          }
+        />
       ) : null}
-      <StepFade stepKey={signInOpen ? "signin" : browseOpen ? "browse-all" : step}>
+      <StepFade
+        stepKey={
+          signInOpen ? "signin" : accountNameOpen ? "account-name" : browseOpen ? "browse-all" : step
+        }
+      >
         {renderScreen()}
       </StepFade>
     </SafeAreaView>
