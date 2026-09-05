@@ -92,10 +92,14 @@ export function matchReasonForChallenge(
   return hit ? MATCH_REASON[hit] : "Popular first challenge";
 }
 
+export function countNoun(n: number, singular: string, plural: string): string {
+  return n === 1 ? `1 ${singular}` : `${n} ${plural}`;
+}
+
 export function challengeDetailLine(c: SuggestableChallenge): string {
-  const days = c.duration_days != null ? `${c.duration_days} days` : null;
+  const days = c.duration_days != null ? countNoun(c.duration_days, "day", "days") : null;
   const taskCount = Array.isArray(c.tasks) ? c.tasks.length : 0;
-  const tasks = taskCount > 0 ? `${taskCount} tasks` : null;
+  const tasks = taskCount > 0 ? countNoun(taskCount, "task", "tasks") : null;
   const line = [days, tasks, "daily"].filter(Boolean).join(" · ");
   return line || c.category || "Starter";
 }

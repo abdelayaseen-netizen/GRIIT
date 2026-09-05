@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  challengeDetailLine,
   isJoinableChallengeId,
   matchReasonForChallenge,
   suggestChallengesForGoals,
@@ -85,6 +86,15 @@ describe("suggestChallengesForGoals", () => {
     );
     expect(matchReasonForChallenge(CATALOG[1]!, ["physical_toughness"])).toBe(
       "Popular first challenge"
+    );
+  });
+});
+
+describe("challengeDetailLine", () => {
+  it("uses Duolingo pluralization: 1 day / 1 task, else days / tasks", () => {
+    expect(challengeDetailLine({ id: "x", duration_days: 1, tasks: [{}] })).toBe("1 day · 1 task · daily");
+    expect(challengeDetailLine({ id: "x", duration_days: 23, tasks: [{}, {}] })).toBe(
+      "23 days · 2 tasks · daily"
     );
   });
 });

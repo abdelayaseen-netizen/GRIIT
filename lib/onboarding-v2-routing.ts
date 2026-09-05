@@ -101,3 +101,32 @@ export function resolveOnboardingLaunch(input: {
   if (input.sessionKind === "none" && !input.inOnboarding) return "welcome";
   return "resume";
 }
+
+/**
+ * After launch dest is "home" (completed), where to send them.
+ * `null` = stay put — a completed guest already on Discover must not bounce to Home.
+ */
+export function resolveCompletedLeaveHref(input: {
+  inOnboarding: boolean;
+  inAuth: boolean;
+  onCreateProfile: boolean;
+  inTabs: boolean;
+  exitHref?: string | null;
+}): string | null {
+  if (input.inTabs) return null;
+  if (input.inOnboarding || input.inAuth || input.onCreateProfile) {
+    return input.exitHref ?? "/(tabs)";
+  }
+  return null;
+}
+
+/** In-memory exit chosen by completeOnboardingV2. Not persisted. */
+let pendingExitHref: string | null = null;
+
+export function setOnboardingV2Exit(href: string): void {
+  pendingExitHref = href;
+}
+
+export function peekOnboardingV2Exit(): string | null {
+  return pendingExitHref;
+}

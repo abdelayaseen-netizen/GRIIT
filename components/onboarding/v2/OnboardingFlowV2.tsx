@@ -20,10 +20,12 @@ import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import {
   ONBOARDING_V2_ORDER,
+  peekOnboardingV2Exit,
   resolveOnboardingCompleted,
   resolveV2Step,
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
+import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
 import WelcomeScreen from "./screens/WelcomeScreen";
@@ -36,7 +38,6 @@ import AccountScreen from "./screens/AccountScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
 import InviteScreen from "./screens/InviteScreen";
 import DayOneScreen from "./screens/DayOneScreen";
-import { completeOnboardingV2 } from "./completeOnboarding";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 
 function useOnboardingHydrated(): boolean {
@@ -144,7 +145,7 @@ export default function OnboardingFlowV2() {
     if (sessionKind === "real" && dbCompleted === null && !dbFetchFailed) return;
     if (!completed) return;
     setSentHome(true);
-    router.replace(ROUTES.TABS as never);
+    router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
   }, [hydrated, completed, user, dbCompleted, dbFetchFailed, sentHome, router]);
 
   useEffect(() => {
@@ -196,12 +197,14 @@ export default function OnboardingFlowV2() {
   }, [goNext]);
 
   const handleBrowseAll = useCallback(async () => {
-    await completeOnboardingV2();
+    const result = await exitOnboardingV2(ROUTES.TABS_DISCOVER);
+    if (!result.ok) return;
     router.replace(ROUTES.TABS_DISCOVER as never);
   }, [router]);
 
   const handleDayOneStart = useCallback(async () => {
-    await completeOnboardingV2();
+    const result = await exitOnboardingV2(ROUTES.TABS);
+    if (!result.ok) return;
     router.replace(ROUTES.TABS as never);
   }, [router]);
 
