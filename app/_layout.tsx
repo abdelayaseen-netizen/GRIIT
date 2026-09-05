@@ -35,7 +35,11 @@ import {
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
 import { captureError, initialiseSentry } from "@/lib/sentry";
-import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
+import {
+  registerPushTokenIfPermissionGranted,
+  requestNotificationPermissionAfterFirstJoin,
+} from "@/lib/register-push-token";
+import { v2MayPromptNotificationPermission } from "@/lib/onboarding-v2-notifications";
 import {
   trackAppOpened,
   trackColdStart,
@@ -73,8 +77,16 @@ function PushRegistrationBootstrap() {
   const storeCompleted = useOnboardingStore((s) => s.isComplete || s.hasCompletedOnboarding);
   useEffect(() => {
     if (Platform.OS === "web" || !user) return;
-    // v2: the reminder step is the only permission prompt in the flow.
-    if (FLAGS.ONBOARDING_V2 && !storeCompleted) return;
+    // v2: RemindersScreen "Turn on reminders" is the only OS prompt.
+    // After completion this still must not request — only register if granted.
+    if (FLAGS.ONBOARDING_V2) {
+      // Re-run when storeCompleted flips after Day 1 so a Reminders grant can register.
+      void storeCompleted;
+      if (!v2MayPromptNotificationPermission("bootstrap")) {
+        void registerPushTokenIfPermissionGranted();
+      }
+      return;
+    }
     void requestNotificationPermissionAfterFirstJoin();
     void requestNotificationPermissions();
   }, [user, storeCompleted]);

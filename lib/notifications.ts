@@ -562,7 +562,10 @@ export async function scheduleChallengeCountdowns(
  *
  * Sets foreground notification behavior, Android default channel, and returns the token.
  */
-export async function registerForPushNotificationsAsync(): Promise<string | null> {
+export async function registerForPushNotificationsAsync(opts?: {
+  /** When false, never show the OS prompt — register only if already granted. */
+  request?: boolean;
+}): Promise<string | null> {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -582,6 +585,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     let finalStatus = existingStatus;
 
     if (existingStatus !== "granted") {
+      if (opts?.request === false) return null;
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }

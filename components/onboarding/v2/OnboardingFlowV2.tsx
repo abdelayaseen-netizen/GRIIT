@@ -26,6 +26,8 @@ import {
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
 import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
+import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
+import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
 import WelcomeScreen from "./screens/WelcomeScreen";
@@ -36,6 +38,7 @@ import GoalsScreen from "./screens/GoalsScreen";
 import RemindersScreen from "./screens/RemindersScreen";
 import AccountScreen from "./screens/AccountScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
+import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
 import InviteScreen from "./screens/InviteScreen";
 import DayOneScreen from "./screens/DayOneScreen";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
@@ -60,6 +63,7 @@ export default function OnboardingFlowV2() {
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const setSelectedGoals = useOnboardingStore((s) => s.setSelectedGoals);
   const setSelectedChallenge = useOnboardingStore((s) => s.setSelectedChallenge);
+  const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
   const step = resolveV2Step(rawStep);
   const [localCompleted, setLocalCompleted] = useState(false);
   const [localReady, setLocalReady] = useState(false);
@@ -67,6 +71,7 @@ export default function OnboardingFlowV2() {
   const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [sentHome, setSentHome] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(false);
 
   useEffect(() => {
     void AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
@@ -153,6 +158,10 @@ export default function OnboardingFlowV2() {
   }, [rawStep, step, setV2Step]);
 
   useEffect(() => {
+    if (step !== "challenge" && browseOpen) setBrowseOpen(false);
+  }, [step, browseOpen]);
+
+  useEffect(() => {
     if (!hydrated || !localReady || completed) return;
     track({ name: "onboarding_started" });
   }, [hydrated, localReady, completed]);
@@ -177,12 +186,17 @@ export default function OnboardingFlowV2() {
         setSignInOpen(false);
         return true;
       }
+      if (browseOpen) {
+        const next = applyBrowseBack(useOnboardingStore.getState().selectedChallengeId);
+        setBrowseOpen(next.phase === "open");
+        return true;
+      }
       if (step === "welcome") return false;
       goBack();
       return true;
     });
     return () => sub.remove();
-  }, [step, goBack, signInOpen]);
+  }, [step, goBack, signInOpen, browseOpen]);
 
   const goToLogin = useCallback(() => {
     setSignInOpen(true);
@@ -196,11 +210,29 @@ export default function OnboardingFlowV2() {
     goNext();
   }, [goNext]);
 
-  const handleBrowseAll = useCallback(async () => {
-    const result = await exitOnboardingV2(ROUTES.TABS_DISCOVER);
-    if (!result.ok) return;
-    router.replace(ROUTES.TABS_DISCOVER as never);
-  }, [router]);
+  const handleBrowseAll = useCallback(() => {
+    setBrowseOpen(true);
+  }, []);
+
+  const handleBrowseSelect = useCallback(
+    (challenge: SuggestableChallenge) => {
+      const next = applyBrowsePick(challenge.id);
+      setSelectedChallenge(next.selectedChallengeId);
+      setSelectedChallengeMeta({
+        id: challenge.id,
+        title: challenge.title ?? null,
+        taskCount: Array.isArray(challenge.tasks) ? challenge.tasks.length : 0,
+        durationDays: challenge.duration_days ?? null,
+      });
+      setBrowseOpen(next.phase === "open");
+    },
+    [setSelectedChallenge, setSelectedChallengeMeta]
+  );
+
+  const handleBrowseBack = useCallback(() => {
+    const next = applyBrowseBack(useOnboardingStore.getState().selectedChallengeId);
+    setBrowseOpen(next.phase === "open");
+  }, []);
 
   const handleDayOneStart = useCallback(async () => {
     const result = await exitOnboardingV2(ROUTES.TABS);
@@ -222,6 +254,9 @@ export default function OnboardingFlowV2() {
       case "circle":
         return <WhyCircleScreen onContinue={goNext} onSkip={goNext} />;
       case "challenge":
+        if (browseOpen) {
+          return <BrowseAllPickerScreen onSelect={handleBrowseSelect} />;
+        }
         return (
           <FirstChallengeScreen
             onJoin={(challengeId) => {
@@ -251,8 +286,12 @@ export default function OnboardingFlowV2() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {step !== "welcome" && !signInOpen ? <FlowChrome step={step} onBack={goBack} /> : null}
-      <StepFade stepKey={signInOpen ? "signin" : step}>{renderScreen()}</StepFade>
+      {step !== "welcome" && !signInOpen ? (
+        <FlowChrome step={step} onBack={browseOpen ? handleBrowseBack : goBack} />
+      ) : null}
+      <StepFade stepKey={signInOpen ? "signin" : browseOpen ? "browse-all" : step}>
+        {renderScreen()}
+      </StepFade>
     </SafeAreaView>
   );
 }

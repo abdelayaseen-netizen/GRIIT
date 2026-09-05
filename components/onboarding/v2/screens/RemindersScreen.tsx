@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { requestNotificationPermissions, scheduleNextSecureReminder } from "@/lib/notifications";
+import { v2MayPromptNotificationPermission } from "@/lib/onboarding-v2-notifications";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { track } from "@/lib/analytics";
 import {
@@ -60,7 +61,10 @@ export default function RemindersScreen({ onContinue }: { onContinue: () => void
   const handleEnable = useCallback(async () => {
     let granted = false;
     try {
-      granted = await requestNotificationPermissions();
+      // Sole v2 OS prompt — see v2MayPromptNotificationPermission("reminders_cta").
+      if (v2MayPromptNotificationPermission("reminders_cta")) {
+        granted = await requestNotificationPermissions();
+      }
       if (granted) {
         await scheduleNextSecureReminder(reminderTime24h(reminderPreset, reminderCustom));
       }
