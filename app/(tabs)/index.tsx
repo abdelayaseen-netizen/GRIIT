@@ -27,7 +27,8 @@ import {
   deriveStreakHeroV4State,
   type StreakHeroV4Task,
 } from "@/components/home/StreakHeroV4";
-import { resolveDisplayedStreak } from "@/lib/home-streak";
+import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_COLORS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { useCelebrationStore } from "@/store/celebrationStore";
@@ -138,6 +139,7 @@ export default function HomeScreen() {
     enabled: !isGuest && !!user?.id,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,
+    placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<StatsFromApi> => {
       try {
         return await fetchStatsWithReconcile();
@@ -227,7 +229,11 @@ export default function HomeScreen() {
   }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
 
   const resolvedStats = statsQuery.data ?? stats;
-  const statsReady = statsQuery.isSuccess || stats != null;
+  const statsReady = resolveHomeStatsReady({
+    queryFetched: statsQuery.isFetched,
+    queryData: statsQuery.data,
+    contextStats: stats,
+  });
   const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
   const lastStreak = statsReady
     ? ((resolvedStats as { lastStreak?: number } | null)?.lastStreak ?? 0)
@@ -237,10 +243,14 @@ export default function HomeScreen() {
     [homeQuery.data?.securedDateKeys],
   );
 
+  const homeTimeZone = resolveHomeTimeZone(
+    (profile as { timezone?: string | null } | null)?.timezone,
+    getDeviceIanaTimeZone(),
+  );
+
   const todaySecured = useMemo(() => {
-    const tz = (profile as { timezone?: string | null })?.timezone;
-    return securedDateKeys.includes(getTodayDateKey(tz));
-  }, [securedDateKeys, profile]);
+    return securedDateKeys.includes(getTodayDateKey(homeTimeZone));
+  }, [securedDateKeys, homeTimeZone]);
 
   /**
    * Challenge day for streak-moment copy — same helper as proof card:
@@ -299,12 +309,9 @@ export default function HomeScreen() {
 
   const showCelebration = useCelebrationStore((s) => s.show);
 
-  // Week strip — Mon→Sun date keys in profile timezone; fill by membership in
-  // securedDateKeys (not by count). Prior memo used device-local midnight.
-  const weekDateKeys = useMemo(() => {
-    const tz = (profile as { timezone?: string | null })?.timezone;
-    return getCurrentWeekDateKeys(tz);
-  }, [profile]);
+  // Week strip — Mon→Sun in profile IANA, else device IANA.
+  // getTodayDateKey(undefined) is UTC: Friday 10:23pm ET highlights Saturday.
+  const weekDateKeys = useMemo(() => getCurrentWeekDateKeys(homeTimeZone), [homeTimeZone]);
 
   const weekSecuredByIndex = useMemo(() => {
     const set = new Set(securedDateKeys);
@@ -317,11 +324,10 @@ export default function HomeScreen() {
   );
 
   const todayWeekIndex = useMemo(() => {
-    const tz = (profile as { timezone?: string | null })?.timezone;
-    const todayKey = getTodayDateKey(tz);
+    const todayKey = getTodayDateKey(homeTimeZone);
     const idx = weekDateKeys.indexOf(todayKey);
     return idx >= 0 ? idx : 0;
-  }, [weekDateKeys, profile]);
+  }, [weekDateKeys, homeTimeZone]);
 
   const nextBadge = useMemo(
     () => deriveNextBadge(streak ?? 0),
@@ -334,9 +340,8 @@ export default function HomeScreen() {
     const keys = [...(homeQuery.data?.securedDateKeys ?? [])].sort();
     if (keys.length === 0) return;
     const lastKey = keys[keys.length - 1]!;
-    const tz = (profile as { timezone?: string | null })?.timezone;
-    const today = getTodayDateKey(tz);
-    const yesterday = getYesterdayDateKey(tz);
+    const today = getTodayDateKey(homeTimeZone);
+    const yesterday = getYesterdayDateKey(homeTimeZone);
     const missedWindow = lastKey !== today && lastKey !== yesterday;
     if (missedWindow) {
       setShowFreezeModal(true);
@@ -354,7 +359,7 @@ export default function HomeScreen() {
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
     if (homeState !== 'streak_at_risk') return;
-    const todayKey = getTodayDateKey();
+    const todayKey = getTodayDateKey(homeTimeZone);
     const storageKey = `griit_jeopardy_${todayKey}`;
     AsyncStorage.getItem(storageKey).then((shown) => {
       if (shown) return;
@@ -407,8 +412,7 @@ export default function HomeScreen() {
     useCallback(() => {
       if (isGuest || !user?.id) return;
       if (heroMetrics.tasksRemaining !== 0 || heroMetrics.totalTasksToday === 0) return;
-      const tz = (profile as { timezone?: string | null })?.timezone;
-      const todayKey = getTodayDateKey(tz);
+      const todayKey = getTodayDateKey(homeTimeZone);
       if (!securedDateKeys.includes(todayKey)) return;
       if (streak == null || streak < 1) return;
       const key = `griit_streak_moment_${todayKey}`;
@@ -534,13 +538,8 @@ export default function HomeScreen() {
   }, []);
 
   const firstName = useMemo(() => {
-    return (
-      profilePrimaryName(
-        profile ?? {},
-        user?.email?.includes("@") ? user.email.split("@")[0] : undefined,
-      ).split(" ")[0] ?? ""
-    );
-  }, [profile, user?.email]);
+    return profilePrimaryName(profile ?? {}).split(" ")[0] ?? "";
+  }, [profile]);
 
   const heroProps = useMemo(
     () => ({
@@ -617,6 +616,7 @@ export default function HomeScreen() {
               onPressAvatar={onPressAvatar}
               hero={heroProps}
               heroState={heroState}
+              timeZone={homeTimeZone}
               onPressBell={onPressBell}
               weekSecured={weekSecured}
               weekTotal={7}

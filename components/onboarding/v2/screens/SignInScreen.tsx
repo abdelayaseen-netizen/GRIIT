@@ -25,13 +25,16 @@ import { BackButton, DarkButton, GhostButton, PrimaryButton, TextLink } from "..
 export default function SignInScreen({
   onBack,
   onSuccess,
+  initialEmail,
 }: {
   onBack: () => void;
   onSuccess: () => void;
+  /** Prefill from Account "Sign in with that account". */
+  initialEmail?: string;
 }) {
   const [appleAvailable, setAppleAvailable] = useState(false);
-  const [emailMode, setEmailMode] = useState(false);
-  const [email, setEmail] = useState("");
+  const [emailMode, setEmailMode] = useState(Boolean(initialEmail?.trim()));
+  const [email, setEmail] = useState(initialEmail?.trim() ?? "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

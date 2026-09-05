@@ -35,6 +35,11 @@ vi.mock("@/lib/sentry", () => ({
   captureError: vi.fn(),
 }));
 
+const writeDeviceTimezone = vi.fn(async (): Promise<string | null> => "America/New_York");
+vi.mock("@/lib/write-device-timezone", () => ({
+  writeDeviceTimezone: () => writeDeviceTimezone(),
+}));
+
 import {
   __anonAuthTestUtils,
   ensureAnonymousSession,
@@ -98,6 +103,8 @@ describe("ensureAnonymousSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getItem.mockResolvedValue(null);
+    __anonAuthTestUtils.resetEnsureAnonymousInflight();
+    writeDeviceTimezone.mockResolvedValue("America/New_York");
   });
 
   it("returns existing session without calling signInAnonymously", async () => {
@@ -109,6 +116,7 @@ describe("ensureAnonymousSession", () => {
     expect(res.kind).toBe("ok");
     expect(res.user?.id).toBe("anon-uid-1");
     expect(signInAnonymously).not.toHaveBeenCalled();
+    expect(writeDeviceTimezone).not.toHaveBeenCalled();
   });
 
   it("creates anon session when none exists", async () => {
@@ -121,6 +129,34 @@ describe("ensureAnonymousSession", () => {
     expect(res.kind).toBe("ok");
     expect(signInAnonymously).toHaveBeenCalledOnce();
     expect(setItem).toHaveBeenCalled();
+    expect(writeDeviceTimezone).toHaveBeenCalledOnce();
+  });
+
+  it("two concurrent callers share one signInAnonymously and the same session", async () => {
+    getSession.mockResolvedValue({ data: { session: null }, error: null });
+    let release: ((value: unknown) => void) | undefined;
+    signInAnonymously.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        })
+    );
+
+    const first = ensureAnonymousSession();
+    const second = ensureAnonymousSession();
+    await vi.waitFor(() => {
+      expect(signInAnonymously).toHaveBeenCalledOnce();
+    });
+
+    release?.({
+      data: { user: anonUser, session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    const [a, b] = await Promise.all([first, second]);
+    expect(a.user?.id).toBe("anon-uid-1");
+    expect(b.user?.id).toBe(a.user?.id);
+    expect(signInAnonymously).toHaveBeenCalledOnce();
+    expect(writeDeviceTimezone).toHaveBeenCalledOnce();
   });
 });
 
@@ -128,6 +164,7 @@ describe("upgradeAnonymousWithApple", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getItem.mockResolvedValue("anon-uid-1");
+    writeDeviceTimezone.mockResolvedValue("America/New_York");
   });
 
   it("links successfully and preserves uid", async () => {
@@ -142,6 +179,7 @@ describe("upgradeAnonymousWithApple", () => {
     const res = await upgradeAnonymousWithApple({ identityToken: "tok" });
     expect(res.kind).toBe("ok");
     expect(res.user?.id).toBe("anon-uid-1");
+    expect(writeDeviceTimezone).toHaveBeenCalledOnce();
     expect(linkIdentity).toHaveBeenCalledWith(
       expect.objectContaining({ provider: "apple", token: "tok" })
     );
@@ -191,6 +229,7 @@ describe("upgradeAnonymousWithEmail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getItem.mockResolvedValue("anon-uid-1");
+    writeDeviceTimezone.mockResolvedValue("America/New_York");
   });
 
   it("uses updateUser and preserves uid", async () => {
@@ -208,6 +247,7 @@ describe("upgradeAnonymousWithEmail", () => {
     expect(res.kind).toBe("ok");
     expect(updateUser).toHaveBeenCalledWith({ email: "a@b.com", password: "secret1" });
     expect(res.user?.id).toBe("anon-uid-1");
+    expect(writeDeviceTimezone).toHaveBeenCalledOnce();
   });
 
   /**

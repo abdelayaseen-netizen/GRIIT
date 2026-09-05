@@ -243,6 +243,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             username: fallbackUsername,
             display_name: fallbackName,
             bio: '',
+            timezone: getDeviceIanaTimeZone(),
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'user_id' }
