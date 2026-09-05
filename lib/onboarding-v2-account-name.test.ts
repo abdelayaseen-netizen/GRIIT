@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  ACCOUNT_NAME_BIO_MAX,
+  accountNameBioForPersist,
   accountNameContinueDecision,
   accountNameSkipDecision,
   classifyAccountAuth,
@@ -85,5 +87,11 @@ describe("account name persist helpers", () => {
     expect(
       prefillAccountUsername({ email: "yaseen@example.com", profileUsername: "user_3d42b39e" })
     ).toBe("yaseen");
+  });
+
+  it("bio persist trims, caps at 150, and skips empty", () => {
+    expect(accountNameBioForPersist("  stay hard  ")).toBe("stay hard");
+    expect(accountNameBioForPersist("   ")).toBeUndefined();
+    expect(accountNameBioForPersist("x".repeat(200))).toHaveLength(ACCOUNT_NAME_BIO_MAX);
   });
 });

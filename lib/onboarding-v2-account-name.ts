@@ -110,6 +110,14 @@ export type AccountNameDecision =
   | { persist: true; displayName: string; username: string }
   | { persist: false; error: string };
 
+/** Same 150-char cap as old ProfileSetup bio. */
+export const ACCOUNT_NAME_BIO_MAX = 150;
+
+export function accountNameBioForPersist(raw: string): string | undefined {
+  const trimmed = raw.trim().slice(0, ACCOUNT_NAME_BIO_MAX);
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export function accountNameSkipDecision(): { persist: false } {
   return { persist: false };
 }

@@ -20,6 +20,8 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { captureError } from "@/lib/sentry";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 import {
+  ACCOUNT_NAME_BIO_MAX,
+  accountNameBioForPersist,
   accountNameContinueDecision,
   accountNameSkipDecision,
   normalizeAccountUsername,
@@ -34,6 +36,11 @@ type UsernameStatus = "idle" | "checking" | "available" | "taken";
  * Photo picker matches old ProfileSetup (`requestMediaLibraryPermissionsAsync`
  * + `launchImageLibraryAsync` 1:1 / quality 0.85) and uploads via
  * `uploadAvatarFromUri` → Supabase Storage `avatars` bucket.
+ *
+ * iOS UIImagePickerController only offers a square crop when
+ * `allowsEditing: true` + `aspect: [1, 1]`. There is no expo-image-picker
+ * flag to hide that grid or crop to a circle — this is the tightest iOS allows.
+ * Preview on this screen and Home (`Avatar.tsx`) then mask the square to a circle.
  */
 async function pickProfilePhoto(): Promise<
   | { status: "ok"; uri: string; mimeType?: string | null; fileName?: string | null }
@@ -79,6 +86,7 @@ export default function AccountNameScreen({
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +96,7 @@ export default function AccountNameScreen({
           username?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
+          bio?: string | null;
         } | null;
         if (cancelled) return;
         if (profile?.username) {
@@ -104,6 +113,9 @@ export default function AccountNameScreen({
         }
         if (profile?.avatar_url?.trim()) {
           setAvatarUrl((prev) => prev || profile.avatar_url || null);
+        }
+        if (profile?.bio?.trim()) {
+          setBio((prev) => prev || profile.bio?.slice(0, ACCOUNT_NAME_BIO_MAX) || "");
         }
       } catch {
         /* prefills are best-effort */
@@ -196,10 +208,12 @@ export default function AccountNameScreen({
     setError("");
     try {
       const photoUrl = await persistAvatarIfNeeded();
+      const persistBio = accountNameBioForPersist(bio);
       await trpcMutate(TRPC.profiles.update, {
         display_name: decision.displayName || undefined,
         username: decision.username,
         ...(photoUrl ? { avatar_url: photoUrl } : {}),
+        ...(persistBio ? { bio: persistBio } : {}),
       });
       setUsername(decision.username);
       onContinue();
@@ -209,7 +223,7 @@ export default function AccountNameScreen({
     } finally {
       setSaving(false);
     }
-  }, [displayName, username, status, persistAvatarIfNeeded, setUsername, onContinue]);
+  }, [displayName, username, bio, status, persistAvatarIfNeeded, setUsername, onContinue]);
 
   const handleSkip = useCallback(() => {
     accountNameSkipDecision();
@@ -265,7 +279,7 @@ export default function AccountNameScreen({
                 </View>
               )}
             </Pressable>
-            <Text style={styles.photoHint}>Photo optional</Text>
+            <Text style={styles.photoHint}>Photo optional · crops to a circle</Text>
 
             <Text style={styles.fieldLabel}>DISPLAY NAME</Text>
             <TextInput
@@ -300,6 +314,21 @@ export default function AccountNameScreen({
             ) : status === "available" ? (
               <Text style={styles.ok}>Available</Text>
             ) : null}
+            <Text style={styles.fieldLabel}>BIO</Text>
+            <TextInput
+              style={[styles.input, styles.bio]}
+              placeholder="What drives you?"
+              placeholderTextColor={OBV2_COLOR.ink3}
+              value={bio}
+              onChangeText={(t) => setBio(t.slice(0, ACCOUNT_NAME_BIO_MAX))}
+              multiline
+              textAlignVertical="top"
+              maxLength={ACCOUNT_NAME_BIO_MAX}
+              accessibilityLabel="Bio — optional"
+            />
+            <Text style={styles.bioCount}>
+              {bio.length}/{ACCOUNT_NAME_BIO_MAX}
+            </Text>
             {error ? <Text style={styles.error}>{error}</Text> : null}
           </View>
         )}
@@ -359,6 +388,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: OBV2_COLOR.borderStrong,
   },
+  bio: { minHeight: 100, paddingTop: 14, paddingBottom: 14 },
+  bioCount: { fontSize: 12, fontWeight: "400", color: OBV2_COLOR.ink3, textAlign: "right" },
   error: { fontSize: 13, color: OBV2_COLOR.orangeInk },
   ok: { fontSize: 13, color: OBV2_COLOR.ink2 },
   footer: { paddingTop: 14, gap: 2 },
