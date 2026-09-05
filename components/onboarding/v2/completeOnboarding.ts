@@ -9,8 +9,11 @@ import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
+import { ROUTES } from "@/lib/routes";
+import { setOnboardingV2Exit } from "@/lib/onboarding-v2-routing";
 
-export async function completeOnboardingV2(): Promise<void> {
+export async function completeOnboardingV2(opts?: { destination?: string }): Promise<void> {
+  setOnboardingV2Exit(opts?.destination ?? ROUTES.TABS);
   const store = useOnboardingStore.getState();
   track({ name: "onboarding_completed" });
   store.completeOnboarding();

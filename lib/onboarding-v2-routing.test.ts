@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ONBOARDING_V2_ORDER,
   ONBOARDING_V2_PROGRESS_SEGMENTS,
+  resolveCompletedLeaveHref,
   resolveOnboardingCompleted,
   resolveOnboardingLaunch,
   resolveV2Step,
@@ -288,6 +289,27 @@ describe("resolveOnboardingLaunch", () => {
         inOnboarding: true,
       })
     ).toBe("home");
+  });
+
+  it("completed guest already on Discover is not redirected to Home", () => {
+    expect(
+      resolveCompletedLeaveHref({
+        inOnboarding: false,
+        inAuth: false,
+        onCreateProfile: false,
+        inTabs: true,
+        exitHref: "/(tabs)/discover",
+      })
+    ).toBeNull();
+    expect(
+      resolveCompletedLeaveHref({
+        inOnboarding: true,
+        inAuth: false,
+        onCreateProfile: false,
+        inTabs: false,
+        exitHref: "/(tabs)/discover",
+      })
+    ).toBe("/(tabs)/discover");
   });
 
   it("completed never routes back to welcome (no redirect loop)", () => {

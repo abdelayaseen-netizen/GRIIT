@@ -49,4 +49,5 @@ export const SEGMENTS = {
   AUTH: "auth",
   CREATE_PROFILE: "create-profile",
   ONBOARDING: "onboarding",
+  TABS: "(tabs)",
 } as const;

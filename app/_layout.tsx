@@ -28,7 +28,12 @@ import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { FLAGS } from "@/lib/feature-flags";
-import { resolveOnboardingLaunch, sessionKindFromUser } from "@/lib/onboarding-v2-routing";
+import {
+  peekOnboardingV2Exit,
+  resolveCompletedLeaveHref,
+  resolveOnboardingLaunch,
+  sessionKindFromUser,
+} from "@/lib/onboarding-v2-routing";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import { requestNotificationPermissionAfterFirstJoin } from "@/lib/register-push-token";
 import {
@@ -290,6 +295,7 @@ function AuthRedirector() {
     const inOnboarding = first === SEGMENTS.ONBOARDING;
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
+    const inTabs = first === SEGMENTS.TABS;
 
     const dest = resolveOnboardingLaunch({
       sessionKind: sessionKindFromUser(user),
@@ -301,9 +307,14 @@ function AuthRedirector() {
     });
 
     if (dest === "home") {
-      if (inOnboarding || inAuth || onCreateProfile) {
-        router.replace(ROUTES.TABS as never);
-      }
+      const href = resolveCompletedLeaveHref({
+        inOnboarding,
+        inAuth,
+        onCreateProfile,
+        inTabs,
+        exitHref: peekOnboardingV2Exit(),
+      });
+      if (href) router.replace(href as never);
       return;
     }
 
