@@ -29,6 +29,10 @@ import {
   receiptGoalsLine,
   receiptReminderLine,
 } from "@/lib/onboarding-v2-dayone";
+import {
+  classifyAccountAuth,
+  type AccountAuthKind,
+} from "@/lib/onboarding-v2-account-name";
 import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { DarkButton, GhostButton, PrimaryButton, TextLink } from "../ui";
 
@@ -44,7 +48,7 @@ export default function AccountScreen({
   onSkip,
   onSignInWithAccount,
 }: {
-  onAuthSuccess: (userId: string) => void;
+  onAuthSuccess: (kind: AccountAuthKind) => void;
   onSkip: () => void;
   onSignInWithAccount: (email?: string) => void;
 }) {
@@ -120,7 +124,7 @@ export default function AccountScreen({
         }
         track({ name: "signup_completed", method: "apple" });
         track({ name: "account_created", method: "apple" });
-        onAuthSuccess(upgraded.user.id);
+        onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_apple" }));
         return;
       }
 
@@ -140,7 +144,13 @@ export default function AccountScreen({
       await writeDeviceTimezone();
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
-      onAuthSuccess(next.id);
+      onAuthSuccess(
+        classifyAccountAuth({
+          path: "apple_id_token",
+          createdAt: next.created_at,
+          lastSignInAt: next.last_sign_in_at,
+        })
+      );
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
@@ -189,7 +199,7 @@ export default function AccountScreen({
         setProfileSetupHints({ email: email.trim() });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
-        onAuthSuccess(upgraded.user.id);
+        onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_email" }));
         return;
       }
 
@@ -216,7 +226,7 @@ export default function AccountScreen({
             setProfileSetupHints({ email: email.trim() });
             track({ name: "signup_completed", method: "email" });
             track({ name: "account_created", method: "email" });
-            onAuthSuccess(signInData.session.user.id);
+            onAuthSuccess(classifyAccountAuth({ path: "signin_email" }));
             return;
           }
         }
@@ -229,7 +239,7 @@ export default function AccountScreen({
         setProfileSetupHints({ email: email.trim() });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
-        onAuthSuccess(createdUser.id);
+        onAuthSuccess(classifyAccountAuth({ path: "signup_email" }));
         return;
       }
       setError("Sign up succeeded but could not create session. Try again.");

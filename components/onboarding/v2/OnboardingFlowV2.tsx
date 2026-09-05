@@ -28,6 +28,10 @@ import {
 import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
+import {
+  nextAfterAccountAuth,
+  type AccountAuthKind,
+} from "@/lib/onboarding-v2-account-name";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
 import WelcomeScreen from "./screens/WelcomeScreen";
@@ -74,7 +78,8 @@ export default function OnboardingFlowV2() {
   const [signInOpen, setSignInOpen] = useState(false);
   const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
-  const [accountNameOpen, setAccountNameOpen] = useState(false);
+  const accountNameOpen = useOnboardingStore((s) => s.accountNameOpen);
+  const setAccountNameOpen = useOnboardingStore((s) => s.setAccountNameOpen);
 
   useEffect(() => {
     void AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
@@ -166,7 +171,7 @@ export default function OnboardingFlowV2() {
 
   useEffect(() => {
     if (step !== "account" && accountNameOpen) setAccountNameOpen(false);
-  }, [step, accountNameOpen]);
+  }, [step, accountNameOpen, setAccountNameOpen]);
 
   useEffect(() => {
     if (!hydrated || !localReady || completed) return;
@@ -207,7 +212,7 @@ export default function OnboardingFlowV2() {
       return true;
     });
     return () => sub.remove();
-  }, [step, goBack, signInOpen, browseOpen, accountNameOpen]);
+  }, [step, goBack, signInOpen, browseOpen, accountNameOpen, setAccountNameOpen]);
 
   const goToLogin = useCallback((prefill?: string) => {
     setSignInPrefill(prefill);
@@ -219,9 +224,21 @@ export default function OnboardingFlowV2() {
     setSignInPrefill(undefined);
   }, []);
 
-  const handleAccountSuccess = useCallback(() => {
-    setAccountNameOpen(true);
-  }, []);
+  const handleAccountSuccess = useCallback(
+    (kind: AccountAuthKind) => {
+      if (nextAfterAccountAuth(kind) === "account_name") {
+        setAccountNameOpen(true);
+        return;
+      }
+      setAccountNameOpen(false);
+      goNext();
+    },
+    [goNext, setAccountNameOpen]
+  );
+
+  const leaveAccountName = useCallback(() => {
+    goNext();
+  }, [goNext]);
 
   const handleBrowseAll = useCallback(() => {
     setBrowseOpen(true);
@@ -293,7 +310,7 @@ export default function OnboardingFlowV2() {
         return <RemindersScreen onContinue={goNext} />;
       case "account":
         if (accountNameOpen) {
-          return <AccountNameScreen onContinue={goNext} onSkip={goNext} />;
+          return <AccountNameScreen onContinue={leaveAccountName} onSkip={leaveAccountName} />;
         }
         return (
           <AccountScreen
@@ -311,7 +328,10 @@ export default function OnboardingFlowV2() {
 
   const sessionKind = sessionKindFromUser(user);
   const waitingOnDb = sessionKind === "real" && dbCompleted === null && !dbFetchFailed;
-  if (!hydrated || !localReady || waitingOnDb || completed) {
+  // After create/upgrade the session is "real" and dbCompleted is still null.
+  // Do not blank the name step (or Invite after it) behind that overlay.
+  const holdForDb = waitingOnDb && step === "account" && !accountNameOpen;
+  if (!hydrated || !localReady || holdForDb || completed) {
     return <SafeAreaView style={styles.safeArea} />;
   }
 
