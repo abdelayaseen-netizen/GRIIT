@@ -1,18 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import {
-  challengeDetailLine,
-  matchReasonForChallenge,
-  suggestChallengesForGoals,
-  type SuggestableChallenge,
-} from "@/lib/onboarding-v2-suggest";
+import { suggestChallengesForGoals, type SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
+import { mergePickedIntoSuggestions } from "@/lib/onboarding-v2-browse";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { captureError } from "@/lib/sentry";
 import { OBV2_COLOR } from "../theme";
 import { PrimaryButton, TextLink } from "../ui";
+import ChallengePickCard from "./ChallengePickCard";
 
 export default function FirstChallengeScreen({
   onJoin,
@@ -26,6 +23,7 @@ export default function FirstChallengeScreen({
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const selectedChallengeId = useOnboardingStore((s) => s.selectedChallengeId);
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
+  const [catalog, setCatalog] = useState<SuggestableChallenge[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestableChallenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [pickedId, setPickedId] = useState<string | null>(selectedChallengeId);
@@ -37,10 +35,16 @@ export default function FirstChallengeScreen({
     void (async () => {
       try {
         const data = (await trpcQuery(TRPC.challenges.getStarterPack)) as unknown;
-        const catalog = Array.isArray(data) ? (data as SuggestableChallenge[]) : [];
-        if (!cancelled) setSuggestions(suggestChallengesForGoals(selectedGoals, catalog, 3));
+        const list = Array.isArray(data) ? (data as SuggestableChallenge[]) : [];
+        if (!cancelled) {
+          setCatalog(list);
+          setSuggestions(suggestChallengesForGoals(selectedGoals, list, 3));
+        }
       } catch {
-        if (!cancelled) setSuggestions([]);
+        if (!cancelled) {
+          setCatalog([]);
+          setSuggestions([]);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -51,10 +55,13 @@ export default function FirstChallengeScreen({
   }, [selectedGoals]);
 
   useEffect(() => {
-    if (pickedId && !suggestions.some((c) => c.id === pickedId)) {
-      setPickedId(null);
-    }
-  }, [suggestions, pickedId]);
+    if (selectedChallengeId) setPickedId(selectedChallengeId);
+  }, [selectedChallengeId]);
+
+  const cards = useMemo(
+    () => mergePickedIntoSuggestions(suggestions, catalog, pickedId),
+    [suggestions, catalog, pickedId]
+  );
 
   const pick = (c: SuggestableChallenge) => {
     setPickedId(c.id);
@@ -98,33 +105,23 @@ export default function FirstChallengeScreen({
           <ActivityIndicator color={OBV2_COLOR.orange} />
         </View>
       ) : (
-        <View style={styles.body}>
-          {suggestions.length === 0 ? (
+        <ScrollView
+          style={styles.bodyScroll}
+          contentContainerStyle={styles.body}
+          showsVerticalScrollIndicator={false}
+        >
+          {cards.length === 0 ? (
             <Text style={styles.empty}>No starter challenges right now. Browse all or set this up later.</Text>
           ) : (
-            suggestions.map((c) => {
-              const on = pickedId === c.id;
-              return (
-                <Pressable
-                  key={c.id}
-                  onPress={() => pick(c)}
-                  style={[styles.card, on && styles.cardOn]}
-                  accessibilityRole="radio"
-                  accessibilityLabel={c.title ?? "Suggested challenge"}
-                  accessibilityState={{ selected: on }}
-                >
-                  <View style={styles.thumb} />
-                  <View style={styles.cardText}>
-                    <Text style={styles.cardTitle}>{c.title ?? "Challenge"}</Text>
-                    <Text style={styles.cardMeta}>{challengeDetailLine(c)}</Text>
-                    <Text style={styles.match}>{matchReasonForChallenge(c, selectedGoals)}</Text>
-                  </View>
-                  <View style={[styles.radio, on && styles.radioOn]}>
-                    {on ? <View style={styles.radioDot} /> : null}
-                  </View>
-                </Pressable>
-              );
-            })
+            cards.map((c) => (
+              <ChallengePickCard
+                key={c.id}
+                challenge={c}
+                selected={pickedId === c.id}
+                selectedGoals={selectedGoals}
+                onPress={() => pick(c)}
+              />
+            ))
           )}
           <Pressable
             onPress={onBrowse}
@@ -134,7 +131,7 @@ export default function FirstChallengeScreen({
           >
             <Text style={styles.browse}>Browse all challenges</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       )}
 
       <View style={styles.footer}>
@@ -158,46 +155,8 @@ const styles = StyleSheet.create({
   h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink },
   sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  body: { flex: 1, justifyContent: "center", paddingVertical: 16, gap: 10 },
-  card: {
-    padding: 14,
-    borderRadius: 18,
-    backgroundColor: OBV2_COLOR.card,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.hair,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 13,
-  },
-  cardOn: {
-    borderColor: OBV2_COLOR.orange,
-    shadowColor: OBV2_COLOR.orange,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-    elevation: 3,
-  },
-  thumb: {
-    width: 50,
-    height: 50,
-    borderRadius: 13,
-    backgroundColor: OBV2_COLOR.sunken,
-  },
-  cardText: { flex: 1, gap: 4 },
-  cardTitle: { fontSize: 16, fontWeight: "500", color: OBV2_COLOR.ink },
-  cardMeta: { fontSize: 12, fontWeight: "400", color: OBV2_COLOR.mutedWarm },
-  match: { fontSize: 11, fontWeight: "500", letterSpacing: 0.4, color: OBV2_COLOR.orangeInk },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.mutedWarm,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radioOn: { borderColor: OBV2_COLOR.orange },
-  radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: OBV2_COLOR.orange },
+  bodyScroll: { flex: 1 },
+  body: { flexGrow: 1, justifyContent: "center", paddingVertical: 16, gap: 10 },
   browseWrap: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" },
   browse: {
     fontSize: 13,

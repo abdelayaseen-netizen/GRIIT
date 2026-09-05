@@ -20,7 +20,7 @@ describe("exitOnboardingV2", () => {
     completeOnboardingV2.mockReset();
   });
 
-  it("browse-all sequence: session then complete then Discover", async () => {
+  it("Day 1 Start: session then complete then Home", async () => {
     ensureAnonymousSession.mockResolvedValue({
       kind: "ok",
       user: { id: "anon-1", is_anonymous: true },
@@ -30,12 +30,12 @@ describe("exitOnboardingV2", () => {
     });
     completeOnboardingV2.mockResolvedValue(undefined);
 
-    const res = await exitOnboardingV2(ROUTES.TABS_DISCOVER);
+    const res = await exitOnboardingV2(ROUTES.TABS);
 
     expect(res).toEqual({ ok: true });
     expect(ensureAnonymousSession).toHaveBeenCalledTimes(1);
     expect(completeOnboardingV2).toHaveBeenCalledTimes(1);
-    expect(completeOnboardingV2).toHaveBeenCalledWith({ destination: ROUTES.TABS_DISCOVER });
+    expect(completeOnboardingV2).toHaveBeenCalledWith({ destination: ROUTES.TABS });
     expect(ensureAnonymousSession.mock.invocationCallOrder[0]).toBeLessThan(
       completeOnboardingV2.mock.invocationCallOrder[0]!
     );
@@ -50,7 +50,7 @@ describe("exitOnboardingV2", () => {
       previousAnonUserId: null,
     });
 
-    const res = await exitOnboardingV2(ROUTES.TABS_DISCOVER);
+    const res = await exitOnboardingV2(ROUTES.TABS);
 
     expect(res).toEqual({ ok: false, message: "You're offline. Connect and try again." });
     expect(completeOnboardingV2).not.toHaveBeenCalled();

@@ -13,10 +13,12 @@ import { registerForPushNotificationsAsync } from "@/lib/notifications";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { logger } from "@/lib/logger";
 
-export async function registerPushTokenWithBackend(): Promise<boolean> {
+export async function registerPushTokenWithBackend(opts?: {
+  request?: boolean;
+}): Promise<boolean> {
   if (Platform.OS === "web") return false;
   try {
-    const token = await registerForPushNotificationsAsync();
+    const token = await registerForPushNotificationsAsync({ request: opts?.request ?? true });
     const { status } = await Notifications.getPermissionsAsync();
     if (status === "granted") {
       try {
@@ -54,6 +56,26 @@ export async function registerPushTokenWithBackend(): Promise<boolean> {
     logger.warn(
       "PushToken",
       `Push token registration skipped: ${error instanceof Error ? error.message : "unknown"}`,
+      error
+    );
+    return false;
+  }
+}
+
+/**
+ * v2 bootstrap / AuthContext: register a token if the OS already granted.
+ * Never calls requestPermissionsAsync.
+ */
+export async function registerPushTokenIfPermissionGranted(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") return false;
+    return registerPushTokenWithBackend({ request: false });
+  } catch (error) {
+    logger.warn(
+      "PushToken",
+      error instanceof Error ? error.message : "unknown",
       error
     );
     return false;

@@ -27,6 +27,7 @@ import {
   deriveStreakHeroV4State,
   type StreakHeroV4Task,
 } from "@/components/home/StreakHeroV4";
+import { resolveDisplayedStreak } from "@/lib/home-streak";
 import { DS_COLORS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { useCelebrationStore } from "@/store/celebrationStore";
@@ -227,7 +228,7 @@ export default function HomeScreen() {
 
   const resolvedStats = statsQuery.data ?? stats;
   const statsReady = statsQuery.isSuccess || stats != null;
-  const streak = statsReady ? (resolvedStats?.activeStreak ?? null) : null;
+  const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
   const lastStreak = statsReady
     ? ((resolvedStats as { lastStreak?: number } | null)?.lastStreak ?? 0)
     : 0;
