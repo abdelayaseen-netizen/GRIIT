@@ -136,3 +136,26 @@ export function badgeRowsFromProgress(input: {
     };
   });
 }
+
+/** First unearned Profile v2 mark. Null when all five are earned. */
+export function nextProfileV2Badge(input: {
+  bestStreak: number;
+  verifiedDays: number;
+}): {
+  name: string;
+  need: ProfileV2BadgeNeed;
+  have: number;
+  progress: number;
+  remaining: number;
+} | null {
+  const next = badgeRowsFromProgress(input).find((r) => !r.earned);
+  if (!next) return null;
+  const have = badgeHave(next.source, input.bestStreak, input.verifiedDays);
+  return {
+    name: next.name,
+    need: next.need,
+    have,
+    progress: next.progress,
+    remaining: Math.max(0, next.need - have),
+  };
+}

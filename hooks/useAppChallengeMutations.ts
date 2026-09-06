@@ -175,7 +175,7 @@ export function useAppChallengeMutations({
           void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["community", "feed", user?.id] });
           void queryClient.invalidateQueries({ queryKey: ["profile"] });
-          showGoalCelebration(5);
+          showGoalCelebration();
           const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
           const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? "unknown";
           const cid = (activeChallenge as ActiveChallengeFromApi | null)?.challenge_id;

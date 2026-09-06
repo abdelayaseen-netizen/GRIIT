@@ -232,7 +232,7 @@ export default function CelebrationOverlay() {
               {iconForType(type, icColor)}
             </Animated.View>
             <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
             {shareMessage ? (
               <>
                 <TouchableOpacity

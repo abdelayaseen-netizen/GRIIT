@@ -949,23 +949,10 @@ export function TaskCompleteScreenInner() {
           taskMode === "minimum" ? "Minimum day secured." : isHardMode ? "Hard mode earned." : "Secured.";
         showCelebration({
           title: celebTitle,
-          subtitle: FLAGS.COMPLETION_REWARDS
-            ? `+${taskMode === "minimum" ? 0 : isHardMode ? 8 : 5} points`
-            : "",
+          subtitle: "",
           type: "goal",
         });
-
-        if (FLAGS.COMPLETION_REWARDS && Math.random() < 0.3) {
-          const rewards = [
-            { label: "2x BONUS — double points!", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
-            { label: "Streak shield earned", color: DS_COLORS_V2.semantic.success, bg: DS_COLORS_V2.semantic.successSoft },
-            { label: "Discipline badge progress +1", color: DS_COLORS_V2.difficulty.hard.fg, bg: DS_COLORS_V2.difficulty.hard.bg },
-            { label: "Bonus: +3 extra points", color: DS_COLORS_V2.semantic.warning, bg: DS_COLORS_V2.semantic.warningSoft },
-          ];
-          setVariableReward(rewards[Math.floor(Math.random() * rewards.length)] ?? null);
-        } else {
-          setVariableReward(null);
-        }
+        setVariableReward(null);
       }
     } catch (err: unknown) {
       captureError(err, "TaskCompleteCompleteTask");

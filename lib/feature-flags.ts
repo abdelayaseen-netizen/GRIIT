@@ -71,11 +71,8 @@ export const FLAGS = {
    */
   WORKOUT_STRUCTURED: false,
   /**
-   * Hardcoded completion rewards: points subtitle (`+N points`) and the random
-   * variable-reward chip ("2x BONUS", "Streak shield earned", etc.).
-   * The storyboard specifies streak-only — no points are shown. These mechanics
-   * may become real server-driven rewards later. Keep false until the backend
-   * returns real values. See CLEANUP_LOG.md item 1.
+   * Dead. Points were celebration copy only — no table, no balance.
+   * The +N points string and variable-reward chips are gone. Keep false.
    */
   COMPLETION_REWARDS: false,
 } as const;
