@@ -4,7 +4,8 @@
  * Translates the onboarding mockup's visual language to the app design system.
  * Every value resolves to a DS_COLORS_V2 nested path / DS token — NO raw hex
  * lives here or in any V2 screen. The mockup's vivid orange (#DC5401) maps to
- * the AA-safe `brand.primary` (#BB471D, 5.2:1 on white).
+ * `brand.primary` (#DC5401, locked). Use `accentAccessible` (#BB471D) only for
+ * dense orange-on-white text that needs AA (5.2:1).
  */
 import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2, DS_TYPE } from "@/lib/design-system";
 
