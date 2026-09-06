@@ -1,7 +1,23 @@
+/**
+ * Welcome — frame 19 and 02_screens.md Welcome.
+ * Display face on a headline is permitted here only (02_screens.md:311, law 2).
+ * Size is 44pt Barlow (02_screens.md:305–306); 44 is DS_V3.size.tap.
+ */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { OBV2_COLOR } from "../theme";
-import { LogoMark, PrimaryButton, TextLink } from "../ui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DS_V3 } from "@/lib/design-system";
+import Button from "@/components/ds/Button";
+
+function LogoBars() {
+  const bar = DS_V3.space.gutter / 2;
+  return (
+    <View style={styles.logo} accessibilityLabel="GRIIT">
+      <View style={[styles.bar, { height: DS_V3.size.avatar.xs }]} />
+      <View style={[styles.bar, { height: DS_V3.type.body.lineHeight, width: bar }]} />
+    </View>
+  );
+}
 
 export default function WelcomeScreen({
   onGetStarted,
@@ -10,69 +26,69 @@ export default function WelcomeScreen({
   onGetStarted: () => void;
   onHaveAccount: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.content}>
-      <View style={styles.hero}>
-        <LogoMark size="hero" />
-        <Text style={styles.wordmark}>GRIIT</Text>
-        <View style={styles.copy}>
-          <Text style={styles.display}>Discipline,{"\n"}witnessed.</Text>
-          <Text style={styles.sub}>
-            The habit app that makes you prove it. Real verification, your circle watching.
-          </Text>
-        </View>
-        <View style={styles.strip}>
-          <Text style={styles.stripItem}>PHOTO</Text>
-          <Text style={styles.stripSep}>·</Text>
-          <Text style={styles.stripItem}>GPS</Text>
-          <Text style={styles.stripSep}>·</Text>
-          <Text style={styles.stripItem}>TIMER</Text>
-        </View>
+    <View style={styles.root}>
+      <View style={[styles.logoWrap, { paddingTop: insets.top + DS_V3.space.sm }]}>
+        <LogoBars />
       </View>
-      <View style={styles.footer}>
-        <PrimaryButton label="Get started" onPress={onGetStarted} />
-        <TextLink label="I already have an account" onPress={onHaveAccount} />
+      <View style={styles.center}>
+        <Text style={styles.headline}>
+          {"Discipline,\nwitnessed."}
+        </Text>
+        <Text style={styles.sub}>Photo proof. Daily. No way to fake it.</Text>
+      </View>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + DS_V3.space.gutter }]}>
+        <Button label="Start" onPress={onGetStarted} />
+        <Button label="Log in" variant="tertiary" ink onPress={onHaveAccount} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 28 },
-  hero: { flex: 1, justifyContent: "center", alignItems: "center", gap: 20 },
-  wordmark: {
-    fontSize: 15,
-    fontWeight: "500",
-    letterSpacing: 6,
-    color: OBV2_COLOR.ink,
-    marginTop: 2,
+  root: {
+    flex: 1,
+    backgroundColor: DS_V3.color.canvas,
   },
-  copy: { alignItems: "center" },
-  display: {
-    fontSize: 46,
-    fontWeight: "500",
-    lineHeight: 44,
-    letterSpacing: -1.8,
-    color: OBV2_COLOR.ink,
-    textAlign: "center",
-    marginTop: 8,
+  logoWrap: {
+    paddingHorizontal: DS_V3.space.gutter,
+  },
+  logo: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: DS_V3.space.sm,
+    height: DS_V3.size.avatar.xs,
+  },
+  bar: {
+    width: DS_V3.space.gutter / 2,
+    borderRadius: DS_V3.space.xs,
+    backgroundColor: DS_V3.color.brand,
+  },
+  center: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    paddingHorizontal: DS_V3.space.gutter,
+    gap: DS_V3.space.lg,
+  },
+  headline: {
+    fontFamily: DS_V3.type.number.fontFamily,
+    fontWeight: DS_V3.type.number.fontWeight,
+    fontSize: DS_V3.size.tap,
+    lineHeight: DS_V3.size.tap,
+    letterSpacing: DS_V3.type.number.letterSpacing,
+    color: DS_V3.color.textPrimary,
+    fontVariant: ["tabular-nums"],
   },
   sub: {
-    fontSize: 17,
-    fontWeight: "400",
-    lineHeight: 25,
-    color: OBV2_COLOR.ink2,
-    textAlign: "center",
-    marginTop: 16,
-    maxWidth: 290,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
-  strip: { flexDirection: "row", alignItems: "center", gap: 18 },
-  stripItem: {
-    fontSize: 12,
-    fontWeight: "500",
-    letterSpacing: 1.2,
-    color: OBV2_COLOR.mutedWarm,
+  footer: {
+    marginTop: "auto",
+    paddingHorizontal: DS_V3.space.gutter,
+    gap: DS_V3.space.sm,
   },
-  stripSep: { fontSize: 12, color: OBV2_COLOR.borderDashed },
-  footer: { paddingTop: 14, paddingBottom: 32, gap: 2 },
 });

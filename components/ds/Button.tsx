@@ -34,6 +34,8 @@ export type ButtonProps = {
   accessibilityLabel?: string;
   /** Zero horizontal padding. Tertiary that sits alone in a card. */
   flush?: boolean;
+  /** Tertiary label in textPrimary (Welcome Log in, Secured Done, Capture Cancel). */
+  ink?: boolean;
 };
 
 export default function Button({
@@ -47,6 +49,7 @@ export default function Button({
   onPress,
   accessibilityLabel,
   flush,
+  ink,
 }: ButtonProps) {
   const height = size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button;
   const blocked = Boolean(disabled || submitting);
@@ -60,7 +63,9 @@ export default function Button({
         ? DS_V3.color.textPrimary
         : destructive
           ? DS_V3.color.danger
-          : DS_V3.color.brandText;
+          : ink
+            ? DS_V3.color.textPrimary
+            : DS_V3.color.brandText;
   const spinnerColor = variant === "primary" ? DS_V3.color.onBrand : labelColor;
 
   return (
