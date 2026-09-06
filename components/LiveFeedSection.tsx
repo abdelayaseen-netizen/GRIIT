@@ -685,7 +685,7 @@ function LiveFeedSection({
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    backgroundColor: DS_DAYLIGHT.color.canvas,
+    backgroundColor: DS_V3.color.canvas,
   },
   feedHeader: {
     flexDirection: "row",
@@ -728,7 +728,11 @@ const styles = StyleSheet.create({
   },
   toggleText: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED, fontWeight: "500" },
   toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
-    listContent: { paddingHorizontal: 0, paddingBottom: DS_V3.space.xs * 30 },
+    listContent: {
+      paddingHorizontal: 0,
+      paddingBottom: DS_V3.space.xs * 30,
+      backgroundColor: DS_V3.color.canvas,
+    },
     v3Item: { paddingHorizontal: DS_V3.space.gutter },
   feedSkeletonStack: { gap: 10, paddingHorizontal: 4, paddingTop: 4 },
   listItemSeparator: { height: DS_V3.space.md },

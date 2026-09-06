@@ -109,6 +109,17 @@ export default function VisitorProfileScreen() {
     enabled: !!ownerId && !!user?.id && !isSelf,
   });
 
+  const followCountsQuery = useQuery({
+    queryKey: ["profile", ownerId, "followCounts"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getFollowCounts, { userId: ownerId }) as Promise<{
+        followers: number;
+        following: number;
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !!ownerId,
+  });
+
   const rec = recordQ.data;
   const name = rec?.identity.displayName || publicQ.data?.display_name || decoded;
   const handle = rec?.identity.username || publicQ.data?.username || decoded;
@@ -229,8 +240,8 @@ export default function VisitorProfileScreen() {
               title={name || handle}
               handle={handle}
               avatarUrl={avatar}
-              followers={0}
-              following={0}
+              followers={followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0)}
+              following={followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0)}
               bio={bio}
               streak={rec?.streak.current ?? 0}
               best={rec?.streak.best ?? 0}
@@ -262,8 +273,16 @@ export default function VisitorProfileScreen() {
                   tier: "Starter",
                 })
               }
-              onFollowers={() => undefined}
-              onFollowing={() => undefined}
+              onFollowers={() =>
+                ownerId
+                  ? router.push(ROUTES.FOLLOW_LIST(ownerId, "followers", handle) as never)
+                  : undefined
+              }
+              onFollowing={() =>
+                ownerId
+                  ? router.push(ROUTES.FOLLOW_LIST(ownerId, "following", handle) as never)
+                  : undefined
+              }
               onSeeRecord={() =>
                 router.push({
                   pathname: ROUTES.PROFILE_CONSISTENCY as never,

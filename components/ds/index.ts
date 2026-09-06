@@ -51,3 +51,6 @@ export type { PushedHeaderProps } from "./PushedHeader";
 
 export { default as Badges } from "./Badges";
 export type { BadgeItem, BadgesProps } from "./Badges";
+
+export { default as TabBar } from "./TabBar";
+export type { TabBarProps, TabBarTab } from "./TabBar";

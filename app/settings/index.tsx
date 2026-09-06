@@ -44,7 +44,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { profile } = useApp();
+  const { isPremium, profile } = useApp();
   const [reminderSub, setReminderSub] = useState("Daily reminder at 9:00");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
@@ -110,7 +110,7 @@ export default function SettingsScreen() {
             <ListRow
               icon={<CreditCard size={ICON} color={DS_V3.color.textPrimary} />}
               title="Subscription"
-              subtitle="Free plan · 1 streak freeze a month"
+              subtitle={isPremium ? "Premium" : "Free plan · 1 streak freeze a month"}
               onPress={() =>
                 router.push({ pathname: ROUTES.PAYWALL as never, params: { source: "settings" } } as never)
               }

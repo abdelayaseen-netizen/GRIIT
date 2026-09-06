@@ -36,6 +36,8 @@ import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
+import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -392,17 +394,57 @@ export default function HomeScreen() {
     setShowJeopardyModal(false);
   }, []);
 
+  const liveFeedQuery = useQuery({
+    queryKey: ["liveFeed", feedScope, user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.getLiveFeed, { scope: feedScope, limit: 20 }) as Promise<{
+        posts: LiveFeedPost[];
+      }>,
+    enabled: !isGuest && !!user?.id,
+    staleTime: 60 * 1000,
+  });
+
+  const awayCount = useMemo(() => {
+    const ids = new Set(
+      (liveFeedQuery.data?.posts ?? [])
+        .map((p) => p.userId)
+        .filter((id) => id && id !== user?.id),
+    );
+    return ids.size;
+  }, [liveFeedQuery.data?.posts, user?.id]);
+
+  const nextBadge = useMemo(() => {
+    const mark = nextProfileV2Badge({
+      bestStreak: resolvedStats?.longestStreak ?? streak ?? 0,
+      verifiedDays: resolvedStats?.totalDaysSecured ?? 0,
+    });
+    if (!mark) return { name: "First badge", progress: 1 };
+    return { name: mark.name, progress: mark.progress };
+  }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
+
+  const firstProofEver =
+    (resolvedStats?.totalDaysSecured ?? 0) === 0 && securedDateKeys.length === 0;
+
   const proof: HomeV3Proof | null = useMemo(() => {
     const task = heroTasks.find((t) => !t.done) ?? heroTasks[0] ?? null;
+    const hasChallenge = heroTasks.length > 0;
     return {
       challenge: task?.challengeName ?? "",
       day: task?.currentDay ?? 1,
       taskText: task?.name ?? "",
       doneCount: heroMetrics.tasksDoneToday,
       totalCount: heroMetrics.totalTasksToday || 1,
-      posted: todaySecured || (heroTasks.length > 0 && heroMetrics.tasksRemaining === 0),
+      posted: todaySecured || (hasChallenge && heroMetrics.tasksRemaining === 0),
+      hasChallenge,
+      firstProofEver,
     };
-  }, [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, todaySecured]);
+  }, [
+    heroTasks,
+    heroMetrics.tasksDoneToday,
+    heroMetrics.totalTasksToday,
+    todaySecured,
+    firstProofEver,
+  ]);
 
   // ────────────── render ──────────────
 
@@ -450,6 +492,10 @@ export default function HomeScreen() {
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}
               onPressProof={onPressPrimaryCTA}
+              awayCount={awayCount}
+              freezesLeft={freezeStatusQuery.data?.remaining ?? 0}
+              badgeName={nextBadge.name}
+              badgePct={Math.round(nextBadge.progress * 100)}
               loading={homeQuery.isPending && !homeQuery.data}
             />
           }

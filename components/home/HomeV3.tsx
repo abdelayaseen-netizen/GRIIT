@@ -41,6 +41,8 @@ export type HomeV3Proof = {
   doneCount: number;
   totalCount: number;
   posted: boolean;
+  hasChallenge: boolean;
+  firstProofEver: boolean;
 };
 
 export type HomeV3Props = {
@@ -54,6 +56,10 @@ export type HomeV3Props = {
   onChangeFeedScope: (s: FeedScope) => void;
   onPressBell: () => void;
   onPressProof: () => void;
+  awayCount: number;
+  freezesLeft: number;
+  badgeName: string;
+  badgePct: number;
   loading?: boolean;
   error?: boolean;
   onRetry?: () => void;
@@ -70,6 +76,10 @@ export function HomeV3({
   onChangeFeedScope,
   onPressBell,
   onPressProof,
+  awayCount,
+  freezesLeft,
+  badgeName,
+  badgePct,
   loading,
   error,
   onRetry,
@@ -82,7 +92,7 @@ export function HomeV3({
 
   if (error) {
     return (
-      <View style={styles.pad}>
+      <View style={[styles.root, styles.pad]}>
         <EmptyState
           heading="Feed did not load"
           body="Check your connection and try again."
@@ -95,7 +105,7 @@ export function HomeV3({
 
   if (loading) {
     return (
-      <View style={styles.pad}>
+      <View style={[styles.root, styles.pad]}>
         <Skeleton />
         <View style={styles.gap20} />
         <Skeleton />
@@ -105,8 +115,26 @@ export function HomeV3({
     );
   }
 
+  const freezeCaption =
+    freezesLeft === 1 ? "1 freeze left" : `${freezesLeft} freezes left`;
+  const badgeCaption = `${badgeName} · ${badgePct}%`;
+  const awayLine =
+    awayCount === 0
+      ? null
+      : `${awayCount} friends posted while you were away.`;
+  const proofCta = proof?.firstProofEver
+    ? "Post your first proof"
+    : "Post today's proof";
+  const proofSub = proof?.hasChallenge ? (
+    <Text style={styles.secondary}>
+      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
+    </Text>
+  ) : (
+    <Text style={styles.secondary}>No active challenge</Text>
+  );
+
   return (
-    <View>
+    <View style={styles.root}>
       <RootHeader
         kicker={kicker}
         title={title}
@@ -132,9 +160,7 @@ export function HomeV3({
             <View style={styles.proofHead}>
               <View style={styles.flex}>
                 <Text style={styles.heading}>Today&apos;s proof</Text>
-                <Text style={styles.secondary}>
-                  {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
-                </Text>
+                {proofSub}
               </View>
               <View style={styles.countChip}>
                 <Text style={styles.countTxt}>
@@ -154,7 +180,7 @@ export function HomeV3({
               </View>
             ) : (
               <Button
-                label="Post your first proof"
+                label={proofCta}
                 icon={<Camera size={ICON} color={DS_V3.color.onBrand} />}
                 onPress={onPressProof}
               />
@@ -168,11 +194,11 @@ export function HomeV3({
         <View style={styles.meta}>
           <View style={styles.metaItem}>
             <Snowflake size={META} color={DS_V3.color.brand} />
-            <Text style={styles.caption}>1 freeze left</Text>
+            <Text style={styles.caption}>{freezeCaption}</Text>
           </View>
           <View style={styles.metaItem}>
             <Medal size={META} color={DS_V3.color.brand} />
-            <Text style={styles.caption}>First badge · 0%</Text>
+            <Text style={styles.caption}>{badgeCaption}</Text>
           </View>
         </View>
       </View>
@@ -193,12 +219,16 @@ export function HomeV3({
         </View>
       </View>
 
-      <Text style={styles.away}>Three friends posted while you were away.</Text>
+      {awayLine ? <Text style={styles.away}>{awayLine}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: DS_V3.color.canvas,
+  },
   pad: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
