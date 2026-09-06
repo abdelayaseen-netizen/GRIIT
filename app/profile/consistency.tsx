@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,17 +11,21 @@ import { ROUTES } from "@/lib/routes";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 type RecordPayload = ProfileRecord & { timezone: string; todayKey: string; elapsedMs: number };
 
 export default function ConsistencyDetailScreen() {
   const router = useRouter();
+  const { userId: userIdParam } = useLocalSearchParams<{ userId?: string }>();
   const { user } = useAuth();
+  const targetId = userIdParam || user?.id || "";
   const q = useQuery({
-    queryKey: ["profiles", "getRecord", user?.id ?? ""],
-    queryFn: () => trpcQuery(TRPC.profiles.getRecord) as Promise<RecordPayload>,
+    queryKey: ["profiles", "getRecord", targetId],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getRecord, userIdParam ? { userId: userIdParam } : undefined) as Promise<RecordPayload>,
     staleTime: 60 * 1000,
-    enabled: !!user?.id,
+    enabled: !!targetId,
   });
   const rec = q.data;
   const lockedIn = rec?.consistency.verdict === "Locked in";
@@ -41,6 +45,7 @@ export default function ConsistencyDetailScreen() {
           <Text style={styles.title}>Consistency</Text>
           <View style={styles.back} />
         </View>
+        <GriitFade fadeKey={`consistency-${rec?.todayKey ?? "none"}`}>
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
           <View style={styles.rateRow}>
             <Text style={styles.rate}>{rec?.consistency.rate ?? "—"}</Text>
@@ -87,6 +92,7 @@ export default function ConsistencyDetailScreen() {
             count of verified proof rows.
           </Text>
         </ScrollView>
+        </GriitFade>
       </SafeAreaView>
     </ErrorBoundary>
   );

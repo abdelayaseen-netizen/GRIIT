@@ -58,7 +58,9 @@ export function ProofsTab({
             {p.imageUrl ? (
               <Image source={{ uri: p.imageUrl }} style={styles.img} contentFit="cover" />
             ) : (
-              <View style={styles.ph} />
+              <View style={styles.textProof} accessibilityLabel={`Day ${p.day} text proof`}>
+                <Text style={styles.textProofLbl}>Text proof</Text>
+              </View>
             )}
             <View style={styles.chip}>
               <Text style={styles.chipTxt}>Day {p.day}</Text>
@@ -110,7 +112,14 @@ const styles = StyleSheet.create({
     backgroundColor: PROFILE_V2_COLOR.sunken,
   },
   img: { width: "100%", height: "100%" },
-  ph: { flex: 1, backgroundColor: PROFILE_V2_COLOR.sunken },
+  textProof: {
+    flex: 1,
+    backgroundColor: PROFILE_V2_COLOR.sunken,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+  },
+  textProofLbl: { fontSize: 11, color: PROFILE_V2_COLOR.mutedLight, textAlign: "center" },
   chip: {
     position: "absolute",
     left: 6,

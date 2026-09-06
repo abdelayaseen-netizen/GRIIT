@@ -24,6 +24,7 @@ import { SettingsNav } from "@/components/settings/SettingsNav";
 import { AccountDangerZone } from "@/components/settings/AccountDangerZone";
 import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
 
@@ -57,6 +58,7 @@ export default function SettingsScreen() {
     useInlineError();
 
   const vis = (profile as { profile_visibility?: string } | null)?.profile_visibility ?? "public";
+  const [activityVis, setActivityVis] = useState("public");
 
   const loadSub = useCallback(async () => {
     if (isGuest) return;
@@ -67,10 +69,13 @@ export default function SettingsScreen() {
       };
       if (data?.enabled === false) {
         setReminderSub("Daily reminder off");
-        return;
+      } else {
+        const parsed = parseReminderTime24h(data?.reminder_time ?? "06:00");
+        setReminderSub(`Daily reminder at ${reminderTimeText(parsed.preset, parsed.custom)}`);
       }
-      const parsed = parseReminderTime24h(data?.reminder_time ?? "06:00");
-      setReminderSub(`Daily reminder at ${reminderTimeText(parsed.preset, parsed.custom)}`);
+      const priv = (await trpcQuery(TRPC.profiles.get)) as { activity_visibility?: string | null };
+      const act = String(priv?.activity_visibility ?? "public").toLowerCase();
+      setActivityVis(act === "friends" || act === "private" ? act : "public");
     } catch (e) {
       captureError(e, "SettingsReminderSub");
     }
@@ -86,6 +91,7 @@ export default function SettingsScreen() {
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <SettingsNav title="Settings" />
+        <GriitFade fadeKey="settings">
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
             <Row
@@ -103,7 +109,7 @@ export default function SettingsScreen() {
             <Row
               icon={<Eye size={20} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />}
               label="Privacy"
-              sub={`Profile ${vis} · Activity public`}
+              sub={`Profile ${vis} · Activity ${activityVis}`}
               onPress={() => router.push(ROUTES.SETTINGS_PRIVACY as never)}
             />
             <Row
@@ -138,6 +144,7 @@ export default function SettingsScreen() {
 
           <Text style={styles.ver}>GRIIT {APP_VERSION}</Text>
         </ScrollView>
+        </GriitFade>
       </SafeAreaView>
     </ErrorBoundary>
   );

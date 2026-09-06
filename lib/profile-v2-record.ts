@@ -148,7 +148,7 @@ export type ProfileRecord = {
     length: number;
     value: string;
   }[];
-  proofs: { dateKey: string; day: number }[];
+  proofs: { dateKey: string; day: number; imageUrl?: string | null }[];
   badges: ReturnType<typeof badgeRowsFromProgress>;
   detail: {
     totalVerified: number;

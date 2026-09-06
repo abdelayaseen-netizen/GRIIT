@@ -18,6 +18,7 @@ import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { ReminderPicker } from "@/components/settings/ReminderPicker";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 export default function SettingsNotificationsScreen() {
   const isGuest = useIsGuest();
@@ -76,6 +77,7 @@ export default function SettingsNotificationsScreen() {
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <SettingsNav title="Notifications" />
+        <GriitFade fadeKey="notifications">
         <ScrollView contentContainerStyle={styles.body}>
           {osDenied ? (
             <View style={styles.osBanner}>
@@ -162,6 +164,7 @@ export default function SettingsNotificationsScreen() {
             Turning the system permission off in iOS Settings silences all of these, and GRIIT will show that state here.
           </Text>
         </ScrollView>
+        </GriitFade>
       </SafeAreaView>
     </ErrorBoundary>
   );

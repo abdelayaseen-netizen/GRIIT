@@ -25,6 +25,8 @@ import { pickProfilePhoto } from "@/lib/pick-profile-photo";
 import { normalizeProfileUsername, usernameFieldState, usernameSaveBlocked } from "@/lib/profile-v2-username";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
 import { Avatar } from "@/components/shared/Avatar";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const BIO_MAX = 150;
@@ -45,6 +47,7 @@ export default function EditProfileScreen() {
   const [formError, setFormError] = useState("");
   const [taken, setTaken] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -107,9 +110,26 @@ export default function EditProfileScreen() {
     setAvatarUrl(up.url);
   }, []);
 
+  const originalName = profile?.display_name ?? "";
+  const originalBio = (profile?.bio ?? "").slice(0, BIO_MAX);
+  const originalAvatar = profile?.avatar_url ?? "";
+  const dirty =
+    displayName !== originalName ||
+    normalized !== originalUsername ||
+    bio !== originalBio ||
+    avatarUrl !== originalAvatar;
+
   const close = () => {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.TABS_PROFILE as never);
+  };
+
+  const requestClose = () => {
+    if (dirty && !saving) {
+      setDiscardOpen(true);
+      return;
+    }
+    close();
   };
 
   const handleSave = async () => {
@@ -143,7 +163,7 @@ export default function EditProfileScreen() {
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.nav}>
-          <Pressable onPress={close} accessibilityRole="button" accessibilityLabel="Cancel" style={styles.navBtn}>
+          <Pressable onPress={requestClose} accessibilityRole="button" accessibilityLabel="Cancel" style={styles.navBtn}>
             <Text style={styles.cancel}>Cancel</Text>
           </Pressable>
           <Text style={styles.navTitle}>Edit profile</Text>
@@ -163,6 +183,7 @@ export default function EditProfileScreen() {
           </Pressable>
         </View>
 
+        <GriitFade fadeKey="edit-profile">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             <View style={styles.avatarBlock}>
@@ -241,6 +262,19 @@ export default function EditProfileScreen() {
             {formError ? <Text style={styles.warn}>{formError}</Text> : null}
           </ScrollView>
         </KeyboardAvoidingView>
+        </GriitFade>
+        <ConfirmDialog
+          visible={discardOpen}
+          title="Discard changes?"
+          message="Your edits will not be saved."
+          confirmLabel="Discard"
+          destructive
+          onConfirm={() => {
+            setDiscardOpen(false);
+            close();
+          }}
+          onCancel={() => setDiscardOpen(false)}
+        />
       </SafeAreaView>
     </ErrorBoundary>
   );

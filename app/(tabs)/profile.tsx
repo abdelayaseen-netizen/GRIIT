@@ -2,7 +2,7 @@
  * Own profile v2 — identity, streak, consistency, Challenges / Proofs / Badges.
  * Record strings come from profiles.getRecord. No proof CTA except empty Proofs tab.
  */
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -39,6 +39,7 @@ import { ConsistencyCard } from "@/components/profile-v2/ConsistencyCard";
 import { ChallengeRow, CompletedRow } from "@/components/profile-v2/ChallengeRow";
 import { BadgeRows } from "@/components/profile-v2/BadgeRows";
 import { ProofsTab } from "@/components/profile-v2/ProofsTab";
+import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 type ProfileTab = "challenges" | "proofs" | "badges";
 
@@ -81,42 +82,15 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
-  const postsQuery = useQuery({
-    queryKey: ["profile", user?.id, "proofPosts"],
-    queryFn: () =>
-      trpcQuery(TRPC.feed.getUserPosts, { userId: user!.id, limit: 50 }) as Promise<{
-        posts: { created_at?: string; photoUrl?: string | null; proofPhotoUrl?: string | null }[];
-      }>,
-    staleTime: 60 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
-
   const refreshing = recordQuery.isRefetching || followCountsQuery.isRefetching;
 
   const onRefresh = useCallback(async () => {
     await refetchAll();
-    await Promise.all([recordQuery.refetch(), followCountsQuery.refetch(), postsQuery.refetch()]);
-  }, [refetchAll, recordQuery, followCountsQuery, postsQuery]);
+    await Promise.all([recordQuery.refetch(), followCountsQuery.refetch()]);
+  }, [refetchAll, recordQuery, followCountsQuery]);
 
   const record = recordQuery.data;
-  const photoByDate = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const p of postsQuery.data?.posts ?? []) {
-      const key = (p.created_at ?? "").slice(0, 10);
-      const url = p.photoUrl ?? p.proofPhotoUrl;
-      if (key && url) map.set(key, url);
-    }
-    return map;
-  }, [postsQuery.data]);
-
-  const proofs = useMemo(
-    () =>
-      (record?.proofs ?? []).map((p) => ({
-        ...p,
-        imageUrl: photoByDate.get(p.dateKey) ?? null,
-      })),
-    [record?.proofs, photoByDate]
-  );
+  const proofs = record?.proofs ?? [];
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -191,6 +165,7 @@ export default function ProfileScreen() {
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
+        <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
@@ -420,6 +395,7 @@ export default function ProfileScreen() {
             ) : null}
           </View>
         </ScrollView>
+        </GriitFade>
       </SafeAreaView>
     </ErrorBoundary>
   );
