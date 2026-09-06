@@ -1,13 +1,37 @@
-import { Tabs, usePathname } from "expo-router";
-import { Home, Compass, Plus, Flame, User } from "lucide-react-native";
+import { Tabs, useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Sentry from "@sentry/react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SHADOWS, GRIIT_COLORS, DS_RADIUS, DS_DAYLIGHT } from "@/lib/design-system"
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { DS_COLORS, DS_DAYLIGHT, DS_V3, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system";
+import TabBar, { type TabBarTab } from "@/components/ds/TabBar";
+import { ROUTES } from "@/lib/routes";
+
+function routeToTab(name: string | undefined): TabBarTab {
+  if (name === "discover") return "discover";
+  if (name === "activity") return "activity";
+  if (name === "profile") return "profile";
+  return "home";
+}
+
+function GritTabBar({ state }: BottomTabBarProps) {
+  const router = useRouter();
+  const current = state.routes[state.index]?.name;
+  return (
+    <TabBar
+      active={routeToTab(current)}
+      onTab={(tab) => {
+        if (tab === "home") router.push(ROUTES.TABS_HOME as never);
+        else if (tab === "discover") router.push(ROUTES.TABS_DISCOVER as never);
+        else if (tab === "activity") router.push(ROUTES.TABS_ACTIVITY as never);
+        else router.push(ROUTES.TABS_PROFILE as never);
+      }}
+      onFab={() => router.push(ROUTES.TABS_CREATE as never)}
+    />
+  );
+}
 
 export default function TabLayout() {
-  void usePathname();
-
   return (
     <Sentry.ErrorBoundary
       fallback={({ error, resetError }) => (
@@ -28,43 +52,32 @@ export default function TabLayout() {
       )}
     >
     <Tabs
+      tabBar={(props) => <GritTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: DS_DAYLIGHT.color.accent,
-        tabBarInactiveTintColor: DS_DAYLIGHT.color.tabInactive,
         headerShown: false,
         sceneStyle: { backgroundColor: DS_DAYLIGHT.color.canvas },
-        tabBarStyle: styles.tabBar,
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarItemStyle: styles.tabBarItem,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Home — your challenges and feed",
+          tabBarAccessibilityLabel: "Home, your challenges and feed",
+          sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
       <Tabs.Screen
         name="discover"
         options={{
           title: "Discover",
-          tabBarIcon: ({ color, size }) => <Compass color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Discover — browse and join challenges",
+          tabBarAccessibilityLabel: "Discover, browse and join challenges",
+          sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
       <Tabs.Screen
         name="create"
         options={{
           title: "Create",
-          tabBarIcon: () => (
-            <View style={styles.centerButtonWrapper}>
-              <View style={styles.centerButton}>
-                <Plus color={DS_COLORS.WHITE} size={24} strokeWidth={2.5} />
-              </View>
-            </View>
-          ),
           tabBarLabel: () => null,
           tabBarAccessibilityLabel: "Create a new challenge",
         }}
@@ -73,16 +86,16 @@ export default function TabLayout() {
         name="activity"
         options={{
           title: "Activity",
-          tabBarIcon: ({ color, size }) => <Flame color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Activity — feed, notifications, and leaderboard",
+          tabBarAccessibilityLabel: "Activity, feed, notifications, and leaderboard",
+          sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => <User color={color} size={size || 24} />,
-          tabBarAccessibilityLabel: "Profile — your stats and settings",
+          tabBarAccessibilityLabel: "Profile, your stats and settings",
+          sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
       <Tabs.Screen
@@ -126,46 +139,5 @@ const styles = StyleSheet.create({
   errorBoundaryButtonText: {
     color: DS_COLORS.WHITE,
     fontWeight: "500",
-  },
-  // Daylight: floating translucent-white pill (no blur — expo-blur not installed).
-  tabBar: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 14,
-    height: 64,
-    backgroundColor: DS_DAYLIGHT.color.tabGlassBg,
-    borderTopWidth: 0,
-    borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.tabGlassBorder,
-    borderRadius: DS_DAYLIGHT.radius.glassBar,
-    paddingHorizontal: 10,
-    paddingTop: 0,
-    paddingBottom: 0,
-    ...DS_DAYLIGHT.shadow.glassBar,
-  },
-  tabBarItem: {
-    height: 64,
-    paddingVertical: 8,
-  },
-  tabBarLabel: {
-    fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    marginTop: 3,
-    marginBottom: 0,
-  },
-  centerButtonWrapper: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  centerButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: DS_DAYLIGHT.color.centerButton,
-    alignItems: "center",
-    justifyContent: "center",
-    ...DS_SHADOWS.centerButton,
   },
 });

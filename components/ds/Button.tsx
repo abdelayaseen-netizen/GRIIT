@@ -2,8 +2,9 @@
  * Button — 01_components.md "Button"
  * Laws: 6 (one brand fill per viewport), 7 (brand + onBrand; never textPrimary on brand),
  * 20 (44 minimum hit), 22 (inside a card: filled or tertiary, never outlined).
- * Spec wins over design/handoff/src/components/Primitives.tsx:25 (that file fills
- * primary with brandText / surface; spec is brand / onBrand).
+ * Disabled (gallery fix): surface fill, textSecondary label, not a dim brand
+ * fill. 01_components.md:16 names the disabled state; 01_components.md:18
+ * secondary ground is surface.
  */
 import React from "react";
 import {
@@ -31,6 +32,8 @@ export type ButtonProps = {
   icon?: React.ReactNode;
   onPress?: () => void;
   accessibilityLabel?: string;
+  /** Zero horizontal padding. Tertiary that sits alone in a card. */
+  flush?: boolean;
 };
 
 export default function Button({
@@ -43,12 +46,15 @@ export default function Button({
   icon,
   onPress,
   accessibilityLabel,
+  flush,
 }: ButtonProps) {
   const height = size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button;
   const blocked = Boolean(disabled || submitting);
   const pad = Math.max(0, (DS_V3.size.tap - height) / 2);
-  const labelColor =
-    variant === "primary"
+  const disabledLook = Boolean(disabled) && !submitting;
+  const labelColor = disabledLook
+    ? DS_V3.color.textSecondary
+    : variant === "primary"
       ? DS_V3.color.onBrand
       : variant === "secondary"
         ? DS_V3.color.textPrimary
@@ -68,11 +74,13 @@ export default function Button({
       style={({ pressed }) => [
         styles.base,
         { height, minHeight: height, minWidth: DS_V3.size.tap },
-        size === "small" ? styles.padSmall : styles.padRegular,
-        variant === "primary" && styles.primary,
-        variant === "secondary" && styles.secondary,
-        variant === "tertiary" && styles.tertiary,
-        blocked && (submitting ? styles.submitting : styles.disabled),
+        flush ? styles.padFlush : size === "small" ? styles.padSmall : styles.padRegular,
+        flush ? styles.flush : null,
+        variant === "primary" && !disabledLook && styles.primary,
+        (variant === "secondary" || disabledLook) && styles.secondary,
+        variant === "tertiary" && !disabledLook && styles.tertiary,
+        disabledLook && styles.disabledFill,
+        submitting && styles.submitting,
         !blocked && pressed ? styles.pressed : null,
       ]}
     >
@@ -106,6 +114,14 @@ const styles = StyleSheet.create({
   padSmall: {
     paddingHorizontal: DS_V3.space.xs * 6,
   },
+  padFlush: {
+    paddingHorizontal: 0,
+  },
+  flush: {
+    minWidth: 0,
+    alignSelf: "flex-start",
+    justifyContent: "center",
+  },
   primary: {
     backgroundColor: DS_V3.color.brand,
   },
@@ -120,8 +136,8 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
   },
-  disabled: {
-    opacity: 0.4,
+  disabledFill: {
+    backgroundColor: DS_V3.color.surface,
   },
   submitting: {
     opacity: 0.6,

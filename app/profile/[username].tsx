@@ -7,17 +7,14 @@ import {
   ActionSheetIOS,
   Alert,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronLeft, Lock, MoreHorizontal } from "lucide-react-native";
+import { MoreHorizontal } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -25,16 +22,16 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { shareProfile } from "@/lib/share";
+import { DS_V3 } from "@/lib/design-system";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import type { ProfileRelationship, VisibilityLevel } from "@/lib/profile-v2-visibility";
 import { visitorFollowControl } from "@/lib/profile-v2-visibility";
-import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
-import { Avatar } from "@/components/shared/Avatar";
+import HeaderIcon from "@/components/ds/HeaderIcon";
+import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { StreakCard } from "@/components/profile-v2/StreakCard";
-import { ConsistencyCard } from "@/components/profile-v2/ConsistencyCard";
-import { ChallengeRow } from "@/components/profile-v2/ChallengeRow";
+import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 type RecordPayload = ProfileRecord & {
@@ -67,7 +64,7 @@ export default function VisitorProfileScreen() {
   const [followBusy, setFollowBusy] = useState(false);
   const [showUnfollow, setShowUnfollow] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
-  const [bioOpen, setBioOpen] = useState(false);
+  const [tab, setTab] = useState<"Challenges" | "Proofs" | "Badges">("Challenges");
 
   const publicQ = useQuery({
     queryKey: ["publicProfile", decoded],
@@ -113,6 +110,17 @@ export default function VisitorProfileScreen() {
     enabled: !!ownerId && !!user?.id && !isSelf,
   });
 
+  const followCountsQuery = useQuery({
+    queryKey: ["profile", ownerId, "followCounts"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getFollowCounts, { userId: ownerId }) as Promise<{
+        followers: number;
+        following: number;
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !!ownerId,
+  });
+
   const rec = recordQ.data;
   const name = rec?.identity.displayName || publicQ.data?.display_name || decoded;
   const handle = rec?.identity.username || publicQ.data?.username || decoded;
@@ -122,8 +130,6 @@ export default function VisitorProfileScreen() {
   const vis = rec?.visibility.profile ?? parseVis(publicQ.data?.profile_visibility);
   const followStatus = followQ.data?.status ?? "none";
   const followCtrl = visitorFollowControl(vis, followStatus);
-  const weekStartLabel = rec?.detail.months[rec.detail.months.length - 1]?.label ?? "";
-
   const invalidate = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["followStatus", ownerId] });
     await queryClient.invalidateQueries({
@@ -211,136 +217,93 @@ export default function VisitorProfileScreen() {
       ? `${name} keeps this record private. Nothing is shown, and requests are not accepted automatically.`
       : `${name} shows the streak, activity and proofs to people they have accepted. Follow to see the record.`;
 
+  const joined = (rec?.runs.length ?? 0) > 0;
+
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <View style={styles.nav}>
-          <Pressable
-            onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_PROFILE as never))}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            style={styles.iconBtn}
-          >
-            <ChevronLeft size={22} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />
-          </Pressable>
-          <Pressable
-            onPress={onMore}
-            accessibilityRole="button"
-            accessibilityLabel="More"
-            style={styles.iconBtn}
-          >
-            <MoreHorizontal size={22} color={PROFILE_V2_COLOR.ink} strokeWidth={1.6} />
-          </Pressable>
-        </View>
+        <PushedHeader
+          title={name || handle}
+          onBack={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_PROFILE as never))}
+          trailing={
+            <HeaderIcon accessibilityLabel="More" onPress={onMore}>
+              <MoreHorizontal size={DS_V3.space.xs * 6} color={DS_V3.color.textPrimary} />
+            </HeaderIcon>
+          }
+        />
 
         <GriitFade fadeKey={`visitor-${handle}-${gate.profile}-${followCtrl.label}`}>
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-            <View style={styles.identity}>
-              <Avatar url={avatar} name={name || handle} size={76} userId={ownerId || undefined} />
-              <View style={styles.idCol}>
-                <Text style={styles.displayName}>{name || handle}</Text>
-                <Text style={styles.handle}>@{handle}</Text>
-              </View>
-            </View>
-            {bio ? (
-              <Pressable onPress={() => setBioOpen((v) => !v)} accessibilityRole="button">
-                <Text style={styles.bio} numberOfLines={bioOpen ? undefined : 3}>
-                  {bio}
-                </Text>
-              </Pressable>
-            ) : null}
-
-            {!isSelf ? (
-              <Pressable
-                onPress={() => void onFollow()}
-                disabled={followBusy || followCtrl.action === "idle"}
-                accessibilityRole="button"
-                accessibilityLabel={followCtrl.label}
-                accessibilityState={{ disabled: followBusy || followCtrl.action === "idle" }}
-                style={[styles.follow, followCtrl.appearance === "quiet" && styles.followOn]}
-              >
-                <Text
-                  style={[
-                    styles.followTxt,
-                    followCtrl.appearance === "quiet" && styles.followTxtOn,
-                  ]}
-                >
-                  {followCtrl.label}
-                </Text>
-              </Pressable>
-            ) : null}
-
             {previewStranger ? (
               <Text style={styles.previewNote}>Preview · how a stranger sees this profile</Text>
             ) : null}
-
-            {!gate.profile ? (
-              <>
-                <View style={styles.lock}>
-                  <Lock size={22} color={PROFILE_V2_COLOR.muted} strokeWidth={1.6} />
-                  <Text style={styles.lockTitle}>{lockTitle}</Text>
-                  <Text style={styles.lockBody}>{lockBody}</Text>
-                </View>
-                <View style={styles.hiddenRow}>
-                  <HiddenTile label="STREAK" />
-                  <HiddenTile label="CONSISTENCY" />
-                </View>
-              </>
-            ) : (
-              <>
-                <StreakCard
-                  current={rec?.streak.current ?? 0}
-                  best={rec?.streak.best ?? 0}
-                  note={rec?.streak.note ?? ""}
-                />
-                <View style={{ height: 10 }} />
-                {gate.activity ? (
-                  <ConsistencyCard
-                    consistency={rec!.consistency}
-                    weekStartLabel={weekStartLabel}
-                    onOpenDetail={() =>
-                      router.push({
-                        pathname: ROUTES.PROFILE_CONSISTENCY as never,
-                        params: { userId: ownerId },
-                      } as never)
-                    }
-                  />
-                ) : null}
-                {gate.challenges ? (
-                  <View style={styles.runs}>
-                    <Text style={styles.micro}>ACTIVE RUNS</Text>
-                    {(rec?.runs ?? []).map((r) => (
-                      <ChallengeRow
-                        key={r.id}
-                        name={r.name}
-                        dayLabel={r.dayLabel}
-                        meta={r.meta}
-                        days={r.days}
-                        onPress={() => router.push(ROUTES.CHALLENGE_ACTIVE(r.id) as never)}
-                      />
-                    ))}
-                  </View>
-                ) : null}
-                {gate.activity ? (
-                  <View style={styles.strip}>
-                    {(rec?.proofs ?? []).slice(0, 6).map((p) => (
-                      <View key={p.dateKey} style={styles.tile}>
-                        {p.imageUrl ? (
-                          <Image source={{ uri: p.imageUrl }} style={styles.tileImg} contentFit="cover" />
-                        ) : (
-                          <View style={styles.tileText}>
-                            <Text style={styles.tileTextLbl}>Text proof</Text>
-                          </View>
-                        )}
-                        <View style={styles.chip}>
-                          <Text style={styles.chipTxt}>Day {p.day}</Text>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                ) : null}
-              </>
-            )}
+            <ProfileV3
+              title={name || handle}
+              handle={handle}
+              avatarUrl={avatar}
+              followers={followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0)}
+              following={followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0)}
+              bio={bio}
+              streak={rec?.streak.current ?? 0}
+              best={rec?.streak.best ?? 0}
+              consistency={rec?.consistency.rate ?? "No due days"}
+              consistencySub={
+                joined
+                  ? "Post every day. Missed days count."
+                  : "Join a challenge and the strip starts filling."
+              }
+              tab={tab}
+              onChangeTab={setTab}
+              runs={(rec?.runs ?? []).map((r) => ({
+                id: r.id,
+                name: r.name,
+                day: r.day,
+                length: r.length,
+              }))}
+              proofs={rec?.proofs ?? []}
+              badges={badgeItemsFromRows(
+                rec?.badges ??
+                  badgeRowsFromProgress({
+                    bestStreak: rec?.streak.best ?? 0,
+                    verifiedDays: rec?.detail.totalVerified ?? 0,
+                  }),
+              )}
+              onShare={() =>
+                void shareProfile({
+                  username: handle,
+                  streak: rec?.streak.current ?? 0,
+                  totalDaysSecured: rec?.detail.totalVerified ?? 0,
+                  tier: "Starter",
+                })
+              }
+              onFollowers={() =>
+                ownerId
+                  ? router.push(ROUTES.FOLLOW_LIST(ownerId, "followers", handle) as never)
+                  : undefined
+              }
+              onFollowing={() =>
+                ownerId
+                  ? router.push(ROUTES.FOLLOW_LIST(ownerId, "following", handle) as never)
+                  : undefined
+              }
+              onSeeRecord={() =>
+                router.push({
+                  pathname: ROUTES.PROFILE_CONSISTENCY as never,
+                  params: { userId: ownerId },
+                } as never)
+              }
+              onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
+              followLabel={isSelf ? undefined : followCtrl.label}
+              onFollow={isSelf ? undefined : () => void onFollow()}
+              followDisabled={followBusy || followCtrl.action === "idle"}
+              showRootHeader={false}
+              locked={
+                gate.profile
+                  ? null
+                  : { heading: lockTitle, body: lockBody }
+              }
+            />
           </ScrollView>
         </GriitFade>
 
@@ -382,106 +345,15 @@ function parseVis(raw: string | undefined): VisibilityLevel {
   return "public";
 }
 
-function HiddenTile({ label }: { label: string }) {
-  return (
-    <View style={styles.hidden}>
-      <Text style={styles.hiddenLbl}>{label}</Text>
-      <Text style={styles.hiddenVal}>Hidden</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: PROFILE_V2_COLOR.canvas },
-  nav: {
-    height: 52,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  iconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  body: { paddingHorizontal: 28, paddingBottom: 34 },
-  identity: { flexDirection: "row", alignItems: "center", gap: 16, marginTop: 4 },
-  idCol: { flex: 1, minWidth: 0 },
-  displayName: {
-    fontSize: 27,
-    fontWeight: "500",
-    letterSpacing: -0.9,
-    lineHeight: 28,
-    color: PROFILE_V2_COLOR.ink,
-  },
-  handle: { marginTop: 6, fontSize: 13, color: PROFILE_V2_COLOR.mutedLight },
-  bio: { marginTop: 14, fontSize: 14, lineHeight: 20, color: PROFILE_V2_COLOR.body },
-  follow: {
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: PROFILE_V2_COLOR.orange,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-    marginBottom: 14,
-  },
-  followOn: {
-    backgroundColor: PROFILE_V2_COLOR.surface,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.borderStrong,
-  },
-  followTxt: { fontSize: 15, color: PROFILE_V2_COLOR.surface },
-  followTxtOn: { color: PROFILE_V2_COLOR.ink },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
+  body: { paddingBottom: DS_V3.space.xs * 30 },
   previewNote: {
-    marginBottom: 12,
-    fontSize: 12,
-    color: PROFILE_V2_COLOR.mutedLight,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
-  lock: {
-    backgroundColor: PROFILE_V2_COLOR.surface,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.border,
-    borderRadius: 22,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    gap: 8,
-  },
-  lockTitle: { fontSize: 17, color: PROFILE_V2_COLOR.ink, textAlign: "center" },
-  lockBody: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: PROFILE_V2_COLOR.muted,
-    textAlign: "center",
-  },
-  hiddenRow: { flexDirection: "row", gap: 10, marginTop: 12 },
-  hidden: {
-    flex: 1,
-    backgroundColor: PROFILE_V2_COLOR.sunken,
-    borderRadius: 16,
-    padding: 16,
-    minHeight: 72,
-  },
-  hiddenLbl: { fontSize: 11, letterSpacing: 0.8, color: PROFILE_V2_COLOR.mutedLight },
-  hiddenVal: { marginTop: 8, fontSize: 19, fontWeight: "500", color: PROFILE_V2_COLOR.mutedLight },
-  runs: { marginTop: 18, gap: 10 },
-  micro: { fontSize: 11, letterSpacing: 1.4, color: PROFILE_V2_COLOR.mutedLight },
-  strip: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 18 },
-  tile: {
-    width: "31.5%",
-    aspectRatio: 1,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: PROFILE_V2_COLOR.sunken,
-  },
-  tileImg: { width: "100%", height: "100%" },
-  tileText: { flex: 1, alignItems: "center", justifyContent: "center" },
-  tileTextLbl: { fontSize: 11, color: PROFILE_V2_COLOR.mutedLight },
-  chip: {
-    position: "absolute",
-    left: 6,
-    bottom: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
-    backgroundColor: "rgba(255,255,255,0.82)",
-  },
-  chipTxt: { fontSize: 10, color: PROFILE_V2_COLOR.ink },
 });

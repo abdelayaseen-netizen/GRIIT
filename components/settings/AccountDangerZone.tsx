@@ -1,8 +1,8 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, Pressable, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_V3 } from "@/lib/design-system";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { supabase } from "@/lib/supabase";
@@ -12,7 +12,7 @@ import { captureError } from "@/lib/sentry";
 import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 import { InlineError } from "@/components/InlineError";
 import { styles as modalStyles } from "@/components/settings/settings-styles";
-import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import Button from "@/components/ds/Button";
 
 export interface AccountDangerZoneProps {
   isGuest: boolean;
@@ -44,8 +44,9 @@ export function AccountDangerZone({
   return (
     <>
       <View style={v2.wrap}>
-        <Pressable
-          style={({ pressed }) => [v2.signOut, pressed && v2.signOutOn]}
+        <Button
+          label="Sign out"
+          variant="secondary"
           onPress={async () => {
             if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             await cancelLapsedUserReminders();
@@ -55,20 +56,14 @@ export function AccountDangerZone({
             await clearOnboardingStorage();
             router.replace(ROUTES.AUTH as never);
           }}
-          accessibilityLabel="Sign out"
-          accessibilityRole="button"
-        >
-          <Text style={v2.signOutTxt}>Sign out</Text>
-        </Pressable>
+        />
         {!isGuest && (
-          <Pressable
-            style={({ pressed }) => [v2.deleteBtn, pressed && v2.deleteOn]}
+          <Button
+            label="Delete account"
+            variant="tertiary"
+            destructive
             onPress={() => setShowDeleteModal(true)}
-            accessibilityLabel="Delete account"
-            accessibilityRole="button"
-          >
-            <Text style={v2.deleteTxt}>Delete account</Text>
-          </Pressable>
+          />
         )}
       </View>
 
@@ -155,25 +150,6 @@ export function AccountDangerZone({
 }
 
 const v2 = StyleSheet.create({
-  wrap: { marginTop: 18, gap: 10 },
-  signOut: {
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: PROFILE_V2_COLOR.surface,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.borderStrong,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  signOutOn: { backgroundColor: PROFILE_V2_COLOR.sunken },
-  signOutTxt: { fontSize: 15, color: PROFILE_V2_COLOR.ink },
-  deleteBtn: {
-    height: 52,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  deleteOn: { backgroundColor: PROFILE_V2_COLOR.dangerWash },
-  deleteTxt: { fontSize: 15, color: PROFILE_V2_COLOR.danger },
+  wrap: { marginTop: DS_V3.space.section, gap: DS_V3.space.md },
 });
 

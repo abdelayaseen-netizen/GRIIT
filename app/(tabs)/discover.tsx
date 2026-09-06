@@ -1,61 +1,74 @@
 /**
- * Discover tab — For-You masonry composition.
- *
- * Replaces the legacy 7-section list footer (the OOM-prone source of the
- * discover crash) with a flat ScrollView that hosts:
- *   1. Lightweight header (title only — no search yet)
- *   2. Category chips (For you / Trending / Body / Mind / Faith / Focus)
- *   3. ForYouHero (immersive 4:5 photo card)
- *   4. DiscoverForYouGrid (masonry of proof / challenge / person / nudge cards)
- *
- * Each grid card is wrapped in its own ErrorBoundary inside the composer, so
- * a single bad item never blanks the screen. Pull-to-refresh invalidates all
- * `discover.*` queries through React Query.
+ * Discover tab — presentation on DiscoverV3. Same queries as the prior screen:
+ * getDiscoverFeatured, feed.getTrending, challenges.getRecommended,
+ * profiles.suggested, feed.getStreakAtRisk. Proof posts are filtered out in
+ * DiscoverV3 (never mapped into the grid).
  */
-import React, { useCallback, useState } from "react";
-import {
-  Pressable,
-  View,
-  Text,
-  StyleSheet,
-  RefreshControl,
-  ScrollView,
-} from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
-import { trpcQuery } from "@/lib/trpc";
+import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS_V2, DS_SPACING_V2 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
+import { profilePrimaryName } from "@/lib/profile-display";
 
 import {
-  CategoryChips,
   type DiscoverCategory,
 } from "@/components/discover/CategoryChips";
+import { type HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard";
+import { type RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
+import { type SuggestedPerson } from "@/components/discover/PersonCard";
+import { type StreakAtRiskData } from "@/components/discover/StreakRiskBanner";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import {
-  type HeroFeaturedData,
-} from "@/components/challenges/HeroFeaturedCard";
-import { ForYouHero } from "@/components/discover/ForYouHero";
-import { DiscoverForYouGrid } from "@/components/discover/DiscoverForYouGrid";
+  DiscoverV3,
+  type DiscoverPerson,
+} from "@/components/discover/DiscoverV3";
 
-const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
+type TrendingResponse = { posts: LiveFeedPost[] };
+type RecommendedResponse = { challenges: RecommendedChallenge[] };
+type FollowState = "none" | "pending" | "following";
+
+function categoryMatches(
+  challenge: RecommendedChallenge,
+  selected: DiscoverCategory,
+): boolean {
+  if (selected === "all" || selected === "for_you" || selected === "trending") {
+    return true;
+  }
+  const c = (challenge.category ?? "").toLowerCase();
+  if (selected === "body") return c === "body" || c === "fitness";
+  return c === selected;
+}
+
+function personStatus(person: SuggestedPerson): string {
+  const streak = person.current_streak;
+  const mutuals = Math.max(0, Number(person.mutuals_count ?? 0));
+  const parts: string[] = [];
+  if (streak > 0) parts.push(`${streak}-day streak`);
+  if (mutuals > 0) parts.push(`${mutuals} mutual${mutuals === 1 ? "" : "s"}`);
+  return parts.length > 0 ? parts.join(" · ") : "New here";
+}
 
 function DiscoverScreenInner() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [selectedCategory, setSelectedCategory] = useState<DiscoverCategory>("for_you");
+  const [selectedCategory, setSelectedCategory] =
+    useState<DiscoverCategory>("for_you");
+  const [followById, setFollowById] = useState<Record<string, FollowState>>({});
+  const [followPendingId, setFollowPendingId] = useState<string | null>(null);
 
   const featuredQuery = useQuery({
     queryKey: ["discover", "featured", selectedCategory],
     queryFn: () =>
       trpcQuery(TRPC.challenges.getDiscoverFeatured, {
-        // Pass the category to the existing endpoint when it's one of the
-        // legacy slugs; for `for_you` / `trending`, fall back to "all".
         category:
           selectedCategory === "for_you" || selectedCategory === "trending"
             ? "all"
@@ -64,10 +77,78 @@ function DiscoverScreenInner() {
     staleTime: 60 * 1000,
   });
 
+  const trendingQuery = useQuery({
+    queryKey: ["discover", "foryou", "trending"],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.getTrending, { limit: 8 }) as Promise<TrendingResponse>,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const recommendedQuery = useQuery({
+    queryKey: ["discover", "foryou", "recommended"],
+    queryFn: () =>
+      trpcQuery(TRPC.challenges.getRecommended) as Promise<RecommendedResponse>,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const peopleQuery = useQuery({
+    queryKey: ["discover", "foryou", "suggested"],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.suggested, { limit: 6 }) as Promise<SuggestedPerson[]>,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const streakAtRiskQuery = useQuery({
+    queryKey: ["discover", "foryou", "streakAtRisk"],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.getStreakAtRisk) as Promise<StreakAtRiskData | null>,
+    staleTime: 5 * 60 * 1000,
+  });
+
   if (featuredQuery.isError)
     captureError(featuredQuery.error, "Discover.getDiscoverFeatured");
+  if (trendingQuery.isError)
+    captureError(trendingQuery.error, "DiscoverForYouGrid.trending");
+  if (recommendedQuery.isError)
+    captureError(recommendedQuery.error, "DiscoverForYouGrid.recommended");
+  if (peopleQuery.isError)
+    captureError(peopleQuery.error, "DiscoverForYouGrid.people");
+  if (streakAtRiskQuery.isError)
+    captureError(streakAtRiskQuery.error, "DiscoverForYouGrid.streakAtRisk");
 
-  const isRefreshing = featuredQuery.isRefetching;
+  void trendingQuery.data;
+  void streakAtRiskQuery.data;
+
+  const filteredChallenges = useMemo(() => {
+    const list = recommendedQuery.data?.challenges ?? [];
+    return list.filter((c) => categoryMatches(c, selectedCategory));
+  }, [recommendedQuery.data, selectedCategory]);
+
+  const people: DiscoverPerson[] = useMemo(() => {
+    return (peopleQuery.data ?? []).map((p) => {
+      const state = followById[p.user_id] ?? "none";
+      const followLabel =
+        state === "following"
+          ? "Following"
+          : state === "pending"
+            ? "Requested"
+            : p.is_private
+              ? "Request"
+              : "Follow";
+      return {
+        user_id: p.user_id,
+        name: profilePrimaryName({
+          username: p.username,
+          display_name: p.display_name,
+        }),
+        uri: p.avatar_url,
+        status: personStatus(p),
+        followLabel,
+        followDisabled: state === "following" || state === "pending",
+        followPending: followPendingId === p.user_id,
+      };
+    });
+  }, [peopleQuery.data, followById, followPendingId]);
 
   const onRefresh = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["discover"] });
@@ -83,52 +164,97 @@ function DiscoverScreenInner() {
     router.push(ROUTES.CREATE_WIZARD as never);
   }, [router]);
 
-  return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Discover</Text>
-      </View>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={onRefresh}
-            tintColor={DS_COLORS_V2.brand.primary}
-          />
-        }
-      >
-        <CategoryChips
-          selected={selectedCategory}
-          onSelect={handleCategorySelect}
-        />
-        <ForYouHero
-          data={featuredQuery.data ?? null}
-          loading={featuredQuery.isPending}
-        />
-        <DiscoverForYouGrid selectedCategory={selectedCategory} />
+  const handleOpenChallenge = useCallback(
+    (id: string, slug?: string | null) => {
+      const target = (slug ?? id).trim() || id;
+      router.push(ROUTES.CHALLENGE_ID(target) as never);
+    },
+    [router],
+  );
 
-        {/* Build your own CTA — routes to existing create wizard entry (not internals) */}
-        <View style={styles.buildOwnSection}>
-          <Text style={styles.buildOwnTitle}>Have your own idea?</Text>
-          <Text style={styles.buildOwnSub}>
-            Create a custom challenge and invite others to join.
-          </Text>
-          <Pressable
-            onPress={handleBuildYourOwn}
-            hitSlop={HIT_SLOP}
-            accessibilityRole="button"
-            accessibilityLabel="Build your own challenge"
-            style={({ pressed }) => [
-              styles.buildOwnCta,
-              pressed ? styles.buildOwnCtaPressed : null,
-            ]}
-          >
-            <Text style={styles.buildOwnCtaText}>Build your own</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+  const handleStartFeatured = useCallback(() => {
+    const data = featuredQuery.data;
+    if (!data?.id) return;
+    handleOpenChallenge(data.id, data.slug);
+  }, [featuredQuery.data, handleOpenChallenge]);
+
+  const handleOpenPerson = useCallback(
+    (userId: string) => {
+      const person = (peopleQuery.data ?? []).find((p) => p.user_id === userId);
+      if (!person) return;
+      const u = (person.username ?? "").trim();
+      const target = u ? encodeURIComponent(u) : encodeURIComponent(person.user_id);
+      router.push(ROUTES.PROFILE_USERNAME(target) as never);
+    },
+    [peopleQuery.data, router],
+  );
+
+  const handleFollowPerson = useCallback(
+    async (userId: string) => {
+      const person = (peopleQuery.data ?? []).find((p) => p.user_id === userId);
+      if (!person || followPendingId) return;
+      const previous = followById[userId] ?? "none";
+      const optimistic: FollowState = person.is_private ? "pending" : "following";
+      setFollowPendingId(userId);
+      setFollowById((cur) => ({ ...cur, [userId]: optimistic }));
+      try {
+        if (person.is_private) {
+          await trpcMutate(TRPC.profiles.sendFollowRequest, { userId });
+        } else {
+          await trpcMutate(TRPC.profiles.followUser, { userId });
+        }
+        trackEvent("discover_suggested_follow_tapped", {
+          target_user_id: person.user_id,
+          is_private: person.is_private,
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["discover", "foryou", "suggested"],
+        });
+      } catch (err) {
+        setFollowById((cur) => ({ ...cur, [userId]: previous }));
+        captureError(err, "Discover.PersonCard.follow");
+      } finally {
+        setFollowPendingId(null);
+      }
+    },
+    [peopleQuery.data, followPendingId, followById, queryClient],
+  );
+
+  const featuredLoading = featuredQuery.isPending && !featuredQuery.data;
+  const challengesLoading =
+    recommendedQuery.isPending && !recommendedQuery.data;
+  const error = featuredQuery.isError || recommendedQuery.isError;
+  const refreshing =
+    featuredQuery.isRefetching ||
+    recommendedQuery.isRefetching ||
+    peopleQuery.isRefetching;
+
+  return (
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <DiscoverV3
+        category={selectedCategory}
+        onCategory={handleCategorySelect}
+        featured={featuredQuery.data ?? null}
+        featuredLoading={featuredLoading}
+        challenges={filteredChallenges}
+        challengesLoading={challengesLoading}
+        people={people}
+        circleCount={featuredQuery.data?.joinedTodayCount ?? 0}
+        error={error}
+        onRetry={() => {
+          void featuredQuery.refetch();
+          void recommendedQuery.refetch();
+        }}
+        onOpenChallenge={handleOpenChallenge}
+        onStartFeatured={handleStartFeatured}
+        onBuildOwn={handleBuildYourOwn}
+        onOpenPerson={handleOpenPerson}
+        onFollowPerson={(id) => {
+          void handleFollowPerson(id);
+        }}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+      />
     </SafeAreaView>
   );
 }
@@ -142,61 +268,8 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  safe: {
     flex: 1,
-    backgroundColor: DS_COLORS_V2.surface.canvas,
-  },
-  header: {
-    paddingHorizontal: DS_SPACING_V2.lg,
-    paddingTop: DS_SPACING_V2.sm,
-    paddingBottom: DS_SPACING_V2.sm,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.6,
-  },
-  scrollContent: {
-    paddingBottom: 115,
-  },
-  buildOwnSection: {
-    marginHorizontal: DS_SPACING_V2.lg,
-    marginTop: 24,
-    marginBottom: 16,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    padding: 20,
-    gap: 8,
-  },
-  buildOwnTitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.2,
-  },
-  buildOwnSub: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: DS_COLORS_V2.text.secondary,
-    lineHeight: 22,
-  },
-  buildOwnCta: {
-    height: 48,
-    borderRadius: 15,
-    backgroundColor: DS_COLORS_V2.text.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  buildOwnCtaPressed: {
-    opacity: 0.82,
-  },
-  buildOwnCtaText: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: DS_COLORS_V2.brand.primaryText,
+    backgroundColor: DS_V3.color.canvas,
   },
 });
